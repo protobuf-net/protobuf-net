@@ -1,10 +1,11 @@
-﻿TODO List
+TODO List
 =========
 
 base-128; pretty sure it is borked for large 64-bit numbers; fine for 32-bit though
 (to do with when the bits run out; need to reset the mask/shifts)
 
 Bug when deserializing Test3 (SimpleStreamDemo)
+It was working fine, so I probably did something stoopid when refactoring
 
 Bug when deserializing larger values in RemotingDemo
 
