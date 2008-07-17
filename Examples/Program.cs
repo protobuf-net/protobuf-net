@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Collections;
 
 namespace Examples
 {
@@ -36,9 +37,10 @@ namespace Examples
                 }
             };
             #endregion
-            
+
             run(SimpleStream.SimpleStreamDemo.Run);
             run(Remoting.RemotingDemo.Run);
+
             
             Console.WriteLine("Press any key to exit");
             Console.ReadKey();

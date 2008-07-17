@@ -136,7 +136,6 @@
     <Compile Include="StringSerializer.cs">
       <DependentUpon>SimpleSerializers.cs</DependentUpon>
     </Compile>
-    <Compile Include="SignedAttribute.cs" />
     <Compile Include="PropertyBase.cs">
       <DependentUpon>IProperty.cs</DependentUpon>
     </Compile>
@@ -151,9 +150,15 @@
     <Compile Include="ServiceModel\XmlProtoDataContractSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataFormat.cs" />
     <Compile Include="DecimalSignedSerializer.cs">
       <DependentUpon>SimpleSerializers.cs</DependentUpon>
     </Compile>
+    <Compile Include="ExtensibleBase.cs">
+      <DependentUpon>IExtensible.cs</DependentUpon>
+    </Compile>
+    <Compile Include="IExtensible.cs" />
+    <Compile Include="ProtoMemberAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

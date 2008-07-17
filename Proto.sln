@@ -5,12 +5,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoBuf", "ProtoBuf\ProtoB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples", "Examples\Examples.csproj", "{816EC137-7AFD-42B3-84A1-447E33A6A8C8}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "General", "General", "{E190238D-8154-48DD-8540-D0913B9BA132}"
-	ProjectSection(SolutionItems) = preProject
-		ProtoBuf.snk = ProtoBuf.snk
-		TODO.txt = TODO.txt
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

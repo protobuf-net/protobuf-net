@@ -11,7 +11,9 @@ namespace ProtoBuf
 
         protected static ISerializer<T> GetSerializer<T>(PropertyInfo property)
         {
-            bool signed = Attribute.GetCustomAttribute(property, typeof(SignedAttribute)) != null;
+            ProtoMemberAttribute attrib = AttributeUtils.GetAttribute<ProtoMemberAttribute>(property);
+            DataFormat format = attrib == null ? DataFormat.Default : attrib.DataFormat;
+            bool signed = format == DataFormat.Default;
 
             ISerializer<T> result = signed ? SerializerCache<T>.Signed : SerializerCache<T>.Unsigned;
 
