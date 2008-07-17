@@ -1,7 +1,8 @@
 ﻿using System;
-using System.Runtime.Serialization;
-using System.Reflection;
 using System.IO;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
 
 namespace ProtoBuf
 {
@@ -26,12 +27,49 @@ namespace ProtoBuf
             return type.IsClass && !type.IsAbstract
                     && type != typeof(string) && !type.IsArray
                     && type.GetConstructor(Type.EmptyTypes) != null
-                    && AttributeUtils.GetAttribute<DataContractAttribute>(type) != null;
+                    && (AttributeUtils.GetAttribute<ProtoContractAttribute>(type) != null
+                        || AttributeUtils.GetAttribute<DataContractAttribute>(type) != null
+                        || AttributeUtils.GetAttribute<XmlTypeAttribute>(type) != null);
         }
-        internal static int GetTag(PropertyInfo property)
+        /// <summary>
+        /// Supports various different property metadata patterns:
+        /// [ProtoMember] is the most specific, allowing the data-format to be set.
+        /// [DataMember], [XmlElement] are supported for compatibility.
+        /// In any event, there must be a unique positive Tag/Order.
+        /// </summary>
+        internal static bool TryGetTag(PropertyInfo property, out int tag, out string name, out DataFormat format, out bool isRequired)
         {
+            name = property.Name;
+            format = DataFormat.Default;
+            tag = -1;
+            isRequired = false;
+            ProtoMemberAttribute pm = AttributeUtils.GetAttribute<ProtoMemberAttribute>(property);
+            if (pm != null) {
+                format = pm.DataFormat;
+                if(!string.IsNullOrEmpty(pm.Name)) name = pm.Name;
+                tag = pm.Tag;
+                isRequired = pm.IsRequired;
+                return tag > 0;
+            }
+
             DataMemberAttribute dm = AttributeUtils.GetAttribute<DataMemberAttribute>(property);
-            return dm == null ? -1 : dm.Order;
+            if (dm != null)
+            {
+                if (!string.IsNullOrEmpty(dm.Name)) name = dm.Name;
+                tag = dm.Order;
+                isRequired = dm.IsRequired;
+                return tag > 0;
+            }
+            
+            XmlElementAttribute xe = AttributeUtils.GetAttribute<XmlElementAttribute>(property);
+            if (xe != null)
+            {
+                if (!string.IsNullOrEmpty(xe.ElementName)) name = xe.ElementName;
+                tag = xe.Order;
+                return tag > 0;
+            }
+
+            return false;
         }
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream
@@ -98,6 +136,23 @@ namespace ProtoBuf
             using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(s)))
             {
                 Merge<T>(instance, ms);
+            }
+        }
+
+        /// <summary>
+        /// Create a deep clone of the supplied instance; any sub-items are also cloned.
+        /// </summary>
+        /// <typeparam name="T">The type being cloned.</typeparam>
+        /// <param name="instance">The existing instance to be cloned (cannot be null).</param>
+        /// <returns>A new copy, cloned from the supplied instance.</returns>
+        public static T DeepClone<T>(T instance) where T : class, new()
+        {
+            if (instance == null) throw new ArgumentNullException("instance");
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serialize<T>(instance, ms);
+                ms.Position = 0;
+                return Deserialize<T>(ms);
             }
         }
         /// <summary>

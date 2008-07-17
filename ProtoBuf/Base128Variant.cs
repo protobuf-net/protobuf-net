@@ -5,15 +5,6 @@ namespace ProtoBuf
 {
     internal static class Base128Variant
     {
-        public static void Skip(Stream source)
-        {
-            int b;
-            do
-            {
-                b = source.ReadByte();
-                if (b < 0) throw new SerializationException();
-            } while ((b & 128) != 0);
-        }
         internal static void DecodeFromStream(SerializationContext context, int length)
         {
             DecodeFromStream(context, length, true);
@@ -89,6 +80,30 @@ namespace ProtoBuf
             destination[index + count] &= 127;
 
             return count + 1;
+        }
+
+        internal static int ReadRaw(SerializationContext context)
+        {
+            int b, index = context.WorkspaceIndex, len = 0;
+            Stream source = context.Stream;
+            do
+            {
+                b = source.ReadByte();
+                if (b < 0) throw new SerializationException();
+                context.Workspace[index++] = (byte)b;
+                len++;
+            } while ((b & 128) != 0);
+            return len;
+        }
+
+        public static void Skip(Stream source)
+        {
+            int b;
+            do
+            {
+                b = source.ReadByte();
+                if (b < 0) throw new SerializationException();
+            } while ((b & 128) != 0);
         }
     }
 }

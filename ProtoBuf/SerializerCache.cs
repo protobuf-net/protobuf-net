@@ -1,4 +1,5 @@
 ﻿
+using System;
 namespace ProtoBuf
 {
     internal static class SerializerCache<TValue>
@@ -7,20 +8,19 @@ namespace ProtoBuf
         {
             SimpleSerializers.Init();
         }
-        public static ISerializer<TValue> Signed
+        public static ISerializer<TValue> Default {get; private set; }
+        public static ISerializer<TValue> ZigZag { get; private set; }
+        public static ISerializer<TValue> TwosComplement { get; private set; }
+        public static ISerializer<TValue> FixedSize { get; private set; }
+
+        public static void Set(ISerializer<TValue> @default, ISerializer<TValue> zigZag,
+            ISerializer<TValue> twosComplement, ISerializer<TValue> fixedSize)
         {
-            get;
-            private set;
-        }
-        public static ISerializer<TValue> Unsigned
-        {
-            get;
-            private set;
-        }
-        internal static void Set(ISerializer<TValue> signed, ISerializer<TValue> unsigned)
-        {
-            Signed = signed;
-            Unsigned = unsigned;
+            if (@default == null) throw new ArgumentNullException("default");
+            Default = @default;
+            ZigZag = zigZag;
+            TwosComplement = twosComplement;
+            FixedSize = fixedSize;
         }
     }
 }

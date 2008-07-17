@@ -1,6 +1,6 @@
 ﻿namespace ProtoBuf
 {
-    enum WireType
+    internal enum WireType
     {
         Variant = 0,
         Fixed64 = 1,

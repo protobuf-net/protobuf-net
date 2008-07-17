@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace ProtoBuf
 {
@@ -14,10 +15,30 @@ namespace ProtoBuf
     {
         internal static string GetDefinedTypeName()
         {
+            string name = typeof(T).Name;
+            ProtoContractAttribute pc = AttributeUtils.GetAttribute<ProtoContractAttribute>(typeof(T));
+            if (pc != null)
+            {
+                if (!string.IsNullOrEmpty(pc.Name)) name = pc.Name;
+                return name;
+            }
+
             DataContractAttribute dc = AttributeUtils.GetAttribute<DataContractAttribute>(typeof(T));
-            string name = dc == null ? null : dc.Name;
-            if (string.IsNullOrEmpty(name)) name = InferName(typeof(T).Name);
+            if (dc != null)
+            {
+                if (!string.IsNullOrEmpty(dc.Name)) name = dc.Name;
+                return name;
+            }
+
+            XmlTypeAttribute xt = AttributeUtils.GetAttribute<XmlTypeAttribute>(typeof(T));
+            if (xt != null)
+            {
+                if (!string.IsNullOrEmpty(xt.TypeName)) name = xt.TypeName;
+                return name;
+            }
+
             return name;
+
         }
 
         public static string GetProto()
@@ -25,10 +46,6 @@ namespace ProtoBuf
             StringBuilder sb = new StringBuilder();
             GetProto(sb, 0);
             return sb.ToString();
-        }
-        static string InferName(string name)
-        {
-            return name; // not implemented - but propose case, underscore etc
         }
 
         internal static StringBuilder Indent(StringBuilder sb, int nestLevel)
@@ -56,24 +73,20 @@ namespace ProtoBuf
             nestLevel++;
             foreach (var pair in props)
             {
-                PropertyInfo prop = pair.Value.Property;
-                DataMemberAttribute dm = AttributeUtils.GetAttribute<DataMemberAttribute>(prop);
-                name = dm == null ? null : dm.Name;
-                if (string.IsNullOrEmpty(name)) name = InferName(prop.Name);
-
+                IProperty<T> prop = pair.Value;
                 Indent(sb, nestLevel).Append(' ')
-                    .Append(dm != null && dm.IsRequired ? "required " : "optional ")
-                    .Append(pair.Value.DefinedType).Append(' ')
-                    .Append(name).Append(" = ").Append(pair.Key);
+                    .Append(prop.IsRequired ? "required " : "optional ")
+                    .Append(prop.DefinedType).Append(' ')
+                    .Append(prop.Name).Append(" = ").Append(prop.Tag);
 
-                DefaultValueAttribute def = AttributeUtils.GetAttribute<DefaultValueAttribute>(prop);
+                DefaultValueAttribute def = AttributeUtils.GetAttribute<DefaultValueAttribute>(pair.Value.Property);
                 if (def != null)
                 {
                     string defText = Convert.ToString(def.Value, CultureInfo.InvariantCulture);
                     sb.Append(" [default = ").Append(defText).Append(" ]");
                 }
                 sb.Append(";");
-                desc = AttributeUtils.GetAttribute<DescriptionAttribute>(prop);
+                desc = AttributeUtils.GetAttribute<DescriptionAttribute>(pair.Value.Property);
                 descText = desc == null ? null : desc.Description;
                 if (!string.IsNullOrEmpty(descText))
                 {
@@ -105,8 +118,14 @@ namespace ProtoBuf
 
             foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                int tag = Serializer.GetTag(prop);
-                if (tag <= 0) continue; // didn't recognise this as a usable property
+                string name;
+                DataFormat format;
+                int tag;
+                bool isRequired;
+                if (!Serializer.TryGetTag(prop, out tag, out name, out format, out isRequired))
+                {
+                    continue; // didn't recognise this as a usable property
+                }
 
                 IProperty<T> iProp;
                 Type propType = prop.PropertyType, listItemType = null;
@@ -172,6 +191,17 @@ namespace ProtoBuf
                 // note that this serialization includes the headers...
                 total += prop.Serialize(instance, context);
             }
+            IExtensible extra = instance as IExtensible;
+            int len;
+            if (extra != null && (len = extra.GetLength()) > 0)
+            {
+                using(Stream extraStream = extra.ReadData()) {
+                    SerializationContext tmpCtx = new SerializationContext(extraStream);
+                    tmpCtx.ReadWorkspaceFrom(context);
+                    BlitData(tmpCtx, context.Stream, len);
+                    context.ReadWorkspaceFrom(tmpCtx);
+                }                
+            }
             context.Stream.Flush();
             return total;
         }
@@ -187,6 +217,8 @@ namespace ProtoBuf
                 total += propLen;
                 if (propLen > 0 && candidateProperties != null) candidateProperties.Add(prop);
             }
+            IExtensible extra = instance as IExtensible;
+            if (extra != null) total += extra.GetLength();
             return total;
         }
         internal static void Deserialize(T instance, Stream source)
@@ -200,65 +232,146 @@ namespace ProtoBuf
         {
             if (context == null) throw new ArgumentNullException("context");
             Stream source = context.Stream;
-            bool canSeek = source.CanSeek;
             int prefix;
             context.CheckSpace();
-            
-            while (Int32VariantSerializer.TryReadFromStream(context, out prefix))
+            IExtensible extra = instance as IExtensible;
+            SerializationContext extraData = null;
+            try
             {
-                WireType wireType = (WireType)(prefix & 7);
-                int fieldIndex = prefix >> 3;
-                if (fieldIndex <= 0)
+                while (Int32VariantSerializer.TryReadFromStream(context, out prefix))
                 {
-                    throw new SerializationException("Invalid tag: " + fieldIndex.ToString());
-                }
-
-                IProperty<T> prop;
-                if (props.TryGetValue(fieldIndex, out prop))
-                {
-                    prop.Deserialize(instance, context);
-                }
-                else
-                {
-                    switch (wireType)
+                    WireType wireType = (WireType)(prefix & 7);
+                    int fieldIndex = prefix >> 3;
+                    if (fieldIndex <= 0)
                     {
-                        case WireType.Variant:
-                            Base128Variant.Skip(source);
-                            break;
-                        case WireType.Fixed32:
-                            if (canSeek) source.Seek(4, SeekOrigin.Current);
-                            else BlobSerializer.ReadBlock(context, 4);
-                            break;
-                        case WireType.Fixed64:
-                            if (canSeek) source.Seek(8, SeekOrigin.Current);
-                            else BlobSerializer.ReadBlock(context, 8);
-                            break;
-                        case WireType.String:
-                            int len = Int32VariantSerializer.ReadFromStream(context);
-                            if (canSeek) source.Seek(len, SeekOrigin.Current);
-                            else
-                            {
-                                int capacity = context.Workspace.Length - context.WorkspaceIndex;
-                                while (len > capacity)
-                                {
-                                    BlobSerializer.ReadBlock(context, capacity);
-                                    len -= capacity;
-                                }
-                                if (len > 0)
-                                {
-                                    BlobSerializer.ReadBlock(context, len);
-                                }
+                        throw new SerializationException("Invalid tag: " + fieldIndex.ToString());
+                    }
 
-                            }
-                            break;
-                        case WireType.EndGroup:
-                        case WireType.StartGroup:
-                            throw new NotSupportedException();
-                        default:
-                            throw new SerializationException("Unknown wire-type " + wireType.ToString());
+                    IProperty<T> prop;
+                    if (props.TryGetValue(fieldIndex, out prop))
+                    {
+                        // recognised fields; use the property deserializer
+                        prop.Deserialize(instance, context);
+                    }
+                    else if (extra != null)
+                    {
+                        // unexpected fields for an extensible object; store the data
+                        if (extraData == null) extraData = new SerializationContext(extra.BeginAppendData());
+                        Int32VariantSerializer.WriteToStream(prefix, extraData);
+                        extraData = ProcessExtraData(context, wireType, extraData);
+                    }
+                    else
+                    {
+                        // unexpected fields for an inextensible object; discard the data
+                        SkipData(context, wireType);
                     }
                 }
+                if (extraData != null) extra.EndAppendData(extraData.Stream, true);
             }
+            catch
+            {
+                if (extraData != null) extra.EndAppendData(extraData.Stream, false);
+                throw;
+            }
+        }
+
+        private static SerializationContext ProcessExtraData(SerializationContext context, WireType wireType, SerializationContext extraData)
+        {
+            int len;
+            switch (wireType)
+            {
+                case WireType.Variant:
+                    len = Base128Variant.ReadRaw(context);
+                    extraData.Stream.Write(context.Workspace, context.WorkspaceIndex, len);
+                    break;
+                case WireType.Fixed32:
+                    BlobSerializer.ReadBlock(context, 4);
+                    extraData.Stream.Write(context.Workspace, context.WorkspaceIndex, 4);
+                    break;
+                case WireType.Fixed64:
+                    BlobSerializer.ReadBlock(context, 8);
+                    extraData.Stream.Write(context.Workspace, context.WorkspaceIndex, 8);
+                    break;
+                case WireType.String:
+                    len = Int32VariantSerializer.ReadFromStream(context);
+                    BlitData(context, extraData.Stream, len);
+                    break;
+                case WireType.EndGroup:
+                case WireType.StartGroup:
+                    throw new NotSupportedException(wireType.ToString());
+                default:
+                    throw new SerializationException("Unknown wire-type " + wireType.ToString());
+            }
+            return extraData;
+        }
+
+        private static void BlitData(SerializationContext source, Stream destination, int length)
+        {
+            int capacity = CheckBufferForBlit(source, length);
+            while (length > capacity)
+            {
+                BlobSerializer.ReadBlock(source, capacity);
+                destination.Write(source.Workspace, source.WorkspaceIndex, capacity);
+                length -= capacity;
+            }
+            if (length > 0)
+            {
+                BlobSerializer.ReadBlock(source, length);
+                destination.Write(source.Workspace, source.WorkspaceIndex, length);
+            }
+        }
+
+        private static void SkipData(SerializationContext context, WireType wireType)
+        {
+            Stream source = context.Stream;
+            switch (wireType)
+            {
+                case WireType.Variant:
+                    Base128Variant.Skip(source);
+                    break;
+                case WireType.Fixed32:
+                    if (source.CanSeek) source.Seek(4, SeekOrigin.Current);
+                    else BlobSerializer.ReadBlock(context, 4);
+                    break;
+                case WireType.Fixed64:
+                    if (source.CanSeek) source.Seek(8, SeekOrigin.Current);
+                    else BlobSerializer.ReadBlock(context, 8);
+                    break;
+                case WireType.String:
+                    int len = Int32VariantSerializer.ReadFromStream(context);
+                    if (source.CanSeek) source.Seek(len, SeekOrigin.Current);
+                    else
+                    {
+                        int capacity = CheckBufferForBlit(context, len);
+                        while (len > capacity)
+                        {
+                            BlobSerializer.ReadBlock(context, capacity);
+                            len -= capacity;
+                        }
+                        if (len > 0)
+                        {
+                            BlobSerializer.ReadBlock(context, len);
+                        }
+                    }
+                    break;
+                case WireType.EndGroup:
+                case WireType.StartGroup:
+                    throw new NotSupportedException(wireType.ToString());
+                default:
+                    throw new SerializationException("Unknown wire-type " + wireType.ToString());
+            }
+        }
+
+        private static int CheckBufferForBlit(SerializationContext context, int length)
+        {
+            const int BLIT_BUFFER_SIZE = 4096;
+            int capacity = context.Workspace.Length - context.WorkspaceIndex;
+            if (length > capacity && capacity < BLIT_BUFFER_SIZE)
+            { // don't want to loop/blit with too small a buffer...
+                context.CheckSpace(BLIT_BUFFER_SIZE);
+                capacity = context.Workspace.Length - context.WorkspaceIndex;
+            }
+            return capacity;
         }
 
 

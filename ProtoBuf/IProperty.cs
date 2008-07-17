@@ -4,6 +4,9 @@ namespace ProtoBuf
 {
     interface IProperty<TEntity>
     {
+        string Name { get; }
+        DataFormat DataFormat { get; }
+        bool IsRequired { get; }
         int Tag { get; }
         PropertyInfo Property { get; }
         void Deserialize(TEntity instance, SerializationContext context);

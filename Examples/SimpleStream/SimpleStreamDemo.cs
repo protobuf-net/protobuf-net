@@ -29,6 +29,7 @@ namespace Examples.SimpleStream
     public sealed class Test1
     {
         [DataMember(Name="a", Order=1, IsRequired=true)]
+        [ProtoMember(1, Name = "a", IsRequired=true, DataFormat=DataFormat.TwosComplement)]
         public int A { get; set; }
     }
     [Serializable, DataContract]

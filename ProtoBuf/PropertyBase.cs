@@ -13,9 +13,21 @@ namespace ProtoBuf
         {
             ProtoMemberAttribute attrib = AttributeUtils.GetAttribute<ProtoMemberAttribute>(property);
             DataFormat format = attrib == null ? DataFormat.Default : attrib.DataFormat;
-            bool signed = format == DataFormat.Default;
-
-            ISerializer<T> result = signed ? SerializerCache<T>.Signed : SerializerCache<T>.Unsigned;
+            
+            ISerializer<T> result;
+            switch (format)
+            {
+                case DataFormat.Default:
+                    result = SerializerCache<T>.Default; break;
+                case DataFormat.FixedSize:
+                    result = SerializerCache<T>.FixedSize; break;
+                case DataFormat.TwosComplement:
+                    result = SerializerCache<T>.TwosComplement; break;
+                case DataFormat.ZigZag:
+                    result = SerializerCache<T>.ZigZag; break;
+                default:
+                    throw new NotSupportedException("Unknown data-format: " + format.ToString());
+            }
 
             if (result == null)
             {
@@ -27,15 +39,31 @@ namespace ProtoBuf
                 }
                 else
                 {
-                    throw new SerializationException(string.Format(
-                        "Unable to determine serializer for {0}.{1}",
-                        property.DeclaringType, property.Name));
+                    // tell the developer that they screwed up...
+                    Type nullType = Nullable.GetUnderlyingType(typeof(T));
+                    string name = nullType == null ? typeof(T).Name : ("Nullable-of-" + nullType.Name);
+
+                    string errorMsg = SerializerCache<T>.Default == null
+                        ? "No serializers registered for {1}, property {2}.{3}"
+                        : "Invalid data-format {0} for {1}, property {2}.{3}";
+
+                    throw new SerializationException(string.Format(errorMsg,
+                        format, name, property.DeclaringType.Name, property.Name));
                 }
             }
             return result;
         }
-        public int Tag { get { return tag; } }
+        
         private readonly int tag;
+        public int Tag { get { return tag; } }
+        private readonly string name;
+        public string Name { get { return name; } }
+        private readonly bool isRequired;
+        public bool IsRequired { get { return isRequired; } }
+        private readonly DataFormat dataFormat;
+        public DataFormat DataFormat { get { return dataFormat; } }
+
+
         private readonly PropertyInfo property;
         public PropertyInfo Property { get { return property; } }
         private readonly Getter getter;
@@ -44,8 +72,12 @@ namespace ProtoBuf
         {
             if (property == null) throw new ArgumentNullException("property");
             this.property = property;
-            tag = Serializer.GetTag(property);
-            if (tag <= 0) throw new ArgumentOutOfRangeException("Positive tag required");
+            if (!Serializer.TryGetTag(property, out tag, out name, out dataFormat, out isRequired))
+            {
+                throw new ArgumentOutOfRangeException(string.Format(
+                    "Property is valid for proto-serialization: {0}.{1}",
+                    property.DeclaringType.Name, property.Name));
+            }
 
             MethodInfo method;
             if (property.CanRead && (method = property.GetGetMethod(true)) != null)

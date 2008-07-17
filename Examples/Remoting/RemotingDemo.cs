@@ -14,12 +14,12 @@ namespace Examples.Remoting
         public int Foo { get; set; }
         public float Bar { get; set; }
     }
-    [Serializable, DataContract]
+    [Serializable, ProtoContract]
     public sealed class ProtoFragment : ISerializable
     {
-        [DataMember(Order = 1)]
+        [ProtoMember(1, DataFormat=DataFormat.TwosComplement)]
         public int Foo { get; set; }
-        [DataMember(Order = 2)]
+        [ProtoMember(2)]
         public float Bar { get; set; }
 
         public ProtoFragment() { }

@@ -20,44 +20,46 @@ namespace ProtoBuf
         /// </summary>
         static SimpleSerializers()
         {
-            SetNullable<int>(
+            Set<int>(
                 new Int32SignedVariantSerializer(),
-                new Int32VariantSerializer());
+                new Int32SignedVariantSerializer(),
+                new Int32VariantSerializer(),
+                null);
 
-            SetNullable<long>(
+            Set<long>(
                 new Int64SignedVariantSerializer(),
-                new Int64VariantSerializer());
+                new Int64SignedVariantSerializer(),
+                new Int64VariantSerializer(),
+                null);
 
-            SetNullable<float>(new SingleSerializer());
-            SetNullable<double>(new DoubleSerializer());
-            SetNullable<uint>(new UInt32VariantSerializer());
-            SetNullable<ulong>(new UInt64VariantSerializer());
-            SetNullable<bool>(new BooleanSerializer());
-            SetNullable<DateTime>(new DateTimeSerializer());
-            SetNullable<decimal>(new DecimalSignedSerializer(), new DecimalSerializer());
+            Set<float>(new SingleSerializer(),null,null,new SingleSerializer());
+            Set<double>(new DoubleSerializer(),null,null,new DoubleSerializer());
+            Set<uint>(new UInt32VariantSerializer(), null, null, null);
+            Set<ulong>(new UInt64VariantSerializer(), null, null, null);
+            Set<bool>(new BooleanSerializer(), null, null,new BooleanSerializer());
+            Set<DateTime>(new DateTimeSerializer(), null, null, new DateTimeSerializer());
+            Set<decimal>(new DecimalSignedSerializer(),
+                new DecimalSignedSerializer(),
+                new DecimalSerializer(),
+                null);
 
             Set<string>(new StringSerializer());
             Set<byte[]>(new BlobSerializer());
         }
 
-        internal static void Set<TValue>(ISerializer<TValue> serializer)
+        internal static void Set<TValue>(ISerializer<TValue> serializer) 
         {
-            SerializerCache<TValue>.Set(serializer, serializer);
+            SerializerCache<TValue>.Set(serializer, null, null, null);
         }
-        static void Set<TValue>(ISerializer<TValue> signed, ISerializer<TValue> unsigned)
+        static ISerializer<T?> Wrap<T>(ISerializer<T> serializer) where T : struct
         {
-            SerializerCache<TValue>.Set(signed, unsigned);
+            return serializer == null ? null : new NullableSerializer<T>(serializer);
         }
-        static void SetNullable<TValue>(ISerializer<TValue> serializer) where TValue : struct
+        static void Set<TValue>(ISerializer<TValue> @default, ISerializer<TValue> zigZag,
+            ISerializer<TValue> twosComplement, ISerializer<TValue> fixedSize) where TValue : struct
         {
-            Set<TValue>(serializer);
-            Set<TValue?>(new NullableSerializer<TValue>(serializer));
-        }
-        static void SetNullable<TValue>(ISerializer<TValue> signed, ISerializer<TValue> unsigned) where TValue : struct
-        {
-            Set<TValue>(signed, unsigned);
-            Set<TValue?>(new NullableSerializer<TValue>(signed),
-                new NullableSerializer<TValue>(unsigned));
+            SerializerCache<TValue>.Set(@default, zigZag, twosComplement, fixedSize);
+            SerializerCache<TValue?>.Set(Wrap(@default), Wrap(zigZag), Wrap(twosComplement), Wrap(fixedSize));
         }
     }
 }

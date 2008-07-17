@@ -34,6 +34,12 @@ namespace ProtoBuf
         /// </summary>
         /// <returns></returns>
         Stream ReadData();
+        /// <summary>
+        /// Requests the length of the raw binary stream; this is used
+        /// when serializing sub-entities to indicate the expected size.
+        /// </summary>
+        /// <returns>The length of the binary stream representing unexpected data.</returns>
+        int GetLength();
 
     }
 }

@@ -23,6 +23,11 @@ namespace ProtoBuf
             Tag = tag;
         }
         /// <summary>
+        /// Specifies the original name defined in the .proto; not used
+        /// during serialization.
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
         /// Specifies the data-format to be used when encoding this value.
         /// </summary>
         public DataFormat DataFormat { get; set; }
