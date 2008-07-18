@@ -10,6 +10,7 @@ using System.Runtime.Serialization.Formatters.Soap;
 using System.Runtime.Serialization.Json;
 using System.ServiceModel;
 using ProtoBuf.ServiceModel;
+using System.Diagnostics;
 
 namespace Examples.SimpleStream
 {
@@ -54,8 +55,49 @@ namespace Examples.SimpleStream
         Test3 Bar(Test1 value);
     }
 
+    [DataContract]
+    public sealed class PerfTest
+    {
+        [DataMember(Order = 1)]
+        public int Foo { get; set; }
+
+        [DataMember(Order = 2)]
+        public string Bar { get; set; }
+
+        [DataMember(Order = 3)]
+        public double Blip{ get; set; }
+
+        [DataMember(Order = 4)]
+        public double Blop { get; set; }
+
+    }
+
     static class SimpleStreamDemo
     {
+        public static void RunSimplePerfTests(int index)
+        {
+            PerfTest obj = new PerfTest
+            {
+                Foo = 12,
+                Bar = "bar",
+                Blip = 123.45F,
+                Blop = 123.4567
+            };
+            PerfTest clone = Serializer.DeepClone(obj);
+            if (obj.Foo == clone.Foo && obj.Bar == clone.Bar
+                && obj.Blip == clone.Blip && obj.Blop == clone.Blop)
+            {
+                Console.WriteLine("\tVaidated object integrity");
+            }
+            const int LOOP = 500000;
+            Stopwatch watch = Stopwatch.StartNew();
+            for (int i = 0; i < LOOP; i++)
+            {
+                Serializer.Serialize(obj, Stream.Null);
+            }
+            watch.Stop();
+            Console.WriteLine("\tSerialized x{0} in {1}ms", 500000, watch.ElapsedMilliseconds);
+        }
         public static void Run(int index)
         {
             Test1 t1 = new Test1 {A=150};

@@ -43,6 +43,7 @@ namespace Examples
             #endregion
 
             run(TestNumbers.NumberTests.Run);
+            run(SimpleStream.SimpleStreamDemo.RunSimplePerfTests);
             run(SimpleStream.SimpleStreamDemo.Run);
             run(Remoting.RemotingDemo.Run);
 
