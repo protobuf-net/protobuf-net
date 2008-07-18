@@ -65,7 +65,7 @@ namespace Examples.SimpleStream
         public string Bar { get; set; }
 
         [DataMember(Order = 3)]
-        public double Blip{ get; set; }
+        public float Blip{ get; set; }
 
         [DataMember(Order = 4)]
         public double Blop { get; set; }
