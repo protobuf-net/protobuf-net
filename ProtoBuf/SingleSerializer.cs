@@ -8,20 +8,20 @@ namespace ProtoBuf
         public WireType WireType { get { return WireType.Fixed32; } }
         public float Deserialize(float value, SerializationContext context)
         {
-            // read 4 bytes (or die trying)
             BlobSerializer.ReadBlock(context, 4);
-            // ensure little-endian
-            BlobSerializer.LocalToFromLittleEndian(context, 4);
-            // convert the buffer to a float
+            if (!BitConverter.IsLittleEndian)
+            {
+                BlobSerializer.Reverse(context.Workspace, context.WorkspaceIndex, 4);
+            }
             return BitConverter.ToSingle(context.Workspace, context.WorkspaceIndex);
         }
         public int Serialize(float value, SerializationContext context)
         {
-            // get a local buffer for the float
             byte[] buffer = BitConverter.GetBytes(value);
-            // ensure little-endian
-            BlobSerializer.LocalToFromLittleEndian(buffer);
-            // write to stream
+            if (!BitConverter.IsLittleEndian)
+            {
+                BlobSerializer.Reverse(buffer, 0, 4);
+            }
             context.Stream.Write(buffer, 0, 4);
             return 4;
         }

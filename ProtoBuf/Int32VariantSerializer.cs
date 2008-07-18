@@ -1,35 +1,33 @@
 ﻿using System;
+using System.IO;
 
 namespace ProtoBuf
 {
     sealed class Int32VariantSerializer : ISerializer<int>
     {
+        
         public static int ReadFromStream(SerializationContext context)
         {
-            Base128Variant.DecodeFromStream(context, 4);
-            BlobSerializer.LocalToFromBigEndian(context, 4);
-            return BitConverter.ToInt32(context.Workspace, context.WorkspaceIndex);
+            return Base128Variant.DecodeInt32(context);
         }
         internal static bool TryReadFromStream(SerializationContext context, out int value)
         {
-            bool hasData = Base128Variant.DecodeFromStream(context, 4, false);
-            if (hasData)
+            Eof oldEof = context.Eof;
+            try
             {
-                BlobSerializer.LocalToFromBigEndian(context, 4);
-                value = BitConverter.ToInt32(context.Workspace, context.WorkspaceIndex);
+                context.Eof = Eof.Expected;
+                value = Base128Variant.DecodeInt32(context);
+                return context.Eof != Eof.Ended;
             }
-            else
+            finally
             {
-                value = default(int);
+                context.Eof = oldEof;
             }
-            return hasData;
         }
         
         public static int WriteToStream(int value, SerializationContext context)
         {
-            byte[] valueBuffer = BitConverter.GetBytes(value);
-            BlobSerializer.LocalToFromBigEndian(valueBuffer);
-            return context.Write(Base128Variant.EncodeToWorkspace(valueBuffer, context));
+            return context.Write(Base128Variant.EncodeInt32(value, context));
         }
         public string DefinedType { get { return "int32"; } }
         public WireType WireType { get { return WireType.Variant; } }
@@ -44,7 +42,7 @@ namespace ProtoBuf
         
         public static int GetLength(int value)
         {
-            if (value < 0) return 5;
+            if (value < 0) return 10;
             unchecked
             {
                 return UInt32VariantSerializer.GetLength((uint)value);

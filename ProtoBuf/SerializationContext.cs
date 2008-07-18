@@ -3,8 +3,13 @@ using System.IO;
 
 namespace ProtoBuf
 {
+    enum Eof
+    {
+        Unexpected, Expected, Ended
+    }
     internal sealed class SerializationContext
     {
+        public Eof Eof { get; set; }
         private readonly Stream stream;
         public Stream Stream { get { return stream; } }
         private byte[] workspace;

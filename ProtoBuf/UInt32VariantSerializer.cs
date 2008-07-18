@@ -6,9 +6,7 @@ namespace ProtoBuf
     {
         public static uint ReadFromStream(SerializationContext context)
         {
-            Base128Variant.DecodeFromStream(context, 4);
-            BlobSerializer.LocalToFromBigEndian(context, 4);
-            return BitConverter.ToUInt32(context.Workspace, context.WorkspaceIndex);
+            return (uint)Base128Variant.DecodeInt64(context);
         }
         public string DefinedType { get { return "uint32"; } }
         public WireType WireType { get { return WireType.Variant; } }
@@ -18,9 +16,7 @@ namespace ProtoBuf
         }
         public static int WriteToStream(uint value, SerializationContext context)
         {
-            byte[] valueBuffer = BitConverter.GetBytes(value);
-            BlobSerializer.LocalToFromBigEndian(valueBuffer);
-            return context.Write(Base128Variant.EncodeToWorkspace(valueBuffer, context));
+            return context.Write(Base128Variant.EncodeInt64(value, context));
         }
         public int Serialize(uint value, SerializationContext context)
         {

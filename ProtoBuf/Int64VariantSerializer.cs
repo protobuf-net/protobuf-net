@@ -9,9 +9,7 @@ namespace ProtoBuf
 
         public static long ReadFromStream(SerializationContext context)
         {
-            Base128Variant.DecodeFromStream(context, 8);
-            BlobSerializer.LocalToFromBigEndian(context, 8);
-            return BitConverter.ToInt64(context.Workspace, context.WorkspaceIndex);
+            return Base128Variant.DecodeInt64(context);
         }
 
         public long Deserialize(long value, SerializationContext context)
@@ -21,9 +19,7 @@ namespace ProtoBuf
 
         public static int WriteToStream(long value, SerializationContext context)
         {
-            byte[] valueBuffer = BitConverter.GetBytes(value);
-            BlobSerializer.LocalToFromBigEndian(valueBuffer);
-            return context.Write(Base128Variant.EncodeToWorkspace(valueBuffer, context));
+            return context.Write(Base128Variant.EncodeInt64(value, context));
         }
         public int Serialize(long value, SerializationContext context)
         {

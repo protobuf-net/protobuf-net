@@ -26,7 +26,11 @@ namespace Examples
                     Console.WriteLine();
                     Console.WriteLine("!!!!! Exception in test {0}", index);
                     Console.WriteLine("\t" + ex.GetType().Name);
-                    Console.WriteLine("\t" + ex.Message);
+                    while (ex != null)
+                    {
+                        Console.WriteLine("\t" + ex.Message);
+                        ex = ex.InnerException;
+                    }
                     Console.WriteLine();
                 }
                 finally
@@ -38,6 +42,7 @@ namespace Examples
             };
             #endregion
 
+            run(TestNumbers.NumberTests.Run);
             run(SimpleStream.SimpleStreamDemo.Run);
             run(Remoting.RemotingDemo.Run);
 

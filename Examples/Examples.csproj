@@ -62,6 +62,7 @@
     <Compile Include="DesignIdeas\Inheritance.cs" />
     <Compile Include="Remoting\RemotingDemo.cs" />
     <Compile Include="SimpleStream\SimpleStreamDemo.cs" />
+    <Compile Include="TestNumbers\NumberTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

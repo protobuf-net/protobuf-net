@@ -20,7 +20,7 @@ namespace ProtoBuf
                 index += read;
                 length -= read;
             }
-            if (length != 0) throw new SerializationException();
+            if (length != 0) throw new EndOfStreamException();
         }
 
         public string DefinedType { get { return "bytes"; } }
@@ -54,7 +54,7 @@ namespace ProtoBuf
             return value;
         }
 
-        private static void Reverse(byte[] buffer, int index, int length)
+        public static void Reverse(byte[] buffer, int index, int length)
         {
             byte tmp;
             switch (length)
@@ -93,23 +93,6 @@ namespace ProtoBuf
                     Array.Reverse(buffer, index, length);
                     break;
             }
-        }
-        internal static void LocalToFromBigEndian(SerializationContext context, int length)
-        {
-            if (BitConverter.IsLittleEndian) Reverse(context.Workspace, context.WorkspaceIndex, length);
-        }
-        internal static void LocalToFromBigEndian(byte[] buffer)
-        {
-            if (BitConverter.IsLittleEndian) Reverse(buffer, 0, buffer.Length);
-        }
-
-        internal static void LocalToFromLittleEndian(byte[] buffer)
-        {
-            if (!BitConverter.IsLittleEndian) Reverse(buffer, 0, buffer.Length);
-        }
-        internal static void LocalToFromLittleEndian(SerializationContext context, int length)
-        {
-            if (!BitConverter.IsLittleEndian) Reverse(context.Workspace, context.WorkspaceIndex, length);
         }
     }
 }

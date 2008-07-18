@@ -6,15 +6,20 @@ namespace ProtoBuf
     {
         public static ulong ReadFromStream(SerializationContext context)
         {
-            Base128Variant.DecodeFromStream(context, 8);
-            BlobSerializer.LocalToFromBigEndian(context, 8);
-            return BitConverter.ToUInt64(context.Workspace, context.WorkspaceIndex);
+            long val = Base128Variant.DecodeInt64(context);
+            unchecked
+            {
+                return (ulong)val;
+            }
         }
         public static int WriteToStream(ulong value, SerializationContext context)
         {
-            byte[] valueBuffer = BitConverter.GetBytes(value);
-            BlobSerializer.LocalToFromBigEndian(valueBuffer);
-            return context.Write(Base128Variant.EncodeToWorkspace(valueBuffer, context));
+            long lVal;
+            unchecked
+            {
+                lVal = (long)value;
+            }
+            return context.Write(Base128Variant.EncodeInt64(lVal, context));
         }
         public string DefinedType { get { return "uint64"; } }
         public WireType WireType { get { return WireType.Variant; } }

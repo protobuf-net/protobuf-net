@@ -156,6 +156,9 @@
     <Compile Include="ExtensibleBase.cs">
       <DependentUpon>IExtensible.cs</DependentUpon>
     </Compile>
+    <Compile Include="FixedSerializer.cs">
+      <DependentUpon>SimpleSerializers.cs</DependentUpon>
+    </Compile>
     <Compile Include="IExtensible.cs" />
     <Compile Include="NetExtensions\ProtoIncludeAttribute.cs" />
     <Compile Include="ProtoContractAttribute.cs" />

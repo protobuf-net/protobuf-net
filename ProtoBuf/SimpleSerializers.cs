@@ -24,13 +24,13 @@ namespace ProtoBuf
                 new Int32SignedVariantSerializer(),
                 new Int32SignedVariantSerializer(),
                 new Int32VariantSerializer(),
-                null);
+                FixedSerializer.Default);
 
             Set<long>(
                 new Int64SignedVariantSerializer(),
                 new Int64SignedVariantSerializer(),
                 new Int64VariantSerializer(),
-                null);
+                FixedSerializer.Default);
 
             Set<float>(new SingleSerializer(),null,null,new SingleSerializer());
             Set<double>(new DoubleSerializer(),null,null,new DoubleSerializer());

@@ -19,8 +19,11 @@ namespace ProtoBuf
     {
         internal static void VerifyBytesWritten(int expected, int actual)
         {
-            if (actual != expected) throw new SerializationException(string.Format(
+            if (actual != expected)
+            {
+                throw new SerializationException(string.Format(
                 "Wrote {0} bytes, but expected to write {1}.", actual, expected));
+            }
         }
         internal static bool IsEntityType(Type type)
         {
