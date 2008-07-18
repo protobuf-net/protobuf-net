@@ -98,31 +98,11 @@ namespace Examples.SimpleStream
             watch.Stop();
             Console.WriteLine("\tSerialized x{0} in {1}ms", 500000, watch.ElapsedMilliseconds);
         }
-        public static void Run(int index)
+
+        public static void RunSimpleStreams(int index)
         {
             Test1 t1 = new Test1 {A=150};
             TestItem(t1, 0x08, 0x96, 0x01);
-
-
-            const int LOOP = 1000000;
-            Console.WriteLine("\tTesting BinaryFormatter vs ProtoBuf.Serializer...");
-            BinaryFormatter bf = new BinaryFormatter();
-            bf.Serialize(Stream.Null, t1); // for JIT
-            Stopwatch watch = Stopwatch.StartNew();
-            for (int i = 0; i < LOOP; i++)
-            {
-                bf.Serialize(Stream.Null, t1);
-            }
-            watch.Stop();
-            Console.WriteLine("\tBinaryFormatter x{0}: {1}ms", LOOP, watch.ElapsedMilliseconds);
-            watch = Stopwatch.StartNew();
-            for (int i = 0; i < LOOP; i++)
-            {
-               Serializer.Serialize(t1, Stream.Null);
-            }
-            watch.Stop();
-            Console.WriteLine("\tProtoBuf.Serializer x{0}: {1}ms", LOOP, watch.ElapsedMilliseconds);
-            Console.WriteLine();
 
             Test2 t2 = new Test2 { B = "testing" };
             TestItem(t2, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67);
@@ -134,6 +114,8 @@ namespace Examples.SimpleStream
         {
             string name = typeof(T).Name;
             Console.WriteLine("\t{0}", name);
+            const int LOOP = 100000;
+            Stopwatch watch;
             T clone;
             using (MemoryStream ms = new MemoryStream())
             {
@@ -160,38 +142,83 @@ namespace Examples.SimpleStream
                     }
                     WriteBytes("Binary", data);
                 }
-                Console.WriteLine("\tProto: {0} bytes", ms.Length);
-            }
 
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    Serializer.Serialize(item, Stream.Null);
+                }
+                watch.Stop();
+                Console.WriteLine("\tprotobuf-net: {0} bytes, {1} ms (x{2})",
+                    ms.Length, watch.ElapsedMilliseconds, LOOP);
+            }
+            
             using (MemoryStream ms = new MemoryStream())
             {
                 BinaryFormatter bf = new BinaryFormatter();
                 bf.Serialize(ms, item);
-                Console.WriteLine("\tBinaryFormatter: {0} bytes", ms.Length);
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    bf.Serialize(Stream.Null, item);
+                }
+                watch.Stop();
+                Console.WriteLine("\tBinaryFormatter: {0} bytes, {1} ms (x{2})",
+                    ms.Length, watch.ElapsedMilliseconds, LOOP);
+
             }
             using (MemoryStream ms = new MemoryStream())
             {
                 SoapFormatter sf = new SoapFormatter();
                 sf.Serialize(ms, item);
-                Console.WriteLine("\tSoapFormatter: {0} bytes", ms.Length);
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    sf.Serialize(Stream.Null, item);
+                }
+                watch.Stop();
+                Console.WriteLine("\tSoapFormatter: {0} bytes, {1} ms (x{2})",
+                    ms.Length, watch.ElapsedMilliseconds, LOOP);
             }
             using (MemoryStream ms = new MemoryStream())
             {
                 XmlSerializer xser = new XmlSerializer(typeof(T));
                 xser.Serialize(ms, item);
-                Console.WriteLine("\tXmlSerializer: {0} bytes", ms.Length);
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    xser.Serialize(Stream.Null, item);
+                }
+                watch.Stop();
+                Console.WriteLine("\tXmlSerializer: {0} bytes, {1} ms (x{2})",
+                    ms.Length, watch.ElapsedMilliseconds, LOOP);
             }
             using (MemoryStream ms = new MemoryStream())
             {
                 DataContractSerializer xser = new DataContractSerializer(typeof(T));
                 xser.WriteObject(ms, item);
-                Console.WriteLine("\tDataContractSerializer: {0} bytes", ms.Length);
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    xser.WriteObject(Stream.Null, item);
+                }
+                watch.Stop();
+                Console.WriteLine("\tDataContractSerializer: {0} bytes, {1} ms (x{2})",
+                    ms.Length, watch.ElapsedMilliseconds, LOOP);
             }
             using (MemoryStream ms = new MemoryStream())
             {
                 DataContractJsonSerializer xser = new DataContractJsonSerializer(typeof(T));
                 xser.WriteObject(ms, item);
-                Console.WriteLine("\tDataContractJsonSerializer: {0} bytes", ms.Length);
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    xser.WriteObject(Stream.Null, item);
+                }
+                watch.Stop();
+                Console.WriteLine("\tDataContractJsonSerializer: {0} bytes, {1} ms (x{2})",
+                    ms.Length, watch.ElapsedMilliseconds, LOOP);
+
                 string originalJson = Encoding.UTF8.GetString(ms.ToArray()), cloneJson;
 
                 using (MemoryStream ms2 = new MemoryStream())

@@ -21,30 +21,22 @@ namespace ProtoBuf
         static SimpleSerializers()
         {
             Set<int>(
-                new Int32VariantSerializer(),
-                new Int32SignedVariantSerializer(),
-                new Int32VariantSerializer(),
-                FixedSerializer.Default);
-
+                TwosComplementSerializer.Default, ZigZagSerializer.Default,
+                TwosComplementSerializer.Default, FixedSerializer.Default);
             Set<long>(
-                new Int64VariantSerializer(),
-                new Int64SignedVariantSerializer(),
-                new Int64VariantSerializer(),
-                FixedSerializer.Default);
+                TwosComplementSerializer.Default, ZigZagSerializer.Default,
+                TwosComplementSerializer.Default, FixedSerializer.Default);
 
-            Set<float>(new SingleSerializer(),null,null,new SingleSerializer());
-            Set<double>(new DoubleSerializer(),null,null,new DoubleSerializer());
-            Set<uint>(new UInt32VariantSerializer(), null, null, null);
-            Set<ulong>(new UInt64VariantSerializer(), null, null, null);
-            Set<bool>(new BooleanSerializer(), null, null,new BooleanSerializer());
-            Set<DateTime>(new DateTimeSerializer(), new DateTimeSerializer(), null, null);
-            Set<decimal>(new DecimalSignedSerializer(),
-                new DecimalSignedSerializer(),
-                new DecimalSerializer(),
-                null);
+            Set<float>(FixedSerializer.Default, null, null, FixedSerializer.Default);
+            Set<double>(FixedSerializer.Default, null, null, FixedSerializer.Default);
+            Set<uint>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, null);
+            Set<ulong>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, null);
+            Set<bool>(BooleanSerializer.Default, null, null, BooleanSerializer.Default);
+            Set<DateTime>(ZigZagSerializer.Default, ZigZagSerializer.Default, null, null);
+            Set<decimal>(TwosComplementSerializer.Default, ZigZagSerializer.Default, TwosComplementSerializer.Default, null);
 
-            Set<string>(new StringSerializer());
-            Set<byte[]>(new BlobSerializer());
+            Set<string>(StringSerializer.Default);
+            Set<byte[]>(BlobSerializer.Default);
         }
 
         internal static void Set<TValue>(ISerializer<TValue> serializer) 

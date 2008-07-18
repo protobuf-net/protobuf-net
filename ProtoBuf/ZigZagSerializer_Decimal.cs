@@ -1,25 +1,24 @@
 ﻿
 namespace ProtoBuf
 {
-    sealed class DecimalSignedSerializer : ISerializer<decimal>
+    partial class ZigZagSerializer : ISerializer<decimal>
     {
-        public WireType WireType { get { return WireType.Variant; } }
-        public string DefinedType { get { return "sint64"; } }
+        string ISerializer<decimal>.DefinedType { get { return ProtoFormat.SINT64; } }
 
         public decimal Deserialize(decimal value, SerializationContext context)
         {
-            long lVal = Int64SignedVariantSerializer.ReadFromStream(context);
+            long lVal = ZigZagSerializer.ReadInt64(context);
             return decimal.FromOACurrency(lVal);
         }
         public int GetLength(decimal value, SerializationContext context)
         {
             long lVal = decimal.ToOACurrency(value);
-            return Int64SignedVariantSerializer.GetLength(lVal);
+            return ZigZagSerializer.GetLength(lVal);
         }
         public int Serialize(decimal value, SerializationContext context)
         {
             long lVal = decimal.ToOACurrency(value);
-            return Int64SignedVariantSerializer.WriteToStream(lVal, context);
+            return ZigZagSerializer.WriteToStream(lVal, context);
         }
     }
 }

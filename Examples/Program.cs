@@ -44,7 +44,7 @@ namespace Examples
 
             run(TestNumbers.NumberTests.Run);
             run(SimpleStream.SimpleStreamDemo.RunSimplePerfTests);
-            run(SimpleStream.SimpleStreamDemo.Run);
+            run(SimpleStream.SimpleStreamDemo.RunSimpleStreams);
             run(Remoting.RemotingDemo.Run);
 
             

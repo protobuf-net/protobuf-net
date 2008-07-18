@@ -238,7 +238,7 @@ namespace ProtoBuf
             SerializationContext extraData = null;
             try
             {
-                while (Int32VariantSerializer.TryReadFromStream(context, out prefix))
+                while (TwosComplementSerializer.TryReadInt32(context, out prefix))
                 {
                     WireType wireType = (WireType)(prefix & 7);
                     int fieldIndex = prefix >> 3;
@@ -257,7 +257,7 @@ namespace ProtoBuf
                     {
                         // unexpected fields for an extensible object; store the data
                         if (extraData == null) extraData = new SerializationContext(extra.BeginAppendData());
-                        Int32VariantSerializer.WriteToStream(prefix, extraData);
+                        TwosComplementSerializer.WriteToStream(prefix, extraData);
                         extraData = ProcessExtraData(context, wireType, extraData);
                     }
                     else
@@ -293,7 +293,7 @@ namespace ProtoBuf
                     extraData.Stream.Write(context.Workspace, context.WorkspaceIndex, 8);
                     break;
                 case WireType.String:
-                    len = Int32VariantSerializer.ReadFromStream(context);
+                    len = TwosComplementSerializer.ReadInt32(context);
                     BlitData(context, extraData.Stream, len);
                     break;
                 case WireType.EndGroup:
@@ -338,7 +338,7 @@ namespace ProtoBuf
                     else BlobSerializer.ReadBlock(context, 8);
                     break;
                 case WireType.String:
-                    int len = Int32VariantSerializer.ReadFromStream(context);
+                    int len = TwosComplementSerializer.ReadInt32(context);
                     if (source.CanSeek) source.Seek(len, SeekOrigin.Current);
                     else
                     {

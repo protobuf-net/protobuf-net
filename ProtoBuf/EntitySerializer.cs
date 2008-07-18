@@ -12,7 +12,7 @@ namespace ProtoBuf
         public TEntity Deserialize(TEntity value, SerializationContext context)
         {
             if (value == null) value = new TEntity();
-            int len = Int32VariantSerializer.ReadFromStream(context);
+            int len = TwosComplementSerializer.ReadInt32(context);
             if (len > 0)
             { // TODO: remove the need for the mem-stream
                 context.CheckSpace(len);
@@ -34,7 +34,7 @@ namespace ProtoBuf
             if (value == null) return 0;
             var candidateProperties = new List<IProperty<TEntity>>();
             int expectedLen = Serializer<TEntity>.GetLength(value, context, candidateProperties);
-            int preambleLen = Int32VariantSerializer.WriteToStream(expectedLen, context);
+            int preambleLen = TwosComplementSerializer.WriteToStream(expectedLen, context);
 
             int actualLen = Serializer<TEntity>.Serialize(value, context, candidateProperties);
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
@@ -44,7 +44,7 @@ namespace ProtoBuf
         {
             if (value == null) return 0;
             int len = Serializer<TEntity>.GetLength(value, context, null);
-            return Int32VariantSerializer.GetLength(len) + len;
+            return TwosComplementSerializer.GetLength(len) + len;
         }
     }
 }

@@ -8,6 +8,8 @@ namespace ProtoBuf
 {
     sealed class BlobSerializer : ISerializer<byte[]>
     {
+        private BlobSerializer() { }
+        public static readonly BlobSerializer Default = new BlobSerializer();
         internal static void ReadBlock(SerializationContext context, int length)
         {
             ReadBlock(context.Stream, context.Workspace, context.WorkspaceIndex, length);
@@ -23,12 +25,12 @@ namespace ProtoBuf
             if (length != 0) throw new EndOfStreamException();
         }
 
-        public string DefinedType { get { return "bytes"; } }
+        public string DefinedType { get { return ProtoFormat.BYTES; } }
         public WireType WireType { get { return WireType.String; } }
         public int Serialize(byte[] value, SerializationContext context)
         {
             if (value == null) return 0;
-            int preambleLen = Int32VariantSerializer.WriteToStream(value.Length, context);
+            int preambleLen = TwosComplementSerializer.WriteToStream(value.Length, context);
             if (value.Length > 0)
             {
                 context.Stream.Write(value, 0, value.Length);
@@ -38,11 +40,11 @@ namespace ProtoBuf
         public int GetLength(byte[] value, SerializationContext context)
         {
             if (value == null) return 0;
-            return Int32VariantSerializer.GetLength(value.Length) + value.Length;
+            return TwosComplementSerializer.GetLength(value.Length) + value.Length;
         }
         public byte[] Deserialize(byte[] value, SerializationContext context)
         {
-            int len = Int32VariantSerializer.ReadFromStream(context);
+            int len = TwosComplementSerializer.ReadInt32(context);
             if (value == null || value.Length != len)
             { // re-use the existing buffer if it is the same size
                 value = new byte[len];

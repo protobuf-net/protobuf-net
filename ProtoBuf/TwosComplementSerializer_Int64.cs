@@ -2,19 +2,18 @@
 
 namespace ProtoBuf
 {
-    sealed class Int64VariantSerializer : ISerializer<long>
+    partial class TwosComplementSerializer : ISerializer<long>
     {
-        public string DefinedType { get { return "int64"; } }
-        public WireType WireType { get { return WireType.Variant; } }
+        string ISerializer<long>.DefinedType { get { return ProtoFormat.INT64; } }
 
-        public static long ReadFromStream(SerializationContext context)
+        public static long ReadInt64(SerializationContext context)
         {
             return Base128Variant.DecodeInt64(context);
         }
 
         public long Deserialize(long value, SerializationContext context)
         {
-            return ReadFromStream(context);
+            return ReadInt64(context);
         }
 
         public static int WriteToStream(long value, SerializationContext context)
@@ -30,10 +29,10 @@ namespace ProtoBuf
             if (value < 0) return 10;
             unchecked
             {
-                return UInt64VariantSerializer.GetLength((ulong)value);
+                return TwosComplementSerializer.GetLength((ulong)value);
             }
         }
-        public  int GetLength(long value, SerializationContext context)
+        public int GetLength(long value, SerializationContext context)
         {
             return GetLength(value);
         }

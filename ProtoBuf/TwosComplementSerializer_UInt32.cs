@@ -2,17 +2,16 @@
 
 namespace ProtoBuf
 {
-    sealed class UInt32VariantSerializer : ISerializer<uint>
+    partial class TwosComplementSerializer : ISerializer<uint>
     {
-        public static uint ReadFromStream(SerializationContext context)
+        public static uint ReadUInt32(SerializationContext context)
         {
             return (uint)Base128Variant.DecodeInt64(context);
         }
-        public string DefinedType { get { return "uint32"; } }
-        public WireType WireType { get { return WireType.Variant; } }
+        string ISerializer<uint>.DefinedType { get { return ProtoFormat.UINT32; } }
         public uint Deserialize(uint value, SerializationContext context)
         {
-            return ReadFromStream(context);
+            return ReadUInt32(context);
         }
         public static int WriteToStream(uint value, SerializationContext context)
         {

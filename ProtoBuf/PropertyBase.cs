@@ -100,11 +100,11 @@ namespace ProtoBuf
         private int Prefix { get { return (Tag << 3) | ((int)WireType & 7); } }
         protected int GetPrefixLength()
         {
-            return Int32VariantSerializer.GetLength(Prefix);
+            return TwosComplementSerializer.GetLength(Prefix);
         }
         protected int WritePrefixToStream(SerializationContext context)
         {
-            return Int32VariantSerializer.WriteToStream(Prefix, context);
+            return TwosComplementSerializer.WriteToStream(Prefix, context);
         }
 
         protected int GetLength<TActualValue>(TActualValue value, ISerializer<TActualValue> serializer, SerializationContext context)

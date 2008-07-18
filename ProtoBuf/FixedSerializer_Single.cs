@@ -2,11 +2,11 @@
 
 namespace ProtoBuf
 {
-    sealed class SingleSerializer : ISerializer<float>
+    partial class FixedSerializer : ISerializer<float>
     {
-        public string DefinedType { get { return "float"; } }
-        public WireType WireType { get { return WireType.Fixed32; } }
-        public float Deserialize(float value, SerializationContext context)
+        string ISerializer<float>.DefinedType { get { return ProtoFormat.FLOAT; } }
+        WireType ISerializer<float>.WireType { get { return WireType.Fixed32; } }
+        float ISerializer<float>.Deserialize(float value, SerializationContext context)
         {
             BlobSerializer.ReadBlock(context, 4);
             if (!BitConverter.IsLittleEndian)
@@ -15,7 +15,7 @@ namespace ProtoBuf
             }
             return BitConverter.ToSingle(context.Workspace, context.WorkspaceIndex);
         }
-        public int Serialize(float value, SerializationContext context)
+        int ISerializer<float>.Serialize(float value, SerializationContext context)
         {
             byte[] buffer = BitConverter.GetBytes(value);
             if (!BitConverter.IsLittleEndian)
@@ -25,10 +25,9 @@ namespace ProtoBuf
             context.Stream.Write(buffer, 0, 4);
             return 4;
         }
-        public int GetLength(float value, SerializationContext context)
+        int ISerializer<float>.GetLength(float value, SerializationContext context)
         {
             return 4;
         }
-
     }
 }

@@ -2,9 +2,9 @@
 
 namespace ProtoBuf
 {
-    sealed class UInt64VariantSerializer : ISerializer<ulong>
+    partial class TwosComplementSerializer : ISerializer<ulong>
     {
-        public static ulong ReadFromStream(SerializationContext context)
+        public static ulong ReadUInt64(SerializationContext context)
         {
             long val = Base128Variant.DecodeInt64(context);
             unchecked
@@ -21,11 +21,11 @@ namespace ProtoBuf
             }
             return context.Write(Base128Variant.EncodeInt64(lVal, context));
         }
-        public string DefinedType { get { return "uint64"; } }
-        public WireType WireType { get { return WireType.Variant; } }
+        string ISerializer<ulong>.DefinedType { get { return ProtoFormat.UINT64; } }
+        
         public ulong Deserialize(ulong value, SerializationContext context)
         {
-            return ReadFromStream(context);
+            return ReadUInt64(context);
         }
         public int Serialize(ulong value, SerializationContext context)
         {
