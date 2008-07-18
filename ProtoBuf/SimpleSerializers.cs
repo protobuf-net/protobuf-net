@@ -21,13 +21,13 @@ namespace ProtoBuf
         static SimpleSerializers()
         {
             Set<int>(
-                new Int32SignedVariantSerializer(),
+                new Int32VariantSerializer(),
                 new Int32SignedVariantSerializer(),
                 new Int32VariantSerializer(),
                 FixedSerializer.Default);
 
             Set<long>(
-                new Int64SignedVariantSerializer(),
+                new Int64VariantSerializer(),
                 new Int64SignedVariantSerializer(),
                 new Int64VariantSerializer(),
                 FixedSerializer.Default);
