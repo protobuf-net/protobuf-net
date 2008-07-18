@@ -37,7 +37,7 @@ namespace ProtoBuf
             Set<uint>(new UInt32VariantSerializer(), null, null, null);
             Set<ulong>(new UInt64VariantSerializer(), null, null, null);
             Set<bool>(new BooleanSerializer(), null, null,new BooleanSerializer());
-            Set<DateTime>(new DateTimeSerializer(), null, null, new DateTimeSerializer());
+            Set<DateTime>(new DateTimeSerializer(), new DateTimeSerializer(), null, null);
             Set<decimal>(new DecimalSignedSerializer(),
                 new DecimalSignedSerializer(),
                 new DecimalSerializer(),

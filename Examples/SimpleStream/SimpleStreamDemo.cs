@@ -8,6 +8,8 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Xml.Serialization;
 using System.Runtime.Serialization.Formatters.Soap;
 using System.Runtime.Serialization.Json;
+using System.ServiceModel;
+using ProtoBuf.ServiceModel;
 
 namespace Examples.SimpleStream
 {
@@ -45,6 +47,12 @@ namespace Examples.SimpleStream
         public Test1 C { get; set; }
     }
 
+    [ServiceContract]
+    public interface IFoo
+    {
+        [OperationContract, ProtoBehavior]
+        Test3 Bar(Test1 value);
+    }
 
     static class SimpleStreamDemo
     {

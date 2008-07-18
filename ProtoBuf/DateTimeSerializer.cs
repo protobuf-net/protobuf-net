@@ -3,32 +3,31 @@
 namespace ProtoBuf
 {
     /// <summary>
-    /// Serializes DateTime as unix time
+    /// Serializes DateTime as milliseconds into the unix epoch
     /// </summary>
     sealed class DateTimeSerializer : ISerializer<DateTime>
     {
-        public string DefinedType { get { return "uint32"; } }
+        public string DefinedType { get { return "sint64"; } }
         public WireType WireType { get { return WireType.Variant; } }
 
+        // origin for unix-time
         static readonly DateTime epoch = new DateTime(1970, 1, 1);
 
         public DateTime Deserialize(DateTime value, SerializationContext context)
         {
-            uint unixTime = UInt32VariantSerializer.ReadFromStream(context);
-            return epoch.AddSeconds(unixTime);
+            return epoch.AddMilliseconds(Int64SignedVariantSerializer.ReadFromStream(context));
         }
-        private static uint GetUnixTime(DateTime value)
+        private static long GetOffset(DateTime value)
         {
-            return (uint)((value - epoch).TotalSeconds);
+            return (long)((value - epoch).TotalMilliseconds);
         }
         public int GetLength(DateTime value, SerializationContext context)
         {
-            return UInt32VariantSerializer.GetLength(
-                GetUnixTime(value));
+            return Int64SignedVariantSerializer.GetLength(GetOffset(value));
         }
         public int Serialize(DateTime value, SerializationContext context)
         {
-            return UInt32VariantSerializer.WriteToStream(GetUnixTime(value), context);
+            return Int64SignedVariantSerializer.WriteToStream(GetOffset(value), context);
         }
     }
 }

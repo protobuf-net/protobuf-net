@@ -143,18 +143,57 @@ namespace ProtoBuf
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
         /// <typeparam name="T">The type being cloned.</typeparam>
-        /// <param name="instance">The existing instance to be cloned (cannot be null).</param>
+        /// <param name="instance">The existing instance to be cloned.</param>
         /// <returns>A new copy, cloned from the supplied instance.</returns>
         public static T DeepClone<T>(T instance) where T : class, new()
         {
-            if (instance == null) throw new ArgumentNullException("instance");
+            return ChangeType<T, T>(instance);
+        }
+
+        /// <summary>
+        /// Serializes a given instance and deserializes it as a different type;
+        /// this can be used to translate between wire-compatible objects (where
+        /// two .NET types represent the same data), or to promote/demote a type
+        /// through an inheritance hierarchy.
+        /// </summary>
+        /// <remarks>No assumption of compatibility is made between the types.</remarks>
+        /// <typeparam name="TOldType">The type of the object being copied.</typeparam>
+        /// <typeparam name="TNewType">The type of the new object to be created.</typeparam>
+        /// <param name="instance">The existing instance to use as a template.</param>
+        /// <returns>A new instane of type TNewType, with the data from TOldType.</returns>
+        public static TNewType ChangeType<TOldType, TNewType>(TOldType instance)
+            where TOldType : class, new()
+            where TNewType : class, new()
+        {
+            return ChangeType<TOldType, TNewType>(instance, null);
+        }
+
+        /// <summary>
+        /// As per the public ChangeType, but allows for workspace-sharing to reduce buffer overhead.
+        /// </summary>
+        internal static TNewType ChangeType<TOldType, TNewType>(TOldType instance, SerializationContext context)
+            where TOldType : class, new()
+            where TNewType : class, new()
+        {
+            if (instance == null) return null; // GIGO
             using (MemoryStream ms = new MemoryStream())
             {
-                Serialize<T>(instance, ms);
+                SerializationContext tmpCtx = new SerializationContext(ms);
+                if (context != null)
+                {
+                    tmpCtx.ReadWorkspaceFrom(context);
+                }
+                Serialize<TOldType>(instance, ms);
                 ms.Position = 0;
-                return Deserialize<T>(ms);
+                TNewType result = Deserialize<TNewType>(ms);
+                if (context != null)
+                {
+                    context.ReadWorkspaceFrom(tmpCtx);
+                }
+                return result;
             }
         }
+
         /// <summary>
         /// Suggest a .proto definition for the given type
         /// </summary>

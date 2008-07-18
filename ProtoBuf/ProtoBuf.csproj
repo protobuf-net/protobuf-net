@@ -79,7 +79,6 @@
     <Compile Include="ListProperty.cs">
       <DependentUpon>PropertyBase.cs</DependentUpon>
     </Compile>
-    <Compile Include="Program.cs" />
     <Compile Include="DoubleSerializer.cs">
       <DependentUpon>SimpleSerializers.cs</DependentUpon>
     </Compile>
@@ -158,7 +157,9 @@
       <DependentUpon>IExtensible.cs</DependentUpon>
     </Compile>
     <Compile Include="IExtensible.cs" />
+    <Compile Include="NetExtensions\ProtoIncludeAttribute.cs" />
     <Compile Include="ProtoContractAttribute.cs" />
+    <Compile Include="ProtoEnumAttribute.cs" />
     <Compile Include="ProtoMemberAttribute.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
