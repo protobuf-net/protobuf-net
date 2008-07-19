@@ -195,7 +195,7 @@ namespace ProtoBuf
             int len;
             if (extra != null && (len = extra.GetLength()) > 0)
             {
-                using(Stream extraStream = extra.ReadData()) {
+                using(Stream extraStream = extra.Read()) {
                     SerializationContext tmpCtx = new SerializationContext(extraStream);
                     tmpCtx.ReadWorkspaceFrom(context);
                     BlitData(tmpCtx, context.Stream, len);
@@ -235,43 +235,39 @@ namespace ProtoBuf
             int prefix;
             context.CheckSpace();
             IExtensible extra = instance as IExtensible;
-            SerializationContext extraData = null;
-            try
+            //SerializationContext extraData = null;
+            while (TwosComplementSerializer.TryReadInt32(context, out prefix))
             {
-                while (TwosComplementSerializer.TryReadInt32(context, out prefix))
+                WireType wireType = (WireType)(prefix & 7);
+                int fieldIndex = prefix >> 3;
+                if (fieldIndex <= 0)
                 {
-                    WireType wireType = (WireType)(prefix & 7);
-                    int fieldIndex = prefix >> 3;
-                    if (fieldIndex <= 0)
-                    {
-                        throw new SerializationException("Invalid tag: " + fieldIndex.ToString());
-                    }
-
-                    IProperty<T> prop;
-                    if (props.TryGetValue(fieldIndex, out prop))
-                    {
-                        // recognised fields; use the property deserializer
-                        prop.Deserialize(instance, context);
-                    }
-                    else if (extra != null)
-                    {
-                        // unexpected fields for an extensible object; store the data
-                        if (extraData == null) extraData = new SerializationContext(extra.BeginAppendData());
-                        TwosComplementSerializer.WriteToStream(prefix, extraData);
-                        extraData = ProcessExtraData(context, wireType, extraData);
-                    }
-                    else
-                    {
-                        // unexpected fields for an inextensible object; discard the data
-                        SkipData(context, wireType);
-                    }
+                    throw new SerializationException("Invalid tag: " + fieldIndex.ToString());
                 }
-                if (extraData != null) extra.EndAppendData(extraData.Stream, true);
-            }
-            catch
-            {
-                if (extraData != null) extra.EndAppendData(extraData.Stream, false);
-                throw;
+
+                IProperty<T> prop;
+                if (props.TryGetValue(fieldIndex, out prop))
+                {
+                    // recognised fields; use the property deserializer
+                    prop.Deserialize(instance, context);
+                }
+                else if (extra != null)
+                {
+                    /*
+                    //TODO: get a wrapped SubStream
+                    // unexpected fields for an extensible object; store the data
+                    Stream subStream = context.Stream; // !!! SWAP THIS
+                    // just the appropriate length
+                    extra.Append(subStream);
+                    TwosComplementSerializer.WriteToStream(prefix, extraData);
+                    //extraData = ProcessExtraData(context, wireType, extraData);
+                     */
+                }
+                else
+                {
+                    // unexpected fields for an inextensible object; discard the data
+                    SkipData(context, wireType);
+                }
             }
         }
 

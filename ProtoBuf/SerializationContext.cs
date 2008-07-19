@@ -14,13 +14,17 @@ namespace ProtoBuf
         public Stream Stream { get { return stream; } }
         private byte[] workspace;
         public byte[] Workspace { get { return workspace; } }
-        private int workspaceIndex;
+        
         public void ReadWorkspaceFrom(SerializationContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
             workspace = context.workspace;
             workspaceIndex = context.workspaceIndex;
         }
+        // not used at the moment; if anything wants to
+        // use non-zero workspace offsets then uncomment
+        // the field / property
+        private int workspaceIndex;
         public int WorkspaceIndex
         {
             get { return workspaceIndex; }

@@ -103,6 +103,9 @@
     <Compile Include="BooleanSerializer.cs">
       <DependentUpon>ISerializer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Extensible.cs">
+      <DependentUpon>IExtensible.cs</DependentUpon>
+    </Compile>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -135,9 +138,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataFormat.cs" />
-    <Compile Include="ExtensibleBase.cs">
-      <DependentUpon>IExtensible.cs</DependentUpon>
-    </Compile>
     <Compile Include="FixedSerializer.cs">
       <DependentUpon>ISerializer.cs</DependentUpon>
     </Compile>
