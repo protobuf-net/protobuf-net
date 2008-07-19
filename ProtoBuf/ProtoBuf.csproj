@@ -150,6 +150,7 @@
     <Compile Include="StringSerializer.cs">
       <DependentUpon>ISerializer.cs</DependentUpon>
     </Compile>
+    <Compile Include="SubStream.cs" />
     <Compile Include="TwosComplementSerializer.cs">
       <DependentUpon>ISerializer.cs</DependentUpon>
     </Compile>

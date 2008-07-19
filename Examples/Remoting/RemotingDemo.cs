@@ -25,11 +25,11 @@ namespace Examples.Remoting
         public ProtoFragment() { }
         private ProtoFragment(SerializationInfo info, StreamingContext context)
         {
-            Serializer.Merge(this, info);
+            Serializer.Merge(info, this);
         }
         void  ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            Serializer.Serialize(this, info);
+            Serializer.Serialize(info, this);
         }
 }
 

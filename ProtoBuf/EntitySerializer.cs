@@ -14,12 +14,10 @@ namespace ProtoBuf
             if (value == null) value = new TEntity();
             int len = TwosComplementSerializer.ReadInt32(context);
             if (len > 0)
-            { // TODO: remove the need for the mem-stream
-                context.CheckSpace(len);
-                BlobSerializer.ReadBlock(context, len);
-                using (MemoryStream ms = new MemoryStream(context.Workspace, context.WorkspaceIndex, len))
+            {
+                using (SubStream subStream = new SubStream(context.Stream, len, false))
                 {
-                    SerializationContext ctx = new SerializationContext(ms);
+                    SerializationContext ctx = new SerializationContext(subStream);
                     // give our existing workspace to this sub-context
                     ctx.ReadWorkspaceFrom(context);
                     Serializer<TEntity>.Deserialize(value, ctx);

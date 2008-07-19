@@ -253,6 +253,7 @@ namespace ProtoBuf
                 }
                 else if (extra != null)
                 {
+                    //using(SubStream subStream = new SubStream(context.Stream, 
                     /*
                     //TODO: get a wrapped SubStream
                     // unexpected fields for an extensible object; store the data

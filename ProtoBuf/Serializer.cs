@@ -92,7 +92,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being merged.</typeparam>
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
-        public static void Merge<T>(T instance, Stream source) where T : class, new()
+        public static void Merge<T>(Stream source, T instance) where T : class, new()
         {
             Serializer<T>.Deserialize(instance, source);
         }
@@ -102,7 +102,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="destination">The destination stream to write to.</param>
-        public static void Serialize<T>(T instance, Stream destination) where T : class, new()
+        public static void Serialize<T>(Stream destination, T instance) where T : class, new()
         {
             Serializer<T>.Serialize(instance, destination);
         }
@@ -114,13 +114,13 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="info">The destination SerializationInfo to write to.</param>
-        public static void Serialize<T>(T instance, SerializationInfo info) where T : class, ISerializable, new()
+        public static void Serialize<T>(SerializationInfo info, T instance) where T : class, ISerializable, new()
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
             using(MemoryStream ms = new MemoryStream())
             {
-                Serialize<T>(instance, ms);
+                Serialize<T>(ms, instance);
                 string s = Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
                 info.AddValue(PROTO_BINARY_FIELD, s);
             }
@@ -131,14 +131,14 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being merged.</typeparam>
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="info">The SerializationInfo containing the data to apply to the instance (cannot be null).</param>
-        public static void Merge<T>(T instance, SerializationInfo info) where T : class, ISerializable, new()
+        public static void Merge<T>(SerializationInfo info, T instance) where T : class, ISerializable, new()
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
             string s = info.GetString(PROTO_BINARY_FIELD);
             using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(s)))
             {
-                Merge<T>(instance, ms);
+                Merge<T>(ms, instance);
             }
         }
 
@@ -186,7 +186,7 @@ namespace ProtoBuf
                 {
                     tmpCtx.ReadWorkspaceFrom(context);
                 }
-                Serialize<TOldType>(instance, ms);
+                Serialize<TOldType>(ms, instance);
                 ms.Position = 0;
                 TNewType result = Deserialize<TNewType>(ms);
                 if (context != null)

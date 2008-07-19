@@ -89,7 +89,7 @@ namespace Examples.TestNumbers
                     }
                 }
             }
-            Console.WriteLine("Int32 tests: {0}", count);
+            Console.WriteLine("\tInt32 tests: {0}", count);
             count = 0;
             for (int i = 0; i < 64; i++)
             {
@@ -124,7 +124,7 @@ namespace Examples.TestNumbers
                     }
                 }
             }
-            Console.WriteLine("Int64 tests: {0}", count);
+            Console.WriteLine("\tInt64 tests: {0}", count);
         }
     }
 }

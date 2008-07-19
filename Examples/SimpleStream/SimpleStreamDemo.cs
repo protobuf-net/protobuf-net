@@ -93,7 +93,7 @@ namespace Examples.SimpleStream
             Stopwatch watch = Stopwatch.StartNew();
             for (int i = 0; i < LOOP; i++)
             {
-                Serializer.Serialize(obj, Stream.Null);
+                Serializer.Serialize(Stream.Null, obj);
             }
             watch.Stop();
             Console.WriteLine("\tSerialized x{0} in {1}ms", 500000, watch.ElapsedMilliseconds);
@@ -119,7 +119,7 @@ namespace Examples.SimpleStream
             T clone;
             using (MemoryStream ms = new MemoryStream())
             {
-                Serializer.Serialize(item, ms);
+                Serializer.Serialize(ms, item);
                 ms.Position = 0;
                 clone = Serializer.Deserialize<T>(ms);
                 byte[] data = ms.ToArray();
@@ -146,7 +146,7 @@ namespace Examples.SimpleStream
                 watch = Stopwatch.StartNew();
                 for (int i = 0; i < LOOP; i++)
                 {
-                    Serializer.Serialize(item, Stream.Null);
+                    Serializer.Serialize(Stream.Null, item);
                 }
                 watch.Stop();
                 Console.WriteLine("\tprotobuf-net: {0} bytes, {1} ms (x{2})",
