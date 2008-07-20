@@ -158,8 +158,8 @@ namespace Examples.SimpleStream
                 }
                 deserializeWatch.Stop();
                 Console.WriteLine("\t(times based on {0} iterations)", LOOP);
-                Console.WriteLine("\t||Serializer||size||serialize||deserialize||");
-                Console.WriteLine("\t||protobuf-net||{0}||{1}||{2}||",
+                Console.WriteLine("||*Serializer*||*size*||*serialize*||*deserialize*||");
+                Console.WriteLine("||protobuf-net||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             
@@ -182,7 +182,7 @@ namespace Examples.SimpleStream
                     bf.Deserialize(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("\t||`BinaryFormatter`||{0}||{1}||{2}||",
+                Console.WriteLine("||`BinaryFormatter`||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             using (MemoryStream ms = new MemoryStream())
@@ -204,7 +204,7 @@ namespace Examples.SimpleStream
                     sf.Deserialize(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("\t||`SoapFormatter`||{0}||{1}||{2}||",
+                Console.WriteLine("||`SoapFormatter`||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             using (MemoryStream ms = new MemoryStream())
@@ -226,7 +226,7 @@ namespace Examples.SimpleStream
                     xser.Deserialize(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("\t||`XmlSerializer`||{0}||{1}||{2}||",
+                Console.WriteLine("||`XmlSerializer`||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             using (MemoryStream ms = new MemoryStream())
@@ -248,7 +248,7 @@ namespace Examples.SimpleStream
                     xser.ReadObject(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("\t||`DataContractSerializer`||{0}||{1}||{2}||",
+                Console.WriteLine("||`DataContractSerializer`||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             using (MemoryStream ms = new MemoryStream())
@@ -270,7 +270,7 @@ namespace Examples.SimpleStream
                     xser.ReadObject(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("\t||`DataContractJsonSerializer`||{0}||{1}||{2}||",
+                Console.WriteLine("||`DataContractJsonSerializer`||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
 
                 string originalJson = Encoding.UTF8.GetString(ms.ToArray()), cloneJson;
