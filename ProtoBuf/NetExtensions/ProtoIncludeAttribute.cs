@@ -38,11 +38,13 @@ namespace ProtoBuf.NetExtensions
         /// <summary>
         /// The unique index (within the type) that will identify this data.
         /// </summary>
-        public int Tag { get; private set; }
+        public int Tag { get { return tag; } private set { tag = value; } }
+        private int tag;
         /// <summary>
         /// The additional type to serialize/deserialize.
         /// </summary>
-        public string TypeName { get; private set; }
+        public string TypeName { get { return name; } set { name = value; } }
+        private string name;
         /// <summary>
         /// The additional type to serialize/deserialize.
         /// </summary>

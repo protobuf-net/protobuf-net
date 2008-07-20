@@ -35,41 +35,25 @@ namespace ProtoBuf
                 return iVal | INT32_MSB;
             }
         }
-        internal static long ReverseInt64(long value)
-        {
-            byte tmp;
-            byte[] buffer = BitConverter.GetBytes(value);
-            tmp = buffer[0];
-            buffer[0] = buffer[7];
-            buffer[7] = tmp;
-            tmp = buffer[1];
-            buffer[1] = buffer[6];
-            buffer[6] = tmp;
-            tmp = buffer[2];
-            buffer[2] = buffer[5];
-            buffer[5] = tmp;
-            tmp = buffer[3];
-            buffer[3] = buffer[4];
-            buffer[4] = tmp;
-            return BitConverter.ToInt64(buffer, 0);
-        }
         internal static int EncodeInt64(long value, SerializationContext context)
         {
-            if (!BitConverter.IsLittleEndian)
-            {
-                value = ReverseInt64(value);
-            }
             byte[] buffer = context.Workspace;
             int index = context.WorkspaceIndex;
+            if ((value & ~((long)127)) == 0)
+            {
+                buffer[index] = (byte)value;
+                return 1;
+            }            
             int lastByte = 0;
             for (int i = 0; i < 10; i++)
             {
                 int v = ((int) value) & 127;
                 if (v != 0) lastByte = i;
                 buffer[index + i] = (byte)(v | 128);
-                //ensure most significant 7 are zero even if -ve
-                value = (value >> 7) & 0x1FFFFFFFFFFFFFF;
+                value >>= 7;
             }
+            // byte 10 inly needs 1 bit (but if -ve backfills >> with 1s)
+            buffer[index + 9] &= 0x01;
             buffer[lastByte] &= 127; // strip the msb
             return lastByte + 1;
         }
@@ -92,16 +76,25 @@ namespace ProtoBuf
                     }
                     throw new EndOfStreamException();
                 }
-                if (tuple++ == 10)
+                if (tuple++ == 9)
                 {
-                    throw new SerializationException("Overflow deserializing Int64");
+                    if ((b & (byte)254) != 0)
+                    {
+                        throw new SerializationException("Overflow reading Int64");
+                    }
+                    // add the final bit (9*7=63; only 1 bit needed from last tuple)
+                    long usefulBits = (long)(b & 1);
+                    value = (value << 1) | usefulBits;
+                    break;
                 }
-
-                long usefulBits = (long)(b & 127);
-                value = (value << 7) | usefulBits;
+                else
+                {
+                    long usefulBits = (long)(b & 127);
+                    value = (value << 7) | usefulBits;
+                }
             } while ((b & 128) != 0);
 
-            return BitConverter.IsLittleEndian ? value : ReverseInt64(value);
+            return value;
         }
         internal static int ReadRaw(SerializationContext context)
         {

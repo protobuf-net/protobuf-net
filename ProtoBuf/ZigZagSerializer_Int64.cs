@@ -5,7 +5,6 @@ namespace ProtoBuf
     {
         private static ulong WrapMsb(long value)
         {
-            // strip the msb, left-shift all by one, and use the old msb as the new lsb
             unchecked
             {
                 return (ulong)((value << 1) ^ (value >> 63));
@@ -37,7 +36,6 @@ namespace ProtoBuf
         }
         public static long ReadInt64(SerializationContext context)
         {
-            // strip the lsb, right-shift all by one, and use the old lsb as the new msb
             ulong uVal = TwosComplementSerializer.ReadUInt64(context);
             unchecked
             {

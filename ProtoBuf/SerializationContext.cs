@@ -9,7 +9,8 @@ namespace ProtoBuf
     }
     internal sealed class SerializationContext
     {
-        public Eof Eof { get; set; }
+        public Eof Eof { get { return eof; } set { eof = value; } }
+        private Eof eof;
         private readonly Stream stream;
         public Stream Stream { get { return stream; } }
         private byte[] workspace;

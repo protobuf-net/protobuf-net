@@ -30,7 +30,7 @@ namespace ProtoBuf
         public int Serialize(TEntity value, SerializationContext context)
         {
             if (value == null) return 0;
-            var candidateProperties = new List<IProperty<TEntity>>();
+            List<IProperty<TEntity>> candidateProperties = new List<IProperty<TEntity>>();
             int expectedLen = Serializer<TEntity>.GetLength(value, context, candidateProperties);
             int preambleLen = TwosComplementSerializer.WriteToStream(expectedLen, context);
 

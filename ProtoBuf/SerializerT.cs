@@ -170,7 +170,7 @@ namespace ProtoBuf
                 }
                 propList.Add(iProp);
             }
-            propList.Sort((x, y) => x.Tag.CompareTo(y.Tag));
+            propList.Sort(delegate (IProperty<T> x, IProperty<T> y) {return x.Tag.CompareTo(y.Tag);});
             props = propList.ToArray();
         }
 

@@ -13,6 +13,7 @@ namespace ProtoBuf
         /// <summary>
         /// The defined name of the type.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get { return name; } set { name = value; } }
+        private string name;
     }
 }

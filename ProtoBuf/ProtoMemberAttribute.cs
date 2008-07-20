@@ -22,22 +22,27 @@ namespace ProtoBuf
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag");
             Tag = tag;
         }
+        
         /// <summary>
         /// Specifies the original name defined in the .proto; not used
         /// during serialization.
         /// </summary>
-        public string Name { get; set; }
+        public string Name { get { return name; } set { name = value; } }
+        private string name;
         /// <summary>
         /// Specifies the data-format to be used when encoding this value.
         /// </summary>
-        public DataFormat DataFormat { get; set; }
+        public DataFormat DataFormat { get { return dataFormat; } set { dataFormat = value; } }
+        private DataFormat dataFormat; 
         /// <summary>
         /// Specifies the unique tag used to identify this member within the type.
         /// </summary>
-        public int Tag { get; private set; }
+        public int Tag { get { return tag; } private set { tag = value; } }
+        private int tag;
         /// <summary>
         /// Indicates whether this member is mandatory.
         /// </summary>
-        public bool IsRequired { get; set; }
+        public bool IsRequired { get { return isRequired; } set { isRequired = value; } }
+        private bool isRequired;
     }
 }
