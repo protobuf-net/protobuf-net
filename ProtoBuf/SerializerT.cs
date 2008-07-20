@@ -71,22 +71,21 @@ namespace ProtoBuf
 
             sb.AppendLine();
             nestLevel++;
-            foreach (var pair in props)
-            {
-                IProperty<T> prop = pair.Value;
+            for(int i = 0 ; i < props.Length ; i++) {
+                IProperty<T> prop = props[i];
                 Indent(sb, nestLevel).Append(' ')
                     .Append(prop.IsRequired ? "required " : "optional ")
                     .Append(prop.DefinedType).Append(' ')
                     .Append(prop.Name).Append(" = ").Append(prop.Tag);
 
-                DefaultValueAttribute def = AttributeUtils.GetAttribute<DefaultValueAttribute>(pair.Value.Property);
+                DefaultValueAttribute def = AttributeUtils.GetAttribute<DefaultValueAttribute>(prop.Property);
                 if (def != null)
                 {
                     string defText = Convert.ToString(def.Value, CultureInfo.InvariantCulture);
                     sb.Append(" [default = ").Append(defText).Append(" ]");
                 }
                 sb.Append(";");
-                desc = AttributeUtils.GetAttribute<DescriptionAttribute>(pair.Value.Property);
+                desc = AttributeUtils.GetAttribute<DescriptionAttribute>(prop.Property);
                 descText = desc == null ? null : desc.Description;
                 if (!string.IsNullOrEmpty(descText))
                 {
@@ -104,7 +103,7 @@ namespace ProtoBuf
         }
 
 
-        static readonly SortedList<int, IProperty<T>> props;
+        static readonly IProperty<T>[] props;
 
         static Serializer()
         {
@@ -112,7 +111,7 @@ namespace ProtoBuf
             {
                 throw new InvalidOperationException("Only concrete data-contract classes can be processed");
             }
-            props = new SortedList<int, IProperty<T>>();
+            List<IProperty<T>> propList = new List<IProperty<T>>();
             Type[] argsOnePropertyInfo = { typeof(PropertyInfo) };
             object[] argsOnePropertyVal = new object[1];
 
@@ -168,8 +167,10 @@ namespace ProtoBuf
                         .GetConstructor(argsOnePropertyInfo)
                         .Invoke(argsOnePropertyVal);
                 }
-                props.Add(iProp.Tag, iProp);
+                propList.Add(iProp);
             }
+            propList.Sort((x, y) => x.Tag.CompareTo(y.Tag));
+            props = propList.ToArray();
         }
 
 
@@ -181,15 +182,16 @@ namespace ProtoBuf
             SerializationContext ctx = new SerializationContext(destination);
             return Serialize(instance, ctx, null);
         }
-        internal static int Serialize(T instance, SerializationContext context, IEnumerable<IProperty<T>> candidateProperties)
+        internal static int Serialize(T instance, SerializationContext context, IProperty<T>[] candidateProperties)
         {
             if (context == null) throw new ArgumentNullException("context");
             context.CheckSpace();
             int total = 0;
-            foreach (IProperty<T> prop in (candidateProperties ?? props.Values))
+            if(candidateProperties == null) candidateProperties = props;
+            for (int i = 0; i < candidateProperties.Length; i++)
             {
                 // note that this serialization includes the headers...
-                total += prop.Serialize(instance, context);
+                total += candidateProperties[i].Serialize(instance, context);
             }
             IExtensible extra = instance as IExtensible;
             int len;
@@ -206,16 +208,15 @@ namespace ProtoBuf
             return total;
         }
 
-        internal static int GetLength(T instance, SerializationContext context, IList<IProperty<T>> candidateProperties)
+        internal static int GetLength(T instance, SerializationContext context, List<IProperty<T>> candidateProperties)
         {
             if (context == null) throw new ArgumentNullException("context");
             context.CheckSpace();
             int total = 0;
-            foreach (IProperty<T> prop in props.Values)
-            {
-                int propLen = prop.GetLength(instance, context);
+            for(int i = 0 ; i < props.Length ; i++) {
+                int propLen = props[i].GetLength(instance, context);
                 total += propLen;
-                if (propLen > 0 && candidateProperties != null) candidateProperties.Add(prop);
+                if (propLen > 0 && candidateProperties != null) candidateProperties.Add(props[i]);
             }
             IExtensible extra = instance as IExtensible;
             if (extra != null) total += extra.GetLength();
@@ -232,27 +233,50 @@ namespace ProtoBuf
         {
             if (context == null) throw new ArgumentNullException("context");
             Stream source = context.Stream;
-            int prefix;
+            int prefix, propCount = props.Length;
             context.CheckSpace();
             IExtensible extra = instance as IExtensible;
             //SerializationContext extraData = null;
+            IProperty<T> prop = propCount == 0 ? null : props[0];
+            int lastIndex = prop == null ? int.MinValue : 0,
+                lastTag = prop == null ? int.MinValue : prop.Tag;
+                
+            
             while (TwosComplementSerializer.TryReadInt32(context, out prefix))
             {
                 WireType wireType = (WireType)(prefix & 7);
-                int fieldIndex = prefix >> 3;
-                if (fieldIndex <= 0)
+                int fieldTag = prefix >> 3;
+                if (fieldTag <= 0)
                 {
-                    throw new SerializationException("Invalid tag: " + fieldIndex.ToString());
+                    throw new SerializationException("Invalid tag: " + fieldTag.ToString());
+                }
+                bool foundTag = fieldTag == lastTag;
+                if (!foundTag) 
+                {
+                    int index = lastIndex;
+                    // start i at 1 as only need to check n-1 other properties
+                    for (int i = 1; i < propCount; i++)
+                    {
+                        if (++index == propCount) { index = 0; }
+                        if (props[index].Tag == fieldTag)
+                        {
+                            prop = props[index];
+                            lastIndex = index;
+                            lastTag = fieldTag;
+                            foundTag = true;
+                            break;
+                        }
+                    }
                 }
 
-                IProperty<T> prop;
-                if (props.TryGetValue(fieldIndex, out prop))
+                if (foundTag)
                 {
                     // recognised fields; use the property deserializer
                     prop.Deserialize(instance, context);
                 }
                 else if (extra != null)
                 {
+                    throw new NotImplementedException("Extensible objects");
                     //using(SubStream subStream = new SubStream(context.Stream, 
                     /*
                     //TODO: get a wrapped SubStream

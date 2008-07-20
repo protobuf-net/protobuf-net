@@ -115,7 +115,7 @@ namespace Examples.SimpleStream
             string name = typeof(T).Name;
             Console.WriteLine("\t{0}", name);
             const int LOOP = 100000;
-            Stopwatch watch;
+            Stopwatch serializeWatch,deserializeWatch;
             T clone;
             using (MemoryStream ms = new MemoryStream())
             {
@@ -142,82 +142,136 @@ namespace Examples.SimpleStream
                     }
                     WriteBytes("Binary", data);
                 }
-
-                watch = Stopwatch.StartNew();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                serializeWatch = Stopwatch.StartNew();
                 for (int i = 0; i < LOOP; i++)
                 {
                     Serializer.Serialize(Stream.Null, item);
                 }
-                watch.Stop();
-                Console.WriteLine("\tprotobuf-net: {0} bytes, {1} ms (x{2})",
-                    ms.Length, watch.ElapsedMilliseconds, LOOP);
+                serializeWatch.Stop();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                deserializeWatch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    ms.Position = 0;
+                    Serializer.Deserialize<T>(ms);
+                }
+                deserializeWatch.Stop();
+                Console.WriteLine("\t(times based on {0} iterations)", LOOP);
+                Console.WriteLine("\t||Serializer||size||serialize||deserialize||");
+                Console.WriteLine("\t||protobuf-net||{0}||{1}||{2}||",
+                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             
             using (MemoryStream ms = new MemoryStream())
             {
                 BinaryFormatter bf = new BinaryFormatter();
                 bf.Serialize(ms, item);
-                watch = Stopwatch.StartNew();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                serializeWatch = Stopwatch.StartNew();
                 for (int i = 0; i < LOOP; i++)
                 {
                     bf.Serialize(Stream.Null, item);
                 }
-                watch.Stop();
-                Console.WriteLine("\tBinaryFormatter: {0} bytes, {1} ms (x{2})",
-                    ms.Length, watch.ElapsedMilliseconds, LOOP);
-
+                serializeWatch.Stop();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                deserializeWatch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    ms.Position = 0;
+                    bf.Deserialize(ms);
+                }
+                deserializeWatch.Stop();
+                Console.WriteLine("\t||`BinaryFormatter`||{0}||{1}||{2}||",
+                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             using (MemoryStream ms = new MemoryStream())
             {
                 SoapFormatter sf = new SoapFormatter();
                 sf.Serialize(ms, item);
-                watch = Stopwatch.StartNew();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                serializeWatch = Stopwatch.StartNew();
                 for (int i = 0; i < LOOP; i++)
                 {
                     sf.Serialize(Stream.Null, item);
                 }
-                watch.Stop();
-                Console.WriteLine("\tSoapFormatter: {0} bytes, {1} ms (x{2})",
-                    ms.Length, watch.ElapsedMilliseconds, LOOP);
+                serializeWatch.Stop();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                deserializeWatch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    ms.Position = 0;
+                    sf.Deserialize(ms);
+                }
+                deserializeWatch.Stop();
+                Console.WriteLine("\t||`SoapFormatter`||{0}||{1}||{2}||",
+                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             using (MemoryStream ms = new MemoryStream())
             {
                 XmlSerializer xser = new XmlSerializer(typeof(T));
                 xser.Serialize(ms, item);
-                watch = Stopwatch.StartNew();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                serializeWatch = Stopwatch.StartNew();
                 for (int i = 0; i < LOOP; i++)
                 {
                     xser.Serialize(Stream.Null, item);
                 }
-                watch.Stop();
-                Console.WriteLine("\tXmlSerializer: {0} bytes, {1} ms (x{2})",
-                    ms.Length, watch.ElapsedMilliseconds, LOOP);
+                serializeWatch.Stop();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                deserializeWatch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    ms.Position = 0;
+                    xser.Deserialize(ms);
+                }
+                deserializeWatch.Stop();
+                Console.WriteLine("\t||`XmlSerializer`||{0}||{1}||{2}||",
+                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             using (MemoryStream ms = new MemoryStream())
             {
                 DataContractSerializer xser = new DataContractSerializer(typeof(T));
                 xser.WriteObject(ms, item);
-                watch = Stopwatch.StartNew();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                serializeWatch = Stopwatch.StartNew();
                 for (int i = 0; i < LOOP; i++)
                 {
                     xser.WriteObject(Stream.Null, item);
                 }
-                watch.Stop();
-                Console.WriteLine("\tDataContractSerializer: {0} bytes, {1} ms (x{2})",
-                    ms.Length, watch.ElapsedMilliseconds, LOOP);
+                serializeWatch.Stop();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                deserializeWatch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    ms.Position = 0;
+                    xser.ReadObject(ms);
+                }
+                deserializeWatch.Stop();
+                Console.WriteLine("\t||`DataContractSerializer`||{0}||{1}||{2}||",
+                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             using (MemoryStream ms = new MemoryStream())
             {
                 DataContractJsonSerializer xser = new DataContractJsonSerializer(typeof(T));
                 xser.WriteObject(ms, item);
-                watch = Stopwatch.StartNew();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                serializeWatch = Stopwatch.StartNew();
                 for (int i = 0; i < LOOP; i++)
                 {
                     xser.WriteObject(Stream.Null, item);
                 }
-                watch.Stop();
-                Console.WriteLine("\tDataContractJsonSerializer: {0} bytes, {1} ms (x{2})",
-                    ms.Length, watch.ElapsedMilliseconds, LOOP);
+                serializeWatch.Stop();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                deserializeWatch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    ms.Position = 0;
+                    xser.ReadObject(ms);
+                }
+                deserializeWatch.Stop();
+                Console.WriteLine("\t||`DataContractJsonSerializer`||{0}||{1}||{2}||",
+                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
 
                 string originalJson = Encoding.UTF8.GetString(ms.ToArray()), cloneJson;
 

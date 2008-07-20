@@ -34,7 +34,7 @@ namespace ProtoBuf
             int expectedLen = Serializer<TEntity>.GetLength(value, context, candidateProperties);
             int preambleLen = TwosComplementSerializer.WriteToStream(expectedLen, context);
 
-            int actualLen = Serializer<TEntity>.Serialize(value, context, candidateProperties);
+            int actualLen = Serializer<TEntity>.Serialize(value, context, candidateProperties.ToArray());
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
             return preambleLen + actualLen;
         }
