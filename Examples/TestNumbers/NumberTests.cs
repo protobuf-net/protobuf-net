@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ProtoBuf;
+using System.Runtime.Serialization;
+using System.IO;
 
 namespace Examples.TestNumbers
 {
@@ -48,8 +50,60 @@ namespace Examples.TestNumbers
         [ProtoMember(17)]
         public string Foo { get; set; }
     }
+
+    [ProtoContract]
+    class ZigZagInt32
+    {
+        [ProtoMember(1, DataFormat = DataFormat.ZigZag)]
+        public int Foo { get; set; }
+    }
+    [ProtoContract]
+    class TwosComplementInt32
+    {
+        [ProtoMember(1, DataFormat = DataFormat.TwosComplement)]
+        public int Foo { get; set; }
+    }
+
+    class SignTests
+    {
+        public static void Run(int index)
+        {
+            CheckBytes(new TwosComplementInt32 { Foo = 1 }, 0x08, 0x01);
+            CheckBytes(new TwosComplementInt32 { Foo = 2 }, 0x08, 0x02);
+            CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01);
+            CheckBytes(new TwosComplementInt32 { Foo = -2 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01);
+
+            CheckBytes(new ZigZagInt32 { Foo = 1 }, 0x08, 0x02);
+            CheckBytes(new ZigZagInt32 { Foo = 2 }, 0x08, 0x04);
+            CheckBytes(new ZigZagInt32 { Foo = -1 }, 0x08, 0x01);
+            CheckBytes(new ZigZagInt32 { Foo = -2 }, 0x08, 0x03);
+        }
+        private static void CheckBytes<T>(T item, params byte[] expected) where T : class, new()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, item);
+                byte[] actual = ms.ToArray();
+                bool match = actual.Length == expected.Length;
+                if (match)
+                {
+                    for (int i = 0; i < expected.Length; i++)
+                    {
+                        match &= actual[i] == expected[i];
+                    }
+                }
+                if (!match)
+                {
+                    Console.WriteLine("Hi");
+                }
+                Console.WriteLine("\tMatch ({0}): {1}", typeof(T).Name, match ? "Pass" : "Fail");
+            }
+        }
+    }
     class NumberTests
     {
+        
+
         public static void Run(int index)
         {
             NumRig rig = new NumRig();

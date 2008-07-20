@@ -67,7 +67,8 @@ namespace ProtoBuf
                 int v = ((int) value) & 127;
                 if (v != 0) lastByte = i;
                 buffer[index + i] = (byte)(v | 128);
-                value >>= 7;
+                //ensure most significant 7 are zero even if -ve
+                value = (value >> 7) & 0x1FFFFFFFFFFFFFF;
             }
             buffer[lastByte] &= 127; // strip the msb
             return lastByte + 1;

@@ -42,6 +42,7 @@ namespace Examples
             };
             #endregion
 
+            run(TestNumbers.SignTests.Run);
             run(TestNumbers.NumberTests.Run);
             run(SimpleStream.SimpleStreamDemo.RunSimplePerfTests);
             run(SimpleStream.SimpleStreamDemo.RunSimpleStreams);
