@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿#if NET_3_0
+using System.IO;
 using System.Runtime.Serialization;
 
 namespace ProtoBuf.ServiceModel
@@ -54,3 +55,4 @@ namespace ProtoBuf.ServiceModel
 
     }
 }
+#endif

@@ -13,7 +13,7 @@ namespace ProtoBuf
     /// choose to use the file system (temporary files) as the back-end, tracking
     /// only the paths [such an object would ideally be IDisposable and use
     /// a finalizer to ensure that the files are removed].</remarks>
-    [DataContract]
+    [ProtoContract]
     public abstract class Extensible : IExtensible
     {
         public static int GetLength(byte[] buffer)

@@ -1,16 +1,19 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Runtime.Serialization;
+using System.Diagnostics;
 using System.IO;
-using ProtoBuf;
 using System.Runtime.Serialization.Formatters.Binary;
-using System.Xml.Serialization;
 using System.Runtime.Serialization.Formatters.Soap;
-using System.Runtime.Serialization.Json;
+using System.Text;
+using System.Xml.Serialization;
+using ProtoBuf;
+using System.Runtime.Serialization;
+#if NET_3_0
 using System.ServiceModel;
 using ProtoBuf.ServiceModel;
-using System.Diagnostics;
+#endif
+#if NET_3_5
+using System.Runtime.Serialization.Json;
+#endif
 
 namespace Examples.SimpleStream
 {
@@ -28,10 +31,12 @@ namespace Examples.SimpleStream
       required Test1 c = 3;
     }
     */
-    [Serializable, DataContract]
+    [Serializable, ProtoContract]
     public sealed class Test1
     {
+#if NET_3_0
         [DataMember(Name="a", Order=1, IsRequired=true)]
+#endif
         [ProtoMember(1, Name = "a", IsRequired=true, DataFormat=DataFormat.TwosComplement)]
         public int A { get; set; }
     }
@@ -51,7 +56,10 @@ namespace Examples.SimpleStream
     [ServiceContract]
     public interface IFoo
     {
-        [OperationContract, ProtoBehavior]
+        [OperationContract]
+#if NET_3_0
+        [ProtoBehavior]
+#endif
         Test3 Bar(Test1 value);
     }
 
@@ -251,6 +259,7 @@ namespace Examples.SimpleStream
                 Console.WriteLine("||`DataContractSerializer`||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
+#if NET_3_5
             using (MemoryStream ms = new MemoryStream())
             {
                 DataContractJsonSerializer xser = new DataContractJsonSerializer(typeof(T));
@@ -287,9 +296,7 @@ namespace Examples.SimpleStream
                     Console.WriteLine("\tClone JSON: {0}", cloneJson);
                 }
             }
-            
-
-
+#endif          
 
             Console.WriteLine("\t[end {0}]", name);
             Console.WriteLine();

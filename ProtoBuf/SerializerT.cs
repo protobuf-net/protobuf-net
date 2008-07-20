@@ -22,13 +22,14 @@ namespace ProtoBuf
                 if (!string.IsNullOrEmpty(pc.Name)) name = pc.Name;
                 return name;
             }
-
+#if NET_3_0
             DataContractAttribute dc = AttributeUtils.GetAttribute<DataContractAttribute>(typeof(T));
             if (dc != null)
             {
                 if (!string.IsNullOrEmpty(dc.Name)) name = dc.Name;
                 return name;
             }
+#endif
 
             XmlTypeAttribute xt = AttributeUtils.GetAttribute<XmlTypeAttribute>(typeof(T));
             if (xt != null)

@@ -31,7 +31,9 @@ namespace ProtoBuf
                     && type != typeof(string) && !type.IsArray
                     && type.GetConstructor(Type.EmptyTypes) != null
                     && (AttributeUtils.GetAttribute<ProtoContractAttribute>(type) != null
+#if NET_3_0
                         || AttributeUtils.GetAttribute<DataContractAttribute>(type) != null
+#endif
                         || AttributeUtils.GetAttribute<XmlTypeAttribute>(type) != null);
         }
         /// <summary>
@@ -54,7 +56,7 @@ namespace ProtoBuf
                 isRequired = pm.IsRequired;
                 return tag > 0;
             }
-
+#if NET_3_0
             DataMemberAttribute dm = AttributeUtils.GetAttribute<DataMemberAttribute>(property);
             if (dm != null)
             {
@@ -63,6 +65,7 @@ namespace ProtoBuf
                 isRequired = dm.IsRequired;
                 return tag > 0;
             }
+#endif
             
             XmlElementAttribute xe = AttributeUtils.GetAttribute<XmlElementAttribute>(property);
             if (xe != null)

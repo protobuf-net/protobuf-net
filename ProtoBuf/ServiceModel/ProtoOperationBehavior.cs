@@ -1,7 +1,8 @@
-﻿using System;
+﻿#if NET_3_0
+using System;
 using System.Collections.Generic;
-using System.ServiceModel.Description;
 using System.Runtime.Serialization;
+using System.ServiceModel.Description;
 using System.ServiceModel;
 
 namespace ProtoBuf.ServiceModel
@@ -20,3 +21,4 @@ namespace ProtoBuf.ServiceModel
         }
     }
 }
+#endif

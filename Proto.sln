@@ -8,15 +8,20 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
+		Net20|Any CPU = Net20|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{8649E5E9-4159-4214-B85D-4539799EB09B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8649E5E9-4159-4214-B85D-4539799EB09B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8649E5E9-4159-4214-B85D-4539799EB09B}.Net20|Any CPU.ActiveCfg = Net20|Any CPU
+		{8649E5E9-4159-4214-B85D-4539799EB09B}.Net20|Any CPU.Build.0 = Net20|Any CPU
 		{8649E5E9-4159-4214-B85D-4539799EB09B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8649E5E9-4159-4214-B85D-4539799EB09B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{816EC137-7AFD-42B3-84A1-447E33A6A8C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{816EC137-7AFD-42B3-84A1-447E33A6A8C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{816EC137-7AFD-42B3-84A1-447E33A6A8C8}.Net20|Any CPU.ActiveCfg = Net20|Any CPU
+		{816EC137-7AFD-42B3-84A1-447E33A6A8C8}.Net20|Any CPU.Build.0 = Net20|Any CPU
 		{816EC137-7AFD-42B3-84A1-447E33A6A8C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{816EC137-7AFD-42B3-84A1-447E33A6A8C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
