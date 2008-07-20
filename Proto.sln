@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoBuf", "ProtoBuf\ProtoB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples", "Examples\Examples.csproj", "{816EC137-7AFD-42B3-84A1-447E33A6A8C8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPipeline", "DataPipeline\DataPipeline.csproj", "{C9755331-5AD9-4F99-90FC-A135FDB1151D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +26,12 @@ Global
 		{816EC137-7AFD-42B3-84A1-447E33A6A8C8}.Net20|Any CPU.Build.0 = Net20|Any CPU
 		{816EC137-7AFD-42B3-84A1-447E33A6A8C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{816EC137-7AFD-42B3-84A1-447E33A6A8C8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C9755331-5AD9-4F99-90FC-A135FDB1151D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C9755331-5AD9-4F99-90FC-A135FDB1151D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C9755331-5AD9-4F99-90FC-A135FDB1151D}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{C9755331-5AD9-4F99-90FC-A135FDB1151D}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{C9755331-5AD9-4F99-90FC-A135FDB1151D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C9755331-5AD9-4F99-90FC-A135FDB1151D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
