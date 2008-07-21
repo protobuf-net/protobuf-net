@@ -92,6 +92,7 @@
     <Compile Include="DesignIdeas\Inheritance.cs" />
     <Compile Include="Remoting\RemotingDemo.cs" />
     <Compile Include="SimpleStream\Collections.cs" />
+    <Compile Include="SimpleStream\NullTypes.cs" />
     <Compile Include="SimpleStream\SimplePerfTests.cs" />
     <Compile Include="SimpleStream\SimpleStreamDemo.cs" />
     <Compile Include="TestNumbers\NumberTests.cs" />

@@ -19,6 +19,13 @@ namespace Examples
                 return Program.ArraysEqual(actual, expected);
             }
         }
+        public static T Build<T>(params byte[] raw) where T : class, new()
+        {
+            using (MemoryStream ms = new MemoryStream(raw))
+            {
+                return Serializer.Deserialize<T>(ms);
+            }
+        }
         public static bool ArraysEqual(byte[] actual, byte[] expected)
         {
             if (ReferenceEquals(actual, expected)) return true;

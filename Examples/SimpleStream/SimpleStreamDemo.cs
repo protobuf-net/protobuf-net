@@ -100,23 +100,18 @@ namespace Examples.SimpleStream
         [Test]
         public void FieldsWrongOrder()
         {
-            TwoFields t1 = Build<TwoFields>(0x08, 0x96, 0x01, 0x10, 0x82, 0x01);
+            TwoFields t1 = Program.Build<TwoFields>(0x08, 0x96, 0x01, 0x10, 0x82, 0x01);
             Assert.AreEqual(150, t1.Foo, "Foo, ascending");
             Assert.AreEqual(130, t1.Bar, "Bar, ascending");
-            t1 = Build<TwoFields>(0x10, 0x82, 0x01, 0x08, 0x96, 0x01);
+            t1 = Program.Build<TwoFields>(0x10, 0x82, 0x01, 0x08, 0x96, 0x01);
             Assert.AreEqual(150, t1.Foo, "Foo, descending");
             Assert.AreEqual(130, t1.Bar, "Bar, descending");
         }
-        static T Build<T>(params byte[] raw) where T : class, new()
-        {
-             using (MemoryStream ms = new MemoryStream(raw)) {
-                 return Serializer.Deserialize<T>(ms);
-             }
-        }
+        
         [Test]
         public void MultipleSameField()
         {
-            Test1 t1 = Build<Test1>(0x08, 0x96, 0x01, 0x08, 0x82, 0x01);
+            Test1 t1 = Program.Build<Test1>(0x08, 0x96, 0x01, 0x08, 0x82, 0x01);
             Assert.AreEqual(130, t1.A);
         }
 

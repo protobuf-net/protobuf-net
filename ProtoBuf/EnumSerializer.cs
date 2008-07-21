@@ -10,8 +10,15 @@ namespace ProtoBuf
     {
         private readonly KeyValuePair<TEnum, TValue>[] values;
         private readonly ISerializer<TValue> valueSerializer;
+        private static string name;
+
         private static readonly EqualityComparer<TEnum> enumComparer = EqualityComparer<TEnum>.Default;
         private static readonly EqualityComparer<TValue> valueComparer = EqualityComparer<TValue>.Default;
+
+        static EnumSerializer()
+        {
+            name = typeof(TEnum).Name;
+        }
         public EnumSerializer(ISerializer<TValue> valueSerializer)
         {
             if (valueSerializer == null) throw new ArgumentNullException("valueSerializer");
@@ -56,7 +63,7 @@ namespace ProtoBuf
             }
             throw new KeyNotFoundException(string.Format("No value found for {0}={1}", typeof(TEnum).Name, key));
         }
-        string ISerializer<TEnum>.DefinedType { get { return valueSerializer.DefinedType; } }
+        string ISerializer<TEnum>.DefinedType { get { return name; } }
         WireType ISerializer<TEnum>.WireType { get { return valueSerializer.WireType; } }
         int ISerializer<TEnum>.GetLength(TEnum key, SerializationContext context)
         {
