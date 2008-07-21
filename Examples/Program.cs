@@ -10,6 +10,22 @@ namespace Examples
     class Program
     {
         static void Main() { }
+
+        public static string GetByteString<T>(T item) where T : class,new()
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, item);
+                byte[] actual = ms.ToArray();
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < actual.Length; i++)
+                {
+                    sb.Append(actual[i].ToString("X2")).Append(' ');
+                }
+                sb.Length -= 1;
+                return sb.ToString();
+            }
+        }
         public static bool CheckBytes<T>(T item, params byte[] expected) where T : class, new()
         {
             using (MemoryStream ms = new MemoryStream())

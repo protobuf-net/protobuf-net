@@ -56,10 +56,40 @@ namespace Examples.TestNumbers
         [ProtoMember(1, DataFormat = DataFormat.TwosComplement)]
         public int Foo { get; set; }
     }
+    [ProtoContract]
+    class ZigZagInt64
+    {
+        [ProtoMember(1, DataFormat = DataFormat.ZigZag)]
+        public long Foo { get; set; }
+    }
+
 
     [TestFixture]
     public class SignTests
     {
+        [Test]
+        public void RoundTripBigPosativeZigZagInt64()
+        {
+            ZigZagInt64 obj = new ZigZagInt64 { Foo = 123456789 },
+                clone = Serializer.DeepClone(obj);
+            Assert.AreEqual(obj.Foo, clone.Foo);
+        }
+        [Test]
+        public void RoundTripBigPosativeZigZagInt64ForDateTime()
+        {
+            ZigZagInt64 obj = new ZigZagInt64 { Foo = 1216669168515 },
+                clone = Serializer.DeepClone(obj);
+            Assert.AreEqual(obj.Foo, clone.Foo);
+        }
+        
+        [Test]
+        public void RoundTripBigNegativeZigZagInt64() {
+            ZigZagInt64 obj = new ZigZagInt64 { Foo = -123456789 },
+                clone = Serializer.DeepClone(obj);
+            clone = Serializer.DeepClone(obj);
+            Assert.AreEqual(obj.Foo, clone.Foo);
+        }
+
         [Test]
         public void TestSignTwosComplementInt32()
         {

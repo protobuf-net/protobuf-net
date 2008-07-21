@@ -14,11 +14,14 @@ namespace ProtoBuf
 
         public DateTime Deserialize(DateTime value, SerializationContext context)
         {
-            return epoch.AddMilliseconds(ZigZagSerializer.ReadInt64(context));
+            long ms = ZigZagSerializer.ReadInt64(context),
+                ticks = ms * TimeSpan.TicksPerMillisecond;
+            Console.WriteLine("Got offset: {0}", ms);
+            return epoch.Add(TimeSpan.FromTicks(ticks));
         }
         private static long GetOffset(DateTime value)
         {
-            return (long)((value - epoch).TotalMilliseconds);
+            return (value - epoch).Ticks / TimeSpan.TicksPerMillisecond;
         }
         public int GetLength(DateTime value, SerializationContext context)
         {
@@ -26,7 +29,9 @@ namespace ProtoBuf
         }
         public int Serialize(DateTime value, SerializationContext context)
         {
-            return ZigZagSerializer.WriteToStream(GetOffset(value), context);
+            long offset = GetOffset(value);
+            Console.WriteLine("Set offset: {0}", offset);
+            return ZigZagSerializer.WriteToStream(offset, context);
         }
     }
 }

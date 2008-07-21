@@ -19,11 +19,9 @@ namespace ProtoBuf
         }
         public static int ReadInt32(SerializationContext context)
         {
-            uint uVal = TwosComplementSerializer.ReadUInt32(context);
-            unchecked
-            {
-                return (int)((uVal >> 1) ^ (uVal << 31));
-            }
+            int val = TwosComplementSerializer.ReadInt32(context);
+            val = (-(val & 0x01)) ^ ((val >> 1) & ~Base128Variant.INT32_MSB);
+            return val;
         }
         public int Serialize(int value, SerializationContext context)
         {

@@ -36,16 +36,15 @@ namespace ProtoBuf
         }
         public static long ReadInt64(SerializationContext context)
         {
-            ulong uVal = TwosComplementSerializer.ReadUInt64(context);
-            unchecked
-            {
-                return (long)((uVal >> 1) ^ (uVal << 63));
-            }
+            long val = TwosComplementSerializer.ReadInt64(context);
+            val = (-(val & 0x01)) ^ ((val >> 1) & ~Base128Variant.INT64_MSB);
+            return val;
         }
 
         internal static int WriteToStream(long value, SerializationContext context)
         {
-            return TwosComplementSerializer.WriteToStream(WrapMsb(value), context);
+            ulong toWrite = WrapMsb(value);
+            return TwosComplementSerializer.WriteToStream(toWrite, context);
         }
     }
 }
