@@ -56,6 +56,14 @@ namespace Examples.TestNumbers
         [ProtoMember(1, DataFormat = DataFormat.TwosComplement)]
         public int Foo { get; set; }
     }
+
+    [ProtoContract]
+    class TwosComplementUInt32
+    {
+        [ProtoMember(1, DataFormat = DataFormat.TwosComplement)]
+        public uint Foo { get; set; }
+    }
+    
     [ProtoContract]
     class ZigZagInt64
     {
@@ -145,12 +153,20 @@ namespace Examples.TestNumbers
         [Test]
         public void TestSignZigZagInt32_2147483647()
         {
-            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 2147483647 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0x0F), "2147483647");
+            // encoding doc gives numbers in terms of uint equivalent
+            ZigZagInt32 zz = new ZigZagInt32 { Foo = 2147483647 }, clone = Serializer.DeepClone(zz);
+            Assert.AreEqual(zz.Foo, clone.Foo, "Roundtrip");
+            TwosComplementUInt32 tc = Serializer.ChangeType<ZigZagInt32, TwosComplementUInt32>(zz);
+            Assert.AreEqual(4294967294, tc.Foo);
         }
         [Test]
         public void TestSignZigZagInt32_m2147483648()
         {
-            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = -2147483648 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F), "-2147483648");
+            // encoding doc gives numbers in terms of uint equivalent
+            ZigZagInt32 zz = new ZigZagInt32 { Foo = -2147483648 }, clone = Serializer.DeepClone(zz);
+            Assert.AreEqual(zz.Foo, clone.Foo, "Roundtrip");
+            TwosComplementUInt32 tc = Serializer.ChangeType<ZigZagInt32, TwosComplementUInt32>(zz);
+            Assert.AreEqual(4294967295, tc.Foo);
         }
 
         [Test]
