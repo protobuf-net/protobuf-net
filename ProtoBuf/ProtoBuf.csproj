@@ -79,17 +79,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Properties\Settings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTimeSharedInput>True</DesignTimeSharedInput>
-      <DependentUpon>Settings.settings</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="app.config" />
     <Compile Include="AttributeUtils.cs" />
     <Compile Include="Base128Variant.cs">
       <DependentUpon>ISerializer.cs</DependentUpon>
@@ -132,10 +126,6 @@
     <Compile Include="Extensible.cs">
       <DependentUpon>IExtensible.cs</DependentUpon>
     </Compile>
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
     <Compile Include="FixedSerializer_Single.cs">
       <DependentUpon>FixedSerializer.cs</DependentUpon>
     </Compile>
@@ -164,7 +154,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataFormat.cs" />
-    <Compile Include="EnumSerializer.cs" />
+    <Compile Include="EnumSerializer.cs">
+      <DependentUpon>ISerializer.cs</DependentUpon>
+    </Compile>
     <Compile Include="FixedSerializer.cs">
       <DependentUpon>ISerializer.cs</DependentUpon>
     </Compile>

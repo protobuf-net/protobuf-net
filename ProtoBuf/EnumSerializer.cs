@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Reflection;
 
 namespace ProtoBuf
@@ -18,6 +17,9 @@ namespace ProtoBuf
             if (valueSerializer == null) throw new ArgumentNullException("valueSerializer");
             this.valueSerializer = valueSerializer;
 
+            // get the known mappings between TEnum and TValue; if a wire-value is set
+            // via ProtoEnumAttribute then use that; otherwise just convert/cast the
+            // value
             List<KeyValuePair<TEnum, TValue>> list = new List<KeyValuePair<TEnum,TValue>>();
             foreach(TEnum key in Enum.GetValues(typeof(TEnum)))
             {
