@@ -56,9 +56,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProtoBuf\ProtoBuf.csproj">
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
       <Project>{8649E5E9-4159-4214-B85D-4539799EB09B}</Project>
-      <Name>ProtoBuf</Name>
+      <Name>protobuf-net</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

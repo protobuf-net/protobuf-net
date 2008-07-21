@@ -12,6 +12,7 @@ namespace Examples.DesignIdeas
     /// note: how to handle flags? (NotSupportedException? at least for now?
     ///             could later use a bitmap sweep?)
     /// </summary>
+    [ProtoContract(Name="blah")]
     enum SomeEnum
     {
         [ProtoEnum(Name="FOO")]
