@@ -14,6 +14,8 @@ using ProtoBuf.ServiceModel;
 #if NET_3_5
 using System.Runtime.Serialization.Json;
 using NUnit.Framework;
+using Examples.DesignIdeas;
+using System.Collections.Generic;
 #endif
 
 namespace Examples.SimpleStream
@@ -69,24 +71,110 @@ namespace Examples.SimpleStream
     {
 
         [Test]
-        public void EncodingDocSample1()
+        public void FirstSample()
         {
             Test1 t1 = new Test1 { A = 150 };
             Assert.IsTrue(Program.CheckBytes(t1, 0x08, 0x96, 0x01));
         }
         [Test]
-        public void EncodingDocSample2()
+        public void StringSample()
         {
             Test2 t2 = new Test2 { B = "testing" };
             Assert.IsTrue(Program.CheckBytes(t2, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
         [Test]
-        public void EncodingDocSample3()
+        public void EmbeddedMessageSample()
         {
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
             Assert.IsTrue(Program.CheckBytes(t3, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
+        [ProtoContract]
+        class TwoFields
+        {
+            [ProtoMember(1)]
+            public int Foo { get; set; }
+            [ProtoMember(2)]
+            public int Bar { get; set; }
+        }
+        [Test]
+        public void FieldsWrongOrder()
+        {
+            TwoFields t1 = Build<TwoFields>(0x08, 0x96, 0x01, 0x10, 0x82, 0x01);
+            Assert.AreEqual(150, t1.Foo, "Foo, ascending");
+            Assert.AreEqual(130, t1.Bar, "Bar, ascending");
+            t1 = Build<TwoFields>(0x10, 0x82, 0x01, 0x08, 0x96, 0x01);
+            Assert.AreEqual(150, t1.Foo, "Foo, descending");
+            Assert.AreEqual(130, t1.Bar, "Bar, descending");
+        }
+        static T Build<T>(params byte[] raw) where T : class, new()
+        {
+             using (MemoryStream ms = new MemoryStream(raw)) {
+                 return Serializer.Deserialize<T>(ms);
+             }
+        }
+        [Test]
+        public void MultipleSameField()
+        {
+            Test1 t1 = Build<Test1>(0x08, 0x96, 0x01, 0x08, 0x82, 0x01);
+            Assert.AreEqual(130, t1.A);
+        }
+
+        [ProtoContract]
+        class ItemWithBlob
+        {
+            [ProtoMember(1)]
+            public byte[] Foo { get; set; }
+        }
+
+        [Test]
+        public void Blob()
+        {
+            ItemWithBlob blob = new ItemWithBlob(), clone = Serializer.DeepClone(blob);
+            Assert.IsTrue(Program.CheckBytes(blob, new byte[0]), "Empty serialization");
+            Assert.IsTrue(Program.ArraysEqual(blob.Foo, clone.Foo), "Clone should be empty");
+
+            blob.Foo = new byte[] { 0x01, 0x02, 0x03 };
+            clone = Serializer.DeepClone(blob);
+            Assert.IsTrue(Program.ArraysEqual(blob.Foo, clone.Foo), "Clone should match");
+
+            Assert.IsTrue(Program.CheckBytes(blob, 0x0A, 0x03, 0x01, 0x02, 0x03), "Stream should match");
+        }
+
+        public enum SomeEnum
+        {
+            [ProtoEnum(Value = 3)]
+            Foo= 1
+        }
+        [XmlType]
+        public class SomeEnumEntity
+        {
+            [XmlElement(Order = 2)]
+            public SomeEnum Enum { get; set; }
+        }
+        [Test]
+        public void TestDuffEnum()
+        {
+            SomeEnumEntity dee = new SomeEnumEntity {Enum = SomeEnum.Foo};
+            Assert.IsTrue(Program.CheckBytes(dee, 0x10, 0x03));
+        }
+        [Test, ExpectedException(ExceptionType = typeof(KeyNotFoundException))]
+        public void TestUndefinedEnum()
+        {
+            SomeEnumEntity dee = new SomeEnumEntity { Enum = 0};
+            Serializer.Serialize(Stream.Null, dee);
+        }
+
+        public class NotAContract
+        {
+            public int X { get; set; }
+        }
+        [Test, ExpectedException(ExceptionType = typeof(TypeInitializationException))]
+        public void TestNotAContract()
+        {
+            NotAContract nac = new NotAContract { X = 4 };
+            Serializer.Serialize(Stream.Null, nac);
+        }
 
         static bool TestItem<T>(T item, params byte[] expected) where T : class, new()
         {

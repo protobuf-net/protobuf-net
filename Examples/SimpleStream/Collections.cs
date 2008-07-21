@@ -9,12 +9,18 @@ namespace Examples.SimpleStream
     [TestFixture]
     public class Collections
     {
+
+        [ProtoContract]
+        public class FooContainer
+        {
+            [ProtoMember(1)]
+            public Foo Foo { get; set; }
+        }
         [ProtoContract]
         public class Foo
         {
-            public Foo() { Bars = new List<Bar>(); }
             [ProtoMember(1)]
-            public List<Bar> Bars { get; private set; }
+            public List<Bar> Bars { get; set; }
         }
         [ProtoContract]
         public class Bar
@@ -25,16 +31,21 @@ namespace Examples.SimpleStream
         [Test]
         public void RunCollectionTests()
         {
-            Foo foo = new Foo(), clone;
+            FooContainer fooContainer = new FooContainer(), cloneContainer;
+            Foo foo = fooContainer.Foo = new Foo(), clone;
+            foo.Bars = new List<Bar>();
             for (int i = Int16.MinValue; i <= Int16.MaxValue; i++)
             {
                 foo.Bars.Add(new Bar { Value = i });
             }
             using (MemoryStream ms = new MemoryStream())
             {
-                Serializer.Serialize(ms, foo);
+                Serializer.Serialize(ms, fooContainer);
                 ms.Position = 0;
-                clone = Serializer.Deserialize<Foo>(ms);
+                cloneContainer = Serializer.Deserialize<FooContainer>(ms);
+                Assert.IsNotNull(cloneContainer);
+                clone = cloneContainer.Foo;
+                Assert.IsNotNull(clone);
             }
             Assert.AreEqual(foo.Bars.Count, clone.Bars.Count, "Item count");
             

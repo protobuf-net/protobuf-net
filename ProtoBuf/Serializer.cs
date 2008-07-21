@@ -123,7 +123,7 @@ namespace ProtoBuf
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
-            using(MemoryStream ms = new MemoryStream())
+            using (MemoryStream ms = new MemoryStream())
             {
                 Serialize<T>(ms, instance);
                 string s = Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
