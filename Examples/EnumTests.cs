@@ -51,6 +51,7 @@ namespace Examples.DesignIdeas
         public void TestEnumNoMap() {
             CheckValue(SomeEnum.LeaveAlone, 0x08, 22);
         }
+
         static void CheckValue(SomeEnum val, params byte[] expected)
         {
             EnumFoo foo = new EnumFoo { Bar = val };

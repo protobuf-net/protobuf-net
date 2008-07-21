@@ -20,52 +20,7 @@ using System.Collections.Generic;
 
 namespace Examples.SimpleStream
 {
-    // compare to the examples in the encoding spec
-    // http://code.google.com/apis/protocolbuffers/docs/encoding.html
     
-    /*
-    message Test1 {
-        required int32 a = 1;
-    }
-    message Test2 {
-      required string b = 2;
-    }
-    message Test3 {
-      required Test1 c = 3;
-    }
-    */
-    [Serializable, ProtoContract]
-    public sealed class Test1
-    {
-#if NET_3_0
-        [DataMember(Name="a", Order=1, IsRequired=true)]
-#endif
-        [ProtoMember(1, Name = "a", IsRequired=true, DataFormat=DataFormat.TwosComplement)]
-        public int A { get; set; }
-    }
-    [Serializable, DataContract]
-    public sealed class Test2
-    {
-        [DataMember(Name = "b", Order = 2, IsRequired = true)]
-        public string B { get; set; }
-    }
-    [Serializable, DataContract]
-    public sealed class Test3
-    {
-        [DataMember(Name = "c", Order = 3, IsRequired = true)]
-        public Test1 C { get; set; }
-    }
-
-    [ServiceContract]
-    public interface IFoo
-    {
-        [OperationContract]
-#if NET_3_0
-        [ProtoBehavior]
-#endif
-        Test3 Bar(Test1 value);
-    }
-
     [TestFixture]
     public class SimpleStreamDemo
     {
@@ -154,10 +109,15 @@ namespace Examples.SimpleStream
             Assert.IsTrue(Program.CheckBytes(dee, 0x10, 0x03));
         }
         [Test, ExpectedException(ExceptionType = typeof(KeyNotFoundException))]
-        public void TestUndefinedEnum()
+        public void TestSerializeUndefinedEnum()
         {
             SomeEnumEntity dee = new SomeEnumEntity { Enum = 0};
             Serializer.Serialize(Stream.Null, dee);
+        }
+        [Test, ExpectedException(ExceptionType = typeof(KeyNotFoundException))]
+        public void TestDeserializeUndefinedEnum()
+        {
+            Program.Build<SomeEnumEntity>(0x10, 0x09);
         }
 
         public class NotAContract
@@ -368,6 +328,51 @@ namespace Examples.SimpleStream
             }
             Console.WriteLine();
         }
+    }
+    // compare to the examples in the encoding spec
+    // http://code.google.com/apis/protocolbuffers/docs/encoding.html
+
+    /*
+    message Test1 {
+        required int32 a = 1;
+    }
+    message Test2 {
+      required string b = 2;
+    }
+    message Test3 {
+      required Test1 c = 3;
+    }
+    */
+    [Serializable, ProtoContract]
+    public sealed class Test1
+    {
+#if NET_3_0
+        [DataMember(Name = "a", Order = 1, IsRequired = true)]
+#endif
+        [ProtoMember(1, Name = "a", IsRequired = true, DataFormat = DataFormat.TwosComplement)]
+        public int A { get; set; }
+    }
+    [Serializable, DataContract]
+    public sealed class Test2
+    {
+        [DataMember(Name = "b", Order = 2, IsRequired = true)]
+        public string B { get; set; }
+    }
+    [Serializable, DataContract]
+    public sealed class Test3
+    {
+        [DataMember(Name = "c", Order = 3, IsRequired = true)]
+        public Test1 C { get; set; }
+    }
+
+    [ServiceContract]
+    public interface IFoo
+    {
+        [OperationContract]
+#if NET_3_0
+        [ProtoBehavior]
+#endif
+        Test3 Bar(Test1 value);
     }
 
 }

@@ -90,7 +90,9 @@ namespace Examples.ServiceModel
                         Assert.AreEqual(data.SubData[i].Name, dataRegular.SubData[i].Name, "Regular name");
                         Assert.AreEqual(data.SubData[i].Number, dataRegular.SubData[i].Number, "Regular number");                    
                     }
-                    Console.WriteLine("Validated: {0}", data.SubData.Count);
+                    Console.WriteLine(string.Format("Validated: {0}", data.SubData.Count));
+
+                    Assert.Less(watchProto.ElapsedMilliseconds, watchRegular.ElapsedMilliseconds, "Proto should be quicker");
                 }
 
                 host.Close();
