@@ -233,7 +233,6 @@ namespace ProtoBuf
         internal static void Deserialize(T instance, SerializationContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
-            Stream source = context.Stream;
             int prefix, propCount = props.Length;
             context.CheckSpace();
             IExtensible extra = instance as IExtensible;

@@ -32,14 +32,17 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="buffer">The current buffer instance (can be null).</param>
         /// <param name="stream">The additional data passed by the serializer.</param>
-        public static void Append(ref byte[] buffer, Stream stream)
+        public static byte[] Append(byte[] buffer, Stream stream)
         {
 
             int offset = buffer == null ? 0 : buffer.Length,
                 remaining = (int) stream.Length, bytes;
             Array.Resize<byte>(ref buffer, offset + remaining);
             while(remaining > 0 && (bytes = stream.Read(buffer, offset, remaining)) > 0)
-            {}
+            {
+                remaining -= bytes;            
+            }
+            return buffer;
         }
         /// <summary>
         /// User to implement ISerializable.Read() for simple byte[]-based implementations;
@@ -59,7 +62,7 @@ namespace ProtoBuf
         }
         void IExtensible.Append(Stream stream)
         {
-            Extensible.Append(ref extendedData, stream);
+            extendedData = Extensible.Append(extendedData, stream);
         }
         Stream IExtensible.Read()
         {

@@ -87,7 +87,7 @@ namespace ProtoBuf
             }
             set
             {
-                if (value < 0 || value >= length) throw new ArgumentOutOfRangeException("Position");
+                if (value < 0 || value >= length) throw new ArgumentOutOfRangeException("value", "Cannot seek outide of the Stream's bounds");
                 parent.Position += (value - position);
             }
         }

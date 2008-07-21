@@ -19,20 +19,20 @@ namespace ProtoBuf.NetExtensions
         /// Creates a new instance of the ProtoIncludeAttribute.
         /// </summary>
         /// <param name="tag">The unique index (within the type) that will identify this data.</param>
-        /// <param name="type">The additional type to serialize/deserialize.</param>
-        public ProtoIncludeAttribute(int tag, Type type)
-            : this(tag, type == null ? "" : type.AssemblyQualifiedName) {}
+        /// <param name="knownType">The additional type to serialize/deserialize.</param>
+        public ProtoIncludeAttribute(int tag, Type knownType)
+            : this(tag, knownType == null ? "" : knownType.AssemblyQualifiedName) { }
         /// <summary>
         /// Creates a new instance of the ProtoIncludeAttribute.
         /// </summary>
         /// <param name="tag">The unique index (within the type) that will identify this data.</param>
-        /// <param name="typeName">The additional type to serialize/deserialize.</param>
-        public ProtoIncludeAttribute(int tag, string typeName)
+        /// <param name="knownTypeName">The additional type to serialize/deserialize.</param>
+        public ProtoIncludeAttribute(int tag, string knownTypeName)
         {
-            if (tag <= 0) throw new ArgumentOutOfRangeException("tag");
-            if (string.IsNullOrEmpty(typeName)) throw new ArgumentNullException("typeName");
+            if (tag <= 0) throw new ArgumentOutOfRangeException("tag","Tags must be positive integers");
+            if (string.IsNullOrEmpty(knownTypeName)) throw new ArgumentNullException("knownTypeName", "Known type cannot be blank");
             Tag = tag;
-            TypeName = typeName;
+            KnownTypeName = knownTypeName;
         }
         /// <summary>
         /// The unique index (within the type) that will identify this data.
@@ -42,18 +42,18 @@ namespace ProtoBuf.NetExtensions
         /// <summary>
         /// The additional type to serialize/deserialize.
         /// </summary>
-        public string TypeName { get { return name; } set { name = value; } }
+        public string KnownTypeName { get { return name; } private set { name = value; } }
         private string name;
         /// <summary>
         /// The additional type to serialize/deserialize.
         /// </summary>
-        public Type Type
+        public Type KnownType
         {
             get
             {
                 try
                 {
-                    return Type.GetType(TypeName);
+                    return Type.GetType(KnownTypeName);
                 }
                 catch
                 {

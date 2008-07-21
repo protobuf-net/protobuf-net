@@ -38,43 +38,7 @@ namespace ProtoBuf
                 workspaceIndex = value;
             }
         }
-        public void Zero(int len)
-        {
-            int index = WorkspaceIndex;
-            byte[] buffer = Workspace;
-            switch (len)
-            {
-                case 0: break;
-                case 1:
-                    buffer[index] = 0;
-                    break;
-                case 2:
-                    buffer[index++] = 0;
-                    buffer[index] = 0;
-                    break;
-                case 4:
-                    buffer[index++] = 0;
-                    buffer[index++] = 0;
-                    buffer[index++] = 0;
-                    buffer[index] = 0;
-                    break;
-                case 8:
-                    buffer[index++] = 0;
-                    buffer[index++] = 0;
-                    buffer[index++] = 0;
-                    buffer[index++] = 0;
-                    buffer[index++] = 0;
-                    buffer[index++] = 0;
-                    buffer[index++] = 0;
-                    buffer[index] = 0;
-                    break;
-                default:
-                    Array.Clear(buffer, index, len);
-                    break;
-
-            }
-        }
-
+     
         public SerializationContext(Stream stream)
         {
             this.stream = stream;

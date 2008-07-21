@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Globalization;
 
 namespace ProtoBuf
 {
@@ -36,11 +37,11 @@ namespace ProtoBuf
                 TValue value;
                 if (ea == null || !ea.HasValue())
                 {
-                    value = (TValue)Convert.ChangeType(key, typeof(TValue));
+                    value = (TValue)Convert.ChangeType(key, typeof(TValue), CultureInfo.InvariantCulture);
                 }
                 else
                 {
-                    value = (TValue)Convert.ChangeType(ea.Value, typeof(TValue));
+                    value = (TValue)Convert.ChangeType(ea.Value, typeof(TValue), CultureInfo.InvariantCulture);
                 }
                 list.Add(new KeyValuePair<TEnum, TValue>(key, value));
             }
