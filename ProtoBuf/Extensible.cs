@@ -16,10 +16,22 @@ namespace ProtoBuf
     [ProtoContract]
     public abstract class Extensible : IExtensible
     {
+        /// <summary>
+        /// Used to implement IExtensible.GetLength() for simple byte[]-based implementations.
+        /// </summary>
+        /// <param name="buffer">The current buffer instance (can be null).</param>
+        /// <returns>The length of the buffer, or 0 if null.</returns>
         public static int GetLength(byte[] buffer)
         {
             return buffer == null ? 0 : buffer.Length;
         }
+        /// <summary>
+        /// Used to implement IExtensible.Append() for simple byte[]-based implementations;
+        /// creates/resizes the buffer accordingly (copying any existing data), and places
+        /// the new data at the end of the buffer.
+        /// </summary>
+        /// <param name="buffer">The current buffer instance (can be null).</param>
+        /// <param name="stream">The additional data passed by the serializer.</param>
         public static void Append(ref byte[] buffer, Stream stream)
         {
 
@@ -29,6 +41,12 @@ namespace ProtoBuf
             while(remaining > 0 && (bytes = stream.Read(buffer, offset, remaining)) > 0)
             {}
         }
+        /// <summary>
+        /// User to implement ISerializable.Read() for simple byte[]-based implementations;
+        /// returns a stream representation of the current buffer.
+        /// </summary>
+        /// <param name="buffer">The current buffer instance (can be null).</param>
+        /// <returns>A stream representation of the buffer.</returns>
         public static Stream Read(byte[] buffer)
         {
             return buffer == null ? Stream.Null : new MemoryStream(buffer);

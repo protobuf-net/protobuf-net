@@ -111,6 +111,8 @@ namespace ProtoBuf
         }
 
         const string PROTO_BINARY_FIELD = "proto";
+
+#if REMOTING
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.
         /// </summary>
@@ -144,7 +146,7 @@ namespace ProtoBuf
                 Merge<T>(ms, instance);
             }
         }
-
+#endif
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>

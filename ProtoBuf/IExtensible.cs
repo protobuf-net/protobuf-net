@@ -9,7 +9,22 @@ namespace ProtoBuf
     /// </summary>
     public interface IExtensible
     {
+        /// <summary>
+        /// The serializer (during deserialization/merge) has encountered unexpected
+        /// fields that it cannot process; the implementing
+        /// class should store this data verbatim. The serializer retains ownership
+        /// of the stream: it is not necessary (but not harmful) to close it.
+        /// The implementing class should be prepared to handle multiple different
+        /// Append messages.
+        /// </summary>
+        /// <param name="stream">The additional data to store.</param>
         void Append(Stream stream);
+        /// <summary>
+        /// The serializer is requesting the additional data that has been previously
+        /// stored; this method is only called once per serialized instance. The
+        /// serializer assumes ownership of the stream, and is responsible for closing it.
+        /// </summary>
+        /// <returns></returns>
         Stream Read();
 
         /// <summary>

@@ -46,7 +46,9 @@ namespace Examples
             run(TestNumbers.NumberTests.Run);
             run(SimpleStream.SimpleStreamDemo.RunSimplePerfTests);
             run(SimpleStream.SimpleStreamDemo.RunSimpleStreams);
+#if REMOTING
             run(Remoting.RemotingDemo.Run);
+#endif
 
             
             Console.WriteLine("Press any key to exit");

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if REMOTING
+using System;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using ProtoBuf;
@@ -124,3 +125,4 @@ namespace Examples.Remoting
         }
     }
 }
+#endif

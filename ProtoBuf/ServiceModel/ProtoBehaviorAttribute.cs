@@ -11,7 +11,6 @@ namespace ProtoBuf.ServiceModel
     /// must be enabled on both the client and server.
     /// </summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-    [ImmutableObject(true)]
     public sealed class ProtoBehaviorAttribute : Attribute, IOperationBehavior
     {
         void IOperationBehavior.AddBindingParameters(OperationDescription operationDescription, System.ServiceModel.Channels.BindingParameterCollection bindingParameters)

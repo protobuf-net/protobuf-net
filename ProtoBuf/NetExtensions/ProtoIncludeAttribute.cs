@@ -13,7 +13,6 @@ namespace ProtoBuf.NetExtensions
     /// </summary>
     [AttributeUsage(AttributeTargets.Property,
         AllowMultiple = true, Inherited = true)]
-    [ImmutableObject(true)]
     public sealed class ProtoIncludeAttribute : Attribute
     {
         /// <summary>
