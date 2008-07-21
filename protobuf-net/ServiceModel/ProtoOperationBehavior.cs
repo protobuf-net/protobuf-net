@@ -14,10 +14,17 @@ namespace ProtoBuf.ServiceModel
 
         public override XmlObjectSerializer CreateSerializer(Type type, System.Xml.XmlDictionaryString name, System.Xml.XmlDictionaryString ns, IList<Type> knownTypes)
         {
-            return (XmlObjectSerializer) typeof(XmlProtoSerializer<>)
-                .MakeGenericType(type)
-                .GetConstructor(Type.EmptyTypes)
-                .Invoke(null);
+            if (Serializer.IsEntityType(type))
+            {
+                return (XmlObjectSerializer)typeof(XmlProtoSerializer<>)
+                    .MakeGenericType(type)
+                    .GetConstructor(Type.EmptyTypes)
+                    .Invoke(null);
+            }
+            else
+            {
+                return base.CreateSerializer(type, name, ns, knownTypes);
+            }
         }
     }
 }

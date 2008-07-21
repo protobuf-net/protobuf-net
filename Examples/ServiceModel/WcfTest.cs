@@ -38,12 +38,26 @@ namespace Examples.ServiceModel
 
         [OperationContract]
         bool Ping();
+
+        [OperationContract]
+        string SimpleTypesRegular(int value);
+        [OperationContract, ProtoBehavior]
+        string SimpleTypesProto(int value);
     }
     class MyService : IMyService
     {
         public MyData RegularWcf(MyData data) { return data; }
         public MyData UsingProto(MyData data) { return data; }
         public bool Ping() { return true; }
+
+        public string SimpleTypesRegular(int value)
+        {
+            return value.ToString();
+        }
+        public string SimpleTypesProto(int value)
+        {
+            return value.ToString();
+        }
     }
 
 
@@ -82,7 +96,23 @@ namespace Examples.ServiceModel
                 Assert.IsTrue(proxy.Service.Ping());
             }
         }
+        [Test]
+        public void SimpleTypesRegular()
+        {
+            using (var proxy = GetProxy())
+            {
+                Assert.AreEqual("27", proxy.Service.SimpleTypesRegular(27));
+            }
+        }
 
+        [Test]
+        public void SimpleTypesProto()
+        {
+            using (var proxy = GetProxy())
+            {
+                Assert.AreEqual("27", proxy.Service.SimpleTypesProto(27));
+            }
+        }
 
         [Test]
         public void WcfRegularNullToNull()
