@@ -16,7 +16,6 @@ namespace ProtoBuf
         {
             long ms = ZigZagSerializer.ReadInt64(context),
                 ticks = ms * TimeSpan.TicksPerMillisecond;
-            Console.WriteLine("Got offset: {0}", ms);
             return epoch.Add(TimeSpan.FromTicks(ticks));
         }
         private static long GetOffset(DateTime value)
@@ -30,7 +29,6 @@ namespace ProtoBuf
         public int Serialize(DateTime value, SerializationContext context)
         {
             long offset = GetOffset(value);
-            Console.WriteLine("Set offset: {0}", offset);
             return ZigZagSerializer.WriteToStream(offset, context);
         }
     }

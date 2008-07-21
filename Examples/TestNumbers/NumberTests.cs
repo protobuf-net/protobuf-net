@@ -74,9 +74,11 @@ namespace Examples.TestNumbers
                 clone = Serializer.DeepClone(obj);
             Assert.AreEqual(obj.Foo, clone.Foo);
         }
+
         [Test]
         public void RoundTripBigPosativeZigZagInt64ForDateTime()
         {
+            // this test to simulate a typical DateTime value
             ZigZagInt64 obj = new ZigZagInt64 { Foo = 1216669168515 },
                 clone = Serializer.DeepClone(obj);
             Assert.AreEqual(obj.Foo, clone.Foo);

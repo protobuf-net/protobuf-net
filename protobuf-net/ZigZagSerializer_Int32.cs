@@ -6,11 +6,11 @@ namespace ProtoBuf
         string ISerializer<int>.DefinedType { get { return ProtoFormat.SINT32; } }
 
 
-        private static uint WrapMsb(int value)
+        private static long WrapMsb(int value)
         {
             unchecked
             {
-                return (uint)((value << 1) ^ (value >> 31));
+                return ((value << 1) ^ (value >> 31));
             }
         }
         public int Deserialize(int value, SerializationContext context)

@@ -99,11 +99,14 @@ namespace ProtoBuf
                     continue; // didn't recognise this as a usable property
                 }
 
-                if(propList.Find(delegate (IProperty<T> tmp) {return tmp.Tag == tag;})
-                    != null) // this tag already in the collection
+                // check for duplicates
+                foreach (IProperty<T> item in propList)
                 {
-                    throw new InvalidOperationException(string.Format("Duplicate tag {0} detected in {1}", 
-                        tag, name));
+                    if (item.Tag == tag)
+                    {
+                        throw new InvalidOperationException(
+                            string.Format("Duplicate tag {0} detected in {1}", tag, name));
+                    }
                 }
 
                 IProperty<T> iProp;

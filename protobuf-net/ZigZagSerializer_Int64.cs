@@ -3,11 +3,11 @@ namespace ProtoBuf
 {
     partial class ZigZagSerializer : ISerializer<int>, ISerializer<long>
     {
-        private static ulong WrapMsb(long value)
+        private static long WrapMsb(long value)
         {
             unchecked
             {
-                return (ulong)((value << 1) ^ (value >> 63));
+                return ((value << 1) ^ (value >> 63));
             }
         }
 
@@ -43,7 +43,7 @@ namespace ProtoBuf
 
         internal static int WriteToStream(long value, SerializationContext context)
         {
-            ulong toWrite = WrapMsb(value);
+            long toWrite = WrapMsb(value);
             return TwosComplementSerializer.WriteToStream(toWrite, context);
         }
     }

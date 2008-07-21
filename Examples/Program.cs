@@ -11,19 +11,24 @@ namespace Examples
     {
         static void Main() { }
 
+        public static string GetByteString(byte[] buffer)
+        {
+            if (buffer == null) return "[null]";
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < buffer.Length; i++)
+            {
+                sb.Append(buffer[i].ToString("X2")).Append(' ');
+            }
+            sb.Length -= 1;
+            return sb.ToString();
+        }
         public static string GetByteString<T>(T item) where T : class,new()
         {
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, item);
                 byte[] actual = ms.ToArray();
-                StringBuilder sb = new StringBuilder();
-                for (int i = 0; i < actual.Length; i++)
-                {
-                    sb.Append(actual[i].ToString("X2")).Append(' ');
-                }
-                sb.Length -= 1;
-                return sb.ToString();
+                return GetByteString(actual);
             }
         }
         public static bool CheckBytes<T>(T item, params byte[] expected) where T : class, new()
@@ -32,7 +37,14 @@ namespace Examples
             {
                 Serializer.Serialize(ms, item);
                 byte[] actual = ms.ToArray();
-                return Program.ArraysEqual(actual, expected);
+                bool equal = Program.ArraysEqual(actual, expected);
+                if (!equal)
+                {
+                    string exp = GetByteString(expected), act = GetByteString(actual);
+                    Console.WriteLine("Expected: {0}", exp);
+                    Console.WriteLine("Actual: {0}", act);
+                }
+                return equal;
             }
         }
         public static T Build<T>(params byte[] raw) where T : class, new()

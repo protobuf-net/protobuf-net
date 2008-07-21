@@ -6,8 +6,8 @@ namespace ProtoBuf
 {
     internal static class Base128Variant
     {
-        internal const long  INT64_MSB = 1 << 63;
-        internal const int   INT32_MSB = 1 << 31;
+        internal const long  INT64_MSB = ((long)1) << 63;
+        internal const int   INT32_MSB = ((int)1) << 31;
 
         public static int EncodeInt32(int value, SerializationContext context)
         {
