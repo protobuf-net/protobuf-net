@@ -93,24 +93,63 @@ namespace Examples.TestNumbers
         }
 
         [Test]
-        public void TestSignTwosComplementInt32()
+        public void TestSignTwosComplementInt32_0()
         {
             Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 0 }, 0x08, 0x00), "0");
+        }
+        [Test]
+        public void TestSignTwosComplementInt32_1()
+        {
             Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 1 }, 0x08, 0x01), "+1");
+        }
+        [Test]
+        public void TestSignTwosComplementInt32_2()
+        {
             Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 2 }, 0x08, 0x02), "+2");
+        }
+        [Test]
+        public void TestSignTwosComplementInt32_m1()
+        {
             Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-1");
+        }
+        [Test]
+        public void TestSignTwosComplementInt32_m2()
+        {
             Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = -2 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-2");
         }
         [Test]
-        public void TestSignZigZagInt32()
+        public void TestSignZigZagInt32_0()
         {
             Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 0 }, 0x08, 0x00), "0");
+        }
+        [Test]
+        public void TestSignZigZagInt32_1()
+        {
             Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 1 }, 0x08, 0x02), "+1");
+        }
+        [Test]
+        public void TestSignZigZagInt32_2()
+        {
             Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 2 }, 0x08, 0x04), "+2");
+        }
+        [Test]
+        public void TestSignZigZagInt32_m1()
+        {
             Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = -1 }, 0x08, 0x01), "-1");
+        }
+        [Test]
+        public void TestSignZigZagInt32_m2()
+        {
             Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = -2 }, 0x08, 0x03), "-2");
-
+        }        
+        [Test]
+        public void TestSignZigZagInt32_2147483647()
+        {
             Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 2147483647 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0x0F), "2147483647");
+        }
+        [Test]
+        public void TestSignZigZagInt32_m2147483648()
+        {
             Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = -2147483648 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F), "-2147483648");
         }
 

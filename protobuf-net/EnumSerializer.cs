@@ -24,11 +24,13 @@ namespace ProtoBuf
             // via ProtoEnumAttribute then use that; otherwise just convert/cast the
             // value
             List<KeyValuePair<TEnum, TValue>> list = new List<KeyValuePair<TEnum,TValue>>();
-            foreach(TEnum key in Enum.GetValues(typeof(TEnum)))
+            foreach(FieldInfo enumField in typeof(TEnum).GetFields(BindingFlags.Static | BindingFlags.Public))
             {
-                string name = Enum.GetName(typeof(TEnum), key);
-                ProtoEnumAttribute ea = AttributeUtils.GetAttribute<ProtoEnumAttribute>
-                    (typeof(TEnum).GetField(name, BindingFlags.Static | BindingFlags.Public));
+                if (!enumField.IsLiteral) continue;
+                TEnum key = (TEnum) enumField.GetValue(null);
+                string name = enumField.Name;
+                ProtoEnumAttribute ea = AttributeUtils.GetAttribute<ProtoEnumAttribute>(enumField);
+
                 TValue value;
                 if (ea == null || !ea.HasValue())
                 {

@@ -11,18 +11,12 @@ namespace ProtoBuf
 
         public static int EncodeInt32(int value, SerializationContext context)
         {
-            if((value & INT32_MSB)==0) {
-                // msb not set; just encode
-                return EncodeInt64((long)value, context);
-            } else {
-                // need to treat as a large -ve long (move the msb)
-                long lVal = (long)(value ^ INT32_MSB);
-                return EncodeInt64(lVal | INT64_MSB, context);
-            }
+            return EncodeInt64((long)value, context);
         }
         public static int DecodeInt32(SerializationContext context)
         {
-            long lVal = DecodeInt64(context);
+            return (int)DecodeInt64(context);
+            /*long lVal = DecodeInt64(context);
             if ((lVal & INT64_MSB) == 0)
             {
                 // msb not set; just cast
@@ -33,7 +27,7 @@ namespace ProtoBuf
                 // treat large -ve long as -ve int (move the msb)
                 int iVal = (int)(lVal ^ INT64_MSB);
                 return iVal | INT32_MSB;
-            }
+            }*/
         }
         internal static int EncodeInt64(long value, SerializationContext context)
         {

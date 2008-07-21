@@ -6,12 +6,9 @@ namespace ProtoBuf
         string ISerializer<int>.DefinedType { get { return ProtoFormat.SINT32; } }
 
 
-        private static long WrapMsb(int value)
+        private static long ZigInt32(int value)
         {
-            unchecked
-            {
-                return ((value << 1) ^ (value >> 31));
-            }
+            return ((value << 1) ^ (value >> 31));
         }
         public int Deserialize(int value, SerializationContext context)
         {
@@ -25,7 +22,7 @@ namespace ProtoBuf
         }
         public int Serialize(int value, SerializationContext context)
         {
-            return TwosComplementSerializer.WriteToStream(WrapMsb(value), context);
+            return TwosComplementSerializer.WriteToStream(ZigInt32(value), context);
         }
         public int GetLength(int value, SerializationContext context)
         {

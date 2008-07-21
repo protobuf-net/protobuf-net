@@ -3,12 +3,9 @@ namespace ProtoBuf
 {
     partial class ZigZagSerializer : ISerializer<int>, ISerializer<long>
     {
-        private static long WrapMsb(long value)
+        private static long ZigInt64(long value)
         {
-            unchecked
-            {
-                return ((value << 1) ^ (value >> 63));
-            }
+            return ((value << 1) ^ (value >> 63));
         }
 
         public int Serialize(long value, SerializationContext context)
@@ -28,11 +25,11 @@ namespace ProtoBuf
         }
         public static int GetLength(int value)
         {
-            return TwosComplementSerializer.GetLength(WrapMsb(value));
+            return TwosComplementSerializer.GetLength(ZigInt32(value));
         }
         public static int GetLength(long value)
         {
-            return TwosComplementSerializer.GetLength(WrapMsb(value));
+            return TwosComplementSerializer.GetLength(ZigInt64(value));
         }
         public static long ReadInt64(SerializationContext context)
         {
@@ -43,7 +40,7 @@ namespace ProtoBuf
 
         internal static int WriteToStream(long value, SerializationContext context)
         {
-            long toWrite = WrapMsb(value);
+            long toWrite = ZigInt64(value);
             return TwosComplementSerializer.WriteToStream(toWrite, context);
         }
     }
