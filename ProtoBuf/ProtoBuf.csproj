@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ProtoBuf</RootNamespace>
-    <AssemblyName>ProtoBuf</AssemblyName>
+    <AssemblyName>protobuf-net</AssemblyName>
     <TargetFrameworkVersion>v3.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <StartupObject>
@@ -28,7 +28,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <DocumentationFile>bin\Debug\ProtoBuf.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\protobuf-net.xml</DocumentationFile>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -38,12 +39,12 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
-    <DocumentationFile>bin\Release\ProtoBuf.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\protobuf-net.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Net20|AnyCPU' ">
     <OutputPath>bin\Net20\</OutputPath>
     <DefineConstants>TRACE;REMOTING</DefineConstants>
-    <DocumentationFile>bin\Release\ProtoBuf.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\protobuf-net.xml</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -55,7 +56,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight2|AnyCPU' ">
     <OutputPath>bin\Silverlight2\</OutputPath>
     <DefineConstants>TRACE;NET_3_0</DefineConstants>
-    <DocumentationFile>bin\Release\ProtoBuf.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\protobuf-net.xml</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
