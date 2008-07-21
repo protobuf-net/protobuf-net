@@ -13,7 +13,7 @@ namespace ProtoBuf
         /// The specific value to use for this enum during serialization.
         /// </summary>
         public long Value {
-            get { return value; }
+            get { return value.GetValueOrDefault(); }
             set
             {
                 if (value < 0 || value > MAX_VALUE)
@@ -23,8 +23,13 @@ namespace ProtoBuf
                 this.value = value;
             }
         }
+        /// <summary>
+        /// Indicates whether this instance has a customised value mapping
+        /// </summary>
+        /// <returns>true if a specific value is set</returns>
+        public bool HasValue() { return value.HasValue; }
         const long MAX_VALUE = 0x7FFFFFFF;
-        private long value = -1;
+        private long? value;
         /// <summary>
         /// The defined name of the enum, as used in .proto
         /// (this name is not used during serialization).

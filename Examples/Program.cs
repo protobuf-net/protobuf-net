@@ -9,6 +9,18 @@ namespace Examples
 {
     class Program
     {
+
+        public static bool ArraysEqual(byte[] actual, byte[] expected)
+        {
+            if (ReferenceEquals(actual, expected)) return true;
+            if (actual == null || expected == null) return false;
+            if (actual.Length != expected.Length) return false;
+            for (int i = 0; i < actual.Length; i++)
+            {
+                if (actual[i] != expected[i]) return false;
+            }
+            return true;
+        }
         static void Main()
         {
 
@@ -63,7 +75,6 @@ namespace Examples
 
             run(TestNumbers.SignTests.RunSignTests);
             run(SimpleStream.Collections.RunCollectionTests);
-            run(DesignIdeas.EnumTests.RunEnumTests);
             run(TestNumbers.NumberTests.RunNumberTests);
             run(SimpleStream.SimplePerfTests.RunSimplePerfTests);
             run(SimpleStream.SimpleStreamDemo.RunSimpleStreams);

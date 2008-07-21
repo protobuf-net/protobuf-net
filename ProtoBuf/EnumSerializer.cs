@@ -25,7 +25,7 @@ namespace ProtoBuf
                 ProtoEnumAttribute ea = AttributeUtils.GetAttribute<ProtoEnumAttribute>
                     (typeof(TEnum).GetField(name, BindingFlags.Static | BindingFlags.Public));
                 TValue value;
-                if (ea == null)
+                if (ea == null || !ea.HasValue())
                 {
                     value = (TValue)Convert.ChangeType(key, typeof(TValue));
                 }
