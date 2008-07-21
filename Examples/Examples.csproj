@@ -91,6 +91,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DesignIdeas\Inheritance.cs" />
+    <Compile Include="ProtoGeneration.cs" />
     <Compile Include="Remoting\RemotingDemo.cs" />
     <Compile Include="ServiceModel\WcfTest.cs" />
     <Compile Include="SimpleStream\Collections.cs" />

@@ -75,7 +75,7 @@ namespace ProtoBuf
                     // check that only the lsb is set in the final block
                     if ((b & (byte)254) != 0)
                     {
-                        throw new SerializationException("Overflow reading Int64");
+                        throw new OverflowException("Overflow reading Int64");
                     }
                     // add the final bit
                     long usefulBits = (long)(b & 1);
