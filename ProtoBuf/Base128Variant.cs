@@ -59,38 +59,41 @@ namespace ProtoBuf
         }
         internal static long DecodeInt64(SerializationContext context)
         {
-            long value = 0;
-
+            long value = 0; // the result (treated as binary
             Stream source = context.Stream;
-            int b, tuple = 0;
+            int b, // the byte we read from the stream
+                shift = 0; // the offset of the read data into the result binary
             do
             {
                 b = source.ReadByte();
                 if (b < 0)
                 {
                     // raise eof only on the first byte
-                    if (tuple == 0 && context.Eof == Eof.Expected)
+                    if (shift == 0 && context.Eof == Eof.Expected)
                     {
                         context.Eof = Eof.Ended;
                         return 0;
                     }
                     throw new EndOfStreamException();
                 }
-                if (tuple++ == 9)
+                if (shift == 63)
                 {
+                    // check that only the lsb is set in the final block
                     if ((b & (byte)254) != 0)
                     {
                         throw new SerializationException("Overflow reading Int64");
                     }
-                    // add the final bit (9*7=63; only 1 bit needed from last tuple)
+                    // add the final bit
                     long usefulBits = (long)(b & 1);
-                    value = (value << 1) | usefulBits;
+                    value |= (usefulBits << shift);
                     break;
                 }
                 else
                 {
+                    // received little-endian, so shift the data into place
                     long usefulBits = (long)(b & 127);
-                    value = (value << 7) | usefulBits;
+                    value |= (usefulBits << shift);
+                    shift += 7;
                 }
             } while ((b & 128) != 0);
 

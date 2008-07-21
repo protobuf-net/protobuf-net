@@ -62,19 +62,21 @@ namespace Examples.TestNumbers
 
     class SignTests
     {
-        public static void Run(int index)
+        public static bool RunSignTests()
         {
-            CheckBytes(new TwosComplementInt32 { Foo = 1 }, 0x08, 0x01);
-            CheckBytes(new TwosComplementInt32 { Foo = 2 }, 0x08, 0x02);
-            CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01);
-            CheckBytes(new TwosComplementInt32 { Foo = -2 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01);
+            bool pass = true;
+            pass &= CheckBytes(new TwosComplementInt32 { Foo = 1 }, 0x08, 0x01);
+            pass &= CheckBytes(new TwosComplementInt32 { Foo = 2 }, 0x08, 0x02);
+            pass &= CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01);
+            pass &= CheckBytes(new TwosComplementInt32 { Foo = -2 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01);
 
-            CheckBytes(new ZigZagInt32 { Foo = 1 }, 0x08, 0x02);
-            CheckBytes(new ZigZagInt32 { Foo = 2 }, 0x08, 0x04);
-            CheckBytes(new ZigZagInt32 { Foo = -1 }, 0x08, 0x01);
-            CheckBytes(new ZigZagInt32 { Foo = -2 }, 0x08, 0x03);
+            pass &= CheckBytes(new ZigZagInt32 { Foo = 1 }, 0x08, 0x02);
+            pass &= CheckBytes(new ZigZagInt32 { Foo = 2 }, 0x08, 0x04);
+            pass &= CheckBytes(new ZigZagInt32 { Foo = -1 }, 0x08, 0x01);
+            pass &= CheckBytes(new ZigZagInt32 { Foo = -2 }, 0x08, 0x03);
+            return pass;
         }
-        private static void CheckBytes<T>(T item, params byte[] expected) where T : class, new()
+        private static bool CheckBytes<T>(T item, params byte[] expected) where T : class, new()
         {
             using (MemoryStream ms = new MemoryStream())
             {
@@ -93,6 +95,7 @@ namespace Examples.TestNumbers
                     Console.WriteLine("Hi");
                 }
                 Console.WriteLine("\tMatch ({0}): {1}", typeof(T).Name, match ? "Pass" : "Fail");
+                return match;
             }
         }
     }
@@ -100,8 +103,9 @@ namespace Examples.TestNumbers
     {
         
 
-        public static void Run(int index)
+        public static bool RunNumberTests()
         {
+            int failCount = 0;
             NumRig rig = new NumRig();
             const string SUCCESS = "bar";
             rig.Foo = SUCCESS; // to help test stream ending prematurely
@@ -121,15 +125,16 @@ namespace Examples.TestNumbers
                     try
                     {
                         NumRig clone = Serializer.DeepClone(rig);
-                        if (rig.Int32Default != val) Console.WriteLine("Int32Default failed for: {0}", val);
-                        if (rig.Int32FixedSize != val) Console.WriteLine("Int32FixedSize failed for: {0}", val);
-                        if (rig.Int32TwosComplement != val) Console.WriteLine("Int32TwosComplement failed for: {0}", val);
-                        if (rig.Int32ZigZag != val) Console.WriteLine("Int32ZigZag failed for: {0}", val);
-                        if (rig.Foo != SUCCESS) Console.WriteLine("Unknown serialization error for: {0}", val);
+                        if (rig.Int32Default != val) { failCount++; Console.WriteLine("Int32Default failed for: {0}", val); }
+                        if (rig.Int32FixedSize != val) {failCount++; Console.WriteLine("Int32FixedSize failed for: {0}", val);}
+                        if (rig.Int32TwosComplement != val) {failCount++;Console.WriteLine("Int32TwosComplement failed for: {0}", val);}
+                        if (rig.Int32ZigZag != val) {failCount++;Console.WriteLine("Int32ZigZag failed for: {0}", val);}
+                        if (rig.Foo != SUCCESS) { failCount++; Console.WriteLine("Unknown serialization error for: {0}", val); }
                         count++;
                     }
                     catch (Exception ex)
                     {
+                        failCount++;
                         Console.WriteLine("{0}, {1} = {2}", i,j,val);
                         while (ex != null)
                         {
@@ -156,15 +161,16 @@ namespace Examples.TestNumbers
                     try
                     {
                         NumRig clone = Serializer.DeepClone(rig);
-                        if (rig.Int64Default != val) Console.WriteLine("Int64Default failed for: {0}", val);
-                        if (rig.Int64FixedSize != val) Console.WriteLine("Int64FixedSize failed for: {0}", val);
-                        if (rig.Int64TwosComplement != val) Console.WriteLine("Int64TwosComplement failed for: {0}", val);
-                        if (rig.Int64ZigZag != val) Console.WriteLine("Int64ZigZag failed for: {0}", val);
-                        if (rig.Foo != SUCCESS) Console.WriteLine("Unknown serialization error for: {0}", val);
+                        if (rig.Int64Default != val) { failCount++; Console.WriteLine("Int64Default failed for: {0}", val); }
+                        if (rig.Int64FixedSize != val) { failCount++; Console.WriteLine("Int64FixedSize failed for: {0}", val); }
+                        if (rig.Int64TwosComplement != val) { failCount++; Console.WriteLine("Int64TwosComplement failed for: {0}", val); }
+                        if (rig.Int64ZigZag != val) { failCount++; Console.WriteLine("Int64ZigZag failed for: {0}", val); }
+                        if (rig.Foo != SUCCESS) { failCount++; Console.WriteLine("Unknown serialization error for: {0}", val); }
                         count++;
                     }
                     catch (Exception ex)
                     {
+                        failCount++;
                         Console.WriteLine("{0}, {1} = {2}", i, j, val);
                         while (ex != null)
                         {
@@ -175,6 +181,7 @@ namespace Examples.TestNumbers
                 }
             }
             Console.WriteLine("\tInt64 tests: {0}", count);
+            return failCount == 0;
         }
     }
 }

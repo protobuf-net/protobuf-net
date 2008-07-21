@@ -52,11 +52,11 @@ namespace Examples.Remoting
 
     static class RemotingDemo
     {
-        public static void Run(int index)
+        public static bool RunRemotingDemo()
         {
             Console.WriteLine(" (note; currently slower than regular remoting)");
             Console.WriteLine();
-
+            bool pass;
             AppDomain app = AppDomain.CreateDomain("Isolated");
             try
             {
@@ -76,10 +76,12 @@ namespace Examples.Remoting
                     && localFrag1.Foo == localFrag2.Foo && localFrag1.Bar == localFrag2.Bar)
                 {
                     Console.WriteLine("\tMessages passed successfully; identical replies received");
+                    pass = true;
                 }
                 else
                 {
                     Console.WriteLine("\t*** Remoting messages did not match!!!");
+                    pass = false;
                 }
                 const int LOOP = 10000;
 
@@ -119,10 +121,12 @@ namespace Examples.Remoting
 
             }
             finally
-            {
+            {                
                 AppDomain.Unload(app);
             }
+            return pass;
         }
+
     }
 }
 #endif

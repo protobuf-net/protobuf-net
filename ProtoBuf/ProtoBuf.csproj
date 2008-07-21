@@ -164,8 +164,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataFormat.cs" />
+    <Compile Include="EnumSerializer.cs" />
     <Compile Include="FixedSerializer.cs">
       <DependentUpon>ISerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FixedSerializer_UInt32.cs">
+      <DependentUpon>FixedSerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FixedSerializer_UInt64.cs">
+      <DependentUpon>FixedSerializer.cs</DependentUpon>
     </Compile>
     <Compile Include="IExtensible.cs" />
     <Compile Include="NetExtensions\ProtoIncludeAttribute.cs" />

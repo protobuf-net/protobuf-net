@@ -63,63 +63,28 @@ namespace Examples.SimpleStream
         Test3 Bar(Test1 value);
     }
 
-    [DataContract]
-    public sealed class PerfTest
-    {
-        [DataMember(Order = 1)]
-        public int Foo { get; set; }
-
-        [DataMember(Order = 2)]
-        public string Bar { get; set; }
-
-        [DataMember(Order = 3)]
-        public float Blip{ get; set; }
-
-        [DataMember(Order = 4)]
-        public double Blop { get; set; }
-
-    }
-
     static class SimpleStreamDemo
     {
-        public static void RunSimplePerfTests(int index)
-        {
-            PerfTest obj = new PerfTest
-            {
-                Foo = 12,
-                Bar = "bar",
-                Blip = 123.45F,
-                Blop = 123.4567
-            };
-            PerfTest clone = Serializer.DeepClone(obj);
-            if (obj.Foo == clone.Foo && obj.Bar == clone.Bar
-                && obj.Blip == clone.Blip && obj.Blop == clone.Blop)
-            {
-                Console.WriteLine("\tVaidated object integrity");
-            }
-            const int LOOP = 500000;
-            Stopwatch watch = Stopwatch.StartNew();
-            for (int i = 0; i < LOOP; i++)
-            {
-                Serializer.Serialize(Stream.Null, obj);
-            }
-            watch.Stop();
-            Console.WriteLine("\tSerialized x{0} in {1}ms", 500000, watch.ElapsedMilliseconds);
-        }
 
-        public static void RunSimpleStreams(int index)
+
+        public static bool RunSimpleStreams()
         {
+            bool pass = true;
             Test1 t1 = new Test1 {A=150};
-            TestItem(t1, 0x08, 0x96, 0x01);
+            pass &= TestItem(t1, 0x08, 0x96, 0x01);
 
             Test2 t2 = new Test2 { B = "testing" };
-            TestItem(t2, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67);
+            pass &= TestItem(t2, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67);
 
             Test3 t3 = new Test3 { C = t1 };
-            TestItem(t3, 0x1a, 0x03, 0x08, 0x96, 0x01);
+            pass &= TestItem(t3, 0x1a, 0x03, 0x08, 0x96, 0x01);
+
+            return pass;
         }
-        static void TestItem<T>(T item, params byte[] expected) where T : class, new()
+
+        static bool TestItem<T>(T item, params byte[] expected) where T : class, new()
         {
+            bool pass = true;
             string name = typeof(T).Name;
             Console.WriteLine("\t{0}", name);
             const int LOOP = 100000;
@@ -134,6 +99,7 @@ namespace Examples.SimpleStream
 
                 if (data.Length != expected.Length)
                 {
+                    pass = false;
                     Console.WriteLine("\t*** serialization failure; expected {0}, got {1} (bytes)", expected.Length, data.Length);
                 }
                 else
@@ -145,6 +111,7 @@ namespace Examples.SimpleStream
                     }
                     if (bad)
                     {
+                        pass = false;
                         Console.WriteLine("\t*** serialization failure; byte stream mismatch");
                         WriteBytes("Expected", expected);
                     }
@@ -292,6 +259,7 @@ namespace Examples.SimpleStream
                 Console.WriteLine("\tJSON: {0}", originalJson);
                 if (originalJson != cloneJson)
                 {
+                    pass = false;
                     Console.WriteLine("\t**** json comparison fails!");
                     Console.WriteLine("\tClone JSON: {0}", cloneJson);
                 }
@@ -300,6 +268,7 @@ namespace Examples.SimpleStream
 
             Console.WriteLine("\t[end {0}]", name);
             Console.WriteLine();
+            return pass;
         }
         static void WriteBytes(string caption, byte[] data)
         {

@@ -5,9 +5,9 @@ namespace ProtoBuf
 {
     static class AttributeUtils
     {
-        internal static T GetAttribute<T>(PropertyInfo property) where T : Attribute
+        internal static T GetAttribute<T>(MemberInfo member) where T : Attribute
         {
-            return (T)Attribute.GetCustomAttribute(property, typeof(T));
+            return (T)Attribute.GetCustomAttribute(member, typeof(T));
         }
         internal static T GetAttribute<T>(Type type) where T : Attribute
         {

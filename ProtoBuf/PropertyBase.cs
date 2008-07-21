@@ -37,6 +37,18 @@ namespace ProtoBuf
                         typeof(EntitySerializer<>).MakeGenericType(typeof(T)));
                     SimpleSerializers.Set<T>(result);
                 }
+                else if (typeof(T).IsEnum)
+                {
+                    Type underlying = Enum.GetUnderlyingType(typeof(T));
+                    object baseSer = typeof(PropertyBase<TEntity, TValue>)
+                        .GetMethod("GetSerializer", BindingFlags.NonPublic | BindingFlags.Static)
+                        .MakeGenericMethod(underlying).Invoke(null, new object[] {property});
+
+                    Type[] ctorArgTypes = { typeof(ISerializer<>).MakeGenericType(underlying) };
+                    result = (ISerializer<T>) typeof(EnumSerializer<,>).MakeGenericType(typeof(T), underlying)
+                        .GetConstructor(ctorArgTypes).Invoke(new object[] {baseSer});
+                    SimpleSerializers.Set<T>(result);
+                }
                 else
                 {
                     // tell the developer that they screwed up...

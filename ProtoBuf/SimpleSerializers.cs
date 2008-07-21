@@ -29,8 +29,8 @@ namespace ProtoBuf
 
             Set<float>(FixedSerializer.Default, null, null, FixedSerializer.Default);
             Set<double>(FixedSerializer.Default, null, null, FixedSerializer.Default);
-            Set<uint>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, null);
-            Set<ulong>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, null);
+            Set<uint>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, FixedSerializer.Default);
+            Set<ulong>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, FixedSerializer.Default);
             Set<bool>(BooleanSerializer.Default, null, null, BooleanSerializer.Default);
             Set<DateTime>(ZigZagSerializer.Default, ZigZagSerializer.Default, null, null);
             Set<decimal>(TwosComplementSerializer.Default, ZigZagSerializer.Default, TwosComplementSerializer.Default, null);
