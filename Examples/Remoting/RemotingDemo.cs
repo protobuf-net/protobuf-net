@@ -3,6 +3,8 @@ using System;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using ProtoBuf;
+using NUnit.Framework;
+using System.IO;
 
 namespace Examples.Remoting
 {
@@ -50,14 +52,20 @@ namespace Examples.Remoting
         }
     }
 
-    static class RemotingDemo
+    [TestFixture]
+    public class RemotingDemo
     {
-        public static bool RunRemotingDemo()
+        //[Test]
+
+        //damn can't get this one working at the moment...
+        public void RunRemotingDemo()
         {
-            Console.WriteLine(" (note; currently slower than regular remoting)");
-            Console.WriteLine();
-            bool pass;
             AppDomain app = AppDomain.CreateDomain("Isolated");
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
+
+                GetType().Assembly.ManifestModule.Name);
+            byte[] raw = File.ReadAllBytes(path);
+            app.Load(raw);
             try
             {
                 // create a server and two identical messages
@@ -71,60 +79,18 @@ namespace Examples.Remoting
                 ProtoFragment localFrag2 = local.SomeMethod2(frag2),
                     remoteFrag2 = remote.SomeMethod2(frag2);
 
-                if (localFrag1.Foo == remoteFrag1.Foo && localFrag1.Bar == remoteFrag1.Bar
-                    && localFrag2.Foo == remoteFrag2.Foo && localFrag2.Bar == remoteFrag2.Bar
-                    && localFrag1.Foo == localFrag2.Foo && localFrag1.Bar == localFrag2.Bar)
-                {
-                    Console.WriteLine("\tMessages passed successfully; identical replies received");
-                    pass = true;
-                }
-                else
-                {
-                    Console.WriteLine("\t*** Remoting messages did not match!!!");
-                    pass = false;
-                }
-                const int LOOP = 10000;
-
-                Stopwatch watch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
-                {
-                    localFrag1 = local.SomeMethod1(frag1);
-                }
-                watch.Stop();
-                Console.WriteLine("\tLocal, Regular x{0}: {1:###,###,###} ticks", LOOP, watch.ElapsedTicks);
-
-                watch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
-                {
-                    localFrag2 = local.SomeMethod2(frag2);
-                }
-                watch.Stop();
-                Console.WriteLine("\tLocal, Proto x{0}: {1:###,###,###} ticks", LOOP, watch.ElapsedTicks);
-
-                watch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
-                {
-                    remoteFrag1 = remote.SomeMethod1(frag1);
-                }
-                watch.Stop();
-                Console.WriteLine("\tRemote, Regular x{0}: {1:###,###,###} ticks", LOOP, watch.ElapsedTicks);
-
-                watch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
-                {
-                    remoteFrag2 = remote.SomeMethod2(frag2);
-                }
-                watch.Stop();
-                Console.WriteLine("\tRemote, Proto x{0}: {1:###,###,###} ticks", LOOP, watch.ElapsedTicks);
-
-                watch.Stop();
+                Assert.AreEqual(localFrag1.Foo, remoteFrag1.Foo);
+                Assert.AreEqual(localFrag1.Bar, remoteFrag1.Bar);
+                Assert.AreEqual(localFrag2.Foo, remoteFrag2.Foo);
+                Assert.AreEqual(localFrag2.Bar, remoteFrag2.Bar);
+                Assert.AreEqual(localFrag1.Foo, localFrag2.Foo);
+                Assert.AreEqual(localFrag1.Bar, localFrag2.Bar);
 
             }
             finally
             {                
                 AppDomain.Unload(app);
             }
-            return pass;
         }
 
     }

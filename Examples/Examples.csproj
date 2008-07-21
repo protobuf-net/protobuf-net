@@ -16,6 +16,8 @@
     </TargetFrameworkSubset>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../ProtoBuf.snk</AssemblyOriginatorKeyFile>
+    <StartupObject>
+    </StartupObject>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -83,7 +85,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DesignIdeas\ChangeType.cs" />
-    <Compile Include="DesignIdeas\Enums.cs" />
+    <Compile Include="EnumTests.cs" />
     <Compile Include="OldProgram.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

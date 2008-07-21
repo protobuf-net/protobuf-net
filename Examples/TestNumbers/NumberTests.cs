@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using ProtoBuf;
+using NUnit.Framework;
 
 namespace Examples.TestNumbers
 {
@@ -18,12 +19,10 @@ namespace Examples.TestNumbers
 
         [ProtoMember(5, DataFormat = DataFormat.Default)]
         public uint UInt32Default { get; set; }
-        //[ProtoMember(6, DataFormat = DataFormat.ZigZag)]
-        //public uint UInt32ZigZag { get; set; }
-        //[ProtoMember(7, DataFormat = DataFormat.TwosComplement)]
-        //public uint UInt32TwosComplement { get; set; }
-        //[ProtoMember(8, DataFormat = DataFormat.FixedSize)]
-        //public uint UInt32FixedSize { get; set; }
+        [ProtoMember(7, DataFormat = DataFormat.TwosComplement)]
+        public uint UInt32TwosComplement { get; set; }
+        [ProtoMember(8, DataFormat = DataFormat.FixedSize)]
+        public uint UInt32FixedSize { get; set; }
 
         [ProtoMember(9, DataFormat = DataFormat.Default)]
         public long Int64Default { get; set; }
@@ -36,12 +35,10 @@ namespace Examples.TestNumbers
 
         [ProtoMember(13, DataFormat = DataFormat.Default)]
         public ulong UInt64Default { get; set; }
-        //[ProtoMember(14, DataFormat = DataFormat.ZigZag)]
-        //public ulong UInt64ZigZag { get; set; }
-        //[ProtoMember(15, DataFormat = DataFormat.TwosComplement)]
-        //public ulong UInt64TwosComplement { get; set; }
-        //[ProtoMember(16, DataFormat = DataFormat.FixedSize)]
-        //public ulong UInt64FixedSize { get; set; }
+        [ProtoMember(15, DataFormat = DataFormat.TwosComplement)]
+        public ulong UInt64TwosComplement { get; set; }
+        [ProtoMember(16, DataFormat = DataFormat.FixedSize)]
+        public ulong UInt64FixedSize { get; set; }
         
         [ProtoMember(17)]
         public string Foo { get; set; }
@@ -60,56 +57,32 @@ namespace Examples.TestNumbers
         public int Foo { get; set; }
     }
 
-    class SignTests
+    [TestFixture]
+    public class SignTests
     {
-        public static bool RunSignTests()
+        [Test]
+        public void TestSignTwosComplementInt32()
         {
-            bool pass = true;
-            pass &= CheckBytes(new TwosComplementInt32 { Foo = 1 }, 0x08, 0x01);
-            pass &= CheckBytes(new TwosComplementInt32 { Foo = 2 }, 0x08, 0x02);
-            pass &= CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01);
-            pass &= CheckBytes(new TwosComplementInt32 { Foo = -2 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01);
-
-            pass &= CheckBytes(new ZigZagInt32 { Foo = 1 }, 0x08, 0x02);
-            pass &= CheckBytes(new ZigZagInt32 { Foo = 2 }, 0x08, 0x04);
-            pass &= CheckBytes(new ZigZagInt32 { Foo = -1 }, 0x08, 0x01);
-            pass &= CheckBytes(new ZigZagInt32 { Foo = -2 }, 0x08, 0x03);
-            return pass;
+            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 1 }, 0x08, 0x01), "+1");
+            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 2 }, 0x08, 0x02), "+2");
+            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-1");
+            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = -2 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-2");
         }
-        private static bool CheckBytes<T>(T item, params byte[] expected) where T : class, new()
+        [Test]
+        public void TestSignZigZagInt32()
         {
-            using (MemoryStream ms = new MemoryStream())
-            {
-                Serializer.Serialize(ms, item);
-                byte[] actual = ms.ToArray();
-                bool match = actual.Length == expected.Length;
-                if (match)
-                {
-                    for (int i = 0; i < expected.Length; i++)
-                    {
-                        match &= actual[i] == expected[i];
-                    }
-                }
-                if (!match)
-                {
-                    Console.WriteLine("Hi");
-                }
-                Console.WriteLine("\tMatch ({0}): {1}", typeof(T).Name, match ? "Pass" : "Fail");
-                return match;
-            }
+            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 1 }, 0x08, 0x02), "+1");
+            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 2 }, 0x08, 0x04), "+2");
+            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = -1 }, 0x08, 0x01), "-1");
+            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = -2 }, 0x08, 0x03), "-2");
         }
-    }
-    class NumberTests
-    {
-        
 
-        public static bool RunNumberTests()
+        [Test]
+        public void SweepBitsInt32()
         {
-            int failCount = 0;
             NumRig rig = new NumRig();
             const string SUCCESS = "bar";
             rig.Foo = SUCCESS; // to help test stream ending prematurely
-            int count = 0;
             for (int i = 0; i < 32; i++)
             {
                 int bigBit = i == 0 ? 0 : (1 << i - 1);
@@ -122,30 +95,22 @@ namespace Examples.TestNumbers
                         = rig.Int32TwosComplement
                         = rig.Int32ZigZag
                         = val;
-                    try
-                    {
-                        NumRig clone = Serializer.DeepClone(rig);
-                        if (rig.Int32Default != val) { failCount++; Console.WriteLine("Int32Default failed for: {0}", val); }
-                        if (rig.Int32FixedSize != val) {failCount++; Console.WriteLine("Int32FixedSize failed for: {0}", val);}
-                        if (rig.Int32TwosComplement != val) {failCount++;Console.WriteLine("Int32TwosComplement failed for: {0}", val);}
-                        if (rig.Int32ZigZag != val) {failCount++;Console.WriteLine("Int32ZigZag failed for: {0}", val);}
-                        if (rig.Foo != SUCCESS) { failCount++; Console.WriteLine("Unknown serialization error for: {0}", val); }
-                        count++;
-                    }
-                    catch (Exception ex)
-                    {
-                        failCount++;
-                        Console.WriteLine("{0}, {1} = {2}", i,j,val);
-                        while (ex != null)
-                        {
-                            Console.WriteLine(ex.Message);
-                            ex = ex.InnerException;
-                        }
-                    }
+
+                    NumRig clone = Serializer.DeepClone(rig);
+                    Assert.AreEqual(val, rig.Int32Default);
+                    Assert.AreEqual(val, rig.Int32FixedSize);
+                    Assert.AreEqual(val, rig.Int32TwosComplement);
+                    Assert.AreEqual(val, rig.Int32ZigZag);
+                    Assert.AreEqual(SUCCESS, rig.Foo);
                 }
             }
-            Console.WriteLine("\tInt32 tests: {0}", count);
-            count = 0;
+        }
+        [Test]
+        public void SweepBitsInt64()
+        {
+            NumRig rig = new NumRig();
+            const string SUCCESS = "bar";
+            rig.Foo = SUCCESS; // to help test stream ending prematurely
             for (int i = 0; i < 64; i++)
             {
                 long bigBit = i == 0 ? 0 : (1 << i - 1);
@@ -158,30 +123,15 @@ namespace Examples.TestNumbers
                         = rig.Int64TwosComplement
                         = rig.Int64ZigZag
                         = val;
-                    try
-                    {
-                        NumRig clone = Serializer.DeepClone(rig);
-                        if (rig.Int64Default != val) { failCount++; Console.WriteLine("Int64Default failed for: {0}", val); }
-                        if (rig.Int64FixedSize != val) { failCount++; Console.WriteLine("Int64FixedSize failed for: {0}", val); }
-                        if (rig.Int64TwosComplement != val) { failCount++; Console.WriteLine("Int64TwosComplement failed for: {0}", val); }
-                        if (rig.Int64ZigZag != val) { failCount++; Console.WriteLine("Int64ZigZag failed for: {0}", val); }
-                        if (rig.Foo != SUCCESS) { failCount++; Console.WriteLine("Unknown serialization error for: {0}", val); }
-                        count++;
-                    }
-                    catch (Exception ex)
-                    {
-                        failCount++;
-                        Console.WriteLine("{0}, {1} = {2}", i, j, val);
-                        while (ex != null)
-                        {
-                            Console.WriteLine(ex.Message);
-                            ex = ex.InnerException;
-                        }
-                    }
+
+                    NumRig clone = Serializer.DeepClone(rig);
+                    Assert.AreEqual(val, rig.Int64Default);
+                    Assert.AreEqual(val, rig.Int64FixedSize);
+                    Assert.AreEqual(val, rig.Int64ZigZag);
+                    Assert.AreEqual(val, rig.Int64TwosComplement);
+                    Assert.AreEqual(SUCCESS, rig.Foo);
                 }
             }
-            Console.WriteLine("\tInt64 tests: {0}", count);
-            return failCount == 0;
         }
     }
 }

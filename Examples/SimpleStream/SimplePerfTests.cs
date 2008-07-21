@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using ProtoBuf;
 using System.Runtime.Serialization;
+using NUnit.Framework;
 
 namespace Examples.SimpleStream
 {
@@ -22,11 +23,12 @@ namespace Examples.SimpleStream
         public double Blop { get; set; }
 
     }
-    static class SimplePerfTests
+    [TestFixture]
+    public class SimplePerfTests
     {
-        public static bool RunSimplePerfTests()
+        [Test]
+        public void RunSimplePerfTests()
         {
-            bool pass = false;
             PerfTest obj = new PerfTest
             {
                 Foo = 12,
@@ -35,21 +37,18 @@ namespace Examples.SimpleStream
                 Blop = 123.4567
             };
             PerfTest clone = Serializer.DeepClone(obj);
-            if (obj.Foo == clone.Foo && obj.Bar == clone.Bar
-                && obj.Blip == clone.Blip && obj.Blop == clone.Blop)
-            {
-                pass = true;
-                Console.WriteLine("\tVaidated object integrity");
-            }
+            Assert.AreEqual(obj.Foo, clone.Foo, "Foo");
+            Assert.AreEqual(obj.Bar, clone.Bar, "Bar");
+            Assert.AreEqual(obj.Blop, clone.Blop, "Blop");
+            Assert.AreEqual(obj.Blip, clone.Blip, "Blip");
+
             const int LOOP = 500000;
             Stopwatch watch = Stopwatch.StartNew();
             for (int i = 0; i < LOOP; i++)
             {
                 Serializer.Serialize(Stream.Null, obj);
             }
-            watch.Stop();
             Console.WriteLine("\tSerialized x{0} in {1}ms", 500000, watch.ElapsedMilliseconds);
-            return pass;
         }
     }
 }

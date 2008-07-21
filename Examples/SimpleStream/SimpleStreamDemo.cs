@@ -13,6 +13,7 @@ using ProtoBuf.ServiceModel;
 #endif
 #if NET_3_5
 using System.Runtime.Serialization.Json;
+using NUnit.Framework;
 #endif
 
 namespace Examples.SimpleStream
@@ -63,24 +64,29 @@ namespace Examples.SimpleStream
         Test3 Bar(Test1 value);
     }
 
-    static class SimpleStreamDemo
+    [TestFixture]
+    public class SimpleStreamDemo
     {
 
-
-        public static bool RunSimpleStreams()
+        [Test]
+        public void EncodingDocSample1()
         {
-            bool pass = true;
-            Test1 t1 = new Test1 {A=150};
-            pass &= TestItem(t1, 0x08, 0x96, 0x01);
-
-            Test2 t2 = new Test2 { B = "testing" };
-            pass &= TestItem(t2, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67);
-
-            Test3 t3 = new Test3 { C = t1 };
-            pass &= TestItem(t3, 0x1a, 0x03, 0x08, 0x96, 0x01);
-
-            return pass;
+            Test1 t1 = new Test1 { A = 150 };
+            Assert.IsTrue(Program.CheckBytes(t1, 0x08, 0x96, 0x01));
         }
+        [Test]
+        public void EncodingDocSample2()
+        {
+            Test2 t2 = new Test2 { B = "testing" };
+            Assert.IsTrue(Program.CheckBytes(t2, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+        }
+        [Test]
+        public void EncodingDocSample3()
+        {
+            Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
+            Assert.IsTrue(Program.CheckBytes(t3, 0x1a, 0x03, 0x08, 0x96, 0x01));
+        }
+
 
         static bool TestItem<T>(T item, params byte[] expected) where T : class, new()
         {
