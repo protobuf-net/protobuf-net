@@ -16,8 +16,15 @@ namespace ProtoBuf
     [ProtoContract]
     public abstract class Extensible : IExtensible
     {
+        private byte[] extendedData;
+
+        int IExtensible.GetLength()
+        {
+            return Extensible.GetLength(extendedData);
+        }
         /// <summary>
-        /// Used to implement IExtensible.GetLength() for simple byte[]-based implementations.
+        /// Used to implement IExtensible.GetLength() for simple byte[]-based implementations;
+        /// returns the length of the current buffer.
         /// </summary>
         /// <param name="buffer">The current buffer instance (can be null).</param>
         /// <returns>The length of the buffer, or 0 if null.</returns>
@@ -25,48 +32,85 @@ namespace ProtoBuf
         {
             return buffer == null ? 0 : buffer.Length;
         }
+
+
+        Stream IExtensible.BeginAppend()
+        {
+            return Extensible.BeginAppend();
+        }
         /// <summary>
-        /// Used to implement IExtensible.Append() for simple byte[]-based implementations;
+        /// Used to implement IExtensible.EndAppend() for simple byte[]-based implementations;
+        /// obtains a new Stream suitable for storing data as a simple buffer.
+        /// </summary>
+        /// <returns>The stream for storing data.</returns>
+        public static Stream BeginAppend()
+        {
+            return new MemoryStream();
+        }
+
+
+        void IExtensible.EndAppend(Stream stream, bool commit)
+        {
+            extendedData = Extensible.EndAppend(extendedData, stream, commit);
+        }
+        /// <summary>
+        /// Used to implement IExtensible.EndAppend() for simple byte[]-based implementations;
         /// creates/resizes the buffer accordingly (copying any existing data), and places
         /// the new data at the end of the buffer.
         /// </summary>
         /// <param name="buffer">The current buffer instance (can be null).</param>
-        /// <param name="stream">The additional data passed by the serializer.</param>
-        public static byte[] Append(byte[] buffer, Stream stream)
+        /// <param name="stream">The stream previously obtained from BeginAppend.</param>
+        /// <param name="commit">Should the data be stored? Or just close the stream?</param>
+        /// <returns>The updated buffer.</returns>
+        public static byte[] EndAppend(byte[] buffer, Stream stream, bool commit)
         {
-
-            int offset = buffer == null ? 0 : buffer.Length,
-                remaining = (int) stream.Length, bytes;
-            Array.Resize<byte>(ref buffer, offset + remaining);
-            while(remaining > 0 && (bytes = stream.Read(buffer, offset, remaining)) > 0)
+            
+            using (stream)
             {
-                remaining -= bytes;            
+                int len;
+                if (commit && (len = (int)stream.Length)>0)
+                {
+                    MemoryStream ms = (MemoryStream)stream;
+                    
+                    int offset = buffer == null ? 0 : buffer.Length;
+                    Array.Resize<byte>(ref buffer, offset + len);
+                    byte[] raw = ms.GetBuffer();
+                    Buffer.BlockCopy(raw, 0, buffer, offset, len);
+                }
+                return buffer;
             }
-            return buffer;
+        }
+
+        Stream IExtensible.BeginQuery()
+        {
+            return Extensible.BeginQuery(extendedData);
         }
         /// <summary>
-        /// User to implement ISerializable.Read() for simple byte[]-based implementations;
+        /// Used to implement ISerializable.BeginQuery() for simple byte[]-based implementations;
         /// returns a stream representation of the current buffer.
         /// </summary>
         /// <param name="buffer">The current buffer instance (can be null).</param>
         /// <returns>A stream representation of the buffer.</returns>
-        public static Stream Read(byte[] buffer)
+        public static Stream BeginQuery(byte[] buffer)
         {
             return buffer == null ? Stream.Null : new MemoryStream(buffer);
         }
-        private byte[] extendedData;
+        /// <summary>
+        /// Used to implement ISerializable.BeginQuery() for simple byte[]-based implementations;
+        /// closes the stream.</summary>
+        /// <param name="stream">The stream previously obtained from BeginQuery.</param>
+        void IExtensible.EndQuery(Stream stream)
+        {
+            Extensible.EndQuery(stream);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="stream"></param>
+        public static void EndQuery(Stream stream)
+        {
+            using (stream) { }
+        }
 
-        int IExtensible.GetLength()
-        {
-            return Extensible.GetLength(extendedData);
-        }
-        void IExtensible.Append(Stream stream)
-        {
-            extendedData = Extensible.Append(extendedData, stream);
-        }
-        Stream IExtensible.Read()
-        {
-            return Extensible.Read(extendedData);
-        }
     }
 }

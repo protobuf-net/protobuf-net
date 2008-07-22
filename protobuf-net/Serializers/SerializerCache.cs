@@ -17,7 +17,6 @@ namespace ProtoBuf
         public static void Set(ISerializer<TValue> @default, ISerializer<TValue> zigZag,
             ISerializer<TValue> twosComplement, ISerializer<TValue> fixedSize)
         {
-            if (@default == null) throw new ArgumentNullException("default");
             Default = @default;
             ZigZag = zigZag;
             TwosComplement = twosComplement;

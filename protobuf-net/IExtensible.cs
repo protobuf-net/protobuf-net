@@ -10,22 +10,30 @@ namespace ProtoBuf
     public interface IExtensible
     {
         /// <summary>
-        /// The serializer (during deserialization/merge) has encountered unexpected
-        /// fields that it cannot process; the implementing
-        /// class should store this data verbatim. The serializer retains ownership
-        /// of the stream: it is not necessary (but not harmful) to close it.
-        /// The implementing class should be prepared to handle multiple different
-        /// Append messages.
+        /// Requests a stream into which any unexpected fields can be persisted.
         /// </summary>
-        /// <param name="stream">The additional data to store.</param>
-        void Append(Stream stream);
+        /// <returns>A new stream suitable for storing data.</returns>
+        Stream BeginAppend();
         /// <summary>
-        /// The serializer is requesting the additional data that has been previously
-        /// stored; this method is only called once per serialized instance. The
-        /// serializer assumes ownership of the stream, and is responsible for closing it.
+        /// Indicates that all unexpected fields have now been stored. The
+        /// implementing class is responsible for closing the stream. If
+        /// "commit" is not true the data may be discarded.
         /// </summary>
-        /// <returns></returns>
-        Stream Read();
+        /// <param name="stream">The stream originally obtained by BeginAppend.</param>
+        /// <param name="commit">True if the append operation completed successfully.</param>
+        void EndAppend(Stream stream, bool commit);
+
+        /// <summary>
+        /// Requests a stream of the unexpected fields previously stored.
+        /// </summary>
+        /// <returns>A prepared stream of the unexpected fields.</returns>
+        Stream BeginQuery();
+        /// <summary>
+        /// Indicates that all unexpected fields have now been read. The
+        /// implementing class is responsible for closing the stream.
+        /// </summary>
+        /// <param name="stream">The stream originally obtained by BeginQuery.</param>
+        void EndQuery(Stream stream);
 
         /// <summary>
         /// Requests the length of the raw binary stream; this is used

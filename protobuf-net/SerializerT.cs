@@ -176,12 +176,16 @@ namespace ProtoBuf
             int len;
             if (extra != null && (len = extra.GetLength()) > 0)
             {
-                using(Stream extraStream = extra.Read()) {
+                Stream extraStream = extra.BeginQuery();
+                try {
                     SerializationContext tmpCtx = new SerializationContext(extraStream);
                     tmpCtx.ReadFrom(context);
                     BlitData(tmpCtx, context.Stream, len);
                     context.ReadFrom(tmpCtx);
-                }                
+                } finally {
+                    extra.EndQuery(extraStream);
+                }
+                                
             }
             context.Stream.Flush();
             context.Pop(instance);
@@ -218,86 +222,94 @@ namespace ProtoBuf
             int prefix, propCount = props.Length;
             context.CheckSpace();
             IExtensible extra = instance as IExtensible;
-            //SerializationContext extraData = null;
+            SerializationContext extraData = null;
             IProperty<T> prop = propCount == 0 ? null : props[0];
             int lastIndex = prop == null ? int.MinValue : 0,
                 lastTag = prop == null ? int.MinValue : prop.Tag;
-                
-            
-            while (TwosComplementSerializer.TryReadInt32(context, out prefix))
+
+            try
             {
-                WireType wireType = (WireType)(prefix & 7);
-                int fieldTag = prefix >> 3;
-                if (fieldTag <= 0)
+                while (TwosComplementSerializer.TryReadInt32(context, out prefix))
                 {
-                    throw new SerializationException("Invalid tag: " + fieldTag.ToString());
-                }
-                bool foundTag = fieldTag == lastTag;
-                if (!foundTag) 
-                {
-                    int index = lastIndex;
-                    // start i at 1 as only need to check n-1 other properties
-                    for (int i = 1; i < propCount; i++)
+                    WireType wireType = (WireType)(prefix & 7);
+                    int fieldTag = prefix >> 3;
+                    if (fieldTag <= 0)
                     {
-                        if (++index == propCount) { index = 0; }
-                        if (props[index].Tag == fieldTag)
+                        throw new SerializationException("Invalid tag: " + fieldTag.ToString());
+                    }
+                    bool foundTag = fieldTag == lastTag;
+                    if (!foundTag)
+                    {
+                        int index = lastIndex;
+                        // start i at 1 as only need to check n-1 other properties
+                        for (int i = 1; i < propCount; i++)
                         {
-                            prop = props[index];
-                            lastIndex = index;
-                            lastTag = fieldTag;
-                            foundTag = true;
-                            break;
+                            if (++index == propCount) { index = 0; }
+                            if (props[index].Tag == fieldTag)
+                            {
+                                prop = props[index];
+                                lastIndex = index;
+                                lastTag = fieldTag;
+                                foundTag = true;
+                                break;
+                            }
                         }
                     }
-                }
 
-                if (foundTag)
-                {
-                    // recognised fields; use the property deserializer
-                    prop.Deserialize(instance, context);
+                    if (foundTag)
+                    {
+                        // recognised fields; use the property deserializer
+                        prop.Deserialize(instance, context);
+                    }
+                    else if (extra != null)
+                    {
+                        if (extraData == null)
+                        {
+                            extraData = new SerializationContext(extra.BeginAppend());
+                        }
+
+                        // borrow the workspace, and copy the data
+                        extraData.ReadFrom(context);
+                        TwosComplementSerializer.WriteToStream(prefix, extraData);
+                        ProcessExtraData(context, wireType, extraData);                        
+                        context.ReadFrom(extraData);
+                    }
+                    else
+                    {
+                        // unexpected fields for an inextensible object; discard the data
+                        SkipData(context, wireType);
+                    }
                 }
-                else if (extra != null)
-                {
-                    throw new NotImplementedException("Extensible objects");
-                    //using(SubStream subStream = new SubStream(context.Stream, 
-                    /*
-                    //TODO: get a wrapped SubStream
-                    // unexpected fields for an extensible object; store the data
-                    Stream subStream = context.Stream; // !!! SWAP THIS
-                    // just the appropriate length
-                    extra.Append(subStream);
-                    TwosComplementSerializer.WriteToStream(prefix, extraData);
-                    //extraData = ProcessExtraData(context, wireType, extraData);
-                     */
-                }
-                else
-                {
-                    // unexpected fields for an inextensible object; discard the data
-                    SkipData(context, wireType);
-                }
+                if (extraData != null) extra.EndAppend(extraData.Stream, true);
+            }
+            catch
+            {
+                if (extraData != null) extra.EndAppend(extraData.Stream, false);
+                throw;
             }
         }
 
-        private static SerializationContext ProcessExtraData(SerializationContext context, WireType wireType, SerializationContext extraData)
+        private static void ProcessExtraData(SerializationContext read, WireType wireType, SerializationContext write)
         {
             int len;
             switch (wireType)
             {
                 case WireType.Variant:
-                    len = Base128Variant.ReadRaw(context);
-                    extraData.Stream.Write(context.Workspace, context.WorkspaceIndex, len);
+                    len = Base128Variant.ReadRaw(read);
+                    write.Stream.Write(read.Workspace, read.WorkspaceIndex, len);
                     break;
                 case WireType.Fixed32:
-                    BlobSerializer.ReadBlock(context, 4);
-                    extraData.Stream.Write(context.Workspace, context.WorkspaceIndex, 4);
+                    BlobSerializer.ReadBlock(read, 4);
+                    write.Stream.Write(read.Workspace, read.WorkspaceIndex, 4);
                     break;
                 case WireType.Fixed64:
-                    BlobSerializer.ReadBlock(context, 8);
-                    extraData.Stream.Write(context.Workspace, context.WorkspaceIndex, 8);
+                    BlobSerializer.ReadBlock(read, 8);
+                    write.Stream.Write(read.Workspace, read.WorkspaceIndex, 8);
                     break;
                 case WireType.String:
-                    len = TwosComplementSerializer.ReadInt32(context);
-                    BlitData(context, extraData.Stream, len);
+                    len = TwosComplementSerializer.ReadInt32(read);
+                    TwosComplementSerializer.WriteToStream(len, write);
+                    BlitData(read, write.Stream, len);
                     break;
                 case WireType.EndGroup:
                 case WireType.StartGroup:
@@ -305,7 +317,6 @@ namespace ProtoBuf
                 default:
                     throw new SerializationException("Unknown wire-type " + wireType.ToString());
             }
-            return extraData;
         }
 
         private static void BlitData(SerializationContext source, Stream destination, int length)
