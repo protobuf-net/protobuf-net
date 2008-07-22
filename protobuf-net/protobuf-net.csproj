@@ -67,6 +67,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)' != 'Net20' ">
@@ -199,6 +200,8 @@
     <Compile Include="Serializers\StringSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Net\ProtoClient.cs" />
+    <Compile Include="Net\ProtoServer.cs" />
     <Compile Include="Serializers\NullableSerializer.cs" />
   </ItemGroup>
   <ItemGroup>

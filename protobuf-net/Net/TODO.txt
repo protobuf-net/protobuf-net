@@ -1,2 +1,2 @@
 ﻿Create a ProtoClient [or whatever] for calling proto-rpc
-	* http-only for Silverlight
+	* async & http-only for Silverlight
