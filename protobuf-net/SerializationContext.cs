@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {
@@ -9,18 +11,42 @@ namespace ProtoBuf
     }
     internal sealed class SerializationContext
     {
+        private List<object> stack = new List<object>();
         public Eof Eof { get { return eof; } set { eof = value; } }
         private Eof eof;
         private readonly Stream stream;
         public Stream Stream { get { return stream; } }
         private byte[] workspace;
         public byte[] Workspace { get { return workspace; } }
-        
-        public void ReadWorkspaceFrom(SerializationContext context)
+
+        public void Push(object obj)
+        {
+            if(obj == null) throw new ArgumentNullException("obj");
+            foreach(object stackItem in stack) {
+                if(ReferenceEquals(stackItem, obj))
+                    throw new SerializationException("Recursive structure detected; only object trees (not full graphs) can be serialized");
+            }
+            stack.Add(obj);
+        }
+        public void Pop(object obj)
+        {
+            if (obj == null) throw new ArgumentNullException("obj");
+            int index = stack.Count - 1;
+            object last = index < 0 ? null : stack[index];
+            if (!ReferenceEquals(obj, last))
+            {
+                throw new SerializationException("Stack corruption; incorrect object popped");
+            }
+            stack.RemoveAt(index);
+        }
+
+
+        public void ReadFrom(SerializationContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
-            workspace = context.workspace;
-            workspaceIndex = context.workspaceIndex;
+            this.workspace = context.workspace;
+            this.workspaceIndex = context.workspaceIndex;
+            this.stack = context.stack;
         }
         // not used at the moment; if anything wants to
         // use non-zero workspace offsets then uncomment

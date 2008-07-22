@@ -19,10 +19,10 @@ namespace ProtoBuf
                 {
                     SerializationContext ctx = new SerializationContext(subStream);
                     // give our existing workspace to this sub-context
-                    ctx.ReadWorkspaceFrom(context);
+                    ctx.ReadFrom(context);
                     Serializer<TEntity>.Deserialize(value, ctx);
                     // grab the workspace back in case it was increased
-                    context.ReadWorkspaceFrom(ctx);
+                    context.ReadFrom(ctx);
                 }
             }
             return value;

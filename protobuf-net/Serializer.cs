@@ -123,6 +123,7 @@ namespace ProtoBuf
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
+            if (instance == null) throw new ArgumentNullException("instance");
             using (MemoryStream ms = new MemoryStream())
             {
                 Serialize<T>(ms, instance);
@@ -140,6 +141,7 @@ namespace ProtoBuf
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
+            if (instance == null) throw new ArgumentNullException("instance");
             string s = info.GetString(PROTO_BINARY_FIELD);
             using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(s)))
             {
@@ -189,14 +191,14 @@ namespace ProtoBuf
                 SerializationContext tmpCtx = new SerializationContext(ms);
                 if (context != null)
                 {
-                    tmpCtx.ReadWorkspaceFrom(context);
+                    tmpCtx.ReadFrom(context);
                 }
                 Serialize<TOldType>(ms, instance);
                 ms.Position = 0;
                 TNewType result = Deserialize<TNewType>(ms);
                 if (context != null)
                 {
-                    context.ReadWorkspaceFrom(tmpCtx);
+                    context.ReadFrom(tmpCtx);
                 }
                 return result;
             }

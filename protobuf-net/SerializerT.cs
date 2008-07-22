@@ -13,7 +13,7 @@ namespace ProtoBuf
 
     internal static class Serializer<T> where T : class, new()
     {
-        
+
 
         public static string GetProto()
         {
@@ -45,7 +45,8 @@ namespace ProtoBuf
 
             sb.AppendLine();
             nestLevel++;
-            for(int i = 0 ; i < props.Length ; i++) {
+            for (int i = 0; i < props.Length; i++)
+            {
                 IProperty<T> prop = props[i];
                 Indent(sb, nestLevel).Append(' ')
                     .Append(prop.IsRequired ? "required " : "optional ")
@@ -162,7 +163,7 @@ namespace ProtoBuf
         }
         internal static int Serialize(T instance, SerializationContext context, IProperty<T>[] candidateProperties)
         {
-            if (context == null) throw new ArgumentNullException("context");
+            context.Push(instance);
             context.CheckSpace();
             int total = 0;
             if(candidateProperties == null) candidateProperties = props;
@@ -177,28 +178,32 @@ namespace ProtoBuf
             {
                 using(Stream extraStream = extra.Read()) {
                     SerializationContext tmpCtx = new SerializationContext(extraStream);
-                    tmpCtx.ReadWorkspaceFrom(context);
+                    tmpCtx.ReadFrom(context);
                     BlitData(tmpCtx, context.Stream, len);
-                    context.ReadWorkspaceFrom(tmpCtx);
+                    context.ReadFrom(tmpCtx);
                 }                
             }
             context.Stream.Flush();
+            context.Pop(instance);
             return total;
         }
 
         internal static int GetLength(T instance, SerializationContext context, List<IProperty<T>> candidateProperties)
         {
-            if (context == null) throw new ArgumentNullException("context");
+            context.Push(instance);
             context.CheckSpace();
             int total = 0;
-            for(int i = 0 ; i < props.Length ; i++) {
+            for (int i = 0; i < props.Length; i++)
+            {
                 int propLen = props[i].GetLength(instance, context);
                 total += propLen;
                 if (propLen > 0 && candidateProperties != null) candidateProperties.Add(props[i]);
             }
             IExtensible extra = instance as IExtensible;
             if (extra != null) total += extra.GetLength();
+            context.Pop(instance);
             return total;
+       
         }
         internal static void Deserialize(T instance, Stream source)
         {
