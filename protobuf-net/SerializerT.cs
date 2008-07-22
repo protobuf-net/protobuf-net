@@ -128,35 +128,30 @@ namespace ProtoBuf
                 argsOnePropertyVal[0] = prop;
                 if (listItemType != null)
                 { // list
-                    iProp = (IProperty<T>)
-                        typeof(ListProperty<,,>).MakeGenericType(
-                            typeof(T), prop.PropertyType, listItemType)
-                        .GetConstructor(argsOnePropertyInfo)
-                        .Invoke(argsOnePropertyVal);
+                    iProp = iProp = (IProperty<T>)typeof(Serializer<T>)
+                        .GetMethod("CreateListProperty")
+                        .MakeGenericMethod(typeof(T), prop.PropertyType, listItemType)
+                        .Invoke(null, argsOnePropertyVal); 
                 }
                 else if (Serializer.IsEntityType(propType))
                 { // entity
-                    iProp = (IProperty<T>)
-                        typeof(EntityProperty<,>).MakeGenericType(
-                            typeof(T), prop.PropertyType)
-                        .GetConstructor(argsOnePropertyInfo)
-                        .Invoke(argsOnePropertyVal);
+                    iProp = (IProperty<T>)typeof(Serializer<T>)
+                        .GetMethod("CreateEntityProperty")
+                        .MakeGenericMethod(typeof(T), prop.PropertyType)
+                        .Invoke(null, argsOnePropertyVal);
                 }
                 else
                 { // simple value
-                    iProp = (IProperty<T>)
-                        typeof(SimpleProperty<,>).MakeGenericType(
-                            typeof(T), prop.PropertyType)
-                        .GetConstructor(argsOnePropertyInfo)
-                        .Invoke(argsOnePropertyVal);
+                    iProp = (IProperty<T>)typeof(Serializer<T>)
+                        .GetMethod("CreateSimpleProperty")
+                        .MakeGenericMethod(typeof(T), prop.PropertyType)
+                        .Invoke(null, argsOnePropertyVal);
                 }
                 propList.Add(iProp);
             }
-            propList.Sort(delegate (IProperty<T> x, IProperty<T> y) {return x.Tag.CompareTo(y.Tag);});
+            propList.Sort(delegate(IProperty<T> x, IProperty<T> y) { return x.Tag.CompareTo(y.Tag); });
             props = propList.ToArray();
         }
-
-
 
         internal static int Serialize(T instance, Stream destination)
         {
@@ -377,8 +372,24 @@ namespace ProtoBuf
             return capacity;
         }
 
+        
+        public static IProperty<TEntity> CreateSimpleProperty<TEntity, TValue>(PropertyInfo property)
+            where TEntity : class, new()
+        {
+            return new SimpleProperty<TEntity, TValue>(property);
+        }
 
+        public static IProperty<TEntity> CreateEntityProperty<TEntity, TValue>(PropertyInfo property)
+            where TEntity : class, new()
+            where TValue : class, new()
+        {
+            return new EntityProperty<TEntity, TValue>(property);
+        }
+        public static IProperty<TEntity> CreateListProperty<TEntity, TList, TValue>(PropertyInfo property)
+            where TEntity : class, new()
+            where TList : IList<TValue>
+        {
+            return new ListProperty<TEntity, TList, TValue>(property);
+        }
     }
-
-    
 }

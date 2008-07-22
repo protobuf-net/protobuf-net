@@ -86,26 +86,26 @@
   <ItemGroup>
     <Compile Include="AttributeUtils.cs" />
     <Compile Include="Property\IProperty.cs" />
-    <Compile Include="Serializer\ISerializer.cs" />
-    <Compile Include="Serializer\FixedSerializer_Double.cs">
+    <Compile Include="Serializers\ISerializer.cs" />
+    <Compile Include="Serializers\FixedSerializer_Double.cs">
       <DependentUpon>FixedSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\FixedSerializer_Int32.cs">
+    <Compile Include="Serializers\FixedSerializer_Int32.cs">
       <DependentUpon>FixedSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\FixedSerializer_Int64.cs">
+    <Compile Include="Serializers\FixedSerializer_Int64.cs">
       <DependentUpon>FixedSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\ZigZagSerializer_DateTime.cs">
+    <Compile Include="Serializers\ZigZagSerializer_DateTime.cs">
       <DependentUpon>ZigZagSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\ZigZagSerializer_Decimal.cs">
+    <Compile Include="Serializers\ZigZagSerializer_Decimal.cs">
       <DependentUpon>ZigZagSerializer.cs</DependentUpon>
     </Compile>
     <Compile Include="Extensible.cs">
       <DependentUpon>IExtensible.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\FixedSerializer_Single.cs">
+    <Compile Include="Serializers\FixedSerializer_Single.cs">
       <DependentUpon>FixedSerializer.cs</DependentUpon>
     </Compile>
     <Compile Include="Serializer.cs" />
@@ -121,12 +121,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataFormat.cs" />
-    <Compile Include="Serializer\FixedSerializer.cs">
+    <Compile Include="Serializers\FixedSerializer.cs">
     </Compile>
-    <Compile Include="Serializer\FixedSerializer_UInt32.cs">
+    <Compile Include="Serializers\FixedSerializer_UInt32.cs">
       <DependentUpon>FixedSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\FixedSerializer_UInt64.cs">
+    <Compile Include="Serializers\FixedSerializer_UInt64.cs">
       <DependentUpon>FixedSerializer.cs</DependentUpon>
     </Compile>
     <Compile Include="IExtensible.cs" />
@@ -136,29 +136,29 @@
     <Compile Include="ProtoFormat.cs" />
     <Compile Include="ProtoMemberAttribute.cs" />
     <Compile Include="SubStream.cs" />
-    <Compile Include="Serializer\TwosComplementSerializer.cs">
+    <Compile Include="Serializers\TwosComplementSerializer.cs">
     </Compile>
-    <Compile Include="Serializer\TwosComplementSerializer_Decimal.cs">
+    <Compile Include="Serializers\TwosComplementSerializer_Decimal.cs">
       <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\TwosComplementSerializer_Int32.cs">
+    <Compile Include="Serializers\TwosComplementSerializer_Int32.cs">
       <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\TwosComplementSerializer_Int64.cs">
+    <Compile Include="Serializers\TwosComplementSerializer_Int64.cs">
       <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\TwosComplementSerializer_UInt32.cs">
+    <Compile Include="Serializers\TwosComplementSerializer_UInt32.cs">
       <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\TwosComplementSerializer_UInt64.cs">
+    <Compile Include="Serializers\TwosComplementSerializer_UInt64.cs">
       <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\ZigZagSerializer.cs">
+    <Compile Include="Serializers\ZigZagSerializer.cs">
     </Compile>
-    <Compile Include="Serializer\ZigZagSerializer_Int32.cs">
+    <Compile Include="Serializers\ZigZagSerializer_Int32.cs">
       <DependentUpon>ZigZagSerializer.cs</DependentUpon>
     </Compile>
-    <Compile Include="Serializer\ZigZagSerializer_Int64.cs">
+    <Compile Include="Serializers\ZigZagSerializer_Int64.cs">
       <DependentUpon>ZigZagSerializer.cs</DependentUpon>
     </Compile>
   </ItemGroup>
@@ -175,31 +175,31 @@
     <Compile Include="Property\PropertyBase.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\EnumSerializer.cs" />
+    <Compile Include="Serializers\EnumSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\BlobSerializer.cs" />
+    <Compile Include="Serializers\BlobSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\BooleanSerializer.cs" />
+    <Compile Include="Serializers\BooleanSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\EntitySerializer.cs" />
+    <Compile Include="Serializers\EntitySerializer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\Base128Variant.cs" />
+    <Compile Include="Serializers\Base128Variant.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\SerializerCache.cs" />
+    <Compile Include="Serializers\SerializerCache.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\SimpleSerializers.cs" />
+    <Compile Include="Serializers\SimpleSerializers.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\StringSerializer.cs" />
+    <Compile Include="Serializers\StringSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Serializer\NullableSerializer.cs" />
+    <Compile Include="Serializers\NullableSerializer.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

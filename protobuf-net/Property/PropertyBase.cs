@@ -82,7 +82,7 @@ namespace ProtoBuf
             }
             return result;
         }
-        
+
         private readonly int tag;
         public int Tag { get { return tag; } }
         private readonly string name;
