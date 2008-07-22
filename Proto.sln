@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPipeline", "DataPipelin
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net", "protobuf-net\protobuf-net.csproj", "{8649E5E9-4159-4214-B85D-4539799EB09B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net_Silverlight", "protobuf-net_Silverlight\protobuf-net_Silverlight.csproj", "{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,14 @@ Global
 		{8649E5E9-4159-4214-B85D-4539799EB09B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8649E5E9-4159-4214-B85D-4539799EB09B}.Silverlight2|Any CPU.ActiveCfg = Silverlight2|Any CPU
 		{8649E5E9-4159-4214-B85D-4539799EB09B}.Silverlight2|Any CPU.Build.0 = Silverlight2|Any CPU
+		{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
+		{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
