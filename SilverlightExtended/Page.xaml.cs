@@ -16,8 +16,9 @@ using Nuxleus.MetaData;
 using Nuxleus.Messaging;
 using Nuxleus.Messaging.Protobuf;
 using System.IO;
+using System.Xml.Serialization;
 
-namespace SilverlightSimple {
+namespace SilverlightExtended {
 
 
     // struct for holding the various objects and related meta-data for each 
@@ -73,7 +74,17 @@ namespace SilverlightSimple {
                 };
                 this.txtBox.Text += String.Format("Completed Serialization Tests in {0}", m_timer.Elapsed);
             }
-            WriteValuesToConsole(CreatePerson(255));
+
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(PerformanceLogCollection));
+
+            foreach (SerializerPerformanceTestAgent agent in serializerPeformanceItem) {
+                string fileName = String.Format("../../Report/{0}Performance.xml", agent.TypeLabel);
+                using (MemoryStream stream = new MemoryStream()) {
+                    this.txtBox.Text += String.Format("Generating {0}", fileName);
+                    xmlSerializer.Serialize(stream, agent.PerformanceLogCollection);
+                    this.txtBox.Text += String.Format("Generation of {0} complete.", fileName);
+                }
+            }
         }
 
         PerformanceLog RunSerializationTest(int fileSequence, SerializerPerformanceTestAgent agent) {
@@ -141,7 +152,6 @@ namespace SilverlightSimple {
 
 
         void WriteValuesToConsole(Person person) {
-            this.txtBox.Text = "";
             this.txtBox.Text += String.Format("person.Name: {0}, person.Email: {1}, person.ID\n", person.Name, person.Email, person.ID);
             foreach (PhoneNumber phone in person.Phone) {
                 this.txtBox.Text += String.Format("phone.Number: {0}, phone.Type: {1}\n", phone.Number, phone.Type);

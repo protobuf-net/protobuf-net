@@ -3,8 +3,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
     Width="400" Height="300">
     <Grid x:Name="LayoutRoot" Background="White">
-        
-        <TextBlock x:Name="txtBefore" Text="Before" HorizontalAlignment="Left"/>
-        <TextBlock x:Name="txtAfter" Text="After" HorizontalAlignment="Right"/>
+        <TextBlock x:Name="txtBefore" Text="Before" HorizontalAlignment="Left" Margin="8,8,8,8"/>
+        <TextBlock x:Name="txtAfter" Text="After" HorizontalAlignment="Right" Margin="8,8,8,8"/>
+        <TextBox x:Name="txtBox" HorizontalAlignment="Left" Margin="8,87,0,8" VerticalAlignment="Stretch" Text="TextBox" TextWrapping="Wrap" Width="384"/>
     </Grid>
 </UserControl>

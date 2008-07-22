@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if NET_3_0
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -194,3 +195,4 @@ namespace Examples.ServiceModel
         }
     }
 }
+#endif
