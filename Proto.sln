@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net_Silverlight", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverlightExtended", "SilverlightExtended\SilverlightExtended.csproj", "{05A18144-D234-46D7-A36C-CD45BA884746}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverlightSimple", "SilverlightSimple\SilverlightSimple.csproj", "{5FE155CA-0941-497F-96F4-9E23C099D06C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,14 @@ Global
 		{05A18144-D234-46D7-A36C-CD45BA884746}.Release|Any CPU.Build.0 = Release|Any CPU
 		{05A18144-D234-46D7-A36C-CD45BA884746}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{05A18144-D234-46D7-A36C-CD45BA884746}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{5FE155CA-0941-497F-96F4-9E23C099D06C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5FE155CA-0941-497F-96F4-9E23C099D06C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5FE155CA-0941-497F-96F4-9E23C099D06C}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{5FE155CA-0941-497F-96F4-9E23C099D06C}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{5FE155CA-0941-497F-96F4-9E23C099D06C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5FE155CA-0941-497F-96F4-9E23C099D06C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5FE155CA-0941-497F-96F4-9E23C099D06C}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
+		{5FE155CA-0941-497F-96F4-9E23C099D06C}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
