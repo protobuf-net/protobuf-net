@@ -86,6 +86,7 @@
   <ItemGroup>
     <Compile Include="DesignIdeas\ChangeType.cs" />
     <Compile Include="EnumTests.cs" />
+    <Compile Include="Extensibility.cs" />
     <Compile Include="OldProgram.cs" />
     <Compile Include="Primatives.cs" />
     <Compile Include="Program.cs" />

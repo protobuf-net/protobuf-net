@@ -25,6 +25,18 @@ namespace Examples
             Assert.AreEqual(p.TestBoolean, Serializer.DeepClone(p).TestBoolean);
         }
         [Test]
+        public void TestString()
+        {
+            Primatives p = new Primatives();
+            p.TestString = "";
+            Assert.AreEqual(p.TestString, Serializer.DeepClone(p).TestString, "Empty");
+            p.TestString = "foo";
+            Assert.AreEqual(p.TestString, Serializer.DeepClone(p).TestString, "Non-empty");
+            p.TestString = null;
+            Assert.AreEqual(p.TestString, Serializer.DeepClone(p).TestString, "Null");
+        }
+       
+        [Test]
         public void TestDecimal()
         {
             Primatives p = new Primatives();
@@ -75,5 +87,7 @@ namespace Examples
         public decimal TestDecimalTwos { get; set; }
         [ProtoMember(5, DataFormat = DataFormat.ZigZag)]
         public decimal TestDecimalZigZag { get; set; }
+        [ProtoMember(6)]
+        public string TestString { get; set; }
     }
 }
