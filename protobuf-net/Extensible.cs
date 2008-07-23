@@ -22,6 +22,7 @@ namespace ProtoBuf
         {
             return Extensible.GetLength(extendedData);
         }
+
         /// <summary>
         /// Used to implement IExtensible.GetLength() for simple byte[]-based implementations;
         /// returns the length of the current buffer.
@@ -33,11 +34,11 @@ namespace ProtoBuf
             return buffer == null ? 0 : buffer.Length;
         }
 
-
         Stream IExtensible.BeginAppend()
         {
             return Extensible.BeginAppend();
         }
+
         /// <summary>
         /// Used to implement IExtensible.EndAppend() for simple byte[]-based implementations;
         /// obtains a new Stream suitable for storing data as a simple buffer.
@@ -47,12 +48,12 @@ namespace ProtoBuf
         {
             return new MemoryStream();
         }
-
-
+        
         void IExtensible.EndAppend(Stream stream, bool commit)
         {
             extendedData = Extensible.EndAppend(extendedData, stream, commit);
         }
+
         /// <summary>
         /// Used to implement IExtensible.EndAppend() for simple byte[]-based implementations;
         /// creates/resizes the buffer accordingly (copying any existing data), and places
@@ -63,12 +64,11 @@ namespace ProtoBuf
         /// <param name="commit">Should the data be stored? Or just close the stream?</param>
         /// <returns>The updated buffer.</returns>
         public static byte[] EndAppend(byte[] buffer, Stream stream, bool commit)
-        {
-            
+        {            
             using (stream)
             {
                 int len;
-                if (commit && (len = (int)stream.Length)>0)
+                if (commit && (len = (int)stream.Length) > 0)
                 {
                     MemoryStream ms = (MemoryStream)stream;
                     
@@ -86,10 +86,12 @@ namespace ProtoBuf
                         buffer = new byte[offset + len];
                         Buffer.BlockCopy(tmp, 0, buffer, 0, offset);
                     }
+
                     // copy the data from the stream
                     byte[] raw = ms.GetBuffer();
                     Buffer.BlockCopy(raw, 0, buffer, offset, len);
                 }
+
                 return buffer;
             }
         }
@@ -98,6 +100,7 @@ namespace ProtoBuf
         {
             return Extensible.BeginQuery(extendedData);
         }
+
         /// <summary>
         /// Used to implement ISerializable.BeginQuery() for simple byte[]-based implementations;
         /// returns a stream representation of the current buffer.
@@ -108,21 +111,22 @@ namespace ProtoBuf
         {
             return buffer == null ? Stream.Null : new MemoryStream(buffer);
         }
-        /// <summary>
-        /// Used to implement ISerializable.BeginQuery() for simple byte[]-based implementations;
-        /// closes the stream.</summary>
-        /// <param name="stream">The stream previously obtained from BeginQuery.</param>
+
         void IExtensible.EndQuery(Stream stream)
         {
             Extensible.EndQuery(stream);
         }
+
         /// <summary>
-        /// 
+        /// Used to implement ISerializable.BeginQuery() for simple byte[]-based implementations;
+        /// closes the stream.
         /// </summary>
-        /// <param name="stream"></param>
+        /// <param name="stream">The stream passed from the serializer.</param>
         public static void EndQuery(Stream stream)
         {
-            using (stream) { }
+            using (stream)
+            {
+            }
         }
 
         /// <summary>
@@ -141,6 +145,7 @@ namespace ProtoBuf
         {
             AppendValue<TValue>(instance, tag, DataFormat.Default, value);
         }
+
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
         /// Note that for non-repeated sub-objects, this equates to a merge operation;
@@ -158,6 +163,7 @@ namespace ProtoBuf
         {
             ExtensibleUtil.AppendExtendValue<TValue>(instance, tag, format, value);
         }
+
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
         /// The value returned is the composed value after merging any duplicated content; if the
@@ -171,15 +177,16 @@ namespace ProtoBuf
         {
             return GetValue<TValue>(instance, tag, DataFormat.Default);
         }
+
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
         /// The value returned is the composed value after merging any duplicated content; if the
         /// value is "repeated" (a list), then use GetValues instead.
         /// </summary>
         /// <typeparam name="TValue">The data-type of the field.</typeparam>
-        /// <param name="format">The data-format to use when decoding the value.</param>
         /// <param name="instance">The extensible object to obtain the value from.</param>
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
+        /// <param name="format">The data-format to use when decoding the value.</param>
         /// <returns>The effective value of the field, or the default value if not found.</returns>
         public static TValue GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
         {
@@ -187,6 +194,7 @@ namespace ProtoBuf
             TryGetValue<TValue>(instance, tag, format, out value);
             return value;
         }
+
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
         /// The value returned (in "value") is the composed value after merging any duplicated content;
@@ -201,6 +209,7 @@ namespace ProtoBuf
         {
             return TryGetValue<TValue>(instance, tag, DataFormat.Default, out value);
         }
+
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
         /// The value returned (in "value") is the composed value after merging any duplicated content;
@@ -223,8 +232,10 @@ namespace ProtoBuf
                 value = val;
                 set = true;
             }
+
             return set;
         }
+
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
         /// Each occurrence of the field is yielded separately, making this usage suitable for "repeated"
@@ -239,6 +250,7 @@ namespace ProtoBuf
         {
             return ExtensibleUtil.GetExtendedValues<TValue>(instance, tag, DataFormat.Default, false);
         }
+
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
         /// Each occurrence of the field is yielded separately, making this usage suitable for "repeated"
@@ -254,8 +266,5 @@ namespace ProtoBuf
         {
             return ExtensibleUtil.GetExtendedValues<TValue>(instance, tag, format, false);
         }
-
-
-
     }
 }

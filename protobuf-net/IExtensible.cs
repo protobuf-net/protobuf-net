@@ -14,6 +14,7 @@ namespace ProtoBuf
         /// </summary>
         /// <returns>A new stream suitable for storing data.</returns>
         Stream BeginAppend();
+
         /// <summary>
         /// Indicates that all unexpected fields have now been stored. The
         /// implementing class is responsible for closing the stream. If
@@ -28,6 +29,7 @@ namespace ProtoBuf
         /// </summary>
         /// <returns>A prepared stream of the unexpected fields.</returns>
         Stream BeginQuery();
+
         /// <summary>
         /// Indicates that all unexpected fields have now been read. The
         /// implementing class is responsible for closing the stream.
@@ -41,6 +43,5 @@ namespace ProtoBuf
         /// </summary>
         /// <returns>The length of the binary stream representing unexpected data.</returns>
         int GetLength();
-
     }
 }

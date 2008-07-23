@@ -27,7 +27,8 @@ namespace ProtoBuf
                     "Wrote {0} bytes, but expected to write {1}.", actual, expected));
             }
         }
-        static readonly Type[] emptyTypes = new Type[0];
+
+        private static readonly Type[] emptyTypes = new Type[0];
         internal static bool IsEntityType(Type type)
         {
             return type.IsClass && !type.IsAbstract
@@ -39,6 +40,7 @@ namespace ProtoBuf
 #endif
                         || AttributeUtils.GetAttribute<XmlTypeAttribute>(type) != null);
         }
+
         /// <summary>
         /// Supports various different property metadata patterns:
         /// [ProtoMember] is the most specific, allowing the data-format to be set.
@@ -52,9 +54,10 @@ namespace ProtoBuf
             tag = -1;
             isRequired = false;
             ProtoMemberAttribute pm = AttributeUtils.GetAttribute<ProtoMemberAttribute>(property);
-            if (pm != null) {
+            if (pm != null)
+            {
                 format = pm.DataFormat;
-                if(!string.IsNullOrEmpty(pm.Name)) name = pm.Name;
+                if (!string.IsNullOrEmpty(pm.Name)) name = pm.Name;
                 tag = pm.Tag;
                 isRequired = pm.IsRequired;
                 return tag > 0;
@@ -80,6 +83,7 @@ namespace ProtoBuf
 
             return false;
         }
+
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream
         /// </summary>
@@ -92,6 +96,7 @@ namespace ProtoBuf
             Serializer<T>.Deserialize(instance, source);
             return instance;
         }
+
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance.
         /// </summary>
@@ -102,6 +107,7 @@ namespace ProtoBuf
         {
             Serializer<T>.Deserialize(instance, source);
         }
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
         /// </summary>
@@ -113,7 +119,7 @@ namespace ProtoBuf
             Serializer<T>.Serialize(instance, destination);
         }
 
-        const string PROTO_BINARY_FIELD = "proto";
+        private const string ProtoBinaryField = "proto";
 
 #if REMOTING
         /// <summary>
@@ -131,7 +137,7 @@ namespace ProtoBuf
             {
                 Serialize<T>(ms, instance);
                 string s = Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
-                info.AddValue(PROTO_BINARY_FIELD, s);
+                info.AddValue(ProtoBinaryField, s);
             }
         }
         /// <summary>
@@ -145,7 +151,7 @@ namespace ProtoBuf
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
             if (instance == null) throw new ArgumentNullException("instance");
-            string s = info.GetString(PROTO_BINARY_FIELD);
+            string s = info.GetString(ProtoBinaryField);
             using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(s)))
             {
                 Merge<T>(ms, instance);
@@ -188,7 +194,11 @@ namespace ProtoBuf
             where TOldType : class, new()
             where TNewType : class, new()
         {
-            if (instance == null) return null; // GIGO
+            if (instance == null)
+            {
+                return null; // GIGO
+            } 
+
             using (MemoryStream ms = new MemoryStream())
             {
                 SerializationContext tmpCtx = new SerializationContext(ms);
@@ -196,6 +206,7 @@ namespace ProtoBuf
                 {
                     tmpCtx.ReadFrom(context);
                 }
+
                 Serialize<TOldType>(ms, instance);
                 ms.Position = 0;
                 TNewType result = Deserialize<TNewType>(ms);
@@ -243,21 +254,18 @@ namespace ProtoBuf
             }
 
             return name;
-
         }
-
-
+        
         internal static int GetPrefixLength(int tag, WireType wireType)
         {
             int prefix = (tag << 3) | ((int)wireType & 7);
             return TwosComplementSerializer.GetLength(prefix);
         }
+
         internal static int WriteFieldToken(int tag, WireType wireType, SerializationContext context)
         {
             int prefix = (tag << 3) | ((int)wireType & 7);
             return TwosComplementSerializer.WriteToStream(prefix, context);
         }
-
-
     }
 }

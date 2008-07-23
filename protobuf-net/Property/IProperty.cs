@@ -2,7 +2,7 @@
 
 namespace ProtoBuf
 {
-    interface IProperty<TEntity>
+    internal interface IProperty<TEntity>
     {
         string Name { get; }
         DataFormat DataFormat { get; }
@@ -20,10 +20,11 @@ namespace ProtoBuf
 
         int GetLength(TEntity instance, SerializationContext context);
     }
+
     /// <summary>
     /// Additional support for properties that can handle grouped (rather than length-prefixed) data (entities)
     /// </summary>
-    interface IGroupProperty<T> : IProperty<T>
+    internal interface IGroupProperty<T> : IProperty<T>
     {
         void DeserializeGroup(T instance, SerializationContext context);
     }

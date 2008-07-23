@@ -9,14 +9,17 @@ namespace ProtoBuf
         {
             SimpleSerializers.Init();
         }
-        private static ISerializer<TValue> _default, zigZag, twos, fixedSize;
-        public static ISerializer<TValue> Default { get { return _default; } private set { _default = value; } }
+        private static ISerializer<TValue> @default, zigZag, twos, fixedSize;
+        public static ISerializer<TValue> Default { get { return @default; } private set { @default = value; } }
         public static ISerializer<TValue> ZigZag { get { return zigZag; } private set { zigZag = value; } }
         public static ISerializer<TValue> TwosComplement { get { return twos; } private set { twos = value; } }
         public static ISerializer<TValue> FixedSize { get { return fixedSize; } private set { fixedSize = value; } }
 
-        public static void Set(ISerializer<TValue> @default, ISerializer<TValue> zigZag,
-            ISerializer<TValue> twosComplement, ISerializer<TValue> fixedSize)
+        public static void Set(
+            ISerializer<TValue> @default,
+            ISerializer<TValue> zigZag,
+            ISerializer<TValue> twosComplement,
+            ISerializer<TValue> fixedSize)
         {
             Default = @default;
             ZigZag = zigZag;
@@ -30,13 +33,17 @@ namespace ProtoBuf
             switch (format)
             {
                 case DataFormat.Default:
-                    result = Default; break;
+                    result = Default;
+                    break;
                 case DataFormat.FixedSize:
-                    result = FixedSize; break;
+                    result = FixedSize;
+                    break;
                 case DataFormat.TwosComplement:
-                    result = TwosComplement; break;
+                    result = TwosComplement;
+                    break;
                 case DataFormat.ZigZag:
-                    result = ZigZag; break;
+                    result = ZigZag;
+                    break;
                 default:
                     throw new NotSupportedException("Unknown data-format: " + format.ToString());
             }
@@ -57,13 +64,14 @@ namespace ProtoBuf
                         .Invoke(null, new object[] { format });
 
                     Type[] ctorArgTypes = { typeof(ISerializer<>).MakeGenericType(underlying) };
-                    result = (ISerializer<TValue>)typeof(EnumSerializer<,>)
+                    result = (ISerializer<TValue>) typeof(EnumSerializer<,>)
                         .MakeGenericType(typeof(TValue), underlying)
                         .GetConstructor(ctorArgTypes).Invoke(new object[] { baseSer });
                 }
                 Default = result;
             }
-            if(result == null) 
+
+            if (result == null) 
             {
                 // tell the developer that they screwed up...
                 Type nullType = Nullable.GetUnderlyingType(typeof(TValue));
@@ -73,9 +81,13 @@ namespace ProtoBuf
                     ? "No serializers registered for {1}"
                     : "No {0} seriailzer registered for {1}";
 
-                throw new InvalidOperationException(string.Format(errorMsg,
-                    format, name));
+                throw new InvalidOperationException(
+                    string.Format(
+                        errorMsg,
+                        format,
+                        name));
             }
+
             return result;
         }
     }

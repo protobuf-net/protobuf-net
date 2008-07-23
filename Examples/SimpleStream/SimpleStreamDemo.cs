@@ -137,7 +137,7 @@ namespace Examples.SimpleStream
             string name = typeof(T).Name;
             Console.WriteLine("\t{0}", name);
             const int LOOP = 100000;
-            Stopwatch serializeWatch,deserializeWatch;
+            Stopwatch serializeWatch, deserializeWatch;
             T clone;
             using (MemoryStream ms = new MemoryStream())
             {
@@ -321,7 +321,7 @@ namespace Examples.SimpleStream
         }
         static void WriteBytes(string caption, byte[] data)
         {
-            Console.Write("\t{0}\t",caption);
+            Console.Write("\t{0}\t", caption);
             foreach (byte b in data)
             {
                 Console.Write(" " + b.ToString("X2"));

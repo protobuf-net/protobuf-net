@@ -5,7 +5,7 @@ using System.IO;
 
 namespace ProtoBuf
 {
-    sealed class BlobSerializer : ISerializer<byte[]>
+    internal sealed class BlobSerializer : ISerializer<byte[]>
     {
         private BlobSerializer() { }
         public static readonly BlobSerializer Default = new BlobSerializer();
@@ -13,6 +13,7 @@ namespace ProtoBuf
         {
             ReadBlock(context.Stream, context.Workspace, context.WorkspaceIndex, length);
         }
+
         private static void ReadBlock(Stream stream, byte[] buffer, int index, int length)
         {
             int read;
@@ -21,6 +22,7 @@ namespace ProtoBuf
                 index += read;
                 length -= read;
             }
+
             if (length != 0) throw new EndOfStreamException();
         }
 
@@ -34,13 +36,18 @@ namespace ProtoBuf
             {
                 context.Stream.Write(value, 0, value.Length);
             }
+
             return preambleLen + value.Length;
         }
         public int GetLength(byte[] value, SerializationContext context)
         {
-            if (value == null) return 0;
+            if (value == null)
+            {
+                return 0;
+            }
             return TwosComplementSerializer.GetLength(value.Length) + value.Length;
         }
+
         public byte[] Deserialize(byte[] value, SerializationContext context)
         {
             int len = TwosComplementSerializer.ReadInt32(context);
@@ -48,10 +55,12 @@ namespace ProtoBuf
             { // re-use the existing buffer if it is the same size
                 value = new byte[len];
             }
+
             if (len > 0)
             {
                 BlobSerializer.ReadBlock(context.Stream, value, 0, len);
             }
+
             return value;
         }
 
@@ -59,7 +68,7 @@ namespace ProtoBuf
         {
             byte tmp;
             switch (length)
-            { //unwrapped reverse
+            {   // unwrapped reverse
                 case 0:
                 case 1:
                     break;

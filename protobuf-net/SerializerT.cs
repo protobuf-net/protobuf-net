@@ -9,10 +9,8 @@ using System.Xml.Serialization;
 
 namespace ProtoBuf
 {
-
     internal static class Serializer<T> where T : class, new()
     {
-
 #if !CF
         public static string GetProto()
         {
@@ -33,6 +31,7 @@ namespace ProtoBuf
             {
                 Indent(sb, nestLevel).Append("package ").Append(ns).AppendLine(";");
             }
+
             string descText, name = Serializer.GetDefinedTypeName<T>();
             Indent(sb, nestLevel).Append("message ").Append(name).Append(" {");
 
@@ -59,25 +58,23 @@ namespace ProtoBuf
                     string defText = Convert.ToString(def, CultureInfo.InvariantCulture);
                     sb.Append(" [default = ").Append(defText).Append(" ]");
                 }
+
                 sb.Append(";");
                 descText = prop.Description;
                 if (!string.IsNullOrEmpty(descText))
                 {
                     sb.Append(" //").Append(descText); // TODO: remove crlf
                 }
+
                 sb.AppendLine();
             }
+
             nestLevel--;
             Indent(sb, nestLevel).AppendLine("}");
-
-
-
-
-
         }
 
 #endif
-        static readonly IProperty<T>[] props;
+        private static readonly IProperty<T>[] props;
 
         static Serializer()
         {
@@ -86,8 +83,7 @@ namespace ProtoBuf
                 throw new InvalidOperationException("Only concrete data-contract classes can be processed");
             }
             List<IProperty<T>> propList = new List<IProperty<T>>();
-            Type[] argsOnePropertyInfo = { typeof(PropertyInfo) };
-            object[] argsOnePropertyVal = new object[1];
+             object[] argsOnePropertyVal = new object[1];
 
             foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
@@ -110,11 +106,11 @@ namespace ProtoBuf
                     }
                 }
 
-                IProperty<T> iProp;
+                IProperty<T> actualProp;
                 Type propType = prop.PropertyType, listItemType = null;
 
-                if (!propType.IsArray) // don't treat arrays as lists
-                {
+                if (!propType.IsArray)
+                {   // don't treat arrays as lists
                     foreach (Type interfaceType in propType.GetInterfaces())
                     {
                         if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition()
@@ -129,26 +125,26 @@ namespace ProtoBuf
                 argsOnePropertyVal[0] = prop;
                 if (listItemType != null)
                 { // list
-                    iProp = iProp = (IProperty<T>)typeof(Serializer<T>)
+                    actualProp = (IProperty<T>) typeof(Serializer<T>)
                         .GetMethod("CreateListProperty")
                         .MakeGenericMethod(typeof(T), prop.PropertyType, listItemType)
                         .Invoke(null, argsOnePropertyVal); 
                 }
                 else if (Serializer.IsEntityType(propType))
                 { // entity
-                    iProp = (IProperty<T>)typeof(Serializer<T>)
+                    actualProp = (IProperty<T>) typeof(Serializer<T>)
                         .GetMethod("CreateEntityProperty")
                         .MakeGenericMethod(typeof(T), prop.PropertyType)
                         .Invoke(null, argsOnePropertyVal);
                 }
                 else
                 { // simple value
-                    iProp = (IProperty<T>)typeof(Serializer<T>)
+                    actualProp = (IProperty<T>) typeof(Serializer<T>)
                         .GetMethod("CreateSimpleProperty")
                         .MakeGenericMethod(typeof(T), prop.PropertyType)
                         .Invoke(null, argsOnePropertyVal);
                 }
-                propList.Add(iProp);
+                propList.Add(actualProp);
             }
             propList.Sort(delegate(IProperty<T> x, IProperty<T> y) { return x.Tag.CompareTo(y.Tag); });
             props = propList.ToArray();
@@ -166,7 +162,10 @@ namespace ProtoBuf
             context.Push(instance);
             context.CheckSpace();
             int total = 0;
-            if(candidateProperties == null) candidateProperties = props;
+            if (candidateProperties == null)
+            {
+                candidateProperties = props;
+            }
             for (int i = 0; i < candidateProperties.Length; i++)
             {
                 // note that this serialization includes the headers...
@@ -177,15 +176,17 @@ namespace ProtoBuf
             if (extra != null && (len = extra.GetLength()) > 0)
             {
                 Stream extraStream = extra.BeginQuery();
-                try {
+                try
+                {
                     SerializationContext tmpCtx = new SerializationContext(extraStream);
                     tmpCtx.ReadFrom(context);
                     BlitData(tmpCtx, context.Stream, len);
                     context.ReadFrom(tmpCtx);
-                } finally {
-                    extra.EndQuery(extraStream);
                 }
-                                
+                finally
+                {
+                    extra.EndQuery(extraStream);
+                }               
             }
             context.Stream.Flush();
             context.Pop(instance);
@@ -207,8 +208,8 @@ namespace ProtoBuf
             if (extra != null) total += extra.GetLength();
             context.Pop(instance);
             return total;
-       
         }
+
         internal static void Deserialize(T instance, Stream source)
         {
             if (instance == null) throw new ArgumentNullException("instance");
@@ -244,10 +245,15 @@ namespace ProtoBuf
                     if (!foundTag)
                     {
                         int index = lastIndex;
+
                         // start i at 1 as only need to check n-1 other properties
                         for (int i = 1; i < propCount; i++)
                         {
-                            if (++index == propCount) { index = 0; }
+                            if (++index == propCount)
+                            {
+                                index = 0;
+                            }
+
                             if (props[index].Tag == fieldTag)
                             {
                                 prop = props[index];
@@ -268,14 +274,20 @@ namespace ProtoBuf
                             {
                                 context.StartGroup(fieldTag);
                                 groupProp.DeserializeGroup(instance, context);
+
                                 // (EndGroup will be called [and token validated] before returning)
                             }
                             else
                             {
                                 // check that we are getting the wire-type we expected, so we
                                 // don't read as a fixed-size when the data is a variant (etc)
-                                throw new ProtoException(string.Format("Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
-                                    prop.Name, prop.Tag, prop.WireType, wireType));
+                                throw new ProtoException(
+                                    string.Format(
+                                        "Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
+                                        prop.Name,
+                                        prop.Tag,
+                                        prop.WireType,
+                                        wireType));
                             }
                         }
                         else
@@ -395,11 +407,13 @@ namespace ProtoBuf
                             BlobSerializer.ReadBlock(context, capacity);
                             len -= capacity;
                         }
+
                         if (len > 0)
                         {
                             BlobSerializer.ReadBlock(context, len);
                         }
                     }
+
                     break;
                 case WireType.EndGroup:
                 case WireType.StartGroup:
@@ -418,9 +432,9 @@ namespace ProtoBuf
                 context.CheckSpace(BLIT_BUFFER_SIZE);
                 capacity = context.Workspace.Length - context.WorkspaceIndex;
             }
+
             return capacity;
         }
-
         
         public static IProperty<TEntity> CreateSimpleProperty<TEntity, TValue>(PropertyInfo property)
             where TEntity : class, new()
@@ -441,15 +455,13 @@ namespace ProtoBuf
             return new ListProperty<TEntity, TList, TValue>(property);
         }
 
-
         internal static void CheckTagNotInUse(int tag)
         {
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag", "Tags must be positive integers.");
             foreach (IProperty<T> prop in props)
             {
                 if (prop.Tag == tag) throw new ArgumentException(
-                    string.Format("Tag {0} is in use; access the {1} property instead.",
-                        tag, prop.Name), "tag");
+                    string.Format("Tag {0} is in use; access the {1} property instead.", tag, prop.Name), "tag");
             }
         }
     }

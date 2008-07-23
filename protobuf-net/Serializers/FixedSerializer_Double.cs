@@ -2,7 +2,7 @@
 
 namespace ProtoBuf
 {
-    partial class FixedSerializer : ISerializer<double>
+    internal partial class FixedSerializer : ISerializer<double>
     {
         string ISerializer<double>.DefinedType { get { return ProtoFormat.DOUBLE; } }
         WireType ISerializer<double>.WireType { get { return WireType.Fixed64; } }

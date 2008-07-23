@@ -2,7 +2,7 @@
 
 namespace ProtoBuf
 {
-    partial class TwosComplementSerializer : ISerializer<uint>
+    internal partial class TwosComplementSerializer : ISerializer<uint>
     {
         public static uint ReadUInt32(SerializationContext context)
         {
@@ -13,10 +13,12 @@ namespace ProtoBuf
         {
             return ReadUInt32(context);
         }
+
         public static int WriteToStream(uint value, SerializationContext context)
         {
             return context.Write(Base128Variant.EncodeInt64(value, context));
         }
+
         public int Serialize(uint value, SerializationContext context)
         {
             return WriteToStream(value, context);
@@ -27,10 +29,14 @@ namespace ProtoBuf
         }
         public static int GetLength(uint value)
         {
-            value >>= 7; if (value == 0) return 1;
-            value >>= 7; if (value == 0) return 2;
-            value >>= 7; if (value == 0) return 3;
-            value >>= 7; if (value == 0) return 4;
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            if (value == 0) return 4;
             return 5;
         }
     }

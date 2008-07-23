@@ -3,9 +3,8 @@ using System.IO;
 
 namespace ProtoBuf
 {
-    partial class TwosComplementSerializer : ISerializer<int>
+    internal partial class TwosComplementSerializer : ISerializer<int>
     {
-
         public static int ReadInt32(SerializationContext context)
         {
             return Base128Variant.DecodeInt32(context);
@@ -29,6 +28,7 @@ namespace ProtoBuf
         {
             return context.Write(Base128Variant.EncodeInt32(value, context));
         }
+
         string ISerializer<int>.DefinedType { get { return ProtoFormat.INT32; } }
         
         public int Deserialize(int value, SerializationContext context)

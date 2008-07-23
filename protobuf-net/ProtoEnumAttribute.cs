@@ -6,36 +6,43 @@ namespace ProtoBuf
     /// Used to define protocol-buffer specific behavior for
     /// enumerated values.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field, AllowMultiple=false)]
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = false)]
     public sealed class ProtoEnumAttribute : Attribute
     {
         /// <summary>
-        /// The specific value to use for this enum during serialization.
+        /// Gets or sets the specific value to use for this enum during serialization.
         /// </summary>
-        public long Value {
-            get { return _value.GetValueOrDefault(); }
+        public long Value
+        {
+            get
+            {
+                return enumValue.GetValueOrDefault();
+            }
+
             set
             {
-                if (value < 0 || value > MAX_VALUE)
+                if (value < 0 || value > MaxValue)
                 {
-                    throw new ArgumentOutOfRangeException("Value");
+                    throw new ArgumentOutOfRangeException("value", "Value cannot be between 0 and" + MaxValue + " (inclusive).");
                 }
-                this._value = value;
+
+                this.enumValue = value;
             }
         }
+
         /// <summary>
         /// Indicates whether this instance has a customised value mapping
         /// </summary>
         /// <returns>true if a specific value is set</returns>
-        public bool HasValue() { return _value.HasValue; }
-        const long MAX_VALUE = 0x7FFFFFFF;
-        private long? _value;
+        public bool HasValue() { return enumValue.HasValue; }
+        private const long MaxValue = 0x7FFFFFFF;
+        private long? enumValue;
+
         /// <summary>
-        /// The defined name of the enum, as used in .proto
+        /// Gets or sets the defined name of the enum, as used in .proto
         /// (this name is not used during serialization).
         /// </summary>
         public string Name { get { return name; } set { name = value; } }
         private string name;
-
     }
 }

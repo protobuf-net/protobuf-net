@@ -2,7 +2,7 @@
 
 namespace ProtoBuf
 {
-    sealed class StringSerializer : ISerializer<string>
+    internal sealed class StringSerializer : ISerializer<string>
     {
         private StringSerializer() { }
         public static readonly StringSerializer Default = new StringSerializer();
@@ -23,6 +23,7 @@ namespace ProtoBuf
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
             return preambleLen + context.Write(actualLen);
         }
+
         public int GetLength(string value, SerializationContext context)
         {
             if (value == null) return 0;
@@ -30,6 +31,7 @@ namespace ProtoBuf
             if (value.Length == 0) return preambleLen;
             return preambleLen + Encoding.UTF8.GetByteCount(value);
         }
+
         public string Deserialize(string value, SerializationContext context)
         {
             int len = TwosComplementSerializer.ReadInt32(context);

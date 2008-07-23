@@ -21,7 +21,7 @@ namespace ProtoBuf
         internal static IEnumerable<TValue> GetExtendedValues<TValue>(IExtensible instance, int tag, DataFormat format, bool singleton)
         {
             if (instance == null) throw new ArgumentNullException("instance");
-            return (IEnumerable<TValue>)typeof(ExtensibleUtil)
+            return (IEnumerable<TValue>) typeof(ExtensibleUtil)
                 .GetMethod("GetExtendedValuesTyped", BindingFlags.Public | BindingFlags.Static)
                 .MakeGenericMethod(instance.GetType(), typeof(TValue))
                 .Invoke(null, new object[] { instance, tag, format, singleton });
@@ -66,19 +66,23 @@ namespace ProtoBuf
                             {
                                 ctx.StartGroup(tag);
                                 value = groupSerializer.DeserializeGroup(lastValue, ctx);
-                                // (EndGroup will be called [and token validated] before returning)
+
+                                // EndGroup will be called [and token validated] before returning
                             }
                             else
                             {
                                 throw new ProtoException(
-                                    string.Format("Wire-type mismatch; expected {0}, received {1}",
-                                        serializer.WireType, wireType));
+                                    string.Format(
+                                        "Wire-type mismatch; expected {0}, received {1}",
+                                        serializer.WireType,
+                                        wireType));
                             }
                         }
                         else
                         {
                             value = serializer.Deserialize(lastValue, ctx);
                         }
+
                         hasValue = true;
                         if (singleton)
                         {
@@ -102,6 +106,7 @@ namespace ProtoBuf
             {
                 instance.EndQuery(stream);
             }
+
             if (singleton && hasValue)
             {
                 yield return lastValue;
@@ -119,8 +124,9 @@ namespace ProtoBuf
             typeof(ExtensibleUtil)
                 .GetMethod("AppendExtendValueTyped", BindingFlags.Public | BindingFlags.Static)
                 .MakeGenericMethod(instance.GetType(), typeof(TValue))
-                .Invoke(null, new object[] { instance, tag, format, value});
+                .Invoke(null, new object[] { instance, tag, format, value });
         }
+
         /// <summary>
         /// Stores the given value into the instance's stream; the serializer
         /// is inferred from TValue and format.

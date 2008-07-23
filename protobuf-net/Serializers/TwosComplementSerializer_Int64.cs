@@ -2,7 +2,7 @@
 
 namespace ProtoBuf
 {
-    partial class TwosComplementSerializer : ISerializer<long>
+    internal partial class TwosComplementSerializer : ISerializer<long>
     {
         string ISerializer<long>.DefinedType { get { return ProtoFormat.INT64; } }
 

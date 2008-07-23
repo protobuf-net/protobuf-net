@@ -2,7 +2,7 @@
 using System;
 namespace ProtoBuf
 {
-    partial class FixedSerializer : ISerializer<uint>
+    internal partial class FixedSerializer : ISerializer<uint>
     {
         int ISerializer<uint>.GetLength(uint value, SerializationContext context)
         {
@@ -30,5 +30,4 @@ namespace ProtoBuf
             return BitConverter.ToUInt32(context.Workspace, context.WorkspaceIndex);
         }
     }
-
 }

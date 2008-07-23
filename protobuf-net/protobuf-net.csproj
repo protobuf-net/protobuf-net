@@ -118,7 +118,6 @@
     <Compile Include="ServiceModel\ProtoOperationBehavior.cs" />
     <Compile Include="ServiceModel\XmlProtoSerializer.cs" />
     <Compile Include="WireType.cs" />
-    <Compile Include="ServiceModel\XmlProtoDataContractSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataFormat.cs" />

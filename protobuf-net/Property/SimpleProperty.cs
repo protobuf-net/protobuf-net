@@ -2,7 +2,7 @@
 using System.Reflection;
 namespace ProtoBuf
 {
-    sealed class SimpleProperty<TEntity, TValue> : PropertyBase<TEntity, TValue>
+    internal sealed class SimpleProperty<TEntity, TValue> : PropertyBase<TEntity, TValue>
         where TEntity : class, new()
     {
         public SimpleProperty(PropertyInfo property)

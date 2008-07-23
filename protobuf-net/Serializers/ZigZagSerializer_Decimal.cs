@@ -1,24 +1,25 @@
 ﻿
 namespace ProtoBuf
 {
-    partial class ZigZagSerializer : ISerializer<decimal>
+    internal partial class ZigZagSerializer : ISerializer<decimal>
     {
         string ISerializer<decimal>.DefinedType { get { return ProtoFormat.SINT64; } }
 
         public decimal Deserialize(decimal value, SerializationContext context)
         {
-            long lVal = ZigZagSerializer.ReadInt64(context);
-            return TwosComplementSerializer.LongToDecimal(lVal);
+            long int64Val = ZigZagSerializer.ReadInt64(context);
+            return TwosComplementSerializer.LongToDecimal(int64Val);
         }
         public int GetLength(decimal value, SerializationContext context)
         {
-            long lVal = TwosComplementSerializer.DecimalToLong(value);
-            return ZigZagSerializer.GetLength(lVal);
+            long int64Val = TwosComplementSerializer.DecimalToLong(value);
+            return ZigZagSerializer.GetLength(int64Val);
         }
+
         public int Serialize(decimal value, SerializationContext context)
         {
-            long lVal = TwosComplementSerializer.DecimalToLong(value);
-            return ZigZagSerializer.WriteToStream(lVal, context);
+            long int64Val = TwosComplementSerializer.DecimalToLong(value);
+            return ZigZagSerializer.WriteToStream(int64Val, context);
         }
     }
 }

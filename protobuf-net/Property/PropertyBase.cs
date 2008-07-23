@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace ProtoBuf
 {
-    abstract class PropertyBase<TEntity, TValue> : IProperty<TEntity> where TEntity : class, new()
+    internal abstract class PropertyBase<TEntity, TValue> : IProperty<TEntity> where TEntity : class, new()
     {
 #if !CF2
         internal delegate TValue Getter(TEntity instance);
@@ -45,7 +45,6 @@ namespace ProtoBuf
         private readonly DataFormat dataFormat;
         public DataFormat DataFormat { get { return dataFormat; } }
 
-
         private readonly PropertyInfo property;
         public PropertyInfo Property { get { return property; } }
 #if !CF2
@@ -58,9 +57,11 @@ namespace ProtoBuf
             this.property = property;
             if (!Serializer.TryGetTag(property, out tag, out name, out dataFormat, out isRequired))
             {
-                throw new ArgumentOutOfRangeException(string.Format(
-                    "Property is valid for proto-serialization: {0}.{1}",
-                    property.DeclaringType.Name, property.Name));
+                throw new ArgumentOutOfRangeException(
+                    string.Format(
+                        "Property is valid for proto-serialization: {0}.{1}",
+                        property.DeclaringType.Name,
+                        property.Name));
             }
 #if !CF2
             MethodInfo method;
@@ -74,20 +75,25 @@ namespace ProtoBuf
             }
 #endif
         }
-        protected TValue GetValue(TEntity instance) {
+
+        protected TValue GetValue(TEntity instance)
+        {
 #if CF2
             return (TValue)property.GetValue(instance,null);
 #else
             return getter(instance);
 #endif
         }
-        protected void SetValue(TEntity instance, TValue value) {
+
+        protected void SetValue(TEntity instance, TValue value)
+        {
 #if CF2
             property.SetValue(instance,value, null);
 #else
             setter(instance, value);
 #endif
         }
+
         public abstract void Deserialize(TEntity instance, SerializationContext context);
         public abstract int Serialize(TEntity instance, SerializationContext context);
         public abstract int GetLength(TEntity instance, SerializationContext context);
@@ -98,6 +104,7 @@ namespace ProtoBuf
         {
             return Serializer.GetPrefixLength(Tag, WireType);
         }
+
         protected int WriteFieldToken(SerializationContext context)
         {
             return Serializer.WriteFieldToken(Tag, WireType, context);
@@ -106,12 +113,15 @@ namespace ProtoBuf
         protected int GetLength<TActualValue>(TActualValue value, ISerializer<TActualValue> serializer, SerializationContext context)
         {
             int len = serializer.GetLength(value, context);
-            if (len == 0) return 0;
+            if (len == 0)
+            {
+                return 0;
+            }
             return GetPrefixLength() + len;
         }
         protected int Serialize<TActualValue>(TActualValue value, ISerializer<TActualValue> serializer, SerializationContext context)
         {
-            //TODO: add a "ShouldSerialize" instead of this
+            // TODO: add a "ShouldSerialize" instead of this
             int expectedLen = serializer.GetLength(value, context);
             if (expectedLen == 0) return 0;
             int prefixLen = WriteFieldToken(context),

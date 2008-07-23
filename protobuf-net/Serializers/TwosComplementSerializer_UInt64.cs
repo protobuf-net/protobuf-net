@@ -2,7 +2,7 @@
 
 namespace ProtoBuf
 {
-    partial class TwosComplementSerializer : ISerializer<ulong>
+    internal partial class TwosComplementSerializer : ISerializer<ulong>
     {
         public static ulong ReadUInt64(SerializationContext context)
         {
@@ -12,14 +12,15 @@ namespace ProtoBuf
                 return (ulong)val;
             }
         }
+
         public static int WriteToStream(ulong value, SerializationContext context)
         {
-            long lVal;
+            long int64Val;
             unchecked
             {
-                lVal = (long)value;
+                int64Val = (long)value;
             }
-            return context.Write(Base128Variant.EncodeInt64(lVal, context));
+            return context.Write(Base128Variant.EncodeInt64(int64Val, context));
         }
         string ISerializer<ulong>.DefinedType { get { return ProtoFormat.UINT64; } }
         
@@ -27,25 +28,37 @@ namespace ProtoBuf
         {
             return ReadUInt64(context);
         }
+
         public int Serialize(ulong value, SerializationContext context)
         {
             return WriteToStream(value, context);
         }
+
         public int GetLength(ulong value, SerializationContext context)
         {
             return GetLength(value);
         }
+
         public static int GetLength(ulong value)
         {
-            value >>= 7; if (value == 0) return 1;
-            value >>= 7; if (value == 0) return 2;
-            value >>= 7; if (value == 0) return 3;
-            value >>= 7; if (value == 0) return 4;
-            value >>= 7; if (value == 0) return 5;
-            value >>= 7; if (value == 0) return 6;
-            value >>= 7; if (value == 0) return 7;
-            value >>= 7; if (value == 0) return 8;
-            value >>= 7; if (value == 0) return 9;
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            if (value == 0) return 4;
+            value >>= 7;
+            if (value == 0) return 5;
+            value >>= 7;
+            if (value == 0) return 6;
+            value >>= 7;
+            if (value == 0) return 7;
+            value >>= 7;
+            if (value == 0) return 8;
+            value >>= 7;
+            if (value == 0) return 9;
             return 10;
         }
     }

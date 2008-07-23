@@ -21,11 +21,15 @@ namespace ProtoBuf
         static SimpleSerializers()
         {
             Set<int>(
-                TwosComplementSerializer.Default, ZigZagSerializer.Default,
-                TwosComplementSerializer.Default, FixedSerializer.Default);
+                TwosComplementSerializer.Default,
+                ZigZagSerializer.Default,
+                TwosComplementSerializer.Default,
+                FixedSerializer.Default);
             Set<long>(
-                TwosComplementSerializer.Default, ZigZagSerializer.Default,
-                TwosComplementSerializer.Default, FixedSerializer.Default);
+                TwosComplementSerializer.Default,
+                ZigZagSerializer.Default,
+                TwosComplementSerializer.Default,
+                FixedSerializer.Default);
 
             Set<float>(FixedSerializer.Default, null, null, FixedSerializer.Default);
             Set<double>(FixedSerializer.Default, null, null, FixedSerializer.Default);
@@ -43,12 +47,17 @@ namespace ProtoBuf
         {
             SerializerCache<TValue>.Set(serializer, null, null, null);
         }
-        static ISerializer<T?> Wrap<T>(ISerializer<T> serializer) where T : struct
+
+        private static ISerializer<T?> Wrap<T>(ISerializer<T> serializer) where T : struct
         {
             return serializer == null ? null : new NullableSerializer<T>(serializer);
         }
-        static void Set<TValue>(ISerializer<TValue> @default, ISerializer<TValue> zigZag,
-            ISerializer<TValue> twosComplement, ISerializer<TValue> fixedSize) where TValue : struct
+
+        private static void Set<TValue>(
+            ISerializer<TValue> @default,
+            ISerializer<TValue> zigZag,
+            ISerializer<TValue> twosComplement,
+            ISerializer<TValue> fixedSize) where TValue : struct
         {
             SerializerCache<TValue>.Set(@default, zigZag, twosComplement, fixedSize);
             SerializerCache<TValue?>.Set(Wrap(@default), Wrap(zigZag), Wrap(twosComplement), Wrap(fixedSize));

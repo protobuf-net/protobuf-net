@@ -19,6 +19,5 @@ namespace ProtoBuf
             DOUBLE = "double",
             FLOAT = "flaot",
             BYTES = "bytes";
-
     }
 }

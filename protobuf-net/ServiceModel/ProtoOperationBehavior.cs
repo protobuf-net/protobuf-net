@@ -10,7 +10,7 @@ namespace ProtoBuf.ServiceModel
     internal sealed class ProtoOperationBehavior : DataContractSerializerOperationBehavior
     {
         public ProtoOperationBehavior(OperationDescription operation) : base(operation) { }
-        public ProtoOperationBehavior(OperationDescription operation, DataContractFormatAttribute dataContractFormat) : base(operation, dataContractFormat) { }
+        //public ProtoOperationBehavior(OperationDescription operation, DataContractFormatAttribute dataContractFormat) : base(operation, dataContractFormat) { }
 
         public override XmlObjectSerializer CreateSerializer(Type type, System.Xml.XmlDictionaryString name, System.Xml.XmlDictionaryString ns, IList<Type> knownTypes)
         {

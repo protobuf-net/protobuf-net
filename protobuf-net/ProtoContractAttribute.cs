@@ -11,7 +11,7 @@ namespace ProtoBuf
     public sealed class ProtoContractAttribute : Attribute
     {
         /// <summary>
-        /// The defined name of the type.
+        /// Gets or sets the defined name of the type.
         /// </summary>
         public string Name { get { return name; } set { name = value; } }
         private string name;

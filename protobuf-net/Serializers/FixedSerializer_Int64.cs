@@ -2,7 +2,7 @@
 
 namespace ProtoBuf
 {
-    partial class FixedSerializer : ISerializer<long>
+    internal partial class FixedSerializer : ISerializer<long>
     {
         int ISerializer<long>.GetLength(long value, SerializationContext context)
         {
@@ -12,8 +12,7 @@ namespace ProtoBuf
         WireType ISerializer<long>.WireType { get { return WireType.Fixed64; } }
 
         string ISerializer<long>.DefinedType { get { return ProtoFormat.SFIXED64; } }
-
-
+        
         int ISerializer<long>.Serialize(long value, SerializationContext context)
         {
             byte[] buffer = BitConverter.GetBytes(value);
@@ -21,6 +20,7 @@ namespace ProtoBuf
             {
                 BlobSerializer.Reverse(buffer, 0, 8);
             }
+
             context.Stream.Write(buffer, 0, 8);
             return 8;
         }
@@ -32,6 +32,7 @@ namespace ProtoBuf
             {
                 BlobSerializer.Reverse(context.Workspace, context.WorkspaceIndex, 8);
             }
+
             return BitConverter.ToInt64(context.Workspace, context.WorkspaceIndex);
         }
     }

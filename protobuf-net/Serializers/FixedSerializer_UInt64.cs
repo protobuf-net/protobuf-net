@@ -2,7 +2,7 @@
 
 namespace ProtoBuf
 {
-    partial class FixedSerializer : ISerializer<ulong>
+    internal partial class FixedSerializer : ISerializer<ulong>
     {
         int ISerializer<ulong>.GetLength(ulong value, SerializationContext context)
         {
@@ -12,7 +12,6 @@ namespace ProtoBuf
         WireType ISerializer<ulong>.WireType { get { return WireType.Fixed64; } }
 
         string ISerializer<ulong>.DefinedType { get { return ProtoFormat.FIXED64; } }
-
 
         int ISerializer<ulong>.Serialize(ulong value, SerializationContext context)
         {

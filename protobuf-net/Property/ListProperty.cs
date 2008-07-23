@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace ProtoBuf
 {
-    sealed class ListProperty<TEntity, TList, TValue> : PropertyBase<TEntity, TList>, IGroupProperty<TEntity>
+    internal sealed class ListProperty<TEntity, TList, TValue> : PropertyBase<TEntity, TList>, IGroupProperty<TEntity>
         where TEntity : class, new()
         where TList : IList<TValue>
     {
@@ -13,6 +13,7 @@ namespace ProtoBuf
         {
             serializer = GetSerializer<TValue>(property);
         }
+
         private readonly ISerializer<TValue> serializer;
 
         public override string DefinedType { get { return serializer.DefinedType; } }
@@ -29,6 +30,7 @@ namespace ProtoBuf
                     total += Serialize(value, serializer, context);
                 }
             }
+
             return total;
         }
         public override int GetLength(TEntity instance, SerializationContext context)
@@ -61,6 +63,7 @@ namespace ProtoBuf
             {
                 throw new ProtoException("Cannot treat property as a group: " + Name);
             }
+
             // read a single item
             TList list = GetValue(instance);
             bool set = list == null;

@@ -10,7 +10,5 @@ namespace ProtoBuf
         private ZigZagSerializer() { }
 
         public WireType WireType { get { return WireType.Variant; } }
-
-
     }
 }

@@ -76,7 +76,8 @@ namespace DataPipeline
             };
 
             // this could be loading an external file, etc
-            using(Stream feed = CreateData()) {
+            using (Stream feed = CreateData())
+            {
                 Serializer.Merge(feed, obj);
             }
 

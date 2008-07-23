@@ -5,13 +5,14 @@ namespace ProtoBuf
 {
     internal static class Base128Variant
     {
-        internal const long  INT64_MSB = ((long)1) << 63;
-        internal const int   INT32_MSB = ((int)1) << 31;
+        internal const long Int64Msb = ((long)1) << 63;
+        internal const int Int32Msb = ((int)1) << 31;
 
         public static int EncodeInt32(int value, SerializationContext context)
         {
             return EncodeInt64((long)value, context);
         }
+
         public static int DecodeInt32(SerializationContext context)
         {
             return (int)DecodeInt64(context);
@@ -28,6 +29,7 @@ namespace ProtoBuf
                 return iVal | INT32_MSB;
             }*/
         }
+
         internal static int EncodeInt64(long value, SerializationContext context)
         {
             byte[] buffer = context.Workspace;
@@ -36,7 +38,8 @@ namespace ProtoBuf
             {
                 buffer[index] = (byte)value;
                 return 1;
-            }            
+            }  
+          
             int lastByte = 0;
             for (int i = 0; i < 10; i++)
             {
@@ -45,11 +48,13 @@ namespace ProtoBuf
                 buffer[index + i] = (byte)(v | 128);
                 value >>= 7;
             }
+
             // byte 10 inly needs 1 bit (but if -ve backfills >> with 1s)
             buffer[index + 9] &= 0x01;
             buffer[lastByte] &= 127; // strip the msb
             return lastByte + 1;
         }
+
         internal static long DecodeInt64(SerializationContext context)
         {
             long value = 0; // the result (treated as binary
@@ -68,8 +73,10 @@ namespace ProtoBuf
                         context.Eof = Eof.Ended;
                         return 0;
                     }
+
                     throw new EndOfStreamException();
                 }
+
                 if (shift == 63)
                 {
                     // check that only the lsb is set in the final block
@@ -77,6 +84,7 @@ namespace ProtoBuf
                     {
                         throw new OverflowException("Overflow reading Int64");
                     }
+
                     // add the final bit
                     long usefulBits = (long)(b & 1);
                     value |= (usefulBits << shift);
@@ -89,10 +97,12 @@ namespace ProtoBuf
                     value |= (usefulBits << shift);
                     shift += 7;
                 }
-            } while ((b & 128) != 0);
+            }
+            while ((b & 128) != 0);
 
             return value;
         }
+
         internal static int ReadRaw(SerializationContext context)
         {
             int b, index = context.WorkspaceIndex, len = 0;
@@ -103,7 +113,8 @@ namespace ProtoBuf
                 if (b < 0) throw new EndOfStreamException();
                 context.Workspace[index++] = (byte)b;
                 len++;
-            } while ((b & 128) != 0);
+            }
+            while ((b & 128) != 0);
             return len;
         }
 
@@ -114,7 +125,8 @@ namespace ProtoBuf
             {
                 b = source.ReadByte();
                 if (b < 0) throw new EndOfStreamException();
-            } while ((b & 128) != 0);
+            }
+            while ((b & 128) != 0);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace ProtoBuf
         private Stream parent;
         private readonly long length;
         private bool closesParent;
-        long position;
+        private long position;
 
         public SubStream(Stream parent, long length, bool closesParent)
         {
@@ -19,10 +19,12 @@ namespace ProtoBuf
             this.length = length;
             this.closesParent = closesParent;
         }
+
         private void CheckDisposed()
         {
             if (parent == null) throw new ObjectDisposedException(GetType().Name);
         }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing && parent != null)
@@ -34,57 +36,69 @@ namespace ProtoBuf
                 else
                 { // move the parent past this sub-data
                     long remaining = length - position, bytes;
-                    if(remaining > 0) {
+                    if (remaining > 0)
+                    {
                         if (CanSeek)
-                        { // seek the stream
+                        {   // seek the stream
                             parent.Seek(remaining, SeekOrigin.Current);
                         }
                         else
-                        { // burn up the stream
+                        {   // burn up the stream
                             const int DEFAULT_SIZE = 4096;
                             byte[] buffer = new byte[remaining < DEFAULT_SIZE ? remaining : DEFAULT_SIZE];
                             while (remaining > 0 && (bytes = parent.Read(buffer, 0, buffer.Length)) > 0)
                             {
                                 remaining -= bytes;
                             }
-
                         }
                     }
                 }
+
                 parent = null;
             }
+
             base.Dispose(disposing);
         }
+
         public override bool CanRead
         {
             get { return parent != null; }
         }
+
         public override bool CanWrite
         {
             get { return false; }
         }
+
         public override bool CanSeek
         {
-            get {
-                return parent!=null && parent.CanSeek;
+            get 
+            {
+                return (parent != null) && parent.CanSeek;
             }
         }
+
         public override void Flush()
-        {}
+        {
+        }
+
         public override void Write(byte[] buffer, int offset, int count)
         {
             throw new NotSupportedException();
         }
+
         public override long Length
         {
             get { return length; }
         }
+
         public override long Position
         {
             get
             {
                 return position;
             }
+
             set
             {
                 if (value < 0 || value >= length) throw new ArgumentOutOfRangeException("value", "Cannot seek outide of the Stream's bounds");
@@ -92,6 +106,7 @@ namespace ProtoBuf
                 position = value;
             }
         }
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             switch (origin)
@@ -108,12 +123,15 @@ namespace ProtoBuf
                 default:
                     throw new ArgumentException("Unknown seek-origin", "origin");
             }
+
             return Position;
         }
+
         public override void SetLength(long value)
         {
             throw new NotSupportedException();
         }
+
         public override int ReadByte()
         {
             CheckDisposed();
@@ -121,10 +139,12 @@ namespace ProtoBuf
             {
                 return -1;
             }
+
             int result = parent.ReadByte();
             if (result >= 0) position++;
             return result;
         }
+
         public override int Read(byte[] buffer, int offset, int count)
         {
             CheckDisposed();
@@ -135,6 +155,7 @@ namespace ProtoBuf
             {
                 position += count;
             }
+
             return count;
         }
     }
