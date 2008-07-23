@@ -4,11 +4,14 @@ using System.Runtime.Serialization;
 using System.Collections.Generic;
 namespace ProtoBuf
 {
-    sealed class EntitySerializer<TEntity> : ISerializer<TEntity> where TEntity : class, new()
+    sealed class EntitySerializer<TEntity> : IGroupSerializer<TEntity> where TEntity : class, new()
     {
         public string DefinedType { get { return Serializer.GetDefinedTypeName<TEntity>(); } }
         public WireType WireType { get { return WireType.String; } }
 
+        /// <summary>
+        /// Regular deserialization is length-prefixed
+        /// </summary>
         public TEntity Deserialize(TEntity value, SerializationContext context)
         {
             if (value == null) value = new TEntity();
@@ -27,6 +30,19 @@ namespace ProtoBuf
             }
             return value;
         }
+        /// <summary>
+        /// Group deserialization is group-terminated
+        /// </summary>
+        public TEntity DeserializeGroup(TEntity value, SerializationContext context)
+        {
+            // no need to sub-stream; group will indicate when complete
+            if (value == null) value = new TEntity();
+            Serializer<TEntity>.Deserialize(value, context);
+            return value;
+        }
+        /// <summary>
+        /// Regular serialization is length-prefixed
+        /// </summary>
         public int Serialize(TEntity value, SerializationContext context)
         {
             if (value == null) return 0;
@@ -38,6 +54,9 @@ namespace ProtoBuf
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
             return preambleLen + actualLen;
         }
+        /// <summary>
+        /// Regular serialization is length-prefixed
+        /// </summary>
         public int GetLength(TEntity value, SerializationContext context)
         {
             if (value == null) return 0;

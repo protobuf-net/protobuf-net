@@ -18,4 +18,11 @@ namespace ProtoBuf
 
         int GetLength(TEntity instance, SerializationContext context);
     }
+    /// <summary>
+    /// Additional support for properties that can handle grouped (rather than length-prefixed) data (entities)
+    /// </summary>
+    interface IGroupProperty<T> : IProperty<T>
+    {
+        void DeserializeGroup(T instance, SerializationContext context);
+    }
 }

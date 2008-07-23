@@ -2,15 +2,16 @@
 using System.Reflection;
 namespace ProtoBuf
 {
-    sealed class EntityProperty<TEntity, TValue> : PropertyBase<TEntity, TValue>
+    sealed class EntityProperty<TEntity, TValue> : PropertyBase<TEntity, TValue>, IGroupProperty<TEntity>
         where TEntity : class, new()
         where TValue : class, new()
     {
-        private readonly ISerializer<TValue> serializer;
+        private readonly IGroupSerializer<TValue> serializer;
         public EntityProperty(PropertyInfo property)
             : base(property)
         {
-            serializer = GetSerializer<TValue>(property);
+            // entity serializers can always handle groups
+            serializer = (IGroupSerializer<TValue>)GetSerializer<TValue>(property);
         }
         public override WireType WireType { get { return serializer.WireType; } }
         public override string DefinedType { get { return serializer.DefinedType; } }
@@ -32,6 +33,13 @@ namespace ProtoBuf
             TValue value = GetValue(instance);
             bool set = value == null;
             value = serializer.Deserialize(value, context);
+            if (set) SetValue(instance, value);
+        }
+        public void DeserializeGroup(TEntity instance, SerializationContext context)
+        {
+            TValue value = GetValue(instance);
+            bool set = value == null;
+            value = serializer.DeserializeGroup(value, context);
             if (set) SetValue(instance, value);
         }
     }

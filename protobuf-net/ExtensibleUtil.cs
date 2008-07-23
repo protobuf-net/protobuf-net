@@ -58,13 +58,28 @@ namespace ProtoBuf
 
                     if (readTag == tag)
                     {
+                        TValue value;
                         if (wireType != serializer.WireType)
                         {
-                            throw new SerializationException(
-                                string.Format("Wire-type mismatch; expected {0}, received {1}",
-                                    serializer.WireType, wireType));
+                            IGroupSerializer<TValue> groupSerializer;
+                            if (wireType == WireType.StartGroup &&
+                                (groupSerializer = serializer as IGroupSerializer<TValue>) != null)
+                            {
+                                ctx.StartGroup(tag);
+                                value = groupSerializer.DeserializeGroup(lastValue, ctx);
+                                // (EndGroup will be called [and token validated] before returning)
+                            }
+                            else
+                            {
+                                throw new SerializationException(
+                                    string.Format("Wire-type mismatch; expected {0}, received {1}",
+                                        serializer.WireType, wireType));
+                            }
                         }
-                        TValue value = serializer.Deserialize(lastValue, ctx);
+                        else
+                        {
+                            value = serializer.Deserialize(lastValue, ctx);
+                        }
                         hasValue = true;
                         if (singleton)
                         {

@@ -235,6 +235,11 @@ namespace ProtoBuf
                     WireType wireType;
                     int fieldTag;
                     ParseFieldToken(prefix, out wireType, out fieldTag);
+                    if (wireType == WireType.EndGroup)
+                    {
+                        context.EndGroup(fieldTag);
+                        break;
+                    }
                     bool foundTag = fieldTag == lastTag;
                     if (!foundTag)
                     {
@@ -257,13 +262,27 @@ namespace ProtoBuf
                     if (foundTag)
                     {
                         if (prop.WireType != wireType)
-                        {   // check that we are getting the wire-type we expected, so we
-                            // don't read as a fixed-size when the data is a variant (etc)
-                            throw new SerializationException(string.Format("Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
-                                prop.Name, prop.Tag, prop.WireType, wireType));
+                        {
+                            IGroupProperty<T> groupProp;
+                            if (wireType == WireType.StartGroup && (groupProp = prop as IGroupProperty<T>) != null)
+                            {
+                                context.StartGroup(fieldTag);
+                                groupProp.DeserializeGroup(instance, context);
+                                // (EndGroup will be called [and token validated] before returning)
+                            }
+                            else
+                            {
+                                // check that we are getting the wire-type we expected, so we
+                                // don't read as a fixed-size when the data is a variant (etc)
+                                throw new SerializationException(string.Format("Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
+                                    prop.Name, prop.Tag, prop.WireType, wireType));
+                            }
                         }
-                        // recognised fields; use the property deserializer
-                        prop.Deserialize(instance, context);
+                        else
+                        {
+                            // recognised fields; use the property's deserializer
+                            prop.Deserialize(instance, context);
+                        }
                     }
                     else if (extra != null)
                     {

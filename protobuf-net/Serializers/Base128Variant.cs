@@ -65,6 +65,7 @@ namespace ProtoBuf
                     // raise eof only on the first byte
                     if (shift == 0 && context.Eof == Eof.Expected)
                     {
+                        context.CheckNoRemainingGroups(); // if EOF then groups should be clean!
                         context.Eof = Eof.Ended;
                         return 0;
                     }

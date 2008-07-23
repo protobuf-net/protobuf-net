@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {
-    sealed class ListProperty<TEntity, TList, TValue> : PropertyBase<TEntity, TList>
+    sealed class ListProperty<TEntity, TList, TValue> : PropertyBase<TEntity, TList>, IGroupProperty<TEntity>
         where TEntity : class, new()
         where TList : IList<TValue>
     {
@@ -50,6 +51,22 @@ namespace ProtoBuf
             bool set = list == null;
             if (set) list = (TList)Activator.CreateInstance(typeof(TList));
             list.Add(serializer.Deserialize(default(TValue), context));
+            if (set) SetValue(instance, list);
+        }
+        public void DeserializeGroup(TEntity instance, SerializationContext context)
+        {
+            // the list could be of anything... need to check if the serializer
+            // supports group usage (i.e. entities)
+            IGroupSerializer<TValue> groupSerializer = serializer as IGroupSerializer<TValue>;
+            if (groupSerializer == null)
+            {
+                throw new SerializationException("Cannot treat property as a group: " + Name);
+            }
+            // read a single item
+            TList list = GetValue(instance);
+            bool set = list == null;
+            if (set) list = (TList)Activator.CreateInstance(typeof(TList));
+            list.Add(groupSerializer.DeserializeGroup(default(TValue), context));
             if (set) SetValue(instance, list);
         }
     }
