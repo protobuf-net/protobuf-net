@@ -6,11 +6,11 @@ namespace ProtoBuf
     internal sealed class SubStream : Stream
     {
         private Stream parent;
-        private readonly int length;
+        private readonly long length;
         private bool closesParent;
-        int position;
+        long position;
 
-        public SubStream(Stream parent, int length, bool closesParent)
+        public SubStream(Stream parent, long length, bool closesParent)
         {
             if (parent == null) throw new ArgumentNullException("parent");
             if (length < 0) throw new ArgumentOutOfRangeException("length");
@@ -33,7 +33,7 @@ namespace ProtoBuf
                 }
                 else
                 { // move the parent past this sub-data
-                    int remaining = length - position, bytes;
+                    long remaining = length - position, bytes;
                     if(remaining > 0) {
                         if (CanSeek)
                         { // seek the stream
@@ -89,6 +89,7 @@ namespace ProtoBuf
             {
                 if (value < 0 || value >= length) throw new ArgumentOutOfRangeException("value", "Cannot seek outide of the Stream's bounds");
                 parent.Position += (value - position);
+                position = value;
             }
         }
         public override long Seek(long offset, SeekOrigin origin)
@@ -127,8 +128,8 @@ namespace ProtoBuf
         public override int Read(byte[] buffer, int offset, int count)
         {
             CheckDisposed();
-            int remaining = length - position;
-            if (count > remaining) count = remaining;
+            long remaining = length - position;
+            if (count > remaining) count = (int)remaining;
             count = parent.Read(buffer, offset, count);
             if (count > 0)
             {
