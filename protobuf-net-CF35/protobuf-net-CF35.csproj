@@ -4,17 +4,17 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30428</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}</ProjectGuid>
+    <ProjectGuid>{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>protobuf_net</RootNamespace>
-    <AssemblyName>protobuf_net</AssemblyName>
+    <RootNamespace>ProtoBuf</RootNamespace>
+    <AssemblyName>protobuf-net</AssemblyName>
     <ProjectTypeGuids>{4D628B5B-2FBC-4AA6-8C16-197242AEB884};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PlatformFamilyName>PocketPC</PlatformFamilyName>
     <PlatformID>4118C335-430C-497f-BE48-11C3316B135E</PlatformID>
     <OSVersion>5.1</OSVersion>
-    <DeployDirSuffix>protobuf_net_CF</DeployDirSuffix>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <DeployDirSuffix>protobuf_net_CF35</DeployDirSuffix>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <NativePlatformName>Windows Mobile 5.0 Pocket PC SDK</NativePlatformName>
     <FormFactorID>
     </FormFactorID>
@@ -31,24 +31,26 @@
     <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <DocumentationFile>bin\Debug\protobuf_net.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;PocketPC CF</DefineConstants>
+    <DefineConstants>TRACE;$(PlatformFamilyName)</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
     <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <DocumentationFile>bin\Release\protobuf_net.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>

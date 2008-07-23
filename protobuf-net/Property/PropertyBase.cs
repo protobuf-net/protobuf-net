@@ -6,7 +6,7 @@ namespace ProtoBuf
 {
     abstract class PropertyBase<TEntity, TValue> : IProperty<TEntity> where TEntity : class, new()
     {
-#if !CF
+#if !CF2
         internal delegate TValue Getter(TEntity instance);
         internal delegate void Setter(TEntity instance, TValue value);
 #endif
@@ -48,7 +48,7 @@ namespace ProtoBuf
 
         private readonly PropertyInfo property;
         public PropertyInfo Property { get { return property; } }
-#if !CF
+#if !CF2
         private readonly Getter getter;
         private readonly Setter setter;
 #endif
@@ -62,27 +62,27 @@ namespace ProtoBuf
                     "Property is valid for proto-serialization: {0}.{1}",
                     property.DeclaringType.Name, property.Name));
             }
-#if !CF
+#if !CF2
             MethodInfo method;
             if (property.CanRead && (method = property.GetGetMethod(true)) != null)
             {
-                getter = (Getter)Delegate.CreateDelegate(typeof(Getter), method);
+                getter = (Getter)Delegate.CreateDelegate(typeof(Getter), null, method);
             }
             if (property.CanWrite && (method = property.GetSetMethod(true)) != null)
             {
-                setter = (Setter)Delegate.CreateDelegate(typeof(Setter), method);
+                setter = (Setter)Delegate.CreateDelegate(typeof(Setter), null, method);
             }
 #endif
         }
         protected TValue GetValue(TEntity instance) {
-#if CF
+#if CF2
             return (TValue)property.GetValue(instance,null);
 #else
             return getter(instance);
 #endif
         }
         protected void SetValue(TEntity instance, TValue value) {
-#if CF
+#if CF2
             property.SetValue(instance,value, null);
 #else
             setter(instance, value);
