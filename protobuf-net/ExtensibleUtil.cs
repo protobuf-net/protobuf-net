@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {
@@ -71,7 +70,7 @@ namespace ProtoBuf
                             }
                             else
                             {
-                                throw new SerializationException(
+                                throw new ProtoException(
                                     string.Format("Wire-type mismatch; expected {0}, received {1}",
                                         serializer.WireType, wireType));
                             }

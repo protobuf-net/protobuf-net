@@ -4,7 +4,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Serialization;
 
@@ -14,7 +13,7 @@ namespace ProtoBuf
     internal static class Serializer<T> where T : class, new()
     {
 
-
+#if !CF
         public static string GetProto()
         {
             StringBuilder sb = new StringBuilder();
@@ -26,6 +25,7 @@ namespace ProtoBuf
         {
             return sb.Append(' ', nestLevel * 2);
         }
+
         internal static void GetProto(StringBuilder sb, int nestLevel)
         {
             string ns = typeof(T).Namespace;
@@ -76,7 +76,7 @@ namespace ProtoBuf
 
         }
 
-
+#endif
         static readonly IProperty<T>[] props;
 
         static Serializer()
@@ -274,7 +274,7 @@ namespace ProtoBuf
                             {
                                 // check that we are getting the wire-type we expected, so we
                                 // don't read as a fixed-size when the data is a variant (etc)
-                                throw new SerializationException(string.Format("Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
+                                throw new ProtoException(string.Format("Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
                                     prop.Name, prop.Tag, prop.WireType, wireType));
                             }
                         }
@@ -318,7 +318,7 @@ namespace ProtoBuf
             tag = token >> 3;
             if (tag <= 0)
             {
-                throw new SerializationException("Invalid tag: " + tag.ToString());
+                throw new ProtoException("Invalid tag: " + tag.ToString());
             }
         }
 
@@ -348,7 +348,7 @@ namespace ProtoBuf
                 case WireType.StartGroup:
                     throw new NotSupportedException(wireType.ToString());
                 default:
-                    throw new SerializationException("Unknown wire-type " + wireType.ToString());
+                    throw new ProtoException("Unknown wire-type " + wireType.ToString());
             }
         }
 
@@ -405,7 +405,7 @@ namespace ProtoBuf
                 case WireType.StartGroup:
                     throw new NotSupportedException(wireType.ToString());
                 default:
-                    throw new SerializationException("Unknown wire-type " + wireType.ToString());
+                    throw new ProtoException("Unknown wire-type " + wireType.ToString());
             }
         }
 

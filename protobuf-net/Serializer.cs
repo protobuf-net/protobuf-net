@@ -1,9 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Xml.Serialization;
-using System.Collections.Generic;
+#if REMOTING
+using System.Runtime.Serialization;
+#endif
 
 namespace ProtoBuf
 {
@@ -22,15 +23,16 @@ namespace ProtoBuf
         {
             if (actual != expected)
             {
-                throw new SerializationException(string.Format(
-                "Wrote {0} bytes, but expected to write {1}.", actual, expected));
+                throw new ProtoException(string.Format(
+                    "Wrote {0} bytes, but expected to write {1}.", actual, expected));
             }
         }
+        static readonly Type[] emptyTypes = new Type[0];
         internal static bool IsEntityType(Type type)
         {
             return type.IsClass && !type.IsAbstract
                     && type != typeof(string) && !type.IsArray
-                    && type.GetConstructor(Type.EmptyTypes) != null
+                    && type.GetConstructor(emptyTypes) != null
                     && (AttributeUtils.GetAttribute<ProtoContractAttribute>(type) != null
 #if NET_3_0
                         || AttributeUtils.GetAttribute<DataContractAttribute>(type) != null
@@ -204,7 +206,7 @@ namespace ProtoBuf
                 return result;
             }
         }
-
+#if !CF
         /// <summary>
         /// Suggest a .proto definition for the given type
         /// </summary>
@@ -214,7 +216,7 @@ namespace ProtoBuf
         {
             return Serializer<T>.GetProto();
         }
-
+#endif
         internal static string GetDefinedTypeName<T>()
         {
             string name = typeof(T).Name;

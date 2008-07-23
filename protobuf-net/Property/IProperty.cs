@@ -8,7 +8,9 @@ namespace ProtoBuf
         DataFormat DataFormat { get; }
         bool IsRequired { get; }
         int Tag { get; }
+#if !CF
         string Description { get; }
+#endif
         object DefaultValue { get; }
 
         void Deserialize(TEntity instance, SerializationContext context);

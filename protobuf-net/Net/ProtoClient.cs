@@ -1,4 +1,4 @@
-﻿#if !SILVERLIGHT
+﻿#if RPC
 using System;
 using System.IO;
 using System.Net;

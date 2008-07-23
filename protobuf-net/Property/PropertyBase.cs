@@ -1,15 +1,15 @@
 ﻿using System;
-using System.Reflection;
-using System.Runtime.Serialization;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace ProtoBuf
 {
     abstract class PropertyBase<TEntity, TValue> : IProperty<TEntity> where TEntity : class, new()
     {
+#if !CF
         internal delegate TValue Getter(TEntity instance);
         internal delegate void Setter(TEntity instance, TValue value);
-
+#endif
         public virtual object DefaultValue
         {
             get
@@ -18,6 +18,7 @@ namespace ProtoBuf
                 return dva == null ? null : dva.Value;
             }
         }
+#if !CF
         public virtual string Description
         {
             get
@@ -26,6 +27,7 @@ namespace ProtoBuf
                 return da == null ? null : da.Description;
             }
         }
+#endif
         protected static ISerializer<T> GetSerializer<T>(PropertyInfo property)
         {
             ProtoMemberAttribute attrib = AttributeUtils.GetAttribute<ProtoMemberAttribute>(property);
@@ -46,8 +48,10 @@ namespace ProtoBuf
 
         private readonly PropertyInfo property;
         public PropertyInfo Property { get { return property; } }
+#if !CF
         private readonly Getter getter;
         private readonly Setter setter;
+#endif
         protected PropertyBase(PropertyInfo property)
         {
             if (property == null) throw new ArgumentNullException("property");
@@ -58,7 +62,7 @@ namespace ProtoBuf
                     "Property is valid for proto-serialization: {0}.{1}",
                     property.DeclaringType.Name, property.Name));
             }
-
+#if !CF
             MethodInfo method;
             if (property.CanRead && (method = property.GetGetMethod(true)) != null)
             {
@@ -68,9 +72,22 @@ namespace ProtoBuf
             {
                 setter = (Setter)Delegate.CreateDelegate(typeof(Setter), method);
             }
+#endif
         }
-        protected TValue GetValue(TEntity instance) { return getter(instance); }
-        protected void SetValue(TEntity instance, TValue value) { setter(instance, value); }
+        protected TValue GetValue(TEntity instance) {
+#if CF
+            return (TValue)property.GetValue(instance,null);
+#else
+            return getter(instance);
+#endif
+        }
+        protected void SetValue(TEntity instance, TValue value) {
+#if CF
+            property.SetValue(instance,value, null);
+#else
+            setter(instance, value);
+#endif
+        }
         public abstract void Deserialize(TEntity instance, SerializationContext context);
         public abstract int Serialize(TEntity instance, SerializationContext context);
         public abstract int GetLength(TEntity instance, SerializationContext context);

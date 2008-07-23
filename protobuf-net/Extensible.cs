@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.Serialization;
 using System.Collections.Generic;
 
 namespace ProtoBuf
@@ -73,8 +72,21 @@ namespace ProtoBuf
                 {
                     MemoryStream ms = (MemoryStream)stream;
                     
-                    int offset = buffer == null ? 0 : buffer.Length;
-                    Array.Resize<byte>(ref buffer, offset + len);
+                    // note: Array.Resize not available on CF
+                    int offset;
+                    if (buffer == null)
+                    {   // allocate new buffer
+                        offset = 0;
+                        buffer = new byte[len];
+                    }
+                    else
+                    {   // resize and copy the data
+                        offset = buffer.Length;
+                        byte[] tmp = buffer;
+                        buffer = new byte[offset + len];
+                        Buffer.BlockCopy(tmp, 0, buffer, 0, offset);
+                    }
+                    // copy the data from the stream
                     byte[] raw = ms.GetBuffer();
                     Buffer.BlockCopy(raw, 0, buffer, offset, len);
                 }

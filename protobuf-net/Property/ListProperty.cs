@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {
@@ -60,7 +59,7 @@ namespace ProtoBuf
             IGroupSerializer<TValue> groupSerializer = serializer as IGroupSerializer<TValue>;
             if (groupSerializer == null)
             {
-                throw new SerializationException("Cannot treat property as a group: " + Name);
+                throw new ProtoException("Cannot treat property as a group: " + Name);
             }
             // read a single item
             TList list = GetValue(instance);

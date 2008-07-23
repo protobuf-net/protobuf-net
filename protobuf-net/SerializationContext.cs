@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {
@@ -25,7 +24,7 @@ namespace ProtoBuf
             if(obj == null) throw new ArgumentNullException("obj");
             foreach(object stackItem in objectStack) {
                 if(ReferenceEquals(stackItem, obj))
-                    throw new SerializationException("Recursive structure detected; only object trees (not full graphs) can be serialized");
+                    throw new ProtoException("Recursive structure detected; only object trees (not full graphs) can be serialized");
             }
             objectStack.Push(obj);
         }
@@ -34,7 +33,7 @@ namespace ProtoBuf
             if (obj == null) throw new ArgumentNullException("obj");
             if(objectStack.Count == 0 || !ReferenceEquals(objectStack.Pop(), obj))
             {
-                throw new SerializationException("Stack corruption; incorrect object popped");
+                throw new ProtoException("Stack corruption; incorrect object popped");
             }
         }
         public void StartGroup(int tag)
@@ -46,7 +45,7 @@ namespace ProtoBuf
         {
             if (groupStack == null || groupStack.Count == 0 || groupStack.Pop() != tag)
             {
-                throw new SerializationException("Mismatched group tags detected in message");
+                throw new ProtoException("Mismatched group tags detected in message");
             }
         }
 
@@ -65,7 +64,7 @@ namespace ProtoBuf
         {
             if (groupStack != null && groupStack.Count > 0)
             {
-                throw new SerializationException("Unterminated group(s) in a message or sub-message");
+                throw new ProtoException("Unterminated group(s) in a message or sub-message");
             }
         }
         // not used at the moment; if anything wants to
@@ -102,7 +101,10 @@ namespace ProtoBuf
             {
                 int newLen = workspace.Length * 2; // try doubling
                 if (length > newLen) newLen = length; // as long as that gives us enough ;-p
-                Array.Resize(ref workspace, newLen);
+                // note Array.Resize not available on CF
+                byte[] tmp = workspace;
+                workspace = new byte[newLen]; 
+                Buffer.BlockCopy(tmp, 0, workspace, 0, tmp.Length);
             }
         }
 

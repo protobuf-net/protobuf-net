@@ -18,7 +18,7 @@ namespace Examples
     [TestFixture]
     public class Recursion
     {
-        [Test, ExpectedException(typeof(SerializationException))]
+        [Test, ExpectedException(typeof(ProtoException))]
         public void BlowUp()
         {
             RecursiveObject obj = new RecursiveObject();

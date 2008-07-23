@@ -205,6 +205,7 @@
     </Compile>
     <Compile Include="Net\ProtoClient.cs" />
     <Compile Include="Net\ProtoServer.cs" />
+    <Compile Include="ProtoException.cs" />
     <Compile Include="Serializers\NullableSerializer.cs" />
   </ItemGroup>
   <ItemGroup>

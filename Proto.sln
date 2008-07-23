@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net_Silverlight", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverlightExtended", "SilverlightExtended\SilverlightExtended.csproj", "{05A18144-D234-46D7-A36C-CD45BA884746}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartDevice", "SmartDevice\SmartDevice.csproj", "{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +61,18 @@ Global
 		{05A18144-D234-46D7-A36C-CD45BA884746}.Release|Any CPU.Build.0 = Release|Any CPU
 		{05A18144-D234-46D7-A36C-CD45BA884746}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{05A18144-D234-46D7-A36C-CD45BA884746}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Net20|Any CPU.Deploy.0 = Release|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{B7A878BB-B0BE-4694-B968-CC7D87CC89BD}.Silverlight2|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
