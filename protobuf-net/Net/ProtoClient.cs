@@ -20,14 +20,19 @@ namespace ProtoBuf.Net
         /// <param name="baseAddress">The base-address of the remote service.</param>
         public ProtoClient(string baseAddress)
         {
+            if (string.IsNullOrEmpty(baseAddress)) throw new ArgumentNullException("baseAddress");
             client = new WebClient();
             client.BaseAddress = baseAddress;
         }
         /// <summary>
         /// The remote address for the service.
         /// </summary>
-        public Uri BaseAddress { get; private set; }
-
+        public string BaseAddress { 
+            get {
+                CheckDisposed();
+                return client.BaseAddress;
+            }
+        }
         /// <summary>
         /// Releases any resources.
         /// </summary>
