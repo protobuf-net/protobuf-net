@@ -200,7 +200,9 @@
     <Compile Include="Serializers\StringSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ExtensibleUtil.cs" />
+    <Compile Include="ExtensibleUtil.cs">
+      <DependentUpon>IExtensible.cs</DependentUpon>
+    </Compile>
     <Compile Include="Net\ProtoClient.cs" />
     <Compile Include="Net\ProtoServer.cs" />
     <Compile Include="Serializers\NullableSerializer.cs" />
