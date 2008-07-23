@@ -224,19 +224,17 @@ namespace ProtoBuf
             IExtensible extra = instance as IExtensible;
             SerializationContext extraData = null;
             IProperty<T> prop = propCount == 0 ? null : props[0];
+            
             int lastIndex = prop == null ? int.MinValue : 0,
                 lastTag = prop == null ? int.MinValue : prop.Tag;
-
+            
             try
             {
                 while (TwosComplementSerializer.TryReadInt32(context, out prefix))
                 {
-                    WireType wireType = (WireType)(prefix & 7);
-                    int fieldTag = prefix >> 3;
-                    if (fieldTag <= 0)
-                    {
-                        throw new SerializationException("Invalid tag: " + fieldTag.ToString());
-                    }
+                    WireType wireType;
+                    int fieldTag;
+                    ParseFieldToken(prefix, out wireType, out fieldTag);
                     bool foundTag = fieldTag == lastTag;
                     if (!foundTag)
                     {
@@ -258,6 +256,12 @@ namespace ProtoBuf
 
                     if (foundTag)
                     {
+                        if (prop.WireType != wireType)
+                        {   // check that we are getting the wire-type we expected, so we
+                            // don't read as a fixed-size when the data is a variant (etc)
+                            throw new SerializationException(string.Format("Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
+                                prop.Name, prop.Tag, prop.WireType, wireType));
+                        }
                         // recognised fields; use the property deserializer
                         prop.Deserialize(instance, context);
                     }
@@ -286,6 +290,16 @@ namespace ProtoBuf
             {
                 if (extraData != null) extra.EndAppend(extraData.Stream, false);
                 throw;
+            }
+        }
+
+        internal static void ParseFieldToken(int token, out WireType wireType, out int tag)
+        {
+            wireType = (WireType)(token & 7);
+            tag = token >> 3;
+            if (tag <= 0)
+            {
+                throw new SerializationException("Invalid tag: " + tag.ToString());
             }
         }
 
@@ -335,7 +349,7 @@ namespace ProtoBuf
             }
         }
 
-        private static void SkipData(SerializationContext context, WireType wireType)
+        internal static void SkipData(SerializationContext context, WireType wireType)
         {
             Stream source = context.Stream;
             switch (wireType)
@@ -406,6 +420,18 @@ namespace ProtoBuf
             where TList : IList<TValue>
         {
             return new ListProperty<TEntity, TList, TValue>(property);
+        }
+
+
+        internal static void CheckTagNotInUse(int tag)
+        {
+            if (tag <= 0) throw new ArgumentOutOfRangeException("tag", "Tags must be positive integers.");
+            foreach (IProperty<T> prop in props)
+            {
+                if (prop.Tag == tag) throw new ArgumentException(
+                    string.Format("Tag {0} is in use; access the {1} property instead.",
+                        tag, prop.Name), "tag");
+            }
         }
     }
 }

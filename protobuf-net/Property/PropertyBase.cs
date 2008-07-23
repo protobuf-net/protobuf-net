@@ -30,57 +30,8 @@ namespace ProtoBuf
         {
             ProtoMemberAttribute attrib = AttributeUtils.GetAttribute<ProtoMemberAttribute>(property);
             DataFormat format = attrib == null ? DataFormat.Default : attrib.DataFormat;
-            
-            ISerializer<T> result;
-            switch (format)
-            {
-                case DataFormat.Default:
-                    result = SerializerCache<T>.Default; break;
-                case DataFormat.FixedSize:
-                    result = SerializerCache<T>.FixedSize; break;
-                case DataFormat.TwosComplement:
-                    result = SerializerCache<T>.TwosComplement; break;
-                case DataFormat.ZigZag:
-                    result = SerializerCache<T>.ZigZag; break;
-                default:
-                    throw new NotSupportedException("Unknown data-format: " + format.ToString());
-            }
 
-            if (result == null)
-            {
-                if (Serializer.IsEntityType(typeof(T)))
-                {
-                    result = (ISerializer<T>)Activator.CreateInstance(
-                        typeof(EntitySerializer<>).MakeGenericType(typeof(T)));
-                    SimpleSerializers.Set<T>(result);
-                }
-                else if (typeof(T).IsEnum)
-                {
-                    Type underlying = Enum.GetUnderlyingType(typeof(T));
-                    object baseSer = typeof(PropertyBase<TEntity, TValue>)
-                        .GetMethod("GetSerializer", BindingFlags.NonPublic | BindingFlags.Static)
-                        .MakeGenericMethod(underlying).Invoke(null, new object[] {property});
-
-                    Type[] ctorArgTypes = { typeof(ISerializer<>).MakeGenericType(underlying) };
-                    result = (ISerializer<T>) typeof(EnumSerializer<,>).MakeGenericType(typeof(T), underlying)
-                        .GetConstructor(ctorArgTypes).Invoke(new object[] {baseSer});
-                    SimpleSerializers.Set<T>(result);
-                }
-                else
-                {
-                    // tell the developer that they screwed up...
-                    Type nullType = Nullable.GetUnderlyingType(typeof(T));
-                    string name = nullType == null ? typeof(T).Name : ("Nullable-of-" + nullType.Name);
-
-                    string errorMsg = SerializerCache<T>.Default == null
-                        ? "No serializers registered for {1}, property {2}.{3}"
-                        : "Invalid data-format {0} for {1}, property {2}.{3}";
-
-                    throw new SerializationException(string.Format(errorMsg,
-                        format, name, property.DeclaringType.Name, property.Name));
-                }
-            }
-            return result;
+            return SerializerCache<T>.GetSerializer(format);
         }
 
         private readonly int tag;
@@ -126,14 +77,13 @@ namespace ProtoBuf
         public abstract WireType WireType { get; }
         public abstract string DefinedType { get; }
 
-        private int Prefix { get { return (Tag << 3) | ((int)WireType & 7); } }
         protected int GetPrefixLength()
         {
-            return TwosComplementSerializer.GetLength(Prefix);
+            return Serializer.GetPrefixLength(Tag, WireType);
         }
-        protected int WritePrefixToStream(SerializationContext context)
+        protected int WriteFieldToken(SerializationContext context)
         {
-            return TwosComplementSerializer.WriteToStream(Prefix, context);
+            return Serializer.WriteFieldToken(Tag, WireType, context);
         }
 
         protected int GetLength<TActualValue>(TActualValue value, ISerializer<TActualValue> serializer, SerializationContext context)
@@ -147,7 +97,7 @@ namespace ProtoBuf
             //TODO: add a "ShouldSerialize" instead of this
             int expectedLen = serializer.GetLength(value, context);
             if (expectedLen == 0) return 0;
-            int prefixLen = WritePrefixToStream(context),
+            int prefixLen = WriteFieldToken(context),
                 actualLen = serializer.Serialize(value, context);
 
             Serializer.VerifyBytesWritten(expectedLen, actualLen);

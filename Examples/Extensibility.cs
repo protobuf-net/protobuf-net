@@ -78,5 +78,60 @@ namespace Examples
             Assert.AreEqual(obj.SomeString, clone.SomeString, "rehydrate");
             Assert.IsTrue(Program.ArraysEqual(obj.SomeBlob, clone.SomeBlob), "rehydrate");
         }
+
+        [Test]
+        public void TestReadExtended()
+        {
+            BiggerObject obj = GetBigObject();
+            SmallerObject small = Serializer.ChangeType<BiggerObject, SmallerObject>(obj);
+
+            float val;
+            bool hasValue = Extensible.TryGetValue<float>(small, 3, out val);
+            Assert.IsTrue(hasValue, "has value");
+            Assert.AreEqual(obj.SomeFloat, val, "float value");
+
+            hasValue = Extensible.TryGetValue<float>(small, 1000, out val);
+            Assert.IsFalse(hasValue, "no value");
+            Assert.AreEqual(default(float), val);
+        }
+
+        [Test]
+        public void TestWriteExtended()
+        {
+            const float SOME_VALUE = 987.65F;
+            SmallerObject obj = new SmallerObject();
+            Extensible.AppendValue<float>(obj, 3, SOME_VALUE);
+
+            float readBack = Extensible.GetValue<float>(obj, 3);
+            Assert.AreEqual(SOME_VALUE, readBack, "read back");
+
+            BiggerObject big = Serializer.ChangeType<SmallerObject, BiggerObject>(obj);
+
+            Assert.AreEqual(SOME_VALUE, big.SomeFloat, "deserialize");
+        }
+
+        [Test, ExpectedException(typeof(ArgumentException))]
+        public void TestReadShouldUseProperty()
+        {
+            SmallerObject obj = new SmallerObject { Bof = "hi" };
+            string hi = Extensible.GetValue<string>(obj,1);
+        }
+
+        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TestReadInvalidTag()
+        {
+            SmallerObject obj = new SmallerObject { Bof = "hi" };
+            string hi = Extensible.GetValue<string>(obj, 0);
+        }
+        [Test, ExpectedException(typeof(ArgumentNullException))]
+        public void TestReadNull()
+        {
+            string hi = Extensible.GetValue<string>(null, 1);
+        }
+        [Test, ExpectedException(typeof(ArgumentNullException))]
+        public void TestWriteNull()
+        {
+            Extensible.AppendValue<string>(null, 1, "hi");
+        }
     }
 }

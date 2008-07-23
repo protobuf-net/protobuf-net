@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using System.Collections.Generic;
 
 namespace ProtoBuf
 {
@@ -242,5 +243,19 @@ namespace ProtoBuf
             return name;
 
         }
+
+
+        internal static int GetPrefixLength(int tag, WireType wireType)
+        {
+            int prefix = (tag << 3) | ((int)wireType & 7);
+            return TwosComplementSerializer.GetLength(prefix);
+        }
+        internal static int WriteFieldToken(int tag, WireType wireType, SerializationContext context)
+        {
+            int prefix = (tag << 3) | ((int)wireType & 7);
+            return TwosComplementSerializer.WriteToStream(prefix, context);
+        }
+
+
     }
 }

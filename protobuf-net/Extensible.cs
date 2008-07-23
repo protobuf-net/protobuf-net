@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Runtime.Serialization;
+using System.Collections.Generic;
 
 namespace ProtoBuf
 {
@@ -111,6 +112,53 @@ namespace ProtoBuf
         {
             using (stream) { }
         }
+
+
+        public static void AppendValue<TValue>(IExtensible instance, int tag, TValue value)
+        {
+            AppendValue<TValue>(instance, tag, DataFormat.Default, value);
+        }
+        public static void AppendValue<TValue>(IExtensible instance, int tag, DataFormat format, TValue value)
+        {
+            ExtensibleUtil.AppendExtendValue<TValue>(instance, tag, format, value);
+        }
+        public static TValue GetValue<TValue>(IExtensible instance, int tag)
+        {
+            return GetValue<TValue>(instance, tag, DataFormat.Default);
+        }
+        public static TValue GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
+        {
+            TValue value;
+            TryGetValue<TValue>(instance, tag, format, out value);
+            return value;
+        }
+        public static bool TryGetValue<TValue>(IExtensible instance, int tag, out TValue value)
+        {
+            return TryGetValue<TValue>(instance, tag, DataFormat.Default, out value);
+        }
+        public static bool TryGetValue<TValue>(IExtensible instance, int tag, DataFormat format, out TValue value)
+        {
+            value = default(TValue);
+            bool set = false;
+            foreach (TValue val in ExtensibleUtil.GetExtendedValues<TValue>(instance, tag, format, true))
+            {
+                // expecting at most one yield...
+                // but don't break; need to read entire stream
+                value = val;
+                set = true;
+            }
+            return set;
+        }
+        public static IEnumerable<TValue> GetValues<TValue>(IExtensible instance, int tag)
+        {
+            return ExtensibleUtil.GetExtendedValues<TValue>(instance, tag, DataFormat.Default, false);
+        }
+        public static IEnumerable<TValue> GetValues<TValue>(IExtensible instance, int tag, DataFormat format)
+        {
+            return ExtensibleUtil.GetExtendedValues<TValue>(instance, tag, format, false);
+        }
+
+
 
     }
 }
