@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
+using System.Diagnostics;
 
 namespace ProtoBuf
 {
@@ -190,11 +191,14 @@ namespace ProtoBuf
             destination.Flush();
             return len;
         }
+
+
+
         internal static int Serialize(T instance, SerializationContext context, IProperty<T>[] candidateProperties)
         {
             context.Push(instance);
             //context.CheckSpace();
-            int total = 0;
+            int total = 0, len;
             if (candidateProperties == null)
             {
                 candidateProperties = props;
@@ -205,7 +209,6 @@ namespace ProtoBuf
                 total += candidateProperties[i].Serialize(instance, context);
             }
             IExtensible extra = instance as IExtensible;
-            int len;
             if (extra != null && (len = extra.GetLength()) > 0)
             {
                 Stream extraStream = extra.BeginQuery();
@@ -275,6 +278,7 @@ namespace ProtoBuf
         internal static void Deserialize(T instance, SerializationContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
+            context.Push();
             int prefix, propCount = props.Length;
             //context.CheckSpace();
             IExtensible extra = instance as IExtensible;
@@ -377,7 +381,10 @@ namespace ProtoBuf
                 if (extraData != null) extra.EndAppend(extraData.Stream, false);
                 throw;
             }
+
+            context.Pop();
         }
+
 
         internal static void ParseFieldToken(int token, out WireType wireType, out int tag)
         {
@@ -536,5 +543,7 @@ namespace ProtoBuf
                     string.Format("Tag {0} is in use; access the {1} property instead.", tag, prop.Name), "tag");
             }
         }
+
+
     }
 }

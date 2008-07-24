@@ -208,6 +208,15 @@
     <Compile Include="Property\ArrayProperty.cs" />
     <Compile Include="ProtoException.cs" />
     <Compile Include="Serializers\NullableSerializer.cs" />
+    <Compile Include="Serializers\TwosComplementSerializer_Int16.cs">
+      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Serializers\TwosComplementSerializer_UInt16.cs">
+      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Serializers\ZigZagSerializer_Int16.cs">
+      <DependentUpon>ZigZagSerializer.cs</DependentUpon>
+    </Compile>
     <Compile Include="UnknownType.cs" />
   </ItemGroup>
   <ItemGroup>

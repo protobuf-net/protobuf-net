@@ -16,6 +16,7 @@ using System.Runtime.Serialization.Json;
 using NUnit.Framework;
 using Examples.DesignIdeas;
 using System.Collections.Generic;
+using ProtoSharp.Core;
 #endif
 
 namespace Examples.SimpleStream
@@ -37,6 +38,15 @@ namespace Examples.SimpleStream
             Test2 t2 = new Test2 { B = "testing" };
             Assert.IsTrue(Program.CheckBytes(t2, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
+        [Test]
+        public void MultiByteUTF8()
+        {
+            Test2 t2 = new Test2 { B = "Toms Spezialitäten" },
+                clone = Serializer.DeepClone(t2);
+            Assert.AreEqual(t2.B, clone.B);
+            
+        }
+
         [Test]
         public void EmbeddedMessageSample()
         {
@@ -153,55 +163,70 @@ namespace Examples.SimpleStream
             string name = typeof(T).Name;
             Console.WriteLine("\t{0}", name);
             Stopwatch serializeWatch, deserializeWatch;
-            T clone;
+            T pbClone, psClone;
+            int protoCount = count * 10;
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, item);
                 ms.Position = 0;
-                clone = Serializer.Deserialize<T>(ms);
+                pbClone = Serializer.Deserialize<T>(ms);
                 byte[] data = ms.ToArray();
-
-                if (data.Length != expected.Length)
+                if (!Program.ArraysEqual(data, expected))
                 {
-                    pass = false;
-                    Console.WriteLine("\t*** serialization failure; expected {0}, got {1} (bytes)", expected.Length, data.Length);
-                }
-                else
-                {
-                    bool bad = false;
-                    for (int i = 0; i < data.Length; i++)
-                    {
-                        if (data[i] != expected[i]) { bad = true; break; }
-                    }
-                    if (bad)
-                    {
-                        pass = false;
-                        Console.WriteLine("\t*** serialization failure; byte stream mismatch");
-                        WriteBytes("Expected", expected);
-                    }
+                    Console.WriteLine("\t*** serialization failure");
                     WriteBytes("Binary", data);
                 }
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < protoCount; i++)
                 {
                     Serializer.Serialize(Stream.Null, item);
                 }
                 serializeWatch.Stop();
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
+                for (int i = 0; i < protoCount; i++)
                 {
                     ms.Position = 0;
                     Serializer.Deserialize<T>(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("\t(times based on {0} iterations)", count);
+                Console.WriteLine("\t(times based on {0} iterations ({1} for .proto))", count, protoCount);
                 Console.WriteLine("||*Serializer*||*size*||*serialize*||*deserialize*||");
                 Console.WriteLine("||protobuf-net||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
-            
+            using(MemoryStream ms = new MemoryStream())
+            {
+                ProtoSharp.Core.MessageWriter mw = new ProtoSharp.Core.MessageWriter(ms),
+                    nullWriter = new ProtoSharp.Core.MessageWriter(Stream.Null);
+                mw.WriteMessage(item);
+                ms.Position = 0;
+                byte[] buffer = ms.ToArray();
+                
+                psClone = ProtoSharp.Core.MessageReader.Read<T>(buffer);
+                if (!Program.ArraysEqual(buffer, expected))
+                {
+                    Console.WriteLine("\t*** serialization failure");
+                    WriteBytes("Binary", buffer);
+                }
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                serializeWatch = Stopwatch.StartNew();
+                for (int i = 0; i < protoCount; i++)
+                {
+                    nullWriter.WriteMessage(item);
+                }
+                serializeWatch.Stop();
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                deserializeWatch = Stopwatch.StartNew();
+                for (int i = 0; i < protoCount; i++)
+                {
+                    ProtoSharp.Core.MessageReader.Read<T>(buffer);
+                }
+                deserializeWatch.Stop();
+                Console.WriteLine("||proto#||{0}||{1}||{2}||",
+                    buffer.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
+            }
             using (MemoryStream ms = new MemoryStream())
             {
                 BinaryFormatter bf = new BinaryFormatter();
@@ -313,19 +338,30 @@ namespace Examples.SimpleStream
                 Console.WriteLine("||`DataContractJsonSerializer`||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
 
-                string originalJson = Encoding.UTF8.GetString(ms.ToArray()), cloneJson;
+                string originalJson = Encoding.UTF8.GetString(ms.ToArray()), pbJson, psJson;
 
                 using (MemoryStream ms2 = new MemoryStream())
                 {
-                    xser.WriteObject(ms2, clone);
-                    cloneJson = Encoding.UTF8.GetString(ms.ToArray());
+                    xser.WriteObject(ms2, pbClone);
+                    pbJson = Encoding.UTF8.GetString(ms.ToArray());
+                }
+                using (MemoryStream ms3 = new MemoryStream())
+                {
+                    xser.WriteObject(ms3, psClone);
+                    psJson = Encoding.UTF8.GetString(ms.ToArray());
                 }
                 Console.WriteLine("\tJSON: {0}", originalJson);
-                if (originalJson != cloneJson)
+                if (originalJson != pbJson)
                 {
                     pass = false;
-                    Console.WriteLine("\t**** json comparison fails!");
-                    Console.WriteLine("\tClone JSON: {0}", cloneJson);
+                    Console.WriteLine("\t**** json comparison fails (protobuf-net)!");
+                    Console.WriteLine("\tClone JSON: {0}", pbJson);
+                }
+                if (originalJson != psJson)
+                {
+                    pass = false;
+                    Console.WriteLine("\t**** json comparison fails (proto#)!");
+                    Console.WriteLine("\tClone JSON: {0}", psJson);
                 }
             }
 #endif          
@@ -363,6 +399,7 @@ namespace Examples.SimpleStream
     {
 #if NET_3_0
         [DataMember(Name = "a", Order = 1, IsRequired = true)]
+        [ProtoSharp.Core.Tag(1)]
 #endif
         [ProtoMember(1, Name = "a", IsRequired = true, DataFormat = DataFormat.TwosComplement)]
         public int A { get; set; }
@@ -371,12 +408,14 @@ namespace Examples.SimpleStream
     public sealed class Test2
     {
         [DataMember(Name = "b", Order = 2, IsRequired = true)]
+        [ProtoSharp.Core.Tag(2)]
         public string B { get; set; }
     }
     [Serializable, DataContract]
     public sealed class Test3
     {
         [DataMember(Name = "c", Order = 3, IsRequired = true)]
+        [ProtoSharp.Core.Tag(3)]
         public Test1 C { get; set; }
     }
 

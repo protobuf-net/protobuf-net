@@ -56,8 +56,9 @@ namespace ProtoBuf
         }
         public override void Deserialize(TEntity instance, SerializationContext context)
         {   // read a single item
-            AddItem(instance, serializer.Deserialize(default(TValue), context));
-            
+            TValue value = serializer.Deserialize(default(TValue), context);
+            AddItem(instance, value);
+            Trace(true, value, context);
         }
 
         public void DeserializeGroup(TEntity instance, SerializationContext context)
@@ -70,7 +71,9 @@ namespace ProtoBuf
                 throw new ProtoException("Cannot treat property as a group: " + Name);
             }
             // read a single item
-            AddItem(instance, groupSerializer.DeserializeGroup(default(TValue), context));
+            TValue value = groupSerializer.DeserializeGroup(default(TValue), context);
+            AddItem(instance, value);
+            Trace(true, value, context);
         }
     }
 }

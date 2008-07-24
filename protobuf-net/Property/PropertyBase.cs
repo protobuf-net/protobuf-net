@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Reflection;
+using System.Diagnostics;
+using System.Text;
 
 namespace ProtoBuf
 {
@@ -127,8 +129,23 @@ namespace ProtoBuf
             int prefixLen = WriteFieldToken(context),
                 actualLen = serializer.Serialize(value, context);
 
+            Trace(false, value, context);
+
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
             return prefixLen + actualLen;
+        }
+
+
+        [Conditional(SerializationContext.VerboseSymbol)]
+        protected void Trace(bool read, object value, SerializationContext context)
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append(read ? '>' : '<', context.Depth).Append(' ')
+                .Append(Tag).Append(' ').Append(Name)
+                .Append(" = ").Append(value)
+                .Append('\t').Append(context.Stream.Position);
+            Debug.WriteLine(sb.ToString(), SerializationContext.DebugCategory);
+
         }
     }
 }

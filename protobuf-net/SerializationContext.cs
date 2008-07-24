@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Text;
 
 namespace ProtoBuf
 {
@@ -25,6 +27,7 @@ namespace ProtoBuf
 
     internal sealed class SerializationContext
     {
+        public const string VerboseSymbol = "VERBOSE", DebugCategory = "protobuf-net";
         private Stack<object> objectStack = new Stack<object>();
         private Stack<int> groupStack;
         public Eof Eof
@@ -67,6 +70,18 @@ namespace ProtoBuf
                 CheckStackForRecursion(obj);
             }            
         }
+
+        /// <summary>
+        /// Only used during debugging for the text nest-level
+        /// </summary>
+        [Conditional(SerializationContext.VerboseSymbol)]
+        public void Push() { stackDepth++; }
+
+        /// <summary>
+        /// Only used during debugging for the text nest-level
+        /// </summary>
+        [Conditional(SerializationContext.VerboseSymbol)]
+        public void Pop() { stackDepth--; }
 
         private void CheckStackForRecursion(object item)
         {
@@ -111,12 +126,27 @@ namespace ProtoBuf
         public void ReadFrom(SerializationContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
+            
             this.workspace = context.workspace;
             this.objectStack = context.objectStack;
             this.stackDepth = context.stackDepth;
 
+            TraceChangeOrigin(context);
+
             // IMPORTANT: don't copy the group stack; we want to 
             // validate that the group-stack is empty when finding the end of a stream
+        }
+
+        [Conditional(SerializationContext.VerboseSymbol)]
+        private void TraceChangeOrigin(SerializationContext context)
+        {
+            long newPos = stream.Position, oldPos = context.stream.Position;
+            if(oldPos != newPos)
+            {
+                Debug.WriteLine(new string('!', stackDepth) +
+                    string.Format(" re-based: {0} now {1}", oldPos, newPos),
+                    SerializationContext.DebugCategory);
+            }
         }
 
         public void CheckStackClean()
@@ -152,5 +182,8 @@ namespace ProtoBuf
                 Buffer.BlockCopy(tmp, 0, workspace, 0, tmp.Length);
             }
         }
+
+        public int Depth { get { return stackDepth; } }
+        
     }
 }

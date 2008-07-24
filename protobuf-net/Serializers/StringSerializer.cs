@@ -11,15 +11,19 @@ namespace ProtoBuf
         public int Serialize(string value, SerializationContext context)
         {
             if (value == null) return 0;
-            int preambleLen = TwosComplementSerializer.WriteToStream(value.Length, context);
-            if (value.Length == 0) return preambleLen;
-
+            if (value.Length == 0)
+            {
+                return TwosComplementSerializer.WriteToStream(0, context);
+            }
+            
             // check buffer space
             int expectedLen = Encoding.UTF8.GetByteCount(value);
             context.CheckSpace(expectedLen);
 
             // do for real
             int actualLen = Encoding.UTF8.GetBytes(value, 0, value.Length, context.Workspace, 0);
+            int preambleLen = TwosComplementSerializer.WriteToStream(actualLen, context);
+
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
             context.Stream.Write(context.Workspace, 0, actualLen);
             return preambleLen + actualLen;

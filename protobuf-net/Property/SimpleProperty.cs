@@ -25,7 +25,9 @@ namespace ProtoBuf
         }
         public override void Deserialize(TEntity instance, SerializationContext context)
         {
-            SetValue(instance, serializer.Deserialize(default(TValue), context));
+            TValue value = serializer.Deserialize(default(TValue), context);
+            SetValue(instance, value);
+            Trace(true, value, context);
         }
     }
 }
