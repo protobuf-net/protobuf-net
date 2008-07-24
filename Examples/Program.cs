@@ -4,12 +4,19 @@ using System.Text;
 using System.Collections;
 using ProtoBuf;
 using System.IO;
+using Examples.SimpleStream;
 
 namespace Examples
 {
     class Program
     {
-        static void Main() { }
+        static void Main() {
+            SimpleStreamDemo demo = new SimpleStreamDemo();
+            const int COUNT = 100000;
+            demo.PerfTestSimple(COUNT);
+            demo.PerfTestString(COUNT);
+            demo.PerfTestEmbedded(COUNT);
+        }
 
         public static string GetByteString(byte[] buffer)
         {

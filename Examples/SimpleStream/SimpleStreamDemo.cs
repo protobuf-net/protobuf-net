@@ -44,23 +44,20 @@ namespace Examples.SimpleStream
             Assert.IsTrue(Program.CheckBytes(t3, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
-        [Test]
-        public void PerfTestSimple()
+        public void PerfTestSimple(int count)
         {
             Test1 t1 = new Test1 { A = 150 };
-            Assert.IsTrue(LoadTestItem(t1, 10000, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t1, count, 0x08, 0x96, 0x01));
         }
-        [Test]
-        public void PerfTestString()
+        public void PerfTestString(int count)
         {
             Test2 t2 = new Test2 { B = "testing" };
-            Assert.IsTrue(LoadTestItem(t2, 10000, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+            Assert.IsTrue(LoadTestItem(t2, count, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
-        [Test]
-        public void PerfTestEmbedded()
+        public void PerfTestEmbedded(int count)
         {
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
-            Assert.IsTrue(LoadTestItem(t3, 10000, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t3, count, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
         [ProtoContract]
