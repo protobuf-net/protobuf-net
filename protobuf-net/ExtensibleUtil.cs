@@ -98,7 +98,7 @@ namespace ProtoBuf
                     else
                     {
                         // skip all other tags
-                        Serializer<TSource>.SkipData(ctx, wireType);
+                        Serializer<TSource>.SkipData(ctx, readTag, wireType);
                     }
                 }
             }

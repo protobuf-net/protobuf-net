@@ -44,6 +44,25 @@ namespace Examples.SimpleStream
             Assert.IsTrue(Program.CheckBytes(t3, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
+        [Test]
+        public void PerfTestSimple()
+        {
+            Test1 t1 = new Test1 { A = 150 };
+            Assert.IsTrue(LoadTestItem(t1, 10000, 0x08, 0x96, 0x01));
+        }
+        [Test]
+        public void PerfTestString()
+        {
+            Test2 t2 = new Test2 { B = "testing" };
+            Assert.IsTrue(LoadTestItem(t2, 10000, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+        }
+        [Test]
+        public void PerfTestEmbedded()
+        {
+            Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
+            Assert.IsTrue(LoadTestItem(t3, 10000, 0x1a, 0x03, 0x08, 0x96, 0x01));
+        }
+
         [ProtoContract]
         class TwoFields
         {
@@ -124,19 +143,18 @@ namespace Examples.SimpleStream
         {
             public int X { get; set; }
         }
-        [Test, ExpectedException(ExceptionType = typeof(TypeInitializationException))]
+        [Test, ExpectedException(ExceptionType = typeof(InvalidOperationException))]
         public void TestNotAContract()
         {
             NotAContract nac = new NotAContract { X = 4 };
             Serializer.Serialize(Stream.Null, nac);
         }
 
-        static bool TestItem<T>(T item, params byte[] expected) where T : class, new()
+        static bool LoadTestItem<T>(T item, int count, params byte[] expected) where T : class, new()
         {
             bool pass = true;
             string name = typeof(T).Name;
             Console.WriteLine("\t{0}", name);
-            const int LOOP = 100000;
             Stopwatch serializeWatch, deserializeWatch;
             T clone;
             using (MemoryStream ms = new MemoryStream())
@@ -168,20 +186,20 @@ namespace Examples.SimpleStream
                 }
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     Serializer.Serialize(Stream.Null, item);
                 }
                 serializeWatch.Stop();
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     ms.Position = 0;
                     Serializer.Deserialize<T>(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("\t(times based on {0} iterations)", LOOP);
+                Console.WriteLine("\t(times based on {0} iterations)", count);
                 Console.WriteLine("||*Serializer*||*size*||*serialize*||*deserialize*||");
                 Console.WriteLine("||protobuf-net||{0}||{1}||{2}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
@@ -193,14 +211,14 @@ namespace Examples.SimpleStream
                 bf.Serialize(ms, item);
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     bf.Serialize(Stream.Null, item);
                 }
                 serializeWatch.Stop();
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     ms.Position = 0;
                     bf.Deserialize(ms);
@@ -215,14 +233,14 @@ namespace Examples.SimpleStream
                 sf.Serialize(ms, item);
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     sf.Serialize(Stream.Null, item);
                 }
                 serializeWatch.Stop();
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     ms.Position = 0;
                     sf.Deserialize(ms);
@@ -237,14 +255,14 @@ namespace Examples.SimpleStream
                 xser.Serialize(ms, item);
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     xser.Serialize(Stream.Null, item);
                 }
                 serializeWatch.Stop();
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     ms.Position = 0;
                     xser.Deserialize(ms);
@@ -259,14 +277,14 @@ namespace Examples.SimpleStream
                 xser.WriteObject(ms, item);
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     xser.WriteObject(Stream.Null, item);
                 }
                 serializeWatch.Stop();
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     ms.Position = 0;
                     xser.ReadObject(ms);
@@ -282,14 +300,14 @@ namespace Examples.SimpleStream
                 xser.WriteObject(ms, item);
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     xser.WriteObject(Stream.Null, item);
                 }
                 serializeWatch.Stop();
                 GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                 deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
+                for (int i = 0; i < count; i++)
                 {
                     ms.Position = 0;
                     xser.ReadObject(ms);

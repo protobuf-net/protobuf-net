@@ -107,23 +107,38 @@ namespace ProtoBuf
                 }
 
                 IProperty<T> actualProp;
-                Type propType = prop.PropertyType, listItemType = null;
+                Type propType = prop.PropertyType, listItemType = GetListType(propType);
 
-                if (!propType.IsArray)
-                {   // don't treat arrays as lists
-                    foreach (Type interfaceType in propType.GetInterfaces())
+                if (propType.IsArray)
+                {
+                    // verify that we can handle it
+                    if (propType.GetArrayRank() != 1)
                     {
-                        if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition()
-                            == typeof(IList<>))
-                        {
-                            listItemType = interfaceType.GetGenericArguments()[0];
-                            break;
-                        }
+                        throw new NotSupportedException("Only 1-dimensional arrays can be used; consider an array/list of a class-type instead");
                     }
                 }
 
-                argsOnePropertyVal[0] = prop;
                 if (listItemType != null)
+                {
+                    if(GetListType(listItemType) != null) {
+                        throw new NotSupportedException("Nested (jagged) arrays/lists are not supported; consider an array/list of a class-type with an inner array/list instead");
+                    }
+                }
+                
+                argsOnePropertyVal[0] = prop;
+                if (propType == typeof(byte[]))
+                {   // want to treat byte[] as a special case
+                    listItemType = null;
+                }
+                if (propType.IsArray && listItemType != null) // second check is for byte[]
+                {
+                    // array
+                    actualProp = (IProperty<T>)typeof(Serializer<T>)
+                        .GetMethod("CreateArrayProperty")
+                        .MakeGenericMethod(typeof(T), listItemType)
+                        .Invoke(null, argsOnePropertyVal); 
+                }
+                else if (listItemType != null)
                 { // list
                     actualProp = (IProperty<T>) typeof(Serializer<T>)
                         .GetMethod("CreateListProperty")
@@ -149,13 +164,30 @@ namespace ProtoBuf
             propList.Sort(delegate(IProperty<T> x, IProperty<T> y) { return x.Tag.CompareTo(y.Tag); });
             props = propList.ToArray();
         }
-
+        private static Type GetListType(Type type)
+        {
+            if (type.IsArray)
+            {
+                return type.GetElementType();
+            }
+            foreach (Type interfaceType in type.GetInterfaces())
+            {
+                if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition()
+                    == typeof(IList<>))
+                {
+                    return interfaceType.GetGenericArguments()[0];
+                }
+            }
+            return null;
+        }
         internal static int Serialize(T instance, Stream destination)
         {
             if (instance == null) throw new ArgumentNullException("instance");
             if (destination == null) throw new ArgumentNullException("destination");
             SerializationContext ctx = new SerializationContext(destination);
-            return Serialize(instance, ctx, null);
+            int len = Serialize(instance, ctx, null);
+            destination.Flush();
+            return len;
         }
         internal static int Serialize(T instance, SerializationContext context, IProperty<T>[] candidateProperties)
         {
@@ -188,7 +220,6 @@ namespace ProtoBuf
                     extra.EndQuery(extraStream);
                 }               
             }
-            context.Stream.Flush();
             context.Pop(instance);
             return total;
         }
@@ -198,16 +229,38 @@ namespace ProtoBuf
             context.Push(instance);
             context.CheckSpace();
             int total = 0;
+            bool unknownLength = false;
             for (int i = 0; i < props.Length; i++)
             {
                 int propLen = props[i].GetLength(instance, context);
-                total += propLen;
-                if (propLen > 0 && candidateProperties != null) candidateProperties.Add(props[i]);
+                if (propLen < 0)
+                {
+                    unknownLength = true;
+                }
+                else
+                {
+                    total += propLen;
+                }
+                if (propLen != 0 && candidateProperties != null)
+                {   // note adds candidate if unknown length, too
+                    candidateProperties.Add(props[i]);
+                }
             }
             IExtensible extra = instance as IExtensible;
-            if (extra != null) total += extra.GetLength();
+            if (extra != null)
+            {
+                int len = extra.GetLength();
+                if (len < 0)
+                {
+                    unknownLength = true;
+                }
+                else
+                {
+                    total += len;
+                }
+            }
             context.Pop(instance);
-            return total;
+            return unknownLength ? -1 : total;
         }
 
         internal static void Deserialize(T instance, Stream source)
@@ -306,13 +359,13 @@ namespace ProtoBuf
                         // borrow the workspace, and copy the data
                         extraData.ReadFrom(context);
                         TwosComplementSerializer.WriteToStream(prefix, extraData);
-                        ProcessExtraData(context, wireType, extraData);                        
+                        ProcessExtraData(context, fieldTag, wireType, extraData);
                         context.ReadFrom(extraData);
                     }
                     else
                     {
                         // unexpected fields for an inextensible object; discard the data
-                        SkipData(context, wireType);
+                        SkipData(context, fieldTag, wireType);
                     }
                 }
                 if (extraData != null) extra.EndAppend(extraData.Stream, true);
@@ -334,7 +387,7 @@ namespace ProtoBuf
             }
         }
 
-        private static void ProcessExtraData(SerializationContext read, WireType wireType, SerializationContext write)
+        private static void ProcessExtraData(SerializationContext read, int fieldTag, WireType wireType, SerializationContext write)
         {
             int len;
             switch (wireType)
@@ -356,9 +409,18 @@ namespace ProtoBuf
                     TwosComplementSerializer.WriteToStream(len, write);
                     BlitData(read, write.Stream, len);
                     break;
-                case WireType.EndGroup:
                 case WireType.StartGroup:
-                    throw new NotSupportedException(wireType.ToString());
+                    using (CloneStream cloneStream = new CloneStream(read.Stream, write.Stream))
+                    {
+                        SerializationContext cloneCtx = new SerializationContext(cloneStream);
+                        cloneCtx.ReadFrom(read);
+                        cloneCtx.StartGroup(fieldTag);
+                        UnknownType.Serializer.DeserializeGroup(null, cloneCtx);
+                        read.ReadFrom(cloneCtx);
+                    }
+                    break;
+                case WireType.EndGroup:
+                    throw new ProtoException("End-group not expected at this location");                
                 default:
                     throw new ProtoException("Unknown wire-type " + wireType.ToString());
             }
@@ -380,7 +442,7 @@ namespace ProtoBuf
             }
         }
 
-        internal static void SkipData(SerializationContext context, WireType wireType)
+        internal static void SkipData(SerializationContext context, int fieldTag, WireType wireType)
         {
             Stream source = context.Stream;
             switch (wireType)
@@ -416,8 +478,12 @@ namespace ProtoBuf
 
                     break;
                 case WireType.EndGroup:
+                    throw new ProtoException("End-group not expected at this location");
                 case WireType.StartGroup:
-                    throw new NotSupportedException(wireType.ToString());
+                    // use the unknown-type deserializer to pass over the data
+                    context.StartGroup(fieldTag);
+                    UnknownType.Serializer.DeserializeGroup(null, context);
+                    break;
                 default:
                     throw new ProtoException("Unknown wire-type " + wireType.ToString());
             }
@@ -447,6 +513,11 @@ namespace ProtoBuf
             where TValue : class, new()
         {
             return new EntityProperty<TEntity, TValue>(property);
+        }
+        public static IProperty<TEntity> CreateArrayProperty<TEntity, TValue>(PropertyInfo property)
+            where TEntity : class, new()
+        {
+            return new ArrayProperty<TEntity, TValue>(property);
         }
         public static IProperty<TEntity> CreateListProperty<TEntity, TList, TValue>(PropertyInfo property)
             where TEntity : class, new()

@@ -83,6 +83,9 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)' != 'Net20' ">
     <Reference Include="System.ServiceModel">
@@ -99,6 +102,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Arrays.cs" />
     <Compile Include="DesignIdeas\ChangeType.cs" />
     <Compile Include="EnumTests.cs" />
     <Compile Include="Extensibility.cs" />

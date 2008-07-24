@@ -3,6 +3,13 @@ using System.IO;
 
 namespace ProtoBuf
 {
+    /// <summary>
+    /// Describes a Stream that wraps an underlying stream but
+    /// which limits the length. This is used for processing
+    /// length-prefied messages (string wire-type) so that no
+    /// complex code is required to manage the end of each
+    /// object.
+    /// </summary>
     internal sealed class SubStream : Stream
     {
         private Stream parent;

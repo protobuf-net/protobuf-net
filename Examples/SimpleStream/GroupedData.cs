@@ -6,6 +6,15 @@ using ProtoBuf;
 
 namespace Examples.SimpleStream
 {
+    [ProtoContract]
+    class NoddyExtends :Extensible { }
+
+    [ProtoContract]
+    class Noddy {
+        [ProtoMember(2)]
+        public int Foo { get; set; }
+    }
+
     [TestFixture]
     public class GroupedData
     {
@@ -14,8 +23,23 @@ namespace Examples.SimpleStream
         {
             Test3 t3 = Program.Build<Test3>(0x1B, 0x08, 0x96, 0x01, 0x1C);// [start group 3] [test1] [end group 3]
             Assert.AreEqual(150, t3.C.A);
-
         }
+
+        [Test]
+        public void TestGroupAsExtension()
+        {
+            NoddyExtends ne = Program.Build<NoddyExtends>(0x1B, 0x08, 0x96, 0x01, 0x1C);// [start group 3] [test1] [end group 3]
+            Test1 t1 = Extensible.GetValue<Test1>(ne, 3);
+            Assert.AreEqual(150, t1.A);
+        }
+
+        [Test]
+        public void TestGroupIgnore()
+        {
+            Noddy no = Program.Build<Noddy>(0x1B, 0x08, 0x96, 0x01, 0x1C, 0x10, 0x96, 0x01);
+            Assert.AreEqual(150, no.Foo);
+        }
+
         [Test, ExpectedException(typeof(ProtoException))]
         public void TestUnterminatedGroup()
         {

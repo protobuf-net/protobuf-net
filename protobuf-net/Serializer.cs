@@ -93,7 +93,15 @@ namespace ProtoBuf
         public static T Deserialize<T>(Stream source) where T : class, new()
         {
             T instance = new T();
-            Serializer<T>.Deserialize(instance, source);
+            try
+            {
+                Serializer<T>.Deserialize(instance, source);
+            }
+            catch (Exception ex)
+            {
+                ThrowInner(ex);
+                throw; // if no inner (preserves stacktrace)
+            }
             return instance;
         }
 
@@ -105,7 +113,15 @@ namespace ProtoBuf
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         public static void Merge<T>(Stream source, T instance) where T : class, new()
         {
-            Serializer<T>.Deserialize(instance, source);
+            try
+            {
+                Serializer<T>.Deserialize(instance, source);
+            }
+            catch (Exception ex)
+            {
+                ThrowInner(ex);
+                throw; // if no inner (preserves stacktrace)
+            }
         }
 
         /// <summary>
@@ -116,7 +132,15 @@ namespace ProtoBuf
         /// <param name="destination">The destination stream to write to.</param>
         public static void Serialize<T>(Stream destination, T instance) where T : class, new()
         {
-            Serializer<T>.Serialize(instance, destination);
+            try
+            {
+                Serializer<T>.Serialize(instance, destination);
+            }
+            catch (Exception ex)
+            {
+                ThrowInner(ex);
+                throw; // if no inner (preserves stacktrace)
+            }
         }
 
         private const string ProtoBinaryField = "proto";
@@ -225,9 +249,36 @@ namespace ProtoBuf
         /// <returns>The .proto definition as a string</returns>
         public static string GetProto<T>() where T : class, new()
         {
-            return Serializer<T>.GetProto();
+            try
+            {
+                return Serializer<T>.GetProto();
+            }
+            catch (Exception ex)
+            {
+                ThrowInner(ex);
+                throw; // if no inner (preserves stacktrace)
+            }
         }
 #endif
+
+        static void ThrowInner(Exception exception)
+        {
+            if (exception != null && exception.InnerException != null)
+            {
+
+                if (exception != null && exception.InnerException != null
+                    && (exception is TargetInvocationException
+#if !CF
+                    || exception is TypeInitializationException
+#endif
+                    ))
+                {
+                    ThrowInner(exception.InnerException);
+                    throw exception.InnerException;
+                }
+            }
+        }
+
         internal static string GetDefinedTypeName<T>()
         {
             string name = typeof(T).Name;

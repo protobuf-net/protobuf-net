@@ -199,13 +199,16 @@
     <Compile Include="Serializers\StringSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CloneStream.cs" />
     <Compile Include="ExtensibleUtil.cs">
       <DependentUpon>IExtensible.cs</DependentUpon>
     </Compile>
     <Compile Include="Net\ProtoClient.cs" />
     <Compile Include="Net\ProtoServer.cs" />
+    <Compile Include="Property\ArrayProperty.cs" />
     <Compile Include="ProtoException.cs" />
     <Compile Include="Serializers\NullableSerializer.cs" />
+    <Compile Include="UnknownType.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Net\TODO.txt" />
