@@ -27,10 +27,24 @@ namespace ProtoBuf
         public static int GetLength(long value)
         {
             if (value < 0) return 10;
-            unchecked
-            {
-                return TwosComplementSerializer.GetLength((ulong)value);
-            }
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            if (value == 0) return 4;
+            value >>= 7;
+            if (value == 0) return 5;
+            value >>= 7;
+            if (value == 0) return 6;
+            value >>= 7;
+            if (value == 0) return 7;
+            value >>= 7;
+            if (value == 0) return 8;
+            value >>= 7;
+            return value == 0 ? 9 : 10;
         }
         public int GetLength(long value, SerializationContext context)
         {
