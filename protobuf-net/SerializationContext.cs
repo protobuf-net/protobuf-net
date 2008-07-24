@@ -46,25 +46,51 @@ namespace ProtoBuf
             get { return workspace; }
         }
 
+        
+
+
+        int stackDepth;
+        private const int RecursionThreshold = 20;
+
+        /// <summary>
+        /// Allows for recursion detection by capturing
+        /// the call tree; this only takes effect after
+        /// an initial threshold call-depth is reached.
+        /// If the object is already in the call-tree,
+        /// an exception is thrown.
+        /// </summary>
+        /// <param name="obj">The item being processed (start).</param>
         public void Push(object obj)
         {
-            if (obj == null) throw new ArgumentNullException("obj");
+            if (++stackDepth > RecursionThreshold)
+            {
+                CheckStackForRecursion(obj);
+            }            
+        }
+
+        private void CheckStackForRecursion(object item)
+        {
             foreach (object stackItem in objectStack)
             {
-                if (ReferenceEquals(stackItem, obj))
+                if (ReferenceEquals(stackItem, item))
                 {
                     throw new ProtoException("Recursive structure detected; only object trees (not full graphs) can be serialized");
                 }
             }
-            objectStack.Push(obj);
+            objectStack.Push(item);
         }
 
+        /// <summary>
+        /// Removes an object from the call-tree.
+        /// </summary>
+        /// <remarks>The object is not checked for validity (peformance);
+        /// ensure that objects are pushed/popped correctly.</remarks>
+        /// <param name="obj">The item being processed (end).</param>
         public void Pop(object obj)
         {
-            if (obj == null) throw new ArgumentNullException("obj");
-            if (objectStack.Count == 0 || !ReferenceEquals(objectStack.Pop(), obj))
+            if(stackDepth-- >= RecursionThreshold)
             {
-                throw new ProtoException("Stack corruption; incorrect object popped");
+                objectStack.Pop();
             }
         }
 
@@ -86,13 +112,18 @@ namespace ProtoBuf
         {
             if (context == null) throw new ArgumentNullException("context");
             this.workspace = context.workspace;
-            this.workspaceIndex = context.workspaceIndex;
             this.objectStack = context.objectStack;
+            this.stackDepth = context.stackDepth;
 
             // IMPORTANT: don't copy the group stack; we want to 
             // validate that the group-stack is empty when finding the end of a stream
         }
 
+        public void CheckStackClean()
+        {
+            if (stackDepth != 0) throw new ProtoException("Stack corruption; the stack depth ended as: " + stackDepth.ToString());
+            CheckNoRemainingGroups();
+        }
         public void CheckNoRemainingGroups()
         {
             if (groupStack != null && groupStack.Count > 0)
@@ -100,28 +131,7 @@ namespace ProtoBuf
                 throw new ProtoException("Unterminated group(s) in a message or sub-message");
             }
         }
-
-        // not used at the moment; if anything wants to
-        // use non-zero workspace offsets then uncomment
-        // the field / property
-        private int workspaceIndex;
-        public int WorkspaceIndex
-        {
-            get
-            {
-                return workspaceIndex;
-            }
-
-            set
-            {
-                if (value < 0 || value >= workspace.Length)
-                {
-                    throw new ArgumentOutOfRangeException("value", "WorkspaceIndex must be inside the current workspace.");
-                }
-                workspaceIndex = value;
-            }
-        }
-     
+    
         public SerializationContext(Stream stream)
         {
             this.stream = stream;
@@ -129,14 +139,9 @@ namespace ProtoBuf
         }
 
         private const int InitialBufferLength = 32;
-        public void CheckSpace()
-        {
-            CheckSpace(InitialBufferLength);
-        }
-
+        
         public void CheckSpace(int length)
         {
-            length += WorkspaceIndex;
             if (workspace.Length < length)
             {
                 int newLen = workspace.Length * 2; // try doubling
@@ -146,12 +151,6 @@ namespace ProtoBuf
                 workspace = new byte[newLen]; 
                 Buffer.BlockCopy(tmp, 0, workspace, 0, tmp.Length);
             }
-        }
-
-        public int Write(int count) // return is for fluent calling
-        {
-            Stream.Write(Workspace, WorkspaceIndex, count);
-            return count;
         }
     }
 }

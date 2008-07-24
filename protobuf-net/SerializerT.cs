@@ -186,13 +186,14 @@ namespace ProtoBuf
             if (destination == null) throw new ArgumentNullException("destination");
             SerializationContext ctx = new SerializationContext(destination);
             int len = Serialize(instance, ctx, null);
+            ctx.CheckStackClean();
             destination.Flush();
             return len;
         }
         internal static int Serialize(T instance, SerializationContext context, IProperty<T>[] candidateProperties)
         {
             context.Push(instance);
-            context.CheckSpace();
+            //context.CheckSpace();
             int total = 0;
             if (candidateProperties == null)
             {
@@ -227,7 +228,7 @@ namespace ProtoBuf
         internal static int GetLength(T instance, SerializationContext context, List<IProperty<T>> candidateProperties)
         {
             context.Push(instance);
-            context.CheckSpace();
+            //context.CheckSpace();
             int total = 0;
             bool unknownLength = false;
             for (int i = 0; i < props.Length; i++)
@@ -269,12 +270,13 @@ namespace ProtoBuf
             if (source == null) throw new ArgumentNullException("source");
             SerializationContext ctx = new SerializationContext(source);
             Deserialize(instance, ctx);
+            ctx.CheckStackClean();
         }
         internal static void Deserialize(T instance, SerializationContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
             int prefix, propCount = props.Length;
-            context.CheckSpace();
+            //context.CheckSpace();
             IExtensible extra = instance as IExtensible;
             SerializationContext extraData = null;
             IProperty<T> prop = propCount == 0 ? null : props[0];
@@ -394,15 +396,15 @@ namespace ProtoBuf
             {
                 case WireType.Variant:
                     len = Base128Variant.ReadRaw(read);
-                    write.Stream.Write(read.Workspace, read.WorkspaceIndex, len);
+                    write.Stream.Write(read.Workspace, 0, len);
                     break;
                 case WireType.Fixed32:
                     BlobSerializer.ReadBlock(read, 4);
-                    write.Stream.Write(read.Workspace, read.WorkspaceIndex, 4);
+                    write.Stream.Write(read.Workspace, 0, 4);
                     break;
                 case WireType.Fixed64:
                     BlobSerializer.ReadBlock(read, 8);
-                    write.Stream.Write(read.Workspace, read.WorkspaceIndex, 8);
+                    write.Stream.Write(read.Workspace, 0, 8);
                     break;
                 case WireType.String:
                     len = TwosComplementSerializer.ReadInt32(read);
@@ -432,13 +434,13 @@ namespace ProtoBuf
             while (length > capacity)
             {
                 BlobSerializer.ReadBlock(source, capacity);
-                destination.Write(source.Workspace, source.WorkspaceIndex, capacity);
+                destination.Write(source.Workspace, 0, capacity);
                 length -= capacity;
             }
             if (length > 0)
             {
                 BlobSerializer.ReadBlock(source, length);
-                destination.Write(source.Workspace, source.WorkspaceIndex, length);
+                destination.Write(source.Workspace, 0, length);
             }
         }
 
@@ -492,13 +494,12 @@ namespace ProtoBuf
         private static int CheckBufferForBlit(SerializationContext context, int length)
         {
             const int BLIT_BUFFER_SIZE = 4096;
-            int capacity = context.Workspace.Length - context.WorkspaceIndex;
+            int capacity = context.Workspace.Length;
             if (length > capacity && capacity < BLIT_BUFFER_SIZE)
             { // don't want to loop/blit with too small a buffer...
                 context.CheckSpace(BLIT_BUFFER_SIZE);
-                capacity = context.Workspace.Length - context.WorkspaceIndex;
+                capacity = context.Workspace.Length;
             }
-
             return capacity;
         }
         

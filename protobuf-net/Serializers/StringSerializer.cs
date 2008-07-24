@@ -19,9 +19,10 @@ namespace ProtoBuf
             context.CheckSpace(expectedLen);
 
             // do for real
-            int actualLen = Encoding.UTF8.GetBytes(value, 0, value.Length, context.Workspace, context.WorkspaceIndex);
+            int actualLen = Encoding.UTF8.GetBytes(value, 0, value.Length, context.Workspace, 0);
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
-            return preambleLen + context.Write(actualLen);
+            context.Stream.Write(context.Workspace, 0, actualLen);
+            return preambleLen + actualLen;
         }
 
         public int GetLength(string value, SerializationContext context)
@@ -39,7 +40,7 @@ namespace ProtoBuf
 
             context.CheckSpace(len);
             BlobSerializer.ReadBlock(context, len);
-            return Encoding.UTF8.GetString(context.Workspace, context.WorkspaceIndex, len);
+            return Encoding.UTF8.GetString(context.Workspace, 0, len);
         }
     }
 }

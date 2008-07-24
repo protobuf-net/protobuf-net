@@ -11,7 +11,7 @@ namespace ProtoBuf
         public static readonly BlobSerializer Default = new BlobSerializer();
         internal static void ReadBlock(SerializationContext context, int length)
         {
-            ReadBlock(context.Stream, context.Workspace, context.WorkspaceIndex, length);
+            ReadBlock(context.Stream, context.Workspace, 0, length);
         }
 
         private static void ReadBlock(Stream stream, byte[] buffer, int index, int length)
@@ -64,45 +64,29 @@ namespace ProtoBuf
             return value;
         }
 
-        public static void Reverse(byte[] buffer, int index, int length)
+        public static void Reverse4(byte[] buffer)
         {
-            byte tmp;
-            switch (length)
-            {   // unwrapped reverse
-                case 0:
-                case 1:
-                    break;
-                case 2:
-                    tmp = buffer[index + 0];
-                    buffer[index + 0] = buffer[index + 1];
-                    buffer[index + 1] = tmp;
-                    break;
-                case 4:
-                    tmp = buffer[index + 0];
-                    buffer[index + 0] = buffer[index + 3];
-                    buffer[index + 3] = tmp;
-                    tmp = buffer[1];
-                    buffer[index + 1] = buffer[index + 2];
-                    buffer[index + 2] = tmp;
-                    break;
-                case 8:
-                    tmp = buffer[index + 0];
-                    buffer[index + 0] = buffer[index + 7];
-                    buffer[index + 7] = tmp;
-                    tmp = buffer[index + 1];
-                    buffer[index + 1] = buffer[index + 6];
-                    buffer[index + 6] = tmp;
-                    tmp = buffer[index + 2];
-                    buffer[index + 2] = buffer[index + 5];
-                    buffer[index + 5] = tmp;
-                    tmp = buffer[index + 3];
-                    buffer[index + 3] = buffer[index + 4];
-                    buffer[index + 4] = tmp;
-                    break;
-                default:
-                    Array.Reverse(buffer, index, length);
-                    break;
-            }
+            byte tmp = buffer[0];
+            buffer[0] = buffer[3];
+            buffer[3] = tmp;
+            tmp = buffer[1];
+            buffer[1] = buffer[2];
+            buffer[2] = tmp;
+        }
+        public static void Reverse8(byte[] buffer)
+        {
+            byte tmp = buffer[0];
+            buffer[0] = buffer[7];
+            buffer[7] = tmp;
+            tmp = buffer[1];
+            buffer[1] = buffer[6];
+            buffer[6] = tmp;
+            tmp = buffer[2];
+            buffer[2] = buffer[5];
+            buffer[5] = tmp;
+            tmp = buffer[3];
+            buffer[3] = buffer[4];
+            buffer[4] = tmp;
         }
     }
 }

@@ -11,16 +11,16 @@ namespace ProtoBuf
             BlobSerializer.ReadBlock(context, 4);
             if (!BitConverter.IsLittleEndian)
             {
-                BlobSerializer.Reverse(context.Workspace, context.WorkspaceIndex, 4);
+                BlobSerializer.Reverse4(context.Workspace);
             }
-            return BitConverter.ToSingle(context.Workspace, context.WorkspaceIndex);
+            return BitConverter.ToSingle(context.Workspace, 0);
         }
         int ISerializer<float>.Serialize(float value, SerializationContext context)
         {
             byte[] buffer = BitConverter.GetBytes(value);
             if (!BitConverter.IsLittleEndian)
             {
-                BlobSerializer.Reverse(buffer, 0, 4);
+                BlobSerializer.Reverse4(buffer);
             }
             context.Stream.Write(buffer, 0, 4);
             return 4;

@@ -20,7 +20,7 @@ namespace ProtoBuf
             {
                 int64Val = (long)value;
             }
-            return context.Write(Base128Variant.EncodeInt64(int64Val, context));
+            return Base128Variant.EncodeInt64(int64Val, context);
         }
         string ISerializer<ulong>.DefinedType { get { return ProtoFormat.UINT64; } }
         
@@ -58,8 +58,7 @@ namespace ProtoBuf
             value >>= 7;
             if (value == 0) return 8;
             value >>= 7;
-            if (value == 0) return 9;
-            return 10;
+            return value == 0 ? 9 : 10;
         }
     }
 }

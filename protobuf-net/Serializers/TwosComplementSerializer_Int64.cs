@@ -18,7 +18,7 @@ namespace ProtoBuf
 
         public static int WriteToStream(long value, SerializationContext context)
         {
-            return context.Write(Base128Variant.EncodeInt64(value, context));
+            return Base128Variant.EncodeInt64(value, context);
         }
         public int Serialize(long value, SerializationContext context)
         {

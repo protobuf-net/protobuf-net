@@ -16,7 +16,7 @@ namespace ProtoBuf
 
         public static int WriteToStream(uint value, SerializationContext context)
         {
-            return context.Write(Base128Variant.EncodeInt64(value, context));
+            return Base128Variant.EncodeInt64(value, context);
         }
 
         public int Serialize(uint value, SerializationContext context)
@@ -36,8 +36,7 @@ namespace ProtoBuf
             value >>= 7;
             if (value == 0) return 3;
             value >>= 7;
-            if (value == 0) return 4;
-            return 5;
+            return value == 0 ? 4 : 5;
         }
     }
 }

@@ -18,7 +18,7 @@ namespace ProtoBuf
             byte[] buffer = BitConverter.GetBytes(value);
             if (!BitConverter.IsLittleEndian)
             {
-                BlobSerializer.Reverse(buffer, 0, 8);
+                BlobSerializer.Reverse8(buffer);
             }
             context.Stream.Write(buffer, 0, 8);
             return 8;
@@ -29,9 +29,9 @@ namespace ProtoBuf
             BlobSerializer.ReadBlock(context, 8);
             if (!BitConverter.IsLittleEndian)
             {
-                BlobSerializer.Reverse(context.Workspace, context.WorkspaceIndex, 8);
+                BlobSerializer.Reverse8(context.Workspace);
             }
-            return BitConverter.ToUInt64(context.Workspace, context.WorkspaceIndex);
+            return BitConverter.ToUInt64(context.Workspace, 0);
         }
     }
 }

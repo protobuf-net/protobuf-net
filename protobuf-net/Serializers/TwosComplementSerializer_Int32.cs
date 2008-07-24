@@ -26,7 +26,7 @@ namespace ProtoBuf
 
         public static int WriteToStream(int value, SerializationContext context)
         {
-            return context.Write(Base128Variant.EncodeInt32(value, context));
+            return Base128Variant.EncodeInt32(value, context);
         }
 
         string ISerializer<int>.DefinedType { get { return ProtoFormat.INT32; } }
@@ -43,10 +43,14 @@ namespace ProtoBuf
         public static int GetLength(int value)
         {
             if (value < 0) return 10;
-            unchecked
-            {
-                return TwosComplementSerializer.GetLength((uint)value);
-            }
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            return value == 0 ? 4 : 5;
         }
         public int GetLength(int value, SerializationContext context)
         {

@@ -136,6 +136,24 @@ namespace Examples
             };
             VerifyNodeTree(node);
         }
+
+        [Test]
+        public void TestDuplicateNonRecursive()
+        {
+            Node child = new Node { Key = 17 };
+            Node parent = new Node { Nodes = new[] { child, child, child } };
+            VerifyNodeTree(parent);
+        }
+
+        [Test, ExpectedException(typeof(ProtoException))]
+        public void TestDuplicateRecursive()
+        {
+            Node child = new Node { Key = 17 };
+            Node parent = new Node { Nodes = new[] { child, child, child } };
+            child.Nodes = new[] { parent };
+            VerifyNodeTree(parent);
+        }
+
         [Test]
         public void TestNestedArray()
         {

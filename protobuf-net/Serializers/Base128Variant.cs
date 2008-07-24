@@ -30,29 +30,31 @@ namespace ProtoBuf
             }*/
         }
 
+        private const long AllButFirstChunk = ~((long)127);
+
         internal static int EncodeInt64(long value, SerializationContext context)
         {
             byte[] buffer = context.Workspace;
-            int index = context.WorkspaceIndex;
-            if ((value & ~((long)127)) == 0)
+            if ((value & AllButFirstChunk) == 0)
             {
-                buffer[index] = (byte)value;
+                context.Stream.WriteByte((byte)value);
                 return 1;
-            }  
-          
+            }
             int lastByte = 0;
             for (int i = 0; i < 10; i++)
             {
-                int v = ((int) value) & 127;
+                int v = ((int)value) & 127;
                 if (v != 0) lastByte = i;
-                buffer[index + i] = (byte)(v | 128);
+                buffer[i] = (byte)(v | 128);
                 value >>= 7;
             }
 
             // byte 10 inly needs 1 bit (but if -ve backfills >> with 1s)
-            buffer[index + 9] &= 0x01;
-            buffer[lastByte] &= 127; // strip the msb
-            return lastByte + 1;
+            buffer[9] &= 0x01;
+            buffer[lastByte++] &= 127; // strip the msb
+            context.Stream.Write(buffer, 0, lastByte);
+            return lastByte;
+            
         }
 
         internal static long DecodeInt64(SerializationContext context)
@@ -105,7 +107,7 @@ namespace ProtoBuf
 
         internal static int ReadRaw(SerializationContext context)
         {
-            int b, index = context.WorkspaceIndex, len = 0;
+            int b, index = 0, len = 0;
             Stream source = context.Stream;
             do
             {
