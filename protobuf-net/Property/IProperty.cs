@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using System;
 
 namespace ProtoBuf
 {
@@ -17,6 +18,8 @@ namespace ProtoBuf
         int Serialize(TEntity instance, SerializationContext context);
         string DefinedType { get; }
         WireType WireType { get; }
+        Type PropertyType { get; }
+        bool IsRepeated { get; }
 
         int GetLength(TEntity instance, SerializationContext context);
     }

@@ -15,9 +15,39 @@ namespace ProtoBuf
 #if !CF
         public static string GetProto()
         {
+            List<Type> types = new List<Type>();
+            WalkTypes(types);
+
             StringBuilder sb = new StringBuilder();
-            GetProto(sb, 0);
+            string ns = typeof(T).Namespace;
+            if (!string.IsNullOrEmpty(ns))
+            {
+                sb.Append("package ").Append(ns).AppendLine(";");
+            }
+            foreach (Type type in types)
+            {
+                typeof(Serializer<>)
+                    .MakeGenericType(type)
+                    .GetMethod("AppendProto")
+                    .Invoke(null, new object[] { sb, 0 });
+            }
             return sb.ToString();
+        }
+
+        public static void WalkTypes(List<Type> knownTypes)
+        {
+            Type newType = typeof(T);
+            if (knownTypes.Contains(newType)) return;
+            knownTypes.Add(newType);
+            foreach (IProperty<T> prop in props)
+            {
+                Type propType = prop.PropertyType;
+                if (!Serializer.IsEntityType(propType)) continue;
+                typeof(Serializer<>)
+                    .MakeGenericType(propType)
+                    .GetMethod("WalkTypes")
+                    .Invoke(null, new object[] { knownTypes });
+            }
         }
 
         internal static StringBuilder Indent(StringBuilder sb, int nestLevel)
@@ -25,15 +55,10 @@ namespace ProtoBuf
             return sb.Append(' ', nestLevel * 2);
         }
 
-        internal static void GetProto(StringBuilder sb, int nestLevel)
+        public static void AppendProto(StringBuilder sb, int nestLevel)
         {
-            string ns = typeof(T).Namespace;
-            if (!string.IsNullOrEmpty(ns))
-            {
-                Indent(sb, nestLevel).Append("package ").Append(ns).AppendLine(";");
-            }
-
             string descText, name = Serializer.GetDefinedTypeName<T>();
+            sb.AppendLine();
             Indent(sb, nestLevel).Append("message ").Append(name).Append(" {");
 
             DescriptionAttribute desc = AttributeUtils.GetAttribute<DescriptionAttribute>(typeof(T));
@@ -47,9 +72,11 @@ namespace ProtoBuf
             nestLevel++;
             for (int i = 0; i < props.Length; i++)
             {
-                IProperty<T> prop = props[i];
+                IProperty<T> prop = props[i];                
                 Indent(sb, nestLevel).Append(' ')
-                    .Append(prop.IsRequired ? "required " : "optional ")
+                    .Append(prop.IsRepeated ? "repeated" :
+                        (prop.IsRequired ? "required" : "optional"))
+                    .Append(' ')
                     .Append(prop.DefinedType).Append(' ')
                     .Append(prop.Name).Append(" = ").Append(prop.Tag);
 

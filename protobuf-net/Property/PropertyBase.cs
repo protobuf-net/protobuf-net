@@ -101,6 +101,8 @@ namespace ProtoBuf
         public abstract int GetLength(TEntity instance, SerializationContext context);
         public abstract WireType WireType { get; }
         public abstract string DefinedType { get; }
+        public virtual Type PropertyType { get { return typeof(TValue); } }
+        public virtual bool IsRepeated { get { return false; } }
 
         protected int GetPrefixLength()
         {

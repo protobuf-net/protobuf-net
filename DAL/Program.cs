@@ -39,6 +39,10 @@ namespace DAL
             }
             */
 
+            string proto = Serializer.GetProto<Database>();
+            File.WriteAllText("nwind.proto", proto);
+            Console.WriteLine(proto);
+
             // otherwise...
             using (Stream fs = File.OpenRead("nwind.proto.bin"))
             {
@@ -78,9 +82,13 @@ namespace DAL
                 Database pbnet = Serializer.Deserialize<Database>(ms);
                 DbMetrics("protobuf-net", pbnet);
 
-                Database psharp = MessageReader.Read<Database>(ms.ToArray());
-                DbMetrics("proto#", psharp);
+                //Database psharp = MessageReader.Read<Database>(ms.ToArray());
+                //DbMetrics("proto#", psharp);
             }
+
+            Console.WriteLine();
+            Console.WriteLine("[press any key]");
+            Console.ReadKey();
             
             
             /*

@@ -17,6 +17,8 @@ namespace ProtoBuf
 
         public override string DefinedType { get { return serializer.DefinedType; } }
         public override WireType WireType { get { return serializer.WireType; } }
+        public override Type PropertyType { get { return typeof(TValue);} }
+        public override bool IsRepeated { get { return true; } }
 
         public override int Serialize(TEntity instance, SerializationContext context)
         { // write all items in a contiguous block

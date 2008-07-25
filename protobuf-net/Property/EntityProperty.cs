@@ -1,5 +1,6 @@
 ﻿
 using System.Reflection;
+using System;
 namespace ProtoBuf
 {
     internal sealed class EntityProperty<TEntity, TValue> : PropertyBase<TEntity, TValue>, IGroupProperty<TEntity>

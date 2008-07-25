@@ -17,7 +17,7 @@ namespace ProtoBuf
             STRING = "string",
             BOOL = "bool",
             DOUBLE = "double",
-            FLOAT = "flaot",
+            FLOAT = "float",
             BYTES = "bytes";
     }
 }
