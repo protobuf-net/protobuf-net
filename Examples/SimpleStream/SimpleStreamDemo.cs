@@ -57,17 +57,17 @@ namespace Examples.SimpleStream
         public void PerfTestSimple(int count)
         {
             Test1 t1 = new Test1 { A = 150 };
-            Assert.IsTrue(LoadTestItem(t1, count, count * 10, true, true, true, true, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t1, count, count, true, true, true, true, 0x08, 0x96, 0x01));
         }
         public void PerfTestString(int count)
         {
             Test2 t2 = new Test2 { B = "testing" };
-            Assert.IsTrue(LoadTestItem(t2, count, count * 10, true, true, true, true, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+            Assert.IsTrue(LoadTestItem(t2, count, count, true, true, true, true, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
         public void PerfTestEmbedded(int count)
         {
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
-            Assert.IsTrue(LoadTestItem(t3, count, count * 10, true, true, true, true, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t3, count, count, true, true, true, true, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
         [ProtoContract]
@@ -225,7 +225,7 @@ namespace Examples.SimpleStream
                         ProtoSharp.Core.MessageReader.Read<T>(buffer);
                     }
                     deserializeWatch.Stop();
-                    Console.WriteLine("||proto#||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
+                    Console.WriteLine("||[http://code.google.com/p/protosharp/ proto#]||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
                         buffer.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
             }
