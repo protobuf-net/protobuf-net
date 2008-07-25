@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Linq;
+using System.Diagnostics;
 using System.IO;
 using ProtoBuf;
-using System.Diagnostics;
-using System.Data.Linq;
 using System.Linq;
+using ProtoSharp.Core;
 
 namespace DAL
 {
     [ProtoContract]
     class Database
     {
-        [ProtoMember(1)]
+        [ProtoMember(1), Tag(1)]
         public List<Order> Orders { get; private set; }
 
         public Database()
@@ -20,14 +21,39 @@ namespace DAL
         }
     }
 
-    class Program
+    static class Program
     {
         static void Main()
         {
-            const string path = @"d:\nwind.proto.bin";
-            const int COUNT = 500;
+        
+            Database db;
+            /*
+            // if have a Northwind handy...
+            using(var ctx = new NorthwindDataContext())
+            {
+                db = ctx.ReadFromDatabase();
+                DbMetrics("Database", db);
+            }
+             */ 
+            // otherwise...
+            using (Stream fs = File.OpenRead("nwind.proto.bin"))
+            {
+                db = Serializer.Deserialize<Database>(fs);
+            }
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, db);
+                ms.Position = 0;
 
-            ReadFromDatabase(path);
+                Database pbnet = Serializer.Deserialize<Database>(ms);
+                DbMetrics("protobuf-net", pbnet);
+
+                Database psharp = MessageReader.Read<Database>(ms.ToArray());
+                DbMetrics("proto#", psharp);
+            }
+            
+            /*
+
             Console.WriteLine("{0}={1} bytes", path, new FileInfo(path).Length);
             
             Database db = null;
@@ -45,6 +71,20 @@ namespace DAL
             }
             watch.Stop();
             Console.WriteLine("Save x{0}: {1}ms", COUNT, watch.ElapsedMilliseconds);
+             * */
+        }
+        static void DbMetrics(string caption, Database database)
+        {
+            int orders = database.Orders.Count;
+            int lines = database.Orders.SelectMany(ord => ord.Lines).Count();
+            int totalQty = database.Orders.SelectMany(ord => ord.Lines)
+                    .Sum(line => line.Quantity);
+            decimal totalValue = database.Orders.SelectMany(ord => ord.Lines)
+                    .Sum(line => line.Quantity * line.UnitPrice);
+
+            Console.WriteLine("{0}\torders {1}; lines {2}; units {3}; value {4:C}",
+                caption, orders, lines, totalQty, totalValue);
+
         }
         static Database ReadFromFile(string path)
         {
@@ -64,20 +104,15 @@ namespace DAL
                 fs.Close();
             }
         }
-        static void ReadFromDatabase(string path) {
+        static Database ReadFromDatabase(this NorthwindDataContext ctx) {
             Database db = new Database();
-            using (var ctx = new NorthwindDataContext())
-            {
-                DataLoadOptions opt = new DataLoadOptions();
-                opt.AssociateWith<Order>(order => order.Lines);
-                ctx.LoadOptions = opt;
-                db.Orders.AddRange(ctx.Orders);
+        
+            DataLoadOptions opt = new DataLoadOptions();
+            opt.AssociateWith<Order>(order => order.Lines);
+            ctx.LoadOptions = opt;
+            db.Orders.AddRange(ctx.Orders);
 
-                Console.WriteLine("Orders: {0}", db.Orders.Count);
-                WriteToFile(path, db);
-                
-            }
-            
+            return db;            
         }
     }
 }
