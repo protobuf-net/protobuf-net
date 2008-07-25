@@ -84,7 +84,11 @@
       <HintPath>..\Tools\ProtoSharp.Core.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Data.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq">
@@ -110,6 +114,8 @@
     <Compile Include="DesignIdeas\ChangeType.cs" />
     <Compile Include="EnumTests.cs" />
     <Compile Include="Extensibility.cs" />
+    <Compile Include="NWind\DataContext.cs" />
+    <Compile Include="NWind\NWind.cs" />
     <Compile Include="OldProgram.cs" />
     <Compile Include="Primatives.cs" />
     <Compile Include="Program.cs" />
@@ -128,6 +134,10 @@
     <Compile Include="TestNumbers\NumberTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\Tools\nwind.proto.bin">
+      <Link>NWind\nwind.proto.bin</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="app.config" />
   </ItemGroup>
   <ItemGroup>

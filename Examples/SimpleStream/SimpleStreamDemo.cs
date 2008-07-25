@@ -57,17 +57,17 @@ namespace Examples.SimpleStream
         public void PerfTestSimple(int count)
         {
             Test1 t1 = new Test1 { A = 150 };
-            Assert.IsTrue(LoadTestItem(t1, count, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t1, count, count * 10, true, true, true, true, 0x08, 0x96, 0x01));
         }
         public void PerfTestString(int count)
         {
             Test2 t2 = new Test2 { B = "testing" };
-            Assert.IsTrue(LoadTestItem(t2, count, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+            Assert.IsTrue(LoadTestItem(t2, count, count * 10, true, true, true, true, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
         public void PerfTestEmbedded(int count)
         {
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
-            Assert.IsTrue(LoadTestItem(t3, count, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t3, count, count * 10, true, true, true, true, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
         [ProtoContract]
@@ -157,21 +157,22 @@ namespace Examples.SimpleStream
             Serializer.Serialize(Stream.Null, nac);
         }
 
-        static bool LoadTestItem<T>(T item, int count, params byte[] expected) where T : class, new()
+        public static bool LoadTestItem<T>(T item, int count, int protoCount, bool testBinary, bool testXml, bool testProtoSharp, bool writeJson, params byte[] expected) where T : class, new()
         {
             bool pass = true;
             string name = typeof(T).Name;
             Console.WriteLine("\t{0}", name);
             Stopwatch serializeWatch, deserializeWatch;
-            T pbClone, psClone;
-            int protoCount = count * 10;
+            T pbClone, psClone = null;
+            Console.WriteLine("\t(times based on {0} iterations ({1} for .proto))", count, protoCount);
+            Console.WriteLine("||*Serializer*||*size*||*serialize*||*deserialize*||");
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, item);
                 ms.Position = 0;
                 pbClone = Serializer.Deserialize<T>(ms);
                 byte[] data = ms.ToArray();
-                if (!Program.ArraysEqual(data, expected))
+                if (expected != null && !Program.ArraysEqual(data, expected))
                 {
                     Console.WriteLine("\t*** serialization failure");
                     WriteBytes("Binary", data);
@@ -191,107 +192,114 @@ namespace Examples.SimpleStream
                     Serializer.Deserialize<T>(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("\t(times based on {0} iterations ({1} for .proto))", count, protoCount);
-                Console.WriteLine("||*Serializer*||*size*||*serialize*||*deserialize*||");
-                Console.WriteLine("||protobuf-net||{0}||{1}||{2}||",
+                Console.WriteLine("||protobuf-net||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
-            using(MemoryStream ms = new MemoryStream())
+            if (testProtoSharp)
             {
-                ProtoSharp.Core.MessageWriter mw = new ProtoSharp.Core.MessageWriter(ms),
-                    nullWriter = new ProtoSharp.Core.MessageWriter(Stream.Null);
-                mw.WriteMessage(item);
-                ms.Position = 0;
-                byte[] buffer = ms.ToArray();
-                
-                psClone = ProtoSharp.Core.MessageReader.Read<T>(buffer);
-                if (!Program.ArraysEqual(buffer, expected))
+                using (MemoryStream ms = new MemoryStream())
                 {
-                    Console.WriteLine("\t*** serialization failure");
-                    WriteBytes("Binary", buffer);
-                }
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < protoCount; i++)
-                {
-                    nullWriter.WriteMessage(item);
-                }
-                serializeWatch.Stop();
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < protoCount; i++)
-                {
-                    ProtoSharp.Core.MessageReader.Read<T>(buffer);
-                }
-                deserializeWatch.Stop();
-                Console.WriteLine("||proto#||{0}||{1}||{2}||",
-                    buffer.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
-            }
-            using (MemoryStream ms = new MemoryStream())
-            {
-                BinaryFormatter bf = new BinaryFormatter();
-                bf.Serialize(ms, item);
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
-                {
-                    bf.Serialize(Stream.Null, item);
-                }
-                serializeWatch.Stop();
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
-                {
+                    ProtoSharp.Core.MessageWriter mw = new ProtoSharp.Core.MessageWriter(ms),
+                        nullWriter = new ProtoSharp.Core.MessageWriter(Stream.Null);
+                    mw.WriteMessage(item);
                     ms.Position = 0;
-                    bf.Deserialize(ms);
+                    byte[] buffer = ms.ToArray();
+
+                    psClone = ProtoSharp.Core.MessageReader.Read<T>(buffer);
+                    if (expected != null && !Program.ArraysEqual(buffer, expected))
+                    {
+                        Console.WriteLine("\t*** serialization failure");
+                        WriteBytes("Binary", buffer);
+                    }
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    serializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < protoCount; i++)
+                    {
+                        nullWriter.WriteMessage(item);
+                    }
+                    serializeWatch.Stop();
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    deserializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < protoCount; i++)
+                    {
+                        ProtoSharp.Core.MessageReader.Read<T>(buffer);
+                    }
+                    deserializeWatch.Stop();
+                    Console.WriteLine("||proto#||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
+                        buffer.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
-                deserializeWatch.Stop();
-                Console.WriteLine("||`BinaryFormatter`||{0}||{1}||{2}||",
-                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
-            using (MemoryStream ms = new MemoryStream())
+            if (testBinary)
             {
-                SoapFormatter sf = new SoapFormatter();
-                sf.Serialize(ms, item);
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
+                using (MemoryStream ms = new MemoryStream())
                 {
-                    sf.Serialize(Stream.Null, item);
+                    BinaryFormatter bf = new BinaryFormatter();
+                    bf.Serialize(ms, item);
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    serializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        bf.Serialize(Stream.Null, item);
+                    }
+                    serializeWatch.Stop();
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    deserializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        ms.Position = 0;
+                        bf.Deserialize(ms);
+                    }
+                    deserializeWatch.Stop();
+                    Console.WriteLine("||`BinaryFormatter`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
+                        ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
-                serializeWatch.Stop();
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
+                using (MemoryStream ms = new MemoryStream())
                 {
-                    ms.Position = 0;
-                    sf.Deserialize(ms);
+                    SoapFormatter sf = new SoapFormatter();
+                    sf.Serialize(ms, item);
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    serializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        sf.Serialize(Stream.Null, item);
+                    }
+                    serializeWatch.Stop();
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    deserializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        ms.Position = 0;
+                        sf.Deserialize(ms);
+                    }
+                    deserializeWatch.Stop();
+                    Console.WriteLine("||`SoapFormatter`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
+                        ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
-                deserializeWatch.Stop();
-                Console.WriteLine("||`SoapFormatter`||{0}||{1}||{2}||",
-                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
-            using (MemoryStream ms = new MemoryStream())
+            if (testXml)
             {
-                XmlSerializer xser = new XmlSerializer(typeof(T));
-                xser.Serialize(ms, item);
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
+                using (MemoryStream ms = new MemoryStream())
                 {
-                    xser.Serialize(Stream.Null, item);
+                    XmlSerializer xser = new XmlSerializer(typeof(T));
+                    xser.Serialize(ms, item);
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    serializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        xser.Serialize(Stream.Null, item);
+                    }
+                    serializeWatch.Stop();
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    deserializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        ms.Position = 0;
+                        xser.Deserialize(ms);
+                    }
+                    deserializeWatch.Stop();
+                    Console.WriteLine("||`XmlSerializer`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
+                        ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
-                serializeWatch.Stop();
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
-                {
-                    ms.Position = 0;
-                    xser.Deserialize(ms);
-                }
-                deserializeWatch.Stop();
-                Console.WriteLine("||`XmlSerializer`||{0}||{1}||{2}||",
-                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
             using (MemoryStream ms = new MemoryStream())
             {
@@ -312,7 +320,7 @@ namespace Examples.SimpleStream
                     xser.ReadObject(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("||`DataContractSerializer`||{0}||{1}||{2}||",
+                Console.WriteLine("||`DataContractSerializer`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
             }
 #if NET_3_5
@@ -335,29 +343,35 @@ namespace Examples.SimpleStream
                     xser.ReadObject(ms);
                 }
                 deserializeWatch.Stop();
-                Console.WriteLine("||`DataContractJsonSerializer`||{0}||{1}||{2}||",
+                Console.WriteLine("||`DataContractJsonSerializer`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
 
-                string originalJson = Encoding.UTF8.GetString(ms.ToArray()), pbJson, psJson;
+                string originalJson = Encoding.UTF8.GetString(ms.ToArray()), pbJson, psJson = null;
 
                 using (MemoryStream ms2 = new MemoryStream())
                 {
                     xser.WriteObject(ms2, pbClone);
                     pbJson = Encoding.UTF8.GetString(ms.ToArray());
                 }
-                using (MemoryStream ms3 = new MemoryStream())
+                if (testProtoSharp)
                 {
-                    xser.WriteObject(ms3, psClone);
-                    psJson = Encoding.UTF8.GetString(ms.ToArray());
+                    using (MemoryStream ms3 = new MemoryStream())
+                    {
+                        xser.WriteObject(ms3, psClone);
+                        psJson = Encoding.UTF8.GetString(ms.ToArray());
+                    }
                 }
-                Console.WriteLine("\tJSON: {0}", originalJson);
+                if (writeJson)
+                {
+                    Console.WriteLine("\tJSON: {0}", originalJson);
+                }
                 if (originalJson != pbJson)
                 {
                     pass = false;
                     Console.WriteLine("\t**** json comparison fails (protobuf-net)!");
                     Console.WriteLine("\tClone JSON: {0}", pbJson);
                 }
-                if (originalJson != psJson)
+                if (testProtoSharp && (originalJson != psJson))
                 {
                     pass = false;
                     Console.WriteLine("\t**** json comparison fails (proto#)!");

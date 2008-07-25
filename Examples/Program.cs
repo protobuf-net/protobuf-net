@@ -16,6 +16,9 @@ namespace Examples
             demo.PerfTestSimple(COUNT);
             demo.PerfTestString(COUNT);
             demo.PerfTestEmbedded(COUNT);
+
+            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
+            SimpleStreamDemo.LoadTestItem(db, 500, 500, false, false, false, false, null);
         }
 
         public static string GetByteString(byte[] buffer)
