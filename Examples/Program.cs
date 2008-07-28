@@ -12,13 +12,13 @@ namespace Examples
     {
         static void Main() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
-            const int COUNT = 1000000;
-            demo.PerfTestSimple(COUNT);
-            demo.PerfTestString(COUNT);
-            demo.PerfTestEmbedded(COUNT);
+            const int COUNT = 100000;
+            //demo.PerfTestSimple(COUNT);
+            //demo.PerfTestString(COUNT);
+            //demo.PerfTestEmbedded(COUNT);
 
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
-            SimpleStreamDemo.LoadTestItem(db, 500, 500, false, false, false, false, null);
+            SimpleStreamDemo.LoadTestItem(db, 500, 500, false, false, true, false, null);
         }
 
         public static string GetByteString(byte[] buffer)

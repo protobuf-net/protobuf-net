@@ -9,7 +9,7 @@ using System.Runtime.Serialization;
 using System.IO.Compression;
 using NUnit.Framework;
 using System.Data.Linq;
-
+using Serializer = ProtoBuf.Serializer;
 namespace DAL
 {
     [ProtoContract, DataContract, Serializable]

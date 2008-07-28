@@ -8,7 +8,7 @@ using System.Linq;
 using ProtoSharp.Core;
 using System.Runtime.Serialization;
 using System.IO.Compression;
-
+using Serializer = ProtoBuf.Serializer;
 namespace DAL
 {
     [ProtoContract, DataContract]

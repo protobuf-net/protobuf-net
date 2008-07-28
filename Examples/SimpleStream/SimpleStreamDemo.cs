@@ -17,6 +17,7 @@ using NUnit.Framework;
 using Examples.DesignIdeas;
 using System.Collections.Generic;
 using ProtoSharp.Core;
+using Serializer = ProtoBuf.Serializer;
 #endif
 
 namespace Examples.SimpleStream
@@ -166,6 +167,7 @@ namespace Examples.SimpleStream
             T pbClone, psClone = null;
             Console.WriteLine("\t(times based on {0} iterations ({1} for .proto))", count, protoCount);
             Console.WriteLine("||*Serializer*||*size*||*serialize*||*deserialize*||");
+            byte[] pbnetBuffer;
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, item);
@@ -194,17 +196,23 @@ namespace Examples.SimpleStream
                 deserializeWatch.Stop();
                 Console.WriteLine("||protobuf-net||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
                     ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
+
+                pbnetBuffer = ms.ToArray();
             }
             if (testProtoSharp)
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
+                    
+                    /* issue logged
                     ProtoSharp.Core.MessageWriter mw = new ProtoSharp.Core.MessageWriter(ms),
                         nullWriter = new ProtoSharp.Core.MessageWriter(Stream.Null);
                     mw.WriteMessage(item);
                     ms.Position = 0;
-                    byte[] buffer = ms.ToArray();
-
+                     */
+                    byte[] buffer = pbnetBuffer;
+                    ms.Write(buffer, 0, buffer.Length); // temporary
+                    /*
                     psClone = ProtoSharp.Core.MessageReader.Read<T>(buffer);
                     if (expected != null && !Program.ArraysEqual(buffer, expected))
                     {
@@ -217,12 +225,14 @@ namespace Examples.SimpleStream
                     {
                         nullWriter.WriteMessage(item);
                     }
-                    serializeWatch.Stop();
+                    serializeWatch.Stop();*/
+                    
                     GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                     deserializeWatch = Stopwatch.StartNew();
                     for (int i = 0; i < protoCount; i++)
                     {
-                        ProtoSharp.Core.MessageReader.Read<T>(buffer);
+                        ms.Position = 0;
+                        ProtoSharp.Core.MessageReader.Read<T>(ms);
                     }
                     deserializeWatch.Stop();
                     Console.WriteLine("||[http://code.google.com/p/protosharp/ proto#]||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",

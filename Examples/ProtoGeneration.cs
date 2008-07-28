@@ -16,6 +16,7 @@ namespace Examples
             string proto = Serializer.GetProto<Test1>();
             Assert.AreEqual(
 @"package Examples.SimpleStream;
+
 message Test1 {
    required int32 a = 1;
 }

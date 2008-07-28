@@ -207,6 +207,7 @@
     <Compile Include="Net\ProtoServer.cs" />
     <Compile Include="Property\ArrayProperty.cs" />
     <Compile Include="ProtoException.cs" />
+    <Compile Include="Serializers\GuidSerializer.cs" />
     <Compile Include="Serializers\NullableSerializer.cs" />
     <Compile Include="Serializers\TwosComplementSerializer_Int16.cs">
       <DependentUpon>TwosComplementSerializer.cs</DependentUpon>

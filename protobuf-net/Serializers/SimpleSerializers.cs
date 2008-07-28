@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using ProtoBuf.Serializers;
 
 namespace ProtoBuf
 {
@@ -40,6 +41,7 @@ namespace ProtoBuf
 
             Set<DateTime>(ZigZagSerializer.Default, ZigZagSerializer.Default, null, null);
             Set<decimal>(TwosComplementSerializer.Default, ZigZagSerializer.Default, TwosComplementSerializer.Default, null);
+            Set<Guid>(GuidSerializer.Default, null, null, GuidSerializer.Default);
         }
 
         internal static void Set<TValue>(ISerializer<TValue> serializer) 
