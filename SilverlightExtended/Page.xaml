@@ -1,8 +1,99 @@
 ﻿<UserControl x:Class="SilverlightExtended.Page"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
-    Width="400" Height="300">
+    xmlns:data="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Data"
+    Width="1024" Height="700">
+
     <Grid x:Name="LayoutRoot" Background="White">
-        <TextBox x:Name="txtBox" HorizontalAlignment="Left" Margin="8,8,8,8" VerticalAlignment="Stretch" Text="TextBox" TextWrapping="Wrap"  Width="600" Height="800" ScrollViewer.VerticalScrollBarVisibility="Visible"/>
+
+        <!--<StackPanel Orientation="Horizontal">
+            <TextBlock x:Name="txtTestStartTime" Text="Foo" Height="25" Width="225" Margin="5" VerticalAlignment="Top" Style="{StaticResource TitleBlock}" />
+            <TextBlock x:Name="txtTestCompleteTime" Text="Bar" Height="25" Width="225" Margin="5" VerticalAlignment="Top" Style="{StaticResource TitleBlock}" />
+            <TextBox x:Name="progressTextBox"  Width="225" Margin="5" VerticalAlignment="Top" Text="Progress"/>
+            <TextBox x:Name="feedTextBox" Width="752" Height="300"  Margin="8"  VerticalAlignment="Top" />
+        </StackPanel>-->
+
+        <Button Click="btnRunTest_Click" Height="19" Width="100"  Margin="0,50,0,0" VerticalAlignment="Top" HorizontalAlignment="Center" Content="Run Test" x:Name="btnRunTest"/>
+        
+        <!-- DataGrid doesn't support dynamic addition of rows yet -->
+        <!--<data:DataGrid x:Name="SummaryGrid" 
+            Height="400" Width="1008" Margin="0,5,0,10" 
+            AutoGenerateColumns="False">
+            <data:DataGrid.Columns>
+                <data:DataGridTextColumn 
+                    Header="ID" 
+                    Width="Auto"
+                    DisplayMemberBinding="{Binding Sequence}" 
+                    FontSize="20" />
+                <data:DataGridTextColumn 
+                    Header="Compiled Object Creation Time" 
+                    Width="Auto"
+                    DisplayMemberBinding="{Binding CompiledObjectCreationTime}" 
+                    FontSize="20" />
+                <data:DataGridTextColumn 
+                    Header="Serialization Time"
+                    Width="Auto"
+                    DisplayMemberBinding="{Binding SerializationTime}" >
+                </data:DataGridTextColumn>
+                <data:DataGridTextColumn 
+                    Header="Deserialization Time" 
+                    Width="Auto"
+                    DisplayMemberBinding="{Binding DeserializationTime}" />
+                <data:DataGridTextColumn 
+                    Header="Stream Size" 
+                    Width="Auto"
+                    DisplayMemberBinding="{Binding StreamSize}" 
+                     />
+                <data:DataGridTextColumn 
+                    Header="Deserialization Was Correct" 
+                    Width="Auto"
+                    DisplayMemberBinding="{Binding DeserializationWasCorrect}" 
+                     />
+                <data:DataGridTextColumn 
+                    Header="Total Duration" 
+                    Width="Auto"
+                    DisplayMemberBinding="{Binding TotalDuration}" 
+                     />
+            </data:DataGrid.Columns>
+        </data:DataGrid>-->
+        <ListBox x:Name="PerformanceLogList" SelectionChanged="PerformanceLogList_SelectionChanged" Height="600" Margin="8" VerticalAlignment="Bottom">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="ID: "/>
+                            <TextBlock Style="{StaticResource TitleValue}" Text="{Binding Sequence}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="Compiled Object Creation Time: "/>
+                            <TextBlock Style="{StaticResource TitleValue}" Text="{Binding CompiledObjectCreationTime}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="Serialization Time: "/>
+                            <TextBlock Style="{StaticResource TitleValue}" Text="{Binding SerializationTime}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="Deserialization Time: "/>
+                            <TextBlock Style="{StaticResource TitleValue}" Text="{Binding DeserializationTime}"/>
+                        </StackPanel>
+
+                        <TextBlock Margin="3" Style="{StaticResource TitleBlock}" Text="{Binding SendSerializedObjectTime}"/>
+                        <TextBlock Margin="3"  Style="{StaticResource TitleBlock}" Text="{Binding ReceiveSerializedObjectTime}"/>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="Stream Size: "/>
+                            <TextBlock Style="{StaticResource TitleValue}" Text="{Binding StreamSize}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="Deserialization Was Correct: "/>
+                            <TextBlock Style="{StaticResource TitleValue}" Text="{Binding DeserializationWasCorrect}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="Total Duration: "/>
+                            <TextBlock Style="{StaticResource TitleValue}" Text="{Binding TotalDuration}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
     </Grid>
 </UserControl>

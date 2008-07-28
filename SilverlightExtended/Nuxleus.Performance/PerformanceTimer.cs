@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Diagnostics;
-using System.ComponentModel;
 using System.Collections.Generic;
+using System.ComponentModel;
 using Nuxleus.MetaData;
 
 namespace Nuxleus.Performance {
@@ -22,13 +21,11 @@ namespace Nuxleus.Performance {
     /// Wraps a Stopwatch object with methods and properties that automate the process of creating, 
     /// starting, monitoring, and stopping the Stopwatch and logging related data to a PerformanceLog.
     /// </summary>
-    public struct PerformanceTimer : IDisposable {
+    public struct SilverlightPerformance_Hmmm_NotSoMuch_Timer : IDisposable {
 
         static object obj = new object();
         public delegate void CodeBlock();
-        static long m_startTicks;
-        //static readonly Stopwatch m_stopwatch = new Stopwatch();
-        static readonly DateTime m_dateTime = new DateTime();
+        static long m_startTime;
 
         [DefaultValue(UnitPrecision.NANOSECONDS)]
         public static UnitPrecision UnitPrecision { get; set; }
@@ -37,8 +34,8 @@ namespace Nuxleus.Performance {
         static Stack<long> m_releaseMarkerStack = new Stack<long>();
         //static long m_freq = Stopwatch.Frequency;
 
-        static PerformanceTimer() {
-            m_startTicks = m_dateTime.Ticks;
+        static SilverlightPerformance_Hmmm_NotSoMuch_Timer() {
+            m_startTime = DateTime.Now.Ticks;
             if (UnitPrecision == 0) {
                 //TODO: Read the DefaultValue attribute of the UnitPrecision property and initialize it with that value.
                 UnitPrecision = UnitPrecision.NANOSECONDS;
@@ -71,12 +68,12 @@ namespace Nuxleus.Performance {
         /// <param name="log">The <typeparamref name="PerformanceLog"/> the message should be written to.</param>
         /// <param name="code">The code to be invoked and timed.</param>
         /// <returns><typeparamref name="PerformanceLog"/> which is the same <typeparamref name="PerformanceLog"/> passed into the method.</returns>
-        public PerformanceLog LogScope(String message, PerformanceLog log, CodeBlock code) {
+        public PerformanceLog LogScope(String message, PerformanceLog log, PerformanceLogEntryType type, CodeBlock code) {
             lock (obj) {
                 this.SetMarker();
                 code.Invoke();
                 this.ReleaseMarker();
-                log.LogData(message, this.Duration);
+                log.LogData(message, this.Duration, type);
             }
             return log;
         }
@@ -97,14 +94,14 @@ namespace Nuxleus.Performance {
             // provides a greater level of accuracy at the Scope level given the marker is set just before the 
             // CodeBlock expression is invoked and therefore immediately before any processing related to the CodeBlock
             // begins.  However, this should be thoroughly tested before making a final determination.
-            m_setMarkerStack.Push(m_dateTime.Ticks);
+            m_setMarkerStack.Push(DateTime.Now.Ticks);
         }
 
         /// <summary>
         /// Release a performance marker
         /// </summary>
         void ReleaseMarker() {
-            m_releaseMarkerStack.Push(m_dateTime.Ticks);
+            m_releaseMarkerStack.Push(DateTime.Now.Ticks);
         }
 
         /// <summary>
@@ -121,12 +118,12 @@ namespace Nuxleus.Performance {
         /// </summary>         
         public double Elapsed {
             get {
-                return GetDuration(m_dateTime.Ticks, m_startTicks);
+                return GetDuration(m_startTime, DateTime.Now.Ticks);
             }
         }
 
         double GetDuration(long startTime, long stopTime) {
-            return ((double)(stopTime - startTime) * (Double)UnitPrecision);
+            return (double)(stopTime - startTime);
         }
 
         #region IDisposable Members

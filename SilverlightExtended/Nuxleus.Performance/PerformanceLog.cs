@@ -1,12 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Xml.Serialization;
-using Nuxleus.Messaging;
-using System.Runtime.Serialization;
 
 namespace Nuxleus.Performance {
+
+    public enum PerformanceLogEntryType {
+        Sequence,
+        CompiledObjectCreation,
+        StreamSize,
+        Serialization,
+        Deserialization,
+        DeserializationCorrect,
+        SendSerializedObjectTime,
+        ReceiveSerializedObjectTime,
+        TotalDuration
+    }
 
     [XmlType(Namespace = "http://nuxleus.com/Nuxleus/Performance")]
     [XmlRootAttribute(Namespace = "http://nuxleus.com/Nuxleus/Performance", IsNullable = false)]
@@ -29,17 +36,19 @@ namespace Nuxleus.Performance {
     [XmlTypeAttribute(Namespace = "http://nuxleus.com/Nuxleus/Performance")]
     public struct PerformanceLog {
 
-        public void LogData(string description, double value) {
+        public void LogData(string description, double value, PerformanceLogEntryType type) {
             Entries.Add(new Entry {
                 Description = description,
-                Value = value
+                Value = value,
+                PerformanceLogEntryType = type
             });
         }
 
-        public void LogData(string description, bool value) {
+        public void LogData(string description, bool value, PerformanceLogEntryType type) {
             Entries.Add(new Entry {
                 Description = description,
-                Value = value
+                Value = value,
+                PerformanceLogEntryType = type
             });
         }
 
@@ -53,6 +62,7 @@ namespace Nuxleus.Performance {
 
     [XmlType(Namespace = "http://nuxleus.com/Nuxleus/Performance")]
     public struct Entry {
+        public PerformanceLogEntryType PerformanceLogEntryType { get; set; }
         public string Description { get; set; }
         public object Value { get; set; }
     }
