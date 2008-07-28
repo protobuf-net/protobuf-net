@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ProtoBuf.Serializers
+namespace ProtoBuf
 {
     internal sealed class GuidSerializer : ISerializer<Guid>
     {

@@ -72,7 +72,66 @@ namespace Examples
                     now.Hour, now.Minute, now.Second, now.Millisecond);
             }
         }
-        
+
+        [Test]
+        public void TestByteTwos()
+        {
+            Assert.AreEqual(0, TestByteTwos(0));
+            byte value = 1;
+            for (int i = 0; i < 8; i++)
+            {
+                Assert.AreEqual(value, TestByteTwos(value));
+                value <<= 1;
+            }
+        }
+
+        [Test]
+        public void TestSByteTwos()
+        {
+            Assert.AreEqual(0, TestSByteTwos(0));
+            sbyte value = 1;
+            for (int i = 0; i < 7; i++)
+            {
+                Assert.AreEqual(value, TestSByteTwos(value));
+                value <<= 1;
+            }
+            value = -1;
+            for (int i = 0; i < 7; i++)
+            {
+                Assert.AreEqual(value, TestSByteTwos(value));
+                value <<= 1;
+            }
+        }
+        [Test]
+        public void TestSByteZigZag()
+        {
+            Assert.AreEqual(0, TestSByteZigZag(0));
+            sbyte value = 1;
+            for (int i = 0; i < 7; i++)
+            {
+                Assert.AreEqual(value, TestSByteZigZag(value));
+                value <<= 1;
+            }
+            value = -1;
+            for (int i = 0; i < 7; i++)
+            {
+                Assert.AreEqual(value, TestSByteZigZag(value));
+                value <<= 1;
+            }
+        }
+
+        static byte TestByteTwos(byte value)
+        {
+            return Serializer.DeepClone(new BytePrimatives { ByteTwos = value }).ByteTwos;
+        }
+        static sbyte TestSByteTwos(sbyte value)
+        {
+            return Serializer.DeepClone(new BytePrimatives { SByteTwos = value }).SByteTwos;
+        }
+        static sbyte TestSByteZigZag(sbyte value)
+        {
+            return Serializer.DeepClone(new BytePrimatives { SByteZigZag = value }).SByteZigZag;
+        }
     }
     [DataContract]
     class Primatives
@@ -89,5 +148,18 @@ namespace Examples
         public decimal TestDecimalZigZag { get; set; }
         [ProtoMember(6)]
         public string TestString { get; set; }
+    }
+
+    [ProtoContract]
+    class BytePrimatives
+    {
+        [ProtoMember(1, DataFormat = DataFormat.TwosComplement)]
+        public byte ByteTwos { get; set; }
+
+        [ProtoMember(2, DataFormat = DataFormat.TwosComplement)]
+        public sbyte SByteTwos { get; set; }
+
+        [ProtoMember(3, DataFormat = DataFormat.ZigZag)]
+        public sbyte SByteZigZag { get; set; }
     }
 }

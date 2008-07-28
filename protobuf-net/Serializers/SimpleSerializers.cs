@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
-using ProtoBuf.Serializers;
 
 namespace ProtoBuf
 {
@@ -30,11 +29,13 @@ namespace ProtoBuf
             
             Set<long>(TwosComplementSerializer.Default, ZigZagSerializer.Default, TwosComplementSerializer.Default, FixedSerializer.Default);
             Set<int>(TwosComplementSerializer.Default, ZigZagSerializer.Default, TwosComplementSerializer.Default, FixedSerializer.Default);
-            Set<short>(TwosComplementSerializer.Default, ZigZagSerializer.Default, TwosComplementSerializer.Default, null);
+            Set<short>(ZigZagSerializer.Default, ZigZagSerializer.Default, TwosComplementSerializer.Default, null);
+            Set<sbyte>(ZigZagSerializer.Default, ZigZagSerializer.Default, TwosComplementSerializer.Default, null);
 
             Set<ulong>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, FixedSerializer.Default);
             Set<uint>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, FixedSerializer.Default);
             Set<ushort>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, null);
+            Set<byte>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, null);
             
             Set<string>(StringSerializer.Default);
             Set<byte[]>(BlobSerializer.Default);
