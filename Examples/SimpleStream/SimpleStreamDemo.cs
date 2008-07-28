@@ -203,16 +203,13 @@ namespace Examples.SimpleStream
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    
-                    /* issue logged
                     ProtoSharp.Core.MessageWriter mw = new ProtoSharp.Core.MessageWriter(ms),
                         nullWriter = new ProtoSharp.Core.MessageWriter(Stream.Null);
                     mw.WriteMessage(item);
                     ms.Position = 0;
-                     */
-                    byte[] buffer = pbnetBuffer;
-                    ms.Write(buffer, 0, buffer.Length); // temporary
-                    /*
+
+                    byte[] buffer = ms.ToArray();
+                    
                     psClone = ProtoSharp.Core.MessageReader.Read<T>(buffer);
                     if (expected != null && !Program.ArraysEqual(buffer, expected))
                     {
@@ -225,7 +222,7 @@ namespace Examples.SimpleStream
                     {
                         nullWriter.WriteMessage(item);
                     }
-                    serializeWatch.Stop();*/
+                    serializeWatch.Stop();
                     
                     GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                     deserializeWatch = Stopwatch.StartNew();

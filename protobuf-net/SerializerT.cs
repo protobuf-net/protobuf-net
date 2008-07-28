@@ -15,6 +15,7 @@ namespace ProtoBuf
 #if !CF
         public static string GetProto()
         {
+            if (props == null) Build();
             List<Type> types = new List<Type>();
             WalkTypes(types);
 
@@ -102,16 +103,19 @@ namespace ProtoBuf
         }
 
 #endif
-        private static readonly IProperty<T>[] props;
+        private static IProperty<T>[] props;
 
-        static Serializer()
+
+        internal static void Build()
         {
+            if (props != null) return;
+            props = new IProperty<T>[0]; // to prevent recursion
             if (!Serializer.IsEntityType(typeof(T)))
             {
                 throw new InvalidOperationException("Only concrete data-contract classes can be processed");
             }
             List<IProperty<T>> propList = new List<IProperty<T>>();
-             object[] argsOnePropertyVal = new object[1];
+            object[] argsOnePropertyVal = new object[1];
 
             foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
@@ -148,11 +152,12 @@ namespace ProtoBuf
 
                 if (listItemType != null)
                 {
-                    if(GetListType(listItemType) != null) {
+                    if (GetListType(listItemType) != null)
+                    {
                         throw new NotSupportedException("Nested (jagged) arrays/lists are not supported; consider an array/list of a class-type with an inner array/list instead");
                     }
                 }
-                
+
                 argsOnePropertyVal[0] = prop;
                 if (propType == typeof(byte[]))
                 {   // want to treat byte[] as a special case
@@ -164,25 +169,25 @@ namespace ProtoBuf
                     actualProp = (IProperty<T>)typeof(Serializer<T>)
                         .GetMethod("CreateArrayProperty")
                         .MakeGenericMethod(typeof(T), listItemType)
-                        .Invoke(null, argsOnePropertyVal); 
+                        .Invoke(null, argsOnePropertyVal);
                 }
                 else if (listItemType != null)
                 { // list
-                    actualProp = (IProperty<T>) typeof(Serializer<T>)
+                    actualProp = (IProperty<T>)typeof(Serializer<T>)
                         .GetMethod("CreateListProperty")
                         .MakeGenericMethod(typeof(T), prop.PropertyType, listItemType)
-                        .Invoke(null, argsOnePropertyVal); 
+                        .Invoke(null, argsOnePropertyVal);
                 }
                 else if (Serializer.IsEntityType(propType))
                 { // entity
-                    actualProp = (IProperty<T>) typeof(Serializer<T>)
+                    actualProp = (IProperty<T>)typeof(Serializer<T>)
                         .GetMethod("CreateEntityProperty")
                         .MakeGenericMethod(typeof(T), prop.PropertyType)
                         .Invoke(null, argsOnePropertyVal);
                 }
                 else
                 { // simple value
-                    actualProp = (IProperty<T>) typeof(Serializer<T>)
+                    actualProp = (IProperty<T>)typeof(Serializer<T>)
                         .GetMethod("CreateSimpleProperty")
                         .MakeGenericMethod(typeof(T), prop.PropertyType)
                         .Invoke(null, argsOnePropertyVal);
@@ -192,6 +197,7 @@ namespace ProtoBuf
             propList.Sort(delegate(IProperty<T> x, IProperty<T> y) { return x.Tag.CompareTo(y.Tag); });
             props = propList.ToArray();
         }
+
         private static Type GetListType(Type type)
         {
             if (type.IsArray)
@@ -210,6 +216,7 @@ namespace ProtoBuf
         }
         internal static int Serialize(T instance, Stream destination)
         {
+            if (props == null) Build();
             if (instance == null) throw new ArgumentNullException("instance");
             if (destination == null) throw new ArgumentNullException("destination");
             SerializationContext ctx = new SerializationContext(destination);
@@ -296,6 +303,7 @@ namespace ProtoBuf
 
         internal static void Deserialize(T instance, Stream source)
         {
+            if (props == null) Build();
             if (instance == null) throw new ArgumentNullException("instance");
             if (source == null) throw new ArgumentNullException("source");
             SerializationContext ctx = new SerializationContext(source);

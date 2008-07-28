@@ -7,6 +7,11 @@ namespace ProtoBuf
         public string DefinedType { get { return Serializer.GetDefinedTypeName<TEntity>(); } }
         public WireType WireType { get { return WireType.String; } }
 
+        public EntitySerializer()
+        {
+            Serializer<TEntity>.Build();
+        }
+
         /// <summary>
         /// Regular deserialization is length-prefixed
         /// </summary>
