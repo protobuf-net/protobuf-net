@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
+using ProtoBuf.ProtoBcl;
 
 namespace ProtoBuf
 {
@@ -27,6 +28,10 @@ namespace ProtoBuf
 
     internal sealed class SerializationContext
     {
+        public readonly ProtoDecimal DecimalTemplate = new ProtoDecimal();
+        public readonly ProtoGuid GuidTemplate = new ProtoGuid();
+        public readonly ProtoTimeSpan TimeSpanTemplate = new ProtoTimeSpan();
+
         public const string VerboseSymbol = "VERBOSE", DebugCategory = "protobuf-net";
         private Stack<object> objectStack = new Stack<object>();
         private Stack<int> groupStack;

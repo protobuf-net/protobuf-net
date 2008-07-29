@@ -41,7 +41,7 @@ namespace DAL
         #endregion
 
         public NorthwindDataContext() :
-            base(global::DAL.Properties.Settings.Default.NorthwindConnectionString, mappingSource)
+            base(@"Data Source=.\SQLEXPRESS;Initial Catalog=Northwind;Integrated Security=True", mappingSource)
         {
             OnCreated();
         }

@@ -21,7 +21,11 @@ namespace ProtoBuf
 
         int ISerializer<short>.GetLength(short value, SerializationContext context)
         {
-            return GetLength((int)value);
+            int i = ZigInt32(value);
+
+            if ((i & ~0x007F) == 0) return 1;
+            if ((i & ~0x3FFF) == 0) return 2;
+            return 3;
         }
 
     }

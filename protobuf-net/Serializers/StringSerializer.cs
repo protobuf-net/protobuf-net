@@ -8,7 +8,8 @@ namespace ProtoBuf
         public static readonly StringSerializer Default = new StringSerializer();
         public string DefinedType { get { return ProtoFormat.STRING; } }
         public WireType WireType { get { return WireType.String; } }
-        public int Serialize(string value, SerializationContext context)
+
+        public static int Serialize(string value, SerializationContext context)
         {
             if (value == null) return 0;
             if (value.Length == 0)
@@ -28,16 +29,22 @@ namespace ProtoBuf
             context.Stream.Write(context.Workspace, 0, actualLen);
             return preambleLen + actualLen;
         }
-
-        public int GetLength(string value, SerializationContext context)
+        int ISerializer<string>.Serialize(string value, SerializationContext context)
+        {
+            return Serialize(value, context);
+        }
+        public static int GetLength(string value)
         {
             if (value == null) return 0;
             int preambleLen = TwosComplementSerializer.GetLength(value.Length);
             if (value.Length == 0) return preambleLen;
             return preambleLen + Encoding.UTF8.GetByteCount(value);
         }
-
-        public string Deserialize(string value, SerializationContext context)
+        int ISerializer<string>.GetLength(string value, SerializationContext context)
+        {
+            return GetLength(value);
+        }
+        public static string Deserialize(string value, SerializationContext context)
         {
             int len = TwosComplementSerializer.ReadInt32(context);
             if (len == 0) return "";
@@ -45,6 +52,10 @@ namespace ProtoBuf
             context.CheckSpace(len);
             BlobSerializer.ReadBlock(context, len);
             return Encoding.UTF8.GetString(context.Workspace, 0, len);
+        }
+        string ISerializer<string>.Deserialize(string value, SerializationContext context)
+        {
+            return Deserialize(value, context);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using ProtoBuf.Serializers;
 
 namespace ProtoBuf
 {
@@ -35,14 +36,23 @@ namespace ProtoBuf
             Set<ulong>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, FixedSerializer.Default);
             Set<uint>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, FixedSerializer.Default);
             Set<ushort>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, null);
+            Set<char>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, null);
             Set<byte>(TwosComplementSerializer.Default, null, TwosComplementSerializer.Default, null);
             
             Set<string>(StringSerializer.Default);
             Set<byte[]>(BlobSerializer.Default);
 
+            /*
             Set<DateTime>(ZigZagSerializer.Default, ZigZagSerializer.Default, null, null);
+            Set<TimeSpan>(ZigZagSerializer.Default, ZigZagSerializer.Default, null, null);
             Set<decimal>(TwosComplementSerializer.Default, ZigZagSerializer.Default, TwosComplementSerializer.Default, null);
             Set<Guid>(GuidSerializer.Default, null, null, GuidSerializer.Default);
+             */
+            Set<TimeSpan>(BclSerializer.Default, null, null, null);
+            Set<DateTime>(BclSerializer.Default, null, null, null);
+            Set<decimal>(BclSerializer.Default, null, null, null);
+            Set<Guid>(BclSerializer.Default, null, null, null);
+            Set<Uri>(UriSerializer.Default);
         }
 
         internal static void Set<TValue>(ISerializer<TValue> serializer) 

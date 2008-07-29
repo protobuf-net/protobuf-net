@@ -31,6 +31,7 @@ namespace ProtoBuf
         }
 
         private const long AllButFirstChunk = ~((long)127);
+        private const long AllButFirstTwoChunks = AllButFirstChunk << 7;
 
         internal static int EncodeInt64(long value, SerializationContext context)
         {
@@ -39,6 +40,14 @@ namespace ProtoBuf
             {
                 context.Stream.WriteByte((byte)value);
                 return 1;
+            }
+            else if ((value & AllButFirstTwoChunks) == 0)
+            {
+                int val = (int)value;
+                buffer[0] = (byte)((val & 0x7F) | 0x80);
+                buffer[1] = (byte)(val >> 7);
+                context.Stream.Write(buffer, 0, 2);
+                return 2;
             }
             int lastByte = 0;
             for (int i = 0; i < 10; i++)

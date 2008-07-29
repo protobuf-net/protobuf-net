@@ -42,15 +42,13 @@ namespace ProtoBuf
 
         public static int GetLength(int value)
         {
-            if (value < 0) return 10;
-            value >>= 7;
-            if (value == 0) return 1;
-            value >>= 7;
-            if (value == 0) return 2;
-            value >>= 7;
-            if (value == 0) return 3;
-            value >>= 7;
-            return value == 0 ? 4 : 5;
+            if ((value & ~0x0000007F) == 0) return 1; // 7 bits
+            if ((value & ~0x00003FFF) == 0) return 2; // 14 bits
+            if ((value & ~0x001FFFFF) == 0) return 3; // 21 bits
+            if ((value & ~0x0FFFFFFF) == 0) return 4; // 28 bits
+
+            if ((value & Base128Variant.Int32Msb) == Base128Variant.Int32Msb) return 10; // -ve
+            return 5;
         }
         public int GetLength(int value, SerializationContext context)
         {

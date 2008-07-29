@@ -5,7 +5,7 @@ namespace ProtoBuf
     {
         string ISerializer<int>.DefinedType { get { return ProtoFormat.SINT32; } }
 
-        private static long ZigInt32(int value)
+        private static int ZigInt32(int value)
         {
             return ((value << 1) ^ (value >> 31));
         }

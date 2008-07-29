@@ -38,7 +38,7 @@ namespace ProtoBuf
             return SerializerCache<T>.GetSerializer(format);
         }
 
-        private readonly int tag;
+        private readonly int tag, prefixLength;
         public int Tag { get { return tag; } }
         private readonly string name;
         public string Name { get { return name; } }
@@ -65,6 +65,7 @@ namespace ProtoBuf
                         property.DeclaringType.Name,
                         property.Name));
             }
+            prefixLength = Serializer.GetPrefixLength(tag);
 #if !CF2
             MethodInfo method;
             if (property.CanRead && (method = property.GetGetMethod(true)) != null)
@@ -104,11 +105,6 @@ namespace ProtoBuf
         public virtual Type PropertyType { get { return typeof(TValue); } }
         public virtual bool IsRepeated { get { return false; } }
 
-        protected int GetPrefixLength()
-        {
-            return Serializer.GetPrefixLength(Tag, WireType);
-        }
-
         protected int WriteFieldToken(SerializationContext context)
         {
             return Serializer.WriteFieldToken(Tag, WireType, context);
@@ -117,11 +113,7 @@ namespace ProtoBuf
         protected int GetLength<TActualValue>(TActualValue value, ISerializer<TActualValue> serializer, SerializationContext context)
         {
             int len = serializer.GetLength(value, context);
-            if (len == 0)
-            {
-                return 0;
-            }
-            return GetPrefixLength() + len;
+            return len == 0 ? 0 : prefixLength + len;
         }
         protected int Serialize<TActualValue>(TActualValue value, ISerializer<TActualValue> serializer, SerializationContext context)
         {

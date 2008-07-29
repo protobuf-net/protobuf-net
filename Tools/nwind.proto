@@ -8,11 +8,11 @@ message Order {
    optional int32 OrderID = 1;
    optional string CustomerID = 2;
    optional int32 EmployeeID = 3;
-   optional sint64 OrderDate = 4;
-   optional sint64 RequiredDate = 5;
-   optional sint64 ShippedDate = 6;
+   optional ProtoTimeSpan OrderDate = 4;
+   optional ProtoTimeSpan RequiredDate = 5;
+   optional ProtoTimeSpan ShippedDate = 6;
    optional int32 ShipVia = 7;
-   optional int64 Freight = 8;
+   optional ProtoDecimal Freight = 8;
    optional string ShipName = 9;
    optional string ShipAddress = 10;
    optional string ShipCity = 11;
@@ -25,7 +25,7 @@ message Order {
 message OrderLine {
    optional int32 OrderID = 1;
    optional int32 ProductID = 2;
-   optional int64 UnitPrice = 3;
-   optional int32 Quantity = 4;
+   optional ProtoDecimal UnitPrice = 3;
+   optional sint32 Quantity = 4;
    optional float Discount = 5;
 }

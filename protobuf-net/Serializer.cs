@@ -2,7 +2,7 @@
 using System.IO;
 using System.Reflection;
 using System.Xml.Serialization;
-#if REMOTING
+#if NET_3_0 || REMOTING
 using System.Runtime.Serialization;
 #endif
 
@@ -307,10 +307,13 @@ namespace ProtoBuf
             return name;
         }
         
-        internal static int GetPrefixLength(int tag, WireType wireType)
+        internal static int GetPrefixLength(int tag)
         {
-            int prefix = (tag << 3) | ((int)wireType & 7);
-            return TwosComplementSerializer.GetLength(prefix);
+            if ((tag & ~0x0000000F) == 0) return 1; // 4 bits
+            if ((tag & ~0x000007FF) == 0) return 2; // 11 bits
+            if ((tag & ~0x0003FFFF) == 0) return 3; // 18 bits
+            if ((tag & ~0x01FFFFFF) == 0) return 4; // 25 bits
+            return 5;            
         }
 
         internal static int WriteFieldToken(int tag, WireType wireType, SerializationContext context)

@@ -206,10 +206,29 @@
     <Compile Include="Net\ProtoClient.cs" />
     <Compile Include="Net\ProtoServer.cs" />
     <Compile Include="Property\ArrayProperty.cs" />
+    <Compile Include="ProtoBcl\ProtoDecimal.cs" />
+    <Compile Include="ProtoBcl\ProtoGuid.cs" />
+    <Compile Include="ProtoBcl\ProtoTimeSpan.cs" />
     <Compile Include="ProtoException.cs" />
+    <Compile Include="Serializers\BclSerializer.cs" />
+    <Compile Include="Serializers\BclSerializer_DateTime.cs">
+      <DependentUpon>BclSerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Serializers\BclSerializer_Decimal.cs">
+      <DependentUpon>BclSerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Serializers\BclSerializer_Guid.cs">
+      <DependentUpon>BclSerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Serializers\BclSerializer_TimeSpan.cs">
+      <DependentUpon>BclSerializer.cs</DependentUpon>
+    </Compile>
     <Compile Include="Serializers\GuidSerializer.cs" />
     <Compile Include="Serializers\NullableSerializer.cs" />
     <Compile Include="Serializers\TwosComplementSerializer_Byte.cs">
+      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Serializers\TwosComplementSerializer_Char.cs">
       <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
     </Compile>
     <Compile Include="Serializers\TwosComplementSerializer_Int16.cs">
@@ -221,12 +240,14 @@
     <Compile Include="Serializers\TwosComplementSerializer_UInt16.cs">
       <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Serializers\UriSerializer.cs" />
     <Compile Include="Serializers\ZigZagSerializer_Int16.cs">
       <DependentUpon>ZigZagSerializer.cs</DependentUpon>
     </Compile>
     <Compile Include="Serializers\ZigZagSerializer_SByte.cs">
       <DependentUpon>ZigZagSerializer.cs</DependentUpon>
     </Compile>
+    <Compile Include="Serializers\ZigZagSerializer_TimeSpan.cs" />
     <Compile Include="UnknownType.cs" />
   </ItemGroup>
   <ItemGroup>
