@@ -57,6 +57,13 @@ namespace Nuxleus.Asynchronous {
         #region System Extensions
 
         /// <summary>
+        /// Asynchronously gets request stream from the internet using BeginGetRequestStream method.
+        /// </summary>
+        public static Async<Stream> GetRequestStreamAsync(this WebRequest req) {
+            return new AsyncPrimitive<Stream>(req.BeginGetRequestStream, req.EndGetRequestStream);
+        }
+
+        /// <summary>
         /// Asynchronously gets response from the internet using BeginGetResponse method.
         /// </summary>
         public static Async<WebResponse> GetResponseAsync(this WebRequest req) {
@@ -90,15 +97,6 @@ namespace Nuxleus.Asynchronous {
         /// </summary>
         /// <returns>Returns string using the 'Result' class.</returns>
         public static IEnumerable<IAsync> ReadToEndAsync(this Stream stream) {
-            return stream.ReadToEndAsync<String>();
-        }
-
-        /// <summary>
-        /// Reads asynchronously the entire content of the stream and returns it 
-        /// as a string using StreamReader.
-        /// </summary>
-        /// <param name="returnType">Specifies the desired return type.  The default is System.String.</param>
-        public static IEnumerable<IAsync> ReadToEndAsync<T>(this Stream stream) {
             MemoryStream ms = new MemoryStream();
             int read = -1;
             while (read != 0) {
@@ -108,35 +106,7 @@ namespace Nuxleus.Asynchronous {
                 ms.Write(buffer, 0, count.Result);
                 read = count.Result;
             }
-
-            ms.Seek(0, SeekOrigin.Begin);
-
-            switch (typeof(T).FullName) {
-                case "System.Xml.XmlReader":
-                    yield return new Result<XmlReader>(XmlReader.Create(ms));
-                    break;
-                case "System.Xml.Linq.XDocument":
-                    yield return new Result<XDocument>(XDocument.Parse(new StreamReader(ms).ReadToEnd()));
-                    break;
-                case "System.Xml.Linq.XElement":
-                    yield return new Result<XElement>(XElement.Parse(new StreamReader(ms).ReadToEnd()));
-                    break;
-                case "System.Xml.Linq.XStreamingElement":
-                    yield return new Result<XStreamingElement>(new XStreamingElement("Result", XElement.Parse(new StreamReader(ms).ReadToEnd())));
-                    break;
-                case "System.Xml.Linq.XNode":
-                    yield return new Result<XNode>(XNode.ReadFrom(XmlReader.Create(ms)));
-                    break;
-                case "System.String":
-                    string s = new StreamReader(ms).ReadToEnd();
-                    yield return new Result<string>(s);
-                    break;
-                default:
-                    string sr = new StreamReader(ms).ReadToEnd();
-                    XmlSerializer serializer = new XmlSerializer(typeof(T));
-                    yield return new Result<T>((T)serializer.Deserialize(new StringReader(sr)));
-                    break;
-            }
+            yield return new Result<MemoryStream>(ms);
         }
 
         public static WebResponse HandleWebException(Exception ex, WebRequest request) {

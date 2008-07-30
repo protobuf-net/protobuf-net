@@ -50,7 +50,13 @@
     <Reference Include="mscorlib" />
     <Reference Include="system" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Json, Version=2.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System.Net" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.ServiceModel.PollingDuplex, Version=2.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.ServiceModel.Syndication, Version=2.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Windows" />
     <Reference Include="System.Windows.Browser" />
     <Reference Include="System.Windows.Controls.Data, Version=2.0.5.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
@@ -66,19 +72,26 @@
     <Compile Include="ISerializerTestAgent.cs" />
     <Compile Include="Nuxleus.Asynchronous\Async.cs" />
     <Compile Include="Nuxleus.Asynchronous\AsyncOperation.cs" />
+    <Compile Include="Nuxleus.Asynchronous\NuxleusAsyncResult.cs" />
     <Compile Include="Nuxleus.Asynchronous\ProtoBufOperationAsyncResult.cs" />
     <Compile Include="Nuxleus.Asynchronous\OperationProgressChangedEventArgs.cs" />
     <Compile Include="Nuxleus.Asynchronous\OperationProgressChangedEventHandler.cs" />
+    <Compile Include="Nuxleus.Extension\ExtensionMethods.cs" />
     <Compile Include="Nuxleus.Extension\Substring.cs" />
     <Compile Include="Nuxleus.Messaging\Protobuf\Person.cs" />
     <Compile Include="Nuxleus.MetaData\Label.cs" />
     <Compile Include="Nuxleus.Performance\PerformanceLog.cs" />
     <Compile Include="Nuxleus.Performance\PerformanceTimer.cs" />
+    <Compile Include="Nuxleus.WebService\HttpWebService.cs" />
     <Compile Include="Nuxleus.WebService\IRequest.cs" />
     <Compile Include="Nuxleus.WebService\IResponse.cs" />
     <Compile Include="Nuxleus.WebService\ITask.cs" />
+    <Compile Include="Nuxleus.WebService\PutObject.cs" />
+    <Compile Include="Nuxleus.WebService\PutObjectRequest.cs" />
+    <Compile Include="Nuxleus.WebService\PutObjectResponse.cs" />
     <Compile Include="Nuxleus.WebService\RequestType.cs" />
     <Compile Include="Nuxleus.WebService\WebServiceType.cs" />
+    <Compile Include="Nuxleus.Web\HttpGetAsyncResponse.cs" />
     <Compile Include="Page.xaml.cs">
       <DependentUpon>Page.xaml</DependentUpon>
     </Compile>
@@ -118,7 +131,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="clientaccesspolicy.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="crossdomain.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Default.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

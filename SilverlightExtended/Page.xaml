@@ -2,7 +2,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
     xmlns:data="clr-namespace:System.Windows.Controls;assembly=System.Windows.Controls.Data"
-    Width="1024" Height="700">
+    Width="Auto" Height="Auto">
 
     <Grid x:Name="LayoutRoot" Background="White">
 
@@ -13,8 +13,7 @@
             <TextBox x:Name="feedTextBox" Width="752" Height="300"  Margin="8"  VerticalAlignment="Top" />
         </StackPanel>-->
 
-        <Button Click="btnRunTest_Click" Height="19" Width="100"  Margin="0,50,0,0" VerticalAlignment="Top" HorizontalAlignment="Center" Content="Run Test" x:Name="btnRunTest"/>
-        
+        <Button Click="btnRunTest_Click" Height="19" Width="100"  Margin="0,0,0,750" VerticalAlignment="Bottom" HorizontalAlignment="Center" Content="Run Test" x:Name="btnRunTest"/>
         <!-- DataGrid doesn't support dynamic addition of rows yet -->
         <!--<data:DataGrid x:Name="SummaryGrid" 
             Height="400" Width="1008" Margin="0,5,0,10" 
@@ -56,7 +55,7 @@
                      />
             </data:DataGrid.Columns>
         </data:DataGrid>-->
-        <ListBox x:Name="PerformanceLogList" SelectionChanged="PerformanceLogList_SelectionChanged" Height="600" Margin="8" VerticalAlignment="Bottom">
+        <ListBox x:Name="PerformanceLogList" SelectionChanged="PerformanceLogList_SelectionChanged" Width="Auto" Height="400" Margin="8,0,8,310" VerticalAlignment="Bottom">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -90,6 +89,22 @@
                         <StackPanel Orientation="Horizontal" Margin="3">
                             <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="Total Duration: "/>
                             <TextBlock Style="{StaticResource TitleValue}" Text="{Binding TotalDuration}"/>
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <ListBox x:Name="ConsoleLogList" SelectionChanged="PerformanceLogList_SelectionChanged" Height="300" Width="Auto" Margin="8" VerticalAlignment="Bottom">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="Entry ID: "/>
+                            <TextBlock Style="{StaticResource TitleValue}" Text="{Binding EntryID}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Margin="1" Style="{StaticResource TitleBlock}" Text="Content: "/>
+                            <TextBlock Style="{StaticResource TitleValue}" Text="{Binding Content}"/>
                         </StackPanel>
                     </StackPanel>
                 </DataTemplate>

@@ -22,7 +22,7 @@
     <script type="text/javascript">
 
         var slhost = document.getElementById("slHost");
-        
+
         function GetStatus(id) {
             slhost.content.Silverlight.Future(id);
         }
@@ -70,29 +70,34 @@
     <div id='errorLocation' style="font-size: small; color: Gray;">
     </div>
     <div id="silverlightControlHost">
-        <div>
-            <label>Total ProtoBuf Tests Processed:</label>
-            <span id='counter'>0</span>
-        </div>
-        <div>
-            <label>Percentage Complete:</label>
-            <span id='percentage'>0</span>
-        </div>
-        <div>
-            <label>Start Time:</label>
-            <span id='startTime'>0</span>
-        </div>
-        <div>
-            <label>Finish Time:</label>
-            <span id='finishTime'>0</span>
-        </div>
-        <div>
-            <label>Total Time (in milliseconds):</label>
-            <span id='totalTime'>0</span>
-        </div>
-        <div style="width: 100%; float: left; height: 100%;">
+        <div style="width: 100%; height: 100%;">
+            <div>
+                <label>
+                    Total ProtoBuf Tests Processed:</label>
+                <span id='counter'>0</span>
+            </div>
+            <div>
+                <label>
+                    Percentage Complete:</label>
+                <span id='percentage'>0</span>
+            </div>
+            <div>
+                <label>
+                    Start Time:</label>
+                <span id='startTime'>0</span>
+            </div>
+            <div>
+                <label>
+                    Finish Time:</label>
+                <span id='finishTime'>0</span>
+            </div>
+            <div>
+                <label>
+                    Total Time (in milliseconds):</label>
+                <span id='totalTime'>0</span>
+            </div>
             <object id="slHost" data="data:application/x-silverlight," type="application/x-silverlight-2-b2"
-                width="100%" height="100%">
+                width="100%" height="800px">
                 <param name="source" value="SilverlightExtended.xap" />
                 <param name="onerror" value="onSilverlightError" />
                 <param name="background" value="white" />

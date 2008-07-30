@@ -18,23 +18,25 @@ namespace Nuxleus.Performance {
     }
 
     /// <summary>
-    /// Wraps a Stopwatch object with methods and properties that automate the process of creating, 
-    /// starting, monitoring, and stopping the Stopwatch and logging related data to a PerformanceLog.
+    /// Mimics the basic functionality of System.Diagnostics.Stopwatch for use in Silverlight applications.
+    /// 
+    /// As far as know, there is no way to gain access to the system clock frequency, so the accuracy of this
+    /// Stopwatch is questionable.
     /// </summary>
-    public struct SilverlightPerformance_Hmmm_NotSoMuch_Timer : IDisposable {
+    public struct Stopwatch : IDisposable {
 
         static object obj = new object();
         public delegate void CodeBlock();
         static long m_startTime;
+        static long m_stopTime;
 
         [DefaultValue(UnitPrecision.NANOSECONDS)]
         public static UnitPrecision UnitPrecision { get; set; }
 
         static Stack<long> m_setMarkerStack = new Stack<long>();
         static Stack<long> m_releaseMarkerStack = new Stack<long>();
-        //static long m_freq = Stopwatch.Frequency;
 
-        static SilverlightPerformance_Hmmm_NotSoMuch_Timer() {
+        static Stopwatch() {
             m_startTime = DateTime.Now.Ticks;
             if (UnitPrecision == 0) {
                 //TODO: Read the DefaultValue attribute of the UnitPrecision property and initialize it with that value.
@@ -48,6 +50,8 @@ namespace Nuxleus.Performance {
         /// [name of perf timer object].Duration to get the total duration of the scoped code block. 
         /// 
         /// Scope CodeBlock's can be nested one with another at an infinite depth.
+        /// 
+        /// This property should not be used for timing asynchronous operations.
         /// </summary>
         public CodeBlock Scope {
             set {
@@ -63,6 +67,8 @@ namespace Nuxleus.Performance {
 
         /// <summary>
         /// Provides an automated wrapper for timing an operation and logging a message to a given PerformanceLog
+        /// 
+        /// This method should not be used for timing asynchronous operations.
         /// </summary>
         /// <param name="message">The message to log.</param>
         /// <param name="log">The <typeparamref name="PerformanceLog"/> the message should be written to.</param>
@@ -77,13 +83,6 @@ namespace Nuxleus.Performance {
             }
             return log;
         }
-
-        /// <summary>
-        /// Resets the timer
-        /// </summary>
-        //void Reset() {
-        //    m_stopwatch.Reset();
-        //}
 
         /// <summary>
         /// Set a performance marker
@@ -105,6 +104,28 @@ namespace Nuxleus.Performance {
         }
 
         /// <summary>
+        /// Starts the Stopwatch
+        /// </summary>
+        public void Start() {
+            m_startTime = DateTime.Now.Ticks;
+        }
+
+        /// <summary>
+        /// Stops the Stopwatch
+        /// </summary>
+        public void Stop() {
+            m_stopTime = DateTime.Now.Ticks;
+        }
+
+        /// <summary>
+        /// Resets the Stopwatch
+        /// </summary>
+        public void Reset() {
+            m_startTime = 0L;
+            m_stopTime = 0L;
+        }
+
+        /// <summary>
         /// Returns the duration of time between the last SetMarker and ReleaseMarker added to the stack
         /// </summary>         
         public double Duration {
@@ -122,6 +143,15 @@ namespace Nuxleus.Performance {
             }
         }
 
+        /// <summary>
+        /// Elapsed time in Milliseconds
+        /// </summary>
+        public long ElapsedMilliseconds {
+            get {
+                return TimeSpan.FromTicks((long)GetDuration(m_startTime, DateTime.Now.Ticks)).Milliseconds;
+            }
+        }
+
         double GetDuration(long startTime, long stopTime) {
             return (double)(stopTime - startTime);
         }
@@ -129,7 +159,8 @@ namespace Nuxleus.Performance {
         #region IDisposable Members
 
         public void Dispose() {
-
+            m_startTime = 0L;
+            m_stopTime = 0L;
         }
 
         #endregion

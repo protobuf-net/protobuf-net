@@ -1,14 +1,6 @@
-﻿using System;
-using System.IO;
-using System.Text;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿using System.IO;
+using System.Runtime.Serialization.Json;
 using System.Xml.Serialization;
-using System.Diagnostics;
-using System.ComponentModel;
-using Nuxleus.Performance;
-using ProtoBuf;
-using Nuxleus.MetaData;
 using Nuxleus.Messaging.Protobuf;
 
 namespace Nuxleus.Messaging {
@@ -38,41 +30,21 @@ namespace Nuxleus.Messaging {
             return (T)m_xmlSerializer.Deserialize(stream);
         }
     }
-    //public struct TestJsonSerializer : ISerializerTestAgent {
-    //    static JsonSerializer m_jsonSerializer = new JsonSerializer();
-    //    public object Serializer {
-    //        get {
-    //            return m_jsonSerializer;
-    //        }
-    //    }
-    //    public Stream Serialize<T>(Stream stream, T obj) where T : class, new() {
-    //        JsonWriter jsonWriter = new JsonTextWriter(new StreamWriter(stream));
-    //        m_jsonSerializer.Serialize(jsonWriter, obj);
-    //        jsonWriter.Flush();
-    //        return stream;
-    //    }
-    //    public T Deserialize<T>(Stream stream) where T : class, new() {
-    //        return (T)m_jsonSerializer.Deserialize(new StringReader(new StreamReader(stream).ReadToEnd()), typeof(T));
-    //    }
-    //}
-
-#if NET_3_0
-    public struct TestDataContractSerializer : ISerializerTestAgent {
-        static DataContractSerializer m_dataContractSerializer = new DataContractSerializer(typeof(Person));
+    public struct TestJsonSerializer : ISerializerTestAgent {
+        static DataContractJsonSerializer m_jsonSerializer = new DataContractJsonSerializer(typeof(Person));
         public object Serializer {
             get {
-                return m_dataContractSerializer;
+                return m_jsonSerializer;
             }
         }
         public Stream Serialize<T>(Stream stream, T obj) where T : class, new() {
-            m_dataContractSerializer.WriteObject(stream, obj);
+            m_jsonSerializer.WriteObject(stream, obj);
             return stream;
         }
         public T Deserialize<T>(Stream stream) where T : class, new() {
-            return (T)m_dataContractSerializer.ReadObject(stream);
+            return (T)m_jsonSerializer.ReadObject(stream);
         }
     }
-#endif
     public struct TestProtoBufSerializer : ISerializerTestAgent {
         public object Serializer {
             get {

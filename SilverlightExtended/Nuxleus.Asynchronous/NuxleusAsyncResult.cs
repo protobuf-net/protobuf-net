@@ -1,26 +1,25 @@
 ﻿using System;
 using System.Threading;
-using Nuxleus.Performance;
-using System.Net;
 
-namespace SilverlightExtended {
+namespace Nuxleus.Asynchronous {
 
-    public struct ProtoBufOperationAsyncResult : IAsyncResult {
+    public class NuxleusAsyncResult : IAsyncResult {
 
-        HttpWebRequest m_state;
         Boolean m_isCompleted;
-        AsyncCallback m_cb;
+        AsyncCallback m_cb = null;
+        Object m_asyncState;
+        //public HttpContext m_context = null;
 
-        public ProtoBufOperationAsyncResult(AsyncCallback cb, HttpWebRequest state) {
+        public NuxleusAsyncResult ( AsyncCallback cb, Object extraData ) {
             this.m_cb = cb;
+            m_asyncState = extraData;
             m_isCompleted = false;
-            m_state = state;
         }
 
 
         public object AsyncState {
             get {
-                return m_state;
+                return m_asyncState;
             }
         }
 

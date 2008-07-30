@@ -12,6 +12,9 @@ using Nuxleus.Messaging;
 using Nuxleus.Messaging.Protobuf;
 using Nuxleus.Performance;
 using System.Collections.ObjectModel;
+using Nuxleus.WebService;
+using Nuxleus.Extension;
+using Nuxleus.Asynchronous;
 
 namespace SilverlightExtended {
 
@@ -30,15 +33,19 @@ namespace SilverlightExtended {
         public SerializerPerformanceTestAgent Agent { get; set; }
     }
 
+    public struct LogEntry {
+        public int EntryID { get; set; }
+        public string Content { get; set; }
+    }
+
+
+
     public delegate void RunTestAsync(PerformanceLogSummary summary);
 
     public partial class Page : UserControl {
 
         Queue<PerformanceLog> m_logQueue = new Queue<PerformanceLog>();
         static Object m_lock = new Object();
-
-        // Create a PerformanceTimer to measure performance
-        //static PerformanceTimer timer = new PerformanceTimer();
 
         // Create a SerializerPerformanceTestAgent array which will then allow us to iterate through each 
         // SerializerPerformanceTestAgent contained in the array, keeping our test code clean and simple
@@ -57,6 +64,12 @@ namespace SilverlightExtended {
                 PerformanceLogCollection = new PerformanceLogCollection(), 
                 FileExtension = "xml"
             },
+            new SerializerPerformanceTestAgent{ 
+                TypeLabel = "JSON", 
+                ISerializerTestAgent = new TestJsonSerializer(), 
+                PerformanceLogCollection = new PerformanceLogCollection(), 
+                FileExtension = "json"
+            },
         };
 
         int totalCount = 0;
@@ -71,11 +84,14 @@ namespace SilverlightExtended {
             InitializeComponent();
             Loaded += new RoutedEventHandler(Page_Loaded);
             jsUpdateElement = (ScriptObject)HtmlPage.Window.GetProperty("updateElement");
+
         }
 
         void Page_Loaded(object sender, RoutedEventArgs e) {
             HtmlPage.RegisterScriptableObject("Silverlight", this);
-            //PerformanceLogList.SelectedIndex = -1;
+            PerformanceLogList.SelectedIndex = -1;
+            //TODO: At present time the DataGrid control doesn't support adding new rows dynamically.
+            //for now I'm just using a ListBox, but this is less desirable obviously.
             //SummaryGrid.ItemsSource = new ObservableCollection<PerformanceLogSummary>();
         }
 
@@ -84,40 +100,133 @@ namespace SilverlightExtended {
             //Future use
         }
 
+        private void btnRunTest_Click(object sender, RoutedEventArgs e) {
+            DispatcherTimer dispatcherTimer = new DispatcherTimer();
+            dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
+            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
+            dispatcherTimer.Start();
+            StartSerializationTest(repeatTest);
+        }
+
         private void StartSerializationTest(int repeatTest) {
 
-            SilverlightPerformance_Hmmm_NotSoMuch_Timer timer = new SilverlightPerformance_Hmmm_NotSoMuch_Timer();
-
-            using (timer) {
-                timer.Scope = () => {
-                    for (int i = 0; i < repeatTest; i++) {
-                        foreach (SerializerPerformanceTestAgent agent in serializerPeformanceItem) {
-                            WebClient webClient = null;
-
-                            lock (m_lock) {
-                                if (webClientQueue.Count == 0) {
-                                    webClient = new WebClient();
-                                } else {
-                                    webClient = webClientQueue.Dequeue();
-                                }
-                            }
-
-                            webClient.DownloadProgressChanged += new DownloadProgressChangedEventHandler(webClient_DownloadProgressChanged);
-                            webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(webClient_DownloadStringCompleted);
-
-                            m_logQueue.Enqueue(RunSerializationTest((long)i, agent));
-
-                            Uri uri = new Uri(String.Format("http://localhost:9999/Person_{0}.xml", i), UriKind.Absolute);
-                            webClient.DownloadStringAsync(uri);
-                        }
-                    }
-                };
-                finishTime = DateTime.Now;
+            for (int i = 0; i < repeatTest; i++) {
+                foreach (SerializerPerformanceTestAgent agent in serializerPeformanceItem) {
+                    agent.PerformanceLogCollection.Add(RunSerializationTest(i, agent));
+                }
             }
         }
 
-        void webClient_DownloadProgressChanged(object sender, DownloadProgressChangedEventArgs e) {
 
+        public PerformanceLog RunSerializationTest(long sequenceID, SerializerPerformanceTestAgent agent) {
+            
+
+            Stopwatch timer = new Stopwatch();
+            Stopwatch.UnitPrecision = UnitPrecision.NANOSECONDS;
+            PerformanceLog perfLog = new PerformanceLog {
+                Entries = new List<Entry>(),
+                UnitPrecision = Stopwatch.UnitPrecision
+            };
+
+            if (totalCount == 0) {
+                startTime = DateTime.Now;
+                UpdateUI(() => jsUpdateElement.InvokeSelf("startTime", startTime));
+            }
+
+            Person person = null;
+
+            Uri uri = new Uri(String.Format("http://localhost:9999/Person_{0}.xml", sequenceID), UriKind.Absolute);
+
+            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(uri);
+
+            int id = (int)sequenceID;
+
+            using (timer) {
+
+                timer.Scope = () => {
+                    timer.LogScope("Create a Person object", perfLog, PerformanceLogEntryType.CompiledObjectCreation, () => {
+                        person = CreatePerson(sequenceID);
+                    });
+                    Stream serializedMemoryStream = null;
+
+                    timer.LogScope("Serialize the Person object to a MemoryStream", perfLog, PerformanceLogEntryType.Serialization, () => {
+                        serializedMemoryStream = SerializeToStream<Person>(person, null, agent.ISerializerTestAgent);
+                    }).LogData("Length (in bytes) of memoryStream", serializedMemoryStream.Length, PerformanceLogEntryType.StreamSize);
+
+
+                    timer.LogScope("Send the serialized MemoryStream to S3", perfLog, PerformanceLogEntryType.SendSerializedObjectTime, () => {
+                        //client.OpenWriteAsync(uri);
+                    });
+
+                    timer.LogScope("Request the serialized object back from S3", perfLog, PerformanceLogEntryType.ReceiveSerializedObjectTime, () => {
+                        request.BeginGetResponse(new AsyncCallback(ReadCallback), request);
+                    });
+
+                    Person newPersonFromMemoryStream = null;
+
+                    using (serializedMemoryStream) {
+                        timer.LogScope("Deserialize and parse the Person object from a MemoryStream", perfLog, PerformanceLogEntryType.Deserialization, () => {
+                            newPersonFromMemoryStream = DeserializeFromStream<Person>(serializedMemoryStream, agent.ISerializerTestAgent);
+                        });
+                    }
+
+                    CompareValuesAndLogResults(person, newPersonFromMemoryStream, perfLog, typeof(MemoryStream), PerformanceLogEntryType.DeserializationCorrect);
+
+                };
+                perfLog.LogData("Duration of test", timer.Duration, PerformanceLogEntryType.TotalDuration);
+            }
+
+            return perfLog;
+        }
+
+        void LogInfo(int id, string info) {
+            Dispatcher.BeginInvoke(() => ConsoleLogList.Items.Add(new LogEntry { EntryID = id, Content = info }));
+        }
+
+        void ReadCallback(IAsyncResult asyncResult) {
+            lock (m_lock) {
+                totalCount += 1;
+                UpdateUI(() => jsUpdateElement.InvokeSelf("counter", totalCount));
+                percentageComplete = Decimal.Divide((Decimal.Divide((decimal)totalCount, (decimal)repeatTest)), serializerPeformanceItem.Count()) * 100;
+            }
+            HttpWebRequest request = (HttpWebRequest)asyncResult.AsyncState;
+            HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(asyncResult);
+            using (Stream stream = response.GetResponseStream()) {
+                LogInfo(1, "Foo");
+            }
+
+            UpdateUI(() => jsUpdateElement.InvokeSelf("percentage", percentageComplete));
+            if (percentageComplete == 100) {
+                finishTime = DateTime.Now;
+                UpdateUI(() => {
+                    jsUpdateElement.InvokeSelf("finishTime", finishTime);
+                    jsUpdateElement.InvokeSelf("totalTime", finishTime.Subtract(startTime).TotalMilliseconds);
+                });
+            }
+        }
+
+        void UpdateUI(Action action) {
+            Dispatcher.BeginInvoke(action);
+        }
+
+
+        void ProcessResponseStream(Stream stream) {
+            if (totalCount == 0) {
+                startTime = DateTime.Now;
+                jsUpdateElement.InvokeSelf("startTime", startTime);
+            }
+            lock (m_lock) {
+                totalCount += 1;
+                percentageComplete = Decimal.Divide((Decimal.Divide((decimal)totalCount, (decimal)repeatTest)), serializerPeformanceItem.Count()) * 100;
+            }
+            jsUpdateElement.InvokeSelf("counter", totalCount);
+            jsUpdateElement.InvokeSelf("percentage", percentageComplete);
+
+            if (percentageComplete == 100) {
+                finishTime = DateTime.Now;
+                jsUpdateElement.InvokeSelf("finishTime", finishTime);
+                jsUpdateElement.InvokeSelf("totalTime", finishTime.Subtract(startTime).TotalMilliseconds);
+            }
         }
 
         //ObservableCollection<PerformanceLogSummary> BoundData {
@@ -147,7 +256,6 @@ namespace SilverlightExtended {
                                   Value = entry.Value,
                                   EntryType = entry.PerformanceLogEntryType
                               };
-                //HtmlPage.Window.Alert(summary.Count().ToString());
 
                 PerformanceLogSummary perfLogSummary = new PerformanceLogSummary();
                 perfLogSummary.Sequence = totalCount;
@@ -182,9 +290,8 @@ namespace SilverlightExtended {
                             break;
                         default:
                             break;
-
                     }
-                    
+
                 }
                 perfLogSummary.DeserializationWasCorrect = !deserializationWasCorrect.Contains(false);
                 PerformanceLogList.Items.Add(perfLogSummary);
@@ -206,13 +313,7 @@ namespace SilverlightExtended {
 
 
 
-        private void btnRunTest_Click(object sender, RoutedEventArgs e) {
-            DispatcherTimer dispatcherTimer = new DispatcherTimer();
-            dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
-            dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
-            dispatcherTimer.Start();
-            StartSerializationTest(repeatTest);
-        }
+
 
         private void dispatcherTimer_Tick(object sender, EventArgs e) {
             //Add any operations you want performed every X intervals, X representing the TimeSpan
@@ -220,17 +321,17 @@ namespace SilverlightExtended {
         }
 
         void RunTest(int repeatTest) {
-            SilverlightPerformance_Hmmm_NotSoMuch_Timer timer = new SilverlightPerformance_Hmmm_NotSoMuch_Timer();
+            Stopwatch timer = new Stopwatch();
 
-            using (timer) {
-                timer.Scope = () => {
-                    for (int i = 0; i < repeatTest; i++) {
-                        foreach (SerializerPerformanceTestAgent agent in serializerPeformanceItem) {
-                            PerformanceLog result = RunSerializationTest((long)i, agent);
-                        }
-                    }
-                };
-            }
+            //using (timer) {
+            //    timer.Scope = () => {
+            //        for (int i = 0; i < repeatTest; i++) {
+            //            foreach (SerializerPerformanceTestAgent agent in serializerPeformanceItem) {
+            //                PerformanceLog result = RunSerializationTest((long)i, agent);
+            //            }
+            //        }
+            //    };
+            //}
 
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(PerformanceLogCollection));
 
@@ -245,54 +346,7 @@ namespace SilverlightExtended {
 
         }
 
-        public PerformanceLog RunSerializationTest(long fileSequence, SerializerPerformanceTestAgent agent) {
 
-            SilverlightPerformance_Hmmm_NotSoMuch_Timer timer = new SilverlightPerformance_Hmmm_NotSoMuch_Timer();
-            SilverlightPerformance_Hmmm_NotSoMuch_Timer.UnitPrecision = UnitPrecision.NANOSECONDS;
-            PerformanceLog perfLog = new PerformanceLog { 
-                Entries = new List<Entry>(), 
-                UnitPrecision = SilverlightPerformance_Hmmm_NotSoMuch_Timer.UnitPrecision 
-            };
-            Person person = null;
-
-            using (timer) {
-                timer.Scope = () => {
-
-                    timer.LogScope("Create a Person object", perfLog, PerformanceLogEntryType.CompiledObjectCreation, () => {
-                        person = CreatePerson(fileSequence);
-                    });
-
-                    Stream memoryStream = null;
-
-                    timer.LogScope("Serialize the Person object to a MemoryStream", perfLog, PerformanceLogEntryType.Serialization, () => {
-                        memoryStream = SerializeToStream<Person>(person, null, agent.ISerializerTestAgent);
-                    }).LogData("Length (in bytes) of memoryStream", memoryStream.Length, PerformanceLogEntryType.StreamSize);
-
-                    Person newPersonFromMemoryStream = null;
-
-                    using (memoryStream) {
-                        timer.LogScope("Deserialize and parse the Person object from a MemoryStream", perfLog, PerformanceLogEntryType.Deserialization, () => {
-                            newPersonFromMemoryStream = DeserializeFromStream<Person>(memoryStream, agent.ISerializerTestAgent);
-                        });
-                    }
-
-                    CompareValuesAndLogResults(person, newPersonFromMemoryStream, perfLog, typeof(MemoryStream), PerformanceLogEntryType.DeserializationCorrect);
-
-
-                    //TODO: Store the uncompressed serialized object on S3
-
-                    //TODO: Retrieve the uncompressed serialized object from S3 and deserialize into a MemoryStream
-
-                    //TODO: Compress and store the serialized object on S3
-
-                    //TODO: Retrieve the compressed serialized object from S3 and deserialize into a MemoryStream
-
-                };
-                perfLog.LogData("Duration of test", timer.Duration, PerformanceLogEntryType.TotalDuration);
-            }
-
-            return perfLog;
-        }
 
         static Person CreatePerson(long fileSequence) {
 

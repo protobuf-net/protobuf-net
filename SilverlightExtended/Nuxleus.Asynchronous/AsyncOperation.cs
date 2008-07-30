@@ -30,24 +30,24 @@ namespace SilverlightExtended {
             reportOperationProgressChanged = new SendOrPostCallback(ReportOperationProgressChanged);
         }
 
-        public IAsyncResult BeginOperation(SerializerPerformanceTestAgent agent, AsyncOperation asyncOp, AsyncCallback callback, PerformanceLog perfLog) {
+        //public IAsyncResult BeginOperation(SerializerPerformanceTestAgent agent, AsyncOperation asyncOp, AsyncCallback callback, PerformanceLog perfLog) {
             
-            IAsyncResult result = new ProtoBufOperationAsyncResult(callback, perfLog);
+        //    //IAsyncResult result = new ProtoBufOperationAsyncResult(callback, perfLog);
 
-            //RunSerializationTest(m_progress.TotalTasksCompleted, agent);
+        //    //RunSerializationTest(m_progress.TotalTasksCompleted, agent);
             
-            m_progress.TotalTasksCompleted += 1;
+        //    m_progress.TotalTasksCompleted += 1;
 
             
-            //if (OperationProgressChanged != null) {
-            //    OperationProgressChanged(this, args);
-            //}
-            if (callback != null) {
-                callback(result);
-            }
+        //    //if (OperationProgressChanged != null) {
+        //    //    OperationProgressChanged(this, args);
+        //    //}
+        //    if (callback != null) {
+        //        callback(result);
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
 
         private void ReportOperationProgressChanged(object arg) {
             OnOperationProgressChanged((OperationProgressChangedEventArgs)arg);
