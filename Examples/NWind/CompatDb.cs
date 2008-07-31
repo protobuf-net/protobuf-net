@@ -68,27 +68,12 @@ namespace DAL
 
         void IXmlSerializable.ReadXml(System.Xml.XmlReader reader)
         {
-            const int LEN = 4096;
-            byte[] buffer = new byte[LEN];
-            int read;
-            using (MemoryStream ms = new MemoryStream())
-            {
-                while ((read = reader.ReadElementContentAsBase64(buffer, 0, LEN)) > 0)
-                {
-                    ms.Write(buffer, 0, read);
-                }
-                ms.Position = 0;
-                Serializer.Merge(ms, this);
-            }
+            Serializer.Merge(reader, this);
         }
 
         void IXmlSerializable.WriteXml(System.Xml.XmlWriter writer)
         {
-            using(MemoryStream ms = new MemoryStream()) {
-                Serializer.Serialize(ms, this);
-                writer.WriteBase64(ms.GetBuffer(), 0, (int)ms.Length);
-            }
-            
+            Serializer.Serialize(writer, this);            
         }
 
         #endregion

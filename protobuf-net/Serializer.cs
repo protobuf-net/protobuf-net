@@ -185,6 +185,47 @@ namespace ProtoBuf
                 Merge<T>(ms, instance);
             }
         }
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied XmlWriter.
+        /// </summary>
+        /// <typeparam name="T">The type being serialized.</typeparam>
+        /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="writer">The destination XmlWriter to write to.</param>
+        public static void Serialize<T>(System.Xml.XmlWriter writer, T instance) where T : class, IXmlSerializable, new()
+        {
+            if (writer == null) throw new ArgumentNullException("writer");
+            if (instance == null) throw new ArgumentNullException("instance");
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, instance);
+                writer.WriteBase64(ms.GetBuffer(), 0, (int)ms.Length);
+            }
+        }
+        /// <summary>
+        /// Applies a protocol-buffer from an XmlReader to an existing instance.
+        /// </summary>
+        /// <typeparam name="T">The type being merged.</typeparam>
+        /// <param name="instance">The existing instance to be modified (cannot be null).</param>
+        /// <param name="reader">The XmlReader containing the data to apply to the instance (cannot be null).</param>
+        public static void Merge<T>(System.Xml.XmlReader reader, T instance) where T : class, IXmlSerializable, new()
+        {
+            if (reader == null) throw new ArgumentNullException("reader");
+            if (instance == null) throw new ArgumentNullException("instance");
+        
+            const int LEN = 4096;
+            byte[] buffer = new byte[LEN];
+            int read;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                while ((read = reader.ReadElementContentAsBase64(buffer, 0, LEN)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+                ms.Position = 0;
+                Serializer.Merge(ms, instance);
+            }
+        }
 #endif
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
