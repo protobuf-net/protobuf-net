@@ -5,6 +5,7 @@ namespace ProtoBuf
     internal sealed class UriSerializer : ISerializer<Uri>
     {
         private UriSerializer() { }
+        
         public static UriSerializer Default = new UriSerializer();
         Uri ISerializer<Uri>.Deserialize(Uri value, SerializationContext context)
         {

@@ -48,5 +48,17 @@ namespace ProtoBuf
         /// </summary>
         public bool IsRequired { get { return isRequired; } set { isRequired = value; } }
         private bool isRequired;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to encode this member as a group
+        /// (with a start and end marker), instead of with a length-prefix.
+        /// This only applies when serializing (writing)
+        /// nested messages, and can avoid repeated reads to "firehose" (one read only) data -
+        /// but groups are less well supported. When deserializing (reading), the system
+        /// will accept groups or length-prefixed data without distinction.
+        /// </summary>
+        /// 
+        public bool IsGroup { get { return isGroup; } set { isGroup = value; } }
+        private bool isGroup;
     }
 }

@@ -5,6 +5,7 @@ namespace ProtoBuf
     internal sealed class EntitySerializer<TEntity> : IGroupSerializer<TEntity> where TEntity : class, new()
     {
         public string DefinedType { get { return Serializer.GetDefinedTypeName<TEntity>(); } }
+        
         public WireType WireType { get { return WireType.String; } }
 
         public EntitySerializer()
@@ -18,6 +19,7 @@ namespace ProtoBuf
         public TEntity Deserialize(TEntity value, SerializationContext context)
         {
             if (value == null) value = new TEntity();
+
             int len = TwosComplementSerializer.ReadInt32(context);
             if (len > 0)
             {
@@ -53,14 +55,23 @@ namespace ProtoBuf
         /// </summary>
         public int Serialize(TEntity value, SerializationContext context)
         {
-            if (value == null) return 0;
-            List<IProperty<TEntity>> candidateProperties = new List<IProperty<TEntity>>();
-            int expectedLen = Serializer<TEntity>.GetLength(value, context, candidateProperties);
-            int preambleLen = TwosComplementSerializer.WriteToStream(expectedLen, context);
+            if (value == null)
+            {
+                return TwosComplementSerializer.WriteToStream(0, context);
+            }
 
-            int actualLen = Serializer<TEntity>.Serialize(value, context, candidateProperties.ToArray());
+            List<IProperty<TEntity>> candidateProperties = new List<IProperty<TEntity>>();
+            int expectedLen = Serializer<TEntity>.GetLength(value, context, candidateProperties),
+                preambleLen = TwosComplementSerializer.WriteToStream(expectedLen, context),
+                actualLen = expectedLen == 0 ? 0 : Serializer<TEntity>.Serialize(value, context, candidateProperties.ToArray());
+
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
             return preambleLen + actualLen;
+        }
+
+        public int SerializeGroup(TEntity value, SerializationContext context)
+        {
+            return Serializer<TEntity>.Serialize(value, context, null);
         }
 
         /// <summary>
@@ -70,7 +81,13 @@ namespace ProtoBuf
         {
             if (value == null) return 0;
             int len = Serializer<TEntity>.GetLength(value, context, null);
-            return TwosComplementSerializer.GetLength(len) + len;
+            if (len >= 0) len += TwosComplementSerializer.GetLength(len);
+            return len;
+        }
+
+        public int GetLengthGroup(TEntity value, SerializationContext context)
+        {
+            return value == null ? 0 : Serializer<TEntity>.GetLength(value, context, null);
         }
     }
 }

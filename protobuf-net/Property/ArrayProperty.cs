@@ -4,46 +4,34 @@ using System.Reflection;
 
 namespace ProtoBuf
 {
-    internal sealed class ArrayProperty<TEntity, TValue> : PropertyBase<TEntity, TValue[]>, IGroupProperty<TEntity>
+    internal sealed class ArrayProperty<TEntity, TValue> : PropertyBase<TEntity, TValue[], TValue>
         where TEntity : class, new()
     {
         public ArrayProperty(PropertyInfo property)
             : base(property)
         {
-            serializer = GetSerializer<TValue>(property);
         }
-
-        private readonly ISerializer<TValue> serializer;
-
-        public override string DefinedType { get { return serializer.DefinedType; } }
-        public override WireType WireType { get { return serializer.WireType; } }
-        public override Type PropertyType { get { return typeof(TValue);} }
+        protected override bool HasValue(TValue[] arr)
+        {
+            return arr != null && arr.Length > 0;
+        }
         public override bool IsRepeated { get { return true; } }
 
-        public override int Serialize(TEntity instance, SerializationContext context)
+        public override int Serialize(TValue[] arr, SerializationContext context)
         { // write all items in a contiguous block
-            TValue[] arr = GetValue(instance);
             int total = 0;
-            if (arr != null && arr.Length > 0)
+            for (int i = 0; i < arr.Length; i++)
             {
-                for (int i = 0; i < arr.Length; i++)
-                {
-                    total += Serialize(arr[i], serializer, context);
-                }
+                total += SerializeValue(arr[i], context);
             }
-
             return total;
         }
-        public override int GetLength(TEntity instance, SerializationContext context)
+        protected override int GetLengthImpl(TValue[] arr, SerializationContext context)
         {
-            TValue[] arr = GetValue(instance);
             int total = 0;
-            if (arr != null && arr.Length > 0)
+            for (int i = 0; i < arr.Length; i++)
             {
-                for (int i = 0; i < arr.Length; i++)
-                {
-                    total += GetLength(arr[i], serializer, context);
-                }
+                total += GetValueLength(arr[i], context);
             }
             return total;
         }
@@ -71,20 +59,13 @@ namespace ProtoBuf
         }
         public override void Deserialize(TEntity instance, SerializationContext context)
         {   // read a single item
-            AddItem(instance, serializer.Deserialize(default(TValue), context));
+            AddItem(instance, ValueSerializer.Deserialize(default(TValue), context));
         }
 
-        public void DeserializeGroup(TEntity instance, SerializationContext context)
+        public override void DeserializeGroup(TEntity instance, SerializationContext context)
         {
-            // the list could be of anything... need to check if the serializer
-            // supports group usage (i.e. entities)
-            IGroupSerializer<TValue> groupSerializer = serializer as IGroupSerializer<TValue>;
-            if (groupSerializer == null)
-            {
-                throw new ProtoException("Cannot treat property as a group: " + Name);
-            }
             // read a single item
-            AddItem(instance, groupSerializer.DeserializeGroup(default(TValue), context));
+            AddItem(instance, GroupSerializer.DeserializeGroup(default(TValue), context));
         }
     }
 }

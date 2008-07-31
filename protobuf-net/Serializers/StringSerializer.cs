@@ -5,6 +5,7 @@ namespace ProtoBuf
     internal sealed class StringSerializer : ISerializer<string>
     {
         private StringSerializer() { }
+        
         public static readonly StringSerializer Default = new StringSerializer();
         public string DefinedType { get { return ProtoFormat.STRING; } }
         public WireType WireType { get { return WireType.String; } }

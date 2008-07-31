@@ -5,7 +5,7 @@ namespace ProtoBuf
     {
         private BooleanSerializer() { }
         public static readonly BooleanSerializer Default = new BooleanSerializer();
-
+        
         public string DefinedType { get { return ProtoFormat.BOOL; } }
         public WireType WireType { get { return WireType.Variant; } }
 

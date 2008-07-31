@@ -6,13 +6,14 @@ using System.Text;
 
 namespace ProtoBuf
 {
-    internal abstract class PropertyBase<TEntity, TValue> : IProperty<TEntity> where TEntity : class, new()
+
+    internal delegate TValue Getter<TEntity, TValue>(TEntity instance) where TEntity : class;
+    internal delegate void Setter<TEntity, TValue>(TEntity instance, TValue value) where TEntity : class;
+
+    internal abstract class PropertyBase<TEntity, TProperty, TValue> : IProperty<TEntity>
+        where TEntity : class, new()
     {
-#if !CF2
-        internal delegate TValue Getter(TEntity instance);
-        internal delegate void Setter(TEntity instance, TValue value);
-#endif
-        public virtual object DefaultValue
+        public object DefaultValue
         {
             get
             {
@@ -38,6 +39,8 @@ namespace ProtoBuf
             return SerializerCache<T>.GetSerializer(format);
         }
 
+        protected abstract bool HasValue(TProperty value);
+
         private readonly int tag, prefixLength;
         public int Tag { get { return tag; } }
         private readonly string name;
@@ -49,15 +52,17 @@ namespace ProtoBuf
 
         private readonly PropertyInfo property;
         public PropertyInfo Property { get { return property; } }
-#if !CF2
-        private readonly Getter getter;
-        private readonly Setter setter;
-#endif
+
+        protected readonly Getter<TEntity, TProperty> GetValue;
+        protected readonly Setter<TEntity, TProperty> SetValue;
+
+        private readonly bool isGroup;
+        public bool IsGroup { get { return isGroup; } }
         protected PropertyBase(PropertyInfo property)
         {
             if (property == null) throw new ArgumentNullException("property");
             this.property = property;
-            if (!Serializer.TryGetTag(property, out tag, out name, out dataFormat, out isRequired))
+            if (!Serializer.TryGetTag(property, out tag, out name, out dataFormat, out isRequired, out isGroup))
             {
                 throw new ArgumentOutOfRangeException(
                     string.Format(
@@ -66,69 +71,98 @@ namespace ProtoBuf
                         property.Name));
             }
             prefixLength = Serializer.GetPrefixLength(tag);
-#if !CF2
+
+            this.ValueSerializer = GetSerializer<TValue>(property);
+            this.groupSerializer = ValueSerializer as IGroupSerializer<TValue>;
+
             MethodInfo method;
             if (property.CanRead && (method = property.GetGetMethod(true)) != null)
             {
-                getter = (Getter)Delegate.CreateDelegate(typeof(Getter), null, method);
+#if CF2
+                GetValue = delegate(TEntity instance) { return (TProperty)property.GetValue(instance, null); };
+#else
+                GetValue = (Getter<TEntity, TProperty>)Delegate.CreateDelegate(typeof(Getter<TEntity, TProperty>), null, method); 
+#endif
+
             }
             if (property.CanWrite && (method = property.GetSetMethod(true)) != null)
             {
-                setter = (Setter)Delegate.CreateDelegate(typeof(Setter), null, method);
+#if CF2
+                SetValue = delegate(TEntity instance, TProperty value) { property.SetValue(instance, value, null); };
+#else
+                SetValue = (Setter<TEntity, TProperty>)Delegate.CreateDelegate(typeof(Setter<TEntity, TProperty>), null, method);
+#endif
             }
-#endif
-        }
 
-        protected TValue GetValue(TEntity instance)
-        {
-#if CF2
-            return (TValue)property.GetValue(instance,null);
-#else
-            return getter(instance);
-#endif
-        }
-
-        protected void SetValue(TEntity instance, TValue value)
-        {
-#if CF2
-            property.SetValue(instance,value, null);
-#else
-            setter(instance, value);
-#endif
         }
 
         public abstract void Deserialize(TEntity instance, SerializationContext context);
-        public abstract int Serialize(TEntity instance, SerializationContext context);
-        public abstract int GetLength(TEntity instance, SerializationContext context);
-        public abstract WireType WireType { get; }
-        public abstract string DefinedType { get; }
-        public virtual Type PropertyType { get { return typeof(TValue); } }
+        public abstract void DeserializeGroup(TEntity instance, SerializationContext context);
+
+        public int Serialize(TEntity instance, SerializationContext context)
+        {
+            TProperty value = GetValue(instance);
+            return HasValue(value) ? Serialize(value, context) : 0;
+        }
+
+        public abstract int Serialize(TProperty value, SerializationContext context);
+
+        public int GetLength(TEntity instance, SerializationContext context)
+        {
+            TProperty value = GetValue(instance);
+            return HasValue(value) ? GetLengthImpl(value, context) : 0;
+        }
+
+        protected readonly ISerializer<TValue> ValueSerializer;
+
+        private readonly IGroupSerializer<TValue> groupSerializer;
+        protected IGroupSerializer<TValue> GroupSerializer
+        {
+            get
+            {
+                if (groupSerializer == null) throw new ProtoException("Cannot treat property as a group: " + Name);
+                return groupSerializer;
+            }
+        }
+                
+
+        protected abstract int GetLengthImpl(TProperty instance, SerializationContext context);
+
+        public WireType WireType { get { return ValueSerializer.WireType; } }
+        public string DefinedType { get { return ValueSerializer.DefinedType; } }
+
+        public Type PropertyType { get { return typeof(TProperty); } }
         public virtual bool IsRepeated { get { return false; } }
 
-        protected int WriteFieldToken(SerializationContext context)
+        protected int GetValueLength(TValue value, SerializationContext context)
         {
-            return Serializer.WriteFieldToken(Tag, WireType, context);
+            if (isGroup)
+            {
+                return prefixLength + prefixLength + GroupSerializer.GetLengthGroup(value, context);
+            }
+            else
+            {
+                int len = ValueSerializer.GetLength(value, context);
+                return len == 0 ? 0 : prefixLength + len;
+            }
         }
-
-        protected int GetLength<TActualValue>(TActualValue value, ISerializer<TActualValue> serializer, SerializationContext context)
+        protected int SerializeValue(TValue value, SerializationContext context)
         {
-            int len = serializer.GetLength(value, context);
-            return len == 0 ? 0 : prefixLength + len;
-        }
-        protected int Serialize<TActualValue>(TActualValue value, ISerializer<TActualValue> serializer, SerializationContext context)
-        {
-            // TODO: add a "ShouldSerialize" instead of this
-            int expectedLen = serializer.GetLength(value, context);
-            if (expectedLen == 0) return 0;
-            int prefixLen = WriteFieldToken(context),
-                actualLen = serializer.Serialize(value, context);
-
+            
             Trace(false, value, context);
 
-            Serializer.VerifyBytesWritten(expectedLen, actualLen);
-            return prefixLen + actualLen;
+            if (isGroup)
+            {
+                return Serializer.WriteFieldToken(Tag, WireType.StartGroup, context)
+                    + GroupSerializer.SerializeGroup(value, context)
+                    + Serializer.WriteFieldToken(Tag, WireType.EndGroup, context);
+            }
+            else
+            {
+                return Serializer.WriteFieldToken(Tag, WireType, context)
+                    + ValueSerializer.Serialize(value, context);
+            }
         }
-
 
         [Conditional(SerializationContext.VerboseSymbol)]
         protected void Trace(bool read, object value, SerializationContext context)

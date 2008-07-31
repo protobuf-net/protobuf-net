@@ -8,6 +8,7 @@ namespace ProtoBuf
         string Name { get; }
         DataFormat DataFormat { get; }
         bool IsRequired { get; }
+        bool IsGroup { get; }
         int Tag { get; }
 #if !CF
         string Description { get; }
@@ -22,13 +23,7 @@ namespace ProtoBuf
         bool IsRepeated { get; }
 
         int GetLength(TEntity instance, SerializationContext context);
-    }
 
-    /// <summary>
-    /// Additional support for properties that can handle grouped (rather than length-prefixed) data (entities)
-    /// </summary>
-    internal interface IGroupProperty<T> : IProperty<T>
-    {
-        void DeserializeGroup(T instance, SerializationContext context);
+        void DeserializeGroup(TEntity instance, SerializationContext context);
     }
 }

@@ -60,10 +60,10 @@ namespace ProtoBuf
             SerializerCache<TValue>.Set(serializer, null, null, null);
         }
 
-        private static ISerializer<T?> Wrap<T>(ISerializer<T> serializer) where T : struct
-        {
-            return serializer == null ? null : new NullableSerializer<T>(serializer);
-        }
+        //private static ISerializer<T?> Wrap<T>(ISerializer<T> serializer) where T : struct
+        //{
+        //    return serializer == null ? null : new NullableSerializer<T>(serializer);
+        //}
 
         private static void Set<TValue>(
             ISerializer<TValue> @default,
@@ -72,7 +72,7 @@ namespace ProtoBuf
             ISerializer<TValue> fixedSize) where TValue : struct
         {
             SerializerCache<TValue>.Set(@default, zigZag, twosComplement, fixedSize);
-            SerializerCache<TValue?>.Set(Wrap(@default), Wrap(zigZag), Wrap(twosComplement), Wrap(fixedSize));
+            //SerializerCache<TValue?>.Set(Wrap(@default), Wrap(zigZag), Wrap(twosComplement), Wrap(fixedSize));
         }
     }
 }

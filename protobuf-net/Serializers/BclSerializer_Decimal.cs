@@ -3,13 +3,24 @@ using ProtoBuf.ProtoBcl;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed partial class BclSerializer : ISerializer<decimal>
+    internal sealed partial class BclSerializer : ISerializer<decimal>, IGroupSerializer<decimal>
     {
         decimal ISerializer<decimal>.Deserialize(decimal value, SerializationContext context)
         {
             ProtoDecimal pd = context.DecimalTemplate;
             pd.Reset();
             ProtoDecimal.Serializer.Deserialize(pd, context);
+            return DeserializeCore(pd);
+        }
+        decimal IGroupSerializer<decimal>.DeserializeGroup(decimal value, SerializationContext context)
+        {
+            ProtoDecimal pd = context.DecimalTemplate;
+            pd.Reset();
+            ProtoDecimal.Serializer.DeserializeGroup(pd, context);
+            return DeserializeCore(pd);
+        }
+
+        static decimal DeserializeCore(ProtoDecimal pd) {
             if (pd.Low == 0 && pd.High == 0) return decimal.Zero;
 
             int[] bits = new int[4];
@@ -40,20 +51,37 @@ namespace ProtoBuf.Serializers
             }
             ProtoDecimal pd = context.DecimalTemplate;
             PrepareDecimal(value, pd);
-            return Serialize(pd, context);
+            int expected = GetLengthCore(pd);
+            // write message-length prefix (expect single-byte!)
+            context.Stream.WriteByte((byte)expected);
+            int actual = SerializeCore(pd, context);
+            Serializer.VerifyBytesWritten(expected, actual);
+            return 1 + actual;
         }
+        int IGroupSerializer<decimal>.SerializeGroup(decimal value, SerializationContext context) {
+            if (value == 0) return 0;
+            PrepareDecimal(value, context.DecimalTemplate);
+            return SerializeCore(context.DecimalTemplate, context);
+        }
+
+
 
         int ISerializer<decimal>.GetLength(decimal value, SerializationContext context)
         {
-            if (value == 0) return 1; // sub-msg-length
-            ProtoDecimal pd = context.DecimalTemplate;
-            PrepareDecimal(value, pd);
-            return GetLength(pd);
+            return 1 + GetLengthGroup(value, context);
         }
 
-        static int GetLength(ProtoDecimal value)
+        public int GetLengthGroup(decimal value, SerializationContext context)
         {
-            int len = 1;
+            if (value == 0) return 0;
+            ProtoDecimal pd = context.DecimalTemplate;
+            PrepareDecimal(value, pd);
+            return GetLengthCore(pd);
+        }
+
+        static int GetLengthCore(ProtoDecimal value)
+        {
+            int len = 0;
             if (value.Low != 0)
             {
                 len += 1 + TwosComplementSerializer.GetLength(value.Low);
@@ -71,12 +99,9 @@ namespace ProtoBuf.Serializers
 
 
 
-        static int Serialize(ProtoDecimal value, SerializationContext context)
+        static int SerializeCore(ProtoDecimal value, SerializationContext context)
         {
-            int expected = GetLength(value);
-            // write message-length prefix (expect single-byte!)
-            context.Stream.WriteByte((byte)(expected - 1));
-            int actual = 1;
+            int actual = 0;
             if (value.Low != 0)
             {
                 context.Stream.WriteByte((0x01 << 3) | (int)WireType.Variant);
@@ -92,7 +117,6 @@ namespace ProtoBuf.Serializers
                 context.Stream.WriteByte((0x03 << 3) | (int)WireType.Variant);
                 actual += 1 + TwosComplementSerializer.WriteToStream(value.SignScale, context);
             }
-            Serializer.VerifyBytesWritten(expected, actual);
             return actual;
         }
 

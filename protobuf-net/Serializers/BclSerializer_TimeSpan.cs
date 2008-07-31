@@ -3,13 +3,23 @@ using ProtoBuf.ProtoBcl;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed partial class BclSerializer : ISerializer<TimeSpan>
+    internal sealed partial class BclSerializer : ISerializer<TimeSpan>, IGroupSerializer<TimeSpan>
     {
         long ReadTimeSpanTicks(SerializationContext context)
         {
             ProtoTimeSpan span = context.TimeSpanTemplate;
             span.Reset();
             ProtoTimeSpan.Serializer.Deserialize(span, context);
+            return ReadTimeSpanTicks(span);
+        }
+        long ReadTimeSpanTicksGroup(SerializationContext context)
+        {
+            ProtoTimeSpan span = context.TimeSpanTemplate;
+            span.Reset();
+            ProtoTimeSpan.Serializer.DeserializeGroup(span, context);
+            return ReadTimeSpanTicks(span);
+        }
+        long ReadTimeSpanTicks(ProtoTimeSpan span) {
             if (span.Value == 0) return 0;
             switch (span.Scale)
             {
@@ -38,6 +48,16 @@ namespace ProtoBuf.Serializers
         TimeSpan ISerializer<TimeSpan>.Deserialize(TimeSpan value, SerializationContext context)
         {
             long ticks = ReadTimeSpanTicks(context);
+            switch (ticks)
+            {
+                case long.MaxValue: return TimeSpan.MaxValue;
+                case long.MinValue: return TimeSpan.MinValue;
+                default: return TimeSpan.FromTicks(ticks);
+            }
+        }
+        TimeSpan IGroupSerializer<TimeSpan>.DeserializeGroup(TimeSpan value, SerializationContext context)
+        {
+            long ticks = ReadTimeSpanTicksGroup(context);
             switch (ticks)
             {
                 case long.MaxValue: return TimeSpan.MaxValue;
@@ -96,19 +116,37 @@ namespace ProtoBuf.Serializers
                 context.Stream.WriteByte(0);
                 return 1;
             }
-            PrepareTimeSpan(value, context.TimeSpanTemplate);
-            return Serialize(context.TimeSpanTemplate, context);
+            ProtoTimeSpan ts = context.TimeSpanTemplate;
+            PrepareTimeSpan(value, ts);
+            return Serialize(ts, context);
         }
-
+        public static int Serialize(ProtoTimeSpan ts, SerializationContext context) 
+        {
+            int expected = GetLengthCore(ts);
+            // write message-length prefix (expect single-byte!)
+            context.Stream.WriteByte((byte)(expected));
+            int actual = SerializeCore(ts, context);
+            Serializer.VerifyBytesWritten(expected, actual);
+            return actual + 1;
+        }
+        int IGroupSerializer<TimeSpan>.SerializeGroup(TimeSpan value, SerializationContext context)
+        {
+            if (value == TimeSpan.Zero) return 0;
+            PrepareTimeSpan(value, context.TimeSpanTemplate);
+            return SerializeCore(context.TimeSpanTemplate, context);
+        }
         int ISerializer<TimeSpan>.GetLength(TimeSpan value, SerializationContext context)
+        {
+            return 1 + GetLengthGroup(value, context);
+        }
+        public int GetLengthGroup(TimeSpan value, SerializationContext context)
         {
             if (value == TimeSpan.Zero)
             {
-                return 1;
+                return 0;
             }
             PrepareTimeSpan(value, context.TimeSpanTemplate);
-            return GetLength(context.TimeSpanTemplate);
-
+            return GetLengthCore(context.TimeSpanTemplate);
         }
 
         string ISerializer<TimeSpan>.DefinedType
@@ -116,9 +154,9 @@ namespace ProtoBuf.Serializers
             get { return ProtoTimeSpan.Serializer.DefinedType; }
         }
 
-        static int GetLength(ProtoTimeSpan value)
+        static int GetLengthCore(ProtoTimeSpan value)
         {
-            int len = 1;
+            int len = 0;
             if (value.Value != 0)
             {
                 len += 1 + ZigZagSerializer.GetLength(value.Value);
@@ -129,12 +167,9 @@ namespace ProtoBuf.Serializers
             }
             return len;
         }
-        static int Serialize(ProtoTimeSpan value, SerializationContext context)
-        {
-            int expected = GetLength(value);
-            // write message-length prefix (expect single-byte!)
-            context.Stream.WriteByte((byte)(expected - 1));
-            int actual = 1;
+
+        static int SerializeCore(ProtoTimeSpan value, SerializationContext context) {
+            int actual = 0;
             if (value.Value != 0)
             {
                 context.Stream.WriteByte((0x01 << 3) | (int)WireType.Variant);
@@ -144,8 +179,7 @@ namespace ProtoBuf.Serializers
             {
                 context.Stream.WriteByte((0x02 << 3) | (int)WireType.Variant);
                 actual += 1 + TwosComplementSerializer.WriteToStream((int)value.Scale, context);
-            }
-            Serializer.VerifyBytesWritten(expected, actual);
+            }            
             return actual;
         }
 

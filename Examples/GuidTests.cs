@@ -23,7 +23,7 @@ namespace Examples
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, foo);
-                Assert.AreEqual(2, ms.Length); // 1 tag, 1 length (0)
+                Assert.AreEqual(0, ms.Length); // 1 tag, 1 length (0)
                 ms.Position = 0;
                 GuidData clone = Serializer.Deserialize<GuidData>(ms);
                 Assert.AreEqual(foo.Bar, clone.Bar);

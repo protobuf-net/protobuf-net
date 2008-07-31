@@ -205,7 +205,22 @@
     </Compile>
     <Compile Include="Net\ProtoClient.cs" />
     <Compile Include="Net\ProtoServer.cs" />
-    <Compile Include="Property\ArrayProperty.cs" />
+    <Compile Include="Property\ArrayProperty.cs">
+      <DependentUpon>ListProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Property\ClassProperty.cs">
+      <DependentUpon>SimpleProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Property\EnumerableProperty.cs">
+      <DependentUpon>ListProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Property\EquatableProperty.cs">
+      <DependentUpon>SimpleProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Property\NullableProperty.cs" />
+    <Compile Include="Property\StructProperty.cs">
+      <DependentUpon>SimpleProperty.cs</DependentUpon>
+    </Compile>
     <Compile Include="ProtoBcl\ProtoDecimal.cs" />
     <Compile Include="ProtoBcl\ProtoGuid.cs" />
     <Compile Include="ProtoBcl\ProtoTimeSpan.cs" />

@@ -4,13 +4,34 @@ using System.Reflection;
 
 namespace ProtoBuf
 {
-    internal sealed class ListProperty<TEntity, TList, TValue> : PropertyBase<TEntity, TList, TValue>
+    internal sealed class EnumerableProperty<TEntity, TList, TValue> : PropertyBase<TEntity, TList, TValue>
         where TEntity : class, new()
-        where TList : class, IList<TValue>
+        where TList : class, IEnumerable<TValue>
     {
-        public ListProperty(PropertyInfo property)
+
+        protected override bool HasValue(TList list)
+        {
+            return list != null;
+        }
+        public EnumerableProperty(PropertyInfo property)
             : base(property)
-        {}
+        {
+            MethodInfo addMethod = typeof(TList).GetMethod("Add", BindingFlags.Instance | BindingFlags.Public,
+                null, CallingConventions.HasThis, new Type[] { typeof(TValue) }, null);
+
+            if (addMethod == null) throw new InvalidOperationException("For pipeline usage, the type must have a public void Add(T obj) method");
+
+#if CF2
+            add = delegate(TList list, TValue value)
+            {
+                addMethod.Invoke(list, new object[] { value });
+            };
+#else
+            add = (Setter<TList, TValue>) Delegate.CreateDelegate(
+                typeof(Setter<TList, TValue>), null, addMethod);
+#endif
+        }
+        private readonly Setter<TList, TValue> add;
 
         public override bool IsRepeated { get { return true; } }
 
@@ -23,12 +44,11 @@ namespace ProtoBuf
             }
             return total;
         }
-        protected override bool HasValue(TList list)
-        {
-            return list != null && list.Count > 0;
-        }
+
         protected override int GetLengthImpl(TList list, SerializationContext context)
         {
+            if (list == null) return 0;
+            if (IsGroup) return -1;
             int total = 0;
             foreach (TValue value in list)
             {
@@ -41,7 +61,7 @@ namespace ProtoBuf
             TList list = GetValue(instance);
             bool set = list == null;
             if (set) list = (TList)Activator.CreateInstance(typeof(TList));
-            list.Add(value);
+            add(list, value);
             if (set) SetValue(instance, list);
         }
         public override void Deserialize(TEntity instance, SerializationContext context)

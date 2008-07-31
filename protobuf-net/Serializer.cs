@@ -47,12 +47,12 @@ namespace ProtoBuf
         /// [DataMember], [XmlElement] are supported for compatibility.
         /// In any event, there must be a unique positive Tag/Order.
         /// </summary>
-        internal static bool TryGetTag(PropertyInfo property, out int tag, out string name, out DataFormat format, out bool isRequired)
+        internal static bool TryGetTag(PropertyInfo property, out int tag, out string name, out DataFormat format, out bool isRequired, out bool isGroup)
         {
             name = property.Name;
             format = DataFormat.Default;
             tag = -1;
-            isRequired = false;
+            isRequired = isGroup = false;
             ProtoMemberAttribute pm = AttributeUtils.GetAttribute<ProtoMemberAttribute>(property);
             if (pm != null)
             {
@@ -60,6 +60,7 @@ namespace ProtoBuf
                 if (!string.IsNullOrEmpty(pm.Name)) name = pm.Name;
                 tag = pm.Tag;
                 isRequired = pm.IsRequired;
+                isGroup = pm.IsGroup;
                 return tag > 0;
             }
 #if NET_3_0

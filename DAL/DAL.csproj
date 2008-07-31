@@ -53,11 +53,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NWind.cs" />
     <Compile Include="Program.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\protobuf-net\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
@@ -66,6 +62,16 @@
     <None Include="..\Tools\nwind.proto.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Examples\Examples.csproj">
+      <Project>{816EC137-7AFD-42B3-84A1-447E33A6A8C8}</Project>
+      <Name>Examples</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
+      <Project>{8374E4D7-2A91-48F1-9360-09B09CF27C3F}</Project>
+      <Name>protobuf-net</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

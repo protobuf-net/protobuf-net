@@ -11,6 +11,8 @@
 
 namespace DAL
 {
+    
+
     using System.Data.Linq;
     using System.Data.Linq.Mapping;
     using System.Data;
@@ -23,12 +25,12 @@ namespace DAL
     using System;
     using ProtoSharp.Core;
     using System.Configuration;
+    using ProtoBuf;
 
 
     [System.Data.Linq.Mapping.DatabaseAttribute(Name = "Northwind")]
     public partial class NorthwindDataContext : System.Data.Linq.DataContext
     {
-
         private static System.Data.Linq.Mapping.MappingSource mappingSource = new AttributeMappingSource();
 
         #region Extensibility Method Definitions
@@ -42,7 +44,7 @@ namespace DAL
         #endregion
 
         public NorthwindDataContext() :
-            base(ConfigurationManager.ConnectionStrings["DAL.Properties.Settings.NorthwindConnectionString"].ConnectionString, mappingSource)
+            base(@"Data Source=.\SQLEXPRESS;Initial Catalog=Northwind;Integrated Security=True", mappingSource)
         {
             OnCreated();
         }
@@ -92,7 +94,8 @@ namespace DAL
     [DataContract(), Serializable]
     public partial class Order : INotifyPropertyChanging, INotifyPropertyChanged
     {
-
+        
+        
         private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
 
         private int _OrderID;
@@ -230,7 +233,7 @@ namespace DAL
         }
 
         [Column(Storage = "_OrderDate", DbType = "DateTime")]
-        [DataMember(Order = 4), Tag(4)]
+        [DataMember(Order = 4), Tag(4), ProtoMember(4, IsGroup = Database.MASTER_GROUP)]
         public System.Nullable<System.DateTime> OrderDate
         {
             get
@@ -251,7 +254,7 @@ namespace DAL
         }
 
         [Column(Storage = "_RequiredDate", DbType = "DateTime")]
-        [DataMember(Order = 5), Tag(5)]
+        [DataMember(Order = 5), Tag(5), ProtoMember(5, IsGroup = Database.MASTER_GROUP)]
         public System.Nullable<System.DateTime> RequiredDate
         {
             get
@@ -272,7 +275,7 @@ namespace DAL
         }
 
         [Column(Storage = "_ShippedDate", DbType = "DateTime")]
-        [DataMember(Order = 6), Tag(6)]
+        [DataMember(Order = 6), Tag(6), ProtoMember(6, IsGroup = Database.MASTER_GROUP)]
         public System.Nullable<System.DateTime> ShippedDate
         {
             get
@@ -314,7 +317,7 @@ namespace DAL
         }
 
         [Column(Storage = "_Freight", DbType = "Money")]
-        [DataMember(Order = 8), Tag(8)]
+        [DataMember(Order = 8), Tag(8), ProtoMember(8, IsGroup = Database.MASTER_GROUP)]
         public System.Nullable<decimal> Freight
         {
             get
@@ -461,7 +464,7 @@ namespace DAL
         }
 
         [Association(Name = "Order_Order_Detail", Storage = "_Lines", OtherKey = "OrderID")]
-        [DataMember(Order = 15, EmitDefaultValue = false), Tag(15)]
+        [DataMember(Order = 15, EmitDefaultValue = false), Tag(15), ProtoMember(15, IsGroup = Database.MASTER_GROUP)]
         public EntitySet<OrderLine> Lines
         {
             get
@@ -626,7 +629,7 @@ namespace DAL
         }
 
         [Column(Storage = "_UnitPrice", DbType = "Money NOT NULL")]
-        [DataMember(Order = 3), Tag(3)]
+        [DataMember(Order = 3), Tag(3), ProtoMember(3, IsGroup = Database.MASTER_GROUP)]
         public decimal UnitPrice
         {
             get

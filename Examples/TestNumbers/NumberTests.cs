@@ -2,6 +2,7 @@
 using System.IO;
 using ProtoBuf;
 using NUnit.Framework;
+using System.ComponentModel;
 
 namespace Examples.TestNumbers
 {
@@ -48,12 +49,14 @@ namespace Examples.TestNumbers
     class ZigZagInt32
     {
         [ProtoMember(1, DataFormat = DataFormat.ZigZag)]
+        [DefaultValue(123456)]
         public int Foo { get; set; }
     }
     [ProtoContract]
     class TwosComplementInt32
     {
         [ProtoMember(1, DataFormat = DataFormat.TwosComplement)]
+        [DefaultValue(123456)]
         public int Foo { get; set; }
     }
 
@@ -106,6 +109,11 @@ namespace Examples.TestNumbers
             Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 0 }, 0x08, 0x00), "0");
         }
         [Test]
+        public void TestSignTwosComplementInt32_Default()
+        {
+            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 123456 }), "123456");
+        }
+        [Test]
         public void TestSignTwosComplementInt32_1()
         {
             Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 1 }, 0x08, 0x01), "+1");
@@ -129,6 +137,11 @@ namespace Examples.TestNumbers
         public void TestSignZigZagInt32_0()
         {
             Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 0 }, 0x08, 0x00), "0");
+        }
+        [Test]
+        public void TestSignZigZagInt32_Default()
+        {
+            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 123456 }), "123456");
         }
         [Test]
         public void TestSignZigZagInt32_1()

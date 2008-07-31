@@ -40,7 +40,7 @@ namespace Examples
             int len;
             TimeSpan ts = TimeSpan.Zero;
             Assert.AreEqual(ts, TestTimeSpan(ts, out len));
-            Assert.AreEqual(2, len, "0 len");
+            Assert.AreEqual(0, len, "0 len");
         }
 
         [Test]
@@ -132,6 +132,99 @@ namespace Examples
             Primatives p = new Primatives { TestDateTime = NowToMillisecond };
             Assert.AreEqual(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
         }
+        [Test]
+        public void TestDateTimeNowMillisGrouped()
+        {
+            PrimativeGrouped p = new PrimativeGrouped { When = NowToMillisecond };
+            Assert.AreEqual(p.When, Serializer.DeepClone(p).When);
+        }
+
+        [Test]
+        public void TestDateTimeNowMillisGroupedWrapped()
+        {
+            PrimativeGroupedWrapper p = new PrimativeGroupedWrapper { Child = { When = NowToMillisecond } };
+            Assert.AreEqual(p.Child.When, Serializer.DeepClone(p).Child.When);
+        }
+
+        [Test]
+        public void TestDateTimeNowMillisNonGroupedWrapped()
+        {
+            PrimativeNonGroupedWrapper p = new PrimativeNonGroupedWrapper { Child = { When = NowToMillisecond } };
+            Assert.AreEqual(p.Child.When, Serializer.DeepClone(p).Child.When);
+        }
+
+        [Test]
+        public void TestTimeSpanGrouped()
+        {
+            PrimativeGrouped p = new PrimativeGrouped { HowLong = TimeSpan.FromSeconds(123456)};
+            Assert.AreEqual(p.HowLong, Serializer.DeepClone(p).HowLong);
+        }
+
+        [Test]
+        public void TestTimeSpanGroupedWrapped()
+        {
+            PrimativeGroupedWrapper p = new PrimativeGroupedWrapper { Child = { HowLong = TimeSpan.FromSeconds(123456) } };
+            Assert.AreEqual(p.Child.HowLong, Serializer.DeepClone(p).Child.HowLong);
+        }
+
+        [Test]
+        public void TestTimeSpanNonGroupedWrapped()
+        {
+            PrimativeNonGroupedWrapper p = new PrimativeNonGroupedWrapper { Child = { HowLong = TimeSpan.FromSeconds(123456) } };
+            Assert.AreEqual(p.Child.HowLong, Serializer.DeepClone(p).Child.HowLong);
+        }
+
+        [Test]
+        public void TestDecimalGrouped()
+        {
+            PrimativeGrouped p = new PrimativeGrouped { HowMuch = 123.4567M };
+            Assert.AreEqual(p.HowMuch, Serializer.DeepClone(p).HowMuch);
+        }
+
+        [Test]
+        public void TestDecimalGroupedWrapped()
+        {
+            PrimativeGroupedWrapper p = new PrimativeGroupedWrapper { Child = { HowMuch = 123.4567M } };
+            Assert.AreEqual(p.Child.HowMuch, Serializer.DeepClone(p).Child.HowMuch);
+        }
+
+        [Test]
+        public void TestDecimalNonGroupedWrapped()
+        {
+            PrimativeNonGroupedWrapper p = new PrimativeNonGroupedWrapper { Child = { HowMuch = 123.4567M } };
+            Assert.AreEqual(p.Child.HowMuch, Serializer.DeepClone(p).Child.HowMuch);
+        }
+
+        [ProtoContract]
+        public class PrimativeGrouped
+        {
+            [ProtoMember(1, IsGroup = true)]
+            public DateTime When { get; set; }
+
+            [ProtoMember(2, IsGroup = true)]
+            public TimeSpan HowLong { get; set; }
+
+            [ProtoMember(3, IsGroup = true)]
+            public decimal HowMuch { get; set; }
+        }
+
+        [ProtoContract]
+        public class PrimativeGroupedWrapper
+        {
+            public PrimativeGroupedWrapper() { Child = new PrimativeGrouped(); }
+
+            [ProtoMember(1, IsGroup = true)]
+            public PrimativeGrouped Child { get; private set; }
+        }
+        [ProtoContract]
+        public class PrimativeNonGroupedWrapper
+        {
+            public PrimativeNonGroupedWrapper() { Child = new PrimativeGrouped(); }
+
+            [ProtoMember(1, IsGroup = false)]
+            public PrimativeGrouped Child { get; private set; }
+        }
+
         [Test]
         public void TestDateTimeNowSeconds()
         {

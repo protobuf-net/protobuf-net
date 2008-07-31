@@ -1,32 +1,48 @@
-﻿
-using System.Reflection;
+﻿using System.Reflection;
 using System;
+using System.Globalization;
+
 namespace ProtoBuf
 {
-    internal sealed class SimpleProperty<TEntity, TValue> : PropertyBase<TEntity, TValue>
+    internal abstract class SimpleProperty<TEntity, TValue> : PropertyBase<TEntity, TValue, TValue>
         where TEntity : class, new()
     {
         public SimpleProperty(PropertyInfo property)
             : base(property)
-        {
-            this.serializer = GetSerializer<TValue>(property);
-        }
-        private readonly ISerializer<TValue> serializer;
+        {}
 
-        public override string DefinedType { get { return serializer.DefinedType; } }
-        public override WireType WireType { get { return serializer.WireType; } }
-
-        public override int GetLength(TEntity instance, SerializationContext context)
+        protected TValue GetDefaultValue()
         {
-            return GetLength(GetValue(instance), serializer, context);
+            object untypedDefault = DefaultValue;
+            if (untypedDefault == null)
+            {
+                return default(TValue);
+            }
+            else
+            {
+                return (TValue)Convert.ChangeType(
+                    untypedDefault, typeof(TValue), CultureInfo.InvariantCulture);
+            }
         }
-        public override int Serialize(TEntity instance, SerializationContext context)
+   
+        protected sealed override int GetLengthImpl(TValue value, SerializationContext context)
         {
-            return Serialize(GetValue(instance), serializer, context);
+            return GetValueLength(value, context);
         }
-        public override void Deserialize(TEntity instance, SerializationContext context)
+        public sealed override int Serialize(TValue value, SerializationContext context)
         {
-            TValue value = serializer.Deserialize(default(TValue), context);
+            return SerializeValue(value, context);
+        }
+        public sealed override void Deserialize(TEntity instance, SerializationContext context)
+        {
+            TValue value = ValueSerializer.Deserialize(default(TValue), context);
+            SetValue(instance, value);
+            Trace(true, value, context);
+        }
+        public sealed override void DeserializeGroup(TEntity instance, SerializationContext context)
+        {
+            // read a single item
+            TValue value = GroupSerializer.DeserializeGroup(default(TValue), context);
             SetValue(instance, value);
             Trace(true, value, context);
         }

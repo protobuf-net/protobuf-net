@@ -3,7 +3,7 @@ using ProtoBuf.ProtoBcl;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed partial class BclSerializer : ISerializer<DateTime>
+    internal sealed partial class BclSerializer : ISerializer<DateTime>, IGroupSerializer<DateTime>
     {
         static void PrepareTimeSpan(DateTime value, ProtoTimeSpan span)
         {
@@ -37,6 +37,19 @@ namespace ProtoBuf.Serializers
                     return Epoch.AddTicks(ticks);
             }
         }
+        DateTime IGroupSerializer<DateTime>.DeserializeGroup(DateTime value, SerializationContext context)
+        {
+            long ticks = ReadTimeSpanTicksGroup(context);
+            switch (ticks)
+            {
+                case long.MaxValue:
+                    return DateTime.MaxValue;
+                case long.MinValue:
+                    return DateTime.MinValue;
+                default:
+                    return Epoch.AddTicks(ticks);
+            }
+        }
 
         int ISerializer<DateTime>.Serialize(DateTime value, SerializationContext context)
         {
@@ -49,13 +62,25 @@ namespace ProtoBuf.Serializers
             PrepareTimeSpan(value, span);
             return Serialize(span, context);
         }
+        int IGroupSerializer<DateTime>.SerializeGroup(DateTime value, SerializationContext context)
+        {
+            if(value == Epoch) return 0;
+            ProtoTimeSpan span = context.TimeSpanTemplate;
+            PrepareTimeSpan(value, span);
+            return SerializeCore(span, context);
+        }
+
 
         int ISerializer<DateTime>.GetLength(DateTime value, SerializationContext context)
         {
-            if (value == Epoch) return 1;
+            return 1 + GetLengthGroup(value, context);
+        }
+        public int GetLengthGroup(DateTime value, SerializationContext context)
+        {
+            if (value == Epoch) return 0;
             ProtoTimeSpan span = context.TimeSpanTemplate;
             PrepareTimeSpan(value, span);
-            return GetLength(span);
+            return GetLengthCore(span);
         }
         static readonly DateTime Epoch = new DateTime(1970, 1, 1);
 
@@ -64,6 +89,5 @@ namespace ProtoBuf.Serializers
             get { return ProtoTimeSpan.Serializer.DefinedType; }
         }
 
-       
     }
 }

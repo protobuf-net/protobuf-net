@@ -1,28 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Data.Linq;
-using System.Diagnostics;
 using System.IO;
-using ProtoBuf;
-using System.Linq;
-using ProtoSharp.Core;
-using System.Runtime.Serialization;
 using System.IO.Compression;
+using System.Linq;
+using System.Runtime.Serialization;
+using ProtoBuf;
 using Serializer = ProtoBuf.Serializer;
 namespace DAL
 {
-    [ProtoContract, DataContract]
-    public class Database
-    {
-        [ProtoMember(1), Tag(1), DataMember(Order=1)]
-        public List<Order> Orders { get; private set; }
-
-        public Database()
-        {
-            Orders = new List<Order>();
-        }
-    }
-
     static class Program
     {
         static void Main()
@@ -30,7 +15,8 @@ namespace DAL
         
             Database db;
 
-            /*
+
+            Console.WriteLine("Using groups: {0}", Database.MASTER_GROUP);
             // if have a Northwind handy...
             using(var ctx = new NorthwindDataContext())
             {
@@ -42,7 +28,7 @@ namespace DAL
             string proto = Serializer.GetProto<Database>();
             File.WriteAllText("nwind.proto", proto);
             Console.WriteLine(proto);
-            */
+            
             // otherwise...
 
             using(MemoryStream ms = new MemoryStream(File.ReadAllBytes("nwind.proto.bin")))
@@ -65,50 +51,50 @@ namespace DAL
             }
             */
 
-            //using (MemoryStream ms = new MemoryStream())
-            //{
-            //    new DataContractSerializer(db.GetType()).WriteObject(ms, db);
-            //    Console.WriteLine("DataContractSerializer length: {0:###,###,000}", ms.Length);
-            //}
-            //using (MemoryStream ms = new MemoryStream())
-            //{
-            //    using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true))
-            //    {
-            //        new DataContractSerializer(db.GetType()).WriteObject(zip, db);
-            //        zip.Close();
-            //    }
-            //    Console.WriteLine("GZip/DataContractSerializer length: {0:###,###,000}", ms.Length);
-            //}
-            //using (MemoryStream ms = new MemoryStream())
-            //{
-            //    using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true))
-            //    {
-            //        Serializer.Serialize(zip, db);
-            //        zip.Close();
-            //    }
-            //    Console.WriteLine("GZip/proto length: {0:###,###,000}", ms.Length);
-            //}
+            using (MemoryStream ms = new MemoryStream())
+            {
+                new DataContractSerializer(db.GetType()).WriteObject(ms, db);
+                Console.WriteLine("DataContractSerializer length: {0:###,###,000}", ms.Length);
+            }
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true))
+                {
+                    new DataContractSerializer(db.GetType()).WriteObject(zip, db);
+                    zip.Close();
+                }
+                Console.WriteLine("GZip/DataContractSerializer length: {0:###,###,000}", ms.Length);
+            }
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using (GZipStream zip = new GZipStream(ms, CompressionMode.Compress, true))
+                {
+                    Serializer.Serialize(zip, db);
+                    zip.Close();
+                }
+                Console.WriteLine("GZip/proto length: {0:###,###,000}", ms.Length);
+            }
 
-            //using (MemoryStream ms = new MemoryStream())
-            //{
-            //    Serializer.Serialize(ms, db);
-            //    ms.Position = 0;
-            //    Console.WriteLine("proto length: {0:###,###,000}", ms.Length);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, db);
+                ms.Position = 0;
+                Console.WriteLine("proto length: {0:###,###,000}", ms.Length);
 
-            //    Database pbnet = Serializer.Deserialize<Database>(ms);
-            //    DbMetrics("protobuf-net", pbnet);
+                Database pbnet = Serializer.Deserialize<Database>(ms);
+                DbMetrics("protobuf-net", pbnet);
 
-            //    //Database psharp = MessageReader.Read<Database>(ms.ToArray());
-            //    //DbMetrics("proto#", psharp);
-            //}
+                //Database psharp = MessageReader.Read<Database>(ms.ToArray());
+                //DbMetrics("proto#", psharp);
+            }
 
-            //Console.WriteLine();
-            //Console.WriteLine("[press any key]");
-            //Console.ReadKey();
+            Console.WriteLine();
+            Console.WriteLine("[press any key]");
+            Console.ReadKey();
+            
             
             
             /*
-
             Console.WriteLine("{0}={1} bytes", path, new FileInfo(path).Length);
             
             Database db = null;
@@ -126,7 +112,8 @@ namespace DAL
             }
             watch.Stop();
             Console.WriteLine("Save x{0}: {1}ms", COUNT, watch.ElapsedMilliseconds);
-             * */
+             */ 
+             
         }
         static void DbMetrics(string caption, Database database)
         {

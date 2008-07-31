@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Xml.Serialization;
 using System.Diagnostics;
+using ProtoBuf.ProtoBcl;
 
 namespace ProtoBuf
 {
@@ -34,7 +35,7 @@ namespace ProtoBuf
             }
             return sb.ToString();
         }
-
+        
         public static void WalkTypes(List<Type> knownTypes)
         {
             Type newType = typeof(T);
@@ -42,12 +43,30 @@ namespace ProtoBuf
             knownTypes.Add(newType);
             foreach (IProperty<T> prop in props)
             {
-                Type propType = prop.PropertyType;
-                if (!Serializer.IsEntityType(propType)) continue;
-                typeof(Serializer<>)
-                    .MakeGenericType(propType)
-                    .GetMethod("WalkTypes")
-                    .Invoke(null, new object[] { knownTypes });
+                Type propType = prop.PropertyType,
+                    nullType = Nullable.GetUnderlyingType(propType);
+                if (nullType != null) propType = nullType;
+                if (propType == typeof(decimal))
+                {
+                    propType = typeof(ProtoDecimal);
+                }
+                else if (propType == typeof(Guid))
+                {
+                    propType = typeof(ProtoGuid);
+                }
+                else if (propType == typeof(DateTime) || propType == typeof(TimeSpan))
+                {
+                    propType = typeof(ProtoTimeSpan);
+                }
+                if (Serializer.IsEntityType(propType))
+                {
+                    typeof(Serializer<>)
+                        .MakeGenericType(propType)
+                        .GetMethod("WalkTypes")
+                        .Invoke(null, new object[] { knownTypes });
+                }
+                
+
             }
         }
 
@@ -73,11 +92,11 @@ namespace ProtoBuf
             nestLevel++;
             for (int i = 0; i < props.Length; i++)
             {
-                IProperty<T> prop = props[i];                
+                IProperty<T> prop = props[i];
                 Indent(sb, nestLevel).Append(' ')
                     .Append(prop.IsRepeated ? "repeated" :
                         (prop.IsRequired ? "required" : "optional"))
-                    .Append(' ')
+                    .Append(prop.IsGroup ? " group " : " ")
                     .Append(prop.DefinedType).Append(' ')
                     .Append(prop.Name).Append(" = ").Append(prop.Tag);
 
@@ -105,7 +124,6 @@ namespace ProtoBuf
 #endif
         private static IProperty<T>[] props;
 
-
         internal static void Build()
         {
             if (props != null) return;
@@ -122,8 +140,8 @@ namespace ProtoBuf
                 string name;
                 DataFormat format;
                 int tag;
-                bool isRequired;
-                if (!Serializer.TryGetTag(prop, out tag, out name, out format, out isRequired))
+                bool isRequired, isGroup;
+                if (!Serializer.TryGetTag(prop, out tag, out name, out format, out isRequired, out isGroup))
                 {
                     continue; // didn't recognise this as a usable property
                 }
@@ -139,7 +157,8 @@ namespace ProtoBuf
                 }
 
                 IProperty<T> actualProp;
-                Type propType = prop.PropertyType, listItemType = GetListType(propType);
+                bool isEnumerableOnly;
+                Type propType = prop.PropertyType, listItemType = GetListType(propType, out isEnumerableOnly);
 
                 if (propType.IsArray)
                 {
@@ -152,7 +171,8 @@ namespace ProtoBuf
 
                 if (listItemType != null)
                 {
-                    if (GetListType(listItemType) != null)
+                    bool dummy;
+                    if (GetListType(listItemType, out dummy) != null)
                     {
                         throw new NotSupportedException("Nested (jagged) arrays/lists are not supported; consider an array/list of a class-type with an inner array/list instead");
                     }
@@ -172,24 +192,44 @@ namespace ProtoBuf
                         .Invoke(null, argsOnePropertyVal);
                 }
                 else if (listItemType != null)
-                { // list
+                {
+                    // list / enumerable
                     actualProp = (IProperty<T>)typeof(Serializer<T>)
-                        .GetMethod("CreateListProperty")
-                        .MakeGenericMethod(typeof(T), prop.PropertyType, listItemType)
+                        .GetMethod(isEnumerableOnly ? "CreateEnumerableProperty" : "CreateListProperty")
+                        .MakeGenericMethod(typeof(T), propType, listItemType)
                         .Invoke(null, argsOnePropertyVal);
                 }
                 else if (Serializer.IsEntityType(propType))
                 { // entity
                     actualProp = (IProperty<T>)typeof(Serializer<T>)
                         .GetMethod("CreateEntityProperty")
-                        .MakeGenericMethod(typeof(T), prop.PropertyType)
+                        .MakeGenericMethod(typeof(T), propType)
                         .Invoke(null, argsOnePropertyVal);
                 }
                 else
                 { // simple value
+                    string methodName;
+                    Type nullType = Nullable.GetUnderlyingType(propType);
+                    if (nullType != null)
+                    {
+                        methodName = "CreateNullableProperty";
+                        propType = nullType;
+                    }
+                    else if (propType.IsClass)
+                    {
+                        methodName = "CreateClassProperty";
+                    }
+                    else if (IsSelfEquatable(propType))
+                    {
+                        methodName = "CreateEquatableProperty";
+                    }
+                    else
+                    {
+                        methodName = "CreateStructProperty";
+                    }
                     actualProp = (IProperty<T>)typeof(Serializer<T>)
-                        .GetMethod("CreateSimpleProperty")
-                        .MakeGenericMethod(typeof(T), prop.PropertyType)
+                        .GetMethod(methodName)
+                        .MakeGenericMethod(typeof(T), propType)
                         .Invoke(null, argsOnePropertyVal);
                 }
                 propList.Add(actualProp);
@@ -198,8 +238,22 @@ namespace ProtoBuf
             props = propList.ToArray();
         }
 
-        private static Type GetListType(Type type)
+        private static bool IsSelfEquatable(Type type)
         {
+            Type huntType = typeof(IEquatable<>).MakeGenericType(type);
+            foreach (Type intType in type.GetInterfaces())
+            {
+                if (intType == huntType)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private static Type GetListType(Type type, out bool isEnumerableOnly)
+        {
+            isEnumerableOnly = false;
             if (type.IsArray)
             {
                 return type.GetElementType();
@@ -210,6 +264,18 @@ namespace ProtoBuf
                     == typeof(IList<>))
                 {
                     return interfaceType.GetGenericArguments()[0];
+                }
+            }
+            if (type != typeof(string))
+            {
+                foreach (Type interfaceType in type.GetInterfaces())
+                {
+                    if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition()
+                        == typeof(IEnumerable<>))
+                    {
+                        isEnumerableOnly = true;
+                        return interfaceType.GetGenericArguments()[0];
+                    }
                 }
             }
             return null;
@@ -230,13 +296,10 @@ namespace ProtoBuf
 
         internal static int Serialize(T instance, SerializationContext context, IProperty<T>[] candidateProperties)
         {
+            if (candidateProperties == null) candidateProperties = props;
             context.Push(instance);
             //context.CheckSpace();
             int total = 0, len;
-            if (candidateProperties == null)
-            {
-                candidateProperties = props;
-            }
             for (int i = 0; i < candidateProperties.Length; i++)
             {
                 // note that this serialization includes the headers...
@@ -252,6 +315,7 @@ namespace ProtoBuf
                     tmpCtx.ReadFrom(context);
                     BlitData(tmpCtx, context.Stream, len);
                     context.ReadFrom(tmpCtx);
+                    total += len;
                 }
                 finally
                 {
@@ -267,30 +331,23 @@ namespace ProtoBuf
             context.Push(instance);
             //context.CheckSpace();
             int total = 0;
-            bool unknownLength = false;
             for (int i = 0; i < props.Length; i++)
             {
                 int propLen = props[i].GetLength(instance, context);
-                if (propLen < 0)
-                {
-                    unknownLength = true;
-                }
-                else
+                if (propLen > 0)
                 {
                     total += propLen;
-                }
-                if (propLen != 0 && candidateProperties != null)
-                {   // note adds candidate if unknown length, too
-                    candidateProperties.Add(props[i]);
+                    if (candidateProperties != null) candidateProperties.Add(props[i]);
                 }
             }
+            
             IExtensible extra = instance as IExtensible;
             if (extra != null)
             {
                 int len = extra.GetLength();
                 if (len < 0)
                 {
-                    unknownLength = true;
+                    throw new ProtoException("Extension data must have a non-negative length");
                 }
                 else
                 {
@@ -298,7 +355,7 @@ namespace ProtoBuf
                 }
             }
             context.Pop(instance);
-            return unknownLength ? -1 : total;
+            return total;
         }
 
         internal static void Deserialize(T instance, Stream source)
@@ -361,28 +418,22 @@ namespace ProtoBuf
 
                     if (foundTag)
                     {
-                        if (prop.WireType != wireType)
+                        if (wireType == WireType.StartGroup)
                         {
-                            IGroupProperty<T> groupProp;
-                            if (wireType == WireType.StartGroup && (groupProp = prop as IGroupProperty<T>) != null)
-                            {
-                                context.StartGroup(fieldTag);
-                                groupProp.DeserializeGroup(instance, context);
-
-                                // (EndGroup will be called [and token validated] before returning)
-                            }
-                            else
-                            {
-                                // check that we are getting the wire-type we expected, so we
-                                // don't read as a fixed-size when the data is a variant (etc)
-                                throw new ProtoException(
-                                    string.Format(
-                                        "Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
-                                        prop.Name,
-                                        prop.Tag,
-                                        prop.WireType,
-                                        wireType));
-                            }
+                            context.StartGroup(fieldTag);
+                            prop.DeserializeGroup(instance, context);
+                        }
+                        else if (prop.WireType != wireType)
+                        {
+                            // check that we are getting the wire-type we expected, so we
+                            // don't read as a fixed-size when the data is a variant (etc)
+                            throw new ProtoException(
+                                string.Format(
+                                    "Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
+                                    prop.Name,
+                                    prop.Tag,
+                                    prop.WireType,
+                                    wireType));
                         }
                         else
                         {
@@ -544,11 +595,32 @@ namespace ProtoBuf
             }
             return capacity;
         }
-        
-        public static IProperty<TEntity> CreateSimpleProperty<TEntity, TValue>(PropertyInfo property)
+
+        public static IProperty<TEntity> CreateStructProperty<TEntity, TValue>(PropertyInfo property)
             where TEntity : class, new()
+            where TValue : struct
         {
-            return new SimpleProperty<TEntity, TValue>(property);
+            return new StructProperty<TEntity, TValue>(property);
+        }
+        public static IProperty<TEntity> CreateEquatableProperty<TEntity, TValue>(PropertyInfo property)
+            where TEntity : class, new()
+            where TValue : struct, IEquatable<TValue>
+        {
+            return new EquatableProperty<TEntity, TValue>(property);
+        }
+
+        public static IProperty<TEntity> CreateClassProperty<TEntity, TValue>(PropertyInfo property)
+            where TEntity : class, new()
+            where TValue : class
+        {
+            return new ClassProperty<TEntity, TValue>(property);
+        }
+
+        public static IProperty<TEntity> CreateNullableProperty<TEntity, TValue>(PropertyInfo property)
+            where TEntity : class, new()
+            where TValue : struct
+        {
+            return new NullableProperty<TEntity, TValue>(property);
         }
 
         public static IProperty<TEntity> CreateEntityProperty<TEntity, TValue>(PropertyInfo property)
@@ -562,9 +634,15 @@ namespace ProtoBuf
         {
             return new ArrayProperty<TEntity, TValue>(property);
         }
+        public static IProperty<TEntity> CreateEnumerableProperty<TEntity, TList, TValue>(PropertyInfo property)
+            where TEntity : class, new()
+            where TList : class, IEnumerable<TValue>
+        {
+            return new EnumerableProperty<TEntity, TList, TValue>(property);
+        }
         public static IProperty<TEntity> CreateListProperty<TEntity, TList, TValue>(PropertyInfo property)
             where TEntity : class, new()
-            where TList : IList<TValue>
+            where TList : class, IList<TValue>
         {
             return new ListProperty<TEntity, TList, TValue>(property);
         }

@@ -8,6 +8,7 @@ namespace ProtoBuf
     internal sealed class BlobSerializer : ISerializer<byte[]>
     {
         private BlobSerializer() { }
+        
         public static readonly BlobSerializer Default = new BlobSerializer();
         internal static void ReadBlock(SerializationContext context, int length)
         {
