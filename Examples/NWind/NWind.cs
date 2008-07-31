@@ -15,7 +15,7 @@ namespace DAL
     [ProtoContract, DataContract, Serializable]
     public class Database
     {
-        public const bool MASTER_GROUP = true;
+        public const bool MASTER_GROUP = false;
 
         [ProtoMember(1, IsGroup=Database.MASTER_GROUP), Tag(1), DataMember(Order=1)]
         public List<Order> Orders { get; private set; }

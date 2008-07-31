@@ -115,6 +115,7 @@
     <Compile Include="EnumTests.cs" />
     <Compile Include="Extensibility.cs" />
     <Compile Include="GuidTests.cs" />
+    <Compile Include="NWind\CompatDb.cs" />
     <Compile Include="NWind\DataContext.cs" />
     <Compile Include="NWind\NWind.cs" />
     <Compile Include="OldProgram.cs" />

@@ -5,9 +5,77 @@ using System.Runtime.Serialization;
 using ProtoBuf;
 using NUnit.Framework;
 using System.IO;
+using System.Reflection;
+using DAL;
 
 namespace Examples.Remoting
 {
+
+    public sealed class DbServer : MarshalByRefObject
+    {
+        public void LoadFrom(string path)
+        {
+            Assembly.LoadFrom(path);
+        }
+
+        public DatabaseCompat Roundtrip(DatabaseCompat db)
+        {
+            return db;
+        }
+        public DatabaseCompatRem Roundtrip(DatabaseCompatRem db)
+        {
+            return db;
+        }
+
+    }
+
+    [TestFixture]
+    public class DbRemoting
+    {
+        [Test]
+        public void Roundtrip()
+        {
+            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
+            DatabaseCompat compat = Serializer.ChangeType<Database, DatabaseCompat>(db);
+            DatabaseCompatRem rem = Serializer.ChangeType<Database, DatabaseCompatRem>(db);
+
+            AppDomain app = AppDomain.CreateDomain("Isolated", null,
+                AppDomain.CurrentDomain.BaseDirectory,
+                AppDomain.CurrentDomain.RelativeSearchPath,false);
+            try
+            {
+                DbServer server = (DbServer)app.CreateInstanceAndUnwrap(
+                    typeof(DbServer).Assembly.FullName, typeof(DbServer).FullName);
+
+                const int LOOP = 5;
+                Stopwatch dbTimer = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    compat = server.Roundtrip(compat);
+                }
+                dbTimer.Stop();
+                Stopwatch remTimer = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    rem = server.Roundtrip(rem);
+                }
+                remTimer.Stop();
+                // want to aim for twice the speed
+                decimal factor = 0.50M;
+#if DEBUG
+                factor = 0.80M; // be realistic in debug...
+#endif
+                long target = (long) (dbTimer.ElapsedTicks * factor);
+                Assert.LessOrEqual(3, 5, "args wrong way around!");
+                Assert.LessOrEqual(remTimer.ElapsedTicks, target);
+            }
+            finally
+            {
+                AppDomain.Unload(app);
+            }
+        }
+    }
+
     [Serializable]
     public sealed class RegularFragment
     {

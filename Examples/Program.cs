@@ -19,7 +19,7 @@ namespace Examples
 
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
             Console.WriteLine("Using groups: {0}", DAL.Database.MASTER_GROUP);
-            SimpleStreamDemo.LoadTestItem(db, 500, 500, false, false, false, false, null);
+            SimpleStreamDemo.LoadTestItem(db, 500, 500, false, false, true, false, null);
         }
 
         public static string GetByteString(byte[] buffer)
