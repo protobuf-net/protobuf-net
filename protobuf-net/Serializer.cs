@@ -161,8 +161,9 @@ namespace ProtoBuf
             using (MemoryStream ms = new MemoryStream())
             {
                 Serialize<T>(ms, instance);
-                string s = Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
-                info.AddValue(ProtoBinaryField, s);
+                info.AddValue(ProtoBinaryField, ms.ToArray());
+                //string s = Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
+                //info.AddValue(ProtoBinaryField, s);
             }
         }
         /// <summary>
@@ -176,8 +177,10 @@ namespace ProtoBuf
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
             if (instance == null) throw new ArgumentNullException("instance");
-            string s = info.GetString(ProtoBinaryField);
-            using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(s)))
+            //string s = info.GetString(ProtoBinaryField);
+            //using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(s)))
+            byte[] buffer = (byte[])info.GetValue(ProtoBinaryField, typeof(byte[]));
+            using (MemoryStream ms = new MemoryStream(buffer))
             {
                 Merge<T>(ms, instance);
             }

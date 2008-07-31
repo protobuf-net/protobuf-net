@@ -33,7 +33,7 @@ namespace Examples.Remoting
     public class DbRemoting
     {
         [Test]
-        public void Roundtrip()
+        public void LargePayload()
         {
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
             DatabaseCompat compat = Serializer.ChangeType<Database, DatabaseCompat>(db);
@@ -123,17 +123,14 @@ namespace Examples.Remoting
     [TestFixture]
     public class RemotingDemo
     {
-        //[Test]
-
-        //damn can't get this one working at the moment...
-        public void RunRemotingDemo()
+        [Test]
+        [Ignore("small messages known to be slower")]
+        public void SmallPayload()
         {
-            AppDomain app = AppDomain.CreateDomain("Isolated");
-            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory,
-
-                GetType().Assembly.ManifestModule.Name);
-            byte[] raw = File.ReadAllBytes(path);
-            app.Load(raw);
+            AppDomain app = AppDomain.CreateDomain("Isolated", null,
+                AppDomain.CurrentDomain.BaseDirectory,
+                AppDomain.CurrentDomain.RelativeSearchPath, false);
+            
             try
             {
                 // create a server and two identical messages
@@ -154,6 +151,25 @@ namespace Examples.Remoting
                 Assert.AreEqual(localFrag1.Foo, localFrag2.Foo);
                 Assert.AreEqual(localFrag1.Bar, localFrag2.Bar);
 
+                const int LOOP = 5000;
+
+                Stopwatch regWatch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    remoteFrag1 = remote.SomeMethod1(remoteFrag1);
+                }
+                regWatch.Stop();
+                Stopwatch protoWatch = Stopwatch.StartNew();
+                for (int i = 0; i < LOOP; i++)
+                {
+                    remoteFrag2 = remote.SomeMethod2(remoteFrag2);
+                }
+                protoWatch.Stop();
+
+                Assert.LessOrEqual(3, 5, "just checking...");
+
+                Assert.LessOrEqual(protoWatch.ElapsedTicks,
+                    (long)(regWatch.ElapsedTicks * 1.00M));
             }
             finally
             {                

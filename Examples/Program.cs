@@ -5,6 +5,7 @@ using System.Collections;
 using ProtoBuf;
 using System.IO;
 using Examples.SimpleStream;
+using DAL;
 
 namespace Examples
 {
@@ -17,9 +18,17 @@ namespace Examples
             demo.PerfTestString(COUNT);
             demo.PerfTestEmbedded(COUNT);
 
+            const int NWIND_COUNT = 500;
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
             Console.WriteLine("Using groups: {0}", DAL.Database.MASTER_GROUP);
-            SimpleStreamDemo.LoadTestItem(db, 500, 500, false, false, true, false, null);
+            SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, null);
+
+            DatabaseCompat compat = Serializer.ChangeType<Database, DatabaseCompat>(db);
+            SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, true, false, true, true, false, null);
+
+            DatabaseCompatRem compatRem = Serializer.ChangeType<Database, DatabaseCompatRem>(db);
+            SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, true, false, null);
+            
         }
 
         public static string GetByteString(byte[] buffer)

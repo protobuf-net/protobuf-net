@@ -58,17 +58,17 @@ namespace Examples.SimpleStream
         public void PerfTestSimple(int count)
         {
             Test1 t1 = new Test1 { A = 150 };
-            Assert.IsTrue(LoadTestItem(t1, count, count, true, true, true, true, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t1, count, count, true, true, true, true, true, 0x08, 0x96, 0x01));
         }
         public void PerfTestString(int count)
         {
             Test2 t2 = new Test2 { B = "testing" };
-            Assert.IsTrue(LoadTestItem(t2, count, count, true, true, true, true, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+            Assert.IsTrue(LoadTestItem(t2, count, count, true, true, true, true, true, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
         public void PerfTestEmbedded(int count)
         {
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
-            Assert.IsTrue(LoadTestItem(t3, count, count, true, true, true, true, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t3, count, count, true, true, true, true, true, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
         [ProtoContract]
@@ -158,7 +158,7 @@ namespace Examples.SimpleStream
             Serializer.Serialize(Stream.Null, nac);
         }
 
-        public static bool LoadTestItem<T>(T item, int count, int protoCount, bool testBinary, bool testXml, bool testProtoSharp, bool writeJson, params byte[] expected) where T : class, new()
+        public static bool LoadTestItem<T>(T item, int count, int protoCount, bool testBinary, bool testSoap, bool testXml, bool testProtoSharp, bool writeJson, params byte[] expected) where T : class, new()
         {
             bool pass = true;
             string name = typeof(T).Name;
@@ -260,6 +260,8 @@ namespace Examples.SimpleStream
                     Console.WriteLine("||`BinaryFormatter`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
                         ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
+            }
+            if(testSoap) {
                 using (MemoryStream ms = new MemoryStream())
                 {
                     SoapFormatter sf = new SoapFormatter();
@@ -308,85 +310,87 @@ namespace Examples.SimpleStream
                         ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
             }
-            using (MemoryStream ms = new MemoryStream())
+            if (!(item is ISerializable))
             {
-                DataContractSerializer xser = new DataContractSerializer(typeof(T));
-                xser.WriteObject(ms, item);
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
+                using (MemoryStream ms = new MemoryStream())
                 {
-                    xser.WriteObject(Stream.Null, item);
-                }
-                serializeWatch.Stop();
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
-                {
-                    ms.Position = 0;
-                    xser.ReadObject(ms);
-                }
-                deserializeWatch.Stop();
-                Console.WriteLine("||`DataContractSerializer`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
-                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
-            }
-#if NET_3_5
-            using (MemoryStream ms = new MemoryStream())
-            {
-                DataContractJsonSerializer xser = new DataContractJsonSerializer(typeof(T));
-                xser.WriteObject(ms, item);
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                serializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
-                {
-                    xser.WriteObject(Stream.Null, item);
-                }
-                serializeWatch.Stop();
-                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
-                deserializeWatch = Stopwatch.StartNew();
-                for (int i = 0; i < count; i++)
-                {
-                    ms.Position = 0;
-                    xser.ReadObject(ms);
-                }
-                deserializeWatch.Stop();
-                Console.WriteLine("||`DataContractJsonSerializer`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
-                    ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
-
-                string originalJson = Encoding.UTF8.GetString(ms.ToArray()), pbJson, psJson = null;
-
-                using (MemoryStream ms2 = new MemoryStream())
-                {
-                    xser.WriteObject(ms2, pbClone);
-                    pbJson = Encoding.UTF8.GetString(ms.ToArray());
-                }
-                if (testProtoSharp)
-                {
-                    using (MemoryStream ms3 = new MemoryStream())
+                    DataContractSerializer xser = new DataContractSerializer(typeof(T));
+                    xser.WriteObject(ms, item);
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    serializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
                     {
-                        xser.WriteObject(ms3, psClone);
-                        psJson = Encoding.UTF8.GetString(ms.ToArray());
+                        xser.WriteObject(Stream.Null, item);
+                    }
+                    serializeWatch.Stop();
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    deserializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        ms.Position = 0;
+                        xser.ReadObject(ms);
+                    }
+                    deserializeWatch.Stop();
+                    Console.WriteLine("||`DataContractSerializer`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
+                        ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
+                }
+#if NET_3_5
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    DataContractJsonSerializer xser = new DataContractJsonSerializer(typeof(T));
+                    xser.WriteObject(ms, item);
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    serializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        xser.WriteObject(Stream.Null, item);
+                    }
+                    serializeWatch.Stop();
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    deserializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        ms.Position = 0;
+                        xser.ReadObject(ms);
+                    }
+                    deserializeWatch.Stop();
+                    Console.WriteLine("||`DataContractJsonSerializer`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
+                        ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
+
+                    string originalJson = Encoding.UTF8.GetString(ms.ToArray()), pbJson, psJson = null;
+
+                    using (MemoryStream ms2 = new MemoryStream())
+                    {
+                        xser.WriteObject(ms2, pbClone);
+                        pbJson = Encoding.UTF8.GetString(ms.ToArray());
+                    }
+                    if (testProtoSharp)
+                    {
+                        using (MemoryStream ms3 = new MemoryStream())
+                        {
+                            xser.WriteObject(ms3, psClone);
+                            psJson = Encoding.UTF8.GetString(ms.ToArray());
+                        }
+                    }
+                    if (writeJson)
+                    {
+                        Console.WriteLine("\tJSON: {0}", originalJson);
+                    }
+                    if (originalJson != pbJson)
+                    {
+                        pass = false;
+                        Console.WriteLine("\t**** json comparison fails (protobuf-net)!");
+                        Console.WriteLine("\tClone JSON: {0}", pbJson);
+                    }
+                    if (testProtoSharp && (originalJson != psJson))
+                    {
+                        pass = false;
+                        Console.WriteLine("\t**** json comparison fails (proto#)!");
+                        Console.WriteLine("\tClone JSON: {0}", psJson);
                     }
                 }
-                if (writeJson)
-                {
-                    Console.WriteLine("\tJSON: {0}", originalJson);
-                }
-                if (originalJson != pbJson)
-                {
-                    pass = false;
-                    Console.WriteLine("\t**** json comparison fails (protobuf-net)!");
-                    Console.WriteLine("\tClone JSON: {0}", pbJson);
-                }
-                if (testProtoSharp && (originalJson != psJson))
-                {
-                    pass = false;
-                    Console.WriteLine("\t**** json comparison fails (proto#)!");
-                    Console.WriteLine("\tClone JSON: {0}", psJson);
-                }
+#endif
             }
-#endif          
-
             Console.WriteLine("\t[end {0}]", name);
             Console.WriteLine();
             return pass;

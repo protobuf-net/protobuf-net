@@ -12,6 +12,8 @@ using System.Data.Linq;
 using Serializer = ProtoBuf.Serializer;
 using System.Data.Linq.Mapping;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
+using System.Xml.Serialization;
 namespace DAL
 {
     [ProtoContract, DataContract, Serializable]
@@ -20,7 +22,8 @@ namespace DAL
         public const bool MASTER_GROUP = false;
 
         [ProtoMember(1, IsGroup = Database.MASTER_GROUP), Tag(1), DataMember(Order = 1)]
-        public List<OrderCompat> Orders { get; private set; }
+        [XmlArray]
+        public List<OrderCompat> Orders { get; set; }
 
         public DatabaseCompat()
         {
@@ -29,12 +32,13 @@ namespace DAL
     }
 
     [ProtoContract, DataContract, Serializable]
-    public class DatabaseCompatRem : ISerializable
+    public class DatabaseCompatRem : ISerializable, IXmlSerializable
     {
         public const bool MASTER_GROUP = false;
 
         [ProtoMember(1, IsGroup = Database.MASTER_GROUP), Tag(1), DataMember(Order = 1)]
-        public List<OrderCompat> Orders { get; private set; }
+        [XmlArray]
+        public List<OrderCompat> Orders { get; set; }
 
         public DatabaseCompatRem()
         {
@@ -54,8 +58,42 @@ namespace DAL
         }
 
         #endregion
-    }
 
+        #region IXmlSerializable Members
+
+        System.Xml.Schema.XmlSchema IXmlSerializable.GetSchema()
+        {
+            return null;
+        }
+
+        void IXmlSerializable.ReadXml(System.Xml.XmlReader reader)
+        {
+            const int LEN = 4096;
+            byte[] buffer = new byte[LEN];
+            int read;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                while ((read = reader.ReadElementContentAsBase64(buffer, 0, LEN)) > 0)
+                {
+                    ms.Write(buffer, 0, read);
+                }
+                ms.Position = 0;
+                Serializer.Merge(ms, this);
+            }
+        }
+
+        void IXmlSerializable.WriteXml(System.Xml.XmlWriter writer)
+        {
+            using(MemoryStream ms = new MemoryStream()) {
+                Serializer.Serialize(ms, this);
+                writer.WriteBase64(ms.GetBuffer(), 0, (int)ms.Length);
+            }
+            
+        }
+
+        #endregion
+    }
+    
     [DataContract(), Serializable]
     public partial class OrderCompat
     {
@@ -89,7 +127,7 @@ namespace DAL
 
         private string _ShipCountry;
 
-        private List<OrderLineCompat> _Lines;
+        private List<OrderLineCompat> _Lines = new List<OrderLineCompat>();
 
         #region Extensibility Method Definitions
         partial void OnLoaded();
@@ -426,12 +464,14 @@ namespace DAL
 
         [Association(Name = "Order_Order_Detail", Storage = "_Lines", OtherKey = "OrderID")]
         [DataMember(Order = 15, EmitDefaultValue = false), Tag(15), ProtoMember(15, IsGroup = Database.MASTER_GROUP)]
+        [XmlArray]
         public List<OrderLineCompat> Lines
         {
             get
             {
                 return this._Lines;
             }
+            set { this._Lines = value; }
         }
 
         protected virtual void SendPropertyChanging()
@@ -455,7 +495,6 @@ namespace DAL
 
         private void Initialize()
         {
-            this._Lines = new List<OrderLineCompat>();
             OnCreated();
         }
 
