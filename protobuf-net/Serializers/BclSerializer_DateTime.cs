@@ -55,7 +55,7 @@ namespace ProtoBuf.Serializers
         {
             if (value == Epoch)
             {
-                context.Stream.WriteByte(0);
+                context.WriteByte(0);
                 return 1;
             }
             ProtoTimeSpan span = context.TimeSpanTemplate;

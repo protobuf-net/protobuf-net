@@ -17,7 +17,7 @@ namespace ProtoBuf
         {
             if (value == null)
             {
-                context.Stream.WriteByte(0);
+                context.WriteByte(0);
                 return 1;
             }
             return StringSerializer.Serialize(value.ToString(), context);

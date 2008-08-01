@@ -14,10 +14,10 @@ namespace ProtoBuf
 
         int ISerializer<byte>.Serialize(byte value, SerializationContext context)
         {
-            context.Stream.WriteByte(value);
+            context.WriteByte(value);
             if ((value & 0x80) == 0x80)
             {                
-                context.Stream.WriteByte(0x01);
+                context.WriteByte(0x01);
                 return 2;
             }
             return 1;
@@ -25,11 +25,11 @@ namespace ProtoBuf
 
         byte ISerializer<byte>.Deserialize(byte value, SerializationContext context)
         {
-            int low = context.Stream.ReadByte();
+            int low = context.ReadByte();
             if (low < 0) throw new EndOfStreamException();
             if ((low & 0x80) == 0x80)
             {
-                int high = context.Stream.ReadByte();
+                int high = context.ReadByte();
                 if (high < 0) throw new EndOfStreamException();
                 if (high != 0x01) throw new OverflowException("Overflow deserializing byte");
                 low = low ^ ((~high) << 7);

@@ -8,7 +8,7 @@ namespace ProtoBuf
         WireType ISerializer<double>.WireType { get { return WireType.Fixed64; } }
         double ISerializer<double>.Deserialize(double value, SerializationContext context)
         {
-            BlobSerializer.ReadBlock(context, 8);
+            context.ReadBlock(8);
             if (!BitConverter.IsLittleEndian)
             {
                 BlobSerializer.Reverse8(context.Workspace);
@@ -22,7 +22,7 @@ namespace ProtoBuf
             {
                 BlobSerializer.Reverse8(buffer);
             }
-            context.Stream.Write(buffer, 0, 8);
+            context.Write(buffer, 0, 8);
             return 8;
         }
         int ISerializer<double>.GetLength(double value, SerializationContext context)

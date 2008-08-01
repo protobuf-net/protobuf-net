@@ -21,7 +21,7 @@ namespace ProtoBuf
 
         public int Serialize(bool value, SerializationContext context)
         {
-            context.Stream.WriteByte(value ? (byte)1 : (byte)0);
+            context.WriteByte(value ? (byte)1 : (byte)0);
             return 1;
         }
     }

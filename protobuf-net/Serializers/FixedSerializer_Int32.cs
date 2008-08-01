@@ -18,13 +18,13 @@ namespace ProtoBuf
                 BlobSerializer.Reverse4(buffer);
             }
 
-            context.Stream.Write(buffer, 0, 4);
+            context.Write(buffer, 0, 4);
             return 4;
         }
 
         int ISerializer<int>.Deserialize(int value, SerializationContext context)
         {
-            BlobSerializer.ReadBlock(context, 4);
+            context.ReadBlock(4);
             if (!BitConverter.IsLittleEndian)
             {
                 BlobSerializer.Reverse4(context.Workspace);

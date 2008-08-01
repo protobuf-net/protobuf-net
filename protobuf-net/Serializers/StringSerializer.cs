@@ -27,7 +27,7 @@ namespace ProtoBuf
             int preambleLen = TwosComplementSerializer.WriteToStream(actualLen, context);
 
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
-            context.Stream.Write(context.Workspace, 0, actualLen);
+            context.Write(actualLen);
             return preambleLen + actualLen;
         }
         int ISerializer<string>.Serialize(string value, SerializationContext context)
@@ -51,7 +51,7 @@ namespace ProtoBuf
             if (len == 0) return "";
 
             context.CheckSpace(len);
-            BlobSerializer.ReadBlock(context, len);
+            context.ReadBlock(len);
             return Encoding.UTF8.GetString(context.Workspace, 0, len);
         }
         string ISerializer<string>.Deserialize(string value, SerializationContext context)

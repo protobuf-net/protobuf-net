@@ -311,10 +311,7 @@ namespace ProtoBuf
                 Stream extraStream = extra.BeginQuery();
                 try
                 {
-                    SerializationContext tmpCtx = new SerializationContext(extraStream);
-                    tmpCtx.ReadFrom(context);
-                    BlitData(tmpCtx, context.Stream, len);
-                    context.ReadFrom(tmpCtx);
+                    context.WriteFrom(extraStream, len);
                     total += len;
                 }
                 finally
@@ -375,6 +372,7 @@ namespace ProtoBuf
             //context.CheckSpace();
             IExtensible extra = instance as IExtensible;
             SerializationContext extraData = null;
+            Stream extraStream = null;
             IProperty<T> prop = propCount == 0 ? null : props[0];
             
             int lastIndex = prop == null ? int.MinValue : 0,
@@ -382,7 +380,7 @@ namespace ProtoBuf
             
             try
             {
-                while (TwosComplementSerializer.TryReadInt32(context, out prefix))
+                while (context.IsDataAvailable && TwosComplementSerializer.TryReadInt32(context, out prefix))
                 {
                     WireType wireType;
                     int fieldTag;
@@ -445,7 +443,8 @@ namespace ProtoBuf
                     {
                         if (extraData == null)
                         {
-                            extraData = new SerializationContext(extra.BeginAppend());
+                            extraStream = extra.BeginAppend();
+                            extraData = new SerializationContext(extraStream);
                         }
 
                         // borrow the workspace, and copy the data
@@ -460,11 +459,11 @@ namespace ProtoBuf
                         SkipData(context, fieldTag, wireType);
                     }
                 }
-                if (extraData != null) extra.EndAppend(extraData.Stream, true);
+                if (extraStream != null) extra.EndAppend(extraStream, true);
             }
             catch
             {
-                if (extraData != null) extra.EndAppend(extraData.Stream, false);
+                if (extraStream != null) extra.EndAppend(extraStream, false);
                 throw;
             }
 
@@ -489,23 +488,23 @@ namespace ProtoBuf
             {
                 case WireType.Variant:
                     len = Base128Variant.ReadRaw(read);
-                    write.Stream.Write(read.Workspace, 0, len);
+                    write.Write(read.Workspace, 0, len);
                     break;
                 case WireType.Fixed32:
-                    BlobSerializer.ReadBlock(read, 4);
-                    write.Stream.Write(read.Workspace, 0, 4);
+                    read.ReadBlock(4);
+                    write.Write(read.Workspace, 0, 4);
                     break;
                 case WireType.Fixed64:
-                    BlobSerializer.ReadBlock(read, 8);
-                    write.Stream.Write(read.Workspace, 0, 8);
+                    read.ReadBlock(8);
+                    write.Write(read.Workspace, 0, 8);
                     break;
                 case WireType.String:
                     len = TwosComplementSerializer.ReadInt32(read);
                     TwosComplementSerializer.WriteToStream(len, write);
-                    BlitData(read, write.Stream, len);
+                    read.WriteTo(write, len);
                     break;
                 case WireType.StartGroup:
-                    using (CloneStream cloneStream = new CloneStream(read.Stream, write.Stream))
+                    using (CloneStream cloneStream = new CloneStream(read, write))
                     {
                         SerializationContext cloneCtx = new SerializationContext(cloneStream);
                         cloneCtx.ReadFrom(read);
@@ -521,56 +520,24 @@ namespace ProtoBuf
             }
         }
 
-        private static void BlitData(SerializationContext source, Stream destination, int length)
-        {
-            int capacity = CheckBufferForBlit(source, length);
-            while (length > capacity)
-            {
-                BlobSerializer.ReadBlock(source, capacity);
-                destination.Write(source.Workspace, 0, capacity);
-                length -= capacity;
-            }
-            if (length > 0)
-            {
-                BlobSerializer.ReadBlock(source, length);
-                destination.Write(source.Workspace, 0, length);
-            }
-        }
-
+        
         internal static void SkipData(SerializationContext context, int fieldTag, WireType wireType)
         {
-            Stream source = context.Stream;
+            
             switch (wireType)
             {
                 case WireType.Variant:
-                    Base128Variant.Skip(source);
+                    Base128Variant.Skip(context);
                     break;
                 case WireType.Fixed32:
-                    if (source.CanSeek) source.Seek(4, SeekOrigin.Current);
-                    else BlobSerializer.ReadBlock(context, 4);
+                    if (!context.TrySeek(4)) context.ReadBlock(4);
                     break;
                 case WireType.Fixed64:
-                    if (source.CanSeek) source.Seek(8, SeekOrigin.Current);
-                    else BlobSerializer.ReadBlock(context, 8);
+                    if (!context.TrySeek(8)) context.ReadBlock(8);
                     break;
                 case WireType.String:
                     int len = TwosComplementSerializer.ReadInt32(context);
-                    if (source.CanSeek) source.Seek(len, SeekOrigin.Current);
-                    else
-                    {
-                        int capacity = CheckBufferForBlit(context, len);
-                        while (len > capacity)
-                        {
-                            BlobSerializer.ReadBlock(context, capacity);
-                            len -= capacity;
-                        }
-
-                        if (len > 0)
-                        {
-                            BlobSerializer.ReadBlock(context, len);
-                        }
-                    }
-
+                    if (!context.TrySeek(len)) context.WriteTo(Stream.Null, len);
                     break;
                 case WireType.EndGroup:
                     throw new ProtoException("End-group not expected at this location");
@@ -584,17 +551,7 @@ namespace ProtoBuf
             }
         }
 
-        private static int CheckBufferForBlit(SerializationContext context, int length)
-        {
-            const int BLIT_BUFFER_SIZE = 4096;
-            int capacity = context.Workspace.Length;
-            if (length > capacity && capacity < BLIT_BUFFER_SIZE)
-            { // don't want to loop/blit with too small a buffer...
-                context.CheckSpace(BLIT_BUFFER_SIZE);
-                capacity = context.Workspace.Length;
-            }
-            return capacity;
-        }
+        
 
         public static IProperty<TEntity> CreateStructProperty<TEntity, TValue>(PropertyInfo property)
             where TEntity : class, new()

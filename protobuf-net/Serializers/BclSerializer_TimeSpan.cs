@@ -113,7 +113,7 @@ namespace ProtoBuf.Serializers
         {
             if (value == TimeSpan.Zero)
             {
-                context.Stream.WriteByte(0);
+                context.WriteByte(0);
                 return 1;
             }
             ProtoTimeSpan ts = context.TimeSpanTemplate;
@@ -124,7 +124,7 @@ namespace ProtoBuf.Serializers
         {
             int expected = GetLengthCore(ts);
             // write message-length prefix (expect single-byte!)
-            context.Stream.WriteByte((byte)(expected));
+            context.WriteByte((byte)(expected));
             int actual = SerializeCore(ts, context);
             Serializer.VerifyBytesWritten(expected, actual);
             return actual + 1;
@@ -172,12 +172,12 @@ namespace ProtoBuf.Serializers
             int actual = 0;
             if (value.Value != 0)
             {
-                context.Stream.WriteByte((0x01 << 3) | (int)WireType.Variant);
+                context.WriteByte((0x01 << 3) | (int)WireType.Variant);
                 actual += 1 + ZigZagSerializer.WriteToStream(value.Value, context);
             }
             if (value.Scale != ProtoTimeSpan.ProtoTimeSpanScale.Days)
             {
-                context.Stream.WriteByte((0x02 << 3) | (int)WireType.Variant);
+                context.WriteByte((0x02 << 3) | (int)WireType.Variant);
                 actual += 1 + TwosComplementSerializer.WriteToStream((int)value.Scale, context);
             }            
             return actual;

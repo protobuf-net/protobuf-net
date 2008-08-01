@@ -46,14 +46,14 @@ namespace ProtoBuf.Serializers
         {
             if (value == 0)
             {
-                context.Stream.WriteByte(0); // sub-msg-length
+                context.WriteByte(0); // sub-msg-length
                 return 1;
             }
             ProtoDecimal pd = context.DecimalTemplate;
             PrepareDecimal(value, pd);
             int expected = GetLengthCore(pd);
             // write message-length prefix (expect single-byte!)
-            context.Stream.WriteByte((byte)expected);
+            context.WriteByte((byte)expected);
             int actual = SerializeCore(pd, context);
             Serializer.VerifyBytesWritten(expected, actual);
             return 1 + actual;
@@ -104,17 +104,17 @@ namespace ProtoBuf.Serializers
             int actual = 0;
             if (value.Low != 0)
             {
-                context.Stream.WriteByte((0x01 << 3) | (int)WireType.Variant);
+                context.WriteByte((0x01 << 3) | (int)WireType.Variant);
                 actual += 1 + TwosComplementSerializer.WriteToStream(value.Low, context);
             }
             if (value.High != 0)
             {
-                context.Stream.WriteByte((0x02 << 3) | (int)WireType.Variant);
+                context.WriteByte((0x02 << 3) | (int)WireType.Variant);
                 actual += 1 + TwosComplementSerializer.WriteToStream(value.High, context);
             }
             if (value.SignScale != 0)
             {
-                context.Stream.WriteByte((0x03 << 3) | (int)WireType.Variant);
+                context.WriteByte((0x03 << 3) | (int)WireType.Variant);
                 actual += 1 + TwosComplementSerializer.WriteToStream(value.SignScale, context);
             }
             return actual;

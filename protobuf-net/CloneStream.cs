@@ -16,7 +16,7 @@ namespace ProtoBuf
     /// is owned/closed by the CloneStream</remarks>
     internal class CloneStream : Stream
     {
-        public CloneStream(Stream source, Stream destination)
+        public CloneStream(SerializationContext source, SerializationContext destination)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (destination == null) throw new ArgumentNullException("destination");
@@ -24,7 +24,7 @@ namespace ProtoBuf
             this.destination = destination;
         }
 
-        private Stream source, destination;
+        private SerializationContext source, destination;
         protected void CheckDisposed()
         {
             if (source == null)
@@ -53,7 +53,7 @@ namespace ProtoBuf
             get
             {
                 CheckDisposed(); 
-                return source.CanTimeout;
+                return false;
             }
         }
 

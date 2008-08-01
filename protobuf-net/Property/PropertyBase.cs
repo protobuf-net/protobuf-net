@@ -171,7 +171,7 @@ namespace ProtoBuf
             sb.Append(read ? '>' : '<', context.Depth).Append(' ')
                 .Append(Tag).Append(' ').Append(Name)
                 .Append(" = ").Append(value)
-                .Append('\t').Append(context.Stream.Position);
+                .Append('\t').Append(context.Position);
             Debug.WriteLine(sb.ToString(), SerializationContext.DebugCategory);
 
         }

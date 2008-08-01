@@ -10,6 +10,8 @@ namespace ProtoBuf
         private BlobSerializer() { }
         
         public static readonly BlobSerializer Default = new BlobSerializer();
+
+        /*
         internal static void ReadBlock(SerializationContext context, int length)
         {
             ReadBlock(context.Stream, context.Workspace, 0, length);
@@ -26,7 +28,7 @@ namespace ProtoBuf
 
             if (length != 0) throw new EndOfStreamException();
         }
-
+        */
         public string DefinedType { get { return ProtoFormat.BYTES; } }
         public WireType WireType { get { return WireType.String; } }
         public int Serialize(byte[] value, SerializationContext context)
@@ -35,7 +37,7 @@ namespace ProtoBuf
             int preambleLen = TwosComplementSerializer.WriteToStream(value.Length, context);
             if (value.Length > 0)
             {
-                context.Stream.Write(value, 0, value.Length);
+                context.Write(value, 0, value.Length);
             }
 
             return preambleLen + value.Length;
@@ -59,7 +61,7 @@ namespace ProtoBuf
 
             if (len > 0)
             {
-                BlobSerializer.ReadBlock(context.Stream, value, 0, len);
+                context.ReadBlock(value, len);
             }
 
             return value;

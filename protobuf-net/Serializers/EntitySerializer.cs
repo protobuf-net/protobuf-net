@@ -1,5 +1,6 @@
 ﻿
 using System.Collections.Generic;
+using System.IO;
 namespace ProtoBuf
 {
     internal sealed class EntitySerializer<TEntity> : IGroupSerializer<TEntity> where TEntity : class, new()
@@ -23,6 +24,11 @@ namespace ProtoBuf
             int len = TwosComplementSerializer.ReadInt32(context);
             if (len > 0)
             {
+                long oldMax = context.MaxReadPosition;
+                context.MaxReadPosition = context.Position + len;
+                Serializer<TEntity>.Deserialize(value, context);
+                context.MaxReadPosition = oldMax;
+                /*
                 using (SubStream subStream = new SubStream(context.Stream, len, false))
                 {
                     SerializationContext ctx = new SerializationContext(subStream);
@@ -33,7 +39,7 @@ namespace ProtoBuf
 
                     // grab the workspace back in case it was increased
                     context.ReadFrom(ctx);
-                }
+                }*/
             }
 
             return value;
@@ -59,14 +65,15 @@ namespace ProtoBuf
             {
                 return TwosComplementSerializer.WriteToStream(0, context);
             }
-
+            return context.WriteEntity(value);
+            /*
             List<IProperty<TEntity>> candidateProperties = new List<IProperty<TEntity>>();
             int expectedLen = Serializer<TEntity>.GetLength(value, context, candidateProperties),
                 preambleLen = TwosComplementSerializer.WriteToStream(expectedLen, context),
                 actualLen = expectedLen == 0 ? 0 : Serializer<TEntity>.Serialize(value, context, candidateProperties.ToArray());
 
             Serializer.VerifyBytesWritten(expectedLen, actualLen);
-            return preambleLen + actualLen;
+            return preambleLen + actualLen;*/
         }
 
         public int SerializeGroup(TEntity value, SerializationContext context)

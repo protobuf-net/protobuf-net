@@ -43,11 +43,123 @@ namespace ProtoBuf
 
         private Eof eof;
         private readonly Stream stream;
+        
         public Stream Stream
         {
             get { return stream; }
         }
+        private long position = 0, maxReadPosition = long.MaxValue;
+        public long Position { get { return position; } }
+        public long MaxReadPosition { get { return maxReadPosition; } set { maxReadPosition = value; } }
 
+        public bool IsDataAvailable { get { return position < maxReadPosition; } }
+
+        public int ReadByte()
+        {
+            int b = stream.ReadByte();
+            if (b >= 0) position++;
+            return b;
+        }
+        public int Read(int count)
+        {
+            int read = stream.Read(workspace, 0, count);
+            if (read > 0) position += read;
+            return read;
+        }
+        public int Read(byte[] buffer, int offset, int count)
+        {
+            int read = stream.Read(buffer, offset, count);
+            if (read > 0) position += read;
+            return read;
+        }
+        public void WriteByte(byte value)
+        {
+            stream.WriteByte(value);
+            position++;
+        }
+        public void Write(int count)
+        {
+            stream.Write(workspace, 0, count);
+            position += count;
+        }
+
+        public void Write(byte[] buffer, int offset, int count)
+        {
+            stream.Write(buffer, offset, count);
+            position += count;
+        }
+        public bool TrySeek(int offset)
+        {
+            if (stream.CanSeek)
+            {
+                stream.Seek(offset, SeekOrigin.Current);
+                position += offset;
+                return true;
+            }
+            return false;
+        }
+        public void ReadBlock(int count)
+        {
+            ReadBlock(workspace, count);
+        }
+        public void ReadBlock(byte[] buffer, int count)
+        {
+            int read, index = 0;
+            position += count;
+            while ((count > 0) && ((read = stream.Read(buffer, index, count)) > 0))
+            {
+                index += read;
+                count -= read;
+            }
+            if (count != 0) throw new EndOfStreamException();
+        }
+        const int BLIT_BUFFER_SIZE = 4096;
+        public void WriteFrom(Stream source, int length)
+        {
+            CheckSpace(length > BLIT_BUFFER_SIZE ? BLIT_BUFFER_SIZE : length);
+            int max = workspace.Length, read;
+            position += length;
+            while ((length >= max) && (read = source.Read(workspace, 0, max)) > 0)
+            {
+                Write(workspace, 0, read);
+                length -= read;
+            }
+            while ((length >= 0) && (read = source.Read(workspace, 0, length)) > 0)
+            {
+                Write(workspace, 0, read);
+                length -= read;
+            }
+            if (length != 0) throw new EndOfStreamException();
+        }
+        public void Flush()
+        {
+            stream.Flush();
+        }
+        public long Length { get { return stream.Length; } }
+        public bool CanRead { get { return stream.CanRead; } }
+        public bool CanWrite { get { return stream.CanWrite; } }
+        public void WriteTo(Stream destination, int length)
+        {
+            CheckSpace(length > BLIT_BUFFER_SIZE ? BLIT_BUFFER_SIZE : length);
+            int max = workspace.Length, read;
+            position += length;
+            while ((length >= max) && (read = stream.Read(workspace, 0, max)) > 0)
+            {
+                destination.Write(workspace, 0, read);
+                length -= read;
+            }
+            while ((length > 0) && (read = stream.Read(workspace, 0, length)) > 0)
+            {
+                destination.Write(workspace, 0, read);
+                length -= read;
+            }
+            if (length != 0) throw new EndOfStreamException();
+        }
+        public void WriteTo(SerializationContext destination, int length)
+        {
+            WriteTo(destination.stream, length);
+            destination.position += length;
+        }
         private byte[] workspace;
         public byte[] Workspace
         {
@@ -189,6 +301,64 @@ namespace ProtoBuf
         }
 
         public int Depth { get { return stackDepth; } }
-        
+
+
+        internal int WriteEntity<TEntity>(TEntity value) where TEntity : class, new()
+        {
+            MemoryStream ms = stream as MemoryStream;
+            if (ms != null)
+            {
+                // we'll write to out current stream, optimising
+                // for the case when the length-prefix is 1-byte;
+                // if not we'll have to BlockCopy
+                int startIndex = (int) ms.Position;
+                ms.WriteByte(0); // fill this in later!
+                int len = Serializer<TEntity>.Serialize(value, this, null);
+                if (len == 0)
+                { // lucky guess!
+                    position++;
+                    return 1;
+                } else if (len < 128) {
+                    // fix the length...
+                    ms.GetBuffer()[startIndex] = (byte)len;
+                    position += len + 1;
+                    return len + 1;
+                }
+
+                // damn; we needed a multi-byte prefix!
+                int preambleLen = TwosComplementSerializer.GetLength(len);
+                for (int i = 1; i < preambleLen; i++)
+                { // extend the buffer if needed...
+                    ms.WriteByte(0);
+                }
+                byte[] buffer = ms.GetBuffer();
+                Buffer.BlockCopy(buffer, startIndex + 1, buffer, startIndex + preambleLen, len);
+                // now back-fill the actual size
+                Base128Variant.EncodeInt64(len, workspace);
+                for (int i = 0; i < preambleLen; i++)
+                {
+                    buffer[startIndex + i] = workspace[i];
+                }
+                len += preambleLen;
+                position += len;
+                return len;
+            }
+            else
+            {
+                // create a temporary stream and write the final result
+                using (ms = new MemoryStream())
+                {
+                    SerializationContext ctx = new SerializationContext(ms);
+                    ctx.ReadFrom(this);
+                    int len = Serializer<TEntity>.Serialize(value, ctx, null);
+                    this.ReadFrom(ctx);
+
+                    int preambleLen = TwosComplementSerializer.WriteToStream(len, this);
+                    byte[] buffer = ms.GetBuffer();
+                    this.Write(buffer, 0, len);
+                    return preambleLen + len;
+                }
+            }
+        }
     }
 }
