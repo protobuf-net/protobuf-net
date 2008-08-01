@@ -185,6 +185,9 @@ namespace ProtoBuf
                 Merge<T>(ms, instance);
             }
         }
+
+#endif
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied XmlWriter.
         /// </summary>
@@ -226,7 +229,7 @@ namespace ProtoBuf
                 Serializer.Merge(ms, instance);
             }
         }
-#endif
+
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
         /// </summary>
