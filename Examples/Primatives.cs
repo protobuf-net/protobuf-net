@@ -6,6 +6,7 @@ using NUnit.Framework;
 using System.Runtime.Serialization;
 using ProtoBuf;
 using System.IO;
+using System.ComponentModel;
 
 namespace Examples
 {
@@ -89,6 +90,67 @@ namespace Examples
         {
             [ProtoMember(1)]
             public TimeSpan HowLong { get; set; }
+        }
+
+        [ProtoContract]
+        class TimeSpanDefaulted
+        {
+            public TimeSpanDefaulted() {
+                HowLong = new TimeSpan(0,1,0);
+            }
+            [ProtoMember(1), DefaultValue("00:01:00")]
+            public TimeSpan HowLong { get; set; }
+        }
+
+        [Test]
+        public void TestTimeSpanDefaulted()
+        {
+            TimeSpanDefaulted def = new TimeSpanDefaulted(),
+                clone = Serializer.DeepClone(def);
+            Assert.AreEqual(def.HowLong, clone.HowLong);
+
+            def.HowLong = new TimeSpan(0, 0, 0);
+            clone = Serializer.DeepClone(def);
+            Assert.AreEqual(def.HowLong, clone.HowLong);
+
+        }
+
+        [Test]
+        public void TestValueTimeUnit()
+        {
+            TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
+                0x08, 0x08, // tag 1; value: 4 (zigzag)
+                0x10, 0x01); // tag 2; unit: hour
+
+            Assert.AreEqual(new TimeSpan(4, 0, 0), ts.HowLong);
+        }
+        [Test, ExpectedException(typeof(ProtoException))]
+        public void TestInvalidTimeUnit() {
+            TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
+                    0x08, 0x08, // tag 1; value: 4 (zigzag)
+                    0x10, 0x4A); // tag 2; unit: invalid
+        }
+        [Test]
+        public void TestValidMinMax()
+        {
+            TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
+                    0x08, 0x02, // tag 1; value: 1 (zigzag)
+                    0x10, 0x0F); // tag 2; min/max
+
+            Assert.AreEqual(TimeSpan.MaxValue, ts.HowLong);
+
+            ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
+                0x08, 0x01, // tag 1; value: -1 (zigzag)
+                0x10, 0x0F); // tag 2; min/max
+
+            Assert.AreEqual(TimeSpan.MinValue, ts.HowLong);
+        }
+        [Test, ExpectedException(typeof(ProtoException))]
+        public void TestInvalidMinMax()
+        {
+            TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
+                    0x08, 0x03, // tag 1; invalid
+                    0x10, 0x0F); // tag 2; min/max
         }
 
         static DateTime TestDateTime(DateTime value, out int len) {
@@ -257,7 +319,56 @@ namespace Examples
             p.TestString = null;
             Assert.AreEqual(p.TestString, Serializer.DeepClone(p).TestString, "Null");
         }
-       
+
+
+        [Test]
+        public void TestDecimalUnits()
+        {
+            Primatives p = new Primatives { TestDecimalDefault = decimal.Zero};
+            Assert.AreEqual(p.TestDecimalDefault, Serializer.DeepClone(p).TestDecimalDefault);
+
+            p.TestDecimalDefault = decimal.MinusOne;
+            Assert.AreEqual(p.TestDecimalDefault, Serializer.DeepClone(p).TestDecimalDefault);
+
+            p.TestDecimalDefault = decimal.One;
+            Assert.AreEqual(p.TestDecimalDefault, Serializer.DeepClone(p).TestDecimalDefault);
+
+            p = Program.Build<Primatives>(0x1A, 0x00);
+            Assert.AreEqual(decimal.Zero, p.TestDecimalDefault);
+
+            p = Program.Build<Primatives>();
+            Assert.AreEqual(29M, p.TestDecimalDefault);
+        }
+
+        [Test]
+        public void TestDecimalExtremes()
+        {
+            Primatives p = new Primatives(), clone;
+
+            p.TestDecimalDefault = decimal.MaxValue;
+            clone = Serializer.DeepClone(p);
+            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Max");
+
+            p.TestDecimalDefault = decimal.MaxValue - 1234.5M;
+            clone = Serializer.DeepClone(p);
+            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Nearly max");
+
+            p.TestDecimalDefault = decimal.MinValue;
+            clone = Serializer.DeepClone(p);
+            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Min");
+
+            p.TestDecimalDefault = decimal.MinValue + 1234.5M;
+            clone = Serializer.DeepClone(p);
+            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Nearly min");
+
+            p.TestDecimalDefault = 0.00000000000000000000000123M;
+            clone = Serializer.DeepClone(p);
+            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Very small +ve");
+
+            p.TestDecimalDefault = -p.TestDecimalDefault;
+            clone = Serializer.DeepClone(p);
+            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Very small -ve");
+        }
         [Test]
         public void TestDecimal()
         {
@@ -414,11 +525,19 @@ namespace Examples
     [DataContract]
     class Primatives
     {
+        public Primatives()
+        {
+            TestDecimalDefault = 29M;
+            TestDateTime = new DateTime(2008, 1, 1);
+        }
         [DataMember(Order=1)]
+
         public bool TestBoolean { get; set; }
         [DataMember(Order = 2)]
+        [DefaultValue("01 Jan 2008")]
         public DateTime TestDateTime { get; set; }
         [ProtoMember(3, DataFormat = DataFormat.Default)]
+        [DefaultValue(29)]
         public decimal TestDecimalDefault { get; set; }
         
         /*[ProtoMember(4, DataFormat = DataFormat.TwosComplement)]

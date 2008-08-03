@@ -3,61 +3,77 @@ using ProtoBuf.ProtoBcl;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed partial class BclSerializer : ISerializer<TimeSpan>, IGroupSerializer<TimeSpan>
+    internal sealed partial class BclSerializer : ISerializer<TimeSpan>, ILengthSerializer<TimeSpan>
     {
-        long ReadTimeSpanTicks(SerializationContext context)
+
+        const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02;
+        long DeserializeTicks(SerializationContext context)
         {
-            ProtoTimeSpan span = context.TimeSpanTemplate;
-            span.Reset();
-            ProtoTimeSpan.Serializer.Deserialize(span, context);
-            return ReadTimeSpanTicks(span);
-        }
-        long ReadTimeSpanTicksGroup(SerializationContext context)
-        {
-            ProtoTimeSpan span = context.TimeSpanTemplate;
-            span.Reset();
-            ProtoTimeSpan.Serializer.DeserializeGroup(span, context);
-            return ReadTimeSpanTicks(span);
-        }
-        long ReadTimeSpanTicks(ProtoTimeSpan span) {
-            if (span.Value == 0) return 0;
-            switch (span.Scale)
+            long value = 0;
+            TimeSpanScale scale = TimeSpanScale.Days;
+
+            int prefix;
+            bool keepRunning = true;
+            while (keepRunning && context.IsDataAvailable && TwosComplementSerializer.TryReadInt32(context, out prefix))
             {
-                case ProtoTimeSpan.ProtoTimeSpanScale.Days:
-                    return span.Value * TimeSpan.TicksPerDay;
-                case ProtoTimeSpan.ProtoTimeSpanScale.Hours:
-                    return span.Value * TimeSpan.TicksPerHour;
-                case ProtoTimeSpan.ProtoTimeSpanScale.Milliseconds:
-                    return span.Value * TimeSpan.TicksPerMillisecond;
-                case ProtoTimeSpan.ProtoTimeSpanScale.Minutes:
-                    return span.Value * TimeSpan.TicksPerMinute;
-                case ProtoTimeSpan.ProtoTimeSpanScale.Seconds:
-                    return span.Value * TimeSpan.TicksPerSecond;
-                case ProtoTimeSpan.ProtoTimeSpanScale.MinMax:
-                    switch (span.Value)
+                switch (prefix)
+                {
+                    case (FieldTimeSpanScale << 3) | (int)WireType.Variant:
+                        scale = (TimeSpanScale)TwosComplementSerializer.ReadInt32(context);
+                        break;
+                    case (FieldTimeSpanValue << 3) | (int)WireType.Variant:
+                        value = ZigZagSerializer.ReadInt64(context);
+                        break;
+                    default:
+                        WireType wireType;
+                        int fieldTag;
+                        Serializer.ParseFieldToken(prefix, out wireType, out fieldTag);
+                        if (wireType == WireType.EndGroup)
+                        {
+                            context.EndGroup(fieldTag);
+                            keepRunning = false;
+                            continue;
+                        }
+                        switch (fieldTag)
+                        {
+                            case FieldTimeSpanScale:
+                            case FieldTimeSpanValue:
+                                throw new ProtoException("Incorrect wire-type deserializing TimeSpan");
+                            default:
+                                Serializer.SkipData(context, fieldTag, wireType);
+                                break;
+                        }
+                        break;
+                }
+            }
+
+            switch (scale)
+            {
+                case TimeSpanScale.Days:
+                    return value * TimeSpan.TicksPerDay;
+                case TimeSpanScale.Hours:
+                    return value * TimeSpan.TicksPerHour;
+                case TimeSpanScale.Milliseconds:
+                    return value * TimeSpan.TicksPerMillisecond;
+                case TimeSpanScale.Minutes:
+                    return value * TimeSpan.TicksPerMinute;
+                case TimeSpanScale.Seconds:
+                    return value * TimeSpan.TicksPerSecond;
+                case TimeSpanScale.MinMax:
+                    switch (value)
                     {
                         case 1: return long.MaxValue;
                         case -1: return long.MinValue;
-                        default: throw new ProtoException("Unknown min/max value: " + span.Value.ToString());
+                        default: throw new ProtoException("Unknown min/max value: " + value.ToString());
                     }
                 default:
-                    throw new ProtoException("Unknown timescale: " + span.Scale.ToString());
+                    throw new ProtoException("Unknown timescale: " + scale.ToString());
             }
         }
 
         TimeSpan ISerializer<TimeSpan>.Deserialize(TimeSpan value, SerializationContext context)
         {
-            long ticks = ReadTimeSpanTicks(context);
-            switch (ticks)
-            {
-                case long.MaxValue: return TimeSpan.MaxValue;
-                case long.MinValue: return TimeSpan.MinValue;
-                default: return TimeSpan.FromTicks(ticks);
-            }
-        }
-        TimeSpan IGroupSerializer<TimeSpan>.DeserializeGroup(TimeSpan value, SerializationContext context)
-        {
-            long ticks = ReadTimeSpanTicksGroup(context);
+            long ticks = DeserializeTicks(context);
             switch (ticks)
             {
                 case long.MaxValue: return TimeSpan.MaxValue;
@@ -66,123 +82,84 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        static void PrepareTimeSpan(TimeSpan value, ProtoTimeSpan span)
+        
+        private enum TimeSpanScale
         {
-            if (value == TimeSpan.Zero)
+            Days = 0,
+            Hours = 1,
+            Minutes = 2,
+            Seconds = 3,
+            Milliseconds = 4,
+
+            MinMax = 15
+        }
+        static int SerializeTicks(TimeSpan timeSpan, SerializationContext context)
+        {
+            TimeSpanScale scale;
+            long value;
+
+            if (timeSpan == TimeSpan.MaxValue)
             {
-                span.Reset();
+                value = 1;
+                scale = TimeSpanScale.MinMax;
             }
-            else if (value == TimeSpan.MaxValue)
+            else if (timeSpan == TimeSpan.MinValue)
             {
-                span.Value = 1;
-                span.Scale = ProtoTimeSpan.ProtoTimeSpanScale.MinMax;
+                value = -1;
+                scale = TimeSpanScale.MinMax;
             }
-            else if (value == TimeSpan.MinValue)
+            else if (timeSpan.Milliseconds != 0)
             {
-                span.Value = -1;
-                span.Scale = ProtoTimeSpan.ProtoTimeSpanScale.MinMax;
+                scale = TimeSpanScale.Milliseconds;
+                value = timeSpan.Ticks / TimeSpan.TicksPerMillisecond;
             }
-            else if (value.Milliseconds != 0)
+            else if (timeSpan.Seconds != 0)
             {
-                span.Scale = ProtoTimeSpan.ProtoTimeSpanScale.Milliseconds;
-                span.Value = value.Ticks / TimeSpan.TicksPerMillisecond;
+                scale = TimeSpanScale.Seconds;
+                value = timeSpan.Ticks / TimeSpan.TicksPerSecond;
             }
-            else if (value.Seconds != 0)
+            else if (timeSpan.Minutes != 0)
             {
-                span.Scale = ProtoTimeSpan.ProtoTimeSpanScale.Seconds;
-                span.Value = value.Ticks / TimeSpan.TicksPerSecond;
+                scale = TimeSpanScale.Minutes;
+                value = timeSpan.Ticks / TimeSpan.TicksPerMinute;
             }
-            else if (value.Minutes != 0)
+            else if (timeSpan.Hours != 0)
             {
-                span.Scale = ProtoTimeSpan.ProtoTimeSpanScale.Minutes;
-                span.Value = value.Ticks / TimeSpan.TicksPerMinute;
-            }
-            else if (value.Hours != 0)
-            {
-                span.Scale = ProtoTimeSpan.ProtoTimeSpanScale.Hours;
-                span.Value = value.Ticks / TimeSpan.TicksPerHour;
+                scale = TimeSpanScale.Hours;
+                value = timeSpan.Ticks / TimeSpan.TicksPerHour;
             }
             else
             {
-                span.Scale = ProtoTimeSpan.ProtoTimeSpanScale.Days;
-                span.Value = value.Ticks / TimeSpan.TicksPerDay;
+                scale = TimeSpanScale.Days;
+                value = timeSpan.Ticks / TimeSpan.TicksPerDay;
             }
-        }
 
-        int ISerializer<TimeSpan>.Serialize(TimeSpan value, SerializationContext context)
-        {
-            if (value == TimeSpan.Zero)
-            {
-                context.WriteByte(0);
-                return 1;
-            }
-            ProtoTimeSpan ts = context.TimeSpanTemplate;
-            PrepareTimeSpan(value, ts);
-            return Serialize(ts, context);
-        }
-        public static int Serialize(ProtoTimeSpan ts, SerializationContext context) 
-        {
-            int expected = GetLengthCore(ts);
-            // write message-length prefix (expect single-byte!)
-            context.WriteByte((byte)(expected));
-            int actual = SerializeCore(ts, context);
-            Serializer.VerifyBytesWritten(expected, actual);
-            return actual + 1;
-        }
-        int IGroupSerializer<TimeSpan>.SerializeGroup(TimeSpan value, SerializationContext context)
-        {
-            if (value == TimeSpan.Zero) return 0;
-            PrepareTimeSpan(value, context.TimeSpanTemplate);
-            return SerializeCore(context.TimeSpanTemplate, context);
-        }
-        int ISerializer<TimeSpan>.GetLength(TimeSpan value, SerializationContext context)
-        {
-            return 1 + GetLengthGroup(value, context);
-        }
-        public int GetLengthGroup(TimeSpan value, SerializationContext context)
-        {
-            if (value == TimeSpan.Zero)
-            {
-                return 0;
-            }
-            PrepareTimeSpan(value, context.TimeSpanTemplate);
-            return GetLengthCore(context.TimeSpanTemplate);
-        }
-
-        string ISerializer<TimeSpan>.DefinedType
-        {
-            get { return ProtoTimeSpan.Serializer.DefinedType; }
-        }
-
-        static int GetLengthCore(ProtoTimeSpan value)
-        {
             int len = 0;
-            if (value.Value != 0)
+            if (value != 0)
             {
-                len += 1 + ZigZagSerializer.GetLength(value.Value);
+                context.WriteByte((FieldTimeSpanValue << 3) | (int)WireType.Variant);
+                len += 1 + ZigZagSerializer.WriteToStream(value, context);
             }
-            if (value.Scale != ProtoTimeSpan.ProtoTimeSpanScale.Days)
+            if (scale != TimeSpanScale.Days)
             {
-                len += 2; // assume scale always single-byte
+                context.WriteByte((FieldTimeSpanScale << 3) | (int)WireType.Variant);
+                len += 1 + TwosComplementSerializer.WriteToStream((int)scale, context);
             }
             return len;
         }
 
-        static int SerializeCore(ProtoTimeSpan value, SerializationContext context) {
-            int actual = 0;
-            if (value.Value != 0)
-            {
-                context.WriteByte((0x01 << 3) | (int)WireType.Variant);
-                actual += 1 + ZigZagSerializer.WriteToStream(value.Value, context);
-            }
-            if (value.Scale != ProtoTimeSpan.ProtoTimeSpanScale.Days)
-            {
-                context.WriteByte((0x02 << 3) | (int)WireType.Variant);
-                actual += 1 + TwosComplementSerializer.WriteToStream((int)value.Scale, context);
-            }            
-            return actual;
+        int ISerializer<TimeSpan>.Serialize(TimeSpan value, SerializationContext context)
+        {
+            return value == TimeSpan.Zero ? 0 : SerializeTicks(value, context);
         }
-
-
+        int ILengthSerializer<TimeSpan>.UnderestimateLength(TimeSpan value)
+        {
+            return 0;
+        }
+        
+        string ISerializer<TimeSpan>.DefinedType
+        {
+            get { return "Bcl.TimeSpan"; }
+        }
     }
 }

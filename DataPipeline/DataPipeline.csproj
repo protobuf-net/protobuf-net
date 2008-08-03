@@ -60,6 +60,9 @@
       <Project>{8649E5E9-4159-4214-B85D-4539799EB09B}</Project>
       <Name>protobuf-net</Name>
     </ProjectReference>
+    <None Include="..\Licence.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

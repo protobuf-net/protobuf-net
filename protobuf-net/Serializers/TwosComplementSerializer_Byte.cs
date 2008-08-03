@@ -7,11 +7,6 @@ namespace ProtoBuf
     {
         string ISerializer<byte>.DefinedType { get { return ProtoFormat.UINT32; } }
 
-        int ISerializer<byte>.GetLength(byte value, SerializationContext context)
-        {
-            return (value & 0x80) == 0x80 ? 2 : 1;
-        }
-
         int ISerializer<byte>.Serialize(byte value, SerializationContext context)
         {
             context.WriteByte(value);

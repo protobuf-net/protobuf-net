@@ -3,7 +3,7 @@ using ProtoBuf.ProtoBcl;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed partial class BclSerializer : ISerializer<Guid>
+    internal sealed partial class BclSerializer : ISerializer<Guid>, ILengthSerializer<Guid>
     {
         Guid ISerializer<Guid>.Deserialize(Guid oldValue, SerializationContext context)
         {
@@ -36,11 +36,8 @@ namespace ProtoBuf.Serializers
 
         int ISerializer<Guid>.Serialize(Guid value, SerializationContext context)
         {
-            if (value == Guid.Empty)
-            {
-                context.WriteByte(0);
-                return 1;
-            }
+            if (value == Guid.Empty) return 0;
+
             ProtoGuid guid = context.GuidTemplate;
             guid.Reset();
             byte[] buffer = value.ToByteArray();
@@ -59,14 +56,14 @@ namespace ProtoBuf.Serializers
             return ProtoGuid.Serializer.Serialize(guid, context);
         }
 
-        int ISerializer<Guid>.GetLength(Guid value, SerializationContext context)
-        {
-            return value == Guid.Empty ? 1 : 19;
-        }
-
         string ISerializer<Guid>.DefinedType
         {
             get { return ProtoGuid.Serializer.DefinedType; }
+        }
+
+        public int UnderestimateLength(Guid value)
+        {
+            return value == Guid.Empty ? 0 : 18;
         }
     }
 }

@@ -46,17 +46,9 @@ namespace ProtoBuf
                 Type propType = prop.PropertyType,
                     nullType = Nullable.GetUnderlyingType(propType);
                 if (nullType != null) propType = nullType;
-                if (propType == typeof(decimal))
-                {
-                    propType = typeof(ProtoDecimal);
-                }
-                else if (propType == typeof(Guid))
+                if (propType == typeof(Guid))
                 {
                     propType = typeof(ProtoGuid);
-                }
-                else if (propType == typeof(DateTime) || propType == typeof(TimeSpan))
-                {
-                    propType = typeof(ProtoTimeSpan);
                 }
                 if (Serializer.IsEntityType(propType))
                 {
@@ -323,38 +315,6 @@ namespace ProtoBuf
             return total;
         }
 
-        internal static int GetLength(T instance, SerializationContext context, List<IProperty<T>> candidateProperties)
-        {
-            context.Push(instance);
-            //context.CheckSpace();
-            int total = 0;
-            for (int i = 0; i < props.Length; i++)
-            {
-                int propLen = props[i].GetLength(instance, context);
-                if (propLen > 0)
-                {
-                    total += propLen;
-                    if (candidateProperties != null) candidateProperties.Add(props[i]);
-                }
-            }
-            
-            IExtensible extra = instance as IExtensible;
-            if (extra != null)
-            {
-                int len = extra.GetLength();
-                if (len < 0)
-                {
-                    throw new ProtoException("Extension data must have a non-negative length");
-                }
-                else
-                {
-                    total += len;
-                }
-            }
-            context.Pop(instance);
-            return total;
-        }
-
         internal static void Deserialize(T instance, Stream source)
         {
             if (props == null) Build();
@@ -384,7 +344,7 @@ namespace ProtoBuf
                 {
                     WireType wireType;
                     int fieldTag;
-                    ParseFieldToken(prefix, out wireType, out fieldTag);
+                    Serializer.ParseFieldToken(prefix, out wireType, out fieldTag);
                     if (wireType == WireType.EndGroup)
                     {
                         context.EndGroup(fieldTag);
@@ -418,13 +378,33 @@ namespace ProtoBuf
                     {
                         if (wireType == WireType.StartGroup)
                         {
+                            if (!prop.CanBeGroup)
+                            {
+                                throw new ProtoException("Group not expected: " + prop.Name);
+                            }
+                            // group-terminated; just deserialize
                             context.StartGroup(fieldTag);
-                            prop.DeserializeGroup(instance, context);
+                            prop.Deserialize(instance, context);
                         }
-                        else if (prop.WireType != wireType)
+                        else if (prop.WireType == wireType)
                         {
-                            // check that we are getting the wire-type we expected, so we
-                            // don't read as a fixed-size when the data is a variant (etc)
+                            if (wireType == WireType.String)
+                            {
+                                // length-prefixed; set the end of the stram and deserialize
+                                int len = TwosComplementSerializer.ReadInt32(context);
+                                long oldMaxPos = context.MaxReadPosition;
+                                context.MaxReadPosition = context.Position + len;
+                                prop.Deserialize(instance, context);
+                                // restore the max-pos
+                                context.MaxReadPosition = oldMaxPos;
+                            }
+                            else
+                            {   // use the known serializer
+                                prop.Deserialize(instance, context);
+                            }
+                        }
+                        else {
+                            // not what we were expecting!
                             throw new ProtoException(
                                 string.Format(
                                     "Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
@@ -432,11 +412,6 @@ namespace ProtoBuf
                                     prop.Tag,
                                     prop.WireType,
                                     wireType));
-                        }
-                        else
-                        {
-                            // recognised fields; use the property's deserializer
-                            prop.Deserialize(instance, context);
                         }
                     }
                     else if (extra != null)
@@ -456,7 +431,7 @@ namespace ProtoBuf
                     else
                     {
                         // unexpected fields for an inextensible object; discard the data
-                        SkipData(context, fieldTag, wireType);
+                        Serializer.SkipData(context, fieldTag, wireType);
                     }
                 }
                 if (extraStream != null) extra.EndAppend(extraStream, true);
@@ -471,15 +446,7 @@ namespace ProtoBuf
         }
 
 
-        internal static void ParseFieldToken(int token, out WireType wireType, out int tag)
-        {
-            wireType = (WireType)(token & 7);
-            tag = token >> 3;
-            if (tag <= 0)
-            {
-                throw new ProtoException("Invalid tag: " + tag.ToString());
-            }
-        }
+        
 
         private static void ProcessExtraData(SerializationContext read, int fieldTag, WireType wireType, SerializationContext write)
         {
@@ -509,7 +476,7 @@ namespace ProtoBuf
                         SerializationContext cloneCtx = new SerializationContext(cloneStream);
                         cloneCtx.ReadFrom(read);
                         cloneCtx.StartGroup(fieldTag);
-                        UnknownType.Serializer.DeserializeGroup(null, cloneCtx);
+                        UnknownType.Serializer.Deserialize(null, cloneCtx);
                         read.ReadFrom(cloneCtx);
                     }
                     break;
@@ -521,35 +488,7 @@ namespace ProtoBuf
         }
 
         
-        internal static void SkipData(SerializationContext context, int fieldTag, WireType wireType)
-        {
-            
-            switch (wireType)
-            {
-                case WireType.Variant:
-                    Base128Variant.Skip(context);
-                    break;
-                case WireType.Fixed32:
-                    if (!context.TrySeek(4)) context.ReadBlock(4);
-                    break;
-                case WireType.Fixed64:
-                    if (!context.TrySeek(8)) context.ReadBlock(8);
-                    break;
-                case WireType.String:
-                    int len = TwosComplementSerializer.ReadInt32(context);
-                    if (!context.TrySeek(len)) context.WriteTo(Stream.Null, len);
-                    break;
-                case WireType.EndGroup:
-                    throw new ProtoException("End-group not expected at this location");
-                case WireType.StartGroup:
-                    // use the unknown-type deserializer to pass over the data
-                    context.StartGroup(fieldTag);
-                    UnknownType.Serializer.DeserializeGroup(null, context);
-                    break;
-                default:
-                    throw new ProtoException("Unknown wire-type " + wireType.ToString());
-            }
-        }
+        
 
         
 

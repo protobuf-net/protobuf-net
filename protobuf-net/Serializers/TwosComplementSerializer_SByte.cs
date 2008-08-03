@@ -14,11 +14,6 @@ namespace ProtoBuf
         {
             return WriteToStream((int)value, context);
         }
-
-        int ISerializer<sbyte>.GetLength(sbyte value, SerializationContext context)
-        {
-            return GetLength((int)value);
-        }
     }
 
 }

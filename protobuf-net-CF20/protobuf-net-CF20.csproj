@@ -56,6 +56,9 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
+    <None Include="..\Licence.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CompactFramework.CSharp.targets" />
   <ProjectExtensions>

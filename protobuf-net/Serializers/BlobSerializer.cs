@@ -5,10 +5,10 @@ using System.IO;
 
 namespace ProtoBuf
 {
-    internal sealed class BlobSerializer : ISerializer<byte[]>
+    internal sealed class BlobSerializer : ISerializer<byte[]>, ILengthSerializer<byte[]>
     {
         private BlobSerializer() { }
-        
+        public bool CanBeGroup { get { return false; } }
         public static readonly BlobSerializer Default = new BlobSerializer();
 
         /*
@@ -33,63 +33,31 @@ namespace ProtoBuf
         public WireType WireType { get { return WireType.String; } }
         public int Serialize(byte[] value, SerializationContext context)
         {
-            if (value == null) return 0;
-            int preambleLen = TwosComplementSerializer.WriteToStream(value.Length, context);
-            if (value.Length > 0)
-            {
-                context.Write(value, 0, value.Length);
-            }
+            if (value == null || value.Length == 0) return 0;
+            
+            context.Write(value, 0, value.Length);
 
-            return preambleLen + value.Length;
+            return value.Length;
         }
-        public int GetLength(byte[] value, SerializationContext context)
-        {
-            if (value == null)
-            {
-                return 0;
-            }
-            return TwosComplementSerializer.GetLength(value.Length) + value.Length;
-        }
-
+        
         public byte[] Deserialize(byte[] value, SerializationContext context)
         {
-            int len = TwosComplementSerializer.ReadInt32(context);
+
+            int len = (int)(context.MaxReadPosition - context.Position);
             if (value == null || value.Length != len)
             { // re-use the existing buffer if it is the same size
                 value = new byte[len];
             }
-
             if (len > 0)
             {
                 context.ReadBlock(value, len);
             }
-
             return value;
         }
 
-        public static void Reverse4(byte[] buffer)
+        public int UnderestimateLength(byte[] value)
         {
-            byte tmp = buffer[0];
-            buffer[0] = buffer[3];
-            buffer[3] = tmp;
-            tmp = buffer[1];
-            buffer[1] = buffer[2];
-            buffer[2] = tmp;
-        }
-        public static void Reverse8(byte[] buffer)
-        {
-            byte tmp = buffer[0];
-            buffer[0] = buffer[7];
-            buffer[7] = tmp;
-            tmp = buffer[1];
-            buffer[1] = buffer[6];
-            buffer[6] = tmp;
-            tmp = buffer[2];
-            buffer[2] = buffer[5];
-            buffer[5] = tmp;
-            tmp = buffer[3];
-            buffer[3] = buffer[4];
-            buffer[4] = tmp;
+            return value == null ? 0 : value.Length;
         }
     }
 }

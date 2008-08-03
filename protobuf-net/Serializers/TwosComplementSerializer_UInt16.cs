@@ -5,11 +5,6 @@ namespace ProtoBuf
     {
         string ISerializer<ushort>.DefinedType { get { return ProtoFormat.UINT32; } }
 
-        int ISerializer<ushort>.GetLength(ushort value, SerializationContext context)
-        {
-            return GetLength((uint)value);
-        }
-
         int ISerializer<ushort>.Serialize(ushort value, SerializationContext context)
         {
             return Serialize((uint)value, context);

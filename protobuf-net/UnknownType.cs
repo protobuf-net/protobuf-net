@@ -8,7 +8,7 @@ namespace ProtoBuf
     [ProtoContract]
     internal sealed class UnknownType
     {
-        internal static readonly IGroupSerializer<UnknownType> Serializer
+        internal static readonly ILengthSerializer<UnknownType> Serializer
             = new EntitySerializer<UnknownType>();
     }
 }

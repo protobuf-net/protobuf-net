@@ -28,32 +28,51 @@ namespace Examples.SimpleStream
             [ProtoMember(1)]
             public int Value { get; set; }
         }
-        [Test]
-        public void RunCollectionTests()
+
+        static Foo GetFullFoo()
         {
-            FooContainer fooContainer = new FooContainer(), cloneContainer;
-            Foo foo = fooContainer.Foo = new Foo(), clone;
+            Foo foo = new Foo();
             foo.Bars = new List<Bar>();
             for (int i = Int16.MinValue; i <= Int16.MaxValue; i++)
             {
                 foo.Bars.Add(new Bar { Value = i });
             }
-            using (MemoryStream ms = new MemoryStream())
-            {
-                Serializer.Serialize(ms, fooContainer);
-                ms.Position = 0;
-                cloneContainer = Serializer.Deserialize<FooContainer>(ms);
-                Assert.IsNotNull(cloneContainer);
-                clone = cloneContainer.Foo;
-                Assert.IsNotNull(clone);
-            }
-            Assert.AreEqual(foo.Bars.Count, clone.Bars.Count, "Item count");
-            
+            return foo;
+        }
+
+        [Test]
+        public void RunWrappedCollectionTest()
+        {
+            FooContainer fooContainer = new FooContainer(), cloneContainer;
+            Foo foo = GetFullFoo(), clone;
+            fooContainer.Foo = foo;
+
+            cloneContainer = Serializer.DeepClone(fooContainer);
+            clone = cloneContainer.Foo;
+            Assert.IsNotNull(cloneContainer, "Clone Container");
+            Assert.IsTrue(CompareFoos(foo, clone));
+        }
+
+        [Test]
+        public void RunNakedCollectionTest()
+        {
+            Foo foo = GetFullFoo(), clone = Serializer.DeepClone(foo);
+            Assert.IsTrue(CompareFoos(foo, clone));            
+        }
+
+        private static bool CompareFoos(Foo original, Foo clone) {
+            Assert.IsNotNull(original, "Original");
+            Assert.IsNotNull(clone, "Clone");
+            Assert.AreEqual(original.Bars.Count, clone.Bars.Count, "Item count");
+            if (original == null || clone == null ||
+                original.Bars.Count != clone.Bars.Count) return false;
             int count = clone.Bars.Count;
             for (int i = 0; i < count; i++)
             {
-                Assert.AreEqual(foo.Bars[i].Value, clone.Bars[i].Value, "Value mismatch");
+                Assert.AreEqual(original.Bars[i].Value, clone.Bars[i].Value, "Value mismatch");
+                if (original.Bars[i].Value != clone.Bars[i].Value) return false;
             }
+            return true;
         }
     }
 }

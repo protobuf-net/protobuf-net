@@ -4,10 +4,6 @@ namespace ProtoBuf
 {
     internal partial class FixedSerializer : ISerializer<int>
     {
-        int ISerializer<int>.GetLength(int value, SerializationContext context)
-        {
-            return 4;
-        }
         WireType ISerializer<int>.WireType { get { return WireType.Fixed32; } }
         string ISerializer<int>.DefinedType { get { return ProtoFormat.SFIXED32; } }
         int ISerializer<int>.Serialize(int value, SerializationContext context)
@@ -15,7 +11,7 @@ namespace ProtoBuf
             byte[] buffer = BitConverter.GetBytes(value);
             if (!BitConverter.IsLittleEndian)
             {
-                BlobSerializer.Reverse4(buffer);
+                SerializationContext.Reverse4(buffer);
             }
 
             context.Write(buffer, 0, 4);
@@ -27,7 +23,7 @@ namespace ProtoBuf
             context.ReadBlock(4);
             if (!BitConverter.IsLittleEndian)
             {
-                BlobSerializer.Reverse4(context.Workspace);
+                SerializationContext.Reverse4(context.Workspace);
             }
 
             return BitConverter.ToInt32(context.Workspace, 0);

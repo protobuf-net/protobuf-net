@@ -3,126 +3,111 @@ using ProtoBuf.ProtoBcl;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed partial class BclSerializer : ISerializer<decimal>, IGroupSerializer<decimal>
+    internal sealed partial class BclSerializer : ISerializer<decimal>, ILengthSerializer<decimal>
     {
+
+        const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
+
         decimal ISerializer<decimal>.Deserialize(decimal value, SerializationContext context)
         {
-            ProtoDecimal pd = context.DecimalTemplate;
-            pd.Reset();
-            ProtoDecimal.Serializer.Deserialize(pd, context);
-            return DeserializeCore(pd);
+            return DeserializeDecimal(context);
         }
-        decimal IGroupSerializer<decimal>.DeserializeGroup(decimal value, SerializationContext context)
-        {
-            ProtoDecimal pd = context.DecimalTemplate;
-            pd.Reset();
-            ProtoDecimal.Serializer.DeserializeGroup(pd, context);
-            return DeserializeCore(pd);
-        }
+        
+        static decimal DeserializeDecimal(SerializationContext context) {
+            ulong low = 0;
+            uint high = 0;
+            uint signScale = 0;
 
-        static decimal DeserializeCore(ProtoDecimal pd) {
-            if (pd.Low == 0 && pd.High == 0) return decimal.Zero;
+            int prefix;
+            bool keepRunning = true;
+            while (keepRunning && context.IsDataAvailable && TwosComplementSerializer.TryReadInt32(context, out prefix))
+            {
+                switch (prefix)
+                {
+                    case (FieldDecimalLow << 3) | (int)WireType.Variant:
+                        low = TwosComplementSerializer.ReadUInt64(context);
+                        break;
+                    case (FieldDecimalHigh << 3) | (int)WireType.Variant:
+                        high = TwosComplementSerializer.ReadUInt32(context);
+                        break;
+                    case (FieldDecimalSignScale << 3) | (int)WireType.Variant:
+                        signScale = TwosComplementSerializer.ReadUInt32(context);
+                        break;
+                    default:
+                        WireType wireType;
+                        int fieldTag;
+                        Serializer.ParseFieldToken(prefix, out wireType, out fieldTag);
+                        if (wireType == WireType.EndGroup)
+                        {
+                            context.EndGroup(fieldTag);
+                            keepRunning = false;
+                            continue;
+                        }
+                        switch (fieldTag)
+                        {
+                            case FieldDecimalHigh:
+                            case FieldDecimalLow:
+                            case FieldDecimalSignScale:
+                                throw new ProtoException("Incorrect wire-type deserializing Deciaml");
+                            default:
+                                Serializer.SkipData(context, fieldTag, wireType);
+                                break;
+                        }
+                        break;
+                }
+            }
 
-            int[] bits = new int[4];
-            bits[0] = (int)(pd.Low & 0xFFFFFFFFL);
-            bits[1] = (int)((pd.Low >> 32) & 0xFFFFFFFFL);
-            bits[2] = (int)pd.High;
-            uint scale = pd.SignScale;
-            bits[3] = (int)(((scale & 0x01FE) << 15) | ((scale & 0x0001) << 31));
-            return new decimal(bits);
-        }
+            if (low == 0 && high == 0) return decimal.Zero;
 
-        static void PrepareDecimal(decimal value, ProtoDecimal proto)
-        {
-
-            int[] bits = decimal.GetBits(value);
-            ulong low = (ulong)bits[0], mid = (ulong)bits[1];
-            proto.Low = (mid << 32) | low;
-            proto.High = (uint)bits[2];
-            proto.SignScale = (uint)(((bits[3] >> 15) & 0x01FE) | ((bits[3] >> 31) & 0x0001));
+            int lo = (int)(low & 0xFFFFFFFFL),
+                mid = (int)((low >> 32) & 0xFFFFFFFFL),
+                hi = (int)high;
+            bool isNeg = (signScale & 0x0001) == 0x0001;
+            byte scale = (byte)((signScale & 0x01FE) >> 1);
+            return new decimal(lo, mid, hi, isNeg, scale);
         }
 
         int ISerializer<decimal>.Serialize(decimal value, SerializationContext context)
         {
-            if (value == 0)
-            {
-                context.WriteByte(0); // sub-msg-length
-                return 1;
-            }
-            ProtoDecimal pd = context.DecimalTemplate;
-            PrepareDecimal(value, pd);
-            int expected = GetLengthCore(pd);
-            // write message-length prefix (expect single-byte!)
-            context.WriteByte((byte)expected);
-            int actual = SerializeCore(pd, context);
-            Serializer.VerifyBytesWritten(expected, actual);
-            return 1 + actual;
-        }
-        int IGroupSerializer<decimal>.SerializeGroup(decimal value, SerializationContext context) {
             if (value == 0) return 0;
-            PrepareDecimal(value, context.DecimalTemplate);
-            return SerializeCore(context.DecimalTemplate, context);
+            return SerializeDecimal(value, context);
+        }
+        
+        int ILengthSerializer<decimal>.UnderestimateLength(decimal value)
+        {
+            return 0;
         }
 
-
-
-        int ISerializer<decimal>.GetLength(decimal value, SerializationContext context)
+        static int SerializeDecimal(decimal value, SerializationContext context)
         {
-            return 1 + GetLengthGroup(value, context);
-        }
+            int[] bits = decimal.GetBits(value);
+            ulong a = ((ulong)bits[1]) << 32, b = ((ulong)bits[0]) & 0xFFFFFFFFL;
+            ulong low = a | b;
+            uint high = (uint) bits[2];
+            uint signScale = (uint)(((bits[3] >> 15) & 0x01FE) | ((bits[3] >> 31) & 0x0001));
 
-        public int GetLengthGroup(decimal value, SerializationContext context)
-        {
-            if (value == 0) return 0;
-            ProtoDecimal pd = context.DecimalTemplate;
-            PrepareDecimal(value, pd);
-            return GetLengthCore(pd);
-        }
-
-        static int GetLengthCore(ProtoDecimal value)
-        {
             int len = 0;
-            if (value.Low != 0)
+            if (low != 0)
             {
-                len += 1 + TwosComplementSerializer.GetLength(value.Low);
+                context.WriteByte((FieldDecimalLow << 3) | (int)WireType.Variant);
+                len += 1 + TwosComplementSerializer.WriteToStream(low, context);
             }
-            if (value.High != 0)
+            if (high != 0)
             {
-                len += 1 + TwosComplementSerializer.GetLength(value.High);
+                context.WriteByte((FieldDecimalHigh << 3) | (int)WireType.Variant);
+                len += 1 + TwosComplementSerializer.WriteToStream(high, context);
             }
-            if (value.SignScale != 0)
+            if (signScale != 0)
             {
-                len += 1 + TwosComplementSerializer.GetLength(value.SignScale);
+                context.WriteByte((FieldDecimalSignScale << 3) | (int)WireType.Variant);
+                len += 1 + TwosComplementSerializer.WriteToStream(signScale, context);
             }
             return len;
         }
 
-
-
-        static int SerializeCore(ProtoDecimal value, SerializationContext context)
-        {
-            int actual = 0;
-            if (value.Low != 0)
-            {
-                context.WriteByte((0x01 << 3) | (int)WireType.Variant);
-                actual += 1 + TwosComplementSerializer.WriteToStream(value.Low, context);
-            }
-            if (value.High != 0)
-            {
-                context.WriteByte((0x02 << 3) | (int)WireType.Variant);
-                actual += 1 + TwosComplementSerializer.WriteToStream(value.High, context);
-            }
-            if (value.SignScale != 0)
-            {
-                context.WriteByte((0x03 << 3) | (int)WireType.Variant);
-                actual += 1 + TwosComplementSerializer.WriteToStream(value.SignScale, context);
-            }
-            return actual;
-        }
-
         string ISerializer<decimal>.DefinedType
         {
-            get { return ProtoDecimal.Serializer.DefinedType; }
+            get { return "Bcl.Decimal"; }
         }
     }
 }

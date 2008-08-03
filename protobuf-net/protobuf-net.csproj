@@ -169,7 +169,9 @@
     <Compile Include="Property\EntityProperty.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Property\ListProperty.cs" />
+    <Compile Include="Property\ListProperty.cs">
+      <DependentUpon>MultiProperty.cs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Property\PropertyBase.cs" />
@@ -205,25 +207,18 @@
     </Compile>
     <Compile Include="Net\ProtoClient.cs" />
     <Compile Include="Net\ProtoServer.cs" />
-    <Compile Include="Property\ArrayProperty.cs">
-      <DependentUpon>ListProperty.cs</DependentUpon>
-    </Compile>
     <Compile Include="Property\ClassProperty.cs">
       <DependentUpon>SimpleProperty.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Property\EnumerableProperty.cs">
-      <DependentUpon>ListProperty.cs</DependentUpon>
     </Compile>
     <Compile Include="Property\EquatableProperty.cs">
       <DependentUpon>SimpleProperty.cs</DependentUpon>
     </Compile>
+    <Compile Include="Property\MultiProperty.cs" />
     <Compile Include="Property\NullableProperty.cs" />
     <Compile Include="Property\StructProperty.cs">
       <DependentUpon>SimpleProperty.cs</DependentUpon>
     </Compile>
-    <Compile Include="ProtoBcl\ProtoDecimal.cs" />
     <Compile Include="ProtoBcl\ProtoGuid.cs" />
-    <Compile Include="ProtoBcl\ProtoTimeSpan.cs" />
     <Compile Include="ProtoException.cs" />
     <Compile Include="Serializers\BclSerializer.cs" />
     <Compile Include="Serializers\BclSerializer_DateTime.cs">
@@ -266,9 +261,17 @@
     <Compile Include="UnknownType.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Net\TODO.txt" />
+    <None Include="..\Licence.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Property\ArrayProperty.cs">
+      <DependentUpon>MultiProperty.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Property\EnumerableProperty.cs">
+      <DependentUpon>MultiProperty.cs</DependentUpon>
+    </Compile>
     <None Include="Web\TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

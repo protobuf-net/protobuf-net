@@ -13,7 +13,7 @@ namespace Examples
     {
         static void Main() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
-            const int COUNT = 1000000;
+            const int COUNT = 10; // 00000;
             demo.PerfTestSimple(COUNT);
             demo.PerfTestString(COUNT);
             demo.PerfTestEmbedded(COUNT);

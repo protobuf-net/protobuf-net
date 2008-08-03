@@ -18,6 +18,24 @@ namespace Examples
     public class GuidTests
     {
         [Test]
+        public void TestDeserializeEmptyWide()
+        {
+            GuidData data = Program.Build<GuidData>(
+                0x0A, 0x18, // prop 1, string:18
+                0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //1:fixed64:0
+                0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 //2:fixed64:0
+                );
+            Assert.AreEqual(Guid.Empty, data.Bar);
+        }
+        [Test]
+        public void TestDeserializeEmptyShort()
+        {
+            GuidData data = Program.Build<GuidData>(
+                0x0A, 0x00 // prop 1, string:0
+                );
+            Assert.AreEqual(Guid.Empty, data.Bar);
+        }
+        [Test]
         public void TestEmptyGuid() {
             GuidData foo = new GuidData { Bar = Guid.Empty };
             using (MemoryStream ms = new MemoryStream())

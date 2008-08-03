@@ -3,43 +3,11 @@ using ProtoBuf.ProtoBcl;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed partial class BclSerializer : ISerializer<DateTime>, IGroupSerializer<DateTime>
+    internal sealed partial class BclSerializer : ISerializer<DateTime>, ILengthSerializer<DateTime>
     {
-        static void PrepareTimeSpan(DateTime value, ProtoTimeSpan span)
-        {
-            TimeSpan ts;
-            if (value == DateTime.MaxValue)
-            {
-                ts = TimeSpan.MaxValue;
-            }
-            else if (value == DateTime.MinValue)
-            {
-                ts = TimeSpan.MinValue;
-            }
-            else
-            {
-                ts = value - Epoch;
-            }
-            PrepareTimeSpan(ts, span);
-        }
-
-
         DateTime ISerializer<DateTime>.Deserialize(DateTime value, SerializationContext context)
         {
-            long ticks = ReadTimeSpanTicks(context);
-            switch (ticks)
-            {
-                case long.MaxValue:
-                    return DateTime.MaxValue;
-                case long.MinValue:
-                    return DateTime.MinValue;
-                default:
-                    return Epoch.AddTicks(ticks);
-            }
-        }
-        DateTime IGroupSerializer<DateTime>.DeserializeGroup(DateTime value, SerializationContext context)
-        {
-            long ticks = ReadTimeSpanTicksGroup(context);
+            long ticks = DeserializeTicks(context);
             switch (ticks)
             {
                 case long.MaxValue:
@@ -53,40 +21,33 @@ namespace ProtoBuf.Serializers
 
         int ISerializer<DateTime>.Serialize(DateTime value, SerializationContext context)
         {
-            if (value == Epoch)
-            {
-                context.WriteByte(0);
-                return 1;
-            }
-            ProtoTimeSpan span = context.TimeSpanTemplate;
-            PrepareTimeSpan(value, span);
-            return Serialize(span, context);
-        }
-        int IGroupSerializer<DateTime>.SerializeGroup(DateTime value, SerializationContext context)
-        {
-            if(value == Epoch) return 0;
-            ProtoTimeSpan span = context.TimeSpanTemplate;
-            PrepareTimeSpan(value, span);
-            return SerializeCore(span, context);
-        }
-
-
-        int ISerializer<DateTime>.GetLength(DateTime value, SerializationContext context)
-        {
-            return 1 + GetLengthGroup(value, context);
-        }
-        public int GetLengthGroup(DateTime value, SerializationContext context)
-        {
             if (value == Epoch) return 0;
-            ProtoTimeSpan span = context.TimeSpanTemplate;
-            PrepareTimeSpan(value, span);
-            return GetLengthCore(span);
+            TimeSpan timeSpan;
+            if (value == DateTime.MaxValue)
+            {
+                timeSpan = TimeSpan.MaxValue;
+            }
+            else if (value == DateTime.MinValue)
+            {
+                timeSpan = TimeSpan.MinValue;
+            }
+            else
+            {
+                timeSpan = value - Epoch;
+            }
+            return SerializeTicks(timeSpan, context);
         }
+
+        int ILengthSerializer<DateTime>.UnderestimateLength(DateTime value)
+        {
+            return 0;
+        }
+
         static readonly DateTime Epoch = new DateTime(1970, 1, 1);
 
         string ISerializer<DateTime>.DefinedType
         {
-            get { return ProtoTimeSpan.Serializer.DefinedType; }
+            get { return "Bcl.DateTime"; }
         }
 
     }

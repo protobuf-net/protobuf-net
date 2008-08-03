@@ -2,10 +2,10 @@
 
 namespace ProtoBuf
 {
-    internal sealed class UriSerializer : ISerializer<Uri>
+    internal sealed class UriSerializer : ISerializer<Uri>, ILengthSerializer<Uri>
     {
         private UriSerializer() { }
-        
+        public bool CanBeGroup { get { return false; } }
         public static UriSerializer Default = new UriSerializer();
         Uri ISerializer<Uri>.Deserialize(Uri value, SerializationContext context)
         {
@@ -15,17 +15,7 @@ namespace ProtoBuf
 
         int ISerializer<Uri>.Serialize(Uri value, SerializationContext context)
         {
-            if (value == null)
-            {
-                context.WriteByte(0);
-                return 1;
-            }
-            return StringSerializer.Serialize(value.ToString(), context);
-        }
-
-        int ISerializer<Uri>.GetLength(Uri value, SerializationContext context)
-        {
-            return value == null ? 1 : StringSerializer.GetLength(value.ToString());
+            return value == null ? 0 : StringSerializer.Serialize(value.ToString(), context);
         }
 
         WireType ISerializer<Uri>.WireType
@@ -36,6 +26,11 @@ namespace ProtoBuf
         string ISerializer<Uri>.DefinedType
         {
             get { return ProtoFormat.STRING; }
+        }
+        
+        int ILengthSerializer<Uri>.UnderestimateLength(Uri value)
+        {
+            return value == null ? 0 : StringSerializer.UnderestimateLength(value.ToString());
         }
     }
 }

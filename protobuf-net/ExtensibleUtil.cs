@@ -53,34 +53,31 @@ namespace ProtoBuf
                 {
                     WireType wireType;
                     int readTag;
-                    Serializer<TSource>.ParseFieldToken(token, out wireType, out readTag);
+                    Serializer.ParseFieldToken(token, out wireType, out readTag);
 
                     if (readTag == tag)
                     {
                         TValue value;
-                        if (wireType != serializer.WireType)
+                        if (wireType == WireType.StartGroup)
                         {
-                            IGroupSerializer<TValue> groupSerializer;
-                            if (wireType == WireType.StartGroup &&
-                                (groupSerializer = serializer as IGroupSerializer<TValue>) != null)
-                            {
-                                ctx.StartGroup(tag);
-                                value = groupSerializer.DeserializeGroup(lastValue, ctx);
+                            ctx.StartGroup(tag);
+                            value = serializer.Deserialize(lastValue, ctx);
 
-                                // EndGroup will be called [and token validated] before returning
-                            }
-                            else
-                            {
-                                throw new ProtoException(
+                            // EndGroup will be called [and token validated] before returning
+                        } else if (wireType == WireType.String) {
+                            int len = TwosComplementSerializer.ReadInt32(ctx);
+                            long oldMaxPos = ctx.MaxReadPosition;
+                            ctx.MaxReadPosition = ctx.Position + len;
+                            value = serializer.Deserialize(lastValue, ctx);
+                            ctx.MaxReadPosition = oldMaxPos;
+                        } else if (wireType == serializer.WireType) {
+                            value = serializer.Deserialize(lastValue, ctx);
+                        } else {
+                            throw new ProtoException(
                                     string.Format(
                                         "Wire-type mismatch; expected {0}, received {1}",
                                         serializer.WireType,
                                         wireType));
-                            }
-                        }
-                        else
-                        {
-                            value = serializer.Deserialize(lastValue, ctx);
                         }
 
                         hasValue = true;
@@ -98,7 +95,7 @@ namespace ProtoBuf
                     else
                     {
                         // skip all other tags
-                        Serializer<TSource>.SkipData(ctx, readTag, wireType);
+                        Serializer.SkipData(ctx, readTag, wireType);
                     }
                 }
             }
@@ -141,26 +138,21 @@ namespace ProtoBuf
 
             // check the length of the new value, using the null stream as a stop-gap
             SerializationContext nullCtx = new SerializationContext(Stream.Null);
-            int len = serializer.GetLength(value, nullCtx);
-
-            if (len > 0)
+            
+            Stream stream = instance.BeginAppend();
+            try
             {
-                // something worth writing; grab a stream from the instance and append
-                Stream stream = instance.BeginAppend();
-                try
-                {
-                    SerializationContext ctx = new SerializationContext(stream);
-                    ctx.Push(instance); // for recursion detection
-                    Serializer.WriteFieldToken(tag, serializer.WireType, ctx);
-                    serializer.Serialize(value, ctx);
-                    instance.EndAppend(stream, true);
-                    ctx.Pop(instance);
-                }
-                catch
-                {
-                    instance.EndAppend(stream, false);
-                    throw;
-                }
+                SerializationContext ctx = new SerializationContext(stream);
+                ctx.Push(instance); // for recursion detection
+                Serializer.WriteFieldToken(tag, serializer.WireType, ctx);
+                serializer.Serialize(value, ctx);
+                instance.EndAppend(stream, true);
+                ctx.Pop(instance);
+            }
+            catch
+            {
+                instance.EndAppend(stream, false);
+                throw;
             }
         }
     }

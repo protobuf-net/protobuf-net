@@ -45,8 +45,11 @@ namespace ProtoBuf
         public int Tag { get { return tag; } }
         private readonly string name;
         public string Name { get { return name; } }
-        private readonly bool isRequired;
+        private readonly bool isRequired, isGroup, canBeGroup;
         public bool IsRequired { get { return isRequired; } }
+        public bool IsGroup { get { return isGroup; } }
+        public bool CanBeGroup { get { return canBeGroup; } }
+
         private readonly DataFormat dataFormat;
         public DataFormat DataFormat { get { return dataFormat; } }
 
@@ -56,8 +59,8 @@ namespace ProtoBuf
         protected readonly Getter<TEntity, TProperty> GetValue;
         protected readonly Setter<TEntity, TProperty> SetValue;
 
-        private readonly bool isGroup;
-        public bool IsGroup { get { return isGroup; } }
+        
+        
         protected PropertyBase(PropertyInfo property)
         {
             if (property == null) throw new ArgumentNullException("property");
@@ -72,9 +75,35 @@ namespace ProtoBuf
             }
             prefixLength = Serializer.GetPrefixLength(tag);
 
-            this.ValueSerializer = GetSerializer<TValue>(property);
-            this.groupSerializer = ValueSerializer as IGroupSerializer<TValue>;
+            this.valueSerializer = GetSerializer<TValue>(property);
+            this.lengthSerializer = valueSerializer as ILengthSerializer<TValue>;
+            this.canBeGroup = lengthSerializer == null ? false : lengthSerializer.CanBeGroup;
 
+            this.wireType = valueSerializer.WireType;
+            switch (WireType)
+            {
+                case WireType.Fixed32:
+                case WireType.Fixed64:
+                case WireType.Variant:
+                    // fine, but can't be a group
+                    canBeGroup = false;
+                    break;
+                case WireType.String:
+                    if(lengthSerializer == null)
+                    {   
+                        throw new ProtoException("Cannot be treated as lengh-prefixed: " + Name);
+                    }
+                    break;
+                case WireType.StartGroup:
+                case WireType.EndGroup:
+                default:
+                    throw new ProtoException("Invalid wire type: " + Name);             
+            }
+            if (IsGroup && !CanBeGroup)
+            {
+                throw new ProtoException("Cannot be treated as a group: " + Name);
+            }
+            
             MethodInfo method;
             if (property.CanRead && (method = property.GetGetMethod(true)) != null)
             {
@@ -97,9 +126,8 @@ namespace ProtoBuf
         }
 
         public abstract void Deserialize(TEntity instance, SerializationContext context);
-        public abstract void DeserializeGroup(TEntity instance, SerializationContext context);
-
-        public int Serialize(TEntity instance, SerializationContext context)
+        
+        int IProperty<TEntity>.Serialize(TEntity instance, SerializationContext context)
         {
             TProperty value = GetValue(instance);
             return HasValue(value) ? Serialize(value, context) : 0;
@@ -107,44 +135,21 @@ namespace ProtoBuf
 
         public abstract int Serialize(TProperty value, SerializationContext context);
 
-        public int GetLength(TEntity instance, SerializationContext context)
-        {
-            TProperty value = GetValue(instance);
-            return HasValue(value) ? GetLengthImpl(value, context) : 0;
-        }
+        private readonly ISerializer<TValue> valueSerializer;
+        private readonly ILengthSerializer<TValue> lengthSerializer;
+        private readonly WireType wireType;
 
-        protected readonly ISerializer<TValue> ValueSerializer;
-
-        private readonly IGroupSerializer<TValue> groupSerializer;
-        protected IGroupSerializer<TValue> GroupSerializer
-        {
-            get
-            {
-                if (groupSerializer == null) throw new ProtoException("Cannot treat property as a group: " + Name);
-                return groupSerializer;
-            }
-        }
-                
-
-        protected abstract int GetLengthImpl(TProperty instance, SerializationContext context);
-
-        public WireType WireType { get { return ValueSerializer.WireType; } }
-        public string DefinedType { get { return ValueSerializer.DefinedType; } }
+        public WireType WireType { get { return wireType; } }
+        public string DefinedType { get { return valueSerializer.DefinedType; } }
 
         public Type PropertyType { get { return typeof(TProperty); } }
         public virtual bool IsRepeated { get { return false; } }
 
-        protected int GetValueLength(TValue value, SerializationContext context)
+        protected TValue DeserializeValue(TValue value, SerializationContext context)
         {
-            if (isGroup)
-            {
-                return prefixLength + prefixLength + GroupSerializer.GetLengthGroup(value, context);
-            }
-            else
-            {
-                int len = ValueSerializer.GetLength(value, context);
-                return len == 0 ? 0 : prefixLength + len;
-            }
+            value = valueSerializer.Deserialize(value, context);
+            Trace(true, value, context);
+            return value;
         }
         protected int SerializeValue(TValue value, SerializationContext context)
         {
@@ -154,13 +159,18 @@ namespace ProtoBuf
             if (isGroup)
             {
                 return Serializer.WriteFieldToken(Tag, WireType.StartGroup, context)
-                    + GroupSerializer.SerializeGroup(value, context)
+                    + valueSerializer.Serialize(value, context)
                     + Serializer.WriteFieldToken(Tag, WireType.EndGroup, context);
+            }
+            else if (WireType == WireType.String)
+            {
+                return Serializer.WriteFieldToken(Tag, WireType, context)
+                    + context.WriteLengthPrefixed(value, lengthSerializer);
             }
             else
             {
                 return Serializer.WriteFieldToken(Tag, WireType, context)
-                    + ValueSerializer.Serialize(value, context);
+                    + valueSerializer.Serialize(value, context);
             }
         }
 

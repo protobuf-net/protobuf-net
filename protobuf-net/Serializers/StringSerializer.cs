@@ -2,52 +2,47 @@
 
 namespace ProtoBuf
 {
-    internal sealed class StringSerializer : ISerializer<string>
+    internal sealed class StringSerializer : ISerializer<string>, ILengthSerializer<string>
     {
         private StringSerializer() { }
-        
+
+        public bool CanBeGroup { get { return false; } }
         public static readonly StringSerializer Default = new StringSerializer();
         public string DefinedType { get { return ProtoFormat.STRING; } }
         public WireType WireType { get { return WireType.String; } }
 
         public static int Serialize(string value, SerializationContext context)
         {
-            if (value == null) return 0;
-            if (value.Length == 0)
+            if (string.IsNullOrEmpty(value)) return 0;
+
+            const int MAX_CHARS = 512;
+            int charsRemaining = value.Length, charIndex = 0, totalLength = 0;
+
+            context.CheckSpace(Encoding.UTF8.GetMaxByteCount(
+                charsRemaining > MAX_CHARS ? MAX_CHARS : charsRemaining));
+
+            while(charsRemaining > MAX_CHARS)
             {
-                return TwosComplementSerializer.WriteToStream(0, context);
+                int len = Encoding.UTF8.GetBytes(value, charIndex, MAX_CHARS, context.Workspace, 0);
+                context.Write(len);
+                totalLength += len;
+                charIndex += MAX_CHARS;
             }
-            
-            // check buffer space
-            int expectedLen = Encoding.UTF8.GetByteCount(value);
-            context.CheckSpace(expectedLen);
-
-            // do for real
-            int actualLen = Encoding.UTF8.GetBytes(value, 0, value.Length, context.Workspace, 0);
-            int preambleLen = TwosComplementSerializer.WriteToStream(actualLen, context);
-
-            Serializer.VerifyBytesWritten(expectedLen, actualLen);
-            context.Write(actualLen);
-            return preambleLen + actualLen;
+            if(charsRemaining > 0)
+            {
+                int len = Encoding.UTF8.GetBytes(value, charIndex, charsRemaining, context.Workspace, 0);
+                context.Write(len);
+                totalLength += len;                
+            }
+            return totalLength;
         }
         int ISerializer<string>.Serialize(string value, SerializationContext context)
         {
             return Serialize(value, context);
         }
-        public static int GetLength(string value)
-        {
-            if (value == null) return 0;
-            int preambleLen = TwosComplementSerializer.GetLength(value.Length);
-            if (value.Length == 0) return preambleLen;
-            return preambleLen + Encoding.UTF8.GetByteCount(value);
-        }
-        int ISerializer<string>.GetLength(string value, SerializationContext context)
-        {
-            return GetLength(value);
-        }
         public static string Deserialize(string value, SerializationContext context)
         {
-            int len = TwosComplementSerializer.ReadInt32(context);
+            int len = (int)(context.MaxReadPosition - context.Position);
             if (len == 0) return "";
 
             context.CheckSpace(len);
@@ -57,6 +52,15 @@ namespace ProtoBuf
         string ISerializer<string>.Deserialize(string value, SerializationContext context)
         {
             return Deserialize(value, context);
+        }
+
+        public static int UnderestimateLength(string value)
+        {
+            return value == null ? 0 : value.Length;
+        }
+        int ILengthSerializer<string>.UnderestimateLength(string value)
+        {
+            return UnderestimateLength(value);
         }
     }
 }

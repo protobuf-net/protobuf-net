@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System;
 using System.Globalization;
+using System.ComponentModel;
 
 namespace ProtoBuf
 {
@@ -20,29 +21,32 @@ namespace ProtoBuf
             }
             else
             {
-                return (TValue)Convert.ChangeType(
-                    untypedDefault, typeof(TValue), CultureInfo.InvariantCulture);
+                try
+                {
+                    return (TValue)Convert.ChangeType(
+                        untypedDefault, typeof(TValue), CultureInfo.InvariantCulture);
+                }
+                catch
+                {
+#if !SILVERLIGHT && !CF
+                    TypeConverter tc = TypeDescriptor.GetConverter(typeof(TValue));
+                    if(tc.CanConvertFrom(untypedDefault.GetType()))
+                    {
+                        return (TValue)tc.ConvertFrom(null, CultureInfo.InvariantCulture, untypedDefault);
+                    }
+#endif
+                    throw;
+                }
             }
         }
    
-        protected sealed override int GetLengthImpl(TValue value, SerializationContext context)
-        {
-            return GetValueLength(value, context);
-        }
         public sealed override int Serialize(TValue value, SerializationContext context)
         {
             return SerializeValue(value, context);
         }
         public sealed override void Deserialize(TEntity instance, SerializationContext context)
         {
-            TValue value = ValueSerializer.Deserialize(default(TValue), context);
-            SetValue(instance, value);
-            Trace(true, value, context);
-        }
-        public sealed override void DeserializeGroup(TEntity instance, SerializationContext context)
-        {
-            // read a single item
-            TValue value = GroupSerializer.DeserializeGroup(default(TValue), context);
+            TValue value = DeserializeValue(default(TValue), context);
             SetValue(instance, value);
             Trace(true, value, context);
         }

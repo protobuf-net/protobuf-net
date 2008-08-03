@@ -80,8 +80,9 @@ namespace ProtoBuf
         private const long AllButFirstChunk = ~((long)127);
         private const long AllButFirstTwoChunks = AllButFirstChunk << 7;
 
-        internal static int EncodeInt64(long value, byte[] buffer)
+        internal static int EncodeInt64ToWorkspace(long value, SerializationContext context)
         {
+            byte[] buffer = context.Workspace;
             if ((value & AllButFirstChunk) == 0)
             {
                 buffer[0] = (byte)value;
@@ -110,34 +111,17 @@ namespace ProtoBuf
         }
         internal static int EncodeInt64(long value, SerializationContext context)
         {
-            byte[] buffer = context.Workspace;
-            if ((value & AllButFirstChunk) == 0)
+            int len = EncodeInt64ToWorkspace(value, context);
+            switch (len)
             {
-                context.WriteByte((byte)value);
-                return 1;
+                case 1:
+                    context.WriteByte(context.Workspace[0]);
+                    break;
+                default:
+                    context.Write(len);
+                    break;
             }
-            else if ((value & AllButFirstTwoChunks) == 0)
-            {
-                int val = (int)value;
-                buffer[0] = (byte)((val & 0x7F) | 0x80);
-                buffer[1] = (byte)(val >> 7);
-                context.Write(2);
-                return 2;
-            }
-            int lastByte = 0;
-            for (int i = 0; i < 10; i++)
-            {
-                int v = ((int)value) & 127;
-                if (v != 0) lastByte = i;
-                buffer[i] = (byte)(v | 128);
-                value >>= 7;
-            }
-
-            // byte 10 inly needs 1 bit (but if -ve backfills >> with 1s)
-            buffer[9] &= 0x01;
-            buffer[lastByte++] &= 127; // strip the msb
-            context.Write(lastByte);
-            return lastByte;            
+            return len;
         }
 
         internal static long DecodeInt64(SerializationContext context)

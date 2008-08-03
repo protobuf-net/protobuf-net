@@ -11,7 +11,7 @@ namespace ProtoBuf
             context.ReadBlock(8);
             if (!BitConverter.IsLittleEndian)
             {
-                BlobSerializer.Reverse8(context.Workspace);
+                SerializationContext.Reverse8(context.Workspace);
             }
             return BitConverter.ToDouble(context.Workspace, 0);
         }
@@ -20,13 +20,9 @@ namespace ProtoBuf
             byte[] buffer = BitConverter.GetBytes(value);
             if (!BitConverter.IsLittleEndian)
             {
-                BlobSerializer.Reverse8(buffer);
+                SerializationContext.Reverse8(buffer);
             }
             context.Write(buffer, 0, 8);
-            return 8;
-        }
-        int ISerializer<double>.GetLength(double value, SerializationContext context)
-        {
             return 8;
         }
     }

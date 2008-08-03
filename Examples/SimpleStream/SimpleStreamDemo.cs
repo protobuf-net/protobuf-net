@@ -135,13 +135,13 @@ namespace Examples.SimpleStream
             SomeEnumEntity dee = new SomeEnumEntity {Enum = SomeEnum.Foo};
             Assert.IsTrue(Program.CheckBytes(dee, 0x10, 0x03));
         }
-        [Test, ExpectedException(ExceptionType = typeof(KeyNotFoundException))]
+        [Test, ExpectedException(ExceptionType = typeof(ProtoException))]
         public void TestSerializeUndefinedEnum()
         {
             SomeEnumEntity dee = new SomeEnumEntity { Enum = 0};
             Serializer.Serialize(Stream.Null, dee);
         }
-        [Test, ExpectedException(ExceptionType = typeof(KeyNotFoundException))]
+        [Test, ExpectedException(ExceptionType = typeof(ProtoException))]
         public void TestDeserializeUndefinedEnum()
         {
             Program.Build<SomeEnumEntity>(0x10, 0x09);

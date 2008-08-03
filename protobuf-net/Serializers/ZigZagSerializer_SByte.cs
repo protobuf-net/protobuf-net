@@ -18,11 +18,5 @@ namespace ProtoBuf
         {
             return TwosComplementSerializer.WriteToStream(ZigInt32((int)value), context);
         }
-
-        int ISerializer<sbyte>.GetLength(sbyte value, SerializationContext context)
-        {
-            return GetLength((int)value);
-        }
-
     }
 }

@@ -9,6 +9,8 @@ namespace ProtoBuf
         DataFormat DataFormat { get; }
         bool IsRequired { get; }
         bool IsGroup { get; }
+        bool CanBeGroup { get; }
+
         int Tag { get; }
 #if !CF
         string Description { get; }
@@ -21,9 +23,5 @@ namespace ProtoBuf
         WireType WireType { get; }
         Type PropertyType { get; }
         bool IsRepeated { get; }
-
-        int GetLength(TEntity instance, SerializationContext context);
-
-        void DeserializeGroup(TEntity instance, SerializationContext context);
     }
 }

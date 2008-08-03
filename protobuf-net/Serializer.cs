@@ -364,6 +364,46 @@ namespace ProtoBuf
             return 5;            
         }
 
+        internal static void ParseFieldToken(int token, out WireType wireType, out int tag)
+        {
+            wireType = (WireType)(token & 7);
+            tag = token >> 3;
+            if (tag <= 0)
+            {
+                throw new ProtoException("Invalid tag: " + tag.ToString());
+            }
+        }
+
+        internal static void SkipData(SerializationContext context, int fieldTag, WireType wireType)
+        {
+
+            switch (wireType)
+            {
+                case WireType.Variant:
+                    Base128Variant.Skip(context);
+                    break;
+                case WireType.Fixed32:
+                    if (!context.TrySeek(4)) context.ReadBlock(4);
+                    break;
+                case WireType.Fixed64:
+                    if (!context.TrySeek(8)) context.ReadBlock(8);
+                    break;
+                case WireType.String:
+                    int len = TwosComplementSerializer.ReadInt32(context);
+                    if (!context.TrySeek(len)) context.WriteTo(Stream.Null, len);
+                    break;
+                case WireType.EndGroup:
+                    throw new ProtoException("End-group not expected at this location");
+                case WireType.StartGroup:
+                    // use the unknown-type deserializer to pass over the data
+                    context.StartGroup(fieldTag);
+                    UnknownType.Serializer.Deserialize(null, context);
+                    break;
+                default:
+                    throw new ProtoException("Unknown wire-type " + wireType.ToString());
+            }
+        }
+
         internal static int WriteFieldToken(int tag, WireType wireType, SerializationContext context)
         {
             int prefix = (tag << 3) | ((int)wireType & 7);

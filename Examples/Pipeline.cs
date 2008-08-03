@@ -64,9 +64,10 @@ message EnumWrapper {
             EnumParentStandardWrapper obj = new EnumParentStandardWrapper();
             EnumParentStandardWrapper clone = Serializer.DeepClone(obj);
 
-            // the source object should have been read three times;
-            // once to get the length-prefix, and once for the data
-            Assert.AreEqual(2, obj.Wrapper.SubData.IteratorCount, "obj IteratorCount");
+            // old: the source object should have been read twice
+            // old: once to get the length-prefix, and once for the data
+            // update: once only with buffering
+            Assert.AreEqual(1, obj.Wrapper.SubData.IteratorCount, "obj IteratorCount");
             Assert.AreEqual(0, obj.Wrapper.SubData.Count, "obj Count");
             Assert.AreEqual(0, obj.Wrapper.SubData.Sum, "obj Sum");
 
