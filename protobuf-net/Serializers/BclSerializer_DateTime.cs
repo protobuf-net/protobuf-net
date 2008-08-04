@@ -47,7 +47,7 @@ namespace ProtoBuf.Serializers
 
         string ISerializer<DateTime>.DefinedType
         {
-            get { return "Bcl.DateTime"; }
+            get { return "bcl.DateTime"; }
         }
 
     }

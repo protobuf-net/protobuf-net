@@ -159,7 +159,7 @@ namespace ProtoBuf.Serializers
         
         string ISerializer<TimeSpan>.DefinedType
         {
-            get { return "Bcl.TimeSpan"; }
+            get { return "bcl.TimeSpan"; }
         }
     }
 }

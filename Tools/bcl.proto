@@ -3,16 +3,16 @@
 package bcl;
 
 message TimeSpan {
-  optional sint64 value = 1;
-  optional TimeSpanScale scale = 2 [default = DAYS];
+  optional sint64 value = 1; // the size of the timespan (in units of the selected scale)
+  optional TimeSpanScale scale = 2 [default = DAYS]; // the scale of the timespan
   enum TimeSpanScale {
-    DAYS = 0,
-    HOURS = 1,
-    MINUTES = 2,
-    SECONDS = 3,
-    MILLISECONDS = 4,
+    DAYS = 0;
+    HOURS = 1;
+    MINUTES = 2;
+    SECONDS = 3;
+    MILLISECONDS = 4;
 
-    MINMAX = 15 // dubious
+    MINMAX = 15; // dubious
   }
 }
 

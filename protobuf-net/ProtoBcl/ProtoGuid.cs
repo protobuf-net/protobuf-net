@@ -2,7 +2,7 @@
 
 namespace ProtoBuf.ProtoBcl
 {
-    [ProtoContract(Name = "Bcl.Guid")]
+    [ProtoContract(Name = "bcl.Guid")]
     internal sealed class ProtoGuid
     {
         private ulong lo;

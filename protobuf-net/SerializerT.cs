@@ -43,17 +43,19 @@ namespace ProtoBuf
             knownTypes.Add(newType);
             foreach (IProperty<T> prop in props)
             {
+                bool dummy;
                 Type propType = prop.PropertyType,
-                    nullType = Nullable.GetUnderlyingType(propType);
-                if (nullType != null) propType = nullType;
-                if (propType == typeof(Guid))
-                {
-                    propType = typeof(ProtoGuid);
-                }
-                if (Serializer.IsEntityType(propType))
+                    actualType = Nullable.GetUnderlyingType(propType)
+                        ?? GetListType(propType, out dummy) ?? propType;
+
+                //if (actualType == typeof(Guid))
+                //{
+                //    actualType = typeof(ProtoGuid);
+                //}
+                if (Serializer.IsEntityType(actualType))
                 {
                     typeof(Serializer<>)
-                        .MakeGenericType(propType)
+                        .MakeGenericType(actualType)
                         .GetMethod("WalkTypes")
                         .Invoke(null, new object[] { knownTypes });
                 }

@@ -107,7 +107,7 @@ namespace ProtoBuf.Serializers
 
         string ISerializer<decimal>.DefinedType
         {
-            get { return "Bcl.Decimal"; }
+            get { return "bcl.Decimal"; }
         }
     }
 }
