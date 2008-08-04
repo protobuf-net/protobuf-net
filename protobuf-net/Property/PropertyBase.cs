@@ -164,7 +164,7 @@ namespace ProtoBuf
             }
             else if (WireType == WireType.String)
             {
-                return Serializer.WriteFieldToken(Tag, WireType, context)
+                return Serializer.WriteFieldToken(Tag, WireType.String, context)
                     + context.WriteLengthPrefixed(value, lengthSerializer);
             }
             else
