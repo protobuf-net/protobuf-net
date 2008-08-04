@@ -4,15 +4,14 @@ using System.ComponentModel;
 namespace ProtoBuf
 {
     /// <summary>
-    /// Indicates that protocol-buffer serialization should use "zigzag" encoding;
-    /// this is useful when a signed integer may frequently have negative values,
-    /// significantly reducing the space required - but means that positive values
-    /// may require an additional byte slightly sooner (one bit sooner, or a factor
-    /// of two).
+    /// Declares a member to be used in protocol-buffer serialization, using
+    /// the given Tag. A DataFormat may be used to optimise the serialization
+    /// format (for instance, using zigzag encoding for negative numbers, or 
+    /// fixed-length encoding for large values.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property,
         AllowMultiple = false, Inherited = true)]
-    public sealed class ProtoMemberAttribute : Attribute
+    public class ProtoMemberAttribute : Attribute
     {
         /// <summary>
         /// Creates a new ProtoMemberAttribute instance.
@@ -21,7 +20,7 @@ namespace ProtoBuf
         public ProtoMemberAttribute(int tag)
         {
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag");
-            Tag = tag;
+            this.tag = tag;
         }
         
         /// <summary>
@@ -40,8 +39,8 @@ namespace ProtoBuf
         /// <summary>
         /// Gets the unique tag used to identify this member within the type.
         /// </summary>
-        public int Tag { get { return tag; } private set { tag = value; } }
-        private int tag;
+        public int Tag { get { return tag; } }
+        private readonly int tag;
 
         /// <summary>
         /// Gets or sets a value indicating whether this member is mandatory.
@@ -60,5 +59,36 @@ namespace ProtoBuf
         /// 
         public bool IsGroup { get { return isGroup; } set { isGroup = value; } }
         private bool isGroup;
+    }
+
+    /// <summary>
+    /// Declares a member to be used in protocol-buffer serialization, using
+    /// the given Tag and MemberName. This allows ProtoMemberAttribute usage
+    /// even for partial classes where the individual members are not
+    /// under direct control.
+    /// A DataFormat may be used to optimise the serialization
+    /// format (for instance, using zigzag encoding for negative numbers, or 
+    /// fixed-length encoding for large values.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Class,
+            AllowMultiple = true, Inherited = true)]
+    public class ProtoPartialMemberAttribute : ProtoMemberAttribute
+    {
+        /// <summary>
+        /// Creates a new ProtoMemberAttribute instance.
+        /// </summary>
+        /// <param name="tag">Specifies the unique tag used to identify this member within the type.</param>
+        /// <param name="memberName">Specifies the member to be serialized.</param>
+        public ProtoPartialMemberAttribute(int tag, string memberName)
+            : base(tag)
+        {
+            if (string.IsNullOrEmpty(memberName)) throw new ArgumentNullException("memberName");
+            this.memberName = memberName;
+        }
+        /// <summary>
+        /// The name of the member to be serialized.
+        /// </summary>
+        public string MemberName { get { return memberName; } }
+        private readonly string memberName;
     }
 }

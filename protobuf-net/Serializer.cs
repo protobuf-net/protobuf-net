@@ -53,7 +53,13 @@ namespace ProtoBuf
             format = DataFormat.Default;
             tag = -1;
             isRequired = isGroup = false;
+            // check against the property
             ProtoMemberAttribute pm = AttributeUtils.GetAttribute<ProtoMemberAttribute>(property);
+            if (pm == null)
+            { // check also against the type 
+                pm = AttributeUtils.GetAttribute<ProtoPartialMemberAttribute>(property.ReflectedType,
+                    delegate(ProtoPartialMemberAttribute ppma) { return ppma.MemberName == property.Name; });
+            }
             if (pm != null)
             {
                 format = pm.DataFormat;
@@ -79,6 +85,14 @@ namespace ProtoBuf
             {
                 if (!string.IsNullOrEmpty(xe.ElementName)) name = xe.ElementName;
                 tag = xe.Order;
+                return tag > 0;
+            }
+
+            XmlArrayAttribute xa = AttributeUtils.GetAttribute<XmlArrayAttribute>(property);
+            if (xa != null)
+            {
+                if (!string.IsNullOrEmpty(xa.ElementName)) name = xa.ElementName;
+                tag = xa.Order;
                 return tag > 0;
             }
 

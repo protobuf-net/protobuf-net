@@ -14,5 +14,14 @@ namespace ProtoBuf
         {
             return (T)Attribute.GetCustomAttribute(type, typeof(T));
         }
+        internal static T GetAttribute<T>(Type type, Predicate<T> predicate) where T : Attribute
+        {
+            if (predicate == null) throw new ArgumentNullException("predicate");
+            foreach (T attrib in Attribute.GetCustomAttributes(type, typeof(T)))
+            {
+                if (predicate(attrib)) return attrib;
+            }
+            return null;
+        }
     }
 }

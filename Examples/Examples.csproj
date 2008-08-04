@@ -119,7 +119,9 @@
     <Compile Include="NWind\DataContext.cs" />
     <Compile Include="NWind\NWind.cs" />
     <Compile Include="OldProgram.cs" />
+    <Compile Include="PartialClasses.cs" />
     <Compile Include="Pipeline.cs" />
+    <Compile Include="Ppt\Ppt.cs" />
     <Compile Include="Primatives.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
