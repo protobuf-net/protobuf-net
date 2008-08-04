@@ -12,7 +12,7 @@ message TimeSpan {
     SECONDS = 3,
     MILLISECONDS = 4,
 
-    MINMAX = 14 // dubious
+    MINMAX = 15 // dubious
   }
 }
 
