@@ -1,0 +1,28 @@
+// this is prototype only!!!
+
+package bcl;
+
+message TimeSpan {
+  optional sint64 value = 1;
+  optional TimeSpanScale scale = 2 [default = DAYS];
+  enum TimeSpanScale {
+    DAYS = 0,
+    HOURS = 1,
+    MINUTES = 2,
+    SECONDS = 3,
+    MILLISECONDS = 4,
+
+    MINMAX = 14 // dubious
+  }
+}
+
+message Guid {
+  optional fixed64 lo = 1; // the first 8 bytes of the guid
+  optional fixed64 hi = 2; // the second 8 bytes of the guid
+}
+
+message Decimal {
+  optional uint64 lo = 1; // the first 64 bits of the underlying value
+  optional uint32 hi = 2; // the last 32 bis of the underlying value
+  optional sint32 signScale = 3; // the number of decimal digits, and the sign
+}
