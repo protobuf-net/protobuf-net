@@ -16,6 +16,20 @@ message TimeSpan {
   }
 }
 
+message DateTime {
+  optional sint64 value = 1; // the offset (in units of the selected scale) from 1970/01/01
+  optional TimeSpanScale scale = 2 [default = DAYS]; // the scale of the timespan
+  enum TimeSpanScale {
+    DAYS = 0;
+    HOURS = 1;
+    MINUTES = 2;
+    SECONDS = 3;
+    MILLISECONDS = 4;
+
+    MINMAX = 15; // dubious
+  }
+}
+
 message Guid {
   optional fixed64 lo = 1; // the first 8 bytes of the guid
   optional fixed64 hi = 2; // the second 8 bytes of the guid
