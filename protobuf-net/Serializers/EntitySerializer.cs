@@ -31,7 +31,7 @@ namespace ProtoBuf
 
         public int Serialize(TEntity value, SerializationContext context)
         {
-            return Serializer<TEntity>.Serialize(value, context, null);
+            return Serializer<TEntity>.Serialize(value, context);
         }
     }
 }

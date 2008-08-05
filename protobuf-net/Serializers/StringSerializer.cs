@@ -5,7 +5,7 @@ namespace ProtoBuf
     internal sealed class StringSerializer : ISerializer<string>, ILengthSerializer<string>
     {
         private StringSerializer() { }
-
+        static readonly UTF8Encoding utf8 = new UTF8Encoding(false, false);
         public bool CanBeGroup { get { return false; } }
         public static readonly StringSerializer Default = new StringSerializer();
         public string DefinedType { get { return ProtoFormat.STRING; } }
@@ -18,19 +18,19 @@ namespace ProtoBuf
             const int MAX_CHARS = 512;
             int charsRemaining = value.Length, charIndex = 0, totalLength = 0;
 
-            context.CheckSpace(Encoding.UTF8.GetMaxByteCount(
+            context.CheckSpace(3 * (
                 charsRemaining > MAX_CHARS ? MAX_CHARS : charsRemaining));
 
             while(charsRemaining > MAX_CHARS)
             {
-                int len = Encoding.UTF8.GetBytes(value, charIndex, MAX_CHARS, context.Workspace, 0);
+                int len = utf8.GetBytes(value, charIndex, MAX_CHARS, context.Workspace, 0);
                 context.Write(len);
                 totalLength += len;
                 charIndex += MAX_CHARS;
             }
             if(charsRemaining > 0)
             {
-                int len = Encoding.UTF8.GetBytes(value, charIndex, charsRemaining, context.Workspace, 0);
+                int len = utf8.GetBytes(value, charIndex, charsRemaining, context.Workspace, 0);
                 context.Write(len);
                 totalLength += len;                
             }
@@ -47,7 +47,7 @@ namespace ProtoBuf
 
             context.CheckSpace(len);
             context.ReadBlock(len);
-            return Encoding.UTF8.GetString(context.Workspace, 0, len);
+            return utf8.GetString(context.Workspace, 0, len);
         }
         string ISerializer<string>.Deserialize(string value, SerializationContext context)
         {

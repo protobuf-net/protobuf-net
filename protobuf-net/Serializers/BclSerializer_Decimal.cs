@@ -48,7 +48,7 @@ namespace ProtoBuf.Serializers
                             case FieldDecimalHigh:
                             case FieldDecimalLow:
                             case FieldDecimalSignScale:
-                                throw new ProtoException("Incorrect wire-type deserializing Deciaml");
+                                throw new ProtoException("Incorrect wire-type deserializing Decimal");
                             default:
                                 Serializer.SkipData(context, fieldTag, wireType);
                                 break;

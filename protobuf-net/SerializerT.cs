@@ -280,7 +280,7 @@ namespace ProtoBuf
             if (instance == null) throw new ArgumentNullException("instance");
             if (destination == null) throw new ArgumentNullException("destination");
             SerializationContext ctx = new SerializationContext(destination);
-            int len = Serialize(instance, ctx, null);
+            int len = Serialize(instance, ctx);
             ctx.CheckStackClean();
             destination.Flush();
             return len;
@@ -288,16 +288,15 @@ namespace ProtoBuf
 
 
 
-        internal static int Serialize(T instance, SerializationContext context, IProperty<T>[] candidateProperties)
+        internal static int Serialize(T instance, SerializationContext context)
         {
-            if (candidateProperties == null) candidateProperties = props;
             context.Push(instance);
             //context.CheckSpace();
             int total = 0, len;
-            for (int i = 0; i < candidateProperties.Length; i++)
+            for (int i = 0; i < props.Length; i++)
             {
                 // note that this serialization includes the headers...
-                total += candidateProperties[i].Serialize(instance, context);
+                total += props[i].Serialize(instance, context);
             }
             IExtensible extra = instance as IExtensible;
             if (extra != null && (len = extra.GetLength()) > 0)
