@@ -203,14 +203,12 @@ namespace Examples.SimpleStream
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    ProtoSharp.Core.MessageWriter mw = new ProtoSharp.Core.MessageWriter(ms),
-                        nullWriter = new ProtoSharp.Core.MessageWriter(Stream.Null);
-                    mw.WriteMessage(item);
+                    ProtoSharp.Core.Serializer.Serialize(ms, item);
                     ms.Position = 0;
 
                     byte[] buffer = ms.ToArray();
                     
-                    psClone = ProtoSharp.Core.MessageReader.Read<T>(buffer);
+                    psClone = ProtoSharp.Core.Serializer.Deserialize<T>(ms);
                     if (expected != null && !Program.ArraysEqual(buffer, expected))
                     {
                         Console.WriteLine("\t*** serialization failure");
@@ -220,7 +218,7 @@ namespace Examples.SimpleStream
                     serializeWatch = Stopwatch.StartNew();
                     for (int i = 0; i < protoCount; i++)
                     {
-                        nullWriter.WriteMessage(item);
+                        ProtoSharp.Core.Serializer.Serialize(Stream.Null, item);
                     }
                     serializeWatch.Stop();
                     
@@ -229,7 +227,7 @@ namespace Examples.SimpleStream
                     for (int i = 0; i < protoCount; i++)
                     {
                         ms.Position = 0;
-                        ProtoSharp.Core.MessageReader.Read<T>(ms);
+                        ProtoSharp.Core.Serializer.Deserialize<T>(ms);
                     }
                     deserializeWatch.Stop();
                     Console.WriteLine("||[http://code.google.com/p/protosharp/ proto#]||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
