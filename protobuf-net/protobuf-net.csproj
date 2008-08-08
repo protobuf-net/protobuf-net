@@ -125,6 +125,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Formatter.cs" />
     <Compile Include="Property\PropertyEnumerable.cs" />
     <Compile Include="Property\PropertyParseable.cs" />
     <Compile Include="Property\PropertyUInt64Fixed.cs" />

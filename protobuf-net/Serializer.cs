@@ -169,6 +169,17 @@ namespace ProtoBuf
         private const string ProtoBinaryField = "proto";
 
 #if REMOTING
+
+        /// <summary>
+        /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
+        /// </summary>
+        /// <typeparam name="T">The type of object to be [de]deserialized by the formatter.</typeparam>
+        /// <returns>A new IFormatter to be used during [de]serialization.</returns>
+        public static IFormatter CreateFormatter<T>() where T : class, new()
+        {
+            return new Formatter<T>();
+        }
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.
         /// </summary>
@@ -188,6 +199,8 @@ namespace ProtoBuf
                 //info.AddValue(ProtoBinaryField, s);
             }
         }
+
+        
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
         /// </summary>
