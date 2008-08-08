@@ -48,6 +48,20 @@ namespace Examples.SimpleStream
             Assert.AreEqual(t2.B, clone.B);
             
         }
+        [Test]
+        public void MultiByteUTF8VariousLengths()
+        {
+            char mb = 'ä';
+            Assert.AreEqual(2, Encoding.UTF8.GetByteCount(new char[] { mb }), "is multibyte");
+
+            for (int i = 0; i < 1024; i++)
+            {
+                Test2 t2 = new Test2 { B = new string(mb, i) },
+                    clone = Serializer.DeepClone(t2);
+                Assert.AreEqual(i, t2.B.Length, "len");
+                Assert.AreEqual(t2.B, clone.B, "Count: " + i.ToString());
+            }
+        }
 
         [Test]
         public void EmbeddedMessageSample()

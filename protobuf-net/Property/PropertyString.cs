@@ -14,29 +14,48 @@ namespace ProtoBuf.Property
         {
             string value = GetValue(source);
             if (value == null || (IsOptional && value == DefaultValue)) return 0;
-            int sLen = value.Length;
-            if (sLen == 0)
+
+            int charCount = value.Length, underEstimate = charCount;
+            if (charCount == 0)
             {
                 int prefixLen = WritePrefix(context);
                 context.WriteByte(0);
                 return prefixLen + 1;
             }
-            else if (sLen <= 127)
-            {
+            else if (charCount <= 42) {
+                // guaranteed to have a byte length at most 127, so single byte;
+                // any text up to 42 chars will take at most 126 bytes
+                context.CheckSpace((3 * charCount) + 1);
                 int prefixLen = WritePrefix(context),
-                    byteCount = utf8.GetByteCount(value);
-
-                context.CheckSpace(3 * sLen); // for utf8 encoding
+                    byteCount = utf8.GetBytes(value, 0, charCount, context.Workspace, 1);
                 context.Workspace[0] = (byte)byteCount;
-                utf8.GetBytes(value, 0, sLen, context.Workspace, 1);
                 context.Write(++byteCount);
-                return prefixLen + byteCount;
+                return prefixLen + byteCount;    
+
+            } else if (charCount <= 127) {
+                // common text in many locales will /tend/ to be single-byte. We'll
+                // absorb the cost of checking the actual length, since we know it
+                // is only a short string.
+                underEstimate = utf8.GetByteCount(value);
+                if(underEstimate <= 127) {
+                    context.CheckSpace(underEstimate + 1);
+                    int prefixLen = WritePrefix(context),
+                    byteCount = utf8.GetBytes(value, 0, charCount, context.Workspace, 1);
+                    context.Workspace[0] = (byte)byteCount;
+                    context.Write(++byteCount);
+                    return prefixLen + byteCount;    
+                }
+                // note also that we update "underEstimate"; this means that even
+                // if we find a 100-char string actually needs multiple bytes
+                // (and so we'll use the callback below), we at least start the
+                // callback with the correct length, avoiding the need to
+                // encode it twice.
             }
-            else
-            {
-                return WritePrefix(context)
-                + context.WriteLengthPrefixed(value, value.Length, this);
-            }
+            
+            // when all else fails (longer strings), use a callback
+            // to to a length prefix using our estimated length...
+            return WritePrefix(context)
+                + context.WriteLengthPrefixed(value, underEstimate, this);
         }
 
         public override string DeserializeImpl(TSource source, SerializationContext context)
