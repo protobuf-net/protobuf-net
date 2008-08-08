@@ -168,7 +168,7 @@
     <Compile Include="ProtoBcl\ProtoDecimal.cs" />
     <Compile Include="ProtoBcl\ProtoGuid.cs" />
     <Compile Include="ProtoBcl\ProtoTimeSpan.cs" />
-    <Compile Include="Serializers\Base128Variant.cs">
+    <Compile Include="Base128Variant.cs">
       <SubType>Code</SubType>
     </Compile>
     <None Include="Web\TODO.txt" />

@@ -13,12 +13,12 @@ namespace Examples
     {
         static void Main() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
-            const int COUNT = 10; // 00000;
+            const int COUNT = 1000000;
             demo.PerfTestSimple(COUNT, false);
             demo.PerfTestString(COUNT, false);
             demo.PerfTestEmbedded(COUNT, false);
 
-            const int NWIND_COUNT = 3000;
+            const int NWIND_COUNT = 500;
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
             Console.WriteLine("Using groups: {0}", DAL.Database.MASTER_GROUP);
             SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, null);
