@@ -1,0 +1,20 @@
+<publishData>
+  <publishTarget publishUrl="\\mgravell2003e\d$\NWindServer\">
+    <file relUrl="NWindService.svc.cs" publishTime="08/06/2008 15:58:18" />
+    <file relUrl="WcfServer.csproj" publishTime="08/06/2008 15:58:53" />
+    <file relUrl="NWindMtomService.svc" publishTime="08/06/2008 15:58:45" />
+    <file relUrl="NWind.dbml" publishTime="08/06/2008 14:29:18" />
+    <file relUrl="INWindService.cs" publishTime="08/06/2008 15:44:15" />
+    <file relUrl="WcfServer.Publish.xml" publishTime="08/06/2008 16:41:46" />
+    <file relUrl="Web.config" publishTime="08/06/2008 15:58:18" />
+    <file relUrl="bin/protobuf-net.dll" publishTime="08/08/2008 13:33:56" />
+    <file relUrl="NWind.dbml.layout" publishTime="08/06/2008 14:29:18" />
+    <file relUrl="bin/WcfServer.pdb" publishTime="08/08/2008 13:52:32" />
+    <file relUrl="WcfServer.csproj.user" publishTime="08/06/2008 17:05:52" />
+    <file relUrl="NWindTextService.svc" publishTime="08/06/2008 15:58:52" />
+    <file relUrl="bin/protobuf-net.xml" publishTime="08/08/2008 13:33:56" />
+    <file relUrl="bin/WcfServer.dll" publishTime="08/08/2008 13:52:32" />
+    <file relUrl="NWind.designer.cs" publishTime="08/06/2008 14:29:18" />
+    <file relUrl="Properties/AssemblyInfo.cs" publishTime="08/06/2008 14:26:17" />
+  </publishTarget>
+</publishData>

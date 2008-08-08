@@ -1,0 +1,90 @@
+=== Introduction ===
+
+This is a sample WCF client/server to illustrate the potential
+performance benefit of protocol buffers for data transit, and
+how protobuf-net enables protocol buffers on your regular .NET types.
+
+We're mainly interested in large payloads; for small payloads latency
+in the performance bottleneck. This demo transfers all orders/lines
+from the Northwind database.
+
+Separate investigations (http://code.google.com/p/protobuf-net/) show
+that this data is (not including WCF overheads):
+
+DataContractSerializer: 736,574 bytes
+protobuf-net: 133,010 bytes
+
+So we should be looking for protobuf-net to take about 18% of the
+time of regular WCF usage.
+
+=== First, The Results ===
+
+(512 broadband over VPN, moderate power laptop)
+
+Local server, with MTOM; 75 roundtrips:
+  Foo: 14,220ms, Bar: 4,710ms (33.1%)
+
+Remote server, without MTOM; 5 roundtrips:
+  Foo: 232,508ms, Bar: 47,172ms (20.3%)
+
+Remote server, with MTOM; 5 roundtrips:
+  Foo: 229,405ms, Bar: 35,659ms (15.5%)
+
+Clearly this represents a *significant* space saving. Obviously the use-case
+is exaggerated, but it illustrates the point: for moderate size messages you
+can save a lot of time by using a slimmer serialization.
+
+Note that this really boils down to transferring 7Mb vs 1Mb; we have met
+(and even exceeded) our target performance of taking 18% of the time.
+
+=== The Server ===
+
+The server is an ASP.NET Web Application Project that uses LINQ-to-SQL
+to talk to a Northwind database on the local (server) machine
+(such as SQL Server 2005 Express Edition). The data is a regular
+"dbml" setup. There is also a WCF server (.svc) that publishes this
+data via the INWindService interface.
+
+=== The WCF Service ===
+
+This interface has methods to load data (from the database), and to
+"roundtrip" data - i.e. it simply accepts the data from the client
+and returns it to the client without any processing (this is to
+allow us to test our data transfer performance without any other
+variables).
+
+The methods are duplicated; the "Foo" methods are regular WCF style;
+the "Bar" methods are *identical* except they also declare a
+behavior: [ProtoBuf.ServiceModel.ProtoBehavior]
+
+This behavior is detected by WCF, and is used to replace the default
+DataContractSerializer for a protobuf-net serializer instead.
+
+=== The Client ===
+
+The client is a winforms application that uses WCF to consume data
+from the WCF service. The proxy classes were generated via "scvutil",
+and have been modified only to include the custom behavior on the "Bar"
+methods.
+
+=== Using The App ===
+
+The app has 3 buttons and 2 options;
+
+"Foo" requests the data (once) via regular WCF; no timing is performed
+but the data is presented for the user to investigate.
+
+"Bar" requests the data (once) via using the protobuf-net behavior;
+again, no timing is performed; it is just to prove it works.
+
+"Mtom" enables / disables MTOM on the wire. MTOM allows binary data to
+be transferred without base-64 encoding, which is useful since protobuf-net
+is a binary formatter.
+
+"Remote" switches between a local server (same machine) and a remote server,
+as defined in app.config. This can be used to illustrate the performance
+over different links.
+
+"Stress" does a number of roundtrips of the data (as defined by the numeric
+control) using both the regular WCF and protobuf-net approaches. The results
+are then summarised in the title bar.
