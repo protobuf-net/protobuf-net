@@ -85,6 +85,11 @@ namespace Examples.SimpleStream
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
             Assert.IsTrue(LoadTestItem(t3, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
+        public void PerfTestEnum(int count, bool runLegacy)
+        {
+            Test4 t4 = new Test4 { D = TestEnum.D };
+            Assert.IsTrue(LoadTestItem(t4, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x20, 0x03));
+        }
 
         [ProtoContract]
         class TwoFields
@@ -458,6 +463,19 @@ namespace Examples.SimpleStream
         [DataMember(Name = "c", Order = 3, IsRequired = true)]
         [ProtoSharp.Core.Tag(3)]
         public Test1 C { get; set; }
+    }
+
+    [Serializable, DataContract]
+    public sealed class Test4
+    {
+        [DataMember(Name = "d", Order = 4, IsRequired = true)]
+        [ProtoSharp.Core.Tag(4)]
+        public TestEnum D { get; set; }
+    }
+
+    public enum TestEnum
+    {
+        A = 0, B = 1, C = 2, D = 3, E = 4, F = 5, G = 6
     }
 
     [ServiceContract]
