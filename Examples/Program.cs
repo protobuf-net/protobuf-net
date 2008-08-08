@@ -14,10 +14,10 @@ namespace Examples
         static void Main() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
             const int COUNT = 1000000;
-            //demo.PerfTestSimple(COUNT, true);
-            //demo.PerfTestString(COUNT, true);
-            //demo.PerfTestEmbedded(COUNT, true);
-            demo.PerfTestEnum(COUNT, true);
+            demo.PerfTestSimple(COUNT, true);
+            demo.PerfTestString(COUNT, true);
+            demo.PerfTestEmbedded(COUNT, true);
+            //demo.PerfTestEnum(COUNT, true);
             const int NWIND_COUNT = 500;
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
             Console.WriteLine("Using groups: {0}", DAL.Database.MASTER_GROUP);

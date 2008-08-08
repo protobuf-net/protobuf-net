@@ -85,6 +85,16 @@ namespace Examples.SimpleStream
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
             Assert.IsTrue(LoadTestItem(t3, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
+
+        [Test]
+        public void PerfTestEnumOnce()
+        {
+            Test4 t4 = new Test4 { D = TestEnum.D };
+            Assert.IsTrue(Program.CheckBytes(t4, 0x20, 0x03));
+            Assert.AreEqual(t4.D, Serializer.DeepClone(t4).D);
+
+        }
+
         public void PerfTestEnum(int count, bool runLegacy)
         {
             Test4 t4 = new Test4 { D = TestEnum.D };

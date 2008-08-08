@@ -12,7 +12,7 @@ namespace ProtoBuf
         /// <summary>
         /// Gets or sets the specific value to use for this enum during serialization.
         /// </summary>
-        public long Value
+        public int Value
         {
             get
             {
@@ -21,9 +21,9 @@ namespace ProtoBuf
 
             set
             {
-                if (value < 0 || value > MaxValue)
+                if (value < 0)
                 {
-                    throw new ArgumentOutOfRangeException("value", "Value cannot be between 0 and" + MaxValue + " (inclusive).");
+                    throw new ArgumentOutOfRangeException("value", "Value cannot be negative.");
                 }
 
                 this.enumValue = value;
@@ -35,8 +35,8 @@ namespace ProtoBuf
         /// </summary>
         /// <returns>true if a specific value is set</returns>
         public bool HasValue() { return enumValue.HasValue; }
-        private const long MaxValue = 0x7FFFFFFF;
-        private long? enumValue;
+        
+        private int? enumValue;
 
         /// <summary>
         /// Gets or sets the defined name of the enum, as used in .proto

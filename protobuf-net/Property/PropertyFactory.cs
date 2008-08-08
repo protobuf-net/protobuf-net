@@ -177,7 +177,7 @@ namespace ProtoBuf.Property
 
             if (type.IsEnum)
             {
-                return PropertyUtil<T>.CreateTypedProperty("CreatePropertyEnum", type, Enum.GetUnderlyingType(type));
+                return PropertyUtil<T>.CreateTypedProperty("CreatePropertyEnum", type);
             }
 
             bool isEnumerableOnly;

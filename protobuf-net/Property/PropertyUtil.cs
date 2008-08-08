@@ -32,11 +32,10 @@ namespace ProtoBuf.Property
             return new PropertyEnumerable<T, TList, TValue>();
         }
 
-        public static Property<T> CreatePropertyEnum<TEnum, TValue>()
+        public static Property<T> CreatePropertyEnum<TEnum>()
             where TEnum : struct
-            where TValue : struct
         {
-            return new PropertyEnum<T, TEnum, TValue>();
+            return new PropertyEnum<T, TEnum>();
         }
 
         public static Property<T> CreatePropertyArray<TValue>()
