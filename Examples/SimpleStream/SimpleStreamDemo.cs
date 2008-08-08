@@ -18,6 +18,7 @@ using Examples.DesignIdeas;
 using System.Collections.Generic;
 using ProtoSharp.Core;
 using Serializer = ProtoBuf.Serializer;
+using System.ComponentModel;
 #endif
 
 namespace Examples.SimpleStream
@@ -55,20 +56,20 @@ namespace Examples.SimpleStream
             Assert.IsTrue(Program.CheckBytes(t3, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
-        public void PerfTestSimple(int count)
+        public void PerfTestSimple(int count, bool runLegacy)
         {
             Test1 t1 = new Test1 { A = 150 };
-            Assert.IsTrue(LoadTestItem(t1, count, count, true, true, true, true, true, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t1, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x08, 0x96, 0x01));
         }
-        public void PerfTestString(int count)
+        public void PerfTestString(int count, bool runLegacy)
         {
             Test2 t2 = new Test2 { B = "testing" };
-            Assert.IsTrue(LoadTestItem(t2, count, count, true, true, true, true, true, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+            Assert.IsTrue(LoadTestItem(t2, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
-        public void PerfTestEmbedded(int count)
+        public void PerfTestEmbedded(int count, bool runLegacy)
         {
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
-            Assert.IsTrue(LoadTestItem(t3, count, count, true, true, true, true, true, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t3, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
         [ProtoContract]
@@ -121,12 +122,15 @@ namespace Examples.SimpleStream
         public enum SomeEnum
         {
             [ProtoEnum(Value = 3)]
-            Foo= 1
+            Foo= 1,
+            [ProtoEnum(Value = 4)]
+            Bar = 2
         }
         [XmlType]
         public class SomeEnumEntity
         {
-            [XmlElement(Order = 2)]
+            public SomeEnumEntity() { Enum = SomeEnum.Bar; }
+            [XmlElement(Order = 2), DefaultValue(SomeEnum.Bar)]
             public SomeEnum Enum { get; set; }
         }
         [Test]
@@ -207,7 +211,7 @@ namespace Examples.SimpleStream
                     ms.Position = 0;
 
                     byte[] buffer = ms.ToArray();
-                    
+
                     psClone = ProtoSharp.Core.Serializer.Deserialize<T>(ms);
                     if (expected != null && !Program.ArraysEqual(buffer, expected))
                     {
@@ -221,7 +225,7 @@ namespace Examples.SimpleStream
                         ProtoSharp.Core.Serializer.Serialize(Stream.Null, item);
                     }
                     serializeWatch.Stop();
-                    
+
                     GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
                     deserializeWatch = Stopwatch.StartNew();
                     for (int i = 0; i < protoCount; i++)

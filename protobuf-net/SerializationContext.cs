@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using ProtoBuf.ProtoBcl;
+using ProtoBuf.Property;
 
 namespace ProtoBuf
 {
@@ -28,7 +29,8 @@ namespace ProtoBuf
 
     internal sealed class SerializationContext
     {
-        public readonly ProtoGuid GuidTemplate = new ProtoGuid();
+        //TODO: reinstate
+        //public readonly ProtoGuid GuidTemplate = null; //new ProtoGuid();
         
         public const string VerboseSymbol = "VERBOSE", DebugCategory = "protobuf-net";
         private Stack<object> objectStack = new Stack<object>();
@@ -283,7 +285,19 @@ namespace ProtoBuf
             workspace = new byte[InitialBufferLength];
         }
 
-        private const int InitialBufferLength = 32;
+        private object cacheProperty, cacheSource, cacheValue;
+        public object GetFromCache(object property, object source)
+        {
+            return (ReferenceEquals(cacheProperty, property) && ReferenceEquals(cacheSource, source))
+                ? cacheValue : null;
+        }
+        public void SetCache(object property, object source, object value)
+        {
+            cacheProperty = property;
+            cacheSource = source;
+            cacheValue = value;
+        }
+        internal const int InitialBufferLength = 32;
         
         public void CheckSpace(int length)
         {
@@ -301,6 +315,74 @@ namespace ProtoBuf
         public int Depth { get { return stackDepth; } }
 
 
+        internal int WriteLengthPrefixed<TValue>(TValue value, int underEstimatedLength, ILengthProperty<TValue> property)
+        {
+            MemoryStream ms = stream as MemoryStream;
+            if (ms != null)
+            {
+                // we'll write to out current stream, optimising
+                // for the case when the length-prefix is 1-byte;
+                // if not we'll have to BlockCopy
+                int startIndex = (int)ms.Position,
+                    guessLength = underEstimatedLength,
+                    guessPrefixLength = Base128Variant.EncodeInt32(guessLength, this),
+                    actualLength = property.Serialize(value, this);
+
+                if (guessLength == actualLength)
+                { // good guess! nothing to do...
+                    return guessPrefixLength + actualLength;
+                }
+
+                int actualPrefixLength = Base128Variant.GetLength(actualLength);
+
+                if (actualPrefixLength < guessPrefixLength)
+                {
+                    throw new ProtoException("Internal error; the serializer over-estimated the length. Sorry, but this shouldn't have happened.");
+                }
+                else if (actualPrefixLength > guessPrefixLength)
+                {
+                    // our guess of the length turned out to be bad; we need to
+                    // fix things...
+
+                    // extend the buffer to ensure we have space
+                    for (int i = actualPrefixLength - guessPrefixLength; i > 0; i--)
+                    {
+                        ms.WriteByte(0);
+                        position++;
+                    }
+
+                    // move the data
+                    // (note; we MUST call GetBuffer *after* extending it,
+                    // otherwise there the buffer might change if we extend
+                    // over a boundary)
+                    byte[] buffer = ms.GetBuffer();
+                    Buffer.BlockCopy(buffer, startIndex + guessPrefixLength,
+                        buffer, startIndex + actualPrefixLength, actualLength);
+                }
+
+                // back-fill the actual length into the buffer
+                Base128Variant.EncodeUInt64((ulong)actualLength, ms.GetBuffer(), startIndex);
+                return actualPrefixLength + actualLength;
+
+            }
+            else
+            {
+                // create a temporary stream and write the final result
+                using (ms = new MemoryStream())
+                {
+                    SerializationContext ctx = new SerializationContext(ms);
+                    ctx.ReadFrom(this);
+                    int len = property.Serialize(value, ctx);
+                    this.ReadFrom(ctx);
+
+                    int preambleLen = Base128Variant.EncodeInt32(len, this);
+                    byte[] buffer = ms.GetBuffer();
+                    this.Write(buffer, 0, len);
+                    return preambleLen + len;
+                }
+            }
+        }
+        /*
         internal int WriteLengthPrefixed<TValue>(TValue value, ILengthSerializer<TValue> serializer)
         {
             MemoryStream ms = stream as MemoryStream;
@@ -368,7 +450,7 @@ namespace ProtoBuf
                     return preambleLen + len;
                 }
             }
-        }
+        }*/
 
         public static void Reverse4(byte[] buffer)
         {
@@ -393,6 +475,15 @@ namespace ProtoBuf
             tmp = buffer[3];
             buffer[3] = buffer[4];
             buffer[4] = tmp;
+        }
+
+        internal long LimitByLengthPrefix()
+        {
+            // length-prefixed
+            int len = Base128Variant.DecodeInt32(this);
+            long oldMaxPos = this.MaxReadPosition;
+            this.MaxReadPosition = this.Position + len;
+            return oldMaxPos;
         }
     }
 }

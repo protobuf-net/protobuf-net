@@ -5,9 +5,7 @@ using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
-using System.Xml.Serialization;
-using System.Diagnostics;
-using ProtoBuf.ProtoBcl;
+using ProtoBuf.Property;
 
 namespace ProtoBuf
 {
@@ -16,7 +14,7 @@ namespace ProtoBuf
 #if !CF
         public static string GetProto()
         {
-            if (props == null) Build();
+            if (readProps == null) Build();
             List<Type> types = new List<Type>();
             WalkTypes(types);
 
@@ -41,12 +39,12 @@ namespace ProtoBuf
             Type newType = typeof(T);
             if (knownTypes.Contains(newType)) return;
             knownTypes.Add(newType);
-            foreach (IProperty<T> prop in props)
+            foreach (Property<T> prop in writeProps)
             {
                 bool dummy;
                 Type propType = prop.PropertyType,
                     actualType = Nullable.GetUnderlyingType(propType)
-                        ?? GetListType(propType, out dummy) ?? propType;
+                        ?? PropertyFactory.GetListType(propType, out dummy) ?? propType;
 
                 //if (actualType == typeof(Guid))
                 //{
@@ -84,12 +82,12 @@ namespace ProtoBuf
 
             sb.AppendLine();
             nestLevel++;
-            for (int i = 0; i < props.Length; i++)
+            for (int i = 0; i < writeProps.Length; i++)
             {
-                IProperty<T> prop = props[i];
+                Property<T> prop = writeProps[i];
                 Indent(sb, nestLevel).Append(' ')
                     .Append(prop.IsRepeated ? "repeated" :
-                        (prop.IsRequired ? "required" : "optional"))
+                        (prop.IsOptional ? "optional" : "required"))
                     .Append(prop.IsGroup ? " group " : " ")
                     .Append(prop.DefinedType).Append(' ')
                     .Append(prop.Name).Append(" = ").Append(prop.Tag);
@@ -116,122 +114,63 @@ namespace ProtoBuf
         }
 
 #endif
-        private static IProperty<T>[] props;
+        private static Property<T>[] readProps, writeProps;
 
         internal static void Build()
         {
-            if (props != null) return;
-            props = new IProperty<T>[0]; // to prevent recursion
-            if (!Serializer.IsEntityType(typeof(T)))
+            if (readProps != null) return;
+            try
             {
-                throw new InvalidOperationException("Only concrete data-contract classes can be processed");
-            }
-            List<IProperty<T>> propList = new List<IProperty<T>>();
-            object[] argsOnePropertyVal = new object[1];
+                readProps = new Property<T>[0]; // to prevent recursion
+                if (!Serializer.IsEntityType(typeof(T)))
+                {
+                    throw new InvalidOperationException("Only concrete data-contract classes can be processed");
+                }
+                List<Property<T>> readPropList = new List<Property<T>>(), writePropList = new List<Property<T>>();
 
-            foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                {
+                    string name;
+                    DataFormat format;
+                    int tag;
+                    bool isRequired, isGroup;
+                    if (!Serializer.TryGetTag(prop, out tag, out name, out format, out isRequired, out isGroup))
+                    {
+                        continue; // didn't recognise this as a usable property
+                    }
+
+                    // check for duplicates
+                    foreach (Property<T> item in readPropList)
+                    {
+                        if (item.Tag == tag)
+                        {
+                            throw new InvalidOperationException(
+                                string.Format("Duplicate tag {0} detected in {1}", tag, name));
+                        }
+                    }
+
+                    Property<T> altProp, actualProp = PropertyFactory.Create<T>(prop, out altProp);
+                    writePropList.Add(actualProp);
+                    readPropList.Add(actualProp);
+                    if (altProp != null)
+                    {
+                        readPropList.Add(altProp);
+                    }
+                }
+                readPropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
+                writePropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
+                readProps = readPropList.ToArray();
+                writeProps = writePropList.ToArray();
+            }
+            catch
             {
-                string name;
-                DataFormat format;
-                int tag;
-                bool isRequired, isGroup;
-                if (!Serializer.TryGetTag(prop, out tag, out name, out format, out isRequired, out isGroup))
-                {
-                    continue; // didn't recognise this as a usable property
-                }
-
-                // check for duplicates
-                foreach (IProperty<T> item in propList)
-                {
-                    if (item.Tag == tag)
-                    {
-                        throw new InvalidOperationException(
-                            string.Format("Duplicate tag {0} detected in {1}", tag, name));
-                    }
-                }
-
-                IProperty<T> actualProp;
-                bool isEnumerableOnly;
-                Type propType = prop.PropertyType, listItemType = GetListType(propType, out isEnumerableOnly);
-
-                if (propType.IsArray)
-                {
-                    // verify that we can handle it
-                    if (propType.GetArrayRank() != 1)
-                    {
-                        throw new NotSupportedException("Only 1-dimensional arrays can be used; consider an array/list of a class-type instead");
-                    }
-                }
-
-                if (listItemType != null)
-                {
-                    bool dummy;
-                    if (GetListType(listItemType, out dummy) != null)
-                    {
-                        throw new NotSupportedException("Nested (jagged) arrays/lists are not supported; consider an array/list of a class-type with an inner array/list instead");
-                    }
-                }
-
-                argsOnePropertyVal[0] = prop;
-                if (propType == typeof(byte[]))
-                {   // want to treat byte[] as a special case
-                    listItemType = null;
-                }
-                if (propType.IsArray && listItemType != null) // second check is for byte[]
-                {
-                    // array
-                    actualProp = (IProperty<T>)typeof(Serializer<T>)
-                        .GetMethod("CreateArrayProperty")
-                        .MakeGenericMethod(typeof(T), listItemType)
-                        .Invoke(null, argsOnePropertyVal);
-                }
-                else if (listItemType != null)
-                {
-                    // list / enumerable
-                    actualProp = (IProperty<T>)typeof(Serializer<T>)
-                        .GetMethod(isEnumerableOnly ? "CreateEnumerableProperty" : "CreateListProperty")
-                        .MakeGenericMethod(typeof(T), propType, listItemType)
-                        .Invoke(null, argsOnePropertyVal);
-                }
-                else if (Serializer.IsEntityType(propType))
-                { // entity
-                    actualProp = (IProperty<T>)typeof(Serializer<T>)
-                        .GetMethod("CreateEntityProperty")
-                        .MakeGenericMethod(typeof(T), propType)
-                        .Invoke(null, argsOnePropertyVal);
-                }
-                else
-                { // simple value
-                    string methodName;
-                    Type nullType = Nullable.GetUnderlyingType(propType);
-                    if (nullType != null)
-                    {
-                        methodName = "CreateNullableProperty";
-                        propType = nullType;
-                    }
-                    else if (propType.IsClass)
-                    {
-                        methodName = "CreateClassProperty";
-                    }
-                    else if (IsSelfEquatable(propType))
-                    {
-                        methodName = "CreateEquatableProperty";
-                    }
-                    else
-                    {
-                        methodName = "CreateStructProperty";
-                    }
-                    actualProp = (IProperty<T>)typeof(Serializer<T>)
-                        .GetMethod(methodName)
-                        .MakeGenericMethod(typeof(T), propType)
-                        .Invoke(null, argsOnePropertyVal);
-                }
-                propList.Add(actualProp);
+                readProps = writeProps = null;
+                throw;
             }
-            propList.Sort(delegate(IProperty<T> x, IProperty<T> y) { return x.Tag.CompareTo(y.Tag); });
-            props = propList.ToArray();
         }
 
+
+        
         private static bool IsSelfEquatable(Type type)
         {
             Type huntType = typeof(IEquatable<>).MakeGenericType(type);
@@ -245,38 +184,12 @@ namespace ProtoBuf
             return false;
         }
 
-        private static Type GetListType(Type type, out bool isEnumerableOnly)
-        {
-            isEnumerableOnly = false;
-            if (type.IsArray)
-            {
-                return type.GetElementType();
-            }
-            foreach (Type interfaceType in type.GetInterfaces())
-            {
-                if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition()
-                    == typeof(IList<>))
-                {
-                    return interfaceType.GetGenericArguments()[0];
-                }
-            }
-            if (type != typeof(string))
-            {
-                foreach (Type interfaceType in type.GetInterfaces())
-                {
-                    if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition()
-                        == typeof(IEnumerable<>))
-                    {
-                        isEnumerableOnly = true;
-                        return interfaceType.GetGenericArguments()[0];
-                    }
-                }
-            }
-            return null;
-        }
+        
+
+
         internal static int Serialize(T instance, Stream destination)
         {
-            if (props == null) Build();
+            if (readProps == null) Build();
             if (instance == null) throw new ArgumentNullException("instance");
             if (destination == null) throw new ArgumentNullException("destination");
             SerializationContext ctx = new SerializationContext(destination);
@@ -293,10 +206,10 @@ namespace ProtoBuf
             context.Push(instance);
             //context.CheckSpace();
             int total = 0, len;
-            for (int i = 0; i < props.Length; i++)
+            for (int i = 0; i < writeProps.Length; i++)
             {
                 // note that this serialization includes the headers...
-                total += props[i].Serialize(instance, context);
+                total += writeProps[i].Serialize(instance, context);
             }
             IExtensible extra = instance as IExtensible;
             if (extra != null && (len = extra.GetLength()) > 0)
@@ -318,7 +231,7 @@ namespace ProtoBuf
 
         internal static void Deserialize(T instance, Stream source)
         {
-            if (props == null) Build();
+            if (readProps == null) Build();
             if (instance == null) throw new ArgumentNullException("instance");
             if (source == null) throw new ArgumentNullException("source");
             SerializationContext ctx = new SerializationContext(source);
@@ -329,93 +242,78 @@ namespace ProtoBuf
         {
             if (context == null) throw new ArgumentNullException("context");
             context.Push();
-            int prefix, propCount = props.Length;
+            uint prefix;
+            int propCount = readProps.Length;
             //context.CheckSpace();
             IExtensible extra = instance as IExtensible;
             SerializationContext extraData = null;
             Stream extraStream = null;
-            IProperty<T> prop = propCount == 0 ? null : props[0];
-            
-            int lastIndex = prop == null ? int.MinValue : 0,
-                lastTag = prop == null ? int.MinValue : prop.Tag;
+            Property<T> prop = propCount == 0 ? null : readProps[0];
+
+            int lastIndex = prop == null ? int.MinValue : 0;
+            uint lastPrefix = prop == null ? uint.MaxValue : prop.FieldPrefix;
             
             try
             {
-                while (context.IsDataAvailable && TwosComplementSerializer.TryReadInt32(context, out prefix))
+                while (context.IsDataAvailable && Base128Variant.TryReadUInt32(context, out prefix))
                 {
+                    // check for a lazy hit (mainly with collections)
+                    if (prefix == lastPrefix)
+                    {
+                        prop.Deserialize(instance, context);
+                        continue;
+                    }
+
+                    // scan for the correct property
+                    bool foundTag = false;
+                    if (prefix > lastPrefix)
+                    {
+                        for (int i = lastIndex + 1; i < propCount; i++)
+                        {
+                            if (readProps[i].FieldPrefix == prefix)
+                            {
+                                prop = readProps[i];
+                                lastIndex = i;
+                                lastPrefix = prefix;
+                                foundTag = true;
+                                break;
+                            }
+                            if (readProps[i].FieldPrefix > prefix) break; // too far
+                        }
+                    }
+                    else
+                    {
+                        for (int i = lastIndex - 1; i >= 0; i--)
+                        {
+                            if (readProps[i].FieldPrefix == prefix)
+                            {
+                                prop = readProps[i];
+                                lastIndex = i;
+                                lastPrefix = prefix;
+                                foundTag = true;
+                                break;
+                            }
+                            if (readProps[i].FieldPrefix < prefix) break; // too far
+                        }
+                    }
+
+                    if (foundTag)
+                    { // found it by seeking; deserialize and continue
+                        prop.Deserialize(instance, context);
+                        continue;
+                    }
+
                     WireType wireType;
                     int fieldTag;
                     Serializer.ParseFieldToken(prefix, out wireType, out fieldTag);
                     if (wireType == WireType.EndGroup)
                     {
                         context.EndGroup(fieldTag);
-                        break;
+                        break; // this ends the entity, so stop the loop
                     }
-                    bool foundTag = fieldTag == lastTag;
-                    if (!foundTag)
-                    {
-                        int index = lastIndex;
-
-                        // start i at 1 as only need to check n-1 other properties
-                        for (int i = 1; i < propCount; i++)
-                        {
-                            if (++index == propCount)
-                            {
-                                index = 0;
-                            }
-
-                            if (props[index].Tag == fieldTag)
-                            {
-                                prop = props[index];
-                                lastIndex = index;
-                                lastTag = fieldTag;
-                                foundTag = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (foundTag)
-                    {
-                        if (wireType == WireType.StartGroup)
-                        {
-                            if (!prop.CanBeGroup)
-                            {
-                                throw new ProtoException("Group not expected: " + prop.Name);
-                            }
-                            // group-terminated; just deserialize
-                            context.StartGroup(fieldTag);
-                            prop.Deserialize(instance, context);
-                        }
-                        else if (prop.WireType == wireType)
-                        {
-                            if (wireType == WireType.String)
-                            {
-                                // length-prefixed; set the end of the stram and deserialize
-                                int len = TwosComplementSerializer.ReadInt32(context);
-                                long oldMaxPos = context.MaxReadPosition;
-                                context.MaxReadPosition = context.Position + len;
-                                prop.Deserialize(instance, context);
-                                // restore the max-pos
-                                context.MaxReadPosition = oldMaxPos;
-                            }
-                            else
-                            {   // use the known serializer
-                                prop.Deserialize(instance, context);
-                            }
-                        }
-                        else {
-                            // not what we were expecting!
-                            throw new ProtoException(
-                                string.Format(
-                                    "Wire-type of {0} (tag {1}) did not match; expected {2}, received {3}",
-                                    prop.Name,
-                                    prop.Tag,
-                                    prop.WireType,
-                                    wireType));
-                        }
-                    }
-                    else if (extra != null)
+                    
+                    // so we couldn't find it...
+                    if (extra != null)
                     {
                         if (extraData == null)
                         {
@@ -425,7 +323,7 @@ namespace ProtoBuf
 
                         // borrow the workspace, and copy the data
                         extraData.ReadFrom(context);
-                        TwosComplementSerializer.WriteToStream(prefix, extraData);
+                        Base128Variant.EncodeUInt32(prefix, extraData);
                         ProcessExtraData(context, fieldTag, wireType, extraData);
                         context.ReadFrom(extraData);
                     }
@@ -433,7 +331,7 @@ namespace ProtoBuf
                     {
                         // unexpected fields for an inextensible object; discard the data
                         Serializer.SkipData(context, fieldTag, wireType);
-                    }
+                    }                    
                 }
                 if (extraStream != null) extra.EndAppend(extraStream, true);
             }
@@ -467,20 +365,21 @@ namespace ProtoBuf
                     write.Write(read.Workspace, 0, 8);
                     break;
                 case WireType.String:
-                    len = TwosComplementSerializer.ReadInt32(read);
-                    TwosComplementSerializer.WriteToStream(len, write);
+                    len = Base128Variant.DecodeInt32(read);
+                    Base128Variant.EncodeInt32(len, write);
                     read.WriteTo(write, len);
                     break;
                 case WireType.StartGroup:
-                    using (CloneStream cloneStream = new CloneStream(read, write))
-                    {
-                        SerializationContext cloneCtx = new SerializationContext(cloneStream);
-                        cloneCtx.ReadFrom(read);
-                        cloneCtx.StartGroup(fieldTag);
-                        UnknownType.Serializer.Deserialize(null, cloneCtx);
-                        read.ReadFrom(cloneCtx);
-                    }
-                    break;
+                    throw new NotImplementedException();
+                    //using (CloneStream cloneStream = new CloneStream(read, write))
+                    //{
+                    //    SerializationContext cloneCtx = new SerializationContext(cloneStream);
+                    //    cloneCtx.ReadFrom(read);
+                    //    cloneCtx.StartGroup(fieldTag);
+                    //    UnknownType.Serializer.Deserialize(null, cloneCtx);
+                    //    read.ReadFrom(cloneCtx);
+                    //}
+                    //break;
                 case WireType.EndGroup:
                     throw new ProtoException("End-group not expected at this location");                
                 default:
@@ -492,7 +391,7 @@ namespace ProtoBuf
         
 
         
-
+        /*
         public static IProperty<TEntity> CreateStructProperty<TEntity, TValue>(PropertyInfo property)
             where TEntity : class, new()
             where TValue : struct
@@ -543,11 +442,11 @@ namespace ProtoBuf
         {
             return new ListProperty<TEntity, TList, TValue>(property);
         }
-
+    */
         internal static void CheckTagNotInUse(int tag)
         {
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag", "Tags must be positive integers.");
-            foreach (IProperty<T> prop in props)
+            foreach (Property<T> prop in readProps)
             {
                 if (prop.Tag == tag) throw new ArgumentException(
                     string.Format("Tag {0} is in use; access the {1} property instead.", tag, prop.Name), "tag");

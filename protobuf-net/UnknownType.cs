@@ -1,4 +1,5 @@
 ﻿
+using ProtoBuf.Property;
 namespace ProtoBuf
 {
     /// <summary>
@@ -8,7 +9,7 @@ namespace ProtoBuf
     [ProtoContract]
     internal sealed class UnknownType
     {
-        internal static readonly ILengthSerializer<UnknownType> Serializer
-            = new EntitySerializer<UnknownType>();
+        //internal static readonly ILengthSerializer<UnknownType> Serializer
+        //    = new EntitySerializer<UnknownType>();
     }
 }

@@ -47,18 +47,18 @@ namespace ProtoBuf
         /// [DataMember], [XmlElement] are supported for compatibility.
         /// In any event, there must be a unique positive Tag/Order.
         /// </summary>
-        internal static bool TryGetTag(PropertyInfo property, out int tag, out string name, out DataFormat format, out bool isRequired, out bool isGroup)
+        internal static bool TryGetTag(MemberInfo member, out int tag, out string name, out DataFormat format, out bool isRequired, out bool isGroup)
         {
-            name = property.Name;
+            name = member.Name;
             format = DataFormat.Default;
             tag = -1;
             isRequired = isGroup = false;
             // check against the property
-            ProtoMemberAttribute pm = AttributeUtils.GetAttribute<ProtoMemberAttribute>(property);
+            ProtoMemberAttribute pm = AttributeUtils.GetAttribute<ProtoMemberAttribute>(member);
             if (pm == null)
             { // check also against the type 
-                pm = AttributeUtils.GetAttribute<ProtoPartialMemberAttribute>(property.ReflectedType,
-                    delegate(ProtoPartialMemberAttribute ppma) { return ppma.MemberName == property.Name; });
+                pm = AttributeUtils.GetAttribute<ProtoPartialMemberAttribute>(member.ReflectedType,
+                    delegate(ProtoPartialMemberAttribute ppma) { return ppma.MemberName == member.Name; });
             }
             if (pm != null)
             {
@@ -70,7 +70,7 @@ namespace ProtoBuf
                 return tag > 0;
             }
 #if NET_3_0
-            DataMemberAttribute dm = AttributeUtils.GetAttribute<DataMemberAttribute>(property);
+            DataMemberAttribute dm = AttributeUtils.GetAttribute<DataMemberAttribute>(member);
             if (dm != null)
             {
                 if (!string.IsNullOrEmpty(dm.Name)) name = dm.Name;
@@ -80,7 +80,7 @@ namespace ProtoBuf
             }
 #endif
             
-            XmlElementAttribute xe = AttributeUtils.GetAttribute<XmlElementAttribute>(property);
+            XmlElementAttribute xe = AttributeUtils.GetAttribute<XmlElementAttribute>(member);
             if (xe != null)
             {
                 if (!string.IsNullOrEmpty(xe.ElementName)) name = xe.ElementName;
@@ -88,7 +88,7 @@ namespace ProtoBuf
                 return tag > 0;
             }
 
-            XmlArrayAttribute xa = AttributeUtils.GetAttribute<XmlArrayAttribute>(property);
+            XmlArrayAttribute xa = AttributeUtils.GetAttribute<XmlArrayAttribute>(member);
             if (xa != null)
             {
                 if (!string.IsNullOrEmpty(xa.ElementName)) name = xa.ElementName;
@@ -118,6 +118,14 @@ namespace ProtoBuf
                 throw; // if no inner (preserves stacktrace)
             }
             return instance;
+        }
+
+
+        internal static Exception ThrowNoEncoder(DataFormat format, Type valueType)
+        {
+            throw new ProtoException(string.Format(
+                "No suitable {0} {1} encoding found.",
+                format, valueType.Name));
         }
 
         /// <summary>
@@ -378,10 +386,10 @@ namespace ProtoBuf
             return 5;            
         }
 
-        internal static void ParseFieldToken(int token, out WireType wireType, out int tag)
+        internal static void ParseFieldToken(uint token, out WireType wireType, out int tag)
         {
             wireType = (WireType)(token & 7);
-            tag = token >> 3;
+            tag = (int)(token >> 3);
             if (tag <= 0)
             {
                 throw new ProtoException("Invalid tag: " + tag.ToString());
@@ -403,16 +411,17 @@ namespace ProtoBuf
                     if (!context.TrySeek(8)) context.ReadBlock(8);
                     break;
                 case WireType.String:
-                    int len = TwosComplementSerializer.ReadInt32(context);
+                    int len = Base128Variant.DecodeInt32(context);
                     if (!context.TrySeek(len)) context.WriteTo(Stream.Null, len);
                     break;
                 case WireType.EndGroup:
                     throw new ProtoException("End-group not expected at this location");
                 case WireType.StartGroup:
-                    // use the unknown-type deserializer to pass over the data
-                    context.StartGroup(fieldTag);
-                    UnknownType.Serializer.Deserialize(null, context);
-                    break;
+                    throw new NotImplementedException();
+                    //// use the unknown-type deserializer to pass over the data
+                    //context.StartGroup(fieldTag);
+                    //UnknownType.Serializer.Deserialize(null, context);
+                    //break;
                 default:
                     throw new ProtoException("Unknown wire-type " + wireType.ToString());
             }
@@ -420,8 +429,8 @@ namespace ProtoBuf
 
         internal static int WriteFieldToken(int tag, WireType wireType, SerializationContext context)
         {
-            int prefix = (tag << 3) | ((int)wireType & 7);
-            return TwosComplementSerializer.WriteToStream(prefix, context);
+            uint prefix = (uint)((tag << 3) | ((int)wireType & 7));
+            return Base128Variant.EncodeUInt32(prefix, context);
         }
     }
 }

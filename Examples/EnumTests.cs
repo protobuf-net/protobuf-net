@@ -2,6 +2,7 @@
 using System.IO;
 using System;
 using NUnit.Framework;
+using System.ComponentModel;
 
 namespace Examples.DesignIdeas
 {
@@ -24,17 +25,59 @@ namespace Examples.DesignIdeas
         [ProtoEnum(Name="BAR", Value=92)]
         ChangeBoth = 7,
         
-        LeaveAlone = 22
+        LeaveAlone = 22,
+
+
+        Default = 2
     }
     [ProtoContract]
     class EnumFoo
     {
-        [ProtoMember(1)]
+        public EnumFoo() { Bar = SomeEnum.Default; }
+        [ProtoMember(1), DefaultValue(SomeEnum.Default)]
         public SomeEnum Bar { get; set; }
     }
+
+    public enum HasConflictingKeys
+    {
+        Foo = 0,
+        Bar = 0
+    }
+    public enum HasConflictingValues
+    {
+        [ProtoEnum(Value=2)]
+        Foo = 0,
+        [ProtoEnum(Value = 2)]
+        Bar = 1
+    }
+    [ProtoContract]
+    class TypeDuffKeys
+    {
+        [ProtoMember(1)]
+        public HasConflictingKeys Value {get;set;}
+    }
+    [ProtoContract]
+    class TypeDuffValues
+    {
+        [ProtoMember(1)]
+        public HasConflictingValues Value {get;set;}
+    }
+
     [TestFixture]
     public class EnumTests
     {
+        [Test, ExpectedException(typeof(ProtoException))]
+        public void TestConflictingKeys()
+        {
+            Serializer.Serialize(Stream.Null, new TypeDuffKeys { Value = HasConflictingKeys.Foo });
+        }
+
+        [Test, ExpectedException(typeof(ProtoException))]
+        public void TestConflictingValues()
+        {
+            Serializer.Serialize(Stream.Null, new TypeDuffValues { Value = HasConflictingValues.Foo });
+        }
+
         [Test]
         public void TestEnumNameValueMapped()
         {

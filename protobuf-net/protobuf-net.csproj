@@ -32,7 +32,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
+    <DebugType>none</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;NET_3_0 REMOTING</DefineConstants>
@@ -86,28 +86,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AttributeUtils.cs" />
-    <Compile Include="Property\IProperty.cs" />
-    <Compile Include="Serializers\ISerializer.cs" />
-    <Compile Include="Serializers\FixedSerializer_Double.cs">
-      <DependentUpon>FixedSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\FixedSerializer_Int32.cs">
-      <DependentUpon>FixedSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\FixedSerializer_Int64.cs">
-      <DependentUpon>FixedSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\ZigZagSerializer_DateTime.cs">
-      <DependentUpon>ZigZagSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\ZigZagSerializer_Decimal.cs">
-      <DependentUpon>ZigZagSerializer.cs</DependentUpon>
-    </Compile>
     <Compile Include="Extensible.cs">
       <DependentUpon>IExtensible.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\FixedSerializer_Single.cs">
-      <DependentUpon>FixedSerializer.cs</DependentUpon>
     </Compile>
     <Compile Include="Serializer.cs" />
     <Compile Include="SerializerT.cs">
@@ -121,14 +101,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataFormat.cs" />
-    <Compile Include="Serializers\FixedSerializer.cs">
-    </Compile>
-    <Compile Include="Serializers\FixedSerializer_UInt32.cs">
-      <DependentUpon>FixedSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\FixedSerializer_UInt64.cs">
-      <DependentUpon>FixedSerializer.cs</DependentUpon>
-    </Compile>
     <Compile Include="IExtensible.cs" />
     <Compile Include="NetExtensions\ProtoIncludeAttribute.cs" />
     <Compile Include="ProtoContractAttribute.cs" />
@@ -136,69 +108,6 @@
     <Compile Include="ProtoFormat.cs" />
     <Compile Include="ProtoMemberAttribute.cs" />
     <Compile Include="SubStream.cs" />
-    <Compile Include="Serializers\TwosComplementSerializer.cs">
-    </Compile>
-    <Compile Include="Serializers\TwosComplementSerializer_Decimal.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\TwosComplementSerializer_Int32.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\TwosComplementSerializer_Int64.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\TwosComplementSerializer_UInt32.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\TwosComplementSerializer_UInt64.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\ZigZagSerializer.cs">
-    </Compile>
-    <Compile Include="Serializers\ZigZagSerializer_Int32.cs">
-      <DependentUpon>ZigZagSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\ZigZagSerializer_Int64.cs">
-      <DependentUpon>ZigZagSerializer.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Property\SimpleProperty.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Property\EntityProperty.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Property\ListProperty.cs">
-      <DependentUpon>MultiProperty.cs</DependentUpon>
-    </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Property\PropertyBase.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Serializers\EnumSerializer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Serializers\BlobSerializer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Serializers\BooleanSerializer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Serializers\EntitySerializer.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Serializers\Base128Variant.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Serializers\SerializerCache.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Serializers\SimpleSerializers.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Serializers\StringSerializer.cs" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CloneStream.cs" />
@@ -207,57 +116,7 @@
     </Compile>
     <Compile Include="Net\ProtoClient.cs" />
     <Compile Include="Net\ProtoServer.cs" />
-    <Compile Include="Property\ClassProperty.cs">
-      <DependentUpon>SimpleProperty.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Property\EquatableProperty.cs">
-      <DependentUpon>SimpleProperty.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Property\MultiProperty.cs" />
-    <Compile Include="Property\NullableProperty.cs" />
-    <Compile Include="Property\StructProperty.cs">
-      <DependentUpon>SimpleProperty.cs</DependentUpon>
-    </Compile>
-    <Compile Include="ProtoBcl\ProtoGuid.cs" />
     <Compile Include="ProtoException.cs" />
-    <Compile Include="Serializers\BclSerializer.cs" />
-    <Compile Include="Serializers\BclSerializer_DateTime.cs">
-      <DependentUpon>BclSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\BclSerializer_Decimal.cs">
-      <DependentUpon>BclSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\BclSerializer_Guid.cs">
-      <DependentUpon>BclSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\BclSerializer_TimeSpan.cs">
-      <DependentUpon>BclSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\GuidSerializer.cs" />
-    <Compile Include="Serializers\NullableSerializer.cs" />
-    <Compile Include="Serializers\TwosComplementSerializer_Byte.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\TwosComplementSerializer_Char.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\TwosComplementSerializer_Int16.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\TwosComplementSerializer_SByte.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\TwosComplementSerializer_UInt16.cs">
-      <DependentUpon>TwosComplementSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\UriSerializer.cs" />
-    <Compile Include="Serializers\ZigZagSerializer_Int16.cs">
-      <DependentUpon>ZigZagSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\ZigZagSerializer_SByte.cs">
-      <DependentUpon>ZigZagSerializer.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Serializers\ZigZagSerializer_TimeSpan.cs" />
     <Compile Include="UnknownType.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -266,11 +125,51 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Property\ArrayProperty.cs">
-      <DependentUpon>MultiProperty.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Property\EnumerableProperty.cs">
-      <DependentUpon>MultiProperty.cs</DependentUpon>
+    <Compile Include="Property\PropertyEnumerable.cs" />
+    <Compile Include="Property\PropertyParseable.cs" />
+    <Compile Include="Property\PropertyUInt64Fixed.cs" />
+    <Compile Include="Property\PropertyUInt64Variant.cs" />
+    <Compile Include="Property\PropertyInt64Fixed.cs" />
+    <Compile Include="Property\PropertyInt64Variant.cs" />
+    <Compile Include="Property\PropertyInt64ZigZag.cs" />
+    <Compile Include="Property\PropertySByte.cs" />
+    <Compile Include="Property\PropertyUri.cs" />
+    <Compile Include="Property\PropertyUInt32Fixed.cs" />
+    <Compile Include="Property\PropertyUInt32Variant.cs" />
+    <Compile Include="Property\PropertyInt32Fixed.cs" />
+    <Compile Include="Property\PropertyInt16ZigZag.cs" />
+    <Compile Include="Property\PropertyInt32ZigZag.cs" />
+    <Compile Include="Property\PropertyChar.cs" />
+    <Compile Include="Property\PropertyBlob.cs" />
+    <Compile Include="Property\PropertyByte.cs" />
+    <Compile Include="Property\PropertyGuidGroup.cs" />
+    <Compile Include="Property\PropertyDouble.cs" />
+    <Compile Include="Property\PropertyGuidString.cs" />
+    <Compile Include="Property\PropertySingle.cs" />
+    <Compile Include="Property\PropertyInt16Variant.cs" />
+    <Compile Include="Property\PropertyDecimalGroup.cs" />
+    <Compile Include="Property\PropertyDecimalString.cs" />
+    <Compile Include="Property\PropertyBoolean.cs" />
+    <Compile Include="Property\PropertyDateTimeString.cs" />
+    <Compile Include="Property\PropertyDateTimeGroup.cs" />
+    <Compile Include="Property\PropertyEnum.cs" />
+    <Compile Include="Property\PropertyFactory.cs" />
+    <Compile Include="Property\PropertyTimeSpanString.cs" />
+    <Compile Include="Property\PropertyTimeSpanGroup.cs" />
+    <Compile Include="Property\PropertyArray.cs" />
+    <Compile Include="Property\PropertyList.cs" />
+    <Compile Include="Property\PropertyMessageString.cs" />
+    <Compile Include="Property\Property.cs" />
+    <Compile Include="Property\PropertyInt32Variant.cs" />
+    <Compile Include="Property\PropertyMessageGroup.cs" />
+    <Compile Include="Property\PropertyNullable.cs" />
+    <Compile Include="Property\PropertyString.cs" />
+    <Compile Include="Property\PropertyUtil.cs" />
+    <Compile Include="ProtoBcl\ProtoDecimal.cs" />
+    <Compile Include="ProtoBcl\ProtoGuid.cs" />
+    <Compile Include="ProtoBcl\ProtoTimeSpan.cs" />
+    <Compile Include="Serializers\Base128Variant.cs">
+      <SubType>Code</SubType>
     </Compile>
     <None Include="Web\TODO.txt" />
   </ItemGroup>

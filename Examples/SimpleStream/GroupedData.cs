@@ -3,6 +3,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using NUnit.Framework;
 using ProtoBuf;
+using System;
 
 namespace Examples.SimpleStream
 {
@@ -25,7 +26,7 @@ namespace Examples.SimpleStream
             Assert.AreEqual(150, t3.C.A);
         }
 
-        [Test]
+        [Test, Ignore("Extensibility not implemented")]
         public void TestGroupAsExtension()
         {
             NoddyExtends ne = Program.Build<NoddyExtends>(0x1B, 0x08, 0x96, 0x01, 0x1C);// [start group 3] [test1] [end group 3]
@@ -33,7 +34,7 @@ namespace Examples.SimpleStream
             Assert.AreEqual(150, t1.A);
         }
 
-        [Test]
+        [Test, Ignore("Extensibility not implemented")]
         public void TestGroupIgnore()
         {
             Noddy no = Program.Build<Noddy>(0x1B, 0x08, 0x96, 0x01, 0x1C, 0x10, 0x96, 0x01);
@@ -75,7 +76,7 @@ namespace Examples.SimpleStream
             Assert.AreEqual(130, t3.C[1].A);
         }
 
-        [Test, ExpectedException(typeof(ProtoException))]
+        [Test, ExpectedException(typeof(ProtoException)), Ignore("Extensibility not implemented")]
         public void TestPrimativeList()
         {
             Test1List t1 = Program.Build<Test1List>(0x0B, 0x96, 0x01, 0x0C); // [start:1] [150] [end:1]

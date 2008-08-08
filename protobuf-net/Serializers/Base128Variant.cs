@@ -8,9 +8,71 @@ namespace ProtoBuf
         internal const long Int64Msb = ((long)1) << 63;
         internal const int Int32Msb = ((int)1) << 31;
 
+        internal static bool TryReadUInt32(SerializationContext context, out uint value)
+        {
+            Eof oldEof = context.Eof;
+
+            context.Eof = Eof.Expected;
+            value = (uint)Base128Variant.DecodeInt32(context);
+            bool result = context.Eof != Eof.Ended;
+            context.Eof = oldEof;
+            return result;
+        }
+
+        public static int EncodeUInt32(uint value, SerializationContext context)
+        {
+            if (value < 0x80)
+            {
+                context.WriteByte((byte)value);
+                return 1;
+            }
+            byte[] buffer = context.Workspace;
+            int index = -1;
+            do
+            {
+                buffer[++index] = (byte)((value & 0x7F) | 0x80);
+                value >>= 7;
+            } while (value != 0);
+            buffer[index++] ^= 0x80;
+            context.Write(index);
+            return index;
+        }
         public static int EncodeInt32(int value, SerializationContext context)
         {
-            return EncodeInt64((long)value, context);
+            byte[] buffer;
+            
+            if (value < 0)
+            {
+                buffer = context.Workspace;
+                buffer[0] = (byte)((value | 0x80) & 0xFF);
+                buffer[1] = (byte)(((value >> 7) | 0x80) & 0xFF);
+                buffer[2] = (byte)(((value >> 14) | 0x80) & 0xFF);
+                buffer[3] = (byte)(((value >> 21) | 0x80) & 0xFF);
+                buffer[4] = (byte)(((value >> 28) | 0x80) & 0xFF);
+                buffer[5] = (byte)0xFF;
+                buffer[6] = (byte)0xFF;
+                buffer[7] = (byte)0xFF;
+                buffer[8] = (byte)0xFF;
+                buffer[9] = (byte)0x01;
+                context.Write(10);
+                return 10;
+            } else if(value < 0x80) {
+                context.WriteByte((byte)value);
+                return 1;
+            }
+            else
+            {
+                buffer = context.Workspace;
+                int index = -1;
+                do
+                {
+                    buffer[++index] = (byte)((value & 0x7F) | 0x80);
+                    value >>= 7;
+                } while (value != 0);
+                buffer[index++] ^= 0x80;
+                context.Write(index);
+                return index;
+            }
 
             #region unrolled, but doesn't help...
             //if(value < 0) return EncodeInt64((long)value, context);
@@ -60,6 +122,118 @@ namespace ProtoBuf
 #endregion
         }
 
+        public static uint Zig(int value)
+        {
+            return (uint)((value << 1) ^ (value >> 31));
+        }
+        public static int Zag(uint ziggedValue)
+        {
+            int value = (int)ziggedValue;
+            return (-(value & 0x01)) ^ ((value >> 1) & ~Base128Variant.Int32Msb);
+        }
+        public static ulong Zig(long value)
+        {
+            return (ulong)((value << 1) ^ (value >> 63));
+        }
+        public static long Zag(ulong ziggedValue)
+        {
+            long value = (long)ziggedValue;
+            return (-(value & 0x01L)) ^ ((value >> 1) & ~Base128Variant.Int64Msb);
+        }
+
+        public static int GetLength(uint value)
+        {
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            return value == 0 ? 4 : 5;
+        }
+        public static int GetLength(int value)
+        {
+            if (value < 0) return 10;
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            return value == 0 ? 4 : 5;
+        }
+
+        public static int GetLength(long value)
+        {
+            if (value < 0) return 10;
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            if (value == 0) return 4;
+            value >>= 7;
+            if (value == 0) return 5;
+            value >>= 7;
+            if (value == 0) return 6;
+            value >>= 7;
+            if (value == 0) return 7;
+            value >>= 7;
+            if (value == 0) return 8;
+            value >>= 7;
+            return value == 0 ? 9 : 10;
+        }
+        public static int GetLength(ulong value)
+        {
+            return GetLength((long)value);
+        }
+
+
+        public static uint DecodeUInt32(SerializationContext context)
+        {
+            return (uint)(int)DecodeInt64(context);
+        }
+        public static int EncodeUInt64(ulong value, byte[] buffer, int index)
+        {
+            if (value < 0x80)
+            {
+                buffer[index] = (byte)value;
+                return 1;
+            }
+            do
+            {
+                buffer[index++] = (byte)((value & 0x7F) | 0x80);
+                value >>= 7;
+            } while (value != 0);
+            buffer[index-1] ^= 0x80;
+            return index;
+        }
+        public static int EncodeUInt64(ulong value, SerializationContext context)
+        {
+            if (value < 0x80)
+            {
+                context.WriteByte((byte)value);
+                return 1;
+            }
+            byte[] buffer = context.Workspace;
+            int index = -1;
+            do
+            {
+                buffer[++index] = (byte)((value & 0x7F) | 0x80);
+                value >>= 7;
+            } while (value != 0);
+            buffer[index++] ^= 0x80;
+            context.Write(index);
+            return index;
+        }
+        public static ulong DecodeUInt64(SerializationContext context)
+        {
+            return (ulong)DecodeInt64(context);
+        }
         public static int DecodeInt32(SerializationContext context)
         {
             return (int)DecodeInt64(context);
@@ -80,48 +254,9 @@ namespace ProtoBuf
         private const long AllButFirstChunk = ~((long)127);
         private const long AllButFirstTwoChunks = AllButFirstChunk << 7;
 
-        internal static int EncodeInt64ToWorkspace(long value, SerializationContext context)
-        {
-            byte[] buffer = context.Workspace;
-            if ((value & AllButFirstChunk) == 0)
-            {
-                buffer[0] = (byte)value;
-                return 1;
-            }
-            else if ((value & AllButFirstTwoChunks) == 0)
-            {
-                int val = (int)value;
-                buffer[0] = (byte)((val & 0x7F) | 0x80);
-                buffer[1] = (byte)(val >> 7);
-                return 2;
-            }
-            int lastByte = 0;
-            for (int i = 0; i < 10; i++)
-            {
-                int v = ((int)value) & 127;
-                if (v != 0) lastByte = i;
-                buffer[i] = (byte)(v | 128);
-                value >>= 7;
-            }
-
-            // byte 10 inly needs 1 bit (but if -ve backfills >> with 1s)
-            buffer[9] &= 0x01;
-            buffer[lastByte++] &= 127; // strip the msb
-            return lastByte;
-        }
         internal static int EncodeInt64(long value, SerializationContext context)
         {
-            int len = EncodeInt64ToWorkspace(value, context);
-            switch (len)
-            {
-                case 1:
-                    context.WriteByte(context.Workspace[0]);
-                    break;
-                default:
-                    context.Write(len);
-                    break;
-            }
-            return len;
+            return EncodeUInt64((ulong)value, context);
         }
 
         internal static long DecodeInt64(SerializationContext context)
