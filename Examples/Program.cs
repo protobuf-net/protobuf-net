@@ -14,9 +14,9 @@ namespace Examples
         static void Main() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
             const int COUNT = 1000000;
-            demo.PerfTestSimple(COUNT, false);
-            demo.PerfTestString(COUNT, false);
-            demo.PerfTestEmbedded(COUNT, false);
+            demo.PerfTestSimple(COUNT, true);
+            demo.PerfTestString(COUNT, true);
+            demo.PerfTestEmbedded(COUNT, true);
 
             const int NWIND_COUNT = 500;
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
