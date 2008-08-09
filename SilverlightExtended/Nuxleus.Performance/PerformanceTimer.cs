@@ -7,8 +7,8 @@ namespace Nuxleus.Performance {
 
     [DefaultValue(UnitPrecision.NANOSECONDS)]
     public enum UnitPrecision {
-        [Label("seconds")]
-        SECONDS = 1,
+        [Label("ticks")]
+        TICKS = 1,
         [Label("milliseconds")]
         MILLISECONDS = 1000,
         [Label("microseconds")]
@@ -20,8 +20,8 @@ namespace Nuxleus.Performance {
     /// <summary>
     /// Mimics the basic functionality of System.Diagnostics.Stopwatch for use in Silverlight applications.
     /// 
-    /// As far as know, there is no way to gain access to the system clock frequency, so the accuracy of this
-    /// Stopwatch is questionable.
+    /// As far as I know, there is no way to gain access to the system clock frequency on Silverlight, so the accuracy of this
+    /// Stopwatch should be seen as a best-guess type effort.
     /// </summary>
     public struct Stopwatch : IDisposable {
 
@@ -30,6 +30,10 @@ namespace Nuxleus.Performance {
         static long m_startTime;
         static long m_stopTime;
 
+        /// <summary>
+        /// At present the value of this property will be used to perform a best-guess calculation of the returned value
+        /// of the Elapsed property.
+        /// </summary>
         [DefaultValue(UnitPrecision.NANOSECONDS)]
         public static UnitPrecision UnitPrecision { get; set; }
 
@@ -126,7 +130,9 @@ namespace Nuxleus.Performance {
         }
 
         /// <summary>
-        /// Returns the duration of time between the last SetMarker and ReleaseMarker added to the stack
+        /// Returns the duration of time between the last SetMarker and ReleaseMarker added to the stack.
+        /// 
+        /// This method should not be used for obtaining the duration of an asynchronous operation.
         /// </summary>         
         public double Duration {
             get {
@@ -144,7 +150,9 @@ namespace Nuxleus.Performance {
         }
 
         /// <summary>
-        /// Elapsed time in Milliseconds
+        /// Elapsed time in Milliseconds. This property is in place for compatibility with System.Diagnostics.Stopwatch. To gain
+        /// access to ticks, microseconds, or nanoseconds set the <typeparamref name="UnitPrecision"/> enumeration to the desired 
+        /// value and use the <typeparamref name="Elapsed"/> property to gain access to the resulting value.
         /// </summary>
         public long ElapsedMilliseconds {
             get {
@@ -153,7 +161,8 @@ namespace Nuxleus.Performance {
         }
 
         double GetDuration(long startTime, long stopTime) {
-            return (double)(stopTime - startTime);
+            double duration = (double)(stopTime - startTime);
+            return (UnitPrecision == UnitPrecision.TICKS) ? duration : duration / (int)UnitPrecision;
         }
 
         #region IDisposable Members

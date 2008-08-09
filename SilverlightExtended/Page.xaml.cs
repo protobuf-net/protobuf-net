@@ -11,10 +11,6 @@ using System.Xml.Serialization;
 using Nuxleus.Messaging;
 using Nuxleus.Messaging.Protobuf;
 using Nuxleus.Performance;
-using System.Collections.ObjectModel;
-using Nuxleus.WebService;
-using Nuxleus.Extension;
-using Nuxleus.Asynchronous;
 
 namespace SilverlightExtended {
 
@@ -37,8 +33,6 @@ namespace SilverlightExtended {
         public int EntryID { get; set; }
         public string Content { get; set; }
     }
-
-
 
     public delegate void RunTestAsync(PerformanceLogSummary summary);
 
@@ -91,7 +85,7 @@ namespace SilverlightExtended {
             HtmlPage.RegisterScriptableObject("Silverlight", this);
             PerformanceLogList.SelectedIndex = -1;
             //TODO: At present time the DataGrid control doesn't support adding new rows dynamically.
-            //for now I'm just using a ListBox, but this is less desirable obviously.
+            //For now I'm just using a ListBox, but this is less desirable obviously.
             //SummaryGrid.ItemsSource = new ObservableCollection<PerformanceLogSummary>();
         }
 
@@ -102,6 +96,9 @@ namespace SilverlightExtended {
 
         private void btnRunTest_Click(object sender, RoutedEventArgs e) {
             DispatcherTimer dispatcherTimer = new DispatcherTimer();
+            totalCount = 0;
+            percentageComplete = 0;
+            ConsoleLogList.Items.Clear();
             dispatcherTimer.Tick += new EventHandler(dispatcherTimer_Tick);
             dispatcherTimer.Interval = new TimeSpan(0, 0, 0, 0, 10);
             dispatcherTimer.Start();
@@ -117,9 +114,7 @@ namespace SilverlightExtended {
             }
         }
 
-
         public PerformanceLog RunSerializationTest(long sequenceID, SerializerPerformanceTestAgent agent) {
-            
 
             Stopwatch timer = new Stopwatch();
             Stopwatch.UnitPrecision = UnitPrecision.NANOSECONDS;
@@ -144,9 +139,11 @@ namespace SilverlightExtended {
             using (timer) {
 
                 timer.Scope = () => {
+
                     timer.LogScope("Create a Person object", perfLog, PerformanceLogEntryType.CompiledObjectCreation, () => {
                         person = CreatePerson(sequenceID);
                     });
+
                     Stream serializedMemoryStream = null;
 
                     timer.LogScope("Serialize the Person object to a MemoryStream", perfLog, PerformanceLogEntryType.Serialization, () => {
@@ -173,6 +170,7 @@ namespace SilverlightExtended {
                     CompareValuesAndLogResults(person, newPersonFromMemoryStream, perfLog, typeof(MemoryStream), PerformanceLogEntryType.DeserializationCorrect);
 
                 };
+
                 perfLog.LogData("Duration of test", timer.Duration, PerformanceLogEntryType.TotalDuration);
             }
 
@@ -184,18 +182,21 @@ namespace SilverlightExtended {
         }
 
         void ReadCallback(IAsyncResult asyncResult) {
-            lock (m_lock) {
-                totalCount += 1;
-                UpdateUI(() => jsUpdateElement.InvokeSelf("counter", totalCount));
-                percentageComplete = Decimal.Divide((Decimal.Divide((decimal)totalCount, (decimal)repeatTest)), serializerPeformanceItem.Count()) * 100;
-            }
+
             HttpWebRequest request = (HttpWebRequest)asyncResult.AsyncState;
             HttpWebResponse response = (HttpWebResponse)request.EndGetResponse(asyncResult);
+
             using (Stream stream = response.GetResponseStream()) {
-                LogInfo(1, "Foo");
+                lock (m_lock) {
+                    totalCount += 1;
+                    UpdateUI(() => jsUpdateElement.InvokeSelf("counter", totalCount));
+                    percentageComplete = Decimal.Divide((Decimal.Divide((decimal)totalCount, (decimal)repeatTest)), serializerPeformanceItem.Count()) * 100;
+                    LogInfo(totalCount, response.StatusCode.ToString());
+                }
             }
 
-            UpdateUI(() => jsUpdateElement.InvokeSelf("percentage", percentageComplete));
+            UpdateUI(() => jsUpdateElement.InvokeSelf("percentage", Math.Floor((double)percentageComplete)));
+
             if (percentageComplete == 100) {
                 finishTime = DateTime.Now;
                 UpdateUI(() => {

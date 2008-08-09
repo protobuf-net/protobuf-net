@@ -18,33 +18,23 @@ namespace Nuxleus.Web {
         bool m_DEBUG;
         Stopwatch m_stopwatch;
         List<long> m_elapsedTimeList;
-        bool m_runSynchronously;
-        bool m_pipelineRequests;
 
-        public HttpGetAsyncResponse ( params string[] httpRequestArray )
-            : this(Console.Out, false, true, false, httpRequestArray) { }
+        public HttpGetAsyncResponse(params string[] httpRequestArray)
+            : this(Console.Out, false, httpRequestArray) { }
 
-        public HttpGetAsyncResponse ( TextWriter logWriter, params string[] httpRequestArray )
-            : this(logWriter, false, true, false, httpRequestArray) { }
+        public HttpGetAsyncResponse(TextWriter logWriter, params string[] httpRequestArray)
+            : this(logWriter, false, httpRequestArray) { }
 
-        public HttpGetAsyncResponse ( TextWriter logWriter, bool debug, params string[] httpRequestArray )
-            : this(logWriter, debug, true, false, httpRequestArray) { }
-
-        public HttpGetAsyncResponse ( TextWriter logWriter, bool debug, bool pipelineRequests, params string[] httpRequestArray )
-            : this(logWriter, debug, pipelineRequests, false, httpRequestArray) { }
-
-        public HttpGetAsyncResponse ( TextWriter logWriter, bool debug, bool pipelineRequests, bool runSynchronously, params string[] httpRequestArray ) {
+        public HttpGetAsyncResponse(TextWriter logWriter, bool debug, params string[] httpRequestArray) {
             m_logWriter = logWriter;
             m_httpRequestArray = httpRequestArray;
             m_httpRequestArrayLength = httpRequestArray.Length;
             m_DEBUG = debug;
             m_stopwatch = new Stopwatch();
             m_elapsedTimeList = new List<long>();
-            m_pipelineRequests = pipelineRequests;
-            m_runSynchronously = runSynchronously;
         }
 
-        public IAsyncResult BeginProcessRequests ( AsyncCallback callback, object extraData ) {
+        public IAsyncResult BeginProcessRequests(AsyncCallback callback, object extraData) {
             if (DEBUG) {
                 m_logWriter.WriteLine("Beginning async HTTP request process...");
             }
@@ -58,7 +48,7 @@ namespace Nuxleus.Web {
         public Stopwatch Stopwatch { get { return m_stopwatch; } }
         public List<long> ElapsedTimeList { get { return m_elapsedTimeList; } }
 
-        private void ProcessRequests ( NuxleusAsyncResult asyncResult ) {
+        private void ProcessRequests(NuxleusAsyncResult asyncResult) {
 
             int queryArrayLength = m_httpRequestArrayLength;
             TextWriter logWriter = m_logWriter;
@@ -75,46 +65,46 @@ namespace Nuxleus.Web {
                 string requestString = r;
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(new Uri(requestString));
 
-                    new AsyncHttpRequest(request, logWriter, DEBUG, stopwatch,
-                            delegate( Stream stream, Stopwatch myStopwatch ) {
-                                //logWriter.WriteLine("The stopwatch objects are the same: {0}", stopwatch.Equals(myStopwatch));
+                new AsyncHttpRequest(request, logWriter, DEBUG, stopwatch,
+                        delegate(Stream stream, Stopwatch myStopwatch) {
+                            //logWriter.WriteLine("The stopwatch objects are the same: {0}", stopwatch.Equals(myStopwatch));
+                            long elapsedTime = 0;
+                            if (DEBUG) {
                                 myStopwatch.Stop();
-                                long elapsedTime = stopwatch.ElapsedMilliseconds;
+                                elapsedTime = stopwatch.ElapsedMilliseconds;
                                 elaspedTimeList.Add(elapsedTime);
                                 myStopwatch.Reset();
+                                logWriter.WriteLine("Current thread id: {0} for current request: {1}", Thread.CurrentThread.ManagedThreadId, requestString);
+                            }
+
+                            try {
+                                using (stream) {
+                                    StreamReader reader = new StreamReader(stream);
+                                    m_responseStreamDictionary.Add(requestString.GetHashCode(), new MemoryStream(encoding.GetBytes(reader.ReadToEnd())));
+                                }
+                            } catch (Exception e) {
+                                logWriter.WriteLine("Exception: {0}", e.Message);
+                            }
+
+                            if (m_responseStreamDictionary.Count == queryArrayLength) {
                                 if (DEBUG) {
-                                    logWriter.WriteLine("Current thread id: {0} for current request: {1}", Thread.CurrentThread.ManagedThreadId, requestString);
+                                    logWriter.WriteLine("Elapsed time of this request:\t {0}ms", elapsedTime);
+                                    logWriter.WriteLine("Completing call.");
                                 }
-
-                                try {
-                                    using (stream) {
-                                        StreamReader reader = new StreamReader(stream);
-                                        m_responseStreamDictionary.Add(requestString.GetHashCode(), new MemoryStream(encoding.GetBytes(reader.ReadToEnd())));
-                                    }
-                                } catch (Exception e) {
-                                    Console.WriteLine("Exception: {0}", e.Message);
+                                asyncResult.CompleteCall();
+                            } else {
+                                if (DEBUG) {
+                                    logWriter.WriteLine("Elapsed time of this request:\t {0}ms", elapsedTime);
+                                    logWriter.WriteLine("Continuing process...");
                                 }
+                            }
 
-                                if (m_responseStreamDictionary.Count == queryArrayLength) {
-                                    if (DEBUG) {
-                                        logWriter.WriteLine("Elapsed time of this request:\t {0}ms", elapsedTime);
-                                        logWriter.WriteLine("Completing call.");
-                                    }
-                                    asyncResult.CompleteCall();
-                                } else {
-                                    if (DEBUG) {
-                                        logWriter.WriteLine("Elapsed time of this request:\t {0}ms", elapsedTime);
-                                        logWriter.WriteLine("Continuing process...");
-                                    }
-                                }
-
-                            });
-               
+                        });
             }
         }
     }
 
-    public delegate void HttpResponseStream ( Stream responseStream, Stopwatch stopwatch );
+    public delegate void HttpResponseStream(Stream responseStream, Stopwatch stopwatch);
 
     public struct AsyncHttpRequest {
 
@@ -126,7 +116,7 @@ namespace Nuxleus.Web {
 
         public bool DEBUG { get { return m_DEBUG; } set { m_DEBUG = value; } }
 
-        public AsyncHttpRequest ( HttpWebRequest request, TextWriter logWriter, bool debug, Stopwatch stopwatch, HttpResponseStream responseStreamCallback ) {
+        public AsyncHttpRequest(HttpWebRequest request, TextWriter logWriter, bool debug, Stopwatch stopwatch, HttpResponseStream responseStreamCallback) {
             m_request = request;
             m_responseStream = responseStreamCallback;
             m_logWriter = logWriter;
@@ -141,7 +131,7 @@ namespace Nuxleus.Web {
             request.BeginGetResponse(RequestIsComplete, request);
         }
 
-        private void RequestIsComplete ( IAsyncResult asyncResult ) {
+        private void RequestIsComplete(IAsyncResult asyncResult) {
             HttpWebRequest request = (HttpWebRequest)asyncResult.AsyncState;
             HttpWebResponse response = (HttpWebResponse)m_request.EndGetResponse(asyncResult);
 
