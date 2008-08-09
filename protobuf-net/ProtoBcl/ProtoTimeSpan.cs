@@ -55,7 +55,7 @@ namespace ProtoBuf.ProtoBcl
 
             uint prefix;
             bool keepRunning = true;
-            while (keepRunning && context.IsDataAvailable && Base128Variant.TryReadUInt32(context, out prefix))
+            while (keepRunning && (prefix = context.TryReadFieldPrefix()) > 0)
             {
                 switch (prefix)
                 {

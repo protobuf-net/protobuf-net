@@ -112,23 +112,7 @@ namespace ProtoBuf.Property
 
         protected TValue GetValue(TSource source) { return getValue(source); }
         protected void SetValue(TSource source, TValue value) { setValue(source, value); }
-        protected void SetValueWithCache(TSource source, SerializationContext context, TValue value) {
-            context.SetCache(this, source, value);
-            setValue(source, value);
-        }
-
-        protected TValue GetValueWithCache(TSource source, SerializationContext context) {
-            object obj = context.GetFromCache(this, source);
-            if (obj == null)
-            {
-                TValue value = getValue(source);
-                if (value != null) context.SetCache(this, source, value);
-                return value;
-            } else {
-                return (TValue)obj;
-            }
-        }
-
+        
         private TValue defaultValue;
         new protected TValue DefaultValue { get { return defaultValue; } }
 

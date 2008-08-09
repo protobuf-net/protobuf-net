@@ -49,20 +49,15 @@ namespace ProtoBuf.Property
         }
         public override void Deserialize(TSource source, SerializationContext context)
         {
-            
-            TValue value = innerProperty.DeserializeImpl(default(TValue), context);
+            TList list = GetValue(source);
+            bool set = list == null;
+            if (set) list = (TList)Activator.CreateInstance(typeof(TList));
+            do
+            {
+                add(list, innerProperty.DeserializeImpl(default(TValue), context));
+            } while (context.TryPeekFieldPrefix(FieldPrefix));
 
-            TList list = GetValueWithCache(source, context);
-            if (list == null)
-            {
-                list = (TList) Activator.CreateInstance(typeof(TList));
-                add(list, value);
-                SetValueWithCache(source, context, list);
-            }
-            else
-            {
-                add(list, value);
-            }
+            if (set) SetValue(source, list);
         }
 
 

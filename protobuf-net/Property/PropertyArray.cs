@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace ProtoBuf.Property
 {
@@ -36,22 +37,41 @@ namespace ProtoBuf.Property
         }
         public override TValue[] DeserializeImpl(TSource source, SerializationContext context)
         {
-            TValue value = innerProperty.DeserializeImpl(default(TValue), context);
             TValue[] arr = GetValue(source);
-            if (arr == null)
+            TValue value = innerProperty.DeserializeImpl(default(TValue), context);
+            if (context.TryPeekFieldPrefix(FieldPrefix))
             {
-                arr = new TValue[1];
-                arr[0] = value;
+                List<TValue> list = new List<TValue>();
+                list.Add(value);
+                do
+                {
+                    list.Add(innerProperty.DeserializeImpl(default(TValue), context));
+                } while (context.TryPeekFieldPrefix(FieldPrefix));
+                int index = Resize(ref arr, list.Count);
+                list.CopyTo(arr, index);
+                arr = list.ToArray();
             }
             else
             {
-                int len = arr.Length;
-                TValue[] newArr = new TValue[len + 1];
-                Array.Copy(arr, newArr, len);
-                newArr[len] = value;
-                arr = newArr;
+                Resize(ref arr, 1);
+                arr[arr.Length - 1] = value;
             }
             return arr;
+        }
+        private static int Resize(ref TValue[] array, int delta) {
+            if (array == null)
+            {
+                array = new TValue[delta];
+                return 0;
+            }
+            else
+            {
+                int len = array.Length;
+                TValue[] newArr = new TValue[len + delta];
+                Array.Copy(array, newArr, len);
+                array = newArr;
+                return len;
+            }
         }
     }
 }

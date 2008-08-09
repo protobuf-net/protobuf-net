@@ -8,23 +8,24 @@ using ProtoBuf.Property;
 
 namespace ProtoBuf
 {
-    internal enum Eof
+    internal enum StreamState
     {
         /// <summary>
         /// Indicates that an EOF is not anticipated, and so will throw an exception.
         /// </summary>
-        Unexpected,
+        Normal,
         
         /// <summary>
         /// Indicates that an EOF is acceptable at the current time and will
         /// not throw an exception.
         /// </summary>
-        Expected,
-        
+        EofExpected,
+
         /// <summary>
-        /// Indicates that an anticipated EOF was found.
+        /// Indicates that we have previously obtained a field value from
+        /// the stream that should be consumed next.
         /// </summary>
-        Ended
+        Peeked
     }
 
     internal sealed class SerializationContext
@@ -35,13 +36,47 @@ namespace ProtoBuf
         public const string VerboseSymbol = "VERBOSE", DebugCategory = "protobuf-net";
         private Stack<object> objectStack = new Stack<object>();
         private Stack<int> groupStack;
-        public Eof Eof
+
+
+        public bool TryPeekFieldPrefix(uint fieldPrefix)
         {
-            get { return eof; }
-            set { eof = value; }
+            uint value = TryReadFieldPrefix();
+            if (value == 0) return false;
+            if (value == fieldPrefix) return true;
+            streamState = StreamState.Peeked;
+            peekedValue = value;
+            return false;
+        }
+        public uint TryReadFieldPrefix()
+        {
+            if (position >= maxReadPosition) return 0;
+            uint value;
+            switch (streamState)
+            {
+                case StreamState.Normal:
+                    streamState = StreamState.EofExpected;
+                    value = Base128Variant.DecodeUInt32(this);
+                    break;
+                case StreamState.Peeked:
+                    value = peekedValue;
+                    break;
+                default:
+                    value = 0;
+                    break;
+            }
+            
+            streamState = StreamState.Normal;
+            return value;
         }
 
-        private Eof eof;
+        private uint peekedValue;
+
+        public bool IsEofExpected
+        {
+            get { return streamState == StreamState.EofExpected; }
+        }
+
+        private StreamState streamState;
         private readonly Stream stream;
         
         public Stream Stream
@@ -51,8 +86,6 @@ namespace ProtoBuf
         private long position = 0, maxReadPosition = long.MaxValue;
         public long Position { get { return position; } }
         public long MaxReadPosition { get { return maxReadPosition; } set { maxReadPosition = value; } }
-
-        public bool IsDataAvailable { get { return position < maxReadPosition; } }
 
         public int ReadByte()
         {
@@ -247,7 +280,8 @@ namespace ProtoBuf
             this.workspace = context.workspace;
             this.objectStack = context.objectStack;
             this.stackDepth = context.stackDepth;
-
+            this.streamState = context.streamState;
+            this.peekedValue = context.peekedValue;
             TraceChangeOrigin(context);
 
             // IMPORTANT: don't copy the group stack; we want to 
@@ -285,18 +319,6 @@ namespace ProtoBuf
             workspace = new byte[InitialBufferLength];
         }
 
-        private object cacheProperty, cacheSource, cacheValue;
-        public object GetFromCache(object property, object source)
-        {
-            return (ReferenceEquals(cacheProperty, property) && ReferenceEquals(cacheSource, source))
-                ? cacheValue : null;
-        }
-        public void SetCache(object property, object source, object value)
-        {
-            cacheProperty = property;
-            cacheSource = source;
-            cacheValue = value;
-        }
         internal const int InitialBufferLength = 32;
         
         public void CheckSpace(int length)

@@ -255,7 +255,7 @@ namespace ProtoBuf
             
             try
             {
-                while (context.IsDataAvailable && Base128Variant.TryReadUInt32(context, out prefix))
+                while ((prefix = context.TryReadFieldPrefix()) > 0)
                 {
                     // check for a lazy hit (mainly with collections)
                     if (prefix == lastPrefix)

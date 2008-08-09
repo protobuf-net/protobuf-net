@@ -8,17 +8,7 @@ namespace ProtoBuf
         internal const long Int64Msb = ((long)1) << 63;
         internal const int Int32Msb = ((int)1) << 31;
 
-        internal static bool TryReadUInt32(SerializationContext context, out uint value)
-        {
-            Eof oldEof = context.Eof;
-
-            context.Eof = Eof.Expected;
-            value = (uint)Base128Variant.DecodeInt32(context);
-            bool result = context.Eof != Eof.Ended;
-            context.Eof = oldEof;
-            return result;
-        }
-
+        
         public static int EncodeUInt32(uint value, SerializationContext context)
         {
             if (value < 0x80)
@@ -270,10 +260,9 @@ namespace ProtoBuf
                 if (b < 0)
                 {
                     // raise eof only on the first byte
-                    if (shift == 0 && context.Eof == Eof.Expected)
+                    if (shift == 0 && context.IsEofExpected)
                     {
                         context.CheckNoRemainingGroups(); // if EOF then groups should be clean!
-                        context.Eof = Eof.Ended;
                         return 0;
                     }
 
