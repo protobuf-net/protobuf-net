@@ -14,7 +14,7 @@ namespace ProtoBuf.Property
             ulong value = GetValue(source);
             if (IsOptional && value == DefaultValue) return 0;
             return WritePrefix(context)
-                + Base128Variant.EncodeUInt64(value, context);
+                + context.EncodeUInt64(value);
         }
 
         public override ulong DeserializeImpl(TSource source, SerializationContext context)

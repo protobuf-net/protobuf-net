@@ -26,7 +26,7 @@ namespace ProtoBuf.Property
             
             return WritePrefix(context)
                 + Serializer<TValue>.Serialize(value, context)
-                + Base128Variant.EncodeUInt32(suffix, context);
+                + context.EncodeUInt32(suffix);
         }
         public override TValue DeserializeImpl(TSource source, SerializationContext context)
         {

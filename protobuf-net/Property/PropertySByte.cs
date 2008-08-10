@@ -14,7 +14,7 @@ namespace ProtoBuf.Property
             sbyte value = GetValue(source);
             if (IsOptional && value == DefaultValue) return 0;
             return WritePrefix(context)
-                + Base128Variant.EncodeUInt32(Base128Variant.Zig((int)value), context);
+                + context.EncodeUInt32(Base128Variant.Zig((int)value));
         }
 
         public override sbyte DeserializeImpl(TSource source, SerializationContext context)

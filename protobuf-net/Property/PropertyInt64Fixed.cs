@@ -13,18 +13,7 @@ namespace ProtoBuf.Property
         {
             long value = GetValue(source);
             if (IsOptional && value == DefaultValue) return 0;
-            byte[] buffer = context.Workspace;
-            buffer[0] = (byte)(value & 0xFF);
-            buffer[1] = (byte)((value >> 8)& 0xFF);
-            buffer[2] = (byte)((value >> 16) & 0xFF);
-            buffer[3] = (byte)((value >> 24) & 0xFF);
-            buffer[4] = (byte)((value >> 32) & 0xFF);
-            buffer[5] = (byte)((value >> 40) & 0xFF);
-            buffer[6] = (byte)((value >> 48) & 0xFF);
-            buffer[7] = (byte)((value >> 56) & 0xFF);
-            int len = WritePrefix(context);
-            context.Write(buffer, 0, 8);
-            return len + 8;
+            return WritePrefix(context) + context.EncodeInt64Fixed(value);
         }
 
         public override long DeserializeImpl(TSource source, SerializationContext context)

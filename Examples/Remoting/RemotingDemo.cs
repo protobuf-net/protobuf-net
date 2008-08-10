@@ -35,7 +35,7 @@ namespace Examples.Remoting
         [Test]
         public void LargePayload()
         {
-            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
+            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
             DatabaseCompat compat = Serializer.ChangeType<Database, DatabaseCompat>(db);
             DatabaseCompatRem rem = Serializer.ChangeType<Database, DatabaseCompatRem>(db);
 

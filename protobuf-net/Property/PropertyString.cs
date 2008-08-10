@@ -29,7 +29,7 @@ namespace ProtoBuf.Property
                 int prefixLen = WritePrefix(context),
                     byteCount = utf8.GetBytes(value, 0, charCount, context.Workspace, 1);
                 context.Workspace[0] = (byte)byteCount;
-                context.Write(++byteCount);
+                context.WriteBlock(context.Workspace, 0, ++byteCount);
                 return prefixLen + byteCount;    
 
             } else if (charCount <= 127) {
@@ -42,7 +42,7 @@ namespace ProtoBuf.Property
                     int prefixLen = WritePrefix(context),
                     byteCount = utf8.GetBytes(value, 0, charCount, context.Workspace, 1);
                     context.Workspace[0] = (byte)byteCount;
-                    context.Write(++byteCount);
+                    context.WriteBlock(context.Workspace, 0, ++byteCount);
                     return prefixLen + byteCount;    
                 }
                 // note also that we update "underEstimate"; this means that even
@@ -79,7 +79,7 @@ namespace ProtoBuf.Property
         {
             context.CheckSpace(Encoding.UTF8.GetMaxByteCount(value.Length));
             int len = utf8.GetBytes(value, 0, value.Length, context.Workspace, 0);
-            context.Write(len);
+            context.WriteBlock(context.Workspace, 0, len);
             return len;
         }
     }

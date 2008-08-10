@@ -59,6 +59,18 @@ message EnumWrapper {
         }
 
         [Test]
+        public void TestEnumerableBinary()
+        {
+            EnumParentStandardWrapper obj = new EnumParentStandardWrapper();
+            Program.CheckBytes(obj,
+                0x0A, 0x0A,  // field 1: obj, 10 bytes
+                0x08, 0x01,  // field 1: variant, 1
+                0x08, 0x02,  // field 1: variant, 2
+                0x08, 0x03,  // field 1: variant, 3
+                0x08, 0x04,  // field 1: variant, 4
+                0x08, 0x05); // field 1: variant, 5
+        }
+        [Test]
         public void TestEnumerableStandard()
         {
             EnumParentStandardWrapper obj = new EnumParentStandardWrapper();
@@ -75,7 +87,7 @@ message EnumWrapper {
             // had 5 values added
             Assert.AreEqual(0, clone.Wrapper.SubData.IteratorCount, "clone IteratorCount");
             Assert.AreEqual(5, clone.Wrapper.SubData.Count, "clone Count");
-            Assert.AreEqual(1 + 2 + 3 + 4 + 5, clone.Wrapper.SubData.Sum, "clone Sum");
+            Assert.AreEqual(1 + 2 + 3 + 4 + 5, clone.Wrapper.SubData.Sum, "clone Sum");            
         }
 
         [Test]

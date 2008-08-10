@@ -101,7 +101,7 @@ namespace ProtoBuf.Property
         {
             uint wireValue = GetWireValue(GetValue(source));
             if (IsOptional && wireValue == defaultWireValue) return 0;
-            return WritePrefix(context) + Base128Variant.EncodeUInt32(wireValue, context);
+            return WritePrefix(context) + context.EncodeUInt32(wireValue);
         }
 
         public override TEnum DeserializeImpl(TSource source, SerializationContext context)

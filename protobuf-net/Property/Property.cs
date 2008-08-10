@@ -87,7 +87,7 @@ namespace ProtoBuf.Property
 
         protected int WritePrefix(SerializationContext context)
         {
-            return Base128Variant.EncodeUInt32(FieldPrefix, context);
+            return context.EncodeUInt32(FieldPrefix);
         }
 
         public abstract int Serialize(TSource source, SerializationContext context);

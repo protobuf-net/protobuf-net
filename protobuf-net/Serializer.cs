@@ -308,13 +308,10 @@ namespace ProtoBuf
 
             using (MemoryStream ms = new MemoryStream())
             {
-                SerializationContext tmpCtx = new SerializationContext(ms);
-                if (context != null)
-                {
-                    tmpCtx.ReadFrom(context);
-                }
-
+                SerializationContext tmpCtx = new SerializationContext(ms, context);
                 Serialize<TOldType>(ms, instance);
+                tmpCtx.Flush();
+
                 ms.Position = 0;
                 TNewType result = Deserialize<TNewType>(ms);
                 if (context != null)
@@ -443,7 +440,7 @@ namespace ProtoBuf
         internal static int WriteFieldToken(int tag, WireType wireType, SerializationContext context)
         {
             uint prefix = (uint)((tag << 3) | ((int)wireType & 7));
-            return Base128Variant.EncodeUInt32(prefix, context);
+            return context.EncodeUInt32(prefix);
         }
     }
 }

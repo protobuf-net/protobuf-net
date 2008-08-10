@@ -15,10 +15,10 @@
             int count = value.Length;
 
             int len = WritePrefix(context)
-                + Base128Variant.EncodeInt32(count, context);
+                + context.EncodeInt32(count);
             if (count > 0)
             {
-                context.Write(value, 0, count);
+                context.WriteBlock(value, 0, count);
             }
             return len + count;
         }

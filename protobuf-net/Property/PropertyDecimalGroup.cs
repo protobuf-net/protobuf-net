@@ -25,7 +25,7 @@ namespace ProtoBuf.Property
             if (IsOptional && value == DefaultValue) return 0;
             return WritePrefix(context)
                 + ProtoDecimal.SerializeDecimal(value, context, false)
-                + Base128Variant.EncodeUInt32(suffix, context);
+                + context.EncodeUInt32(suffix);
         }
 
         public override Decimal DeserializeImpl(TSource source, SerializationContext context)

@@ -14,11 +14,7 @@ namespace ProtoBuf.Property
         {
             double value = GetValue(source);
             if (IsOptional && value == DefaultValue) return 0;
-            byte[] raw = BitConverter.GetBytes(value);
-            if (!BitConverter.IsLittleEndian) SerializationContext.Reverse8(raw);
-            int len = WritePrefix(context);
-            context.Write(raw, 0, 8);
-            return len + 8;
+            return WritePrefix(context) + context.EncodeDouble(value);
         }
 
         public override double DeserializeImpl(TSource source, SerializationContext context)

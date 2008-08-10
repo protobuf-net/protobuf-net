@@ -133,7 +133,7 @@ namespace ProtoBuf
             int bytes = source.Read(buffer, offset, count);
             if(bytes > 0)
             {
-                destination.Write(buffer, offset, bytes);
+                destination.WriteBlock(buffer, offset, bytes);
             }
             return bytes;
         }        

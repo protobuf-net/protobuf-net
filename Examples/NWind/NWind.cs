@@ -29,12 +29,13 @@ namespace DAL
     [TestFixture]
     public class NWindTests
     {
-        public static Database LoadDatabaseFromFile()
+        public static T LoadDatabaseFromFile<T>()
+            where T : class,new()
         {
             // otherwise...
             using (Stream fs = File.OpenRead(@"NWind\nwind.proto.bin"))
             {
-                return Serializer.Deserialize<Database>(fs);
+                return Serializer.Deserialize<T>(fs);
             }
         }
         
@@ -42,7 +43,7 @@ namespace DAL
         public void LoadTest()
         {
 
-            Database db = LoadDatabaseFromFile();
+            Database db = LoadDatabaseFromFile<Database>();
             DbMetrics("Database", db);
 
         }

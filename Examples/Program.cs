@@ -14,20 +14,24 @@ namespace Examples
         static void Main() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
             const int COUNT = 1000000;
-            demo.PerfTestSimple(COUNT, true);
-            demo.PerfTestString(COUNT, true);
-            demo.PerfTestEmbedded(COUNT, true);
+            const bool RUN_LEGACY = true;
+            demo.PerfTestSimple(COUNT, RUN_LEGACY);
+            demo.PerfTestString(COUNT, RUN_LEGACY);
+            demo.PerfTestEmbedded(COUNT, RUN_LEGACY);
             //demo.PerfTestEnum(COUNT, true);
-            const int NWIND_COUNT = 500;
-            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile();
-            Console.WriteLine("Using groups: {0}", DAL.Database.MASTER_GROUP);
-            SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, null);
+            //demo.PerfTestArray(COUNT, true);
+            
+            const int NWIND_COUNT = 1000;
+            //DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
+            //Console.WriteLine("Using groups: {0}", DAL.Database.MASTER_GROUP);
+            //SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, null);
 
-            DatabaseCompat compat = Serializer.ChangeType<Database, DatabaseCompat>(db);
-            SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, true, false, true, true, false, null);
+            DatabaseCompat compat = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompat>();
+            //SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, false, false, false, false, false, null);
+            SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, RUN_LEGACY, false, RUN_LEGACY, true, false, null);
 
-            DatabaseCompatRem compatRem = Serializer.ChangeType<Database, DatabaseCompatRem>(db);
-            SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, true, false, null);
+            //DatabaseCompatRem compatRem = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompatRem>();
+            //SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, true, false, null);
             
         }
 

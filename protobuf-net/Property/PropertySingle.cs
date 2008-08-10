@@ -14,11 +14,7 @@ namespace ProtoBuf.Property
         {
             float value = GetValue(source);
             if (IsOptional && value == DefaultValue) return 0;
-            byte[] raw = BitConverter.GetBytes(value);
-            if (!BitConverter.IsLittleEndian) SerializationContext.Reverse4(raw);
-            int len = WritePrefix(context);
-            context.Write(raw, 0, 4);
-            return len + 4;
+            return WritePrefix(context) + context.EncodeSingle(value);
         }
 
         public override float DeserializeImpl(TSource source, SerializationContext context)

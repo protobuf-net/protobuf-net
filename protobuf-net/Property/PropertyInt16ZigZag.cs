@@ -14,7 +14,7 @@ namespace ProtoBuf.Property
             short value = GetValue(source);
             if (IsOptional && value == DefaultValue) return 0;
             return WritePrefix(context)
-                + Base128Variant.EncodeUInt32(Base128Variant.Zig(value), context);
+                + context.EncodeUInt32(Base128Variant.Zig(value));
         }
 
         public override short DeserializeImpl(TSource source, SerializationContext context)

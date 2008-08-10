@@ -180,12 +180,12 @@ namespace ProtoBuf.ProtoBcl
             if (value != 0)
             {
                 context.WriteByte((FieldTimeSpanValue << 3) | (int)WireType.Variant);
-                len += 1 + Base128Variant.EncodeUInt64(zig, context);
+                len += 1 + context.EncodeUInt64(zig);
             }
             if (scale != TimeSpanScale.Days)
             {
                 context.WriteByte((FieldTimeSpanScale << 3) | (int)WireType.Variant);
-                len += 1 + Base128Variant.EncodeInt32((int)scale, context);
+                len += 1 + context.EncodeInt32((int)scale);
             }
             return len;
         }

@@ -24,7 +24,7 @@ namespace ProtoBuf.Property
             if (IsOptional && value == DefaultValue) return 0;
             return WritePrefix(context)
                 + ProtoTimeSpan.SerializeTimeSpan(value, context, false)
-                + Base128Variant.EncodeUInt32(suffix, context);
+                + context.EncodeUInt32(suffix);
         }
 
         public override TimeSpan DeserializeImpl(TSource source, SerializationContext context)

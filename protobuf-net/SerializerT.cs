@@ -192,10 +192,10 @@ namespace ProtoBuf
             if (readProps == null) Build();
             if (instance == null) throw new ArgumentNullException("instance");
             if (destination == null) throw new ArgumentNullException("destination");
-            SerializationContext ctx = new SerializationContext(destination);
+            SerializationContext ctx = new SerializationContext(destination, null);
             int len = Serialize(instance, ctx);
             ctx.CheckStackClean();
-            destination.Flush();
+            ctx.Flush();
             return len;
         }
 
@@ -234,7 +234,7 @@ namespace ProtoBuf
             if (readProps == null) Build();
             if (instance == null) throw new ArgumentNullException("instance");
             if (source == null) throw new ArgumentNullException("source");
-            SerializationContext ctx = new SerializationContext(source);
+            SerializationContext ctx = new SerializationContext(source, null);
             Deserialize(instance, ctx);
             ctx.CheckStackClean();
         }
@@ -318,12 +318,12 @@ namespace ProtoBuf
                         if (extraData == null)
                         {
                             extraStream = extra.BeginAppend();
-                            extraData = new SerializationContext(extraStream);
+                            extraData = new SerializationContext(extraStream, context);
                         }
 
                         // borrow the workspace, and copy the data
                         extraData.ReadFrom(context);
-                        Base128Variant.EncodeUInt32(prefix, extraData);
+                        extraData.EncodeUInt32(prefix);
                         ProcessExtraData(context, fieldTag, wireType, extraData);
                         context.ReadFrom(extraData);
                     }
@@ -354,19 +354,19 @@ namespace ProtoBuf
             {
                 case WireType.Variant:
                     len = Base128Variant.ReadRaw(read);
-                    write.Write(read.Workspace, 0, len);
+                    write.WriteBlock(read.Workspace, 0, len);
                     break;
                 case WireType.Fixed32:
                     read.ReadBlock(4);
-                    write.Write(read.Workspace, 0, 4);
+                    write.WriteBlock(read.Workspace, 0, 4);
                     break;
                 case WireType.Fixed64:
                     read.ReadBlock(8);
-                    write.Write(read.Workspace, 0, 8);
+                    write.WriteBlock(read.Workspace, 0, 8);
                     break;
                 case WireType.String:
                     len = Base128Variant.DecodeInt32(read);
-                    Base128Variant.EncodeInt32(len, write);
+                    write.EncodeInt32(len);
                     read.WriteTo(write, len);
                     break;
                 case WireType.StartGroup:

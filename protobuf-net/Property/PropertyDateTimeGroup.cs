@@ -25,7 +25,7 @@ namespace ProtoBuf.Property
             if (IsOptional && value == DefaultValue) return 0;
             return WritePrefix(context)
                 + ProtoTimeSpan.SerializeDateTime(value, context, false)
-                + Base128Variant.EncodeUInt32(suffix, context);
+                + context.EncodeUInt32(suffix);
         }
 
         public override DateTime DeserializeImpl(TSource source, SerializationContext context)

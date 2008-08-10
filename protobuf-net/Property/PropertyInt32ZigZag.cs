@@ -14,7 +14,7 @@ namespace ProtoBuf.Property
             int value = GetValue(source);
             if (IsOptional && value == DefaultValue) return 0;
             return WritePrefix(context)
-                + Base128Variant.EncodeUInt32(Base128Variant.Zig(value), context);
+                + context.EncodeUInt32(Base128Variant.Zig(value));
         }
 
         public override int DeserializeImpl(TSource source, SerializationContext context)

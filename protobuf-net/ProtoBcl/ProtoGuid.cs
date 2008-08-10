@@ -69,9 +69,9 @@ namespace ProtoBuf.ProtoBcl
                 len = 1;
             }
             context.WriteByte(FieldLo << 3 | (int)WireType.Fixed64);
-            context.Write(buffer, 0, 8);
+            context.WriteBlock(buffer, 0, 8);
             context.WriteByte(FieldHi << 3 | (int)WireType.Fixed64);
-            context.Write(buffer, 8, 8);
+            context.WriteBlock(buffer, 8, 8);
             return len + 18;
 
         }

@@ -77,17 +77,17 @@ namespace ProtoBuf.ProtoBcl
                 if (low != 0) len += 1 + Base128Variant.GetLength((long)low);
                 if (high != 0) len += 1 + Base128Variant.GetLength((long)high);
                 if (signScale!=0) len += 2;
-                len = Base128Variant.EncodeInt32(len, context);
+                len = context.EncodeInt32(len);
             }
             if (low != 0)
             {
                 context.WriteByte((FieldDecimalLow << 3) | (int)WireType.Variant);
-                len += 1 + Base128Variant.EncodeInt64((long)low, context);
+                len += 1 + context.EncodeInt64((long)low);
             }
             if (high != 0)
             { // note encode as long to avoid high sign issues
                 context.WriteByte((FieldDecimalHigh << 3) | (int)WireType.Variant);
-                len += 1 + Base128Variant.EncodeInt64((long)high, context);
+                len += 1 + context.EncodeInt64((long)high);
             }
             if (signScale != 0)
             {

@@ -101,6 +101,48 @@ namespace Examples.SimpleStream
             Assert.IsTrue(LoadTestItem(t4, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x20, 0x03));
         }
 
+
+        [Test]
+        public void TestArray()
+        {
+            Assert.IsTrue(PerfTestArray(1, false));
+        }
+        public bool PerfTestArray(int count, bool log)
+        {
+            int[] data = new int[1000];
+            for (int i = 0; i < 1000; i++) data[i] = i;
+            Test5 t5 = new Test5 { Data = data };
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, t5);
+                ms.Position = 0;
+                Test5 clone = Serializer.Deserialize<Test5>(ms);
+                if (t5.Data.Length != clone.Data.Length) return false;
+                for (int i = 0; i < t5.Data.Length; i++)
+                {
+                    if (t5.Data[i] != clone.Data[i]) return false;
+                }
+                Stopwatch watch = Stopwatch.StartNew();
+                for (int i = 0; i < count; i++)
+                {
+                    ms.Position = 0;
+                    Serializer.Deserialize<Test5>(ms);
+                }
+                watch.Stop();
+                if(log)
+                Console.WriteLine("array x {0}; {1} ms", count, watch.ElapsedMilliseconds);
+            }
+            return true;
+        }
+
+        [ProtoContract]
+        class Test5
+        {
+            [ProtoMember(1)]
+            public int[] Data { get; set; }
+        }
+
         [ProtoContract]
         class TwoFields
         {
