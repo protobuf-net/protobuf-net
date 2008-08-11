@@ -19,20 +19,7 @@ namespace ProtoBuf.Property
 
         public override ulong DeserializeImpl(TSource source, SerializationContext context)
         {
-            context.ReadBlock(8);
-            byte[] buffer = context.Workspace;
-
-            uint lo = (((uint)buffer[3]) << 24)
-                | (((uint)buffer[2]) << 16)
-                | (((uint)buffer[1]) << 8)
-                | (((uint)buffer[0])),
-                hi = (((uint)buffer[7]) << 24)
-                | (((uint)buffer[6]) << 16)
-                | (((uint)buffer[5]) << 8)
-                | (((uint)buffer[4]));
-
-            ulong loL = (ulong)lo, hiL = (ulong)hi;
-            return (hiL << 32) | loL;
+            return (ulong) context.DecodeInt64Fixed();
         }
     }
 }

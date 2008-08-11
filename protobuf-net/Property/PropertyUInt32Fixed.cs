@@ -18,12 +18,7 @@ namespace ProtoBuf.Property
 
         public override uint DeserializeImpl(TSource source, SerializationContext context)
         {
-            context.ReadBlock(4);
-            byte[] buffer = context.Workspace;
-            return (((uint)buffer[3]) << 24)
-                | (((uint)buffer[2]) << 16)
-                | (((uint)buffer[1]) << 8)
-                | (((uint)buffer[0]));
+            return (uint)context.DecodeInt32Fixed();
         }
     }
 }

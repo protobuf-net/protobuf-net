@@ -17,7 +17,7 @@ namespace ProtoBuf.Property
 
         public override bool DeserializeImpl(TSource source, SerializationContext context)
         {
-            int i = Base128Variant.DecodeInt32(context);
+            int i = context.DecodeInt32();
             return i != 0;
         }
     }

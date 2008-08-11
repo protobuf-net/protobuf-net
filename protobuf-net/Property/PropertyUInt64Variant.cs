@@ -19,7 +19,7 @@ namespace ProtoBuf.Property
 
         public override ulong DeserializeImpl(TSource source, SerializationContext context)
         {
-            return Base128Variant.DecodeUInt64(context);
+            return context.DecodeUInt64();
         }
     }
 }

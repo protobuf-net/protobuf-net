@@ -412,7 +412,7 @@ namespace ProtoBuf
             switch (wireType)
             {
                 case WireType.Variant:
-                    Base128Variant.Skip(context);
+                    context.ReadRawVariant();
                     break;
                 case WireType.Fixed32:
                     if (!context.TrySeek(4)) context.ReadBlock(4);
@@ -421,7 +421,7 @@ namespace ProtoBuf
                     if (!context.TrySeek(8)) context.ReadBlock(8);
                     break;
                 case WireType.String:
-                    int len = Base128Variant.DecodeInt32(context);
+                    int len = context.DecodeInt32();
                     if (!context.TrySeek(len)) context.WriteTo(Stream.Null, len);
                     break;
                 case WireType.EndGroup:

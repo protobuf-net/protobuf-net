@@ -19,9 +19,7 @@ namespace ProtoBuf.Property
 
         public override double DeserializeImpl(TSource source, SerializationContext context)
         {
-            context.ReadBlock(8);
-            if (!BitConverter.IsLittleEndian) SerializationContext.Reverse8(context.Workspace);
-            return BitConverter.ToDouble(context.Workspace, 0);
+            return context.DecodeDouble();
         }
     }
 }

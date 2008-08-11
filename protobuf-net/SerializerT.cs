@@ -353,7 +353,7 @@ namespace ProtoBuf
             switch (wireType)
             {
                 case WireType.Variant:
-                    len = Base128Variant.ReadRaw(read);
+                    len = read.ReadRawVariant();
                     write.WriteBlock(read.Workspace, 0, len);
                     break;
                 case WireType.Fixed32:
@@ -365,7 +365,7 @@ namespace ProtoBuf
                     write.WriteBlock(read.Workspace, 0, 8);
                     break;
                 case WireType.String:
-                    len = Base128Variant.DecodeInt32(read);
+                    len = read.DecodeInt32();
                     write.EncodeInt32(len);
                     read.WriteTo(write, len);
                     break;

@@ -31,16 +31,25 @@ namespace Examples.SimpleStream
         {
             PerfTest obj = new PerfTest
             {
-                Foo = 12,
-                Bar = "bar",
-                Blip = 123.45F,
-                Blop = 123.4567
+                Foo = 12,  // 1: 8, 12
+                Bar = "bar", // 2: 18, 3, 98, 97, 114
+                Blip = 123.45F, // 3: 29, 102, 230, 246, 66
+                Blop = 123.4567 // 4: 33, 83, 5, 163, 146, 58, 221, 94, 64
             };
-            PerfTest clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(obj.Foo, clone.Foo, "Foo");
-            Assert.AreEqual(obj.Bar, clone.Bar, "Bar");
-            Assert.AreEqual(obj.Blop, clone.Blop, "Blop");
-            Assert.AreEqual(obj.Blip, clone.Blip, "Blip");
+
+            PerfTest clone;
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, obj);
+                byte[] raw = ms.ToArray();
+                ms.Position = 0;
+                clone = Serializer.Deserialize<PerfTest>(ms);
+                Assert.AreEqual(obj.Foo, clone.Foo, "Foo");
+                Assert.AreEqual(obj.Bar, clone.Bar, "Bar");
+                Assert.AreEqual(obj.Blop, clone.Blop, "Blop");
+                Assert.AreEqual(obj.Blip, clone.Blip, "Blip");
+            }
+            
 
             const int LOOP = 500000;
             Stopwatch watch = Stopwatch.StartNew();

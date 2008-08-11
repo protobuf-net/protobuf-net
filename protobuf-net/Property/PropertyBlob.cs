@@ -15,7 +15,7 @@
             int count = value.Length;
 
             int len = WritePrefix(context)
-                + context.EncodeInt32(count);
+                + context.EncodeUInt32((uint)count);
             if (count > 0)
             {
                 context.WriteBlock(value, 0, count);
@@ -25,11 +25,11 @@
 
         public override byte[] DeserializeImpl(TSource source, SerializationContext context)
         {
-            int count = Base128Variant.DecodeInt32(context);
+            int count = (int) context.DecodeUInt32();
             byte[] value = new byte[count];
             if (count > 0)
             {
-                context.ReadBlock(value, count);
+                context.ReadBlock(value, 0, count);
             }
             return value;
         }

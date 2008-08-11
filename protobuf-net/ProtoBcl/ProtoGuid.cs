@@ -19,12 +19,10 @@ namespace ProtoBuf.ProtoBcl
                 switch (prefix)
                 {
                     case (FieldLo << 3) | (int)WireType.Fixed64:
-                        context.ReadBlock(8);
-                        Buffer.BlockCopy(context.Workspace, 0, buffer, 0, 8);
+                        context.ReadBlock(buffer, 0, 8);
                         break;
                     case (FieldHi << 3) | (int)WireType.Fixed64:
-                        context.ReadBlock(8);
-                        Buffer.BlockCopy(context.Workspace, 0, buffer, 8, 8);
+                        context.ReadBlock(buffer, 8, 8);
                         break;
                     default:
                         WireType wireType;

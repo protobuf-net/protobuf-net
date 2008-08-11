@@ -53,7 +53,7 @@ namespace ProtoBuf
             {
                 case StreamState.Normal:
                     streamState = StreamState.EofExpected;
-                    value = Base128Variant.DecodeUInt32(this);
+                    value = this.DecodeUInt32();
                     break;
                 case StreamState.Peeked:
                     value = peekedValue;
@@ -85,24 +85,8 @@ namespace ProtoBuf
         public long Position { get { return position; } }
         public long MaxReadPosition { get { return maxReadPosition; } set { maxReadPosition = value; } }
 
-        public int ReadByte()
-        {
-            int b = stream.ReadByte();
-            if (b >= 0) position++;
-            return b;
-        }
-        public int Read(int count)
-        {
-            int read = stream.Read(workspace, 0, count);
-            if (read > 0) position += read;
-            return read;
-        }
-        public int Read(byte[] buffer, int offset, int count)
-        {
-            int read = stream.Read(buffer, offset, count);
-            if (read > 0) position += read;
-            return read;
-        }
+        
+        
 
         public bool TrySeek(int offset)
         {
@@ -116,21 +100,7 @@ namespace ProtoBuf
         }
 
 
-        public void ReadBlock(int count)
-        {
-            ReadBlock(workspace, count);
-        }
-        public void ReadBlock(byte[] buffer, int count)
-        {
-            int read, index = 0;
-            position += count;
-            while ((count > 0) && ((read = stream.Read(buffer, index, count)) > 0))
-            {
-                index += read;
-                count -= read;
-            }
-            if (count != 0) throw new EndOfStreamException();
-        }
+       
         const int BLIT_BUFFER_SIZE = 4096;
         
         public long Length { get { return stream.Length; } }
@@ -221,24 +191,7 @@ namespace ProtoBuf
         private int ioBufferIndex;
         const int IO_BUFFER_SIZE = 64;
 
-        public void ReadFrom(SerializationContext context)
-        {
-            if (context == null) throw new ArgumentNullException("context");
-            
-            this.workspace = context.workspace;
-            this.objectStack = context.objectStack;
-            this.stackDepth = context.stackDepth;
-            this.streamState = context.streamState;
-            this.peekedValue = context.peekedValue;
-            this.ioBuffer = context.ioBuffer;
-            this.ioBufferIndex = context.ioBufferIndex;
-
-            TraceChangeOrigin(context);
-
-            // IMPORTANT: don't copy the group stack; we want to 
-            // validate that the group-stack is empty when finding the end of a stream
-        }
-
+       
         [Conditional(SerializationContext.VerboseSymbol)]
         private void TraceChangeOrigin(SerializationContext context)
         {
@@ -296,36 +249,55 @@ namespace ProtoBuf
         public int Depth { get { return stackDepth; } }
 
 
-        
-        public static void Reverse4(byte[] buffer)
+        public void ReadFrom(SerializationContext context)
         {
-            byte tmp = buffer[0];
-            buffer[0] = buffer[3];
-            buffer[3] = tmp;
-            tmp = buffer[1];
-            buffer[1] = buffer[2];
-            buffer[2] = tmp;
+            if (context == null) throw new ArgumentNullException("context");
+
+            this.workspace = context.workspace;
+            this.objectStack = context.objectStack;
+            this.stackDepth = context.stackDepth;
+            this.streamState = context.streamState;
+            this.peekedValue = context.peekedValue;
+            this.ioBuffer = context.ioBuffer;
+            this.ioBufferIndex = context.ioBufferIndex;
+            this.inputStreamAvailable = context.inputStreamAvailable;
+            this.ioBufferEffectiveSize = context.ioBufferEffectiveSize;
+
+            TraceChangeOrigin(context);
+
+            // IMPORTANT: don't copy the group stack; we want to 
+            // validate that the group-stack is empty when finding the end of a stream
         }
-        public static void Reverse8(byte[] buffer)
+
+        public static void Reverse4(byte[] buffer, int index)
         {
-            byte tmp = buffer[0];
-            buffer[0] = buffer[7];
-            buffer[7] = tmp;
-            tmp = buffer[1];
-            buffer[1] = buffer[6];
-            buffer[6] = tmp;
-            tmp = buffer[2];
-            buffer[2] = buffer[5];
-            buffer[5] = tmp;
-            tmp = buffer[3];
-            buffer[3] = buffer[4];
-            buffer[4] = tmp;
+            byte tmp = buffer[index + 0];
+            buffer[index + 0] = buffer[index + 3];
+            buffer[index + 3] = tmp;
+            tmp = buffer[index + 1];
+            buffer[index + 1] = buffer[index + 2];
+            buffer[index + 2] = tmp;
+        }
+        public static void Reverse8(byte[] buffer, int index)
+        {
+            byte tmp = buffer[index + 0];
+            buffer[index + 0] = buffer[index + 7];
+            buffer[index + 7] = tmp;
+            tmp = buffer[index + 1];
+            buffer[index + 1] = buffer[index + 6];
+            buffer[index + 6] = tmp;
+            tmp = buffer[index + 2];
+            buffer[index + 2] = buffer[index + 5];
+            buffer[index + 5] = tmp;
+            tmp = buffer[index + 3];
+            buffer[index + 3] = buffer[index + 4];
+            buffer[index + 4] = tmp;
         }
 
         internal long LimitByLengthPrefix()
         {
             // length-prefixed
-            int len = Base128Variant.DecodeInt32(this);
+            int len = (int)this.DecodeUInt32();
             long oldMaxPos = this.MaxReadPosition;
             this.MaxReadPosition = this.Position + len;
             return oldMaxPos;

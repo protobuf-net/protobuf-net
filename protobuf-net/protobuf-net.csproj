@@ -183,7 +183,12 @@
     <Compile Include="Base128Variant.cs">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="SerializationContext.Write.cs" />
+    <Compile Include="SerializationContext.Read.cs">
+      <DependentUpon>SerializationContext.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SerializationContext.Write.cs">
+      <DependentUpon>SerializationContext.cs</DependentUpon>
+    </Compile>
     <None Include="Web\TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

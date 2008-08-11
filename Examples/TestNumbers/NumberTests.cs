@@ -3,6 +3,7 @@ using System.IO;
 using ProtoBuf;
 using NUnit.Framework;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Examples.TestNumbers
 {
@@ -222,6 +223,44 @@ namespace Examples.TestNumbers
                 }
             }
         }
+
+        [Test]
+        public void SweepBitsInt64KnownTricky()
+        {
+            try
+            {
+                int i = 31, j = 31;
+                long bigBit = i == 0 ? 0 : (1 << i - 1);
+                long smallBit = 1 << j;
+                long val = bigBit | smallBit;
+                NumRig rig = new NumRig();
+                rig.Int64Default // 9 => 72
+                    = rig.Int64FixedSize // 12 => 97?
+                    = rig.Int64TwosComplement // 11 => 88
+                    = rig.Int64ZigZag // 10 => 80
+                    = val;
+                const string SUCCESS = "bar";
+                rig.Foo = SUCCESS; // to help test stream ending prematurely
+
+                MemoryStream ms = new MemoryStream();
+                Serializer.Serialize(ms, rig);
+                byte[] raw = ms.ToArray();
+                ms.Position = 0;
+                NumRig clone = Serializer.Deserialize<NumRig>(ms);
+
+                Assert.AreEqual(val, clone.Int64Default, "Default");
+                Assert.AreEqual(val, clone.Int64FixedSize, "FixedSize");
+                Assert.AreEqual(val, clone.Int64ZigZag, "ZigZag");
+                Assert.AreEqual(val, clone.Int64TwosComplement, "TwosComplement");
+                Assert.AreEqual(SUCCESS, clone.Foo, "EOF check");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.StackTrace);
+                Assert.Fail(ex.Message);
+            }
+        }
+
         [Test]
         public void SweepBitsInt64()
         {
@@ -242,11 +281,11 @@ namespace Examples.TestNumbers
                         = val;
 
                     NumRig clone = Serializer.DeepClone(rig);
-                    Assert.AreEqual(val, rig.Int64Default);
-                    Assert.AreEqual(val, rig.Int64FixedSize);
-                    Assert.AreEqual(val, rig.Int64ZigZag);
-                    Assert.AreEqual(val, rig.Int64TwosComplement);
-                    Assert.AreEqual(SUCCESS, rig.Foo);
+                    Assert.AreEqual(val, clone.Int64Default, "Default");
+                    Assert.AreEqual(val, clone.Int64FixedSize, "FixedSize");
+                    Assert.AreEqual(val, clone.Int64ZigZag, "ZigZag");
+                    Assert.AreEqual(val, clone.Int64TwosComplement, "TwosComplement");
+                    Assert.AreEqual(SUCCESS, clone.Foo, "EOF check: " + val.ToString());
                 }
             }
         }

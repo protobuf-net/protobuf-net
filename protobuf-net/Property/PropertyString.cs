@@ -15,7 +15,8 @@ namespace ProtoBuf.Property
             string value = GetValue(source);
             if (value == null || (IsOptional && value == DefaultValue)) return 0;
 
-            int charCount = value.Length, underEstimate = charCount;
+            int charCount = value.Length;
+            uint underEstimate = (uint)charCount;
             if (charCount == 0)
             {
                 int prefixLen = WritePrefix(context);
@@ -36,9 +37,9 @@ namespace ProtoBuf.Property
                 // common text in many locales will /tend/ to be single-byte. We'll
                 // absorb the cost of checking the actual length, since we know it
                 // is only a short string.
-                underEstimate = utf8.GetByteCount(value);
+                underEstimate = (uint)utf8.GetByteCount(value);
                 if(underEstimate <= 127) {
-                    context.CheckSpace(underEstimate + 1);
+                    context.CheckSpace((int)(underEstimate + 1));
                     int prefixLen = WritePrefix(context),
                     byteCount = utf8.GetBytes(value, 0, charCount, context.Workspace, 1);
                     context.Workspace[0] = (byte)byteCount;
@@ -60,7 +61,7 @@ namespace ProtoBuf.Property
 
         public override string DeserializeImpl(TSource source, SerializationContext context)
         {
-            int len = Base128Variant.DecodeInt32(context);
+            int len = (int)context.DecodeUInt32();
             string value;
             if (len == 0)
             {

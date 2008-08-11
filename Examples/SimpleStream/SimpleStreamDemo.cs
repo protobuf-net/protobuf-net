@@ -49,17 +49,38 @@ namespace Examples.SimpleStream
             
         }
         [Test]
+        public void MultiByteUTF8Len128() // started failing...
+        {
+            Test2 t2 = new Test2 { B = new string('ä', 128) };
+            MemoryStream ms = new MemoryStream();
+            Serializer.Serialize(ms, t2);
+            ms.Position = 0;
+            byte[] raw = ms.ToArray();
+            Test2 clone = Serializer.Deserialize<Test2>(ms);
+            Assert.IsNotNull(clone);
+            Assert.AreEqual(t2.B, clone.B);
+        }
+
+        [Test]
         public void MultiByteUTF8VariousLengths()
         {
             char mb = 'ä';
             Assert.AreEqual(2, Encoding.UTF8.GetByteCount(new char[] { mb }), "is multibyte");
-
+            
             for (int i = 0; i < 1024; i++)
             {
-                Test2 t2 = new Test2 { B = new string(mb, i) },
-                    clone = Serializer.DeepClone(t2);
-                Assert.AreEqual(i, t2.B.Length, "len");
-                Assert.AreEqual(t2.B, clone.B, "Count: " + i.ToString());
+                try
+                {
+                    Test2 t2 = new Test2 { B = new string(mb, i) },
+                        clone = Serializer.DeepClone(t2);
+                    Assert.AreEqual(i, t2.B.Length, "len");
+                    Assert.AreEqual(t2.B, clone.B, "Count: " + i.ToString());
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(ex.StackTrace);
+                    Assert.Fail(i.ToString() + ": " + ex.Message);
+                }
             }
         }
 

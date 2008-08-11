@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.IO;
 using ProtoBuf.Property;
 
@@ -14,8 +12,16 @@ namespace ProtoBuf
             ioBuffer[ioBufferIndex++] = value;
             position++;
         }
-        
-        
+
+        public static uint Zig(int value)
+        {
+            return (uint)((value << 1) ^ (value >> 31));
+        }
+        public static ulong Zig(long value)
+        {
+            return (ulong)((value << 1) ^ (value >> 63));
+        }
+
         public void WriteBlock(byte[] buffer, int offset, int count)
         {
             if (ioBufferIndex + count < IO_BUFFER_SIZE)
@@ -47,10 +53,17 @@ namespace ProtoBuf
             }
             if (length != 0) throw new EndOfStreamException();
         }
-        public void Flush(int count)
+        /// <summary>
+        /// Flushes the IO buffer if there is not enough space to complete the current operation.
+        /// </summary>
+        /// <param name="spaceRequired">The maximum number of bytes required by the current operation.</param>
+        public void Flush(int spaceRequired)
         {
-            if (ioBufferIndex + count >= IO_BUFFER_SIZE) Flush();
+            if (ioBufferIndex + spaceRequired >= IO_BUFFER_SIZE) Flush();
         }
+        /// <summary>
+        /// Flushes the IO buffer, writing any cached data to the underlying stream and resetting the cache.
+        /// </summary>
         public void Flush()
         {
             if (ioBufferIndex > 0)
@@ -60,7 +73,7 @@ namespace ProtoBuf
             }
         }
 
-        internal int WriteLengthPrefixed<TValue>(TValue value, int underEstimatedLength, ILengthProperty<TValue> property)
+        internal int WriteLengthPrefixed<TValue>(TValue value, uint underEstimatedLength, ILengthProperty<TValue> property)
         {
             Flush(); // commit to the stream before monkeying with the buffers...
 
@@ -70,17 +83,17 @@ namespace ProtoBuf
                 // we'll write to out current stream, optimising
                 // for the case when the length-prefix is 1-byte;
                 // if not we'll have to BlockCopy
-                int startIndex = (int)ms.Position,
-                    guessLength = underEstimatedLength,
-                    guessPrefixLength = this.EncodeInt32(guessLength),
-                    actualLength = property.Serialize(value, this);
+                int startIndex = (int)ms.Position;
+                uint guessLength = underEstimatedLength,
+                    guessPrefixLength = (uint) this.EncodeUInt32(guessLength),
+                    actualLength = (uint) property.Serialize(value, this);
 
                 if (guessLength == actualLength)
                 { // good guess! nothing to do...
-                    return guessPrefixLength + actualLength;
+                    return (int)(guessPrefixLength + actualLength);
                 }
 
-                int actualPrefixLength = Base128Variant.GetLength(actualLength);
+                uint actualPrefixLength = (uint)SerializationContext.GetLength(actualLength);
 
                 Flush(); // commit to the stream before we start messing with it... 
 
@@ -94,7 +107,7 @@ namespace ProtoBuf
                     // fix things...
 
                     // extend the buffer to ensure we have space
-                    for (int i = actualPrefixLength - guessPrefixLength; i > 0; i--)
+                    for (uint i = actualPrefixLength - guessPrefixLength; i > 0; i--)
                     {
                         ms.WriteByte(0);
                         position++;
@@ -105,13 +118,13 @@ namespace ProtoBuf
                     // otherwise there the buffer might change if we extend
                     // over a boundary)
                     byte[] buffer = ms.GetBuffer();
-                    Buffer.BlockCopy(buffer, startIndex + guessPrefixLength,
-                        buffer, startIndex + actualPrefixLength, actualLength);
+                    Buffer.BlockCopy(buffer, (int)(startIndex + guessPrefixLength),
+                        buffer, (int)(startIndex + actualPrefixLength), (int)actualLength);
                 }
 
                 // back-fill the actual length into the buffer
-                SerializationContext.EncodeUInt64((ulong)actualLength, ms.GetBuffer(), startIndex);
-                return actualPrefixLength + actualLength;
+                SerializationContext.EncodeUInt32(actualLength, ms.GetBuffer(), startIndex);
+                return (int)(actualPrefixLength + actualLength);
 
             }
             else
@@ -135,13 +148,12 @@ namespace ProtoBuf
         {
             CheckSpace(length > BLIT_BUFFER_SIZE ? BLIT_BUFFER_SIZE : length);
             int max = workspace.Length, read;
-            position += length;
-            while ((length >= max) && (read = stream.Read(workspace, 0, max)) > 0)
+            while ((length >= max) && (read = Read(workspace, 0, max)) > 0)
             {
                 destination.Write(workspace, 0, read);
                 length -= read;
             }
-            while ((length > 0) && (read = stream.Read(workspace, 0, length)) > 0)
+            while ((length > 0) && (read = Read(workspace, 0, length)) > 0)
             {
                 destination.Write(workspace, 0, read);
                 length -= read;
@@ -183,7 +195,7 @@ namespace ProtoBuf
         {
             return EncodeUInt64((ulong)value);
         }
-        public static int EncodeUInt64(ulong value, byte[] buffer, int index)
+        public static int EncodeUInt32(uint value, byte[] buffer, int index)
         {
             int count = 0;
             do
@@ -204,8 +216,14 @@ namespace ProtoBuf
                 return 1;
             }
             Flush(10);
-            int count = EncodeUInt64(value, ioBuffer, ioBufferIndex);
-            ioBufferIndex += count;
+            int count = 0;
+            do
+            {
+                ioBuffer[ioBufferIndex++] = (byte)((value & 0x7F) | 0x80);
+                value >>= 7;
+                count++;
+            } while (value != 0);
+            ioBuffer[ioBufferIndex - 1] &= 0x7F;
             position += count;
             return count;
         }
@@ -303,6 +321,56 @@ namespace ProtoBuf
             return 8;
         }
 
+        public static int GetLength(uint value)
+        {
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            return value == 0 ? 4 : 5;
+        }
+        public static int GetLength(int value)
+        {
+            if (value < 0) return 10;
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            return value == 0 ? 4 : 5;
+        }
+
+        public static int GetLength(long value)
+        {
+            if (value < 0) return 10;
+            value >>= 7;
+            if (value == 0) return 1;
+            value >>= 7;
+            if (value == 0) return 2;
+            value >>= 7;
+            if (value == 0) return 3;
+            value >>= 7;
+            if (value == 0) return 4;
+            value >>= 7;
+            if (value == 0) return 5;
+            value >>= 7;
+            if (value == 0) return 6;
+            value >>= 7;
+            if (value == 0) return 7;
+            value >>= 7;
+            if (value == 0) return 8;
+            value >>= 7;
+            return value == 0 ? 9 : 10;
+        }
+        public static int GetLength(ulong value)
+        {
+            return GetLength((long)value);
+        }
         
     }
 }

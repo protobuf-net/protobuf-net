@@ -21,13 +21,13 @@ namespace ProtoBuf.ProtoBcl
                 switch (prefix)
                 {
                     case (FieldDecimalLow << 3) | (int)WireType.Variant:
-                        low = (ulong)Base128Variant.DecodeInt64(context);
+                        low = (ulong)context.DecodeInt64();
                         break;
                     case (FieldDecimalHigh << 3) | (int)WireType.Variant:
-                        high = (uint)Base128Variant.DecodeInt32(context);
+                        high = (uint)context.DecodeInt32();
                         break;
                     case (FieldDecimalSignScale << 3) | (int)WireType.Variant:
-                        signScale = (uint)Base128Variant.DecodeInt32(context);
+                        signScale = (uint)context.DecodeInt32();
                         break;
                     default:
                         WireType wireType;
@@ -74,8 +74,8 @@ namespace ProtoBuf.ProtoBcl
             int len = 0;
             if (lengthPrefixed)
             {
-                if (low != 0) len += 1 + Base128Variant.GetLength((long)low);
-                if (high != 0) len += 1 + Base128Variant.GetLength((long)high);
+                if (low != 0) len += 1 + SerializationContext.GetLength((long)low);
+                if (high != 0) len += 1 + SerializationContext.GetLength((long)high);
                 if (signScale!=0) len += 2;
                 len = context.EncodeInt32(len);
             }

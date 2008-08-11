@@ -106,7 +106,7 @@ namespace ProtoBuf.Property
 
         public override TEnum DeserializeImpl(TSource source, SerializationContext context)
         {
-            uint wireValue = Base128Variant.DecodeUInt32(context);
+            uint wireValue = context.DecodeUInt32();
             return GetKey(wireValue);
         }
     }

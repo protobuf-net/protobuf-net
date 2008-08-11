@@ -19,9 +19,7 @@ namespace ProtoBuf.Property
 
         public override float DeserializeImpl(TSource source, SerializationContext context)
         {
-            context.ReadBlock(4);
-            if (!BitConverter.IsLittleEndian) SerializationContext.Reverse4(context.Workspace);
-            return BitConverter.ToSingle(context.Workspace, 0);
+            return context.DecodeSingle();
         }
     }
 }

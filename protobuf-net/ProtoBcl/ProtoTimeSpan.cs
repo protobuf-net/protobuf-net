@@ -60,10 +60,10 @@ namespace ProtoBuf.ProtoBcl
                 switch (prefix)
                 {
                     case (FieldTimeSpanScale << 3) | (int)WireType.Variant:
-                        scale = (TimeSpanScale)Base128Variant.DecodeInt32(context);
+                        scale = (TimeSpanScale)context.DecodeInt32();
                         break;
                     case (FieldTimeSpanValue << 3) | (int)WireType.Variant:
-                        value = Base128Variant.Zag(Base128Variant.DecodeUInt64(context));
+                        value = SerializationContext.Zag(context.DecodeUInt64());
                         break;
                     default:
                         WireType wireType;
@@ -163,7 +163,7 @@ namespace ProtoBuf.ProtoBcl
             }
 
             int len = 0;
-            ulong zig = Base128Variant.Zig(value);
+            ulong zig = SerializationContext.Zig(value);
             if (lengthPrefixed)
             {
                 if (scale != TimeSpanScale.Days)
@@ -172,7 +172,7 @@ namespace ProtoBuf.ProtoBcl
                 }
                 if (zig != 0)
                 {
-                    len += 1 + Base128Variant.GetLength(zig);
+                    len += 1 + SerializationContext.GetLength(zig);
                 }
                 context.WriteByte((byte)len);
                 len = 1;
