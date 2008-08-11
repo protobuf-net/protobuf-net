@@ -22,16 +22,15 @@ namespace Examples
             //demo.PerfTestArray(COUNT, true);
             
             const int NWIND_COUNT = 1000;
-            //DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
-            //Console.WriteLine("Using groups: {0}", DAL.Database.MASTER_GROUP);
-            //SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, null);
+            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
+            Console.WriteLine("Using groups: {0}", DAL.Database.MASTER_GROUP);
+            SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, null);
 
             DatabaseCompat compat = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompat>();
-            //SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, false, false, false, false, false, null);
             SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, RUN_LEGACY, false, RUN_LEGACY, true, false, null);
 
-            //DatabaseCompatRem compatRem = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompatRem>();
-            //SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, true, false, null);
+            DatabaseCompatRem compatRem = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompatRem>();
+            SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, false, false, null);
             
         }
 
