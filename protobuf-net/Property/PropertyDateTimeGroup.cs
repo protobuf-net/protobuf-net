@@ -10,6 +10,10 @@ namespace ProtoBuf.Property
         {
             get { return "bcl.DateTime"; }
         }
+        public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
+        {
+            yield return CreateAlternative<PropertyDateTimeString<TSource>>(DataFormat.Default);
+        }
         private uint suffix;
         public override WireType WireType { get { return WireType.StartGroup; } }
 

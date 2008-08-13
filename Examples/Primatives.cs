@@ -260,13 +260,13 @@ namespace Examples
         [ProtoContract]
         public class PrimativeGrouped
         {
-            [ProtoMember(1, IsGroup = true)]
+            [ProtoMember(1, DataFormat = DataFormat.Group)]
             public DateTime When { get; set; }
 
-            [ProtoMember(2, IsGroup = true)]
+            [ProtoMember(2, DataFormat = DataFormat.Group)]
             public TimeSpan HowLong { get; set; }
 
-            [ProtoMember(3, IsGroup = true)]
+            [ProtoMember(3, DataFormat = DataFormat.Group)]
             public decimal HowMuch { get; set; }
         }
 
@@ -275,7 +275,7 @@ namespace Examples
         {
             public PrimativeGroupedWrapper() { Child = new PrimativeGrouped(); }
 
-            [ProtoMember(1, IsGroup = true)]
+            [ProtoMember(1, DataFormat = DataFormat.Group)]
             public PrimativeGrouped Child { get; private set; }
         }
         [ProtoContract]
@@ -283,7 +283,7 @@ namespace Examples
         {
             public PrimativeNonGroupedWrapper() { Child = new PrimativeGrouped(); }
 
-            [ProtoMember(1, IsGroup = false)]
+            [ProtoMember(1, DataFormat = DataFormat.Default)]
             public PrimativeGrouped Child { get; private set; }
         }
 

@@ -23,7 +23,7 @@ namespace Examples
             
             const int NWIND_COUNT = 1000;
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
-            Console.WriteLine("Using groups: {0}", DAL.Database.MASTER_GROUP);
+            Console.WriteLine("Sub-object format: {0}", DAL.Database.SubObjectFormat);
             SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, null);
 
             DatabaseCompat compat = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompat>();

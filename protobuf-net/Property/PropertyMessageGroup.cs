@@ -4,6 +4,11 @@ namespace ProtoBuf.Property
     internal sealed class PropertyMessageGroup<TSource, TValue> : Property<TSource, TValue>
         where TValue : class, new()
     {
+        public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
+        {
+            yield return CreateAlternative<PropertyMessageString<TSource, TValue>>(DataFormat.Default);
+        }
+
         public override string DefinedType
         {
             get { return Serializer.GetDefinedTypeName<TValue>(); }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
@@ -108,6 +109,66 @@ message EnumWrapper {
         }
 
         [Test]
+        public void NWindPipeline()
+        {
+            DAL.Database masterDb = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
+            int orderCount = masterDb.Orders.Count,
+                lineCount = masterDb.Orders.Sum(o=>o.Lines.Count),
+                unitCount = masterDb.Orders.SelectMany(o=>o.Lines).Sum(l=>(int)l.Quantity);
+
+            decimal freight = masterDb.Orders.Sum(order => order.Freight).GetValueOrDefault(),
+                value = masterDb.Orders.SelectMany(o => o.Lines).Sum(l => l.Quantity * l.UnitPrice);
+
+            DatabaseReader db = DAL.NWindTests.LoadDatabaseFromFile<DatabaseReader>();
+
+            Assert.AreEqual(830, orderCount);
+            Assert.AreEqual(2155, lineCount);
+            Assert.AreEqual(51317, unitCount);
+            Assert.AreEqual(1354458.59M, value);
+
+            Assert.AreEqual(orderCount, db.OrderReader.OrderCount);
+            Assert.AreEqual(lineCount, db.OrderReader.LineCount);
+            Assert.AreEqual(unitCount, db.OrderReader.UnitCount);
+            Assert.AreEqual(freight, db.OrderReader.FreightTotal);
+            Assert.AreEqual(value, db.OrderReader.ValueTotal);
+        }
+
+        [ProtoContract]
+        class DatabaseReader
+        {
+            public DatabaseReader() { OrderReader = new OrderReader(); }
+            [ProtoMember(1)]
+            public OrderReader OrderReader {get;private set;}
+        }
+
+        class OrderReader : IEnumerable<DAL.Order>
+        {
+            public int OrderCount { get; private set; }
+            public int LineCount { get; private set; }
+            public int UnitCount { get; private set; }
+            public decimal FreightTotal { get; private set; }
+            public decimal ValueTotal { get; private set; }
+            public void Add(DAL.Order order)
+            {
+                OrderCount++;
+                LineCount += order.Lines.Count;
+                UnitCount += order.Lines.Sum(l => l.Quantity);
+                FreightTotal += order.Freight.GetValueOrDefault();
+                ValueTotal += order.Lines.Sum(l => l.UnitPrice * l.Quantity);
+            }
+
+            IEnumerator<DAL.Order> IEnumerable<DAL.Order>.GetEnumerator()
+            {
+                throw new NotImplementedException();
+            }
+
+            IEnumerator IEnumerable.GetEnumerator()
+            {
+                throw new NotImplementedException();
+            }
+        }
+
+        [Test]
         public void TestEnumerableStandardProto()
         {
             string proto = Serializer.GetProto<EnumParentStandardWrapper>();
@@ -129,7 +190,7 @@ message EnumWrapper {
     class EnumParentGroupWrapper
     {
         public EnumParentGroupWrapper() { Wrapper = new EnumWrapper(); }
-        [ProtoMember(1, IsGroup = true)]
+        [ProtoMember(1, DataFormat = DataFormat.Group)]
         public EnumWrapper Wrapper { get; private set; }
     }
 
@@ -137,7 +198,7 @@ message EnumWrapper {
     class EnumParentStandardWrapper
     {
         public EnumParentStandardWrapper() { Wrapper = new EnumWrapper(); }
-        [ProtoMember(1, IsGroup = false)]
+        [ProtoMember(1, DataFormat = DataFormat.Default)]
         public EnumWrapper Wrapper { get; private set; }
     }
 

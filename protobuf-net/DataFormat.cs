@@ -31,6 +31,12 @@ namespace ProtoBuf
         /// When applied to signed integer-based data (including Decimal), this
         /// indicates that a fixed amount of space will be used.
         /// </summary>
-        FixedSize
+        FixedSize,
+
+        /// <summary>
+        /// When applied to a sub-message, indicates that the value should be treated
+        /// as group-delimited.
+        /// </summary>
+        Group
     }
 }

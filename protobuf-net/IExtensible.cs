@@ -1,47 +1,25 @@
-﻿using System.IO;
-
+﻿
 namespace ProtoBuf
 {
     /// <summary>
-    /// Provides addition capability for supporting unexpected fields during
-    /// protocol-buffer serialization/deserialization. This allows for loss-less
-    /// round-trip/merge, even when the data is not fully understood.
+    /// Indicates that the implementing type has support for protocol-buffer
+    /// <see cref="IExtension">extensions</see>.
     /// </summary>
+    /// <remarks>Can be implemented by deriving from <see cref="Extensible"/>.</remarks>
     public interface IExtensible
     {
         /// <summary>
-        /// Requests a stream into which any unexpected fields can be persisted.
+        /// Retrieves the <see cref="IExtension">extension</see> object for the current
+        /// instance, optionally creating it if it does not already exist.
         /// </summary>
-        /// <returns>A new stream suitable for storing data.</returns>
-        Stream BeginAppend();
-
-        /// <summary>
-        /// Indicates that all unexpected fields have now been stored. The
-        /// implementing class is responsible for closing the stream. If
-        /// "commit" is not true the data may be discarded.
-        /// </summary>
-        /// <param name="stream">The stream originally obtained by BeginAppend.</param>
-        /// <param name="commit">True if the append operation completed successfully.</param>
-        void EndAppend(Stream stream, bool commit);
-
-        /// <summary>
-        /// Requests a stream of the unexpected fields previously stored.
-        /// </summary>
-        /// <returns>A prepared stream of the unexpected fields.</returns>
-        Stream BeginQuery();
-
-        /// <summary>
-        /// Indicates that all unexpected fields have now been read. The
-        /// implementing class is responsible for closing the stream.
-        /// </summary>
-        /// <param name="stream">The stream originally obtained by BeginQuery.</param>
-        void EndQuery(Stream stream);
-
-        /// <summary>
-        /// Requests the length of the raw binary stream; this is used
-        /// when serializing sub-entities to indicate the expected size.
-        /// </summary>
-        /// <returns>The length of the binary stream representing unexpected data.</returns>
-        int GetLength();
+        /// <param name="createIfMissing">Should a new extension object be
+        /// created if it does not already exist?</param>
+        /// <returns>The extension object if it exists (or was created), or null
+        /// if the extension object does not exist or is not available.</returns>
+        /// <remarks>The <c>createIfMissing</c> argument is false during serialization,
+        /// and true during deserialization upon encountering unexpected fields.</remarks>
+        IExtension GetExtensionObject(bool createIfMissing);
     }
+
+    
 }

@@ -233,7 +233,7 @@ namespace DAL
         }
 
         [Column(Storage = "_OrderDate", DbType = "DateTime")]
-        [DataMember(Order = 4), Tag(4), ProtoMember(4, IsGroup = Database.MASTER_GROUP)]
+        [DataMember(Order = 4), Tag(4), ProtoMember(4, DataFormat = Database.SubObjectFormat)]
         public System.Nullable<System.DateTime> OrderDate
         {
             get
@@ -254,7 +254,7 @@ namespace DAL
         }
 
         [Column(Storage = "_RequiredDate", DbType = "DateTime")]
-        [DataMember(Order = 5), Tag(5), ProtoMember(5, IsGroup = Database.MASTER_GROUP)]
+        [DataMember(Order = 5), Tag(5), ProtoMember(5, DataFormat = Database.SubObjectFormat)]
         public System.Nullable<System.DateTime> RequiredDate
         {
             get
@@ -275,7 +275,7 @@ namespace DAL
         }
 
         [Column(Storage = "_ShippedDate", DbType = "DateTime")]
-        [DataMember(Order = 6), Tag(6), ProtoMember(6, IsGroup = Database.MASTER_GROUP)]
+        [DataMember(Order = 6), Tag(6), ProtoMember(6, DataFormat = Database.SubObjectFormat)]
         public System.Nullable<System.DateTime> ShippedDate
         {
             get
@@ -317,7 +317,7 @@ namespace DAL
         }
 
         [Column(Storage = "_Freight", DbType = "Money")]
-        [DataMember(Order = 8), Tag(8), ProtoMember(8, IsGroup = Database.MASTER_GROUP)]
+        [DataMember(Order = 8), Tag(8), ProtoMember(8, DataFormat = Database.SubObjectFormat)]
         public System.Nullable<decimal> Freight
         {
             get
@@ -464,7 +464,7 @@ namespace DAL
         }
 
         [Association(Name = "Order_Order_Detail", Storage = "_Lines", OtherKey = "OrderID")]
-        [DataMember(Order = 15, EmitDefaultValue = false), Tag(15), ProtoMember(15, IsGroup = Database.MASTER_GROUP)]
+        [DataMember(Order = 15, EmitDefaultValue = false), Tag(15), ProtoMember(15, DataFormat = Database.SubObjectFormat)]
         public EntitySet<OrderLine> Lines
         {
             get
@@ -629,7 +629,7 @@ namespace DAL
         }
 
         [Column(Storage = "_UnitPrice", DbType = "Money NOT NULL")]
-        [DataMember(Order = 3), Tag(3), ProtoMember(3, IsGroup = Database.MASTER_GROUP)]
+        [DataMember(Order = 3), Tag(3), ProtoMember(3, DataFormat = Database.SubObjectFormat)]
         public decimal UnitPrice
         {
             get
@@ -650,7 +650,7 @@ namespace DAL
         }
 
         [Column(Storage = "_Quantity", DbType = "SmallInt NOT NULL")]
-        [DataMember(Order = 4), Tag(4)]
+        [DataMember(Order = 4), Tag(4), ProtoMember(4, DataFormat = DataFormat.ZigZag)]
         public short Quantity
         {
             get

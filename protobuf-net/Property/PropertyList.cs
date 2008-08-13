@@ -9,10 +9,17 @@ namespace ProtoBuf.Property
     {
         private Property<TValue, TValue> innerProperty;
 
-        protected override void OnBeforeInit(MemberInfo member, bool overrideIsGroup)
+        public override IEnumerable<Property<TSource>> GetCompatibleReaders()
         {
-            innerProperty = PropertyFactory.CreatePassThru<TValue>(member, overrideIsGroup);
-            base.OnBeforeInit(member, overrideIsGroup);
+            foreach(Property<TValue> alt in innerProperty.GetCompatibleReaders()) {
+                yield return CreateAlternative<PropertyList<TSource, TList, TValue>>(alt.DataFormat);
+            }
+        }
+
+        protected override void OnBeforeInit(int tag)
+        {
+            innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, DataFormat);
+            base.OnBeforeInit(tag);
         }
         public override WireType WireType
         {

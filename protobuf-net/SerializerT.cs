@@ -133,8 +133,8 @@ namespace ProtoBuf
                     string name;
                     DataFormat format;
                     int tag;
-                    bool isRequired, isGroup;
-                    if (!Serializer.TryGetTag(prop, out tag, out name, out format, out isRequired, out isGroup))
+                    bool isRequired; ;
+                    if (!Serializer.TryGetTag(prop, out tag, out name, out format, out isRequired))
                     {
                         continue; // didn't recognise this as a usable property
                     }
@@ -149,11 +149,19 @@ namespace ProtoBuf
                         }
                     }
 
-                    Property<T> altProp, actualProp = PropertyFactory.Create<T>(prop, out altProp);
+                    Property<T> actualProp = PropertyFactory.Create<T>(prop);
                     writePropList.Add(actualProp);
                     readPropList.Add(actualProp);
-                    if (altProp != null)
+                    foreach (Property<T> altProp in actualProp.GetCompatibleReaders())
                     {
+                        if (altProp.Tag != actualProp.Tag)
+                        {
+                            throw new ProtoException("Alternative readers must handle the same tag");
+                        }
+                        if (readPropList.Find(delegate(Property<T> tmp) { return tmp.FieldPrefix == altProp.FieldPrefix; }) != null)
+                        {
+                            throw new ProtoException("Alternative readers must handle different wire-types");
+                        }
                         readPropList.Add(altProp);
                     }
                 }
@@ -211,7 +219,9 @@ namespace ProtoBuf
                 // note that this serialization includes the headers...
                 total += writeProps[i].Serialize(instance, context);
             }
-            IExtensible extra = instance as IExtensible;
+            IExtensible extensible = instance as IExtensible;
+            IExtension extra = extensible == null ? null : extensible.GetExtensionObject(false);
+
             if (extra != null && (len = extra.GetLength()) > 0)
             {
                 Stream extraStream = extra.BeginQuery();
@@ -245,7 +255,8 @@ namespace ProtoBuf
             uint prefix;
             int propCount = readProps.Length;
             //context.CheckSpace();
-            IExtensible extra = instance as IExtensible;
+            IExtensible extensible = instance as IExtensible;
+            IExtension extn = null;
             SerializationContext extraData = null;
             Stream extraStream = null;
             Property<T> prop = propCount == 0 ? null : readProps[0];
@@ -313,11 +324,12 @@ namespace ProtoBuf
                     }
                     
                     // so we couldn't find it...
-                    if (extra != null)
+                    if (extensible != null)
                     {
-                        if (extraData == null)
-                        {
-                            extraStream = extra.BeginAppend();
+                        if (extn == null) extn = extensible.GetExtensionObject(true);
+                        if (extraData == null && extn != null)
+                        {    
+                            extraStream = extn.BeginAppend();
                             extraData = new SerializationContext(extraStream, context);
                         }
 
@@ -333,11 +345,11 @@ namespace ProtoBuf
                         Serializer.SkipData(context, fieldTag, wireType);
                     }                    
                 }
-                if (extraStream != null) extra.EndAppend(extraStream, true);
+                if (extraStream != null) extn.EndAppend(extraStream, true);
             }
             catch
             {
-                if (extraStream != null) extra.EndAppend(extraStream, false);
+                if (extraStream != null) extn.EndAppend(extraStream, false);
                 throw;
             }
 

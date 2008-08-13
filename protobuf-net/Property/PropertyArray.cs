@@ -6,12 +6,20 @@ namespace ProtoBuf.Property
 {
     internal class PropertyArray<TSource, TValue> : Property<TSource, TValue[]>
     {
+        public override IEnumerable<Property<TSource>> GetCompatibleReaders()
+        {
+            foreach (Property<TValue> alt in innerProperty.GetCompatibleReaders())
+            {
+                yield return CreateAlternative<PropertyArray<TSource, TValue>>(alt.DataFormat);
+            }
+        }
+
         private Property<TValue, TValue> innerProperty;
 
-        protected override void OnBeforeInit(MemberInfo member, bool overrideIsGroup)
+        protected override void OnBeforeInit(int tag)
         {
-            innerProperty = PropertyFactory.CreatePassThru<TValue>(member, overrideIsGroup);
-            base.OnBeforeInit(member, overrideIsGroup);
+            innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, DataFormat);
+            base.OnBeforeInit(tag);
         }
         public override WireType WireType
         {

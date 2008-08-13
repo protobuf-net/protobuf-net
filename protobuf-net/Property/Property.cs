@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+using System.Collections.Generic;
 
 namespace ProtoBuf.Property
 {
@@ -25,33 +26,43 @@ namespace ProtoBuf.Property
             return (uint)(tag << 3 | (int)wireType);
         }
 
-        public bool IsGroup { get { return WireType == WireType.StartGroup; } }
-        public void Init(int tag, Delegate getValue, bool overrideIsGroup)
+        public override string ToString()
         {
-            InitPrivate(tag, false, null, getValue, null, overrideIsGroup);
-        }
-        public void Init(MemberInfo member, bool overrideIsGroup)
-        {
-            InitPrivate(0, false, member, null, null, overrideIsGroup);
+            return prefix == 0 ? "(not initialised)" : string.Format("{0}: {1} ({2})", Name, Tag, WireType);
         }
 
-        private void InitPrivate(int tag, bool isOptional, MemberInfo member, Delegate getValue, Delegate setValue, bool overrideIsGroup)
+        public bool IsGroup { get { return WireType == WireType.StartGroup; } }
+        public void Init(int tag, DataFormat format, Delegate getValue, Delegate setValue, bool isOptional, object defaultValue)
+        {
+            InitPrivate(tag, format, isOptional, null, getValue, setValue, defaultValue);
+        }
+        public void Init(MemberInfo member)
+        {
+            if (member == null) throw new ArgumentNullException("member");
+            InitPrivate(0, DataFormat.Default, false, member, null, null, null);
+        }
+
+
+        public virtual IEnumerable<Property<TSource>> GetCompatibleReaders()
+        {
+            yield break;
+        }
+
+        private void InitPrivate(int tag, DataFormat dataFormat, bool isOptional, MemberInfo member, Delegate getValue, Delegate setValue, object defaultValue)
         {
             if (this.prefix != 0) throw new InvalidOperationException("Can only initialise a property once");
 
             if(member != null)
             {
-                DataFormat df;
-                bool isGroup, isRequired;
-                if (!Serializer.TryGetTag(member, out tag, out name, out df, out isRequired, out isGroup))
+                bool isRequired;
+                if (!Serializer.TryGetTag(member, out tag, out name, out dataFormat, out isRequired))
                 {
                     throw new ArgumentException(member.Name + " cannot be used for serialization", "member");
                 }
                 isOptional = !isRequired;
-
                 {
                     DefaultValueAttribute dva = AttributeUtils.GetAttribute<DefaultValueAttribute>(member);
-                    this.defaultValue = dva == null ? null : dva.Value;
+                    defaultValue = dva == null ? null : dva.Value;
                 }
 #if CF
                 this.description = null; // not used in CF; assigned to get rid of warning
@@ -63,12 +74,17 @@ namespace ProtoBuf.Property
 #endif
             }
             this.isOptional = isOptional;
-            OnBeforeInit(member, getValue, setValue, overrideIsGroup);
+            this.defaultValue = defaultValue;
+            this.dataFormat = dataFormat;
+            OnBeforeInit(member, getValue, setValue, tag);
             this.prefix = GetPrefix(tag, WireType);
             OnAfterInit();
-            
         }
-        protected virtual void OnBeforeInit(MemberInfo member, Delegate getValue, Delegate setValue, bool overrideIsGroup)
+
+        private DataFormat dataFormat;
+        public DataFormat DataFormat { get { return dataFormat; } }
+
+        protected virtual void OnBeforeInit(MemberInfo member, Delegate getValue, Delegate setValue, int tag)
         {}
         protected virtual void OnAfterInit()
         { }
@@ -110,6 +126,13 @@ namespace ProtoBuf.Property
         private Getter<TSource, TValue> getValue;
         private Setter<TSource, TValue> setValue;
 
+        protected T CreateAlternative<T>(DataFormat format) where T : Property<TSource>, new()
+        {
+            T alt = new T();
+            alt.Init(Tag, format, getValue, setValue, IsOptional, DefaultValue);
+            return alt;
+        }
+        
         protected TValue GetValue(TSource source) { return getValue(source); }
         protected void SetValue(TSource source, TValue value) { setValue(source, value); }
         
@@ -123,10 +146,10 @@ namespace ProtoBuf.Property
      
         public abstract TValue DeserializeImpl(TSource source, SerializationContext context);
 
-        protected virtual void OnBeforeInit(MemberInfo member, bool overrideIsGroup) { }
-        protected override sealed void OnBeforeInit(MemberInfo member, Delegate getValue, Delegate setValue, bool overrideIsGroup)
+        protected virtual void OnBeforeInit(int tag) { }
+        protected override sealed void OnBeforeInit(MemberInfo member, Delegate getValue, Delegate setValue, int tag)
         {
-            base.OnBeforeInit(member, getValue, setValue, overrideIsGroup);
+            base.OnBeforeInit(member, getValue, setValue, tag);
             this.defaultValue = ConvertValue(base.DefaultValue);
             if (member == null)
             {
@@ -168,7 +191,7 @@ namespace ProtoBuf.Property
                         throw new ArgumentException(member.MemberType.ToString() + " not supported for serialization: ", "member");
                 }
             }
-            OnBeforeInit(member, overrideIsGroup);
+            OnBeforeInit(tag);
         }
 
         private static TValue ConvertValue(object value)

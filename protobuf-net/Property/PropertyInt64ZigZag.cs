@@ -7,6 +7,10 @@ namespace ProtoBuf.Property
         {
             get { return ProtoFormat.SINT64; }
         }
+        public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
+        {
+            yield return CreateAlternative<PropertyInt64Fixed<TSource>>(DataFormat.FixedSize);
+        }
         public override WireType WireType { get { return WireType.Variant; } }
 
         public override int Serialize(TSource source, SerializationContext context)

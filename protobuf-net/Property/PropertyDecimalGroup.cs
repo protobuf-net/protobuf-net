@@ -10,6 +10,10 @@ namespace ProtoBuf.Property
         {
             get { return "bcl.Decimal"; }
         }
+        public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
+        {
+            yield return CreateAlternative<PropertyDecimalString<TSource>>(DataFormat.Default);
+        }
         public override WireType WireType { get { return WireType.StartGroup; } }
 
         protected override void OnAfterInit()

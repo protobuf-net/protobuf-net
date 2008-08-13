@@ -15,9 +15,9 @@ namespace DAL
     [ProtoContract, DataContract, Serializable]
     public class Database
     {
-        public const bool MASTER_GROUP = false;
+        public const DataFormat SubObjectFormat = DataFormat.Default;
 
-        [ProtoMember(1, IsGroup=Database.MASTER_GROUP), Tag(1), DataMember(Order=1)]
+        [ProtoMember(1, DataFormat=Database.SubObjectFormat), Tag(1), DataMember(Order=1)]
         public List<Order> Orders { get; private set; }
 
         public Database()

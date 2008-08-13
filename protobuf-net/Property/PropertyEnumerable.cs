@@ -7,19 +7,27 @@ namespace ProtoBuf.Property
     internal class PropertyEnumerable<TSource, TList, TValue> : Property<TSource, TList>
         where TList : IEnumerable<TValue>
     {
+        public override IEnumerable<Property<TSource>> GetCompatibleReaders()
+        {
+            foreach (Property<TValue> alt in innerProperty.GetCompatibleReaders())
+            {
+                yield return CreateAlternative<PropertyEnumerable<TSource, TList, TValue>>(alt.DataFormat);
+            }
+        }
+
         private Property<TValue, TValue> innerProperty;
         private Setter<TList, TValue> add;
 
-        protected override void OnBeforeInit(MemberInfo member, bool overrideIsGroup)
+        protected override void OnBeforeInit(int tag)
         {
-            innerProperty = PropertyFactory.CreatePassThru<TValue>(member, overrideIsGroup);
+            innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, DataFormat);
             MethodInfo addMethod = PropertyFactory.GetAddMethod(typeof(TList), typeof(TValue));
 #if CF2
             add = delegate(TList source, TValue value) { addMethod.Invoke(source, new object[] { value }); };
 #else
             add = (Setter<TList, TValue>)Delegate.CreateDelegate(typeof(Setter<TList, TValue>), null, addMethod);
 #endif
-            base.OnBeforeInit(member, overrideIsGroup);
+            base.OnBeforeInit(tag);
         }
         public override WireType WireType
         {

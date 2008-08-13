@@ -11,10 +11,10 @@ namespace ProtoBuf.Property
         }
         private Property<TValue, TValue> innerProperty;
 
-        protected override void OnBeforeInit(MemberInfo member, bool overrideIsGroup)
+        protected override void OnBeforeInit(int tag)
         {
-            innerProperty = PropertyFactory.CreatePassThru<TValue>(member, overrideIsGroup);
-            base.OnBeforeInit(member, overrideIsGroup);
+            innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, DataFormat);
+            base.OnBeforeInit(tag);
         }
         public override WireType WireType
         {

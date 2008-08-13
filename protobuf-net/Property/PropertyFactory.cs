@@ -15,29 +15,33 @@ namespace ProtoBuf.Property
         {
             return delegate(T value) { return value; };
         }
-
-        public static Property<T, T> CreatePassThru<T>(MemberInfo member, bool isGroup)
+        /*
+        public static Property<T, T> CreatePassThru<T>(MemberInfo member)
         {
             if (member == null) throw new ArgumentNullException("member");
             int tag;
             string name;
             DataFormat format;
-            bool isRequired, ignoreIsGroup;
-            if (!Serializer.TryGetTag(member, out tag, out name, out format, out isRequired, out ignoreIsGroup))
+            bool isRequired;
+            if (!Serializer.TryGetTag(member, out tag, out name, out format, out isRequired))
             {
                 throw new InvalidOperationException("Cannot be treated as a proto member: " + member.Name);
             }
-            Property<T,T> prop = (Property<T, T>)CreateProperty<T>(typeof(T), format, isGroup);
-            prop.Init(tag, GetPassThru<T>(), isGroup);
+            return CreatePassThru<T>(tag, format);
+        }*/
+
+        public static Property<T,T> CreatePassThru<T>(int tag, DataFormat format) {
+            Property<T,T> prop = (Property<T, T>)CreateProperty<T>(typeof(T), format);
+            prop.Init(tag, format, GetPassThru<T>(), null, false, null);
             return prop;
         }
-        public static Property<T> Create<T>(MemberInfo member, out Property<T> alternative)
+        public static Property<T> Create<T>(MemberInfo member)
         {
             if (member == null) throw new ArgumentNullException("member");
             int tag;
             string name;
             DataFormat format;
-            bool isRequired, isGroup;
+            bool isRequired;
             Type type;
             switch (member.MemberType)
             {
@@ -51,31 +55,17 @@ namespace ProtoBuf.Property
                     type = null;
                     break;
             }
-            if(type == null || !Serializer.TryGetTag(member, out tag, out name, out format, out isRequired, out isGroup))
+            if(type == null || !Serializer.TryGetTag(member, out tag, out name, out format, out isRequired))
             {
                 throw new InvalidOperationException("Cannot be treated as a proto member: " + member.Name);
             }
 
-            Property<T> prop = CreateProperty<T>(type, format, isGroup);
-            prop.Init(member, isGroup);
-            alternative = null;
-            try
-            {
-                alternative = CreateProperty<T>(type, format, !isGroup);
-                alternative.Init(member, !isGroup);
-                if (alternative.FieldPrefix == prop.FieldPrefix)
-                {
-                    alternative = null; // not interested unless it is different...
-                }
-            }
-            catch (ProtoException) {
-                //
-            }
-            
+            Property<T> prop = CreateProperty<T>(type, format);
+            prop.Init(member);    
             return prop;
         }
 
-        private static Property<T> CreateProperty<T>(Type type, DataFormat format, bool isGroup)
+        private static Property<T> CreateProperty<T>(Type type, DataFormat format)
         {
             if (type == typeof(int))
             {
@@ -149,30 +139,42 @@ namespace ProtoBuf.Property
 
             if (type == typeof(Guid))
             {
-                if (isGroup) return new PropertyGuidGroup<T>();
-                else return new PropertyGuidString<T>();
+                switch (format)
+                {
+                    case DataFormat.Group: return new PropertyGuidGroup<T>();
+                    case DataFormat.Default: return new PropertyGuidString<T>();
+                }
             }
             if (type == typeof(TimeSpan))
             {
-                if (isGroup) return new PropertyTimeSpanGroup<T>();
-                else return new PropertyTimeSpanString<T>();
+                switch (format)
+                {
+                    case DataFormat.Group: return new PropertyTimeSpanGroup<T>();
+                    case DataFormat.Default: return new PropertyTimeSpanString<T>();
+                }
             }
             if (type == typeof(DateTime))
             {
-                if (isGroup) return new PropertyDateTimeGroup<T>();
-                else return new PropertyDateTimeString<T>();
+                switch (format)
+                {
+                    case DataFormat.Group: return new PropertyDateTimeGroup<T>();
+                    case DataFormat.Default: return new PropertyDateTimeString<T>();
+                }
             }
             if (type == typeof(decimal))
             {
-                if (isGroup) return new PropertyDecimalGroup<T>();
-                else return new PropertyDecimalString<T>();
+                switch (format)
+                {
+                    case DataFormat.Group: return new PropertyDecimalGroup<T>();
+                    case DataFormat.Default: return new PropertyDecimalString<T>();
+                }
             }
 
             
             if (Serializer.IsEntityType(type))
             {
                 return PropertyUtil<T>.CreateTypedProperty(
-                    isGroup ? "CreatePropertyMessageGroup" : "CreatePropertyMessageString", type);
+                    format == DataFormat.Group ? "CreatePropertyMessageGroup" : "CreatePropertyMessageString", type);
             }
 
             if (type.IsEnum)
