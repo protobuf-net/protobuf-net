@@ -85,22 +85,6 @@ namespace ProtoBuf
         public long Position { get { return position; } }
         public long MaxReadPosition { get { return maxReadPosition; } set { maxReadPosition = value; } }
 
-        
-        
-
-        public bool TrySeek(int offset)
-        {
-            if (stream.CanSeek)
-            {
-                stream.Seek(offset, SeekOrigin.Current);
-                position += offset;
-                return true;
-            }
-            return false;
-        }
-
-
-       
         const int BLIT_BUFFER_SIZE = 4096;
         
         public long Length { get { return stream.Length; } }

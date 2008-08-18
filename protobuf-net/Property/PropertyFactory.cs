@@ -30,8 +30,8 @@ namespace ProtoBuf.Property
             return CreatePassThru<T>(tag, format);
         }*/
 
-        public static Property<T,T> CreatePassThru<T>(int tag, DataFormat format) {
-            Property<T,T> prop = (Property<T, T>)CreateProperty<T>(typeof(T), format);
+        public static Property<T,T> CreatePassThru<T>(int tag, ref DataFormat format) {
+            Property<T,T> prop = (Property<T, T>)CreateProperty<T>(typeof(T), ref format);
             prop.Init(tag, format, GetPassThru<T>(), null, false, null);
             return prop;
         }
@@ -60,12 +60,12 @@ namespace ProtoBuf.Property
                 throw new InvalidOperationException("Cannot be treated as a proto member: " + member.Name);
             }
 
-            Property<T> prop = CreateProperty<T>(type, format);
-            prop.Init(member);    
+            Property<T> prop = CreateProperty<T>(type, ref format);
+            prop.Init(member);
             return prop;
         }
 
-        private static Property<T> CreateProperty<T>(Type type, DataFormat format)
+        private static Property<T> CreateProperty<T>(Type type, ref DataFormat format)
         {
             if (type == typeof(int))
             {
@@ -73,6 +73,7 @@ namespace ProtoBuf.Property
                 {
                     case DataFormat.Default:
                     case DataFormat.TwosComplement:
+                        format = DataFormat.TwosComplement;
                         return new PropertyInt32Variant<T>();
                     case DataFormat.ZigZag:
                         return new PropertyInt32ZigZag<T>();
@@ -86,6 +87,7 @@ namespace ProtoBuf.Property
                 {
                     case DataFormat.Default:
                     case DataFormat.TwosComplement:
+                        format = DataFormat.TwosComplement;
                         return new PropertyInt64Variant<T>();
                     case DataFormat.ZigZag:
                         return new PropertyInt64ZigZag<T>();
@@ -99,6 +101,7 @@ namespace ProtoBuf.Property
                 {
                     case DataFormat.Default:
                     case DataFormat.TwosComplement:
+                        format = DataFormat.TwosComplement;
                         return new PropertyUInt32Variant<T>();
                     case DataFormat.FixedSize:
                         return new PropertyUInt32Fixed<T>();
@@ -110,6 +113,7 @@ namespace ProtoBuf.Property
                 {
                     case DataFormat.Default:
                     case DataFormat.TwosComplement:
+                        format = DataFormat.TwosComplement;
                         return new PropertyUInt64Variant<T>();
                     case DataFormat.FixedSize:
                         return new PropertyUInt64Fixed<T>();
@@ -121,21 +125,22 @@ namespace ProtoBuf.Property
                 {
                     case DataFormat.Default:
                     case DataFormat.TwosComplement:
+                        format = DataFormat.TwosComplement;
                         return new PropertyInt16Variant<T>();
                     case DataFormat.ZigZag:
                         return new PropertyInt16ZigZag<T>();
                 }
             }
 
-            if (type == typeof(byte[])) return new PropertyBlob<T>();
-            if (type == typeof(byte)) return new PropertyByte<T>();
-            if (type == typeof(sbyte)) return new PropertySByte<T>();
-            if (type == typeof(char)) return new PropertyChar<T>();            
-            if (type == typeof(bool)) return new PropertyBoolean<T>();            
-            if (type == typeof(string)) return new PropertyString<T>();
-            if (type == typeof(float)) return new PropertySingle<T>();
-            if (type == typeof(double)) return new PropertyDouble<T>();
-            if (type == typeof(Uri)) return new PropertyUri<T>();
+            if (type == typeof(byte[])) { format = DataFormat.Default; return new PropertyBlob<T>(); }
+            if (type == typeof(byte)) { format = DataFormat.TwosComplement; return new PropertyByte<T>(); }
+            if (type == typeof(sbyte)) { format = DataFormat.ZigZag; return new PropertySByte<T>();}
+            if (type == typeof(char)) { format = DataFormat.TwosComplement; return new PropertyChar<T>();}      
+            if (type == typeof(bool)) { format = DataFormat.TwosComplement; return new PropertyBoolean<T>();} 
+            if (type == typeof(string)) { format = DataFormat.Default; return new PropertyString<T>();}
+            if (type == typeof(float)) { format = DataFormat.FixedSize; return new PropertySingle<T>();}
+            if (type == typeof(double)) { format = DataFormat.FixedSize; return new PropertyDouble<T>(); }
+            if (type == typeof(Uri)) { format = DataFormat.Default; return new PropertyUri<T>();}
 
             if (type == typeof(Guid))
             {
@@ -173,12 +178,16 @@ namespace ProtoBuf.Property
             
             if (Serializer.IsEntityType(type))
             {
-                return PropertyUtil<T>.CreateTypedProperty(
-                    format == DataFormat.Group ? "CreatePropertyMessageGroup" : "CreatePropertyMessageString", type);
+                switch (format)
+                {
+                    case DataFormat.Default: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageString", type);
+                    case DataFormat.Group: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageGroup", type);
+                }
             }
 
             if (type.IsEnum)
             {
+                format = DataFormat.TwosComplement;
                 return PropertyUtil<T>.CreateTypedProperty("CreatePropertyEnum", type);
             }
 

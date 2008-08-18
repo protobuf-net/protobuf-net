@@ -16,10 +16,10 @@ namespace ProtoBuf.Property
 
         private Property<TValue, TValue> innerProperty;
 
-        protected override void OnBeforeInit(int tag)
+        protected override void OnBeforeInit(int tag, ref DataFormat format)
         {
-            innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, DataFormat);
-            base.OnBeforeInit(tag);
+            innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, ref format);
+            base.OnBeforeInit(tag, ref format);
         }
         public override WireType WireType
         {

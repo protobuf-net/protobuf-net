@@ -261,7 +261,7 @@ namespace ProtoBuf
             Stream extraStream = null;
             Property<T> prop = propCount == 0 ? null : readProps[0];
 
-            int lastIndex = prop == null ? int.MinValue : 0;
+            int lastIndex = prop == null ? -1 : 0;
             uint lastPrefix = prop == null ? uint.MaxValue : prop.FieldPrefix;
             
             try
@@ -330,14 +330,12 @@ namespace ProtoBuf
                         if (extraData == null && extn != null)
                         {    
                             extraStream = extn.BeginAppend();
-                            extraData = new SerializationContext(extraStream, context);
+                            extraData = new SerializationContext(extraStream, null);
                         }
 
-                        // borrow the workspace, and copy the data
-                        extraData.ReadFrom(context);
+                        // copy the data into the output stream
                         extraData.EncodeUInt32(prefix);
                         ProcessExtraData(context, fieldTag, wireType, extraData);
-                        context.ReadFrom(extraData);
                     }
                     else
                     {
@@ -345,7 +343,11 @@ namespace ProtoBuf
                         Serializer.SkipData(context, fieldTag, wireType);
                     }                    
                 }
-                if (extraStream != null) extn.EndAppend(extraStream, true);
+                if (extraStream != null)
+                {
+                    extraData.Flush();
+                    extn.EndAppend(extraStream, true);
+                }
             }
             catch
             {
@@ -382,16 +384,28 @@ namespace ProtoBuf
                     read.WriteTo(write, len);
                     break;
                 case WireType.StartGroup:
-                    throw new NotImplementedException();
-                    //using (CloneStream cloneStream = new CloneStream(read, write))
-                    //{
-                    //    SerializationContext cloneCtx = new SerializationContext(cloneStream);
-                    //    cloneCtx.ReadFrom(read);
-                    //    cloneCtx.StartGroup(fieldTag);
-                    //    UnknownType.Serializer.Deserialize(null, cloneCtx);
-                    //    read.ReadFrom(cloneCtx);
-                    //}
-                    //break;
+                    read.StartGroup(fieldTag);
+                    uint prefix;
+                    while ((prefix = read.TryReadFieldPrefix()) > 0)
+                    {
+                        write.EncodeUInt32(prefix);
+                        Serializer.ParseFieldToken(prefix, out wireType, out fieldTag);
+                        if (wireType == WireType.EndGroup)
+                        {
+                            read.EndGroup(fieldTag);
+                            break;
+                        }
+                        ProcessExtraData(read, fieldTag, wireType, write);
+                    }
+                    break;
+                    /*using (CloneStream cloneStream = new CloneStream(read, write))
+                    {
+                        SerializationContext cloneCtx = new SerializationContext(cloneStream, null);
+                        cloneCtx.StartGroup(fieldTag);
+                        Serializer<UnknownType>.Build();
+                        Serializer<UnknownType>.Deserialize(UnknownType.Default, cloneCtx);
+                    }
+                    break;*/
                 case WireType.EndGroup:
                     throw new ProtoException("End-group not expected at this location");                
                 default:
@@ -458,6 +472,7 @@ namespace ProtoBuf
         internal static void CheckTagNotInUse(int tag)
         {
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag", "Tags must be positive integers.");
+            if (readProps == null) Build();
             foreach (Property<T> prop in readProps)
             {
                 if (prop.Tag == tag) throw new ArgumentException(

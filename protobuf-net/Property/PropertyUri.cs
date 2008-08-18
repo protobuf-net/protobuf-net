@@ -12,10 +12,10 @@ namespace ProtoBuf.Property
         public override WireType WireType { get { return WireType.String; } }
 
         private Property<string, string> innerSerializer;
-        protected override void OnBeforeInit(int tag)
+        protected override void OnBeforeInit(int tag, ref DataFormat format)
         {
-            innerSerializer = PropertyFactory.CreatePassThru<string>(tag, DataFormat);
-            base.OnBeforeInit(tag);
+            innerSerializer = PropertyFactory.CreatePassThru<string>(tag, ref format);
+            base.OnBeforeInit(tag, ref format);
         }
         public override int Serialize(TSource source, SerializationContext context)
         {

@@ -18,16 +18,16 @@ namespace ProtoBuf.Property
         private Property<TValue, TValue> innerProperty;
         private Setter<TList, TValue> add;
 
-        protected override void OnBeforeInit(int tag)
+        protected override void OnBeforeInit(int tag, ref DataFormat format)
         {
-            innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, DataFormat);
+            innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, ref format);
             MethodInfo addMethod = PropertyFactory.GetAddMethod(typeof(TList), typeof(TValue));
 #if CF2
             add = delegate(TList source, TValue value) { addMethod.Invoke(source, new object[] { value }); };
 #else
             add = (Setter<TList, TValue>)Delegate.CreateDelegate(typeof(Setter<TList, TValue>), null, addMethod);
 #endif
-            base.OnBeforeInit(tag);
+            base.OnBeforeInit(tag, ref format);
         }
         public override WireType WireType
         {

@@ -39,7 +39,7 @@ namespace ProtoBuf
             }
             return extensionObject;
         }
-/*
+
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
         /// Note that for non-repeated sub-objects, this equates to a merge operation;
@@ -74,7 +74,7 @@ namespace ProtoBuf
         {
             ExtensibleUtil.AppendExtendValue<TValue>(instance, tag, format, value);
         }
-
+        
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
         /// The value returned is the composed value after merging any duplicated content; if the
@@ -177,7 +177,6 @@ namespace ProtoBuf
         {
             return ExtensibleUtil.GetExtendedValues<TValue>(instance, tag, format, false);
         }
-        */
     }
 
 

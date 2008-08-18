@@ -26,15 +26,19 @@ namespace Examples.SimpleStream
             Assert.AreEqual(150, t3.C.A);
         }
 
-        [Test, Ignore("Extensibility not implemented")]
+        [Test]
         public void TestGroupAsExtension()
         {
             NoddyExtends ne = Program.Build<NoddyExtends>(0x1B, 0x08, 0x96, 0x01, 0x1C);// [start group 3] [test1] [end group 3]
+
+            Assert.IsTrue(Program.CheckBytes(ne, 0x1B, 0x08, 0x96, 0x01, 0x1C), "Round trip");
+
             Test1 t1 = Extensible.GetValue<Test1>(ne, 3);
-            Assert.AreEqual(150, t1.A);
+            Assert.IsNotNull(t1, "Got an object?");
+            Assert.AreEqual(150, t1.A, "Value");
         }
 
-        [Test, Ignore("Extensibility not implemented")]
+        [Test]
         public void TestGroupIgnore()
         {
             Noddy no = Program.Build<Noddy>(0x1B, 0x08, 0x96, 0x01, 0x1C, 0x10, 0x96, 0x01);
@@ -76,7 +80,7 @@ namespace Examples.SimpleStream
             Assert.AreEqual(130, t3.C[1].A);
         }
 
-        [Test, ExpectedException(typeof(ProtoException)), Ignore("Extensibility not implemented")]
+        [Test, ExpectedException(typeof(ProtoException))]
         public void TestPrimativeList()
         {
             Test1List t1 = Program.Build<Test1List>(0x0B, 0x96, 0x01, 0x0C); // [start:1] [150] [end:1]

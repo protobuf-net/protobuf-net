@@ -75,8 +75,8 @@ namespace ProtoBuf.Property
             }
             this.isOptional = isOptional;
             this.defaultValue = defaultValue;
-            this.dataFormat = dataFormat;
-            OnBeforeInit(member, getValue, setValue, tag);
+            this.dataFormat = dataFormat; // set initial format, and use the *field* for the "ref" so either usage is valid
+            OnBeforeInit(member, getValue, setValue, tag, ref this.dataFormat);
             this.prefix = GetPrefix(tag, WireType);
             OnAfterInit();
         }
@@ -84,7 +84,7 @@ namespace ProtoBuf.Property
         private DataFormat dataFormat;
         public DataFormat DataFormat { get { return dataFormat; } }
 
-        protected virtual void OnBeforeInit(MemberInfo member, Delegate getValue, Delegate setValue, int tag)
+        protected virtual void OnBeforeInit(MemberInfo member, Delegate getValue, Delegate setValue, int tag, ref DataFormat format)
         {}
         protected virtual void OnAfterInit()
         { }
@@ -146,10 +146,10 @@ namespace ProtoBuf.Property
      
         public abstract TValue DeserializeImpl(TSource source, SerializationContext context);
 
-        protected virtual void OnBeforeInit(int tag) { }
-        protected override sealed void OnBeforeInit(MemberInfo member, Delegate getValue, Delegate setValue, int tag)
+        protected virtual void OnBeforeInit(int tag, ref DataFormat format) { }
+        protected override sealed void OnBeforeInit(MemberInfo member, Delegate getValue, Delegate setValue, int tag, ref DataFormat format)
         {
-            base.OnBeforeInit(member, getValue, setValue, tag);
+            base.OnBeforeInit(member, getValue, setValue, tag, ref format);
             this.defaultValue = ConvertValue(base.DefaultValue);
             if (member == null)
             {
@@ -191,7 +191,7 @@ namespace ProtoBuf.Property
                         throw new ArgumentException(member.MemberType.ToString() + " not supported for serialization: ", "member");
                 }
             }
-            OnBeforeInit(tag);
+            OnBeforeInit(tag, ref format);
         }
 
         private static TValue ConvertValue(object value)

@@ -414,23 +414,22 @@ namespace ProtoBuf
                     context.ReadRawVariant();
                     break;
                 case WireType.Fixed32:
-                    if (!context.TrySeek(4)) context.ReadBlock(4);
+                    context.ReadBlock(4);
                     break;
                 case WireType.Fixed64:
-                    if (!context.TrySeek(8)) context.ReadBlock(8);
+                    context.ReadBlock(8);
                     break;
                 case WireType.String:
                     int len = context.DecodeInt32();
-                    if (!context.TrySeek(len)) context.WriteTo(Stream.Null, len);
+                    context.WriteTo(Stream.Null, len);
                     break;
                 case WireType.EndGroup:
                     throw new ProtoException("End-group not expected at this location");
                 case WireType.StartGroup:
-                    throw new NotImplementedException();
-                    //// use the unknown-type deserializer to pass over the data
-                    //context.StartGroup(fieldTag);
-                    //UnknownType.Serializer.Deserialize(null, context);
-                    //break;
+                    context.StartGroup(fieldTag); // will be ended internally
+                    Serializer<UnknownType>.Build();
+                    Serializer<UnknownType>.Deserialize(UnknownType.Default, context);
+                    break;
                 default:
                     throw new ProtoException("Unknown wire-type " + wireType.ToString());
             }
