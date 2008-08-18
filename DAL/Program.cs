@@ -16,7 +16,7 @@ namespace DAL
             Database db;
 
 
-            Console.WriteLine("Using groups: {0}", Database.MASTER_GROUP);
+            Console.WriteLine("Using groups: {0}", Database.SubObjectFormat== DataFormat.Group);
             // if have a Northwind handy...
             using(var ctx = new NorthwindDataContext())
             {
