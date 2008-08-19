@@ -26,10 +26,20 @@ namespace ProtoBuf
             }
             foreach (Type type in types)
             {
-                typeof(Serializer<>)
-                    .MakeGenericType(type)
-                    .GetMethod("AppendProto")
-                    .Invoke(null, new object[] { sb, 0 });
+                if (type.IsEnum)
+                {
+                    typeof(Serializer<T>)
+                        .GetMethod("AppendEnum")
+                        .MakeGenericMethod(type)
+                        .Invoke(null, new object[] { sb, 0 });
+                }
+                else
+                {
+                    typeof(Serializer<>)
+                        .MakeGenericType(type)
+                        .GetMethod("AppendProto")
+                        .Invoke(null, new object[] { sb, 0 });
+                }
             }
             return sb.ToString();
         }
@@ -46,16 +56,17 @@ namespace ProtoBuf
                     actualType = Nullable.GetUnderlyingType(propType)
                         ?? PropertyFactory.GetListType(propType, out dummy) ?? propType;
 
-                //if (actualType == typeof(Guid))
-                //{
-                //    actualType = typeof(ProtoGuid);
-                //}
                 if (Serializer.IsEntityType(actualType))
                 {
                     typeof(Serializer<>)
                         .MakeGenericType(actualType)
                         .GetMethod("WalkTypes")
                         .Invoke(null, new object[] { knownTypes });
+                }
+                else if (actualType.IsEnum)
+                {
+                    if (!knownTypes.Contains(actualType))
+                        knownTypes.Add(actualType);
                 }
                 
 
@@ -66,7 +77,22 @@ namespace ProtoBuf
         {
             return sb.Append(' ', nestLevel * 2);
         }
+        public static void AppendEnum<TEnum>(StringBuilder sb, int nestLevel) where TEnum : struct
+        {
+            ProtoEnumAttribute attrib = AttributeUtils.GetAttribute<ProtoEnumAttribute>(typeof(TEnum));
+            string name = attrib == null || string.IsNullOrEmpty(attrib.Name) ? typeof(TEnum).Name : attrib.Name;
+            
+            Indent(sb, nestLevel).Append("enum ").Append(name).Append(" {").AppendLine();
+            foreach (Serializer.ProtoEnumValue<TEnum> value in Serializer.GetEnumValues<TEnum>())
+            {
+                Indent(sb, nestLevel + 1).Append(' ').Append(value.Name)
+                    .Append(" = ").Append(value.WireValue).Append(";").AppendLine();
+            }
+            Indent(sb, nestLevel).Append("}").AppendLine();
+        }
 
+        
+            
         public static void AppendProto(StringBuilder sb, int nestLevel)
         {
             string descText, name = Serializer.GetDefinedTypeName<T>();
@@ -96,7 +122,7 @@ namespace ProtoBuf
                 if (def != null)
                 {
                     string defText = Convert.ToString(def, CultureInfo.InvariantCulture);
-                    sb.Append(" [default = ").Append(defText).Append(" ]");
+                    sb.Append(" [default = ").Append(defText).Append("]");
                 }
 
                 sb.Append(";");

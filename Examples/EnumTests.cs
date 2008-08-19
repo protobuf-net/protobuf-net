@@ -38,6 +38,8 @@ namespace Examples.DesignIdeas
         public SomeEnum Bar { get; set; }
     }
 
+
+
     public enum HasConflictingKeys
     {
         Foo = 0,
@@ -66,6 +68,26 @@ namespace Examples.DesignIdeas
     [TestFixture]
     public class EnumTests
     {
+
+        [Test]
+        public void EnumGeneration()
+        {
+            string proto = Serializer.GetProto<EnumFoo>();
+            Assert.AreEqual(@"package Examples.DesignIdeas;
+
+message EnumFoo {
+   optional blah Bar = 1 [default = Default];
+}
+enum SomeEnum {
+   Default = 2;
+   FOO = 3;
+   ChangeValue = 19;
+   LeaveAlone = 22;
+   BAR = 92;
+}
+", proto);
+        }
+
         [Test, ExpectedException(typeof(ProtoException))]
         public void TestConflictingKeys()
         {

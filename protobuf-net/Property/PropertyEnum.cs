@@ -19,34 +19,19 @@ namespace ProtoBuf.Property
             // via ProtoEnumAttribute then use that; otherwise just convert/cast the
             // value
             List<KeyValuePair<TEnum, uint>> list = new List<KeyValuePair<TEnum, uint>>();
-            foreach (FieldInfo enumField in typeof(TEnum).GetFields(BindingFlags.Static | BindingFlags.Public))
+            foreach (Serializer.ProtoEnumValue<TEnum> value in Serializer.GetEnumValues<TEnum>())
             {
-                if (!enumField.IsLiteral)
+                foreach (KeyValuePair<TEnum, uint> existing in list)
                 {
-                    continue;
-                }
-
-                TEnum key = (TEnum) enumField.GetValue(null);
-                ProtoEnumAttribute ea = AttributeUtils.GetAttribute<ProtoEnumAttribute>(enumField);
-
-                uint value;
-                if (ea == null || !ea.HasValue())
-                {
-                    value = (uint)Convert.ChangeType(key, typeof(uint), CultureInfo.InvariantCulture);
-                }
-                else
-                {
-                    value = (uint)ea.Value;
-                }
-                foreach(KeyValuePair<TEnum, uint> existing in list) {
-                    if ((existing.Value == value) || enumComparer.Equals(existing.Key, key))
+                    if ((existing.Value == value.WireValue) || enumComparer.Equals(existing.Key, value.EnumValue))
                     {
                         errMsg = string.Format("The enum {0} has conflicting values {1} and {2}",
-                            typeof(TEnum), existing.Key, enumField.Name);
+                            typeof(TEnum), existing.Key, value.Name);
                         return; // but throw from the *regular* ctor to prevent obscure type init errors
                     }
                 }
-                list.Add(new KeyValuePair<TEnum, uint>(key, value));
+
+                list.Add(new KeyValuePair<TEnum, uint>(value.EnumValue, value.WireValue));
             }
 
             values = list.ToArray();

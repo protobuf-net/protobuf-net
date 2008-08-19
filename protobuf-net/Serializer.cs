@@ -4,6 +4,8 @@ using System.Reflection;
 using System.Xml.Serialization;
 #if NET_3_0 || REMOTING
 using System.Runtime.Serialization;
+using System.Collections.Generic;
+using System.Globalization;
 #endif
 
 namespace ProtoBuf
@@ -439,6 +441,55 @@ namespace ProtoBuf
         {
             uint prefix = (uint)((tag << 3) | ((int)wireType & 7));
             return context.EncodeUInt32(prefix);
+        }
+
+        internal struct ProtoEnumValue<TEnum>
+        {
+            private readonly TEnum enumValue;
+            private readonly uint wireValue;
+            private readonly string name;
+            public TEnum EnumValue { get { return enumValue; } }
+            public uint WireValue { get { return wireValue; } }
+            public string Name { get { return name; } }
+            public ProtoEnumValue(TEnum enumValue, uint wireValue, string name)
+            {
+                this.enumValue = enumValue;
+                this.wireValue = wireValue;
+                this.name = name;
+            }
+        }
+
+        internal static IEnumerable<ProtoEnumValue<TEnum>> GetEnumValues<TEnum>()
+        {
+            List<ProtoEnumValue<TEnum>> list = new List<ProtoEnumValue<TEnum>>();
+            foreach (FieldInfo enumField in typeof(TEnum).GetFields(BindingFlags.Static | BindingFlags.Public))
+            {
+                if (!enumField.IsLiteral)
+                {
+                    continue;
+                }
+                
+                TEnum key = (TEnum)enumField.GetValue(null);
+                ProtoEnumAttribute ea = AttributeUtils.GetAttribute<ProtoEnumAttribute>(enumField);
+                uint value;
+                string name = (ea == null || string.IsNullOrEmpty(ea.Name)) ? enumField.Name : ea.Name;
+
+                if (ea == null || !ea.HasValue())
+                {
+                    value = (uint)Convert.ChangeType(key, typeof(uint), CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    value = (uint)ea.Value;
+                }
+
+                list.Add(new ProtoEnumValue<TEnum>(key, value, name));
+            }
+            list.Sort(delegate(ProtoEnumValue<TEnum> x, ProtoEnumValue<TEnum> y)
+            {
+                return x.WireValue.CompareTo(y.WireValue);
+            });
+            return list;
         }
     }
 }
