@@ -184,9 +184,12 @@ namespace ProtoBuf
                         {
                             throw new ProtoException("Alternative readers must handle the same tag");
                         }
-                        if (readPropList.Find(delegate(Property<T> tmp) { return tmp.FieldPrefix == altProp.FieldPrefix; }) != null)
+                        foreach (Property<T> tmp in readPropList)
                         {
-                            throw new ProtoException("Alternative readers must handle different wire-types");
+                            if (tmp.FieldPrefix == altProp.FieldPrefix)
+                            {
+                                throw new ProtoException("Alternative readers must handle different wire-types");
+                            }
                         }
                         readPropList.Add(altProp);
                     }

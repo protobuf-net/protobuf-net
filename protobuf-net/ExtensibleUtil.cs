@@ -67,13 +67,21 @@ namespace ProtoBuf
                     WireType a;
                     int b;
                     Serializer.ParseFieldToken(fieldPrefix, out a, out b);
-                    
-                    Property<TValue, TValue> actProp = fieldPrefix == prop.FieldPrefix ? prop
-                        : props.Find(delegate(Property<TValue, TValue> x)
-                    {
-                        return x.FieldPrefix == fieldPrefix;
-                    });
 
+                    Property<TValue, TValue> actProp = null;
+                    if(fieldPrefix == prop.FieldPrefix) {
+                        actProp = prop;
+                    } else {
+                        foreach (Property<TValue, TValue> x in props)
+                        {
+                            if (x.FieldPrefix == fieldPrefix)
+                            {
+                                actProp = x;
+                                break;
+                            }
+                        }
+                    }
+                    
                     if(actProp != null) {
                         TValue value = actProp.DeserializeImpl(lastValue, ctx);
                         hasValue = true;

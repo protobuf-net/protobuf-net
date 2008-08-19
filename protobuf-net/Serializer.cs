@@ -2,10 +2,10 @@
 using System.IO;
 using System.Reflection;
 using System.Xml.Serialization;
-#if NET_3_0 || REMOTING
-using System.Runtime.Serialization;
 using System.Collections.Generic;
 using System.Globalization;
+#if NET_3_0 || REMOTING
+using System.Runtime.Serialization;
 #endif
 
 namespace ProtoBuf
