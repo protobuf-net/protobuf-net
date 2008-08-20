@@ -79,7 +79,7 @@ namespace ProtoBuf
         }
         public static void AppendEnum<TEnum>(StringBuilder sb, int nestLevel) where TEnum : struct
         {
-            ProtoEnumAttribute attrib = AttributeUtils.GetAttribute<ProtoEnumAttribute>(typeof(TEnum));
+            ProtoContractAttribute attrib = AttributeUtils.GetAttribute<ProtoContractAttribute>(typeof(TEnum));
             string name = attrib == null || string.IsNullOrEmpty(attrib.Name) ? typeof(TEnum).Name : attrib.Name;
             
             Indent(sb, nestLevel).Append("enum ").Append(name).Append(" {").AppendLine();

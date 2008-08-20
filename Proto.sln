@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL", "DAL\DAL.csproj", "{D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlClr", "SqlClr\SqlClr.csproj", "{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net-CF20", "protobuf-net-CF20\protobuf-net-CF20.csproj", "{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net-CF35", "protobuf-net-CF35\protobuf-net-CF35.csproj", "{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -89,6 +93,26 @@ Global
 		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Profile|Any CPU.ActiveCfg = Release|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Profile|Any CPU.Build.0 = Release|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
+		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Profile|Any CPU.ActiveCfg = Release|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Profile|Any CPU.Build.0 = Release|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
+		{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

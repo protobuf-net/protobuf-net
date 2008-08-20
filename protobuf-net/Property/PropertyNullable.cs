@@ -7,7 +7,7 @@ namespace ProtoBuf.Property
     {
         public override string DefinedType
         {
-            get { return ProtoFormat.INT32; }
+            get { return innerProperty.DefinedType; }
         }
         private Property<TValue, TValue> innerProperty;
 

@@ -65,6 +65,23 @@ namespace Examples.DesignIdeas
         public HasConflictingValues Value {get;set;}
     }
 
+    [ProtoContract]
+    class NonNullValues
+    {
+        [ProtoMember(1), DefaultValue(SomeEnum.Default)]
+        SomeEnum Foo { get; set; }
+        [ProtoMember(2)]
+        bool Bar { get; set; }
+    }
+    [ProtoContract]
+    class NullValues
+    {
+        [ProtoMember(1), DefaultValue(SomeEnum.Default)]
+        SomeEnum? Foo { get; set; }
+        [ProtoMember(2)]
+        bool? Bar { get; set; }
+    }
+
     [TestFixture]
     public class EnumTests
     {
@@ -78,7 +95,48 @@ namespace Examples.DesignIdeas
 message EnumFoo {
    optional blah Bar = 1 [default = Default];
 }
-enum SomeEnum {
+enum blah {
+   Default = 2;
+   FOO = 3;
+   ChangeValue = 19;
+   LeaveAlone = 22;
+   BAR = 92;
+}
+", proto);
+        }
+
+
+        [Test]
+        public void TestNonNullValues()
+        {
+            string proto = Serializer.GetProto<NonNullValues>();
+            Assert.AreEqual(@"package Examples.DesignIdeas;
+
+message NonNullValues {
+   optional blah Foo = 1 [default = Default];
+   optional bool Bar = 2;
+}
+enum blah {
+   Default = 2;
+   FOO = 3;
+   ChangeValue = 19;
+   LeaveAlone = 22;
+   BAR = 92;
+}
+", proto);
+        }
+
+        [Test]
+        public void TestNullValues()
+        {
+            string proto = Serializer.GetProto<NullValues>();
+            Assert.AreEqual(@"package Examples.DesignIdeas;
+
+message NullValues {
+   optional blah Foo = 1 [default = Default];
+   optional bool Bar = 2;
+}
+enum blah {
    Default = 2;
    FOO = 3;
    ChangeValue = 19;
