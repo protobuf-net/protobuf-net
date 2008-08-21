@@ -1,5 +1,4 @@
 ﻿
-using System;
 namespace ProtoBuf.Property
 {
     internal sealed class PropertySingle<TSource> : Property<TSource, float>

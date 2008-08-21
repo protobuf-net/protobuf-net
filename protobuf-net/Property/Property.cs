@@ -1,8 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
-using System.Collections.Generic;
 
 namespace ProtoBuf.Property
 {
@@ -115,6 +115,8 @@ namespace ProtoBuf.Property
         // only called for .proto generation, so no need to optimise
         public virtual bool IsRepeated { get { return false; } }
         public abstract string DefinedType { get; }
+
+        internal abstract object DeserializeImplWeak(TSource source, SerializationContext context);
     }
 
     internal abstract class Property<TSource, TValue> : Property<TSource>
@@ -144,6 +146,10 @@ namespace ProtoBuf.Property
             SetValue(source, DeserializeImpl(source, context));
         }
      
+        internal sealed override object DeserializeImplWeak(TSource source, SerializationContext context)
+        {
+ 	        return (TValue) DeserializeImpl(source, context);
+        }
         public abstract TValue DeserializeImpl(TSource source, SerializationContext context);
 
         protected virtual void OnBeforeInit(int tag, ref DataFormat format) { }

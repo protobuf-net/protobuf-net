@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
 using ProtoBuf;
-using System.Collections.Generic;
 
 namespace Examples
 {

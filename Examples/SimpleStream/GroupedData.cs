@@ -1,9 +1,6 @@
 ﻿using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization;
 using NUnit.Framework;
 using ProtoBuf;
-using System;
 
 namespace Examples.SimpleStream
 {

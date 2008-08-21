@@ -1,5 +1,4 @@
 ﻿
-using ProtoBuf.Property;
 namespace ProtoBuf
 {
     /// <summary>

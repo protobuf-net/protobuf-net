@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.ServiceModel.Description;
-using System.ServiceModel;
 
 namespace ProtoBuf.ServiceModel
 {

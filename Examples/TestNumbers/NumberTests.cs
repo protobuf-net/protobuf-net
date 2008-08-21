@@ -1,9 +1,9 @@
 ﻿using System;
-using System.IO;
-using ProtoBuf;
-using NUnit.Framework;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using NUnit.Framework;
+using ProtoBuf;
 
 namespace Examples.TestNumbers
 {

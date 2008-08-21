@@ -1,8 +1,7 @@
-﻿using ProtoBuf;
+﻿using System.ComponentModel;
 using System.IO;
-using System;
 using NUnit.Framework;
-using System.ComponentModel;
+using ProtoBuf;
 
 namespace Examples.DesignIdeas
 {

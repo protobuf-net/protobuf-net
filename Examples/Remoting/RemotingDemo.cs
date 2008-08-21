@@ -1,12 +1,11 @@
 ﻿#if REMOTING
 using System;
 using System.Diagnostics;
-using System.Runtime.Serialization;
-using ProtoBuf;
-using NUnit.Framework;
-using System.IO;
 using System.Reflection;
+using System.Runtime.Serialization;
 using DAL;
+using NUnit.Framework;
+using ProtoBuf;
 
 namespace Examples.Remoting
 {

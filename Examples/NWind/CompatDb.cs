@@ -1,19 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using ProtoBuf;
-using System.Linq;
-using ProtoSharp.Core;
-using System.Runtime.Serialization;
-using System.IO.Compression;
-using NUnit.Framework;
-using System.Data.Linq;
-using Serializer = ProtoBuf.Serializer;
-using System.Data.Linq.Mapping;
 using System.ComponentModel;
-using System.Collections.ObjectModel;
+using System.Data.Linq.Mapping;
+using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using ProtoBuf;
+using ProtoSharp.Core;
+using Serializer = ProtoBuf.Serializer;
 namespace DAL
 {
     [ProtoContract, DataContract, Serializable]

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Net;
 using NUnit.Framework;
 using ProtoBuf;
-using System.Net;
 
 namespace Examples
 {

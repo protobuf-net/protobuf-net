@@ -1,6 +1,4 @@
 ﻿
-using System;
-using System.IO;
 namespace ProtoBuf
 {
     internal static class Base128Variant

@@ -1,6 +1,5 @@
 ﻿#if NET_3_0
 using System;
-using System.ComponentModel;
 using System.ServiceModel.Description;
 using System.ServiceModel.Dispatcher;
 

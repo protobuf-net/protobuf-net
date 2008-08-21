@@ -1,5 +1,4 @@
 ﻿
-using System.Reflection;
 namespace ProtoBuf.Property
 {
     internal sealed class PropertyNullable<TSource, TValue> : Property<TSource, TValue?>

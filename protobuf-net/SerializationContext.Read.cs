@@ -1,6 +1,6 @@
 ﻿
-using System.IO;
 using System;
+using System.IO;
 namespace ProtoBuf
 {
     internal sealed partial class SerializationContext

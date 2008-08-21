@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Collections;
-using ProtoBuf;
 using System.IO;
-using Examples.SimpleStream;
+using System.Text;
 using DAL;
+using Examples.SimpleStream;
+using ProtoBuf;
 
 namespace Examples
 {
@@ -14,10 +12,10 @@ namespace Examples
         static void Main() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
             const int COUNT = 1000000;
-            const bool RUN_LEGACY = true;
-            demo.PerfTestSimple(COUNT, RUN_LEGACY);
-            demo.PerfTestString(COUNT, RUN_LEGACY);
-            demo.PerfTestEmbedded(COUNT, RUN_LEGACY);
+            const bool RUN_LEGACY = false;
+            //demo.PerfTestSimple(COUNT, RUN_LEGACY);
+            //demo.PerfTestString(COUNT, RUN_LEGACY);
+            //demo.PerfTestEmbedded(COUNT, RUN_LEGACY);
             //demo.PerfTestEnum(COUNT, true);
             //demo.PerfTestArray(COUNT, true);
             

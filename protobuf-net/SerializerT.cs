@@ -240,6 +240,10 @@ namespace ProtoBuf
 
         internal static int Serialize(T instance, SerializationContext context)
         {
+            if (instance.GetType() != typeof(T))
+            {
+                throw new ArgumentException("Sub-classes must use the correct serializer; to support inheritance of sub-messages, use ProtoIncludeAttribute on the parent-property.");
+            }
             context.Push(instance);
             //context.CheckSpace();
             int total = 0, len;

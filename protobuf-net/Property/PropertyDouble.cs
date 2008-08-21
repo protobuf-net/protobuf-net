@@ -1,5 +1,4 @@
 ﻿
-using System;
 namespace ProtoBuf.Property
 {
     internal sealed class PropertyDouble<TSource> : Property<TSource, double>

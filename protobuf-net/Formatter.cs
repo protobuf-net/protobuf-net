@@ -1,7 +1,7 @@
 ﻿#if REMOTING
 
-using System.Runtime.Serialization;
 using System.IO;
+using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {

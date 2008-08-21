@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using ProtoBuf;
 using System.Runtime.Serialization;
 using NUnit.Framework;
+using ProtoBuf;
 
 namespace Examples.SimpleStream
 {

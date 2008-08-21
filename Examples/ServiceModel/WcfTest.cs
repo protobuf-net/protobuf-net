@@ -1,12 +1,10 @@
 ﻿#if NET_3_0
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.ServiceModel;
-using System.Runtime.Serialization;
-using NUnit.Framework;
 using System.Diagnostics;
+using System.Runtime.Serialization;
+using System.ServiceModel;
+using NUnit.Framework;
 using ProtoBuf.ServiceModel;
 
 namespace Examples.ServiceModel

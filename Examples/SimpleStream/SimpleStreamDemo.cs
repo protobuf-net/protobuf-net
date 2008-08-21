@@ -14,9 +14,6 @@ using ProtoBuf.ServiceModel;
 #if NET_3_5
 using System.Runtime.Serialization.Json;
 using NUnit.Framework;
-using Examples.DesignIdeas;
-using System.Collections.Generic;
-using ProtoSharp.Core;
 using Serializer = ProtoBuf.Serializer;
 using System.ComponentModel;
 #endif

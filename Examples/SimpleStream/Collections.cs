@@ -1,8 +1,7 @@
-﻿using System.Collections.Generic;
-using ProtoBuf;
-using System.IO;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using NUnit.Framework;
+using ProtoBuf;
 
 namespace Examples.SimpleStream
 {

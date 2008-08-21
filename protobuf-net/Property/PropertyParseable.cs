@@ -1,6 +1,6 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Text;
-using System;
 
 namespace ProtoBuf.Property
 {
