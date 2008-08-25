@@ -1,17 +1,15 @@
 ﻿using System;
+using System.ComponentModel;
 
 namespace ProtoBuf.NetExtensions
 {
     /// <summary>
     /// Indicates the known-types to support for an individual
-    /// property. IMPORTANT: note that this feature is an
-    /// implemenation-specific extension to the .proto spec,
-    /// and it will not be possible to generate a 100% compatible
-    /// .proto from a type that uses this attribute. Under .proto,
-    /// each separate type will have to load into a separate field.
+    /// message. This serializes each level in the hierarchy as
+    /// a nested message to retain wire-compatibility with
+    /// other protocol-buffer implementations.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property,
-        AllowMultiple = true, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
     public sealed class ProtoIncludeAttribute : Attribute
     {
         /// <summary>
@@ -57,5 +55,17 @@ namespace ProtoBuf.NetExtensions
                 return Type.GetType(KnownTypeName);
             }
         }
+
+        /// <summary>
+        /// Specifies whether the inherited sype's sub-message should be
+        /// written with a length-prefix (default), or with group markers.
+        /// </summary>
+        [DefaultValue(DataFormat.Default)]
+        public DataFormat DataFormat
+        {
+            get { return dataFormat; }
+            set { dataFormat = value; }
+        }
+        private DataFormat dataFormat = DataFormat.Default;
     }
 }

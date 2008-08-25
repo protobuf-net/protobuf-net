@@ -115,8 +115,6 @@ namespace ProtoBuf.Property
         // only called for .proto generation, so no need to optimise
         public virtual bool IsRepeated { get { return false; } }
         public abstract string DefinedType { get; }
-
-        internal abstract object DeserializeImplWeak(TSource source, SerializationContext context);
     }
 
     internal abstract class Property<TSource, TValue> : Property<TSource>
@@ -128,6 +126,12 @@ namespace ProtoBuf.Property
         private Getter<TSource, TValue> getValue;
         private Setter<TSource, TValue> setValue;
 
+        protected Property<TSource, TValue> CreateSlave(Property<TValue, TValue> inner)
+        {
+            Property<TSource, TValue> prop = new SlaveProperty<TSource, TValue>(inner);
+            prop.Init(Tag, DataFormat, getValue, setValue, IsOptional, defaultValue);
+            return prop;
+        }
         protected T CreateAlternative<T>(DataFormat format) where T : Property<TSource>, new()
         {
             T alt = new T();
@@ -146,10 +150,6 @@ namespace ProtoBuf.Property
             SetValue(source, DeserializeImpl(source, context));
         }
      
-        internal sealed override object DeserializeImplWeak(TSource source, SerializationContext context)
-        {
- 	        return (TValue) DeserializeImpl(source, context);
-        }
         public abstract TValue DeserializeImpl(TSource source, SerializationContext context);
 
         protected virtual void OnBeforeInit(int tag, ref DataFormat format) { }
@@ -226,5 +226,33 @@ namespace ProtoBuf.Property
                 }
             }
         }
+    }
+
+    class SlaveProperty<TSource, TValue> : Property<TSource, TValue>
+    {
+        private readonly Property<TValue, TValue> inner;
+        public SlaveProperty(Property<TValue, TValue> inner)
+        {
+            if (inner == null) throw new ArgumentNullException("inner");
+            this.inner = inner;
+        }
+        public override string DefinedType
+        {
+            get { return inner.DefinedType; }
+        }
+        public override WireType WireType
+        {
+            get { return inner.WireType; }
+        }
+        public override int Serialize(TSource source, SerializationContext context)
+        {
+            return inner.Serialize(GetValue(source), context);
+        }
+        public override TValue DeserializeImpl(TSource source, SerializationContext context)
+        {
+            return inner.DeserializeImpl(GetValue(source), context);
+        }
+
+
     }
 }

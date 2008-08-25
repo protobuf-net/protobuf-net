@@ -180,8 +180,8 @@ namespace ProtoBuf.Property
             {
                 switch (format)
                 {
-                    case DataFormat.Default: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageString", type);
-                    case DataFormat.Group: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageGroup", type);
+                    case DataFormat.Default: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageString", type, type);
+                    case DataFormat.Group: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageGroup", type, type);
                 }
             }
 

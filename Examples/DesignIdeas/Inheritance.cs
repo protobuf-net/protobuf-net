@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using ProtoBuf;
 using ProtoBuf.NetExtensions;
+using NUnit.Framework;
 
 namespace Examples.DesignIdeas
 {
@@ -24,8 +25,6 @@ namespace Examples.DesignIdeas
     [ProtoContract]
     class Message {
         [ProtoMember(1)]
-        [ProtoInclude(2, typeof(Sub1))]
-        [ProtoInclude(3, typeof(Sub2))]
         public List<SomeBase> Data { get; private set; }
     }
     /* 
@@ -33,7 +32,84 @@ namespace Examples.DesignIdeas
      * repeated sub1 data_sub1 = 2
      * repeated sub2 data_sub2 = 3
      */ 
-    [ProtoContract] class SomeBase { }
-    [ProtoContract] class Sub1 : SomeBase { }
-    [ProtoContract] class Sub2 : SomeBase { }
+    [ProtoContract]
+    [ProtoInclude(2, typeof(Sub1))]
+    [ProtoInclude(3, typeof(Sub2))]
+    class SomeBase
+    {
+        [ProtoMember(10)]
+        public int Test { get; set; }
+    }
+    [ProtoContract] class Sub1 : SomeBase {
+        [ProtoMember(11)]
+        public string Foo { get; set; }
+    }
+    [ProtoContract] class Sub2 : SomeBase {
+        [ProtoMember(11)]
+        public float Bar { get; set; }
+    }
+
+    [TestFixture]
+    public class InheritanceTests
+    {
+        [Test]
+        public void InheritanceBaseType()
+        {
+            SomeBase sb = new SomeBase {Test = 12345};
+            SomeBase clone = Serializer.DeepClone<SomeBase>(sb);
+            Assert.IsInstanceOfType(typeof(SomeBase), clone, "Type");
+            Assert.AreEqual(sb.Test, clone.Test, "Value");
+        }
+        [Test]
+        public void InheritanceSub1()
+        {
+            SomeBase sb = new Sub1 { Test = 12345, Foo = "abc" };
+            SomeBase clone = Serializer.DeepClone<SomeBase>(sb);
+            Assert.IsInstanceOfType(typeof(Sub1), clone, "Type");
+            Assert.AreEqual(sb.Test, clone.Test, "Value");
+            Assert.AreEqual(((Sub1)sb).Foo, ((Sub1)clone).Foo, "Foo");
+        }
+        [Test]
+        public void InheritanceSub2()
+        {
+            SomeBase sb = new Sub2 { Test = 12345, Bar = 123.45F};
+            SomeBase clone = Serializer.DeepClone<SomeBase>(sb);
+            Assert.IsInstanceOfType(typeof(Sub2), clone, "Type");
+            Assert.AreEqual(sb.Test, clone.Test, "Value");
+            Assert.AreEqual(((Sub2)sb).Bar, ((Sub2)clone).Bar, "Foo");
+        }
+
+
+        [Test]
+        public void InheritanceCheckBytesCorrectOrder()
+        {
+            // the purpose of this test is to validate the byte stream so that when
+            // we turn around the order we know what we are expecting
+            SomeBase sb = new Sub1 { Test = 12345, Foo = "abc" };
+            byte[] raw = { 0x12, 0x05, 0x5A, 0x03, 0x61, 0x62, 0x63, 0x50, 0xB9, 0x60 };
+            // 0x12 = 10 010 = field 2, string (Sub1)
+            // 0x05 = 5 bytes
+            // 0x5A = 1011 010 = field 11, string (Foo)
+            // 0x03 = 3 bytes
+            // 0x61 0x62 0x63 = "abc"
+            // 0x50 = 1010 000 = field 10, variant (Test)
+            // 0xB9 0x60 = [0]1100000[1]0111001 = 12345            
+
+            Assert.IsTrue(Program.CheckBytes(sb, raw), "raw bytes");
+            SomeBase clone = Program.Build<SomeBase>(raw);
+            Assert.IsInstanceOfType(typeof(Sub1), clone);
+            Assert.AreEqual(sb.Test, clone.Test);
+            Assert.AreEqual(((Sub1)sb).Foo, ((Sub1)clone).Foo);
+        }
+
+        [Test]
+        public void InheritanceCheckBytesWrongOrder()
+        {
+            byte[] raw = { 0x50, 0xB9, 0x60, 0x12, 0x05, 0x5A, 0x03, 0x61, 0x62, 0x63};
+            SomeBase clone = Program.Build<SomeBase>(raw);
+            Assert.IsInstanceOfType(typeof(Sub1), clone);
+            Assert.AreEqual(12345, clone.Test);
+            Assert.AreEqual("abc", ((Sub1)clone).Foo);
+        }
+    }
 }

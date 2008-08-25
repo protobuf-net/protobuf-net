@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using ProtoBuf.Property;
+using ProtoBuf.NetExtensions;
 
 namespace ProtoBuf
 {
@@ -141,6 +142,9 @@ namespace ProtoBuf
 
 #endif
         private static Property<T>[] readProps, writeProps;
+        private static KeyValuePair<Type, Property<T, T>>[] subclasses;
+
+
 
         internal static void Build()
         {
@@ -154,7 +158,7 @@ namespace ProtoBuf
                 }
                 List<Property<T>> readPropList = new List<Property<T>>(), writePropList = new List<Property<T>>();
 
-                foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+                foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
                 {
                     string name;
                     DataFormat format;
@@ -198,6 +202,37 @@ namespace ProtoBuf
                 writePropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
                 readProps = readPropList.ToArray();
                 writeProps = writePropList.ToArray();
+
+                List<KeyValuePair<Type, Property<T, T>>> subclassList = new List<KeyValuePair<Type, Property<T, T>>>();
+                foreach (ProtoIncludeAttribute pia in Attribute.GetCustomAttributes(typeof(T), typeof(ProtoIncludeAttribute), false))
+                {
+                    Type subclassType = pia.KnownType;
+                    if (subclassType == null)
+                    {
+                        throw new ProtoException("Unable to identify known-type for ProtoIncludeAttribute: " + pia.KnownTypeName);
+                    }
+                    if (subclassType.BaseType != typeof(T))
+                    {
+                        throw new ProtoException(string.Format(
+                            "Known-type {0} for ProtoIncludeAttribute must be a direct subclass of {1}",
+                            subclassType.Name, typeof(T).Name));
+                    }
+                    Property<T, T> prop;
+                    switch (pia.DataFormat)
+                    {
+                        case DataFormat.Default:
+                            prop = (Property<T, T>) PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageString", typeof(T), subclassType);
+                            break;
+                        case DataFormat.Group:
+                            prop = (Property<T, T>) PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageGroup", typeof(T), subclassType);
+                            break;
+                        default:
+                            throw new ProtoException("Invalid ProtoIncludeAttribute data-format: " + pia.DataFormat);
+                    }
+                    prop.Init(pia.Tag, pia.DataFormat, PropertyFactory.GetPassThru<T>(), null, true, null);
+                    subclassList.Add(new KeyValuePair<Type, Property<T, T>>(subclassType, prop));
+                }
+                subclasses = subclassList.ToArray();
             }
             catch
             {
@@ -240,12 +275,31 @@ namespace ProtoBuf
 
         internal static int Serialize(T instance, SerializationContext context)
         {
-            if (instance.GetType() != typeof(T))
+            // check for inheritance; if the instance is a subclass, then we
+            // should serialize the sub-type first, allowing for more efficient
+            // deserialization; note that we don't push the instance onto the
+            // stack yet - we'll do that within each instance (otherwise deep
+            // items could incorrectly count as cyclic).
+            Type actualType = instance.GetType();
+            if (actualType != typeof(T))
             {
-                throw new ArgumentException("Sub-classes must use the correct serializer; to support inheritance of sub-messages, use ProtoIncludeAttribute on the parent-property.");
+                bool subclassFound = false;
+                foreach (KeyValuePair<Type, Property<T,T>> subclass in subclasses)
+                {
+                    if (subclass.Key.IsAssignableFrom(actualType))
+                    {
+                        subclass.Value.Serialize(instance, context);
+                        subclassFound = true;
+                        break;
+                    }
+                }
+                if (!subclassFound)
+                {
+                    throw new ProtoException("Unexpected type found during serialization; types must be included with ProtoIncludeAttribute");
+                }
             }
+
             context.Push(instance);
-            //context.CheckSpace();
             int total = 0, len;
             for (int i = 0; i < writeProps.Length; i++)
             {
@@ -272,16 +326,16 @@ namespace ProtoBuf
             return total;
         }
 
-        internal static void Deserialize(T instance, Stream source)
+        internal static void Deserialize(ref T instance, Stream source)
         {
             if (readProps == null) Build();
-            if (instance == null) throw new ArgumentNullException("instance");
+            //if (instance == null) throw new ArgumentNullException("instance");
             if (source == null) throw new ArgumentNullException("source");
             SerializationContext ctx = new SerializationContext(source, null);
-            Deserialize(instance, ctx);
+            Deserialize(ref instance, ctx);
             ctx.CheckStackClean();
         }
-        internal static void Deserialize(T instance, SerializationContext context)
+        internal static void Deserialize(ref T instance, SerializationContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
             context.Push();
@@ -301,16 +355,13 @@ namespace ProtoBuf
             {
                 while ((prefix = context.TryReadFieldPrefix()) > 0)
                 {
-                    // check for a lazy hit (mainly with collections)
-                    if (prefix == lastPrefix)
-                    {
-                        prop.Deserialize(instance, context);
-                        continue;
-                    }
-
                     // scan for the correct property
                     bool foundTag = false;
-                    if (prefix > lastPrefix)
+                    if (prefix == lastPrefix)
+                    {
+                        foundTag = true;
+                    }
+                    else if (prefix > lastPrefix)
                     {
                         for (int i = lastIndex + 1; i < propCount; i++)
                         {
@@ -341,8 +392,31 @@ namespace ProtoBuf
                         }
                     }
 
+                    if (!foundTag)
+                    {
+                        // check for subclass creation
+                        foreach (KeyValuePair<Type, Property<T, T>> subclass in subclasses)
+                        {
+                            // deserialize the nested data
+                            if (prefix == subclass.Value.FieldPrefix)
+                            {
+                                foundTag = true;
+                                instance = subclass.Value.DeserializeImpl(instance, context);
+                                break;
+                            }
+                        }
+                        if (foundTag) continue; // nothing more to do for this...
+                    }
+                    
+                    // not a sub-class, but *some* data there, so create an object
+                    if (instance == null)
+                    {
+                        instance = new T();
+                        extensible = instance as IExtensible;
+                    }
                     if (foundTag)
                     { // found it by seeking; deserialize and continue
+                        
                         prop.Deserialize(instance, context);
                         continue;
                     }
@@ -388,6 +462,12 @@ namespace ProtoBuf
                 throw;
             }
 
+            // final chance to create an instance - this only gets invoked for empty
+            // messages (otherwise instance should already be non-null)
+            if (instance == null)
+            {
+                instance = new T();
+            }
             context.Pop();
         }
 
@@ -513,6 +593,22 @@ namespace ProtoBuf
             }
         }
 
+        internal static TValueActual CheckSubType<TValueActual>(T instance)
+            where TValueActual : class, T, new()
+        {
+            TValueActual actual = instance as TValueActual;
+            if (actual == null && instance != null)
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    Serializer.Serialize<T>(ms, instance);
+                    actual = new TValueActual();
+                    ms.Position = 0;
+                    Serializer.Merge<T>(ms, actual);
+                }
+            }
+            return actual;
+        }
 
     }
 }

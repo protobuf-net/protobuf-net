@@ -108,10 +108,10 @@ namespace ProtoBuf
         /// <returns>A new, initialized instance.</returns>
         public static T Deserialize<T>(Stream source) where T : class, new()
         {
-            T instance = new T();
+            T instance = null;
             try
             {
-                Serializer<T>.Deserialize(instance, source);
+                Serializer<T>.Deserialize(ref instance, source);
             }
             catch (Exception ex)
             {
@@ -133,13 +133,17 @@ namespace ProtoBuf
         /// Applies a protocol-buffer stream to an existing instance.
         /// </summary>
         /// <typeparam name="T">The type being merged.</typeparam>
-        /// <param name="instance">The existing instance to be modified (cannot be null).</param>
+        /// <param name="instance">The existing instance to be modified (can be null).</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
-        public static void Merge<T>(Stream source, T instance) where T : class, new()
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public static T Merge<T>(Stream source, T instance) where T : class, new()
         {
             try
             {
-                Serializer<T>.Deserialize(instance, source);
+                Serializer<T>.Deserialize(ref instance, source);
+                return instance;
             }
             catch (Exception ex)
             {
@@ -430,7 +434,8 @@ namespace ProtoBuf
                 case WireType.StartGroup:
                     context.StartGroup(fieldTag); // will be ended internally
                     Serializer<UnknownType>.Build();
-                    Serializer<UnknownType>.Deserialize(UnknownType.Default, context);
+                    UnknownType ut = UnknownType.Default;
+                    Serializer<UnknownType>.Deserialize(ref ut, context);
                     break;
                 default:
                     throw new ProtoException("Unknown wire-type " + wireType.ToString());

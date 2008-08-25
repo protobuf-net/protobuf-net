@@ -6,13 +6,17 @@ namespace ProtoBuf.Property
 {
     internal static class PropertyUtil<T>
     {
-        public static Property<T> CreatePropertyMessageGroup<TValue>() where TValue : class, new()
+        public static Property<T> CreatePropertyMessageGroup<TValueBase, TValueActual>()
+            where TValueBase : class, new()
+            where TValueActual : class, TValueBase, new()
         {
-            return new PropertyMessageGroup<T, TValue>();
+            return new PropertyMessageGroup<T, TValueBase, TValueActual>();
         }
-        public static Property<T> CreatePropertyMessageString<TValue>() where TValue : class, new()
+        public static Property<T> CreatePropertyMessageString<TValueBase, TValueActual>()
+            where TValueBase : class, new()
+            where TValueActual : class, TValueBase, new()
         {
-            return new PropertyMessageString<T, TValue>();
+            return new PropertyMessageString<T, TValueBase, TValueActual>();
         }
         
         public static Property<T> CreatePropertyNullable<TValue>() where TValue : struct

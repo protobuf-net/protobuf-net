@@ -1,6 +1,7 @@
 ﻿using System;
 using NUnit.Framework;
 using ProtoBuf;
+using ProtoBuf.NetExtensions;
 
 namespace Examples
 {
@@ -17,18 +18,21 @@ namespace Examples
         public void TestBarAsBar()
         {
             Bar bar = new Bar { Value = 1 };
-            Assert.AreEqual(bar.Value, Serializer.DeepClone(bar).Value);
+            Assert.AreEqual(bar.Value, Serializer.DeepClone<Foo>(bar).Value);
         }
 
-        [Test, ExpectedException(typeof(ArgumentException))]
+        [Test]
         public void TestBarAsFoo()
         {
             Foo foo = new Bar { Value = 1 };
-            Assert.AreEqual(foo.Value, Serializer.DeepClone(foo).Value);
+            Foo clone = Serializer.DeepClone(foo);
+            Assert.AreEqual(foo.Value, clone.Value);
+            Assert.IsInstanceOfType(typeof(Bar), clone);
         }
     }
     
     [ProtoContract]
+    [ProtoInclude(2, typeof(Bar))]
     class Foo
     {
         [ProtoMember(1)]

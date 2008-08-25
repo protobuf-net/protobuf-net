@@ -5,10 +5,11 @@ using ProtoBuf;
 namespace Examples.SimpleStream
 {
     [ProtoContract]
-    class NoddyExtends :Extensible { }
+    class NoddyExtends : Extensible { }
 
     [ProtoContract]
-    class Noddy {
+    class Noddy
+    {
         [ProtoMember(2)]
         public int Foo { get; set; }
     }

@@ -1,17 +1,18 @@
 ﻿
 namespace ProtoBuf.Property
 {
-    internal sealed class PropertyMessageGroup<TSource, TValue> : Property<TSource, TValue>
-        where TValue : class, new()
+    internal sealed class PropertyMessageGroup<TSource, TValueBase, TValueActual> : Property<TSource, TValueBase>
+        where TValueBase : class, new()
+        where TValueActual : class, TValueBase, new()
     {
         public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
         {
-            yield return CreateAlternative<PropertyMessageString<TSource, TValue>>(DataFormat.Default);
+            yield return CreateAlternative<PropertyMessageString<TSource, TValueBase, TValueActual>>(DataFormat.Default);
         }
 
         public override string DefinedType
         {
-            get { return Serializer.GetDefinedTypeName<TValue>(); }
+            get { return Serializer.GetDefinedTypeName<TValueBase>(); }
         }
         public override WireType WireType { get { return WireType.StartGroup; } }
 
@@ -19,26 +20,26 @@ namespace ProtoBuf.Property
         {
             base.OnAfterInit();
             suffix = GetPrefix(Tag, WireType.EndGroup);
-            Serializer<TValue>.Build();
+            Serializer<TValueActual>.Build();
         }
         
         private uint suffix;
 
         public override int Serialize(TSource source, SerializationContext context)
         {
-            TValue value = GetValue(source);
+            TValueActual value = (TValueActual) GetValue(source);
             if (value == null) return 0;
             
             return WritePrefix(context)
-                + Serializer<TValue>.Serialize(value, context)
+                + Serializer<TValueActual>.Serialize(value, context)
                 + context.EncodeUInt32(suffix);
         }
-        public override TValue DeserializeImpl(TSource source, SerializationContext context)
+        public override TValueBase DeserializeImpl(TSource source, SerializationContext context)
         {
-            TValue value = GetValue(source);
-            if (value == null) value = new TValue();
+            TValueActual value = Serializer<TValueBase>.CheckSubType<TValueActual>(GetValue(source));
+
             context.StartGroup(Tag); // will be ended internally
-            Serializer<TValue>.Deserialize(value, context);
+            Serializer<TValueActual>.Deserialize(ref value, context);
             return value;     
         }
      }

@@ -1,5 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
+using ProtoBuf.NetExtensions;
 
 namespace ProtoBuf
 {
@@ -35,7 +36,7 @@ namespace ProtoBuf
                 Number = 1234,
                 When = new DateTime(2008, 1, 1),
                 HowMuchNotSerialized = 123.456M
-            }, clone = Serializer.DeepClone(orig);
+            }, clone = (SubClassData)Serializer.DeepClone<PartialData>(orig);
 
             Assert.IsNotNull(orig, "original");
             Assert.IsNotNull(clone, "clone");
@@ -59,13 +60,11 @@ namespace ProtoBuf
     [ProtoPartialMember(2, "Name")]
     [ProtoPartialMember(3, "When")]
     [ProtoContract]
+    [ProtoInclude(4, typeof(SubClassData))]
     public partial class PartialData
     {
     }
 
-    [ProtoPartialMember(1, "Number")]
-    [ProtoPartialMember(2, "Name")]
-    [ProtoPartialMember(3, "When")]
     [ProtoContract]
     public class SubClassData : PartialData
     {

@@ -10,6 +10,13 @@ namespace ProtoBuf.Property
         }
         private Property<TValue, TValue> innerProperty;
 
+        public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
+        {
+            foreach (Property<TValue> alt in innerProperty.GetCompatibleReaders())
+            {
+                yield return CreateAlternative<PropertyNullable<TSource, TValue>>(alt.DataFormat);
+            }
+        }
         protected override void OnBeforeInit(int tag, ref DataFormat format)
         {
             innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, ref format);
