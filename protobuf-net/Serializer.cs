@@ -51,6 +51,16 @@ namespace ProtoBuf
         /// </summary>
         internal static bool TryGetTag(MemberInfo member, out int tag, out string name, out DataFormat format, out bool isRequired)
         {
+            return TryGetTag(member, out tag, out name, false, out format, out isRequired);
+        }
+
+        internal static IEnumerable<PropertyInfo> GetProtoProperties(Type type)
+        {
+            return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+        }
+
+        internal static bool TryGetTag(MemberInfo member, out int tag, out string name, bool callerIsTagInference, out DataFormat format, out bool isRequired)
+        {
             name = member.Name;
             format = DataFormat.Default;
             tag = -1;
@@ -76,8 +86,48 @@ namespace ProtoBuf
             {
                 if (!string.IsNullOrEmpty(dm.Name)) name = dm.Name;
                 tag = dm.Order;
+                if(!callerIsTagInference) // avoid infinite recursion
+                {
+                    ProtoContractAttribute pca = AttributeUtils.GetAttribute<ProtoContractAttribute>(member.DeclaringType);
+                    if (pca != null && pca.InferTagFromName)
+                    {
+                        // since the type has inference enabled, identify the members for the
+                        // type and give each an order based on the Order and Name, then find
+                        // where the current property comes in the list. This will be repeated
+                        // once (or more) per property during initialization, but not during
+                        // core runtime - so it is not a perfomance bottleneck (so not worth
+                        // complicating the implementation by caching it anywhere).
+
+                        // find all properties under consideration
+                        List<KeyValuePair<string, int>> members = new List<KeyValuePair<string,int>>();
+                        string tmpName; // use this also to cache the "out" name (not usable from lambda)
+                        foreach(PropertyInfo prop in GetProtoProperties(member.DeclaringType))
+                        {
+                            int tmpTag;
+                            DataFormat tmpFormat;
+                            bool tmpIsReq;
+                            if(TryGetTag(prop, out tmpTag, out tmpName, true, out tmpFormat, out tmpIsReq))
+                            {
+                                members.Add(new KeyValuePair<string,int>(tmpName, tmpTag));
+                            }
+                        }
+                        // sort by "Order, Name", where "Name" includes any renaming (i.e. not MemberInfo.Name)
+                        members.Sort(delegate(KeyValuePair<string, int> x, KeyValuePair<string, int> y)
+                        {
+                            int result = x.Value.CompareTo(y.Value);
+                            if (result == 0) result = string.CompareOrdinal(x.Key, y.Key);
+                            return result;
+                        });
+                        // find the current item
+                        tmpName = name;
+                        tag = 1 + members.FindIndex(delegate(KeyValuePair<string, int> x)
+                        {
+                            return x.Key == tmpName;
+                        });
+                    }
+                }
                 isRequired = dm.IsRequired;
-                return tag > 0;
+                return callerIsTagInference || tag > 0;
             }
 #endif
             

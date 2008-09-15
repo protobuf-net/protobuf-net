@@ -1,7 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
 using ProtoBuf;
-using ProtoBuf.NetExtensions;
 
 namespace Examples
 {

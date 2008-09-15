@@ -6,7 +6,6 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using ProtoBuf.Property;
-using ProtoBuf.NetExtensions;
 
 namespace ProtoBuf
 {
@@ -146,6 +145,7 @@ namespace ProtoBuf
 
 
 
+
         internal static void Build()
         {
             if (readProps != null) return;
@@ -158,7 +158,7 @@ namespace ProtoBuf
                 }
                 List<Property<T>> readPropList = new List<Property<T>>(), writePropList = new List<Property<T>>();
 
-                foreach (PropertyInfo prop in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                foreach (PropertyInfo prop in Serializer.GetProtoProperties(typeof(T)))
                 {
                     string name;
                     DataFormat format;

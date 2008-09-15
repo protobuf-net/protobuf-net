@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using ProtoBuf;
-using ProtoBuf.NetExtensions;
 using NUnit.Framework;
 
 namespace Examples.DesignIdeas

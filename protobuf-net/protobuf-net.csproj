@@ -114,7 +114,7 @@
   <ItemGroup>
     <Compile Include="DataFormat.cs" />
     <Compile Include="IExtensible.cs" />
-    <Compile Include="NetExtensions\ProtoIncludeAttribute.cs" />
+    <Compile Include="ProtoIncludeAttribute.cs" />
     <Compile Include="ProtoContractAttribute.cs" />
     <Compile Include="ProtoEnumAttribute.cs" />
     <Compile Include="ProtoFormat.cs" />

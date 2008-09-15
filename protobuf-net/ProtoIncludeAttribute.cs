@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 
-namespace ProtoBuf.NetExtensions
+namespace ProtoBuf
 {
     /// <summary>
     /// Indicates the known-types to support for an individual

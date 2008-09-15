@@ -83,12 +83,18 @@ namespace Examples
         [Test]
         public void TestDateTimeTicks()
         {
-            //TestDate(DateTime.Now);
-            //TestDate(DateTime.MinValue);
+            TestDate(DateTime.Now);
+            TestDate(DateTime.MinValue);
             TestDate(DateTime.MaxValue);
-            
+            Random rand = new Random();
+            for (int i = 0; i < 500; i++)
+            {
+                DateTime dt = new DateTime(rand.Next(int.MaxValue));
+            }
         }
-        static void TestDate(DateTime when) {
+
+        static void TestDate(DateTime when)
+        {
             long ticks = (when - origin).Ticks;
 
             byte[] bits = BitConverter.GetBytes(ticks);
