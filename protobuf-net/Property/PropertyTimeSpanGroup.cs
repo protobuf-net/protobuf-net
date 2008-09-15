@@ -18,6 +18,12 @@ namespace ProtoBuf.Property
         }
         private uint suffix;
 
+        public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
+        {
+            yield return CreateAlternative<PropertyTimeSpanString<TSource>>(DataFormat.Default);
+            yield return CreateAlternative<PropertyTimeSpanFixed<TSource>>(DataFormat.FixedSize);
+        }
+
         public override int Serialize(TSource source, SerializationContext context)
         {
             TimeSpan value = GetValue(source);

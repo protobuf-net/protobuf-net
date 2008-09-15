@@ -13,6 +13,7 @@ namespace ProtoBuf.Property
         public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
         {
             yield return CreateAlternative<PropertyDateTimeString<TSource>>(DataFormat.Default);
+            yield return CreateAlternative<PropertyDateTimeFixed<TSource>>(DataFormat.FixedSize);
         }
         private uint suffix;
         public override WireType WireType { get { return WireType.StartGroup; } }

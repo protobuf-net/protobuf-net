@@ -124,6 +124,7 @@
   <ItemGroup>
     <Compile Include="Arrays.cs" />
     <Compile Include="EnumTests.cs" />
+    <Compile Include="ExtendedTimeTests.cs" />
     <Compile Include="Extensibility.cs" />
     <Compile Include="GuidTests.cs" />
     <Compile Include="Inheritance.cs" />

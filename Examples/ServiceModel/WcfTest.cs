@@ -67,10 +67,19 @@ namespace Examples.ServiceModel
         [TestFixtureSetUp]
         public void StartServer()
         {
-            StopServer();
-            host = new ServiceHost(typeof(MyService),
-                new Uri("http://localhost/MyService"));
-            host.Open();
+            try
+            {
+                StopServer();
+                host = new ServiceHost(typeof(MyService),
+                    new Uri("http://localhost:84/MyService"));
+                host.Open();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.GetType().FullName);
+                Console.WriteLine(ex.Message);
+                throw;
+            }
         }
 
         [TestFixtureTearDown]

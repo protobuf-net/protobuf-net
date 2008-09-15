@@ -1,36 +1,33 @@
-﻿using System;
+﻿
+using System;
 using ProtoBuf.ProtoBcl;
-
 namespace ProtoBuf.Property
 {
-
-    internal sealed class PropertyDateTimeString<TSource> : Property<TSource, DateTime>
+    internal sealed class PropertyDateTimeFixed<TSource> : Property<TSource, DateTime>
     {
         public override string DefinedType
         {
-            get { return "bcl.DateTime"; }
+            get { return ProtoFormat.SFIXED64; }
         }
+        public override WireType WireType { get { return WireType.Fixed64; } }
+
         public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
         {
+            yield return CreateAlternative<PropertyDateTimeString<TSource>>(DataFormat.Default);
             yield return CreateAlternative<PropertyDateTimeGroup<TSource>>(DataFormat.Group);
-            yield return CreateAlternative<PropertyDateTimeFixed<TSource>>(DataFormat.FixedSize);
         }
-        public override WireType WireType { get { return WireType.String; } }
-
         public override int Serialize(TSource source, SerializationContext context)
         {
             DateTime value = GetValue(source);
             if (IsOptional && value == DefaultValue) return 0;
-            return WritePrefix(context)
-                + ProtoTimeSpan.SerializeDateTime(value, context, true);
+            long ticks = (value - ProtoTimeSpan.EpochOrigin).Ticks;
+            return WritePrefix(context) + context.EncodeInt64Fixed(ticks);
         }
 
         public override DateTime DeserializeImpl(TSource source, SerializationContext context)
         {
-            long restore = context.LimitByLengthPrefix();
-            DateTime value = ProtoTimeSpan.DeserializeDateTime(context);
-            context.MaxReadPosition = restore;
-            return value;
+            long ticks = context.DecodeInt64Fixed();
+            return ProtoTimeSpan.EpochOrigin.AddTicks(ticks);
         }
     }
 }

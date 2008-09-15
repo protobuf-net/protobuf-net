@@ -142,6 +142,8 @@
     </Compile>
     <Compile Include="Formatter.cs" />
     <Compile Include="IExtension.cs" />
+    <Compile Include="Property\PropertyTimeSpanFixed.cs" />
+    <Compile Include="Property\PropertyDateTimeFixed.cs" />
     <Compile Include="Property\PropertyInclude.cs" />
     <Compile Include="Property\PropertyEnumerable.cs" />
     <Compile Include="Property\PropertyParseable.cs" />

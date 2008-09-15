@@ -17,7 +17,7 @@ namespace ProtoBuf.ProtoBcl
             }
         }
 
-        private static readonly DateTime epoch = new DateTime(1970, 1, 1);
+        internal static readonly DateTime EpochOrigin = new DateTime(1970, 1, 1);
         public static int SerializeDateTime(DateTime value, SerializationContext context, bool lengthPrefixed)
         {
             TimeSpan delta;
@@ -31,7 +31,7 @@ namespace ProtoBuf.ProtoBcl
             }
             else
             {
-                delta = value - epoch;
+                delta = value - EpochOrigin;
             }
 
             return SerializeTimeSpan(delta, context, lengthPrefixed);
@@ -43,7 +43,7 @@ namespace ProtoBuf.ProtoBcl
             {
                 case long.MaxValue: return DateTime.MaxValue;
                 case long.MinValue: return DateTime.MinValue;
-                default: return epoch.AddTicks(ticks);
+                default: return EpochOrigin.AddTicks(ticks);
             }
         }
         private static long DeserializeTicks(SerializationContext context)
@@ -92,12 +92,14 @@ namespace ProtoBuf.ProtoBcl
                     return value * TimeSpan.TicksPerDay;
                 case TimeSpanScale.Hours:
                     return value * TimeSpan.TicksPerHour;
-                case TimeSpanScale.Milliseconds:
-                    return value * TimeSpan.TicksPerMillisecond;
                 case TimeSpanScale.Minutes:
                     return value * TimeSpan.TicksPerMinute;
                 case TimeSpanScale.Seconds:
                     return value * TimeSpan.TicksPerSecond;
+                case TimeSpanScale.Milliseconds:
+                    return value * TimeSpan.TicksPerMillisecond;
+                case TimeSpanScale.Ticks:
+                    return value;
                 case TimeSpanScale.MinMax:
                     switch (value)
                     {
@@ -116,14 +118,14 @@ namespace ProtoBuf.ProtoBcl
             Minutes = 2,
             Seconds = 3,
             Milliseconds = 4,
+            Ticks = 5,
 
             MinMax = 15
         }
         internal static int SerializeTimeSpan(TimeSpan timeSpan, SerializationContext context, bool lengthPrefixed)
         {
             TimeSpanScale scale;
-            long value;
-
+            long value = timeSpan.Ticks;
             if (timeSpan == TimeSpan.MaxValue)
             {
                 value = 1;
@@ -134,30 +136,34 @@ namespace ProtoBuf.ProtoBcl
                 value = -1;
                 scale = TimeSpanScale.MinMax;
             }
-            else if (timeSpan.Milliseconds != 0)
+            else if (value % TimeSpan.TicksPerDay == 0)
             {
-                scale = TimeSpanScale.Milliseconds;
-                value = timeSpan.Ticks / TimeSpan.TicksPerMillisecond;
+                scale = TimeSpanScale.Days;
+                value /= TimeSpan.TicksPerDay;
             }
-            else if (timeSpan.Seconds != 0)
-            {
-                scale = TimeSpanScale.Seconds;
-                value = timeSpan.Ticks / TimeSpan.TicksPerSecond;
-            }
-            else if (timeSpan.Minutes != 0)
-            {
-                scale = TimeSpanScale.Minutes;
-                value = timeSpan.Ticks / TimeSpan.TicksPerMinute;
-            }
-            else if (timeSpan.Hours != 0)
+            else if (value % TimeSpan.TicksPerHour == 0)
             {
                 scale = TimeSpanScale.Hours;
-                value = timeSpan.Ticks / TimeSpan.TicksPerHour;
+                value /= TimeSpan.TicksPerHour;
+            }
+            else if (value % TimeSpan.TicksPerMinute == 0)
+            {
+                scale = TimeSpanScale.Minutes;
+                value /= TimeSpan.TicksPerMinute;
+            }
+            else if (value % TimeSpan.TicksPerSecond == 0)
+            {
+                scale = TimeSpanScale.Seconds;
+                value /= TimeSpan.TicksPerSecond;
+            }
+            else if (value % TimeSpan.TicksPerMillisecond == 0)
+            {
+                scale = TimeSpanScale.Milliseconds;
+                value /= TimeSpan.TicksPerMillisecond;
             }
             else
             {
-                scale = TimeSpanScale.Days;
-                value = timeSpan.Ticks / TimeSpan.TicksPerDay;
+                scale = TimeSpanScale.Ticks;
             }
 
             int len = 0;

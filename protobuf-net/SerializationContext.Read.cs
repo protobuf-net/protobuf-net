@@ -279,20 +279,20 @@ namespace ProtoBuf
         public long DecodeInt64Fixed()
         {
             Fill(8, true);
-            int lo =
-                   ((int)ioBuffer[ioBufferIndex++])
-                | (((int)ioBuffer[ioBufferIndex++]) << 8)
-                | (((int)ioBuffer[ioBufferIndex++]) << 16)
-                | (((int)ioBuffer[ioBufferIndex++]) << 24),
+            uint lo =
+                   ((uint)ioBuffer[ioBufferIndex++])
+                | (((uint)ioBuffer[ioBufferIndex++]) << 8)
+                | (((uint)ioBuffer[ioBufferIndex++]) << 16)
+                | (((uint)ioBuffer[ioBufferIndex++]) << 24),
                 hi =
-                   ((int)ioBuffer[ioBufferIndex++])
-                | (((int)ioBuffer[ioBufferIndex++]) << 8)
-                | (((int)ioBuffer[ioBufferIndex++]) << 16)
-                | (((int)ioBuffer[ioBufferIndex++]) << 24);
+                   ((uint)ioBuffer[ioBufferIndex++])
+                | (((uint)ioBuffer[ioBufferIndex++]) << 8)
+                | (((uint)ioBuffer[ioBufferIndex++]) << 16)
+                | (((uint)ioBuffer[ioBufferIndex++]) << 24);
 
             position += 8;
-            long loL = (long)lo, hiL = (long)hi;
-            return (hiL << 32) | loL;
+            ulong loL = (ulong)lo, hiL = (ulong)hi;
+            return (long)((hiL << 32) | loL);
         }
         public int Read(int count)
         {

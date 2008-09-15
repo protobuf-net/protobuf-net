@@ -156,6 +156,7 @@ namespace ProtoBuf.Property
                 {
                     case DataFormat.Group: return new PropertyTimeSpanGroup<T>();
                     case DataFormat.Default: return new PropertyTimeSpanString<T>();
+                    case DataFormat.FixedSize: return new PropertyTimeSpanFixed<T>();
                 }
             }
             if (type == typeof(DateTime))
@@ -164,6 +165,7 @@ namespace ProtoBuf.Property
                 {
                     case DataFormat.Group: return new PropertyDateTimeGroup<T>();
                     case DataFormat.Default: return new PropertyDateTimeString<T>();
+                    case DataFormat.FixedSize: return new PropertyDateTimeFixed<T>();
                 }
             }
             if (type == typeof(decimal))
@@ -245,7 +247,7 @@ namespace ProtoBuf.Property
                 return PropertyUtil<T>.CreateTypedProperty("CreatePropertyNullable", nullType);
             }
 
-            if (GetParseMethod(type) != null)
+            if (format == DataFormat.Default && GetParseMethod(type) != null)
             {
                 return PropertyUtil<T>.CreateTypedProperty("CreatePropertyParseable", type);
             }
