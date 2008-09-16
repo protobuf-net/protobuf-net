@@ -197,6 +197,7 @@
     <Compile Include="SerializationContext.Write.cs">
       <DependentUpon>SerializationContext.cs</DependentUpon>
     </Compile>
+    <Compile Include="SerializerProxy.cs" />
     <None Include="Web\TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

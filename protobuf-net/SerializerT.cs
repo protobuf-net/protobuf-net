@@ -259,6 +259,7 @@ namespace ProtoBuf
         
 
 
+        
         internal static int Serialize(T instance, Stream destination)
         {
             if (readProps == null) Build();
@@ -270,7 +271,6 @@ namespace ProtoBuf
             ctx.Flush();
             return len;
         }
-
 
 
         internal static int Serialize(T instance, SerializationContext context)

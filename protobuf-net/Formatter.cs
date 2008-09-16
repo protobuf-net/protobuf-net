@@ -6,7 +6,6 @@ using System.Runtime.Serialization;
 namespace ProtoBuf
 {
     internal sealed class Formatter<T> : IFormatter
-        where T : class, new()
     {
         private SerializationBinder binder;
         public SerializationBinder Binder

@@ -156,12 +156,12 @@ namespace ProtoBuf
         /// <typeparam name="T">The type to be created.</typeparam>
         /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
         /// <returns>A new, initialized instance.</returns>
-        public static T Deserialize<T>(Stream source) where T : class, new()
+        public static T Deserialize<T>(Stream source)
         {
-            T instance = null;
+            T instance = default(T);
             try
             {
-                Serializer<T>.Deserialize(ref instance, source);
+                SerializerProxy<T>.Default.Deserialize(ref instance, source);
             }
             catch (Exception ex)
             {
@@ -188,11 +188,11 @@ namespace ProtoBuf
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public static T Merge<T>(Stream source, T instance) where T : class, new()
+        public static T Merge<T>(Stream source, T instance)
         {
             try
             {
-                Serializer<T>.Deserialize(ref instance, source);
+                SerializerProxy<T>.Default.Deserialize(ref instance, source);
                 return instance;
             }
             catch (Exception ex)
@@ -208,11 +208,11 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="destination">The destination stream to write to.</param>
-        public static void Serialize<T>(Stream destination, T instance) where T : class, new()
+        public static void Serialize<T>(Stream destination, T instance)
         {
             try
             {
-                Serializer<T>.Serialize(instance, destination);
+                SerializerProxy<T>.Default.Serialize(instance, destination);
             }
             catch (Exception ex)
             {
@@ -230,7 +230,7 @@ namespace ProtoBuf
         /// </summary>
         /// <typeparam name="T">The type of object to be [de]deserialized by the formatter.</typeparam>
         /// <returns>A new IFormatter to be used during [de]serialization.</returns>
-        public static IFormatter CreateFormatter<T>() where T : class, new()
+        public static IFormatter CreateFormatter<T>()
         {
             return new Formatter<T>();
         }
@@ -241,7 +241,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="info">The destination SerializationInfo to write to.</param>
-        public static void Serialize<T>(SerializationInfo info, T instance) where T : class, ISerializable, new()
+        public static void Serialize<T>(SerializationInfo info, T instance) where T : ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
@@ -262,7 +262,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being merged.</typeparam>
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="info">The SerializationInfo containing the data to apply to the instance (cannot be null).</param>
-        public static void Merge<T>(SerializationInfo info, T instance) where T : class, ISerializable, new()
+        public static void Merge<T>(SerializationInfo info, T instance) where T : ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
@@ -284,7 +284,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="writer">The destination XmlWriter to write to.</param>
-        public static void Serialize<T>(System.Xml.XmlWriter writer, T instance) where T : class, IXmlSerializable, new()
+        public static void Serialize<T>(System.Xml.XmlWriter writer, T instance) where T : IXmlSerializable
         {
             if (writer == null) throw new ArgumentNullException("writer");
             if (instance == null) throw new ArgumentNullException("instance");
@@ -301,7 +301,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being merged.</typeparam>
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="reader">The XmlReader containing the data to apply to the instance (cannot be null).</param>
-        public static void Merge<T>(System.Xml.XmlReader reader, T instance) where T : class, IXmlSerializable, new()
+        public static void Merge<T>(System.Xml.XmlReader reader, T instance) where T : IXmlSerializable
         {
             if (reader == null) throw new ArgumentNullException("reader");
             if (instance == null) throw new ArgumentNullException("instance");
@@ -326,7 +326,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being cloned.</typeparam>
         /// <param name="instance">The existing instance to be cloned.</param>
         /// <returns>A new copy, cloned from the supplied instance.</returns>
-        public static T DeepClone<T>(T instance) where T : class, new()
+        public static T DeepClone<T>(T instance)
         {
             return ChangeType<T, T>(instance);
         }
@@ -343,8 +343,6 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to use as a template.</param>
         /// <returns>A new instane of type TNewType, with the data from TOldType.</returns>
         public static TNewType ChangeType<TOldType, TNewType>(TOldType instance)
-            where TOldType : class, new()
-            where TNewType : class, new()
         {
             return ChangeType<TOldType, TNewType>(instance, null);
         }
@@ -353,12 +351,10 @@ namespace ProtoBuf
         /// As per the public ChangeType, but allows for workspace-sharing to reduce buffer overhead.
         /// </summary>
         internal static TNewType ChangeType<TOldType, TNewType>(TOldType instance, SerializationContext context)
-            where TOldType : class, new()
-            where TNewType : class, new()
         {
             if (instance == null)
             {
-                return null; // GIGO
+                return default(TNewType); // GIGO
             } 
 
             using (MemoryStream ms = new MemoryStream())

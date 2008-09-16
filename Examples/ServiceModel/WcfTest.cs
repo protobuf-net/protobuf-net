@@ -30,10 +30,16 @@ namespace Examples.ServiceModel
     interface IMyService
     {
         [OperationContract, ProtoBehavior]
-        MyData UsingProto(MyData data);
+        MyData UsingProtoItem(MyData data);
 
         [OperationContract]
-        MyData RegularWcf(MyData data);
+        MyData RegularWcfItem(MyData data);
+
+        [OperationContract, ProtoBehavior]
+        MyData[] UsingProtoList(List<MyData> data);
+
+        [OperationContract]
+        MyData[] RegularWcfList(List<MyData> data);
 
         [OperationContract]
         bool Ping();
@@ -45,8 +51,11 @@ namespace Examples.ServiceModel
     }
     class MyService : IMyService
     {
-        public MyData RegularWcf(MyData data) { return data; }
-        public MyData UsingProto(MyData data) { return data; }
+        public MyData RegularWcfItem(MyData data) { return data; }
+        public MyData UsingProtoItem(MyData data) { return data; }
+        public MyData[] RegularWcfList(List<MyData> data) { return data == null ? null : data.ToArray(); }
+        public MyData[] UsingProtoList(List<MyData> data) { return data == null ? null : data.ToArray(); }
+
         public bool Ping() { return true; }
 
         public string SimpleTypesRegular(int value)
@@ -127,7 +136,7 @@ namespace Examples.ServiceModel
         {
             using (var proxy = GetProxy())
             {
-                Assert.IsNull(proxy.Service.RegularWcf(null));
+                Assert.IsNull(proxy.Service.RegularWcfItem(null));
             }
         }
 
@@ -136,7 +145,57 @@ namespace Examples.ServiceModel
         {
             using (var proxy = GetProxy())
             {
-                Assert.IsNull(proxy.Service.UsingProto(null));
+                Assert.IsNull(proxy.Service.UsingProtoItem(null));
+            }
+        }
+
+        static List<MyData> GetShortList() {
+            List<MyData> list = new List<MyData>();
+            for(int j = 0 ; j < 5 ; j++) {
+                MyData data = new MyData();
+                for (int i = 0; i < 50; i++)
+                {
+                    data.SubData.Add(new MySubData { Number = i, Name = "item " + i.ToString() });
+                }
+                list.Add(data);
+            }
+            return list;
+        }
+        static void CheckListResult(MyData[] arr)
+        {
+            Assert.IsNotNull(arr, "Null");
+            Assert.AreEqual(5, arr.Length, "Length");
+            for (int j = 0; j < arr.Length; j++)
+            {
+                MyData item = arr[j];
+                Assert.IsNotNull(item, "Null: " + j.ToString());
+                Assert.IsNotNull(item.SubData, "SubData Null: " + j.ToString());
+                Assert.AreEqual(50, item.SubData.Count, "SubData Count: " + j.ToString());
+                for (int i = 0; i < item.SubData.Count; i++)
+                {
+                    var subItem = item.SubData[i];
+                    Assert.IsNotNull(subItem, i.ToString());
+                    Assert.AreEqual(i, subItem.Number, "Number: " + i.ToString());
+                    Assert.AreEqual("item " + i.ToString(), subItem.Name, "Name: " + i.ToString());
+                }
+            }
+        }
+        [Test]
+        public void RegularWcfList()
+        {
+            using (var proxy = GetProxy())
+            {
+                MyData[] arr = proxy.Service.RegularWcfList(GetShortList());
+                CheckListResult(arr);
+            }            
+        }
+        [Test]
+        public void ProtoList()
+        {
+            using (var proxy = GetProxy())
+            {
+                MyData[] arr = proxy.Service.UsingProtoList(GetShortList());
+                CheckListResult(arr);
             }
         }
 
@@ -152,13 +211,17 @@ namespace Examples.ServiceModel
 
             using (var proxy = GetProxy())
             {
+                // for JIT etc
+                proxy.Service.RegularWcfItem(data);
+                proxy.Service.UsingProtoItem(data);
+
                 Stopwatch watchProto = Stopwatch.StartNew();
-                MyData dataProto = proxy.Service.UsingProto(data);
+                MyData dataProto = proxy.Service.UsingProtoItem(data);
                 watchProto.Stop();
                 Console.WriteLine("WCF: Proto took: {0}", watchProto.ElapsedMilliseconds);
 
                 Stopwatch watchRegular = Stopwatch.StartNew();
-                MyData dataRegular = proxy.Service.RegularWcf(data);
+                MyData dataRegular = proxy.Service.RegularWcfItem(data);
                 watchRegular.Stop();
                 Console.WriteLine("WCF: Regular took: {0}", watchRegular.ElapsedMilliseconds);
 

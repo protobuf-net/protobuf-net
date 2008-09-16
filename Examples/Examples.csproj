@@ -128,6 +128,7 @@
     <Compile Include="Extensibility.cs" />
     <Compile Include="GuidTests.cs" />
     <Compile Include="Inheritance.cs" />
+    <Compile Include="ListTests.cs" />
     <Compile Include="NWind\CompatDb.cs" />
     <Compile Include="NWind\DataContext.cs" />
     <Compile Include="NWind\NWind.cs" />
