@@ -17,18 +17,19 @@ namespace ProtoBuf
 
         #if NET_3_0
 
-        private bool inferTagFromName;
+        private bool? inferTagFromName;
         /// <summary>
-        /// Enables automatic tag generation based on the existing name / order
+        /// Enables/disables automatic tag generation based on the existing name / order
         /// of the defined members. This option is not used for members marked
         /// with ProtoMemberAttribute, as intended to provide compatibility with
         /// WCF serialization. WARNING: when adding new fields you must take
         /// care to increase the Order for new elements, otherwise data corruption
         /// may occur.
         /// </summary>
+        /// <remarks>If not specified, the default is assumed from <see cref="Serializer.GlobalOptions.InferTagFromName"/>.</remarks>
         public bool InferTagFromName
         {
-            get { return inferTagFromName; }
+            get { return inferTagFromName ?? Serializer.GlobalOptions.InferTagFromName; }
             set { inferTagFromName = value; }
         }
 

@@ -19,7 +19,7 @@ namespace ProtoBuf
     /// extensible, allowing a type to be deserialized / merged even if some data is
     /// not recognised.
     /// </remarks>
-    public static class Serializer
+    public static partial class Serializer
     {
         internal static void VerifyBytesWritten(int expected, int actual)
         {

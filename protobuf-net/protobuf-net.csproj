@@ -141,6 +141,7 @@
       <DependentUpon>IExtension.cs</DependentUpon>
     </Compile>
     <Compile Include="Formatter.cs" />
+    <Compile Include="GlobalOptions.cs" />
     <Compile Include="IExtension.cs" />
     <Compile Include="Property\PropertyTimeSpanFixed.cs" />
     <Compile Include="Property\PropertyDateTimeFixed.cs" />
