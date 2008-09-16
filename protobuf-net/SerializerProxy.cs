@@ -9,27 +9,23 @@ namespace ProtoBuf
     {
         public static readonly SerializerProxy<T> Default;
 
-        static bool HasAdd(Type list, Type item)
-        {
-            return list.GetMethod("Add", new Type[] { item }) != null;
-        }
         static SerializerProxy()
         {
-            Type itemType;
-            bool enumOnly;
-            if (typeof(T).IsValueType) { } // not handling that...
-            if (Serializer.IsEntityType(typeof(T)))
-            {
-                Default = (SerializerProxy<T>)typeof(SerializerProxy<T>).GetMethod("MakeItem")
-                    .MakeGenericMethod(typeof(T)).Invoke(null, null);
+            if(Serializer.CanSerialize(typeof(T))) {
+                if (Serializer.IsEntityType(typeof(T)))
+                {
+                    Default = (SerializerProxy<T>)typeof(SerializerProxy<T>).GetMethod("MakeItem")
+                        .MakeGenericMethod(typeof(T)).Invoke(null, null);
+                }
+                else
+                {
+                    bool enumOnly;
+                    Type itemType = PropertyFactory.GetListType(typeof(T), out enumOnly);
+                    Default = (SerializerProxy<T>)typeof(SerializerProxy<T>).GetMethod("MakeList")
+                        .MakeGenericMethod(typeof(T), itemType).Invoke(null, null);
+                    
+                }
             }
-            else if ((itemType = PropertyFactory.GetListType(typeof(T), out enumOnly)) != null
-                && (!enumOnly || HasAdd(typeof(T), itemType)) &&  Serializer.IsEntityType(itemType))
-            {
-                Default = (SerializerProxy<T>)typeof(SerializerProxy<T>).GetMethod("MakeList")
-                    .MakeGenericMethod(typeof(T), itemType).Invoke(null, null);
-            }
-
             if(Default == null)
             {
                 throw new InvalidOperationException("Only concrete data-contract classes (and lists/arrays of such) can be processed");

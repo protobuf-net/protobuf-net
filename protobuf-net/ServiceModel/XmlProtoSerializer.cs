@@ -5,7 +5,6 @@ using System.Runtime.Serialization;
 namespace ProtoBuf.ServiceModel
 {
     sealed class XmlProtoSerializer<T> : XmlObjectSerializer
-        where T : class, new()
     {
         public override void WriteEndObject(System.Xml.XmlDictionaryWriter writer)
         {
@@ -26,7 +25,7 @@ namespace ProtoBuf.ServiceModel
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    Serializer<T>.Serialize((T)graph, ms);
+                    Serializer.Serialize<T>(ms, (T)graph);
                     byte[] buffer = ms.GetBuffer();
                     writer.WriteBase64(buffer, 0, (int)ms.Length);
                 }

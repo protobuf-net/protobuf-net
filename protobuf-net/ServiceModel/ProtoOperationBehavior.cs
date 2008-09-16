@@ -13,7 +13,7 @@ namespace ProtoBuf.ServiceModel
 
         public override XmlObjectSerializer CreateSerializer(Type type, System.Xml.XmlDictionaryString name, System.Xml.XmlDictionaryString ns, IList<Type> knownTypes)
         {
-            if (Serializer.IsEntityType(type))
+            if (Serializer.CanSerialize(type))
             {
                 return (XmlObjectSerializer)typeof(XmlProtoSerializer<>)
                     .MakeGenericType(type)
