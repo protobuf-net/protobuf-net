@@ -138,6 +138,7 @@
     <Compile Include="Pipeline.cs" />
     <Compile Include="Ppt\Ppt.cs" />
     <Compile Include="Primatives.cs" />
+    <Compile Include="PrimativeSerializationTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="DesignIdeas\Inheritance.cs" />

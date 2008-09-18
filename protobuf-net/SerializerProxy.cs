@@ -26,6 +26,22 @@ namespace ProtoBuf
                     
                 }
             }
+            else // see if our property-factory can handle this type; if it can, use a wrapper object
+            {
+                try
+                {
+                    DataFormat fmt = DataFormat.Default;
+                    if (PropertyFactory.CreatePassThru<T>(1, ref fmt) != null)
+                    {
+                        Default = (SerializerProxy<T>)typeof(SerializerProxy<T>).GetMethod("MakeValue")
+                            .MakeGenericMethod(typeof(T)).Invoke(null, null);
+                    }
+                }
+                catch
+                {
+                    // nope, can't do it...
+                }
+            }
             if(Default == null)
             {
                 throw new InvalidOperationException("Only concrete data-contract classes (and lists/arrays of such) can be processed");
@@ -38,6 +54,10 @@ namespace ProtoBuf
             where TItem : class, T, new()
         {
             return new SerializerItemProxy<TItem>();
+        }
+        public static SerializerProxy<TValue> MakeValue<TValue>()
+        {
+            return new SerializerSimpleProxy<TValue>();
         }
         public static SerializerProxy<TList> MakeList<TList,TItem>()
             where TList : class, T, IEnumerable<TItem>
@@ -85,6 +105,34 @@ namespace ProtoBuf
             {
                 get { return list; }
                 set { list = value; }
+            }
+        }
+    }
+
+    sealed class SerializerSimpleProxy<TValue> : SerializerProxy<TValue>
+    {
+        public override int Serialize(TValue value, Stream destination)
+        {
+            return Serializer<SimpleWrapper>.Serialize(new SimpleWrapper(value), destination);
+        }
+        public override void Deserialize(ref TValue value, Stream source)
+        {
+            SimpleWrapper wrapper = null;
+            Serializer<SimpleWrapper>.Deserialize(ref wrapper, source);
+            if (wrapper != null) value = wrapper.Value;
+        }
+
+        [ProtoContract]
+        sealed class SimpleWrapper
+        {
+            public SimpleWrapper() { }
+            public SimpleWrapper(TValue value) { this.value = value; }
+            private TValue value;
+            [ProtoMember(1)]
+            public TValue Value
+            {
+                get { return this.value; }
+                set { this.value = value; }
             }
         }
     }
