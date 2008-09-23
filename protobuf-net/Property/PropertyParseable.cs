@@ -6,7 +6,6 @@ namespace ProtoBuf.Property
 {
     internal sealed class PropertyParseable<TSource, TValue> : Property<TSource, TValue>
     {
-        private static readonly UTF8Encoding utf8 = new UTF8Encoding(false, false);
         private static readonly Getter<string, TValue> parse;
 
         static PropertyParseable()

@@ -241,25 +241,6 @@ namespace ProtoBuf
             }
         }
 
-
-        
-        private static bool IsSelfEquatable(Type type)
-        {
-            Type huntType = typeof(IEquatable<>).MakeGenericType(type);
-            foreach (Type intType in type.GetInterfaces())
-            {
-                if (intType == huntType)
-                {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        
-
-
-        
         internal static int Serialize(T instance, Stream destination)
         {
             if (readProps == null) Build();

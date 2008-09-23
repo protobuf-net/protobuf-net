@@ -3,7 +3,7 @@
 namespace ProtoBuf.Property
 {
     /// <summary>
-    /// <see cref="Property"/> implemenation that handles enum values.
+    /// Property implemenation that handles enum values.
     /// </summary>
     /// <remarks>All enum wire-values must be in the Int32 range.</remarks>
     internal sealed class PropertyEnum<TSource,TEnum> : Property<TSource, TEnum>

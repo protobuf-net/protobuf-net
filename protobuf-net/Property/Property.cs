@@ -16,9 +16,6 @@ namespace ProtoBuf.Property
     }
     internal abstract class Property<TSource>
     {
-        private static Getter<TSource, TSource>
-            PassThru = delegate(TSource x) { return x; };
-
         public abstract Type PropertyType { get; }
         
         protected static uint GetPrefix(int tag, WireType wireType)

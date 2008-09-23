@@ -8,7 +8,6 @@ namespace ProtoBuf.Property
     /// Utility class for creating/initializing protobuf-net property
     /// wrappers.
     /// </summary>
-    /// <see cref="Property"/>
     internal static class PropertyFactory
     {
         /// <summary>
@@ -34,7 +33,7 @@ namespace ProtoBuf.Property
         }
 
         /// <summary>
-        /// Create a simple <see cref="Property"/> that can be used standalone
+        /// Create a simple Property that can be used standalone
         /// to encode/decode values for the given type.
         /// </summary>
         public static Property<T,T> CreatePassThru<T>(int tag, ref DataFormat format) {
@@ -44,7 +43,7 @@ namespace ProtoBuf.Property
         }
 
         /// <summary>
-        /// Create a <see cref="Property"/> based around a class
+        /// Create a Property based around a class
         /// member (PropertyInfo/FieldInfo).
         /// </summary>
         public static Property<T> Create<T>(MemberInfo member)

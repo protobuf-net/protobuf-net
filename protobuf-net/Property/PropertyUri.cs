@@ -5,8 +5,6 @@ namespace ProtoBuf.Property
 {
     internal sealed class PropertyUri<TSource> : Property<TSource, Uri>
     {
-        private static readonly UTF8Encoding utf8 = new UTF8Encoding(false, false);
-
         public override string DefinedType { get { return ProtoFormat.STRING; } }
         public override WireType WireType { get { return WireType.String; } }
 
