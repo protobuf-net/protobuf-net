@@ -4,37 +4,49 @@ using System.Reflection;
 
 namespace ProtoBuf.Property
 {
+    /// <summary>
+    /// Utility class for creating/initializing protobuf-net property
+    /// wrappers.
+    /// </summary>
+    /// <see cref="Property"/>
     internal static class PropertyFactory
     {
-        static PropertyFactory()
+        /// <summary>
+        /// Stores, per T, a pass-thru Getter&lt;T,T&gt; delegate.
+        /// </summary>
+        /// <seealso cref="PropertyFactory.GetPassThru"/>
+        private static class PassThruCache<T>
         {
-
+            public static readonly Getter<T, T> Default = Get;
+            private static T Get(T value) { return value; }
         }
 
+        /// <summary>
+        /// Returns a Getter&lt;T,T&gt; delegate that simply returns
+        /// the original value. This allows code re-use between
+        /// different implementations.
+        /// </summary>
+        /// <remarks>Originally an anonymous method was used, but
+        /// this proved problematic with the Mono 2.0 compiler.</remarks>
         public static Getter<T,T> GetPassThru<T>()
         {
-            return delegate(T value) { return value; };
+            return PassThruCache<T>.Default;
         }
-        /*
-        public static Property<T, T> CreatePassThru<T>(MemberInfo member)
-        {
-            if (member == null) throw new ArgumentNullException("member");
-            int tag;
-            string name;
-            DataFormat format;
-            bool isRequired;
-            if (!Serializer.TryGetTag(member, out tag, out name, out format, out isRequired))
-            {
-                throw new InvalidOperationException("Cannot be treated as a proto member: " + member.Name);
-            }
-            return CreatePassThru<T>(tag, format);
-        }*/
 
+        /// <summary>
+        /// Create a simple <see cref="Property"/> that can be used standalone
+        /// to encode/decode values for the given type.
+        /// </summary>
         public static Property<T,T> CreatePassThru<T>(int tag, ref DataFormat format) {
             Property<T,T> prop = (Property<T, T>)CreateProperty<T>(typeof(T), ref format);
             prop.Init(tag, format, GetPassThru<T>(), null, false, null);
             return prop;
         }
+
+        /// <summary>
+        /// Create a <see cref="Property"/> based around a class
+        /// member (PropertyInfo/FieldInfo).
+        /// </summary>
         public static Property<T> Create<T>(MemberInfo member)
         {
             if (member == null) throw new ArgumentNullException("member");
@@ -65,6 +77,10 @@ namespace ProtoBuf.Property
             return prop;
         }
 
+        /// <summary>
+        /// Responsible for deciding how to encode/decode a given data-type; maybe
+        /// not the most elegant solution, but it is simple and quick.
+        /// </summary>
         private static Property<T> CreateProperty<T>(Type type, ref DataFormat format)
         {
             if (type == typeof(int))
@@ -254,61 +270,6 @@ namespace ProtoBuf.Property
 
             throw Serializer.ThrowNoEncoder(format, type);
 
-            /*
-           argsOnePropertyVal[0] = prop;
-           if (propType == typeof(byte[]))
-           {   // want to treat byte[] as a special case
-               listItemType = null;
-           }
-           if (propType.IsArray && listItemType != null) // second check is for byte[]
-           {
-               // array
-               actualProp = (IProperty<T>)typeof(Serializer<T>)
-                   .GetMethod("CreateArrayProperty")
-                   .MakeGenericMethod(typeof(T), listItemType)
-                   .Invoke(null, argsOnePropertyVal);
-           }
-           else if (listItemType != null)
-           {
-               // list / enumerable
-               actualProp = (IProperty<T>)typeof(Serializer<T>)
-                   .GetMethod(isEnumerableOnly ? "CreateEnumerableProperty" : "CreateListProperty")
-                   .MakeGenericMethod(typeof(T), propType, listItemType)
-                   .Invoke(null, argsOnePropertyVal);
-           }
-           else if (Serializer.IsEntityType(propType))
-           { // entity
-               actualProp = (IProperty<T>)typeof(Serializer<T>)
-                   .GetMethod("CreateEntityProperty")
-                   .MakeGenericMethod(typeof(T), propType)
-                   .Invoke(null, argsOnePropertyVal);
-           }
-           else
-           { // simple value
-               string methodName;
-               Type nullType = Nullable.GetUnderlyingType(propType);
-               if (nullType != null)
-               {
-                   methodName = "CreateNullableProperty";
-                   propType = nullType;
-               }
-               else if (propType.IsClass)
-               {
-                   methodName = "CreateClassProperty";
-               }
-               else if (IsSelfEquatable(propType))
-               {
-                   methodName = "CreateEquatableProperty";
-               }
-               else
-               {
-                   methodName = "CreateStructProperty";
-               }
-               actualProp = (IProperty<T>)typeof(Serializer<T>)
-                   .GetMethod(methodName)
-                   .MakeGenericMethod(typeof(T), propType)
-                   .Invoke(null, argsOnePropertyVal);
-           }*/
         }
         internal static MethodInfo GetParseMethod(Type type) {
             return type.GetMethod("Parse", BindingFlags.Public | BindingFlags.Static,

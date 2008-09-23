@@ -497,12 +497,12 @@ namespace ProtoBuf
         internal struct ProtoEnumValue<TEnum>
         {
             private readonly TEnum enumValue;
-            private readonly uint wireValue;
+            private readonly int wireValue;
             private readonly string name;
             public TEnum EnumValue { get { return enumValue; } }
-            public uint WireValue { get { return wireValue; } }
+            public int WireValue { get { return wireValue; } }
             public string Name { get { return name; } }
-            public ProtoEnumValue(TEnum enumValue, uint wireValue, string name)
+            public ProtoEnumValue(TEnum enumValue, int wireValue, string name)
             {
                 this.enumValue = enumValue;
                 this.wireValue = wireValue;
@@ -522,16 +522,16 @@ namespace ProtoBuf
                 
                 TEnum key = (TEnum)enumField.GetValue(null);
                 ProtoEnumAttribute ea = AttributeUtils.GetAttribute<ProtoEnumAttribute>(enumField);
-                uint value;
+                int value;
                 string name = (ea == null || string.IsNullOrEmpty(ea.Name)) ? enumField.Name : ea.Name;
 
                 if (ea == null || !ea.HasValue())
                 {
-                    value = (uint)Convert.ChangeType(key, typeof(uint), CultureInfo.InvariantCulture);
+                    value = (int)Convert.ChangeType(key, typeof(int), CultureInfo.InvariantCulture);
                 }
                 else
                 {
-                    value = (uint)ea.Value;
+                    value = (int)ea.Value;
                 }
 
                 list.Add(new ProtoEnumValue<TEnum>(key, value, name));

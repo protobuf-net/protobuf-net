@@ -37,8 +37,16 @@ namespace Examples.DesignIdeas
         public SomeEnum Bar { get; set; }
     }
 
-
-
+    enum NegEnum
+    {
+        A = -1, B = 0, C = 1
+    }
+    [ProtoContract]
+    class NegEnumType
+    {
+        [ProtoMember(1)]
+        public NegEnum Value { get; set; }
+    }
     public enum HasConflictingKeys
     {
         Foo = 0,
@@ -188,6 +196,31 @@ enum blah {
                 EnumFoo clone = Serializer.Deserialize<EnumFoo>(ms);
                 Assert.AreEqual(val, clone.Bar);
             }
+        }
+
+        [Test]
+        public void TestNegEnum()
+        {
+            TestNegEnum(NegEnum.A);
+            TestNegEnum(NegEnum.B);
+            TestNegEnum(NegEnum.C);
+        }
+        [Test, ExpectedException(typeof(ProtoException))]
+        public void TestNegEnumnotDefinedNeg()
+        {
+            TestNegEnum((NegEnum)(-2));
+        }
+        [Test, ExpectedException(typeof(ProtoException))]
+        public void TestNegEnumnotDefinedPos()
+        {
+            TestNegEnum((NegEnum) 2);
+        }
+
+        private static void TestNegEnum(NegEnum value)
+        {
+            NegEnumType obj = new NegEnumType { Value = value },
+                clone = Serializer.DeepClone(obj);
+            Assert.AreEqual(obj.Value, clone.Value, value.ToString());
         }
     }
 }

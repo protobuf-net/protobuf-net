@@ -2,23 +2,27 @@
 
 namespace ProtoBuf.Property
 {
+    /// <summary>
+    /// <see cref="Property"/> implemenation that handles enum values.
+    /// </summary>
+    /// <remarks>All enum wire-values must be in the Int32 range.</remarks>
     internal sealed class PropertyEnum<TSource,TEnum> : Property<TSource, TEnum>
         where TEnum : struct
     {
-        private static readonly KeyValuePair<TEnum, uint>[] values;
+        private static readonly KeyValuePair<TEnum, int>[] values;
         
         private static readonly EqualityComparer<TEnum> enumComparer = EqualityComparer<TEnum>.Default;
         
-        private uint defaultWireValue;
+        private int defaultWireValue;
         
         static PropertyEnum() {
             // get the known mappings between TEnum and TValue; if a wire-value is set
             // via ProtoEnumAttribute then use that; otherwise just convert/cast the
             // value
-            List<KeyValuePair<TEnum, uint>> list = new List<KeyValuePair<TEnum, uint>>();
+            List<KeyValuePair<TEnum, int>> list = new List<KeyValuePair<TEnum, int>>();
             foreach (Serializer.ProtoEnumValue<TEnum> value in Serializer.GetEnumValues<TEnum>())
             {
-                foreach (KeyValuePair<TEnum, uint> existing in list)
+                foreach (KeyValuePair<TEnum, int> existing in list)
                 {
                     if ((existing.Value == value.WireValue) || enumComparer.Equals(existing.Key, value.EnumValue))
                     {
@@ -28,7 +32,7 @@ namespace ProtoBuf.Property
                     }
                 }
 
-                list.Add(new KeyValuePair<TEnum, uint>(value.EnumValue, value.WireValue));
+                list.Add(new KeyValuePair<TEnum, int>(value.EnumValue, value.WireValue));
             }
 
             values = list.ToArray();
@@ -42,7 +46,7 @@ namespace ProtoBuf.Property
             }
         }
 
-        private static TEnum GetKey(uint value)
+        private static TEnum GetKey(int value)
         {
             for (int i = 0; i < values.Length; i++)
             {
@@ -52,7 +56,7 @@ namespace ProtoBuf.Property
             throw new ProtoException(string.Format("No key found for {0}", value));
         }
 
-        private static uint GetWireValue(TEnum key) 
+        private static int GetWireValue(TEnum key) 
         {
             for (int i = 0; i < values.Length; i++)
             {
@@ -81,14 +85,14 @@ namespace ProtoBuf.Property
 
         public override int Serialize(TSource source, SerializationContext context)
         {
-            uint wireValue = GetWireValue(GetValue(source));
+            int wireValue = GetWireValue(GetValue(source));
             if (IsOptional && wireValue == defaultWireValue) return 0;
-            return WritePrefix(context) + context.EncodeUInt32(wireValue);
+            return WritePrefix(context) + context.EncodeInt32(wireValue);
         }
 
         public override TEnum DeserializeImpl(TSource source, SerializationContext context)
         {
-            uint wireValue = context.DecodeUInt32();
+            int wireValue = context.DecodeInt32();
             return GetKey(wireValue);
         }
     }

@@ -14,20 +14,8 @@ namespace ProtoBuf
         /// </summary>
         public int Value
         {
-            get
-            {
-                return enumValue.GetValueOrDefault();
-            }
-
-            set
-            {
-                if (value < 0)
-                {
-                    throw new ArgumentOutOfRangeException("value", "Value cannot be negative.");
-                }
-
-                this.enumValue = value;
-            }
+            get { return enumValue.GetValueOrDefault(); }
+            set {this.enumValue = value; }
         }
 
         /// <summary>
