@@ -1,0 +1,41 @@
+What is protobuf-net?
+=====================
+
+protobuf-net is a binary serialization engine, along similar lines to BinaryFormatter
+but using the "protocol buffers" [PB] specification as laid out by Google.
+
+The core protobuf-net library is a single dll; other projects are presented for
+testing and example purposes.
+
+Many PB implementations start with a .proto text file (describing the types), with
+the developer running a command-line tool to generate code in their target
+language. Deliberately, protobuf-net started the other way around: it is designed
+to work with existing .NET types at runtime. This allows you to use your existing
+data objects, but still with lots of optimisations to keep things very fast.
+
+There is a C# code generation version (courtesy of Jon Skeet), and a proposed future
+extension is to allow generation of protobuf-net classes from a .proto file.
+
+================
+How do I use it?
+================
+
+These steps are a walkthrough of the QuickStart project.
+
+0: add a reference to protobuf-net
+
+protobuf-net is a runtime engine, and the assembly is required (and should be
+deployed with your program).
+
+1: define your data objects ("1 Data Objects.cs")
+
+protobuf-net uses regular .NET classes. The only requirement (in common with
+other serializers such as XmlSerializer) is that there must be a public
+parameterless constructor, and it must be marked for serialization.
+Any properties you want to serialize must have a "getter" and "setter",
+and an integer "tag" is required on each (used to uniquely identify each
+property when serialized). Collection properties can also be serialized, but
+it is not necessary to have a "setter", as items can be added to the
+existing list.
+
+2: write objects to a file and read them back ("2 File Access.cs")
