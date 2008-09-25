@@ -6,6 +6,7 @@ namespace QuickStart
         static void Main()
         {
             FileAccess.ShowFileAccess();
+            Sockets.ShowSockets();
         }
     }
 }

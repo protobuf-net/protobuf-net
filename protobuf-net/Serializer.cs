@@ -172,6 +172,22 @@ namespace ProtoBuf
         }
 
 
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream that has a length-prefix
+        /// on data (to assist with network IO).
+        /// </summary>
+        /// <typeparam name="T">The type to be created.</typeparam>
+        /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
+        /// <returns>A new, initialized instance.</returns>
+        public static T DeserializeWithLengthPrefix<T>(Stream source)
+        {
+            uint len = SerializationContext.DecodeUInt32(source);
+            using (SubStream subStream = new SubStream(source, len, false))
+            {
+                return Deserialize<T>(subStream);
+            }
+        }
+
         internal static Exception ThrowNoEncoder(DataFormat format, Type valueType)
         {
             throw new ProtoException(string.Format(
@@ -203,6 +219,25 @@ namespace ProtoBuf
         }
 
         /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance, using length-prefixed
+        /// data - useful with network IO.
+        /// </summary>
+        /// <typeparam name="T">The type being merged.</typeparam>
+        /// <param name="instance">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public static T MergeWithLengthPrefix<T>(Stream source, T instance)
+        {
+            uint len = SerializationContext.DecodeUInt32(source);
+            using (SubStream subStream = new SubStream(source, len, false))
+            {
+                return Merge<T>(subStream, instance);
+            }
+        }
+
+        /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
         /// </summary>
         /// <typeparam name="T">The type being serialized.</typeparam>
@@ -219,6 +254,28 @@ namespace ProtoBuf
                 ThrowInner(ex);
                 throw; // if no inner (preserves stacktrace)
             }
+        }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied stream,
+        /// with a length-prefix. This is useful for socket programming,
+        /// as DeserializeWithLengthPrefix/MergeWithLengthPrefix can be used to read the single object back
+        /// from an ongoing stream.
+        /// </summary>
+        /// <typeparam name="T">The type being serialized.</typeparam>
+        /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="destination">The destination stream to write to.</param>
+        public static void SerializeWithLengthPrefix<T>(Stream destination, T instance)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serialize<T>(ms, instance);
+                byte[] tmp = new byte[10];
+                int len = SerializationContext.EncodeUInt32((uint)ms.Length, tmp, 0);
+                destination.Write(tmp, 0, len);
+                destination.Write(ms.GetBuffer(), 0, (int)ms.Length);
+            }
+            destination.Flush();
         }
 
         private const string ProtoBinaryField = "proto";

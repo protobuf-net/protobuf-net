@@ -195,6 +195,7 @@ namespace ProtoBuf
         {
             return EncodeUInt64((ulong)value);
         }
+
         public static int EncodeUInt32(uint value, byte[] buffer, int index)
         {
             int count = 0;
@@ -207,6 +208,7 @@ namespace ProtoBuf
             buffer[index - 1] &= 0x7F;
             return count;
         }
+
         public int EncodeUInt64(ulong value)
         {
             if (value < 0x80)

@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="1 Data Objects.cs" />
     <Compile Include="2 File Access.cs" />
+    <Compile Include="3 Sockets.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>

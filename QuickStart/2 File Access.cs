@@ -27,7 +27,7 @@ namespace QuickStart
         /// </summary>
         static void WriteCustomer(string path)
         {
-            Customer cust = InventCustomer();
+            Customer cust = Customer.Invent();
 
             using (Stream file = File.Create(path))
             {
@@ -50,34 +50,7 @@ namespace QuickStart
                 cust = Serializer.Deserialize<Customer>(file);
             }
 
-            Console.WriteLine("{0}: {1} ({2} contact(s))",
-                cust.CustomerId, cust.Name, cust.Contacts.Count);
-        }
-
-        /// <summary>
-        /// Returns an invented customer... nothing special
-        /// </summary>
-        static Customer InventCustomer()
-        {
-            return new Customer
-            {
-                CustomerId = "abc123",
-                MaximumOrderAmount = 123.45M,
-                Name = "FooBar Inc.",
-                Contacts =
-                {
-                    new Contact
-                    {
-                        Name = "Jo",
-                        ContactDetails = "jo@foobar.inc"
-                    },
-                    new Contact
-                    {
-                        Name = "Fred",
-                        ContactDetails = "01234121412"
-                    }
-                }
-            };
+            cust.ShowCustomer();
         }
     }
 }

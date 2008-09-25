@@ -20,6 +20,39 @@ namespace ProtoBuf
             return (-(value & 0x01L)) ^ ((value >> 1) & ~Base128Variant.Int64Msb);
         }
 
+        /// <summary>
+        /// Slow (unbuffered) read from a stream; used to avoid issues
+        /// with buffers when performing network IO.
+        /// </summary>
+        public static uint DecodeUInt32(Stream source)
+        {
+            if (source == null) throw new ArgumentNullException("source");
+
+            int b = source.ReadByte();
+            if (b < 0) throw new EndOfStreamException();
+            if ((b & 0x80) == 0) return (uint)b; // single-byte
+
+            int shift = 7;
+
+            uint value = (uint)(b & 0x7F);
+            bool keepGoing;
+            int i = 0;
+            do
+            {
+                b = source.ReadByte();
+                if (b < 0) throw new EndOfStreamException();
+                i++;
+                keepGoing = (b & 0x80) != 0;
+                value |= ((uint)(b & 0x7F)) << shift;
+                shift += 7;
+            } while (keepGoing && i < 4);
+            if (keepGoing && i == 4)
+            {
+                throw new OverflowException();
+            }
+            return value;
+        }
+
         public uint DecodeUInt32()
         {
             if (ioBufferIndex == ioBufferEffectiveSize)

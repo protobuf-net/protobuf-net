@@ -39,3 +39,14 @@ it is not necessary to have a "setter", as items can be added to the
 existing list.
 
 2: write objects to a file and read them back ("2 File Access.cs")
+
+This sample shows writing object-graphs to simple streams such as FileStream,
+using the Serialize and Deserialize methods.
+
+3: write objects to a socket and read them back ("3 Sockets.cs")
+
+Network IO is more complicated, especially since we can reasonably expect
+a conversation between client and server on the same connection, but each
+needs to know how much data is part of the current request/response. This
+sample shows using the SerializeWithLengthPrefix/DeserializeWithLengthPrefix
+methods to communicate over a socket.
