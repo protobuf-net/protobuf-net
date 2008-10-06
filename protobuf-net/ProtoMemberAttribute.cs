@@ -8,7 +8,7 @@ namespace ProtoBuf
     /// format (for instance, using zigzag encoding for negative numbers, or 
     /// fixed-length encoding for large values.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property,
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field,
         AllowMultiple = false, Inherited = true)]
     public class ProtoMemberAttribute : Attribute
     {

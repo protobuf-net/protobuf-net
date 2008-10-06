@@ -11,7 +11,7 @@ namespace Examples
     {
         static void Main() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
-            const int COUNT = 1000000;
+            //const int COUNT = 1000000;
             const bool RUN_LEGACY = false;
             //demo.PerfTestSimple(COUNT, RUN_LEGACY);
             //demo.PerfTestString(COUNT, RUN_LEGACY);

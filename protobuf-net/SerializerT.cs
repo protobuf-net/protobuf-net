@@ -158,7 +158,7 @@ namespace ProtoBuf
                 }
                 List<Property<T>> readPropList = new List<Property<T>>(), writePropList = new List<Property<T>>();
 
-                foreach (PropertyInfo prop in Serializer.GetProtoProperties(typeof(T)))
+                foreach (MemberInfo prop in Serializer.GetProtoMembers(typeof(T)))
                 {
                     string name;
                     DataFormat format;

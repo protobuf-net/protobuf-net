@@ -54,9 +54,16 @@ namespace ProtoBuf
             return TryGetTag(member, out tag, out name, false, out format, out isRequired);
         }
 
-        internal static IEnumerable<PropertyInfo> GetProtoProperties(Type type)
+        internal static IEnumerable<MemberInfo> GetProtoMembers(Type type)
         {
-            return type.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+            foreach(MemberInfo member in type.GetMembers(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)) {
+                switch(member.MemberType) {
+                    case MemberTypes.Property:
+                    case MemberTypes.Field:
+                        yield return member;
+                        break;
+                }
+            }
         }
 
         internal static bool TryGetTag(MemberInfo member, out int tag, out string name, bool callerIsTagInference, out DataFormat format, out bool isRequired)
@@ -101,7 +108,7 @@ namespace ProtoBuf
                         // find all properties under consideration
                         List<KeyValuePair<string, int>> members = new List<KeyValuePair<string,int>>();
                         string tmpName; // use this also to cache the "out" name (not usable from lambda)
-                        foreach(PropertyInfo prop in GetProtoProperties(member.DeclaringType))
+                        foreach(MemberInfo prop in GetProtoMembers(member.DeclaringType))
                         {
                             int tmpTag;
                             DataFormat tmpFormat;
