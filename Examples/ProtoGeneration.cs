@@ -1,6 +1,7 @@
 ﻿using Examples.SimpleStream;
 using NUnit.Framework;
 using ProtoBuf;
+using System.ComponentModel;
 
 namespace Examples
 {
@@ -18,6 +19,23 @@ message Test1 {
 }
 ", proto);
         }
-        
+
+        [Test]
+        public void TestProtoGenerationWithDefaultString()
+        {
+            string proto = Serializer.GetProto<MyClass>();
+            Assert.AreEqual(@"
+message MyClass {
+   optional string TestString = 1 [default = ""Test Test TEst""];
+}
+", proto);
+        }
     }
 }
+[ProtoContract]
+class MyClass
+{
+    [ProtoMember(1), DefaultValue("Test Test TEst")]
+    public string TestString { get; set; }
+}
+

@@ -122,7 +122,15 @@ namespace ProtoBuf
                 if (def != null)
                 {
                     string defText = Convert.ToString(def, CultureInfo.InvariantCulture);
-                    sb.Append(" [default = ").Append(defText).Append("]");
+                    if (prop.DefinedType == ProtoFormat.STRING)
+                    {
+                        // note; waiting on clarification over quote escape rules
+                        sb.Append(" [default = \"").Append(defText).Append("\"]");
+                    }
+                    else
+                    {
+                        sb.Append(" [default = ").Append(defText).Append("]");
+                    }
                 }
 
                 sb.Append(";");
