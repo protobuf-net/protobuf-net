@@ -129,6 +129,7 @@
     <Compile Include="Fields.cs" />
     <Compile Include="GuidTests.cs" />
     <Compile Include="Inheritance.cs" />
+    <Compile Include="Issues\Issue26.cs" />
     <Compile Include="ListTests.cs" />
     <Compile Include="NWind\CompatDb.cs" />
     <Compile Include="NWind\DataContext.cs" />
