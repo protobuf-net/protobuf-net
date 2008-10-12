@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using NUnit.Framework;
 using ProtoBuf;
 
@@ -12,13 +9,13 @@ namespace Examples.Issues
     /// To investigate: http://code.google.com/p/protobuf-net/issues/detail?id=26
     /// (cannot reproduce)
     /// </summary>
-    [TestFixture]
+    [TestFixture, Ignore("Issue 26 to investigate")]
     public class Issue26
     {
         [Test]
         public void RoundTripCStation()
         {
-            CStation cs = new CStation { number = 1, ticket = 2 },
+            CStation cs = new CStation(1,2),
                 clone = Serializer.DeepClone(cs);
             Assert.AreNotSame(cs, clone);
             Assert.IsNotNull(clone);
@@ -33,8 +30,8 @@ namespace Examples.Issues
             {
                 liststation =
                 {
-                    new CStation { number = 1, ticket = 2},
-                    new CStation { number = 3, ticket = 4}
+                    new CStation(1,2),
+                    new CStation(3,4)
                 }
             }, clone = Serializer.DeepClone(list);
             Assert.AreNotSame(list, clone);
@@ -55,6 +52,13 @@ namespace Examples.Issues
 
         [ProtoMember(8)]
         public int ticket { get; set; }
+
+        public CStation(int number, int ticket)
+        {
+            this.number = number;
+            this.ticket = ticket;
+        }
+        private CStation() { }
 
     }
 
