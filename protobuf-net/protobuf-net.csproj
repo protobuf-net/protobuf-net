@@ -145,6 +145,7 @@
       <DependentUpon>Serializer.cs</DependentUpon>
     </Compile>
     <Compile Include="IExtension.cs" />
+    <Compile Include="ObjectFactory.cs" />
     <Compile Include="Property\PropertyTimeSpanFixed.cs" />
     <Compile Include="Property\PropertyDateTimeFixed.cs" />
     <Compile Include="Property\PropertyInclude.cs" />

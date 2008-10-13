@@ -38,7 +38,7 @@ namespace ProtoBuf
         /// <remarks>Needs to be public to be callable thru reflection in Silverlight</remarks>
         public static IEnumerable<TValue> GetExtendedValuesTyped<TSource, TValue>(
             TSource instance, int tag, DataFormat format, bool singleton)
-            where TSource : class, IExtensible, new()
+            where TSource : class, IExtensible
         {
             if (instance == null) throw new ArgumentNullException("instance");
 
@@ -148,7 +148,7 @@ namespace ProtoBuf
         /// <remarks>Needs to be public to be callable thru reflection in Silverlight</remarks>
         public static void AppendExtendValueTyped<TSource, TValue>(
             TSource instance, int tag, DataFormat format, TValue value)
-            where TSource : class, IExtensible, new()
+            where TSource : class, IExtensible
         {
             Serializer<TSource>.CheckTagNotInUse(tag);
             Property<TValue, TValue> prop = PropertyFactory.CreatePassThru<TValue>(tag, ref format);

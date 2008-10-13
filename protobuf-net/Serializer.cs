@@ -30,12 +30,11 @@ namespace ProtoBuf
             }
         }
 
-        private static readonly Type[] emptyTypes = new Type[0];
+        internal static readonly Type[] EmptyTypes = new Type[0];
         internal static bool IsEntityType(Type type)
         {
             return type.IsClass && !type.IsAbstract
                     && type != typeof(string) && !type.IsArray
-                    && type.GetConstructor(emptyTypes) != null
                     && (AttributeUtils.GetAttribute<ProtoContractAttribute>(type) != null
 #if NET_3_0
                         || AttributeUtils.GetAttribute<DataContractAttribute>(type) != null
@@ -442,7 +441,7 @@ namespace ProtoBuf
         /// </summary>
         /// <typeparam name="T">The type to generate a .proto definition for</typeparam>
         /// <returns>The .proto definition as a string</returns>
-        public static string GetProto<T>() where T : class, new()
+        public static string GetProto<T>() where T : class
         {
             try
             {

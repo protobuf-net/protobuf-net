@@ -5,6 +5,14 @@ using ProtoBuf;
 
 namespace Examples.Issues
 {
+    /// <summary>
+    /// Relates to wanting to serialize structs; issue here is that:
+    /// a: structs are generally immutable, and protobuf-net wants to mutate
+    /// b: would require lots of "ref" additions
+    /// 
+    /// This is a workaround, simply intended to show an alternative construction, i.e.
+    /// wrapping the structs with a class during serialization.
+    /// </summary>
     [TestFixture]
     public class Issue27
     {

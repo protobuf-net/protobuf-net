@@ -2,8 +2,8 @@
 namespace ProtoBuf.Property
 {
     internal sealed class PropertyMessageGroup<TSource, TValueBase, TValueActual> : Property<TSource, TValueBase>
-        where TValueBase : class, new()
-        where TValueActual : class, TValueBase, new()
+        where TValueBase : class
+        where TValueActual : class, TValueBase
     {
         public override System.Collections.Generic.IEnumerable<Property<TSource>> GetCompatibleReaders()
         {

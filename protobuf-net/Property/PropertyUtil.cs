@@ -7,14 +7,14 @@ namespace ProtoBuf.Property
     internal static class PropertyUtil<T>
     {
         public static Property<T> CreatePropertyMessageGroup<TValueBase, TValueActual>()
-            where TValueBase : class, new()
-            where TValueActual : class, TValueBase, new()
+            where TValueBase : class
+            where TValueActual : class, TValueBase
         {
             return new PropertyMessageGroup<T, TValueBase, TValueActual>();
         }
         public static Property<T> CreatePropertyMessageString<TValueBase, TValueActual>()
-            where TValueBase : class, new()
-            where TValueActual : class, TValueBase, new()
+            where TValueBase : class
+            where TValueActual : class, TValueBase
         {
             return new PropertyMessageString<T, TValueBase, TValueActual>();
         }

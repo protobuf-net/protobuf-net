@@ -9,7 +9,7 @@ using ProtoBuf.Property;
 
 namespace ProtoBuf
 {
-    internal static class Serializer<T> where T : class, new()
+    internal static class Serializer<T> where T : class
     {
 #if !CF
         public static string GetProto()
@@ -400,7 +400,7 @@ namespace ProtoBuf
                     // not a sub-class, but *some* data there, so create an object
                     if (instance == null)
                     {
-                        instance = new T();
+                        instance = ObjectFactory<T>.Create();
                         extensible = instance as IExtensible;
                     }
                     if (foundTag)
@@ -455,7 +455,7 @@ namespace ProtoBuf
             // messages (otherwise instance should already be non-null)
             if (instance == null)
             {
-                instance = new T();
+                instance = ObjectFactory<T>.Create();
             }
             context.Pop();
         }
@@ -583,7 +583,7 @@ namespace ProtoBuf
         }
 
         internal static TValueActual CheckSubType<TValueActual>(T instance)
-            where TValueActual : class, T, new()
+            where TValueActual : class, T
         {
             TValueActual actual = instance as TValueActual;
             if (actual == null && instance != null)
@@ -591,7 +591,7 @@ namespace ProtoBuf
                 using (MemoryStream ms = new MemoryStream())
                 {
                     Serializer.Serialize<T>(ms, instance);
-                    actual = new TValueActual();
+                    actual = ObjectFactory<TValueActual>.Create();
                     ms.Position = 0;
                     Serializer.Merge<T>(ms, actual);
                 }

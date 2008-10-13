@@ -1,75 +1,111 @@
 ﻿using System.Collections.Generic;
 using NUnit.Framework;
 using ProtoBuf;
+using System.IO;
 
 namespace Examples.Issues
 {
 
     /// <summary>
     /// To investigate: http://code.google.com/p/protobuf-net/issues/detail?id=26
-    /// (cannot reproduce)
+    /// Related to classes requiring a public constructor. This constraint now removed;
+    /// a non-public (but parameterless) constructor can be used instead, and a better
+    /// error message is returned if you get it wrong.
     /// </summary>
-    [TestFixture, Ignore("Issue 26 to investigate")]
+    [TestFixture]
     public class Issue26
     {
         [Test]
         public void RoundTripCStation()
         {
-            CStation cs = new CStation(1,2),
+            Station cs = new Station(1,2),
                 clone = Serializer.DeepClone(cs);
             Assert.AreNotSame(cs, clone);
             Assert.IsNotNull(clone);
-            Assert.AreEqual(cs.number, clone.number);
-            Assert.AreEqual(cs.ticket, clone.ticket);
+            Assert.AreEqual(cs.Number, clone.Number);
+            Assert.AreEqual(cs.Ticket, clone.Ticket);
         }
 
         [Test]
         public void RoundTripCListStations()
         {
-            CListStations list = new CListStations
+            StationList list = new StationList
             {
-                liststation =
+                Stations =
                 {
-                    new CStation(1,2),
-                    new CStation(3,4)
+                    new Station(1,2),
+                    new Station(3,4)
                 }
             }, clone = Serializer.DeepClone(list);
             Assert.AreNotSame(list, clone);
             Assert.IsNotNull(clone);
-            Assert.AreEqual(2, clone.liststation.Count, "Count");
-            Assert.AreEqual(1, clone.liststation[0].number);
-            Assert.AreEqual(2, clone.liststation[0].ticket);
-            Assert.AreEqual(3, clone.liststation[1].number);
-            Assert.AreEqual(4, clone.liststation[1].ticket);
+            Assert.AreEqual(2, clone.Stations.Count, "Count");
+            Assert.AreEqual(1, clone.Stations[0].Number);
+            Assert.AreEqual(2, clone.Stations[0].Ticket);
+            Assert.AreEqual(3, clone.Stations[1].Number);
+            Assert.AreEqual(4, clone.Stations[1].Ticket);
         }
+
+        [Test, ExpectedException(typeof(ProtoException), ExpectedMessage = "No parameterless constructor found for WithoutParameterlessCtor", MatchType=MessageMatch.Exact)]
+        public void CheckMeaningfulErrorIfNoParameterlessCtor()
+        {
+            WithoutParameterlessCtor obj = new WithoutParameterlessCtor(123);
+            Serializer.DeepClone(obj);
+        }
+
+        [Test]
+        public void TestMergeWithoutParameterlessCtor()
+        {
+            WithoutParameterlessCtor obj = new WithoutParameterlessCtor(123),
+                clone = new WithoutParameterlessCtor(456);
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, obj);
+                ms.Position = 0;
+                Serializer.Merge(ms, clone);
+            }
+            Assert.AreEqual(obj.Foo, clone.Foo);
+        }
+        
     }
 
     [ProtoContract]
-    public class CStation
+    public class Station
     {
         [ProtoMember(1)]
-        public int number { get; set; }
+        public int Number { get; internal set; }
 
         [ProtoMember(8)]
-        public int ticket { get; set; }
+        public int Ticket { get; internal set; }
 
-        public CStation(int number, int ticket)
+        public Station(int number, int ticket)
         {
-            this.number = number;
-            this.ticket = ticket;
+            this.Number = number;
+            this.Ticket = ticket;
         }
-        private CStation() { }
+        private Station() { }
 
     }
 
-
-
+    /// <remarks>Re the unusual structure here, note that this is related to the code-sample
+    /// provided to investigate this issue.</remarks>
     [ProtoContract]
-    public class CListStations
+    public class StationList
     {
         [ProtoMember(1)]
-        private List<CStation> _liststations = new List<CStation>();
-        public List<CStation> liststation { get { return _liststations; } }
+        private readonly List<Station> _liststations = new List<Station>();
+        public List<Station> Stations { get { return _liststations; } }
 
+    }
+
+    [ProtoContract]
+    public class WithoutParameterlessCtor {
+        [ProtoMember(1)]
+        public int Foo {get; internal set;}
+
+        public WithoutParameterlessCtor(int foo)
+        {
+            this.Foo = foo;
+        }
     }
 }

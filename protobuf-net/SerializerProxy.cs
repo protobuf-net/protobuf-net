@@ -51,7 +51,7 @@ namespace ProtoBuf
         public abstract void Deserialize(ref T instance, Stream source);
 
         public static SerializerProxy<TItem> MakeItem<TItem>()
-            where TItem : class, T, new()
+            where TItem : class, T
         {
             return new SerializerItemProxy<TItem>();
         }
@@ -61,13 +61,13 @@ namespace ProtoBuf
         }
         public static SerializerProxy<TList> MakeList<TList,TItem>()
             where TList : class, T, IEnumerable<TItem>
-            where TItem : class, new()
+            where TItem : class
         {
             return new SerializerListProxy<TList,TItem>();
         }
     }
 
-    sealed class SerializerItemProxy<TItem> : SerializerProxy<TItem> where TItem : class, new()
+    sealed class SerializerItemProxy<TItem> : SerializerProxy<TItem> where TItem : class
     {
         public override int Serialize(TItem instance, Stream destination)
         {
@@ -81,7 +81,7 @@ namespace ProtoBuf
 
     sealed class SerializerListProxy<TList, TItem> : SerializerProxy<TList>
         where TList : class, IEnumerable<TItem>
-        where TItem : class, new()
+        where TItem : class
     {
         public override int Serialize(TList instance, Stream destination)
         {
