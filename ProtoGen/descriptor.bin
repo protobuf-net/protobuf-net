@@ -1,0 +1,121 @@
+
+È
+descriptor.protogoogle.protobuf"G
+FileDescriptorSet2
+file (2$.google.protobuf.FileDescriptorProto"‹
+FileDescriptorProto
+name (	
+package (	
+
+dependency (	6
+message_type (2 .google.protobuf.DescriptorProto7
+	enum_type (2$.google.protobuf.EnumDescriptorProto8
+service (2'.google.protobuf.ServiceDescriptorProto8
+	extension (2%.google.protobuf.FieldDescriptorProto-
+options (2.google.protobuf.FileOptions"©
+DescriptorProto
+name (	4
+field (2%.google.protobuf.FieldDescriptorProto8
+	extension (2%.google.protobuf.FieldDescriptorProto5
+nested_type (2 .google.protobuf.DescriptorProto7
+	enum_type (2$.google.protobuf.EnumDescriptorProtoH
+extension_range (2/.google.protobuf.DescriptorProto.ExtensionRange0
+options (2.google.protobuf.MessageOptions,
+ExtensionRange
+start (
+end ("î
+FieldDescriptorProto
+name (	
+number (:
+label (2+.google.protobuf.FieldDescriptorProto.Label8
+type (2*.google.protobuf.FieldDescriptorProto.Type
+	type_name (	
+extendee (	
+default_value (	.
+options (2.google.protobuf.FieldOptions"∂
+Type
+TYPE_DOUBLE
+
+TYPE_FLOAT
+
+TYPE_INT64
+TYPE_UINT64
+
+TYPE_INT32
+TYPE_FIXED64
+TYPE_FIXED32
+	TYPE_BOOL
+TYPE_STRING	
+
+TYPE_GROUP
+
+TYPE_MESSAGE
+
+TYPE_BYTES
+TYPE_UINT32
+	TYPE_ENUM
+TYPE_SFIXED32
+TYPE_SFIXED64
+TYPE_SINT32
+TYPE_SINT64"C
+Label
+LABEL_OPTIONAL
+LABEL_REQUIRED
+LABEL_REPEATED"å
+EnumDescriptorProto
+name (	8
+value (2).google.protobuf.EnumValueDescriptorProto-
+options (2.google.protobuf.EnumOptions"l
+EnumValueDescriptorProto
+name (	
+number (2
+options (2!.google.protobuf.EnumValueOptions"ê
+ServiceDescriptorProto
+name (	6
+method (2&.google.protobuf.MethodDescriptorProto0
+options (2.google.protobuf.ServiceOptions"
+MethodDescriptorProto
+name (	
+
+input_type (	
+output_type (	/
+options (2.google.protobuf.MethodOptions"´
+FileOptions
+java_package (	
+java_outer_classname (	"
+java_multiple_files
+ (:falseJ
+optimize_for	 (2).google.protobuf.FileOptions.OptimizeMode:	CODE_SIZEC
+uninterpreted_optionÁ (2$.google.protobuf.UninterpretedOption"(
+OptimizeMode	
+SPEED
+	CODE_SIZE*	ËÄÄÄÄ"à
+MessageOptions&
+message_set_wire_format (:falseC
+uninterpreted_optionÁ (2$.google.protobuf.UninterpretedOption*	ËÄÄÄÄ"’
+FieldOptions2
+ctype (2#.google.protobuf.FieldOptions.CType
+experimental_map_key	 (	C
+uninterpreted_optionÁ (2$.google.protobuf.UninterpretedOption"#
+CType
+CORD
+STRING_PIECE*	ËÄÄÄÄ"]
+EnumOptionsC
+uninterpreted_optionÁ (2$.google.protobuf.UninterpretedOption*	ËÄÄÄÄ"b
+EnumValueOptionsC
+uninterpreted_optionÁ (2$.google.protobuf.UninterpretedOption*	ËÄÄÄÄ"`
+ServiceOptionsC
+uninterpreted_optionÁ (2$.google.protobuf.UninterpretedOption*	ËÄÄÄÄ"_
+MethodOptionsC
+uninterpreted_optionÁ (2$.google.protobuf.UninterpretedOption*	ËÄÄÄÄ"Ö
+UninterpretedOption;
+name (2-.google.protobuf.UninterpretedOption.NamePart
+identifier_value (	
+positive_int_value (
+negative_int_value (
+double_value (
+string_value (3
+NamePart
+	name_part (	
+is_extension (B)
+com.google.protobufBDescriptorProtosH

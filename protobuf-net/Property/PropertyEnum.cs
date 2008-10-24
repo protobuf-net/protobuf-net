@@ -56,14 +56,18 @@ namespace ProtoBuf.Property
             throw new ProtoException(string.Format("No key found for {0}", value));
         }
 
-        private static int GetWireValue(TEnum key) 
+        private static bool TryGetWireValue(TEnum key, out int value) 
         {
             for (int i = 0; i < values.Length; i++)
             {
-                if (enumComparer.Equals(values[i].Key, key)) return values[i].Value;
+                if (enumComparer.Equals(values[i].Key, key))
+                {
+                    value = values[i].Value;
+                    return true;
+                }
             }
-
-            throw new ProtoException(string.Format("No value found for {0}={1}", typeof(TEnum).Name, key));
+            value = 0;
+            return false;
         }
         public override string DefinedType
         {
@@ -75,9 +79,13 @@ namespace ProtoBuf.Property
             base.OnAfterInit();
             if(IsOptional) //&& !Enum.IsDefined(typeof(TEnum), DefaultValue))
             {
-                defaultWireValue = GetWireValue(DefaultValue);
-                //throw new ProtoException(string.Format(
-                //    "The default enum value ({0}.{1}) is invalid for the optional property {2}", typeof(TEnum).Name, DefaultValue, Name));
+                if(!TryGetWireValue(DefaultValue, out defaultWireValue))
+                {
+                    throw new ProtoException(string.Format(
+                        "The default enum value ({0}.{1}) is not defined for the optional property {2}",
+                        typeof(TEnum).Name, DefaultValue, Name));    
+                }
+                
             }
         }
 
@@ -85,7 +93,13 @@ namespace ProtoBuf.Property
 
         public override int Serialize(TSource source, SerializationContext context)
         {
-            int wireValue = GetWireValue(GetValue(source));
+            int wireValue;
+            if(!TryGetWireValue(GetValue(source), out wireValue))
+            {
+                throw new ProtoException(string.Format(
+                    "The value ({0}.{1}) has no wire-representation for property {2}",
+                    typeof(TEnum).Name, DefaultValue, Name));
+            }
             if (IsOptional && wireValue == defaultWireValue) return 0;
             return WritePrefix(context) + context.EncodeInt32(wireValue);
         }
