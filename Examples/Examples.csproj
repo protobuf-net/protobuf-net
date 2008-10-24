@@ -123,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Arrays.cs" />
+    <Compile Include="DictionaryTests.cs" />
     <Compile Include="EnumTests.cs" />
     <Compile Include="ExtendedTimeTests.cs" />
     <Compile Include="Extensibility.cs" />
@@ -136,6 +137,7 @@
     <Compile Include="NWind\DataContext.cs" />
     <Compile Include="NWind\NWind.cs" />
     <Compile Include="OldProgram.cs" />
+    <Compile Include="OptionalData.cs" />
     <Compile Include="Parseable.cs" />
     <Compile Include="PartialClasses.cs" />
     <Compile Include="Pipeline.cs" />

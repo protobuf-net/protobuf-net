@@ -13,7 +13,6 @@ namespace ProtoBuf.Property
         /// <summary>
         /// Stores, per T, a pass-thru Getter&lt;T,T&gt; delegate.
         /// </summary>
-        /// <seealso cref="PropertyFactory.GetPassThru"/>
         private static class PassThruCache<T>
         {
             public static readonly Getter<T, T> Default = Get;
@@ -208,6 +207,10 @@ namespace ProtoBuf.Property
                 return PropertyUtil<T>.CreateTypedProperty("CreatePropertyEnum", type);
             }
 
+            if (type.IsValueType && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                return PropertyUtil<T>.CreateTypedProperty("CreatePropertyPairString", type.GetGenericArguments());
+            }
             bool isEnumerableOnly;
             Type listItemType = GetListType(type, out isEnumerableOnly);
 
@@ -289,7 +292,7 @@ namespace ProtoBuf.Property
             foreach (Type interfaceType in type.GetInterfaces())
             {
                 if (interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition()
-                    == typeof(IList<>))
+                    == typeof(ICollection<>))
                 {
                     return interfaceType.GetGenericArguments()[0];
                 }

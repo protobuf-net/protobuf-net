@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ProtoBuf.Property
 {
     internal class PropertyList<TSource, TList, TValue> : Property<TSource, TList>
-        where TList : IList<TValue>
+        where TList : ICollection<TValue>
     {
         private Property<TValue, TValue> innerProperty;
 

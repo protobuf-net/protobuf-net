@@ -27,7 +27,7 @@ namespace QuickStart
         internal void ShowCustomer()
         {
             Console.WriteLine("{0}: {1} ({2} contact(s))",
-                this.CustomerId, this.Name, this.Contacts.Count);
+                CustomerId, Name, Contacts.Count);
         }
 
         /// <summary>

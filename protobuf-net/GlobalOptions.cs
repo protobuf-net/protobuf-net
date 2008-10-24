@@ -31,24 +31,7 @@ namespace ProtoBuf
 
             #endif
         }
-
-        internal static bool CanSerialize(Type type)
-        {
-            if(type == null) throw new ArgumentNullException("type");
-            if(type.IsValueType) return false;
-
-            // serialize as item?
-            if (IsEntityType(type)) return true;
-
-            // serialize as list?
-            bool enumOnly;
-            Type itemType = PropertyFactory.GetListType(type, out enumOnly);
-            if (itemType != null
-                && (!enumOnly || Serializer.HasAddMethod(type, itemType))
-                && Serializer.IsEntityType(itemType)) return true;
-            return false;
-        }
-
+        
         internal static bool HasAddMethod(Type list, Type item)
         {
             return list.GetMethod("Add", new Type[] { item }) != null;

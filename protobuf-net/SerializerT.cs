@@ -171,7 +171,7 @@ namespace ProtoBuf
                     string name;
                     DataFormat format;
                     int tag;
-                    bool isRequired; ;
+                    bool isRequired;
                     if (!Serializer.TryGetTag(prop, out tag, out name, out format, out isRequired))
                     {
                         continue; // didn't recognise this as a usable property
@@ -406,7 +406,9 @@ namespace ProtoBuf
                     if (foundTag)
                     { // found it by seeking; deserialize and continue
                         
+// ReSharper disable PossibleNullReferenceException
                         prop.Deserialize(instance, context);
+// ReSharper restore PossibleNullReferenceException
                         continue;
                     }
 
@@ -430,7 +432,9 @@ namespace ProtoBuf
                         }
 
                         // copy the data into the output stream
+// ReSharper disable PossibleNullReferenceException
                         extraData.EncodeUInt32(prefix);
+// ReSharper restore PossibleNullReferenceException
                         ProcessExtraData(context, fieldTag, wireType, extraData);
                     }
                     else
@@ -500,82 +504,20 @@ namespace ProtoBuf
                         ProcessExtraData(read, fieldTag, wireType, write);
                     }
                     break;
-                    /*using (CloneStream cloneStream = new CloneStream(read, write))
-                    {
-                        SerializationContext cloneCtx = new SerializationContext(cloneStream, null);
-                        cloneCtx.StartGroup(fieldTag);
-                        Serializer<UnknownType>.Build();
-                        Serializer<UnknownType>.Deserialize(UnknownType.Default, cloneCtx);
-                    }
-                    break;*/
                 case WireType.EndGroup:
                     throw new ProtoException("End-group not expected at this location");                
                 default:
-                    throw new ProtoException("Unknown wire-type " + wireType.ToString());
+                    throw new ProtoException("Unknown wire-type " + wireType);
             }
         }
-
-        
-        
-
-        
-        /*
-        public static IProperty<TEntity> CreateStructProperty<TEntity, TValue>(PropertyInfo property)
-            where TEntity : class, new()
-            where TValue : struct
-        {
-            return new StructProperty<TEntity, TValue>(property);
-        }
-        public static IProperty<TEntity> CreateEquatableProperty<TEntity, TValue>(PropertyInfo property)
-            where TEntity : class, new()
-            where TValue : struct, IEquatable<TValue>
-        {
-            return new EquatableProperty<TEntity, TValue>(property);
-        }
-
-        public static IProperty<TEntity> CreateClassProperty<TEntity, TValue>(PropertyInfo property)
-            where TEntity : class, new()
-            where TValue : class
-        {
-            return new ClassProperty<TEntity, TValue>(property);
-        }
-
-        public static IProperty<TEntity> CreateNullableProperty<TEntity, TValue>(PropertyInfo property)
-            where TEntity : class, new()
-            where TValue : struct
-        {
-            return new NullableProperty<TEntity, TValue>(property);
-        }
-
-        public static IProperty<TEntity> CreateEntityProperty<TEntity, TValue>(PropertyInfo property)
-            where TEntity : class, new()
-            where TValue : class, new()
-        {
-            return new EntityProperty<TEntity, TValue>(property);
-        }
-        public static IProperty<TEntity> CreateArrayProperty<TEntity, TValue>(PropertyInfo property)
-            where TEntity : class, new()
-        {
-            return new ArrayProperty<TEntity, TValue>(property);
-        }
-        public static IProperty<TEntity> CreateEnumerableProperty<TEntity, TList, TValue>(PropertyInfo property)
-            where TEntity : class, new()
-            where TList : class, IEnumerable<TValue>
-        {
-            return new EnumerableProperty<TEntity, TList, TValue>(property);
-        }
-        public static IProperty<TEntity> CreateListProperty<TEntity, TList, TValue>(PropertyInfo property)
-            where TEntity : class, new()
-            where TList : class, IList<TValue>
-        {
-            return new ListProperty<TEntity, TList, TValue>(property);
-        }
-    */
+      
         internal static void CheckTagNotInUse(int tag)
         {
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag", "Tags must be positive integers.");
             if (readProps == null) Build();
+// ReSharper disable PossibleNullReferenceException
             foreach (Property<T> prop in readProps)
+// ReSharper restore PossibleNullReferenceException
             {
                 if (prop.Tag == tag) throw new ArgumentException(
                     string.Format("Tag {0} is in use; access the {1} property instead.", tag, prop.Name), "tag");

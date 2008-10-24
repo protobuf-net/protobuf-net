@@ -25,7 +25,7 @@ namespace ProtoBuf.Property
         }
 
         public static Property<T> CreatePropertyList<TList, TValue>()
-            where TList : IList<TValue>
+            where TList : ICollection<TValue>
         {
             return new PropertyList<T, TList, TValue>();
         }
@@ -40,6 +40,11 @@ namespace ProtoBuf.Property
             where TEnum : struct
         {
             return new PropertyEnum<T, TEnum>();
+        }
+
+        public static Property<T> CreatePropertyPairString<TKey,TValue>()
+        {
+            return new PropertyPairString<T, TKey, TValue>();
         }
 
         public static Property<T> CreatePropertyArray<TValue>()
