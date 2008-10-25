@@ -1,455 +1,698 @@
-﻿// Protocol Buffers - Google's data interchange format
-// Copyright 2008 Google Inc.  All rights reserved.
-// http://code.google.com/p/protobuf/
-//
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
-//
-//     * Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//     * Redistributions in binary form must reproduce the above
-// copyright notice, this list of conditions and the following disclaimer
-// in the documentation and/or other materials provided with the
-// distribution.
-//     * Neither the name of Google Inc. nor the names of its
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-// "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-// LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-// A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-// OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-// SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-// LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-// DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-// THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-// (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-// OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-// Author: kenton@google.com (Kenton Varda)
-//  Based on original Protocol Buffers design by
-//  Sanjay Ghemawat, Jeff Dean, and others.
-//
-// The messages in this file describe the definitions found in .proto files.
-// A valid .proto file can be translated directly to a FileDescriptorProto
-// without any other information (e.g. without reading its imports).
-
-
-
-
-using System.ComponentModel;
-using ProtoBuf;
-using System.Collections.Generic;
-using System;
-namespace google.protobuf {
-
-[Serializable, ProtoContract(Name=@"FileDescriptorSet")]
-public sealed class FileDescriptorSet {
-  
-    [ProtoMember(1, Name=@"file")]
-    public List<FileDescriptorProto> file {get; set;}
-
-}
-
-// Describes a complete .proto file.
-
-[Serializable, ProtoContract(Name=@"FileDescriptorProto")]
-public sealed class FileDescriptorProto {
-  
-    [ProtoMember(1, Name=@"name")]
-    public string name {get; set;}
-       // file name, relative to root of source tree
-  
-    [ProtoMember(2, Name=@"package")]
-    public string package {get; set;}
-    // e.g. "foo", "foo.bar", etc.
-
-  // Names of files imported by this file.
-  
-    [ProtoMember(3, Name=@"dependency")]
-    public List<string> dependency {get; set;}
-
-
-  // All top-level definitions in this file.
-  
-    [ProtoMember(4, Name=@"message_type")]
-    public List<DescriptorProto> message_type {get; set;}
-
-  
-    [ProtoMember(5, Name=@"enum_type")]
-    public List<enumDescriptorProto> enum_type {get; set;}
-
-  
-    [ProtoMember(6, Name=@"service")]
-    public List<ServiceDescriptorProto> service {get; set;}
-
-  
-    [ProtoMember(7, Name=@"extension")]
-    public List<FieldDescriptorProto> extension {get; set;}
-
-
-  
-    [ProtoMember(8, Name=@"options")]
-    public FileOptions options {get; set;}
-
-}
-
-// Describes a message type.
-
-[Serializable, ProtoContract(Name=@"DescriptorProto")]
-public sealed class DescriptorProto {
-  
-    [ProtoMember(1, Name=@"name")]
-    public string name {get; set;}
-
-
-  
-    [ProtoMember(2, Name=@"field")]
-    public List<FieldDescriptorProto> field {get; set;}
-
-  
-    [ProtoMember(6, Name=@"extension")]
-    public List<FieldDescriptorProto> extension {get; set;}
-
-
-  
-    [ProtoMember(3, Name=@"nested_type")]
-    public List<DescriptorProto> nested_type {get; set;}
-
-  
-    [ProtoMember(4, Name=@"enum_type")]
-    public List<enumDescriptorProto> enum_type {get; set;}
-
-
-  
-[Serializable, ProtoContract(Name=@"ExtensionRange")]
-public sealed class ExtensionRange {
-    
-    [ProtoMember(1, Name=@"start")]
-    public int start {get; set;}
-
-    
-    [ProtoMember(2, Name=@"end")]
-    public int end {get; set;}
-
-  }
-  
-    [ProtoMember(5, Name=@"extension_range")]
-    public List<ExtensionRange> extension_range {get; set;}
-
-
-  
-    [ProtoMember(7, Name=@"options")]
-    public MessageOptions options {get; set;}
-
-}
-
-// Describes a field within a message.
-
-[Serializable, ProtoContract(Name=@"FieldDescriptorProto")]
-public sealed class FieldDescriptorProto {
-  public enum Type {
-    // 0 is reserved for errors.
-    // Order is weird for historical reasons.
-    TYPE_DOUBLE         = 1,
-    TYPE_FLOAT          = 2,
-    TYPE_INT64          = 3,   // Not ZigZag encoded.  Negative numbers
-                               // take 10 bytes.  Use TYPE_Slong if negative
-                               // values are likely.
-    TYPE_UINT64         = 4,
-    TYPE_INT32          = 5,   // Not ZigZag encoded.  Negative numbers
-                               // take 10 bytes.  Use TYPE_SINT32 if negative
-                               // values are likely.
-    TYPE_FIXED64        = 6,
-    TYPE_FIXED32        = 7,
-    TYPE_BOOL           = 8,
-    TYPE_STRING         = 9,
-    TYPE_GROUP          = 10,  // Tag-delimited aggregate.
-    TYPE_MESSAGE        = 11,  // Length-delimited aggregate.
-
-    // New in version 2.
-    TYPE_BYTES          = 12,
-    TYPE_UINT32         = 13,
-    TYPE_ENUM           = 14,
-    TYPE_SFIXED32       = 15,
-    TYPE_SFIXED64       = 16,
-    TYPE_SINT32         = 17,  // Uses ZigZag encoding.
-    TYPE_SINT64         = 18  // Uses ZigZag encoding.
-  };
-
-  public enum Label {
-    // 0 is reserved for errors
-    LABEL_OPTIONAL      = 1,
-    LABEL_REQUIRED      = 2,
-    LABEL_REPEATED      = 3
-    // TODO(sanjay): Should we add LABEL_MAP
-  };
-
-  
-    [ProtoMember(1, Name=@"name")]
-    public string name {get; set;}
-
-  
-    [ProtoMember(3, Name=@"number")]
-    public int number {get; set;}
-
-  
-    [ProtoMember(4, Name=@"label")]
-    [DefaultValue(Label.LABEL_OPTIONAL)]
-    public Label label {get; set;}
-
-
-  // If type_name is set, this need not be set.  If both this and type_name
-  // are set, this must be either TYPE_public enum or TYPE_MESSAGE.
-  
-    [ProtoMember(5, Name=@"type")]
-    [DefaultValue(Type.TYPE_INT32)]
-    public Type type {get; set;}
-
-
-  // For message and public enum types, this is the name of the type.  If the name
-  // starts with a '.', it is fully-qualified.  Otherwise, C++-like scoping
-  // rules are used to find the type (i.e. first the nested types within this
-  // message are searched, then within the parent, on up to the root
-  // namespace).
-  
-    [ProtoMember(6, Name=@"type_name")]
-    public string type_name {get; set;}
-
-
-  // For extensions, this is the name of the type being extended.  It is
-  // resolved in the same manner as type_name.
-  
-    [ProtoMember(2, Name=@"extendee")]
-    public string extendee {get; set;}
-
-
-  // For numeric types, contains the original text representation of the value.
-  // For booleans, "true" or "false".
-  // For strings, contains the default text contents (not escaped in any way).
-  // For bytes, contains the C escaped value.  All bytes >= 128 are escaped.
-  // TODO(kenton):  Base-64 encode
-  
-    [ProtoMember(7, Name=@"default_value")]
-    public string default_value {get; set;}
-
-
-  
-    [ProtoMember(8, Name=@"options")]
-    public MessageOptions.FieldOptions options {get; set;}
-
-}
-
-// Describes an public enum type.
-
-[Serializable, ProtoContract(Name=@"public enumDescriptorProto")]
-public sealed class enumDescriptorProto {
-  
-    [ProtoMember(1, Name=@"name")]
-    public string name {get; set;}
-
-
-  
-    [ProtoMember(2, Name=@"value")]
-    public List<enumValueDescriptorProto> value {get; set;}
-
-
-  
-    [ProtoMember(3, Name=@"options")]
-    public MessageOptions.FieldOptions.Item.enumOptions options {get; set;}
-
-}
-
-// Describes a value within an public enum.
-
-[Serializable, ProtoContract(Name=@"public enumValueDescriptorProto")]
-public sealed class enumValueDescriptorProto {
-  
-    [ProtoMember(1, Name=@"name")]
-    public string name {get; set;}
-
-  
-    [ProtoMember(2, Name=@"number")]
-    public int number {get; set;}
-
-
-  
-    [ProtoMember(3, Name=@"options")]
-    public MessageOptions.FieldOptions.Item.enumValueOptions options {get; set;}
-
-}
-
-// Describes a service.
-
-[Serializable, ProtoContract(Name=@"ServiceDescriptorProto")]
-public sealed class ServiceDescriptorProto {
-  
-    [ProtoMember(1, Name=@"name")]
-    public string name {get; set;}
-
-  
-    [ProtoMember(2, Name=@"method")]
-    public List<MethodDescriptorProto> method {get; set;}
-
-
-  
-    [ProtoMember(3, Name=@"options")]
-    public MessageOptions.FieldOptions.Item.ServiceOptions options {get; set;}
-
-}
-
-// Describes a method of a service.
-
-[Serializable, ProtoContract(Name=@"MethodDescriptorProto")]
-public sealed class MethodDescriptorProto {
-  
-    [ProtoMember(1, Name=@"name")]
-    public string name {get; set;}
-
-
-  // Input and output type names.  These are resolved in the same way as
-  // FieldDescriptorProto.type_name, but must refer to a message type.
-  
-    [ProtoMember(2, Name=@"input_type")]
-    public string input_type {get; set;}
-
-  
-    [ProtoMember(3, Name=@"output_type")]
-    public string output_type {get; set;}
-
-
-  
-    [ProtoMember(4, Name=@"options")]
-    public MessageOptions.FieldOptions.Item.MethodOptions options {get; set;}
-
-}
-
-// ===================================================================
-// Options
-
-// Each of the definitions above may have "options" attached.  These are
-// just annotations which may cause code to be generated slightly differently
-// or may contain hints for code that manipulates protocol messages.
-//
-// Clients may define custom options as extensions of the *Options messages.
-// These extensions may not yet be known at parsing time, so the parser cannot
-// store the values in them.  Instead it stores them in a field in the *Options
-// message called uninterpreted_option. This field must have the same name
-// across all *Options messages. We then use this field to populate the
-// extensions when we build a descriptor, at which point all protos have been
-// parsed and so all extensions are known.
-//
-// Extension numbers for custom options may be chosen as follows:
-// * For options which will only be used within a single application or
-//   organization, or for experimental options, use field numbers 50000
-//   through 99999.  It is up to you to ensure that you do not use the
-//   same number for multiple options.
-// * For options which will be published and used publicly by multiple
-//   independent entities, e-mail kenton@google.com to reserve extension
-//   numbers.  Simply tell me how many you need and I'll send you back a
-//   set of numbers to use -- there's no need to explain how you intend to
-//   use them.  If this turns out to be popular, a web service will be set up
-//   to automatically assign option numbers.
-
-
-
-[Serializable, ProtoContract(Name=@"FileOptions")]
-public sealed class FileOptions {
-
-  // Sets the Java package where classes generated from this .proto will be
-  // placed.  By default, the proto package is used, but this is often
-  // inappropriate because proto packages do not normally start with backwards
-  // domain names.
-  
-    [ProtoMember(1, Name=@"java_package")]
-    public string java_package {get; set;}
-
-
-
-  // If set, all the classes from the .proto file are wrapped in a single
-  // outer class with the given name.  This applies to both Proto1
-  // (equivalent to the old "--one_java_file" option) and Proto2 (where
-  // a .proto always translates to a single class, but you may want to
-  // explicitly choose the class name).
-  
-    [ProtoMember(8, Name=@"java_outer_classname")]
-    public string java_outer_classname {get; set;}
-
-
-  // If set true, then the Java code generator will generate a separate .java
-  // file for each top-level message, public enum, and service defined in the .proto
-  // file.  Thus, these types will *not* be nested inside the outer class
-  // named by java_outer_classname.  However, the outer class will still be
-  // generated to contain the file's getDescriptor() method as well as any
-  // top-level extensions defined in the file.
-
-  [DefaultValue(false)]
-  [ProtoMember(10, Name="java_multiple_files")]
-  public bool java_multiple_files { get; set;}
-
-  // Generated classes can be optimized for speed or code size.
-  public enum OptimizeMode {
-    SPEED = 1,      // Generate complete code for parsing, serialization, etc.
-    CODE_SIZE = 2  // Use ReflectionOps to implement these methods.
-  }
-    public FileOptions()
-    {
-        optimize_for = OptimizeMode.CODE_SIZE;
-    }
-    [ProtoMember(9, Name="optimize_for")]
-    [DefaultValue(OptimizeMode.CODE_SIZE)]
-    public OptimizeMode optimize_for { get; set;}
-}
-
-
-}
-
-
-[Serializable, ProtoContract(Name = @"MessageOptions")]
-public sealed class MessageOptions
+﻿
+// see descriptor.proto
+namespace google.protobuf
 {
-    // Set true to use the old proto1 MessageSet wire format for extensions.
-    // This is provided for backwards-compatibility with the MessageSet wire
-    // format.  You should not use this for any other reason:  It's less
-    // efficient, has fewer features, and is more complicated.
-    //
-    // The message must be defined exactly as follows:
-    //   
-    [Serializable, ProtoContract(Name = @"Foo")]
-    public sealed class Foo
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class FileDescriptorSet
     {
-        //     option message_set_wire_format = true;
-        //     extensions 4 to max;
-        //   }
-        // Note that the message cannot have any defined fields; MessageSets only
-        // have extensions.
-        //
-        // All extensions of your type must be singular messages; e.g. they cannot
-        // be int32s, public enums, or repeated messages.
-        //
-        // Because this is an option, the above two restrictions are not enforced by
-        // the protocol compiler.
 
-        [ProtoMember(1)]
-        public bool message_set_wire_format { get; set; }
+        private readonly System.Collections.Generic.List<google.protobuf.FileDescriptorProto> _ID0EU = new System.Collections.Generic.List<google.protobuf.FileDescriptorProto>();
 
+        [ProtoBuf.ProtoMember(1)]
+        public System.Collections.Generic.List<google.protobuf.FileDescriptorProto> file
+        {
+            get { return _ID0EU; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EU.Clear();
+                if (value != null)
+                {
+                    _ID0EU.AddRange(value);
+                }
+            }
+        }
 
     }
 
-
-    [Serializable, ProtoContract(Name = @"FieldOptions")]
-    public sealed class FieldOptions
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class FileDescriptorProto
     {
-        // The ctype option instructs the C++ code generator to use a different
-        // representation of the field than it normally would.  See the specific
-        // options below.  This option is not yet implemented in the open source
-        // release -- sorry, we'll try to include it in a future version!
 
-        [ProtoMember(1, Name = @"ctype")]
-        [DefaultValue(CType.CORD)]
-        public CType ctype { get; set; }
+        private string _ID0EJB = "";
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue("")]
+        public string name
+        {
+            get { return _ID0EJB; }
+            set { _ID0EJB = value; }
+        }
+
+        private string _ID0ESB = "";
+
+        [ProtoBuf.ProtoMember(2)]
+        [System.ComponentModel.DefaultValue("")]
+        public string package
+        {
+            get { return _ID0ESB; }
+            set { _ID0ESB = value; }
+        }
+
+        private readonly System.Collections.Generic.List<string> _ID0E2B = new System.Collections.Generic.List<string>();
+
+        [ProtoBuf.ProtoMember(3)]
+        public System.Collections.Generic.List<string> dependency
+        {
+            get { return _ID0E2B; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0E2B.Clear();
+                if (value != null)
+                {
+                    _ID0E2B.AddRange(value);
+                }
+            }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.DescriptorProto> _ID0EGC = new System.Collections.Generic.List<google.protobuf.DescriptorProto>();
+
+        [ProtoBuf.ProtoMember(4)]
+        public System.Collections.Generic.List<google.protobuf.DescriptorProto> message_type
+        {
+            get { return _ID0EGC; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EGC.Clear();
+                if (value != null)
+                {
+                    _ID0EGC.AddRange(value);
+                }
+            }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.EnumDescriptorProto> _ID0ETC = new System.Collections.Generic.List<google.protobuf.EnumDescriptorProto>();
+
+        [ProtoBuf.ProtoMember(5)]
+        public System.Collections.Generic.List<google.protobuf.EnumDescriptorProto> enum_type
+        {
+            get { return _ID0ETC; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0ETC.Clear();
+                if (value != null)
+                {
+                    _ID0ETC.AddRange(value);
+                }
+            }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.ServiceDescriptorProto> _ID0EAD = new System.Collections.Generic.List<google.protobuf.ServiceDescriptorProto>();
+
+        [ProtoBuf.ProtoMember(6)]
+        public System.Collections.Generic.List<google.protobuf.ServiceDescriptorProto> service
+        {
+            get { return _ID0EAD; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EAD.Clear();
+                if (value != null)
+                {
+                    _ID0EAD.AddRange(value);
+                }
+            }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.FieldDescriptorProto> _ID0END = new System.Collections.Generic.List<google.protobuf.FieldDescriptorProto>();
+
+        [ProtoBuf.ProtoMember(7)]
+        public System.Collections.Generic.List<google.protobuf.FieldDescriptorProto> extension
+        {
+            get { return _ID0END; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0END.Clear();
+                if (value != null)
+                {
+                    _ID0END.AddRange(value);
+                }
+            }
+        }
+
+        private google.protobuf.FileOptions _ID0E1D = null;
+
+        [ProtoBuf.ProtoMember(8)]
+        [System.ComponentModel.DefaultValue(null)]
+        public google.protobuf.FileOptions options
+        {
+            get { return _ID0E1D; }
+            set { _ID0E1D = value; }
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class DescriptorProto
+    {
+
+        private string _ID0ENE = "";
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue("")]
+        public string name
+        {
+            get { return _ID0ENE; }
+            set { _ID0ENE = value; }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.FieldDescriptorProto> _ID0EWE = new System.Collections.Generic.List<google.protobuf.FieldDescriptorProto>();
+
+        [ProtoBuf.ProtoMember(2)]
+        public System.Collections.Generic.List<google.protobuf.FieldDescriptorProto> field
+        {
+            get { return _ID0EWE; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EWE.Clear();
+                if (value != null)
+                {
+                    _ID0EWE.AddRange(value);
+                }
+            }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.FieldDescriptorProto> _ID0EDF = new System.Collections.Generic.List<google.protobuf.FieldDescriptorProto>();
+
+        [ProtoBuf.ProtoMember(6)]
+        public System.Collections.Generic.List<google.protobuf.FieldDescriptorProto> extension
+        {
+            get { return _ID0EDF; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EDF.Clear();
+                if (value != null)
+                {
+                    _ID0EDF.AddRange(value);
+                }
+            }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.DescriptorProto> _ID0EQF = new System.Collections.Generic.List<google.protobuf.DescriptorProto>();
+
+        [ProtoBuf.ProtoMember(3)]
+        public System.Collections.Generic.List<google.protobuf.DescriptorProto> nested_type
+        {
+            get { return _ID0EQF; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EQF.Clear();
+                if (value != null)
+                {
+                    _ID0EQF.AddRange(value);
+                }
+            }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.EnumDescriptorProto> _ID0E4F = new System.Collections.Generic.List<google.protobuf.EnumDescriptorProto>();
+
+        [ProtoBuf.ProtoMember(4)]
+        public System.Collections.Generic.List<google.protobuf.EnumDescriptorProto> enum_type
+        {
+            get { return _ID0E4F; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0E4F.Clear();
+                if (value != null)
+                {
+                    _ID0E4F.AddRange(value);
+                }
+            }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.DescriptorProto.ExtensionRange> _ID0EKG = new System.Collections.Generic.List<google.protobuf.DescriptorProto.ExtensionRange>();
+
+        [ProtoBuf.ProtoMember(5)]
+        public System.Collections.Generic.List<google.protobuf.DescriptorProto.ExtensionRange> extension_range
+        {
+            get { return _ID0EKG; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EKG.Clear();
+                if (value != null)
+                {
+                    _ID0EKG.AddRange(value);
+                }
+            }
+        }
+
+        private google.protobuf.MessageOptions _ID0EXG = null;
+
+        [ProtoBuf.ProtoMember(7)]
+        [System.ComponentModel.DefaultValue(null)]
+        public google.protobuf.MessageOptions options
+        {
+            get { return _ID0EXG; }
+            set { _ID0EXG = value; }
+        }
+
+        [System.Serializable, ProtoBuf.ProtoContract]
+        public partial class ExtensionRange
+        {
+
+            private int _ID0ELH = default(int);
+
+            [ProtoBuf.ProtoMember(1)]
+            [System.ComponentModel.DefaultValue(default(int))]
+            public int start
+            {
+                get { return _ID0ELH; }
+                set { _ID0ELH = value; }
+            }
+
+            private int _ID0ESH = default(int);
+
+            [ProtoBuf.ProtoMember(2)]
+            [System.ComponentModel.DefaultValue(default(int))]
+            public int end
+            {
+                get { return _ID0ESH; }
+                set { _ID0ESH = value; }
+            }
+
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class FieldDescriptorProto
+    {
+
+        private string _ID0EEAAC = "";
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue("")]
+        public string name
+        {
+            get { return _ID0EEAAC; }
+            set { _ID0EEAAC = value; }
+        }
+
+        private int _ID0ENAAC = default(int);
+
+        [ProtoBuf.ProtoMember(3)]
+        [System.ComponentModel.DefaultValue(default(int))]
+        public int number
+        {
+            get { return _ID0ENAAC; }
+            set { _ID0ENAAC = value; }
+        }
+
+        private google.protobuf.FieldDescriptorProto.Label _ID0EUAAC = google.protobuf.FieldDescriptorProto.Label.LABEL_OPTIONAL;
+
+        [ProtoBuf.ProtoMember(4)]
+        [System.ComponentModel.DefaultValue(google.protobuf.FieldDescriptorProto.Label.LABEL_OPTIONAL)]
+        public google.protobuf.FieldDescriptorProto.Label label
+        {
+            get { return _ID0EUAAC; }
+            set { _ID0EUAAC = value; }
+        }
+
+        private google.protobuf.FieldDescriptorProto.Type _ID0E6AAC = google.protobuf.FieldDescriptorProto.Type.TYPE_DOUBLE;
+
+        [ProtoBuf.ProtoMember(5)]
+        [System.ComponentModel.DefaultValue(google.protobuf.FieldDescriptorProto.Type.TYPE_DOUBLE)]
+        public google.protobuf.FieldDescriptorProto.Type type
+        {
+            get { return _ID0E6AAC; }
+            set { _ID0E6AAC = value; }
+        }
+
+        private string _ID0EKBAC = "";
+
+        [ProtoBuf.ProtoMember(6)]
+        [System.ComponentModel.DefaultValue("")]
+        public string type_name
+        {
+            get { return _ID0EKBAC; }
+            set { _ID0EKBAC = value; }
+        }
+
+        private string _ID0ETBAC = "";
+
+        [ProtoBuf.ProtoMember(2)]
+        [System.ComponentModel.DefaultValue("")]
+        public string extendee
+        {
+            get { return _ID0ETBAC; }
+            set { _ID0ETBAC = value; }
+        }
+
+        private string _ID0E3BAC = "";
+
+        [ProtoBuf.ProtoMember(7)]
+        [System.ComponentModel.DefaultValue("")]
+        public string default_value
+        {
+            get { return _ID0E3BAC; }
+            set { _ID0E3BAC = value; }
+        }
+
+        private google.protobuf.FieldOptions _ID0EFCAC = null;
+
+        [ProtoBuf.ProtoMember(8)]
+        [System.ComponentModel.DefaultValue(null)]
+        public google.protobuf.FieldOptions options
+        {
+            get { return _ID0EFCAC; }
+            set { _ID0EFCAC = value; }
+        }
+
+        public enum Type
+        {
+            TYPE_DOUBLE = 1,
+            TYPE_FLOAT = 2,
+            TYPE_INT64 = 3,
+            TYPE_UINT64 = 4,
+            TYPE_INT32 = 5,
+            TYPE_FIXED64 = 6,
+            TYPE_FIXED32 = 7,
+            TYPE_BOOL = 8,
+            TYPE_STRING = 9,
+            TYPE_GROUP = 10,
+            TYPE_MESSAGE = 11,
+            TYPE_BYTES = 12,
+            TYPE_UINT32 = 13,
+            TYPE_ENUM = 14,
+            TYPE_SFIXED32 = 15,
+            TYPE_SFIXED64 = 16,
+            TYPE_SINT32 = 17,
+            TYPE_SINT64 = 18
+        }
+
+        public enum Label
+        {
+            LABEL_OPTIONAL = 1,
+            LABEL_REQUIRED = 2,
+            LABEL_REPEATED = 3
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class EnumDescriptorProto
+    {
+
+        private string _ID0E5HAC = "";
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue("")]
+        public string name
+        {
+            get { return _ID0E5HAC; }
+            set { _ID0E5HAC = value; }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.EnumValueDescriptorProto> _ID0EHIAC = new System.Collections.Generic.List<google.protobuf.EnumValueDescriptorProto>();
+
+        [ProtoBuf.ProtoMember(2)]
+        public System.Collections.Generic.List<google.protobuf.EnumValueDescriptorProto> value
+        {
+            get { return _ID0EHIAC; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EHIAC.Clear();
+                if (value != null)
+                {
+                    _ID0EHIAC.AddRange(value);
+                }
+            }
+        }
+
+        private google.protobuf.EnumOptions _ID0EUIAC = null;
+
+        [ProtoBuf.ProtoMember(3)]
+        [System.ComponentModel.DefaultValue(null)]
+        public google.protobuf.EnumOptions options
+        {
+            get { return _ID0EUIAC; }
+            set { _ID0EUIAC = value; }
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class EnumValueDescriptorProto
+    {
+
+        private string _ID0EHJAC = "";
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue("")]
+        public string name
+        {
+            get { return _ID0EHJAC; }
+            set { _ID0EHJAC = value; }
+        }
+
+        private int _ID0EQJAC = default(int);
+
+        [ProtoBuf.ProtoMember(2)]
+        [System.ComponentModel.DefaultValue(default(int))]
+        public int number
+        {
+            get { return _ID0EQJAC; }
+            set { _ID0EQJAC = value; }
+        }
+
+        private google.protobuf.EnumValueOptions _ID0EXJAC = null;
+
+        [ProtoBuf.ProtoMember(3)]
+        [System.ComponentModel.DefaultValue(null)]
+        public google.protobuf.EnumValueOptions options
+        {
+            get { return _ID0EXJAC; }
+            set { _ID0EXJAC = value; }
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class ServiceDescriptorProto
+    {
+
+        private string _ID0EKKAC = "";
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue("")]
+        public string name
+        {
+            get { return _ID0EKKAC; }
+            set { _ID0EKKAC = value; }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.MethodDescriptorProto> _ID0ETKAC = new System.Collections.Generic.List<google.protobuf.MethodDescriptorProto>();
+
+        [ProtoBuf.ProtoMember(2)]
+        public System.Collections.Generic.List<google.protobuf.MethodDescriptorProto> method
+        {
+            get { return _ID0ETKAC; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0ETKAC.Clear();
+                if (value != null)
+                {
+                    _ID0ETKAC.AddRange(value);
+                }
+            }
+        }
+
+        private google.protobuf.ServiceOptions _ID0EALAC = null;
+
+        [ProtoBuf.ProtoMember(3)]
+        [System.ComponentModel.DefaultValue(null)]
+        public google.protobuf.ServiceOptions options
+        {
+            get { return _ID0EALAC; }
+            set { _ID0EALAC = value; }
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class MethodDescriptorProto
+    {
+
+        private string _ID0ETLAC = "";
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue("")]
+        public string name
+        {
+            get { return _ID0ETLAC; }
+            set { _ID0ETLAC = value; }
+        }
+
+        private string _ID0E3LAC = "";
+
+        [ProtoBuf.ProtoMember(2)]
+        [System.ComponentModel.DefaultValue("")]
+        public string input_type
+        {
+            get { return _ID0E3LAC; }
+            set { _ID0E3LAC = value; }
+        }
+
+        private string _ID0EFMAC = "";
+
+        [ProtoBuf.ProtoMember(3)]
+        [System.ComponentModel.DefaultValue("")]
+        public string output_type
+        {
+            get { return _ID0EFMAC; }
+            set { _ID0EFMAC = value; }
+        }
+
+        private google.protobuf.MethodOptions _ID0EOMAC = null;
+
+        [ProtoBuf.ProtoMember(4)]
+        [System.ComponentModel.DefaultValue(null)]
+        public google.protobuf.MethodOptions options
+        {
+            get { return _ID0EOMAC; }
+            set { _ID0EOMAC = value; }
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class FileOptions
+    {
+
+        private string _ID0EBNAC = "";
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue("")]
+        public string java_package
+        {
+            get { return _ID0EBNAC; }
+            set { _ID0EBNAC = value; }
+        }
+
+        private string _ID0EKNAC = "";
+
+        [ProtoBuf.ProtoMember(8)]
+        [System.ComponentModel.DefaultValue("")]
+        public string java_outer_classname
+        {
+            get { return _ID0EKNAC; }
+            set { _ID0EKNAC = value; }
+        }
+
+        private bool _ID0ETNAC = false;
+
+        [ProtoBuf.ProtoMember(10)]
+        [System.ComponentModel.DefaultValue(false)]
+        public bool java_multiple_files
+        {
+            get { return _ID0ETNAC; }
+            set { _ID0ETNAC = value; }
+        }
+
+        private google.protobuf.FileOptions.OptimizeMode _ID0E5NAC = google.protobuf.FileOptions.OptimizeMode.CODE_SIZE;
+
+        [ProtoBuf.ProtoMember(9)]
+        [System.ComponentModel.DefaultValue(google.protobuf.FileOptions.OptimizeMode.CODE_SIZE)]
+        public google.protobuf.FileOptions.OptimizeMode optimize_for
+        {
+            get { return _ID0E5NAC; }
+            set { _ID0E5NAC = value; }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.UninterpretedOption> _ID0ELOAC = new System.Collections.Generic.List<google.protobuf.UninterpretedOption>();
+
+        [ProtoBuf.ProtoMember(999)]
+        public System.Collections.Generic.List<google.protobuf.UninterpretedOption> uninterpreted_option
+        {
+            get { return _ID0ELOAC; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0ELOAC.Clear();
+                if (value != null)
+                {
+                    _ID0ELOAC.AddRange(value);
+                }
+            }
+        }
+
+        public enum OptimizeMode
+        {
+            SPEED = 1,
+            CODE_SIZE = 2
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class MessageOptions
+    {
+
+        private bool _ID0EEAAE = false;
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue(false)]
+        public bool message_set_wire_format
+        {
+            get { return _ID0EEAAE; }
+            set { _ID0EEAAE = value; }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.UninterpretedOption> _ID0EPAAE = new System.Collections.Generic.List<google.protobuf.UninterpretedOption>();
+
+        [ProtoBuf.ProtoMember(999)]
+        public System.Collections.Generic.List<google.protobuf.UninterpretedOption> uninterpreted_option
+        {
+            get { return _ID0EPAAE; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EPAAE.Clear();
+                if (value != null)
+                {
+                    _ID0EPAAE.AddRange(value);
+                }
+            }
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class FieldOptions
+    {
+
+        private google.protobuf.FieldOptions.CType _ID0EOBAE = google.protobuf.FieldOptions.CType.CORD;
+
+        [ProtoBuf.ProtoMember(1)]
+        [System.ComponentModel.DefaultValue(google.protobuf.FieldOptions.CType.CORD)]
+        public google.protobuf.FieldOptions.CType ctype
+        {
+            get { return _ID0EOBAE; }
+            set { _ID0EOBAE = value; }
+        }
+
+        private string _ID0EZBAE = "";
+
+        [ProtoBuf.ProtoMember(9)]
+        [System.ComponentModel.DefaultValue("")]
+        public string experimental_map_key
+        {
+            get { return _ID0EZBAE; }
+            set { _ID0EZBAE = value; }
+        }
+
+        private readonly System.Collections.Generic.List<google.protobuf.UninterpretedOption> _ID0ECCAE = new System.Collections.Generic.List<google.protobuf.UninterpretedOption>();
+
+        [ProtoBuf.ProtoMember(999)]
+        public System.Collections.Generic.List<google.protobuf.UninterpretedOption> uninterpreted_option
+        {
+            get { return _ID0ECCAE; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0ECCAE.Clear();
+                if (value != null)
+                {
+                    _ID0ECCAE.AddRange(value);
+                }
+            }
+        }
 
         public enum CType
         {
@@ -457,125 +700,190 @@ public sealed class MessageOptions
             STRING_PIECE = 2
         }
 
-        // EXPERIMENTAL.  DO NOT USE.
-        // For "map" fields, the name of the field in the enclosed type that
-        // is the key for this map.  For example, suppose we have:
-        //   
-        [Serializable, ProtoContract(Name = @"Item")]
-        public sealed class Item
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class EnumOptions
+    {
+
+        private readonly System.Collections.Generic.List<google.protobuf.UninterpretedOption> _ID0E1DAE = new System.Collections.Generic.List<google.protobuf.UninterpretedOption>();
+
+        [ProtoBuf.ProtoMember(999)]
+        public System.Collections.Generic.List<google.protobuf.UninterpretedOption> uninterpreted_option
         {
-            //     required string name = 1;
-            //     required string value = 2;
-            //   }
-            //   
-            [Serializable, ProtoContract(Name = @"Config")]
-            public sealed class Config
-            {
-                //     repeated Item items = 1 [experimental_map_key="name"];
-                //   }
-                // In this situation, the map key for Item will be set to "name".
-                // TODO: Fully-implement this, then remove the "experimental_" prefix.
-
-                [ProtoMember(9, Name = @"experimental_map_key")]
-                public string experimental_map_key { get; set; }
-
-
-            }
-
-
-            [Serializable, ProtoContract(Name = @"public enumOptions")]
-            public sealed class enumOptions
-            {
-                // The parser stores options it doesn't recognize here. See above.
-
-
-            }
-
-
-            [Serializable, ProtoContract(Name = @"public enumValueOptions")]
-            public sealed class enumValueOptions
-            {
-
-            }
-
-
-            [Serializable, ProtoContract(Name = @"ServiceOptions")]
-            public sealed class ServiceOptions
-            {
-
-                // Note:  Field numbers 1 through 32 are reserved for Google's internal RPC
-                //   framework.  We apologize for hoarding these numbers to ourselves, but
-                //   we were already using them long before we decided to release Protocol
-                //   Buffers.
-
-
-            }
-
-
-            [Serializable, ProtoContract(Name = @"MethodOptions")]
-            public sealed class MethodOptions
-            {
-
-                // Note:  Field numbers 1 through 32 are reserved for Google's internal RPC
-                //   framework.  We apologize for hoarding these numbers to ourselves, but
-                //   we were already using them long before we decided to release Protocol
-                //   Buffers.
-
-
-            }
-
-            // A message representing a option the parser does not recognize. This only
-            // appears in options protos created by the compiler::Parser class.
-            // DescriptorPool resolves these when building Descriptor objects. Therefore,
-            // options protos in descriptor objects (e.g. returned by Descriptor::options(),
-            // or produced by Descriptor::CopyTo()) will never have UninterpretedOptions
-            // in them.
-
-            [Serializable, ProtoContract(Name = @"UninterpretedOption")]
-            public sealed class UninterpretedOption
-            {
-                // The name of the uninterpreted option.  Each string represents a segment in
-                // a dot-separated name.  is_extension is true iff a segment represents an
-                // extension (denoted with parentheses in options specs in .proto files).
-                // E.g.,{ ["foo", false], ["bar.baz", true], ["qux", false] } represents
-                // "foo.(bar.baz).qux".
-
-                [Serializable, ProtoContract(Name = @"NamePart")]
-                public sealed class NamePart
+            get { return _ID0E1DAE; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0E1DAE.Clear();
+                if (value != null)
                 {
-                    [ProtoMember(1)]
-                    public string name_part { get; set; }
-                    [ProtoMember(2)]
-                    public bool is_extension { get; set; }
+                    _ID0E1DAE.AddRange(value);
                 }
-
-                [ProtoMember(2, Name = @"name")]
-                public List<NamePart> name { get; private set; }
-
-
-                // The value of the uninterpreted option, in whatever type the tokenizer
-                // identified it as during parsing. Exactly one of these should be set.
-
-                [ProtoMember(3, Name = @"identifier_value")]
-                public string identifier_value { get; set; }
-
-
-                [ProtoMember(4, Name = @"positive_int_value")]
-                public ulong positive_int_value { get; set; }
-
-
-                [ProtoMember(5, Name = @"negative_int_value")]
-                public long negative_int_value { get; set; }
-
-
-                [ProtoMember(6, Name = @"double_value")]
-                public double double_value { get; set; }
-
-
-                [ProtoMember(7, Name = @"string_value")]
-                public byte[] string_value { get; set; }
-
             }
         }
+
     }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class EnumValueOptions
+    {
+
+        private readonly System.Collections.Generic.List<google.protobuf.UninterpretedOption> _ID0EZEAE = new System.Collections.Generic.List<google.protobuf.UninterpretedOption>();
+
+        [ProtoBuf.ProtoMember(999)]
+        public System.Collections.Generic.List<google.protobuf.UninterpretedOption> uninterpreted_option
+        {
+            get { return _ID0EZEAE; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EZEAE.Clear();
+                if (value != null)
+                {
+                    _ID0EZEAE.AddRange(value);
+                }
+            }
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class ServiceOptions
+    {
+
+        private readonly System.Collections.Generic.List<google.protobuf.UninterpretedOption> _ID0EYFAE = new System.Collections.Generic.List<google.protobuf.UninterpretedOption>();
+
+        [ProtoBuf.ProtoMember(999)]
+        public System.Collections.Generic.List<google.protobuf.UninterpretedOption> uninterpreted_option
+        {
+            get { return _ID0EYFAE; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EYFAE.Clear();
+                if (value != null)
+                {
+                    _ID0EYFAE.AddRange(value);
+                }
+            }
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class MethodOptions
+    {
+
+        private readonly System.Collections.Generic.List<google.protobuf.UninterpretedOption> _ID0EXGAE = new System.Collections.Generic.List<google.protobuf.UninterpretedOption>();
+
+        [ProtoBuf.ProtoMember(999)]
+        public System.Collections.Generic.List<google.protobuf.UninterpretedOption> uninterpreted_option
+        {
+            get { return _ID0EXGAE; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EXGAE.Clear();
+                if (value != null)
+                {
+                    _ID0EXGAE.AddRange(value);
+                }
+            }
+        }
+
+    }
+
+    [System.Serializable, ProtoBuf.ProtoContract]
+    public partial class UninterpretedOption
+    {
+
+        private readonly System.Collections.Generic.List<google.protobuf.UninterpretedOption.NamePart> _ID0EWHAE = new System.Collections.Generic.List<google.protobuf.UninterpretedOption.NamePart>();
+
+        [ProtoBuf.ProtoMember(2)]
+        public System.Collections.Generic.List<google.protobuf.UninterpretedOption.NamePart> name
+        {
+            get { return _ID0EWHAE; }
+            set
+            { // setter needed for XmlSerializer
+                _ID0EWHAE.Clear();
+                if (value != null)
+                {
+                    _ID0EWHAE.AddRange(value);
+                }
+            }
+        }
+
+        private string _ID0EDIAE = "";
+
+        [ProtoBuf.ProtoMember(3)]
+        [System.ComponentModel.DefaultValue("")]
+        public string identifier_value
+        {
+            get { return _ID0EDIAE; }
+            set { _ID0EDIAE = value; }
+        }
+
+        private ulong _ID0EMIAE = default(ulong);
+
+        [ProtoBuf.ProtoMember(4)]
+        [System.ComponentModel.DefaultValue(default(ulong))]
+        public ulong positive_int_value
+        {
+            get { return _ID0EMIAE; }
+            set { _ID0EMIAE = value; }
+        }
+
+        private long _ID0EVIAE = default(long);
+
+        [ProtoBuf.ProtoMember(5)]
+        [System.ComponentModel.DefaultValue(default(long))]
+        public long negative_int_value
+        {
+            get { return _ID0EVIAE; }
+            set { _ID0EVIAE = value; }
+        }
+
+        private double _ID0E5IAE = default(double);
+
+        [ProtoBuf.ProtoMember(6)]
+        [System.ComponentModel.DefaultValue(default(double))]
+        public double double_value
+        {
+            get { return _ID0E5IAE; }
+            set { _ID0E5IAE = value; }
+        }
+
+        private byte[] _ID0EHJAE = null;
+
+        [ProtoBuf.ProtoMember(7)]
+        [System.ComponentModel.DefaultValue(null)]
+        public byte[] string_value
+        {
+            get { return _ID0EHJAE; }
+            set { _ID0EHJAE = value; }
+        }
+
+        [System.Serializable, ProtoBuf.ProtoContract]
+        public partial class NamePart
+        {
+
+            private string _ID0EZJAE;
+
+            [ProtoBuf.ProtoMember(1)]
+            public string name_part
+            {
+                get { return _ID0EZJAE; }
+                set { _ID0EZJAE = value; }
+            }
+
+            private bool _ID0EEKAE;
+
+            [ProtoBuf.ProtoMember(2)]
+            public bool is_extension
+            {
+                get { return _ID0EEKAE; }
+                set { _ID0EEKAE = value; }
+            }
+
+        }
+
+    }
+
 }
