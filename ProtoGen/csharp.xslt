@@ -31,12 +31,32 @@
 
   <xsl:template match="DescriptorProto">
     [ProtoContract]
-    public class <xsl:value-of select="name"/>
+    public partial class <xsl:value-of select="name"/>
     {
-      <xsl:apply-templates select="field/FieldDescriptorProto | nested_type/DescriptorProto"/>
+      <xsl:apply-templates select="*"/>
     }
   </xsl:template>
 
+  <xsl:template match="DescriptorProto/name | DescriptorProto/extension_range"/>
+  
+  <xsl:template match="DescriptorProto/field | DescriptorProto/enum_type | DescriptorProto/message_type
+                | DescriptorProto/nested_type | enumDescriptorProto/value">
+    <xsl:apply-templates select="*"/>
+  </xsl:template>
+
+  <xsl:template match="enumDescriptorProto">
+    public enum <xsl:value-of select="name"/>
+    {
+      <xsl:apply-templates select="value"/>
+    }
+  </xsl:template>
+
+  <xsl:template match="enumValueDescriptorProto">
+    <xsl:value-of select="concat(name,' = ',number)"/>
+    <xsl:if test="position()!=last()">,
+    </xsl:if>
+  </xsl:template>
+  
   <xsl:template match="FieldDescriptorProto" mode="type">
     <xsl:choose>
       <xsl:when test="type='TYPE_BOOL'">bool</xsl:when>
@@ -73,10 +93,18 @@
     private readonly List&lt;<xsl:value-of select="$type" />&gt; <xsl:value-of select="generate-id()"/> = new List&lt;<xsl:value-of select="$type"/>&gt;();
 
     [ProtoMember(<xsl:value-of select="number"/>)]
-    public <xsl:value-of select="concat($type,' ',name)"/>
+    public List&lt;<xsl:value-of select="$type" />&gt; <xsl:value-of select="name"/>
     {
       get { return <xsl:value-of select="generate-id()"/>; }
+      set
+      {
+        <xsl:value-of select="generate-id()"/>.Clear();
+        if(value != null)
+        {
+          <xsl:value-of select="generate-id()"/>.AddRange(value);
+        }
+      }
     }
-  </xsl:template>
+</xsl:template>
   
 </xsl:stylesheet>
