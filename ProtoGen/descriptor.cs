@@ -155,10 +155,10 @@ public sealed class FieldDescriptorProto {
     // Order is weird for historical reasons.
     TYPE_DOUBLE         = 1,
     TYPE_FLOAT          = 2,
-    TYPE_long          = 3,   // Not ZigZag encoded.  Negative numbers
+    TYPE_INT64          = 3,   // Not ZigZag encoded.  Negative numbers
                                // take 10 bytes.  Use TYPE_Slong if negative
                                // values are likely.
-    TYPE_ulong         = 4,
+    TYPE_UINT64         = 4,
     TYPE_INT32          = 5,   // Not ZigZag encoded.  Negative numbers
                                // take 10 bytes.  Use TYPE_SINT32 if negative
                                // values are likely.
@@ -176,7 +176,7 @@ public sealed class FieldDescriptorProto {
     TYPE_SFIXED32       = 15,
     TYPE_SFIXED64       = 16,
     TYPE_SINT32         = 17,  // Uses ZigZag encoding.
-    TYPE_Slong         = 18  // Uses ZigZag encoding.
+    TYPE_SINT64         = 18  // Uses ZigZag encoding.
   };
 
   public enum Label {
