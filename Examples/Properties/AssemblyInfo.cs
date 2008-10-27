@@ -4,12 +4,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Examples")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("protobuf-net Examples")]
+[assembly: AssemblyDescription("Protocol Buffers for .NET (Examples)")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("RM plc")]
-[assembly: AssemblyProduct("Examples")]
-[assembly: AssemblyCopyright("Copyright © RM plc 2008")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("protobuf-net")]
+[assembly: AssemblyCopyright("See http://code.google.com/p/protobuf-net/")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

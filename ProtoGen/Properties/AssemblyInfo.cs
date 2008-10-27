@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ProtoGen")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("protobuf-net ProtoGen")]
+[assembly: AssemblyDescription("Protocol Buffers for .NET (code generator)")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("RM plc")]
-[assembly: AssemblyProduct("ProtoGen")]
-[assembly: AssemblyCopyright("Copyright © RM plc 2008")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("protobuf-net")]
+[assembly: AssemblyCopyright("See http://code.google.com/p/protobuf-net/")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

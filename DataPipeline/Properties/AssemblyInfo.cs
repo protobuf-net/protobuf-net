@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("DataPipeline")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("protobuf-net DataPipeline")]
+[assembly: AssemblyDescription("Protocol Buffers for .NET (DataPipeline)")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("RM plc")]
-[assembly: AssemblyProduct("DataPipeline")]
-[assembly: AssemblyCopyright("Copyright © RM plc 2008")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("protobuf-net")]
+[assembly: AssemblyCopyright("See http://code.google.com/p/protobuf-net/")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

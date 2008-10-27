@@ -3,8 +3,18 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:msxsl="urn:schemas-microsoft-com:xslt" exclude-result-prefixes="xsl msxsl"
 >
+  <xsl:param name="help"/>
+  <xsl:param name="xml"/>
+  <xsl:param name="datacontract"/>
+  <xsl:param name="binary"/>
+  
+  
   <xsl:output method="text" indent="no" omit-xml-declaration="yes"/>
 
+  <xsl:variable name="optionXml" select="$xml='true'"/>
+  <xsl:variable name="optionDataContract" select="$datacontract='true'"/>
+  <xsl:variable name="optionBinary" select="$binary='true'"/>
+  
   <xsl:template match="*">
     <xsl:message terminate="yes">
       Node not handled: <xsl:for-each select="ancestor-or-self::*">/<xsl:value-of select="name()"/></xsl:for-each>
@@ -19,7 +29,33 @@
   </xsl:template>
 
   <xsl:template match="FileDescriptorProto">
-    // see <xsl:value-of select="name"/>
+    <xsl:if test="$help='true'">
+      <xsl:message terminate="yes">
+    CSharp template for protobuf-net.
+    Options:
+      General:
+        "help" - this page
+      Additional serializers:
+        "xml" - enable explicit xml support (XmlSerializer)
+        "datacontract" - enable data-contract support (DataContractSerializer)
+        "binary" - enable binary support (BinaryFormatter)
+      </xsl:message>
+    </xsl:if>
+    <xsl:if test="$optionXml and $optionDataContract">
+      <xsl:message terminate="yes">
+        Invalid options: xml and data-contract serialization are mutually exclusive.       
+      </xsl:message>
+    </xsl:if>
+    // Generated from <xsl:value-of select="name"/>
+    <xsl:if test="$optionXml">
+    // Option: xml serialization enabled  
+    </xsl:if>
+    <xsl:if test="$optionDataContract">
+    // Option: data-contract serialization enabled  
+    </xsl:if>
+    <xsl:if test="$optionBinary">
+      // Option: binary serialization enabled
+    </xsl:if>
     namespace <xsl:value-of select="package"/>
     {
       <xsl:apply-templates select="message_type/DescriptorProto"/>
@@ -27,10 +63,26 @@
   </xsl:template>
 
   <xsl:template match="DescriptorProto">
-    [System.Serializable, ProtoBuf.ProtoContract]
+    [System.Serializable, ProtoBuf.ProtoContract(Name=@"<xsl:value-of select="name"/>")]
+    <xsl:if test="$optionDataContract">
+    [System.Runtime.Serialization.DataContract(Name=@"<xsl:value-of select="name"/>")]
+    </xsl:if>
+    <xsl:if test="$optionXml">
+    [System.Xml.Serialization.XmlType(TypeName=@"<xsl:value-of select="name"/>")]
+    </xsl:if>
     public partial class <xsl:value-of select="name"/>
+    <xsl:if test="$optionBinary"> : System.Runtime.Serialization.ISerializable</xsl:if>
     {
+      public <xsl:value-of select="name"/>() {}
+      
       <xsl:apply-templates select="*"/>
+
+      <xsl:if test="$optionBinary">
+      protected <xsl:value-of select="name"/>(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        : this() { ProtoBuf.Serializer.Merge(info, this); }
+      void System.Runtime.Serialization.ISerializable.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+        { ProtoBuf.Serializer.Serialize(info, this); }
+      </xsl:if>
     }
   </xsl:template>
 
@@ -116,8 +168,14 @@
     <xsl:variable name="defaultValue"><xsl:apply-templates select="." mode="defaultValue"/></xsl:variable>
     private <xsl:value-of select="concat($type, ' _', generate-id())"/> = <xsl:value-of select="$defaultValue"/>;
 
-    [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>)]
+    [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired = false, Name=@"<xsl:value-of select="name"/>")]
     [System.ComponentModel.DefaultValue(<xsl:value-of select="$defaultValue"/>)]
+    <xsl:if test="$optionXml">
+    [System.Xml.Serialization.XmlElementAttribute(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
+    </xsl:if>
+    <xsl:if test="$optionDataContract">
+    [System.Runtime.Serialization.DataMember(Name=@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>, IsRequired = false)]
+    </xsl:if>
     public <xsl:value-of select="concat($type,' ',name)"/>
     {
       get { return _<xsl:value-of select="generate-id()"/>; }
@@ -129,7 +187,13 @@
     <xsl:variable name="type"><xsl:apply-templates select="." mode="type"/></xsl:variable>
     private <xsl:value-of select="concat($type, ' _', generate-id())"/>;
 
-    [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>)]
+    [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired = true, Name=@"<xsl:value-of select="name"/>")]
+    <xsl:if test="$optionXml">
+    [System.Xml.Serialization.XmlElementAttribute(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
+    </xsl:if>
+    <xsl:if test="$optionDataContract">
+    [System.Runtime.Serialization.DataMember(Name=@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>, IsRequired = true)]
+    </xsl:if>
     public <xsl:value-of select="concat($type,' ',name)"/>
     {
       get { return _<xsl:value-of select="generate-id()"/>; }
@@ -141,7 +205,10 @@
     <xsl:variable name="type"><xsl:apply-templates select="." mode="type"/></xsl:variable>
     private readonly System.Collections.Generic.List&lt;<xsl:value-of select="$type" />&gt; _<xsl:value-of select="generate-id()"/> = new System.Collections.Generic.List&lt;<xsl:value-of select="$type"/>&gt;();
 
-    [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>)]
+    [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, Name=@"<xsl:value-of select="name"/>")]
+    <xsl:if test="$optionXml">
+    [System.Xml.Serialization.XmlElementAttribute(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
+    </xsl:if>
     public System.Collections.Generic.List&lt;<xsl:value-of select="$type" />&gt; <xsl:value-of select="name"/>
     {
       get { return _<xsl:value-of select="generate-id()"/>; }
