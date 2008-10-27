@@ -1,0 +1,11 @@
+
+·
+	rpc.proto"L
+SearchRequest
+query (	
+page_number (
+result_per_page (" 
+SearchResponse
+result (	2:
+SearchService)
+Search.SearchRequest.SearchResponse

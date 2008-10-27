@@ -38,7 +38,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="descriptor.cs" />
+    <Compile Include="descriptor.cs">
+      <DependentUpon>descriptor.proto</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -48,6 +50,7 @@
     </None>
     <None Include="descriptor.bin">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <DependentUpon>descriptor.proto</DependentUpon>
     </None>
     <None Include="descriptor.proto">
     </None>
@@ -64,7 +67,19 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="descriptor.xml" />
+    <None Include="descriptor.xml">
+      <DependentUpon>descriptor.proto</DependentUpon>
+    </None>
+    <None Include="rpc.bin">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <DependentUpon>rpc.proto</DependentUpon>
+    </None>
+    <None Include="rpc.proto" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="xml.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bin\Debug\" />

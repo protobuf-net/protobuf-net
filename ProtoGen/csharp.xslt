@@ -7,6 +7,7 @@
   <xsl:param name="xml"/>
   <xsl:param name="datacontract"/>
   <xsl:param name="binary"/>
+  <xsl:param name="protoRpc"/>
   
   
   <xsl:output method="text" indent="no" omit-xml-declaration="yes"/>
@@ -14,6 +15,7 @@
   <xsl:variable name="optionXml" select="$xml='true'"/>
   <xsl:variable name="optionDataContract" select="$datacontract='true'"/>
   <xsl:variable name="optionBinary" select="$binary='true'"/>
+  <xsl:variable name="optionProtoRpc" select="$protoRpc='true'"/>
   
   <xsl:template match="*">
     <xsl:message terminate="yes">
@@ -31,16 +33,18 @@
   <xsl:template match="FileDescriptorProto">
     <xsl:if test="$help='true'">
       <xsl:message terminate="yes">
-    CSharp template for protobuf-net.
-    Options:
-      General:
+        CSharp template for protobuf-net.
+        Options:
+        General:
         "help" - this page
-      Additional serializers:
+        Additional serializers:
         "xml" - enable explicit xml support (XmlSerializer)
         "datacontract" - enable data-contract support (DataContractSerializer)
         "binary" - enable binary support (BinaryFormatter)
+        "protoRpc" - enable proto-rpc client
       </xsl:message>
     </xsl:if>
+    
     <xsl:if test="$optionXml and $optionDataContract">
       <xsl:message terminate="yes">
         Invalid options: xml and data-contract serialization are mutually exclusive.       
@@ -56,9 +60,15 @@
     <xsl:if test="$optionBinary">
       // Option: binary serialization enabled
     </xsl:if>
-    namespace <xsl:value-of select="package"/>
+    <xsl:if test="$optionProtoRpc">
+      // Option: proto-rpc enabled
+    </xsl:if>
+    namespace <xsl:choose>
+      <xsl:when test="package"><xsl:value-of select="package"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="name"/></xsl:otherwise>
+    </xsl:choose>
     {
-      <xsl:apply-templates select="message_type/DescriptorProto"/>
+      <xsl:apply-templates select="message_type | enum_type | service"/>
     }
   </xsl:template>
 
@@ -88,8 +98,10 @@
 
   <xsl:template match="DescriptorProto/name | DescriptorProto/extension_range | DescriptorProto/extension"/>
   
-  <xsl:template match="DescriptorProto/field | DescriptorProto/enum_type | DescriptorProto/message_type
-                | DescriptorProto/nested_type | EnumDescriptorProto/value">
+  <xsl:template match="
+                FileDescriptorProto/message_type | FileDescriptorProto/enum_type | FileDescriptorProto/service
+                | DescriptorProto/field | DescriptorProto/enum_type | DescriptorProto/message_type
+                | DescriptorProto/nested_type | EnumDescriptorProto/value | ServiceDescriptorProto/method">
     <xsl:apply-templates select="*"/>
   </xsl:template>
 
@@ -221,6 +233,42 @@
         }
       }
     }
-</xsl:template>
-  
+  </xsl:template>
+
+  <xsl:template match="ServiceDescriptorProto">
+    <xsl:if test="$optionDataContract">
+    [System.ServiceModel.ServiceContract(Name = @"<xsl:value-of select="name"/>")]
+    </xsl:if>
+    public interface I<xsl:value-of select="name"/>
+    {
+      <xsl:apply-templates select="method"/>
+    }
+    
+    <xsl:if test="$optionProtoRpc">
+    public class <xsl:value-of select="name"/>Client : ProtoBuf.ServiceModel.RpcClient
+    {
+      public <xsl:value-of select="name"/>Client() : base(typeof(I<xsl:value-of select="name"/>)) { }
+
+      <xsl:apply-templates select="method/MethodDescriptorProto" mode="protoRpc"/>
+    }
+    </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="MethodDescriptorProto">
+    <xsl:if test="$optionDataContract">
+      [System.ServiceModel.OperationContract(Name = @"<xsl:value-of select="name"/>")]
+    </xsl:if>
+      <xsl:apply-templates select="output_type"/><xsl:text xml:space="preserve"> </xsl:text><xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request);
+  </xsl:template>
+
+  <xsl:template match="MethodDescriptorProto" mode="protoRpc">
+      <xsl:apply-templates select="output_type"/><xsl:text xml:space="preserve"> </xsl:text><xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request)
+      {
+        return (<xsl:apply-templates select="output_type"/>) Send(@"<xsl:value-of select="name"/>", request);
+      }
+  </xsl:template>
+
+  <xsl:template match="MethodDescriptorProto/input_type | MethodDescriptorProto/output_type">
+    <xsl:value-of select="substring-after(.,'.')"/>
+  </xsl:template>
 </xsl:stylesheet>

@@ -204,6 +204,7 @@
       <DependentUpon>SerializationContext.cs</DependentUpon>
     </Compile>
     <Compile Include="SerializerProxy.cs" />
+    <Compile Include="ServiceModel\RpcClient.cs" />
     <Compile Include="ServiceModel\RpcMessage.cs" />
     <None Include="Web\TODO.txt" />
   </ItemGroup>
