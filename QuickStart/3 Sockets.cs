@@ -42,13 +42,13 @@ namespace QuickStart
                 using (NetworkStream stream = client.GetStream())
                 {
                     Console.WriteLine("SERVER: Client connected; reading customer");
-                    Customer cust = Serializer.DeserializeWithLengthPrefix<Customer>(stream);
+                    Customer cust = Serializer.DeserializeWithLengthPrefix<Customer>(stream, PrefixStyle.Base128);
                     Console.WriteLine("SERVER: Got customer:");
                     cust.ShowCustomer();
                     cust.Name += " (from server)";
                     cust.Contacts.Add(new Contact { Name = "Server", ContactDetails = Environment.MachineName });
                     Console.WriteLine("SERVER: Returning updated customer:");
-                    Serializer.SerializeWithLengthPrefix(stream, cust);
+                    Serializer.SerializeWithLengthPrefix(stream, cust, PrefixStyle.Base128);
 
                     int final = stream.ReadByte();
                     if (final == 123)
@@ -81,10 +81,10 @@ namespace QuickStart
                 using (NetworkStream stream = client.GetStream())
                 {
                     Console.WriteLine("CLIENT: Got connection; sending data...");
-                    Serializer.SerializeWithLengthPrefix(stream, cust);
+                    Serializer.SerializeWithLengthPrefix(stream, cust, PrefixStyle.Base128);
                     
                     Console.WriteLine("CLIENT: Attempting to read data...");
-                    Customer newCust = Serializer.DeserializeWithLengthPrefix<Customer>(stream);
+                    Customer newCust = Serializer.DeserializeWithLengthPrefix<Customer>(stream, PrefixStyle.Base128);
                     Console.WriteLine("CLIENT: Got customer:");
                     newCust.ShowCustomer();
 

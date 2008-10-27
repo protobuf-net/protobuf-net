@@ -146,6 +146,7 @@
     </Compile>
     <Compile Include="IExtension.cs" />
     <Compile Include="ObjectFactory.cs" />
+    <Compile Include="PrefixStyle.cs" />
     <Compile Include="Property\PropertyPairString.cs" />
     <Compile Include="Property\PropertyTimeSpanFixed.cs" />
     <Compile Include="Property\PropertyDateTimeFixed.cs" />
@@ -203,6 +204,7 @@
       <DependentUpon>SerializationContext.cs</DependentUpon>
     </Compile>
     <Compile Include="SerializerProxy.cs" />
+    <Compile Include="ServiceModel\RpcMessage.cs" />
     <None Include="Web\TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

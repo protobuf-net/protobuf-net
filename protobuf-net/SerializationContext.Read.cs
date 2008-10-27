@@ -24,6 +24,27 @@ namespace ProtoBuf
         /// Slow (unbuffered) read from a stream; used to avoid issues
         /// with buffers when performing network IO.
         /// </summary>
+        public static uint DecodeUInt32Fixed(Stream source)
+        {
+            byte[] buffer = new byte[4];
+            int offset = 0, read;
+            while(offset < 3 && (read = source.Read(buffer, offset, 4-offset)) > 0)
+            {
+                offset += read;
+            }
+            if (offset != 4) throw new EndOfStreamException();
+
+            return ((uint)buffer[0])
+            | (((uint)buffer[1]) << 8)
+            | (((uint)buffer[2]) << 16)
+            | (((uint)buffer[3]) << 24);
+
+        }
+
+        /// <summary>
+        /// Slow (unbuffered) read from a stream; used to avoid issues
+        /// with buffers when performing network IO.
+        /// </summary>
         public static uint DecodeUInt32(Stream source)
         {
             if (source == null) throw new ArgumentNullException("source");

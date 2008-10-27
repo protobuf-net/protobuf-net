@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 #if NET_3_0 || REMOTING
 using System.Runtime.Serialization;
+using System.ComponentModel;
 #endif
 
 namespace ProtoBuf
@@ -177,7 +178,6 @@ namespace ProtoBuf
             return instance;
         }
 
-
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream that has a length-prefix
         /// on data (to assist with network IO).
@@ -185,14 +185,49 @@ namespace ProtoBuf
         /// <typeparam name="T">The type to be created.</typeparam>
         /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
         /// <returns>A new, initialized instance.</returns>
+        [Obsolete("Please specify a PrefixStyle.", false)]
+#if !SILVERLIGHT && !CF
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public static T DeserializeWithLengthPrefix<T>(Stream source)
         {
-            uint len = SerializationContext.DecodeUInt32(source);
+            return DeserializeWithLengthPrefix<T>(source, PrefixStyle.Base128);
+        }
+
+        private static uint ReadPrefixLength(Stream source, PrefixStyle style)
+        {
+            switch (style)
+            {
+                case PrefixStyle.None:
+                    return uint.MaxValue;
+                case PrefixStyle.Base128:
+                    return SerializationContext.DecodeUInt32(source);
+                case PrefixStyle.Fixed32:
+                    return SerializationContext.DecodeUInt32Fixed(source);
+                default:
+                    throw new NotSupportedException("Invalid prefix style: " + style);
+            }
+        }
+
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream that has a length-prefix
+        /// on data (to assist with network IO).
+        /// </summary>
+        /// <typeparam name="T">The type to be created.</typeparam>
+        /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
+        /// <param name="style">How to encode the length prefix.</param>
+        /// <returns>A new, initialized instance.</returns>
+        public static T DeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style)
+        {
+            uint len = ReadPrefixLength(source, style);
+            if (len == uint.MaxValue) return Deserialize<T>(source);
             using (SubStream subStream = new SubStream(source, len, false))
             {
                 return Deserialize<T>(subStream);
             }
         }
+
+
 
         internal static Exception ThrowNoEncoder(DataFormat format, Type valueType)
         {
@@ -224,7 +259,7 @@ namespace ProtoBuf
             }
         }
 
-        /// <summary>
+                /// <summary>
         /// Applies a protocol-buffer stream to an existing instance, using length-prefixed
         /// data - useful with network IO.
         /// </summary>
@@ -234,9 +269,30 @@ namespace ProtoBuf
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
+        [Obsolete("Please specify a PrefixStyle.", false)]
+#if !SILVERLIGHT && !CF
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public static T MergeWithLengthPrefix<T>(Stream source, T instance)
         {
-            uint len = SerializationContext.DecodeUInt32(source);
+            return MergeWithLengthPrefix<T>(source, instance, PrefixStyle.Base128);
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance, using length-prefixed
+        /// data - useful with network IO.
+        /// </summary>
+        /// <typeparam name="T">The type being merged.</typeparam>
+        /// <param name="instance">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="style">How to encode the length prefix.</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public static T MergeWithLengthPrefix<T>(Stream source, T instance, PrefixStyle style)
+        {
+            uint len = ReadPrefixLength(source, style);
+            if (len == uint.MaxValue) return Merge<T>(source, instance);
             using (SubStream subStream = new SubStream(source, len, false))
             {
                 return Merge<T>(subStream, instance);
@@ -271,13 +327,48 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="destination">The destination stream to write to.</param>
+        [Obsolete("Please specify a PrefixStyle.", false)]
+#if !SILVERLIGHT && !CF
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
         public static void SerializeWithLengthPrefix<T>(Stream destination, T instance)
         {
+            SerializeWithLengthPrefix<T>(destination, instance, PrefixStyle.Base128);
+        }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied stream,
+        /// with a length-prefix. This is useful for socket programming,
+        /// as DeserializeWithLengthPrefix/MergeWithLengthPrefix can be used to read the single object back
+        /// from an ongoing stream.
+        /// </summary>
+        /// <typeparam name="T">The type being serialized.</typeparam>
+        /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="style">How to encode the length prefix.</param>
+        /// <param name="destination">The destination stream to write to.</param>
+        public static void SerializeWithLengthPrefix<T>(Stream destination, T instance, PrefixStyle style)
+        {
+            if(style == PrefixStyle.None)
+            {
+                Serialize<T>(destination, instance);
+                return;
+            }
             using (MemoryStream ms = new MemoryStream())
             {
                 Serialize<T>(ms, instance);
                 byte[] tmp = new byte[10];
-                int len = SerializationContext.EncodeUInt32((uint)ms.Length, tmp, 0);
+                int len;
+                switch(style)
+                {
+                    case PrefixStyle.Base128:
+                        len = SerializationContext.EncodeUInt32((uint)ms.Length, tmp, 0);
+                        break;
+                    case PrefixStyle.Fixed32:
+                        len = SerializationContext.EncodeUInt32Fixed((uint) ms.Length, tmp, 0);
+                        break;
+                    default:
+                        throw new NotSupportedException("Invalid prefix style: " + style);
+                }
                 destination.Write(tmp, 0, len);
                 destination.Write(ms.GetBuffer(), 0, (int)ms.Length);
             }
