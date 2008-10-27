@@ -22,6 +22,7 @@ namespace ProtoBuf
     /// </remarks>
     public static partial class Serializer
     {
+        const string OBSOLETE_MESSAGE_PREFIX_STYLE = "Please specify a PrefixStyle; existing code should use Base128 to retain wire-compatibility.";
         internal static void VerifyBytesWritten(int expected, int actual)
         {
             if (actual != expected)
@@ -185,7 +186,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type to be created.</typeparam>
         /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
         /// <returns>A new, initialized instance.</returns>
-        [Obsolete("Please specify a PrefixStyle.", false)]
+        [Obsolete(OBSOLETE_MESSAGE_PREFIX_STYLE, false)]
 #if !SILVERLIGHT && !CF
         [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
@@ -269,7 +270,7 @@ namespace ProtoBuf
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        [Obsolete("Please specify a PrefixStyle.", false)]
+        [Obsolete(OBSOLETE_MESSAGE_PREFIX_STYLE, false)]
 #if !SILVERLIGHT && !CF
         [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
@@ -327,7 +328,7 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="destination">The destination stream to write to.</param>
-        [Obsolete("Please specify a PrefixStyle.", false)]
+        [Obsolete(OBSOLETE_MESSAGE_PREFIX_STYLE, false)]
 #if !SILVERLIGHT && !CF
         [EditorBrowsable(EditorBrowsableState.Never)]
 #endif
