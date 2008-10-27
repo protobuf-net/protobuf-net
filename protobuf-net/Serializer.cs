@@ -334,7 +334,7 @@ namespace ProtoBuf
 #endif
         public static void SerializeWithLengthPrefix<T>(Stream destination, T instance)
         {
-            SerializeWithLengthPrefix<T>(destination, instance, PrefixStyle.Base128);
+            SerializeWithLengthPrefix<T>(destination, instance, PrefixStyle.Base128, 0);
         }
 
         /// <summary>
@@ -349,6 +349,12 @@ namespace ProtoBuf
         /// <param name="destination">The destination stream to write to.</param>
         public static void SerializeWithLengthPrefix<T>(Stream destination, T instance, PrefixStyle style)
         {
+            SerializeWithLengthPrefix<T>(destination, instance, style, 0);
+        }
+
+        /// <remarks>Note that the tag is only used with base-128</remarks>
+        private static void SerializeWithLengthPrefix<T>(Stream destination, T instance, PrefixStyle style, int tag)
+        {
             if(style == PrefixStyle.None)
             {
                 Serialize<T>(destination, instance);
@@ -357,15 +363,22 @@ namespace ProtoBuf
             using (MemoryStream ms = new MemoryStream())
             {
                 Serialize<T>(ms, instance);
-                byte[] tmp = new byte[10];
+                byte[] tmp = new byte[20];
                 int len;
                 switch(style)
                 {
                     case PrefixStyle.Base128:
-                        len = SerializationContext.EncodeUInt32((uint)ms.Length, tmp, 0);
+                        len = 0;
+                        if(tag > 0)
+                        {
+                            uint prefix = (uint)((tag << 3) | ((int)WireType.String & 7));
+                            len += SerializationContext.EncodeUInt32(prefix, tmp, 0);
+                        }
+                        len += SerializationContext.EncodeUInt32((uint)ms.Length, tmp, len);
                         break;
                     case PrefixStyle.Fixed32:
-                        len = SerializationContext.EncodeUInt32Fixed((uint) ms.Length, tmp, 0);
+                        SerializationContext.EncodeUInt32Fixed((uint)ms.Length, tmp, 0);
+                        len = 4;
                         break;
                     default:
                         throw new NotSupportedException("Invalid prefix style: " + style);

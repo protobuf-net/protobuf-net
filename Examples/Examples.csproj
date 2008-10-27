@@ -151,6 +151,7 @@
     <Compile Include="Recursion.cs" />
     <Compile Include="Remoting.cs" />
     <Compile Include="Remoting\RemotingDemo.cs" />
+    <Compile Include="Rpc.cs" />
     <Compile Include="ServiceModel\WcfTest.cs" />
     <Compile Include="SimpleStream\Collections.cs" />
     <Compile Include="SimpleStream\GroupedData.cs" />

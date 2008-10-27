@@ -195,13 +195,12 @@ namespace ProtoBuf
         {
             return EncodeUInt64((ulong)value);
         }
-        public static int EncodeUInt32Fixed(uint value, byte[] buffer, int index)
+        public static void EncodeUInt32Fixed(uint value, byte[] buffer, int index)
         {
             buffer[index++] = (byte)(value & 0xFF);
             buffer[index++] = (byte)((value >> 8) & 0xFF);
             buffer[index++] = (byte)((value >> 16) & 0xFF);
             buffer[index] = (byte)((value >> 24) & 0xFF);
-            return 4;
         }
         public static int EncodeUInt32(uint value, byte[] buffer, int index)
         {
