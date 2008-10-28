@@ -18,7 +18,7 @@ namespace person.proto
 
         [ProtoBuf.ProtoMember(1, IsRequired = true, Name = @"name")]
 
-        [System.Xml.Serialization.XmlElementAttribute(@"name", Order = 1)]
+        [System.Xml.Serialization.XmlElement(@"name", Order = 1)]
 
         public string name
         {
@@ -30,7 +30,7 @@ namespace person.proto
 
         [ProtoBuf.ProtoMember(2, IsRequired = true, Name = @"id")]
 
-        [System.Xml.Serialization.XmlElementAttribute(@"id", Order = 2)]
+        [System.Xml.Serialization.XmlElement(@"id", Order = 2)]
 
         public int id
         {
@@ -43,7 +43,7 @@ namespace person.proto
         [ProtoBuf.ProtoMember(3, IsRequired = false, Name = @"email")]
         [System.ComponentModel.DefaultValue("")]
 
-        [System.Xml.Serialization.XmlElementAttribute(@"email", Order = 3)]
+        [System.Xml.Serialization.XmlElement(@"email", Order = 3)]
 
         public string email
         {
@@ -55,7 +55,7 @@ namespace person.proto
 
         [ProtoBuf.ProtoMember(4, Name = @"phone")]
 
-        [System.Xml.Serialization.XmlElementAttribute(@"phone", Order = 4)]
+        [System.Xml.Serialization.XmlElement(@"phone", Order = 4)]
 
         public System.Collections.Generic.List<Person.PhoneNumber> phone
         {
@@ -83,7 +83,7 @@ namespace person.proto
 
             [ProtoBuf.ProtoMember(1, IsRequired = true, Name = @"number")]
 
-            [System.Xml.Serialization.XmlElementAttribute(@"number", Order = 1)]
+            [System.Xml.Serialization.XmlElement(@"number", Order = 1)]
 
             public string number
             {
@@ -96,7 +96,7 @@ namespace person.proto
             [ProtoBuf.ProtoMember(2, IsRequired = false, Name = @"type")]
             [System.ComponentModel.DefaultValue(Person.PhoneType.HOME)]
 
-            [System.Xml.Serialization.XmlElementAttribute(@"type", Order = 2)]
+            [System.Xml.Serialization.XmlElement(@"type", Order = 2)]
 
             public Person.PhoneType type
             {
