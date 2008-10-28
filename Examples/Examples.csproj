@@ -140,6 +140,7 @@
     <Compile Include="OptionalData.cs" />
     <Compile Include="Parseable.cs" />
     <Compile Include="PartialClasses.cs" />
+    <Compile Include="person.cs" />
     <Compile Include="Pipeline.cs" />
     <Compile Include="Ppt\Ppt.cs" />
     <Compile Include="Primatives.cs" />

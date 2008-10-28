@@ -70,6 +70,11 @@
     <None Include="descriptor.xml">
       <DependentUpon>descriptor.proto</DependentUpon>
     </None>
+    <None Include="person.proto" />
+    <None Include="person.bin">
+      <DependentUpon>person.proto</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="rpc.bin">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <DependentUpon>rpc.proto</DependentUpon>

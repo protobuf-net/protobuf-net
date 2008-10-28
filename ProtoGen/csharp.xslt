@@ -113,8 +113,10 @@
   </xsl:template>
 
   <xsl:template match="EnumValueDescriptorProto">
-    <xsl:value-of select="concat(name,' = ',number)"/>
-    <xsl:if test="position()!=last()">,
+    <xsl:value-of select="name"/><xsl:text xml:space="preserve"> = </xsl:text><xsl:choose>
+      <xsl:when test="number"><xsl:value-of select="number"/></xsl:when>
+      <xsl:otherwise>0</xsl:otherwise>
+    </xsl:choose><xsl:if test="position()!=last()">,
     </xsl:if>
   </xsl:template>
   
