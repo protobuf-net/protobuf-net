@@ -185,7 +185,7 @@
     [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired = false, Name=@"<xsl:value-of select="name"/>")]
     [System.ComponentModel.DefaultValue(<xsl:value-of select="$defaultValue"/>)]
     <xsl:if test="$optionXml">
-    [System.Xml.Serialization.XmlElementAttribute(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
+    [System.Xml.Serialization.XmlElement(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
     </xsl:if>
     <xsl:if test="$optionDataContract">
     [System.Runtime.Serialization.DataMember(Name=@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>, IsRequired = false)]
@@ -203,7 +203,7 @@
 
     [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired = true, Name=@"<xsl:value-of select="name"/>")]
     <xsl:if test="$optionXml">
-    [System.Xml.Serialization.XmlElementAttribute(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
+    [System.Xml.Serialization.XmlElement(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
     </xsl:if>
     <xsl:if test="$optionDataContract">
     [System.Runtime.Serialization.DataMember(Name=@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>, IsRequired = true)]
@@ -221,7 +221,7 @@
 
     [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, Name=@"<xsl:value-of select="name"/>")]
     <xsl:if test="$optionXml">
-    [System.Xml.Serialization.XmlElementAttribute(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
+    [System.Xml.Serialization.XmlElement(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
     </xsl:if>
     public System.Collections.Generic.List&lt;<xsl:value-of select="$type" />&gt; <xsl:value-of select="name"/>
     {
