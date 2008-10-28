@@ -33,6 +33,23 @@ namespace ProtoBuf
         /// and true during deserialization upon encountering unexpected fields.</remarks>
         protected virtual IExtension GetExtensionObject(bool createIfMissing)
         {
+            return GetExtensionObject(ref extensionObject, createIfMissing);
+        }
+
+        /// <summary>
+        /// Provides a simple, default implementation for <see cref="IExtension">extension</see> support,
+        /// optionally creating it if it does not already exist. Designed to be called by
+        /// classes implementing <see cref="IExtensible"/>.
+        /// </summary>
+        /// <param name="createIfMissing">Should a new extension object be
+        /// created if it does not already exist?</param>
+        /// <param name="extensionObject">The extension field to check (and possibly update).</param>
+        /// <returns>The extension object if it exists (or was created), or null
+        /// if the extension object does not exist or is not available.</returns>
+        /// <remarks>The <c>createIfMissing</c> argument is false during serialization,
+        /// and true during deserialization upon encountering unexpected fields.</remarks>
+        public static IExtension GetExtensionObject(ref IExtension extensionObject, bool createIfMissing)
+        {
             if (createIfMissing && extensionObject == null)
             {
                 extensionObject = new BufferExtension();

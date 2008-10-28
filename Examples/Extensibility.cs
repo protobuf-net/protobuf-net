@@ -1,18 +1,50 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using NUnit.Framework;
 using ProtoBuf;
 
 namespace Examples
 {
-    /* used to keep test API unchanged while extensibility commented out...
-    class Extensible {
-        public static void AppendValue<T>(object obj, int tag, T value) { throw new NotImplementedException(); }
-        public static bool TryGetValue<T>(object obj, int tag, out T value) { throw new NotImplementedException(); }
-        public static T GetValue<T>(object obj, int tag) { throw new NotImplementedException(); }
-    }*/
+    interface IExtTest
+    {
+        string Bof { get; set; }
+        string Eof { get; set; }
+    }
+
     [ProtoContract]
-    class SmallerObject : Extensible
+    class InterfaceBased : object, ProtoBuf.IExtensible, IExtTest, System.ComponentModel.INotifyPropertyChanged
+    {
+        [ProtoMember(1)]
+        public string Bof { get; set; }
+
+        private string eof;
+        [ProtoMember(99, DataFormat = ProtoBuf.DataFormat.Default)]
+        public string Eof
+        {
+            get { return eof;}
+            set
+            {
+                eof = value;
+                OnPropertyChanged("Eof");
+            }
+        }
+
+        private IExtension extensionObject;
+        IExtension IExtensible.GetExtensionObject(bool createIfMissing)
+        {
+            return Extensible.GetExtensionObject(ref extensionObject, createIfMissing);
+        }
+
+        public event System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            if(PropertyChanged != null) PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+
+    [ProtoContract]
+    class SmallerObject : Extensible, IExtTest
     {
         [ProtoMember(1)]
         public string Bof { get; set; }
@@ -62,16 +94,27 @@ namespace Examples
             };
         }
         [Test]
-        public void TestRoundtrip()
+        public void TestRoundtripSmaller()
         {
+            TestRoundTrip<SmallerObject>();
+        }
+
+        [Test]
+        public void TestRoundtripInterfaceBased()
+        {
+            TestRoundTrip<InterfaceBased>();
+        }
+
+        static void TestRoundTrip<T>() where T : IExtTest, IExtensible, new() {
+
             BiggerObject obj = GetBigObject();
 
-            SmallerObject tmp = Serializer.ChangeType<BiggerObject, SmallerObject>(obj);
+            T tmp = Serializer.ChangeType<BiggerObject, T>(obj);
 
             Assert.AreEqual(obj.Bof, tmp.Bof, "dehydrate");
             Assert.AreEqual(obj.Eof, tmp.Eof, "dehydrate");
 
-            BiggerObject clone = Serializer.ChangeType<SmallerObject, BiggerObject>(tmp);
+            BiggerObject clone = Serializer.ChangeType<T, BiggerObject>(tmp);
 
             Assert.AreEqual(obj.Bof, clone.Bof, "rehydrate");
             Assert.AreEqual(obj.Eof, clone.Eof, "rehydrate");
@@ -83,11 +126,22 @@ namespace Examples
         }
 
         [Test]
-        public void TestReadExtended()
+        public void TestReadExtendedSmallerObject()
+        {
+            TestReadExt<SmallerObject>();
+        }
+
+        [Test]
+        public void TestReadExtendedInterfaceBased()
+        {
+            TestReadExt<InterfaceBased>();
+        }
+
+        static void TestReadExt<T>() where T : IExtTest, IExtensible, new()
         {
             BiggerObject obj = GetBigObject();
             
-            SmallerObject small = Serializer.ChangeType<BiggerObject, SmallerObject>(obj);
+            T small = Serializer.ChangeType<BiggerObject, T>(obj);
 
             byte[] raw = GetExtensionBytes(small);
             
@@ -120,10 +174,19 @@ namespace Examples
         }
 
         [Test]
-        public void TestWriteExtended()
+        public void TestWriteExtendedSmaller()
         {
+            TestWriteExt<SmallerObject>();
+        }
+        [Test]
+        public void TestWriteExtendedInterfaceBased()
+        {
+            TestWriteExt<InterfaceBased>();
+        }
+
+        static void TestWriteExt<T>() where T : IExtTest, IExtensible, new() {
             const float SOME_VALUE = 987.65F;
-            SmallerObject obj = new SmallerObject();
+            T obj = new T();
             Extensible.AppendValue<float>(obj, 3, SOME_VALUE);
 
             byte[] raw = GetExtensionBytes(obj);
@@ -139,31 +202,73 @@ namespace Examples
             float readBack = Extensible.GetValue<float>(obj, 3);
             Assert.AreEqual(SOME_VALUE, readBack, "read back");
 
-            BiggerObject big = Serializer.ChangeType<SmallerObject, BiggerObject>(obj);
+            BiggerObject big = Serializer.ChangeType<T, BiggerObject>(obj);
 
             Assert.AreEqual(SOME_VALUE, big.SomeFloat, "deserialize");
         }
 
         [Test, ExpectedException(typeof(ArgumentException))]
-        public void TestReadShouldUseProperty()
+        public void TestReadShouldUsePropertySmaller()
         {
-            SmallerObject obj = new SmallerObject { Bof = "hi" };
+            TestReadShouldUseProperty<SmallerObject>();
+        }
+
+        [Test, ExpectedException(typeof(ArgumentException))]
+        public void TestReadShouldUsePropertyInterfaceBased()
+        {
+            TestReadShouldUseProperty<InterfaceBased>();
+        }
+
+        static void TestReadShouldUseProperty<T>() where T : IExtTest, IExtensible, new()
+        {
+            T obj = new T { Bof = "hi" };
             string hi = Extensible.GetValue<string>(obj,1);
         }
 
         [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
-        public void TestReadInvalidTag()
+        public void TestReadInvalidTagSmaller()
         {
-            SmallerObject obj = new SmallerObject { Bof = "hi" };
+            TestReadInvalidTag<SmallerObject>();
+        }
+
+        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        public void TestReadInvalidTagInterfaceBased()
+        {
+            TestReadInvalidTag<InterfaceBased>();
+        }
+
+        static void TestReadInvalidTag<T>() where T : IExtTest, IExtensible, new()
+        {
+            T obj = new T {Bof = "hi"};
             string hi = Extensible.GetValue<string>(obj, 0);
         }
         [Test, ExpectedException(typeof(ArgumentNullException))]
-        public void TestReadNull()
+        public void TestReadNullSmaller()
+        {
+            TestReadNull<SmallerObject>();
+        }
+        [Test, ExpectedException(typeof(ArgumentNullException))]
+        public void TestReadNullInterfaceBased()
+        {
+            TestReadNull<InterfaceBased>();
+        }
+
+        static void TestReadNull<T>() where T : IExtTest, IExtensible, new()
         {
             string hi = Extensible.GetValue<string>(null, 1);
         }
+
         [Test, ExpectedException(typeof(ArgumentNullException))]
-        public void TestWriteNull()
+        public void TestWriteNullSmaller()
+        {
+            TestWriteNull<SmallerObject>();
+        }
+        [Test, ExpectedException(typeof(ArgumentNullException))]
+        public void TestWriteNullInterfaceBased()
+        {
+            TestWriteNull<InterfaceBased>();
+        }
+        static void TestWriteNull<T>() where T : IExtTest, IExtensible, new()
         {
             Extensible.AppendValue<string>(null, 1, "hi");
         }
