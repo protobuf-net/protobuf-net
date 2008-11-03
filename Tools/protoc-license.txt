@@ -1,8 +1,7 @@
-protoc.exe was built from the original source at http://code.google.com/p/protobuf/
-The licence for this code is as follows:
-
 Copyright 2008, Google Inc.
 All rights reserved.
+
+http://code.google.com/p/protobuf/
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
