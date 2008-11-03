@@ -3,6 +3,7 @@ using google.protobuf;
 using System.IO;
 using System.Diagnostics;
 using System.Text;
+using System.Threading;
 
 namespace ProtoBuf.CodeGenerator
 {
@@ -56,13 +57,17 @@ namespace ProtoBuf.CodeGenerator
 
                 using (Process proc = Process.Start(psi))
                 {
-                    StringBuilder messages = new StringBuilder();
-                    proc.ErrorDataReceived += (sender, args) => messages.Append(args.Data);
-                    proc.OutputDataReceived += (sender, args) => messages.Append(args.Data);
+                    Thread stdErr = new Thread(DumpStream(proc.StandardError, Console.Error));
+                    Thread stdOut = new Thread(DumpStream(proc.StandardOutput, Console.Out));
+                    stdErr.Name = "stderr reader";
+                    stdOut.Name = "stdout reader";
+                    stdErr.Start();
+                    stdOut.Start();
                     proc.WaitForExit();
+                    stdOut.Join();
+                    stdErr.Join();
                     if (proc.ExitCode != 0)
                     {
-                        Console.Error.Write(messages);
                         throw new ArgumentException("The input file could not be parsed.", "path");
                     }
                     return tmp;
@@ -73,6 +78,15 @@ namespace ProtoBuf.CodeGenerator
                 try {File.Delete(tmp);} catch {}
                 throw;
             }
+        }
+
+        static ThreadStart DumpStream(TextReader reader, TextWriter writer)
+        {
+            return (ThreadStart) delegate
+             {
+                 string line;
+                 while ((line = reader.ReadLine()) != null) writer.WriteLine(line);
+             };
         }
 
         static bool IsValidBinary(string path)

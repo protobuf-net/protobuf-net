@@ -64,11 +64,23 @@ namespace Examples.ProtoGen
 
 
 
-        [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = "The input file could not be parsed.", MatchType=MessageMatch.Contains)]
+        [Test]
         public void TestGarbageInput()
         {
             FileDescriptorSet files = new FileDescriptorSet();
-            InputFileLoader.Merge(files, @"ProtoGen\InputLoader.cs");
+            try {
+                InputFileLoader.Merge(files, @"ProtoGen\InputLoader.cs");
+                Assert.Fail("Should have barfed");
+            }
+            catch(ArgumentException ex)
+            {
+                Assert.IsTrue(ex.Message.StartsWith("The input file could not be parsed."));
+            }
+            catch
+            {
+                Assert.Fail("Expected ArgumentException");
+            }
+
         }
     }
 }
