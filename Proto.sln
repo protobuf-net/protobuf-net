@@ -27,9 +27,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuickStart", "QuickStart\QuickStart.csproj", "{65A793DB-49B9-4563-B028-BDF958A915CE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoGen", "ProtoGen\ProtoGen.csproj", "{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protorpc-net", "protorpc-net\protorpc-net.csproj", "{D883F810-825F-4496-AAC4-F55AD424A407}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoGen", "ProtoGen\ProtoGen.csproj", "{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -135,16 +135,6 @@ Global
 		{65A793DB-49B9-4563-B028-BDF958A915CE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{65A793DB-49B9-4563-B028-BDF958A915CE}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{65A793DB-49B9-4563-B028-BDF958A915CE}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Net20|Any CPU.ActiveCfg = Release|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Net20|Any CPU.Build.0 = Release|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Profile|Any CPU.ActiveCfg = Release|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Profile|Any CPU.Build.0 = Release|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
-		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
 		{D883F810-825F-4496-AAC4-F55AD424A407}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D883F810-825F-4496-AAC4-F55AD424A407}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D883F810-825F-4496-AAC4-F55AD424A407}.Net20|Any CPU.ActiveCfg = Release|Any CPU
@@ -155,6 +145,16 @@ Global
 		{D883F810-825F-4496-AAC4-F55AD424A407}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D883F810-825F-4496-AAC4-F55AD424A407}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{D883F810-825F-4496-AAC4-F55AD424A407}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Profile|Any CPU.ActiveCfg = Release|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Profile|Any CPU.Build.0 = Release|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
+		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

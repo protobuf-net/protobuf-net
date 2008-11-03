@@ -8,8 +8,8 @@
     <ProjectGuid>{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProtoGen</RootNamespace>
-    <AssemblyName>ProtoGen</AssemblyName>
+    <RootNamespace>ProtoBuf.CodeGenerator</RootNamespace>
+    <AssemblyName>protogen</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkSubset>
@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -38,22 +40,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="descriptor.cs">
-      <DependentUpon>descriptor.proto</DependentUpon>
-    </Compile>
+    <Compile Include="CommandLineOptions.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="csharp_options.proto">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="descriptor.bin">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <DependentUpon>descriptor.proto</DependentUpon>
-    </None>
-    <None Include="descriptor.proto">
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
@@ -65,23 +54,23 @@
     <None Include="csharp.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="descriptor.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="descriptor.xml">
-      <DependentUpon>descriptor.proto</DependentUpon>
-    </None>
-    <None Include="person.proto" />
-    <None Include="person.bin">
-      <DependentUpon>person.proto</DependentUpon>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="rpc.bin">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      <DependentUpon>rpc.proto</DependentUpon>
-    </None>
-    <None Include="rpc.proto" />
+    <Compile Include="descriptor.cs" />
+    <Compile Include="InputFileLoader.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\Tools\protoc-license.txt">
+      <Link>protoc-license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Tools\protoc.exe">
+      <Link>protoc.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="xml.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

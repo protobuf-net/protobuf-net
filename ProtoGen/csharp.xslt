@@ -180,7 +180,10 @@
     <xsl:choose>
       <xsl:when test="type='TYPE_STRING'">@"<xsl:value-of select="default_value"/>"</xsl:when>
       <xsl:when test="type='TYPE_ENUM'"><xsl:apply-templates select="." mode="type"/>.<xsl:value-of select="default_value"/></xsl:when>
-      <xsl:otherwise><xsl:value-of select="default_value"/></xsl:otherwise>
+      <xsl:when test="type='TYPE_BYTES'"> /* 
+        <xsl:value-of select="default_value"/>
+        */ null </xsl:when>
+      <xsl:otherwise>(<xsl:apply-templates select="." mode="type"/>)<xsl:value-of select="default_value"/></xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 

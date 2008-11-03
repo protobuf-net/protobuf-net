@@ -1,6 +1,5 @@
 ﻿using System;
 using System.CodeDom.Compiler;
-using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -8,9 +7,8 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Xml.Xsl;
 using google.protobuf;
-using Microsoft.CSharp;
-using ProtoBuf;
-namespace ProtoGen
+
+namespace ProtoBuf.CodeGenerator
 {
     static class Program
     {
@@ -29,27 +27,10 @@ namespace ProtoGen
             }
         }
 
-        class GenerationOptions
-        {
-            public bool TestCompile { get; set; }
-            public string Template { get; set; }
-            public string OutPath { get; set; }
-            public XsltArgumentList XsltOptions { get; private set; }
-            public List<string> InPaths { get; private set; }
 
-            public GenerationOptions()
-            {
-                Template = TEMPLATE_CSHARP;
-                XsltOptions = new XsltArgumentList();
-                InPaths = new List<string>();
-            }
-
-            public const string TEMPLATE_CSHARP = "csharp";
-
-        }
         static void Generate(string[] args)
         {
-            GenerationOptions options = ParseCommandOptions(args);
+            CommandLineOptions options = CommandLineOptions.Parse(args);
 
             string xml = LoadFilesAsXml(options);
             string code = ApplyTransform(options, xml);
@@ -58,10 +39,10 @@ namespace ProtoGen
                 File.WriteAllText(options.OutPath, code);
             }
 
-            if (options.TestCompile)
-            {
-                TestCompile(options, code);
-            }
+            //if (options.TestCompile)
+            //{
+            //    TestCompile(options, code);
+            //}
             
             if (string.IsNullOrEmpty(options.OutPath))
             {
@@ -70,25 +51,25 @@ namespace ProtoGen
 
     }
 
-        private static void TestCompile(GenerationOptions options, string code) {
-            CompilerResults results;
-            switch(options.Template) {
-                case GenerationOptions.TEMPLATE_CSHARP:
-                    {
-                        CSharpCodeProvider csc = new CSharpCodeProvider();
-                        string[] refs = new string[] { "System.dll", "System.Xml.dll", "protobuf-net.dll" };
-                        CompilerParameters cscArgs = new CompilerParameters(refs, "descriptor.dll", false);
-                        results = csc.CompileAssemblyFromSource(cscArgs, code);
-                        break;
-                    }
-                default:
-                    Console.Error.WriteLine("No compiler available to test code with template " + options.Template);
-                    return;
-            }
-            ShowErrors(results.Errors);
-        }
+        //private static void TestCompile(GenerationOptions options, string code) {
+        //    CompilerResults results;
+        //    switch(options.Template) {
+        //        case GenerationOptions.TEMPLATE_CSHARP:
+        //            {
+        //                CSharpCodeProvider csc = new CSharpCodeProvider();
+        //                string[] refs = new string[] { "System.dll", "System.Xml.dll", "protobuf-net.dll" };
+        //                CompilerParameters cscArgs = new CompilerParameters(refs, "descriptor.dll", false);
+        //                results = csc.CompileAssemblyFromSource(cscArgs, code);
+        //                break;
+        //            }
+        //        default:
+        //            Console.Error.WriteLine("No compiler available to test code with template " + options.Template);
+        //            return;
+        //    }
+        //    ShowErrors(results.Errors);
+        //}
 
-        private static string ApplyTransform(GenerationOptions options, string xml) {
+        private static string ApplyTransform(CommandLineOptions options, string xml) {
             XmlWriterSettings settings = new XmlWriterSettings
                                          {
                                              ConformanceLevel = ConformanceLevel.Auto, CheckCharacters = false
@@ -105,14 +86,12 @@ namespace ProtoGen
             return sb.ToString();
         }
 
-        private static string LoadFilesAsXml(GenerationOptions options) {
+        private static string LoadFilesAsXml(CommandLineOptions options)
+        {
             FileDescriptorSet set = new FileDescriptorSet();
 
             foreach (string inPath in options.InPaths) {
-                using (Stream file = File.OpenRead(inPath))
-                {
-                    set = Serializer.Merge(file, set);
-                }
+                InputFileLoader.Merge(set, inPath);
             }
 
             XmlSerializer xser = new XmlSerializer(typeof(FileDescriptorSet));
@@ -130,47 +109,7 @@ namespace ProtoGen
             return sb.ToString();
         }
 
-        static readonly char[] SplitTokens = { '=' };
-        private static void Split(string arg, out string key, out string value)
-        {
-            string[] parts = arg.Trim().Split(SplitTokens, 2);
-            key = parts[0].Trim();
-            value = parts.Length > 1 ? parts[1].Trim() : null;
-                    
-        }
-        private static GenerationOptions ParseCommandOptions(string[] args) {
-            GenerationOptions options = new GenerationOptions();
 
-            string key, value;
-            for (int i = 0; i < args.Length; i++)
-            {
-                string arg = args[i].Trim();
-                if (arg.StartsWith("-o:"))
-                {
-                    if (options.OutPath != null) throw new InvalidOperationException("Only one output path can be specified.");
-                    options.OutPath = arg.Substring(3).Trim();
-                }
-                else if (arg.StartsWith("-p:"))
-                {
-                    Split(arg.Substring(3),out key, out value);
-                    options.XsltOptions.AddParam(key, "", value ?? "true");
-                }
-                else if (arg.StartsWith("-t:"))
-                {
-                    options.Template = arg.Substring(3).Trim();
-                }
-                else if (arg=="-c")
-                {
-                    options.TestCompile = true;
-                }
-                else if(arg.StartsWith("-i:"))
-                {
-                    options.InPaths.Add(arg.Substring(3).Trim());
-                }
-            }
-            if (options.InPaths.Count == 0) throw new InvalidOperationException("No input files specified.");
-            return options;
-        }
 
         static void ShowErrors(CompilerErrorCollection errors)
         {
