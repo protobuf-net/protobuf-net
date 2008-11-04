@@ -1,12 +1,5 @@
 ﻿using System;
-using System.CodeDom.Compiler;
-using System.IO;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Xml;
-using System.Xml.Serialization;
-using System.Xml.Xsl;
-using google.protobuf;
 
 namespace ProtoBuf.CodeGenerator
 {
@@ -17,7 +10,7 @@ namespace ProtoBuf.CodeGenerator
         {
             try
             {
-                Generate(args);
+                CommandLineOptions.Parse(Console.Out,args).Execute();
                 return 0;
             }
             catch (Exception ex)
@@ -26,30 +19,6 @@ namespace ProtoBuf.CodeGenerator
                 return 1;
             }
         }
-
-
-        static void Generate(string[] args)
-        {
-            CommandLineOptions options = CommandLineOptions.Parse(args);
-
-            string xml = LoadFilesAsXml(options);
-            string code = ApplyTransform(options, xml);
-            if(!string.IsNullOrEmpty(options.OutPath))
-            {
-                File.WriteAllText(options.OutPath, code);
-            }
-
-            //if (options.TestCompile)
-            //{
-            //    TestCompile(options, code);
-            //}
-            
-            if (string.IsNullOrEmpty(options.OutPath))
-            {
-                Console.Out.Write(code);
-            }
-
-    }
 
         //private static void TestCompile(GenerationOptions options, string code) {
         //    CompilerResults results;
@@ -69,59 +38,24 @@ namespace ProtoBuf.CodeGenerator
         //    ShowErrors(results.Errors);
         //}
 
-        private static string ApplyTransform(CommandLineOptions options, string xml) {
-            XmlWriterSettings settings = new XmlWriterSettings
-                                         {
-                                             ConformanceLevel = ConformanceLevel.Auto, CheckCharacters = false
-                                         };
-            StringBuilder sb = new StringBuilder();
-            using(XmlReader reader = XmlReader.Create(new StringReader(xml)))
-            using(TextWriter writer = new StringWriter(sb))
-            {
+        //static void ShowErrors(CompilerErrorCollection errors)
+        //{
+        //    if (errors.Count > 0)
+        //    {
+        //        Console.Error.Write(errors.Count + " errors");
+        //        foreach (CompilerError err in errors)
+        //        {
+        //            Console.Error.Write(err.IsWarning ? "Warning: " : "Error: ");
+        //            Console.Error.WriteLine(err.ErrorText);
+        //        }
+        //    }
+        //}
 
-                XslCompiledTransform xslt = new XslCompiledTransform();
-                xslt.Load(Path.ChangeExtension(options.Template, "xslt"));
-                xslt.Transform(reader, options.XsltOptions, writer);
-            }
-            return sb.ToString();
-        }
+        
 
-        private static string LoadFilesAsXml(CommandLineOptions options)
-        {
-            FileDescriptorSet set = new FileDescriptorSet();
-
-            foreach (string inPath in options.InPaths) {
-                InputFileLoader.Merge(set, inPath);
-            }
-
-            XmlSerializer xser = new XmlSerializer(typeof(FileDescriptorSet));
-            XmlWriterSettings settings = new XmlWriterSettings
-                                         {
-                                             Indent = true,
-                                             IndentChars = "  ",
-                                             NewLineHandling = NewLineHandling.Entitize
-                                         };
-            StringBuilder sb = new StringBuilder();
-            using (XmlWriter writer = XmlWriter.Create(sb, settings))
-            {
-                xser.Serialize(writer, set);
-            }
-            return sb.ToString();
-        }
+        
 
 
-
-        static void ShowErrors(CompilerErrorCollection errors)
-        {
-            if(errors.Count > 0)
-            {
-                Console.Error.Write(errors.Count + " errors");
-                foreach(CompilerError err in errors)
-                {
-                    Console.Error.Write(err.IsWarning ? "Warning: " : "Error: ");
-                    Console.Error.WriteLine(err.ErrorText);
-                }
-            }
-        }
+        
     }
 }

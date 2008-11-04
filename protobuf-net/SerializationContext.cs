@@ -221,12 +221,11 @@ namespace ProtoBuf
         {
             if (workspace.Length < length)
             {
+                // note that the workspace is a scratch area, and can be
+                // discarded; no need to preserve the contents
                 int newLen = workspace.Length * 2; // try doubling
                 if (length > newLen) newLen = length; // as long as that gives us enough ;-p
-                // note Array.Resize not available on CF
-                byte[] tmp = workspace;
                 workspace = new byte[newLen]; 
-                Buffer.BlockCopy(tmp, 0, workspace, 0, tmp.Length);
             }
         }
 

@@ -25,9 +25,22 @@ namespace ProtoBuf
         public void WriteBlock(byte[] buffer, int offset, int count)
         {
             if (ioBufferIndex + count < IO_BUFFER_SIZE)
-            { // enough space in the buffer
-                Buffer.BlockCopy(buffer, offset, ioBuffer, ioBufferIndex, count);
-                ioBufferIndex += count;
+            {
+                // enough space in the buffer
+                if(count <= 8)
+                {
+                    // copy manually
+                    while (--count >= 0)
+                    {
+                        ioBuffer[ioBufferIndex++] = buffer[offset++];
+                    }
+                }
+                else
+                {
+                    // blit
+                    Buffer.BlockCopy(buffer, offset, ioBuffer, ioBufferIndex, count);
+                    ioBufferIndex += count;
+                }
             }
             else
             { // not enough space; flush and write directly to the output
@@ -197,10 +210,10 @@ namespace ProtoBuf
         }
         public static void EncodeUInt32Fixed(uint value, byte[] buffer, int index)
         {
-            buffer[index++] = (byte)(value & 0xFF);
-            buffer[index++] = (byte)((value >> 8) & 0xFF);
-            buffer[index++] = (byte)((value >> 16) & 0xFF);
-            buffer[index] = (byte)((value >> 24) & 0xFF);
+            buffer[index++] = (byte)value;
+            buffer[index++] = (byte)(value >> 8);
+            buffer[index++] = (byte)(value >> 16);
+            buffer[index] = (byte)(value >> 24);
         }
         public static int EncodeUInt32(uint value, byte[] buffer, int index)
         {
@@ -238,24 +251,24 @@ namespace ProtoBuf
         public int EncodeInt32Fixed(int value)
         {
             Flush(4);
-            ioBuffer[ioBufferIndex++] = (byte)(value & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 8) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 16) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 24) & 0xFF);
+            ioBuffer[ioBufferIndex++] = (byte)value;
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 8);
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 16);
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 24);
             position += 4;
             return 4;
         }
         public int EncodeInt64Fixed(long value)
         {
             Flush(8);
-            ioBuffer[ioBufferIndex++] = (byte)(value & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 8) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 16) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 24) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 32) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 40) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 48) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)((value >> 56) & 0xFF);
+            ioBuffer[ioBufferIndex++] = (byte)(value);
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 8);
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 16);
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 24);
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 32);
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 40);
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 48);
+            ioBuffer[ioBufferIndex++] = (byte)(value >> 56);
             position += 8;
             return 8;
         }
@@ -264,11 +277,11 @@ namespace ProtoBuf
             if (value >= 0) return EncodeUInt32((uint)value);
             
             Flush(10);
-            ioBuffer[ioBufferIndex++] = (byte)((value | 0x80) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)(((value >> 7) | 0x80) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)(((value >> 14) | 0x80) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)(((value >> 21) | 0x80) & 0xFF);
-            ioBuffer[ioBufferIndex++] = (byte)(((value >> 28) | 0x80) & 0xFF);
+            ioBuffer[ioBufferIndex++] = (byte)(value | 0x80);
+            ioBuffer[ioBufferIndex++] = (byte)((value >> 7) | 0x80);
+            ioBuffer[ioBufferIndex++] = (byte)((value >> 14) | 0x80);
+            ioBuffer[ioBufferIndex++] = (byte)((value >> 21) | 0x80);
+            ioBuffer[ioBufferIndex++] = (byte)((value >> 28) | 0x80);
             ioBuffer[ioBufferIndex++] = (byte)0xFF;
             ioBuffer[ioBufferIndex++] = (byte)0xFF;
             ioBuffer[ioBufferIndex++] = (byte)0xFF;

@@ -245,22 +245,47 @@ namespace ProtoBuf
         {
             int cached = ioBufferEffectiveSize - ioBufferIndex;
             
-            if (count < cached)
+            if (count <= cached)
             {   // all available from cache
-                Buffer.BlockCopy(ioBuffer, ioBufferIndex, buffer, offset, count);
-                ioBufferIndex += count;
+                if (count <= 8)
+                {
+                    // copy manually for small BLOBs
+                    int tmp = count;
+                    while (--tmp >= 0)
+                    {
+                        buffer[offset++] = ioBuffer[ioBufferIndex++];
+                    }
+                }
+                else
+                {
+                    // blit
+                    Buffer.BlockCopy(ioBuffer, ioBufferIndex, buffer, offset, count);
+                    ioBufferIndex += count;
+                }
                 position += count;
                 return count;
             }
 
             int totalRead = 0;
-            if (cached > 0)
-            { // some available from cache
+            // check if some available from cache
+            if (cached > 8)
+            {
+                // blit    
                 Buffer.BlockCopy(ioBuffer, ioBufferIndex, buffer, offset, cached);
                 count -= cached;
                 ioBufferIndex += cached;
                 totalRead += cached;
                 offset += cached;
+            }
+            else if(cached > 0)
+            {
+                // copy manually for small BLOBs
+                totalRead += cached;
+                count -= cached;
+                while (--cached >= 0)
+                {
+                    buffer[offset++] = ioBuffer[ioBufferIndex++];
+                }
             }
 
             int bytesRead = 1;
