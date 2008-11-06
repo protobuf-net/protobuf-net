@@ -1,11 +1,11 @@
 The core Protocol Buffers technology is provided courtesy of Google.
-At the time of writing, this is released under the Apache License, Version 2.0.
+At the time of writing, this is released under the BSD license.
 Full details can be found here:
 
 http://code.google.com/p/protobuf/
 
 
-This .NET implemenattion is Copyright 2008 Marc Gravell
+This .NET implementation is Copyright 2008 Marc Gravell
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
