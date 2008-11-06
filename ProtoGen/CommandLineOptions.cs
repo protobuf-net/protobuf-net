@@ -11,12 +11,16 @@ namespace ProtoBuf.CodeGenerator
 {
     public sealed class CommandLineOptions
     {
-        public string Template { get; set; }
-        public bool NoLogo { get; set; }
-        public string OutPath { get; set; }
-        public bool ShowHelp { get; set; }
-        public XsltArgumentList XsltOptions { get; private set; }
-        public List<string> InPaths { get; private set; }
+        private string template = TemplateCSharp, outPath = "";
+        private bool noLogo, showHelp;
+        private readonly List<string> inPaths = new List<string>();
+        public string Template { get { return template;} set { template = value;} }
+        public bool NoLogo { get { return noLogo; } set { noLogo = value; } }
+        public string OutPath { get { return outPath; } set { outPath = value; } }
+        public bool ShowHelp { get { return showHelp; } set { showHelp = value; } }
+        private readonly XsltArgumentList xsltOptions = new XsltArgumentList();
+        public XsltArgumentList XsltOptions { get { return xsltOptions; } }
+        public List<string> InPaths { get { return inPaths; } }
 
         private readonly TextWriter messageOutput;
 
@@ -59,7 +63,10 @@ namespace ProtoBuf.CodeGenerator
                     options.ShowHelp = true;
                 }
             }
-            if (options.InPaths.Count == 0) options.ShowHelp = true;
+            if (options.InPaths.Count == 0)
+            {
+                options.ShowHelp = (string) options.XsltOptions.GetParam("help", "") != "true";
+            }
             return options;
 
         }
@@ -76,16 +83,9 @@ namespace ProtoBuf.CodeGenerator
         {
             if(messageOutput == null) throw new ArgumentNullException("messageOutput");
             this.messageOutput = messageOutput;
-            Template = TemplateCSharp;
-            OutPath = "";
-            XsltOptions = new XsltArgumentList();
-            XsltOptions.XsltMessageEncountered += XsltOptions_XsltMessageEncountered;
-            InPaths = new List<string>();
-        }
 
-        void XsltOptions_XsltMessageEncountered(object sender, XsltMessageEncounteredEventArgs e)
-        {
-            messageOutput.WriteLine(e.Message);
+            // handling this (even trivially) suppresses the default write
+            XsltOptions.XsltMessageEncountered += delegate { };
         }
 
         public const string TemplateCSharp = "csharp";
@@ -94,13 +94,14 @@ namespace ProtoBuf.CodeGenerator
         {
             if(!NoLogo)
             {
-                messageOutput.WriteLine("protobuf-net:protogen - code generator for .proto");
+                messageOutput.WriteLine(Properties.Resources.LogoText);
             }
             if(ShowHelp)
             {
-                messageOutput.WriteLine("usage: protogen -i:{infile2} [-i:{infile2}] [-o:{outfile}] [-t:{template}] [-p:{prop}] [-p:{prop}={value}]");
+                messageOutput.WriteLine(Properties.Resources.Usage);
                 return;
             }
+            
             string xml = LoadFilesAsXml(this);
             string code = ApplyTransform(this, xml);
             if (!string.IsNullOrEmpty(this.OutPath))
@@ -125,12 +126,10 @@ namespace ProtoBuf.CodeGenerator
             }
 
             XmlSerializer xser = new XmlSerializer(typeof(FileDescriptorSet));
-            XmlWriterSettings settings = new XmlWriterSettings
-            {
-                Indent = true,
-                IndentChars = "  ",
-                NewLineHandling = NewLineHandling.Entitize
-            };
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.IndentChars = "  ";
+            settings.NewLineHandling = NewLineHandling.Entitize;
             StringBuilder sb = new StringBuilder();
             using (XmlWriter writer = XmlWriter.Create(sb, settings))
             {
@@ -141,11 +140,9 @@ namespace ProtoBuf.CodeGenerator
 
         private static string ApplyTransform(CommandLineOptions options, string xml)
         {
-            XmlWriterSettings settings = new XmlWriterSettings
-            {
-                ConformanceLevel = ConformanceLevel.Auto,
-                CheckCharacters = false
-            };
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.ConformanceLevel = ConformanceLevel.Auto;
+            settings.CheckCharacters = false;
             
             StringBuilder sb = new StringBuilder();
             using (XmlReader reader = XmlReader.Create(new StringReader(xml)))

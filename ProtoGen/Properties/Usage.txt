@@ -1,0 +1,14 @@
+usage: protogen -i:{infile2} [-i:{infile2}] [-o:{outfile}] [-t:{template}] [-p:{prop}[=value]] [-q]
+
+-i: Input file(s); proto definitions, either as text or pre-compiled binary (via protoc)
+-o: Output file; if none specified, writes to stdout
+-t: Template to use; defaults to csharp
+-p: Property for the template; value defaults to true; use -p:help to view available options
+-q: Quiet; suppresses header
+
+Examples:
+
+protogen -i:input.proto -o:output.cs
+protogen -i:input.proto -o:output.xml -t:xml
+protogen -i:input.proto -o:output.cs -p:datacontract -q
+protogen -i:input.proto -o:output.cs -p:observable=true

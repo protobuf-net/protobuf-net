@@ -9,6 +9,8 @@
   <xsl:param name="binary"/>
   <xsl:param name="protoRpc"/>
   <xsl:param name="observable"/>
+  <xsl:param name="preObservable"/>
+  <xsl:param name="partialMethods"/>
   
   
   <xsl:output method="text" indent="no" omit-xml-declaration="yes"/>
@@ -18,6 +20,8 @@
   <xsl:variable name="optionBinary" select="$binary='true'"/>
   <xsl:variable name="optionProtoRpc" select="$protoRpc='true'"/>
   <xsl:variable name="optionObservable" select="$observable='true'"/>
+  <xsl:variable name="optionPreObservable" select="$preObservable='true'"/>
+  <xsl:variable name="optionPartialMethods" select="$partialMethods='true'"/>
 
   <xsl:template match="*">
     <xsl:message terminate="yes">
@@ -29,36 +33,35 @@
   </xsl:template>
   
   <xsl:template match="FileDescriptorSet">
-    <xsl:apply-templates select="file/FileDescriptorProto"/>
-  </xsl:template>
-
-  <xsl:template match="FileDescriptorProto">
     <xsl:if test="$help='true'">
       <xsl:message terminate="yes">
         CSharp template for protobuf-net.
         Options:
         General:
-        "help" - this page
-        Additional serializers:
-        "xml" - enable explicit xml support (XmlSerializer)
-        "datacontract" - enable data-contract support (DataContractSerializer)
-        "binary" - enable binary support (BinaryFormatter)
-        "protoRpc" - enable proto-rpc client
-        "observable" - change notification (observer pattern) support
+          "help" - this page
+        Additional serializer support:
+          "xml" - enable explicit xml support (XmlSerializer)
+          "datacontract" - enable data-contract support (DataContractSerializer; requires .NET 3.0)
+          "binary" - enable binary support (BinaryFormatter; not supported on Silverlight)
+        Other:
+          "protoRpc" - enable proto-rpc client
+          "observable" - change notification (observer pattern) support
+          "preObservable" - pre-change notification (observer pattern) support (requires .NET 3.5)
+          "partialMethods" - provide partial methods for changes (requires C# 3.0)
       </xsl:message>
     </xsl:if>
-    
+
     <xsl:if test="$optionXml and $optionDataContract">
       <xsl:message terminate="yes">
-        Invalid options: xml and data-contract serialization are mutually exclusive.       
+        Invalid options: xml and data-contract serialization are mutually exclusive.
       </xsl:message>
     </xsl:if>
     // Generated from <xsl:value-of select="name"/>
     <xsl:if test="$optionXml">
-    // Option: xml serialization enabled  
+      // Option: xml serialization enabled
     </xsl:if>
     <xsl:if test="$optionDataContract">
-    // Option: data-contract serialization enabled  
+      // Option: data-contract serialization enabled
     </xsl:if>
     <xsl:if test="$optionBinary">
       // Option: binary serialization enabled
@@ -69,6 +72,13 @@
     <xsl:if test="$optionObservable">
       // Option: observable (change notifications) enabled
     </xsl:if>
+    <xsl:if test="$optionPreObservable">
+      // Option: pre-observable (pre-change notifications) enabled
+    </xsl:if>
+    <xsl:apply-templates select="file/FileDescriptorProto"/>
+  </xsl:template>
+
+  <xsl:template match="FileDescriptorProto">
     namespace <xsl:choose>
       <xsl:when test="package"><xsl:value-of select="package"/></xsl:when>
       <xsl:otherwise><xsl:value-of select="name"/></xsl:otherwise>
@@ -89,6 +99,7 @@
     public partial class <xsl:value-of select="name"/> : ProtoBuf.IExtensible
     <xsl:if test="$optionBinary">, System.Runtime.Serialization.ISerializable</xsl:if>
     <xsl:if test="$optionObservable">, System.ComponentModel.INotifyPropertyChanged</xsl:if>
+    <xsl:if test="$optionPreObservable">, System.ComponentModel.INotifyPropertyChanging</xsl:if>
     {
       public <xsl:value-of select="name"/>() {}
       
@@ -105,6 +116,11 @@
       protected virtual void OnPropertyChanged(string propertyName)
         { if(PropertyChanged != null) PropertyChanged(this, new System.ComponentModel.PropertyChangedEventArgs(propertyName)); }
       </xsl:if>
+    <xsl:if test="$optionPreObservable">
+      public event System.ComponentModel.PropertyChangingEventHandler PropertyChanging;
+      protected virtual void OnPropertyChanging(string propertyName)
+      { if(PropertyChanging != null) PropertyChanging(this, new System.ComponentModel.PropertyChangingEventArgs(propertyName)); }
+    </xsl:if>
       private ProtoBuf.IExtension extensionObject;
       ProtoBuf.IExtension ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
         { return ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
@@ -231,11 +247,11 @@
     <xsl:if test="$optionDataContract">
     [System.Runtime.Serialization.DataMember(Name=@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>, IsRequired = false)]
     </xsl:if>
-    public <xsl:value-of select="concat($type,' ',name)"/>
-    {
-      get { return _<xsl:value-of select="generate-id()"/>; }
-      set { _<xsl:value-of select="generate-id()"/> = value; <xsl:if test="$optionObservable">OnPropertyChanged(@"<xsl:value-of select="name"/>"); </xsl:if>}
-    }
+    <xsl:call-template name="WriteGetSet">
+      <xsl:with-param name="type" select="$type"/>
+      <xsl:with-param name="name" select="name"/>
+      <xsl:with-param name="field" select="concat('_',generate-id())"/>
+    </xsl:call-template>
   </xsl:template>
   
   <xsl:template match="FieldDescriptorProto[label='LABEL_REQUIRED']">
@@ -250,13 +266,27 @@
     <xsl:if test="$optionDataContract">
     [System.Runtime.Serialization.DataMember(Name=@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>, IsRequired = true)]
     </xsl:if>
-    public <xsl:value-of select="concat($type,' ',name)"/>
-    {
-      get { return _<xsl:value-of select="generate-id()"/>; }
-      set { _<xsl:value-of select="generate-id()"/> = value; <xsl:if test="$optionObservable">OnPropertyChanged(@"<xsl:value-of select="name"/>"); </xsl:if>}
-    }
+    <xsl:call-template name="WriteGetSet">
+      <xsl:with-param name="type" select="$type"/>
+      <xsl:with-param name="name" select="name"/>
+      <xsl:with-param name="field" select="concat('_',generate-id())"/>
+    </xsl:call-template>    
   </xsl:template>
-  
+
+  <xsl:template name="WriteGetSet">
+    <xsl:param name="type"/>
+    <xsl:param name="name"/>
+    <xsl:param name="field"/>
+    public <xsl:value-of select="concat($type,' ',$name)"/>
+    {
+      get { return <xsl:value-of select="$field"/>; }
+      set { <xsl:if test="$optionPartialMethods">On<xsl:value-of select="$name"/>Changing(value); </xsl:if><xsl:if test="$optionPreObservable">OnPropertyChanging(@"<xsl:value-of select="$name"/>"); </xsl:if><xsl:value-of select="$field"/> = value; <xsl:if test="$optionObservable">OnPropertyChanged(@"<xsl:value-of select="$name"/>"); </xsl:if><xsl:if test="$optionPartialMethods">On<xsl:value-of select="$name"/>Changed();</xsl:if>}
+    }
+    <xsl:if test="$optionPartialMethods">
+    partial void On<xsl:value-of select="$name"/>Changing(<xsl:value-of select="$type"/> value);
+    partial void On<xsl:value-of select="$name"/>Changed();
+    </xsl:if>
+  </xsl:template>
   <xsl:template match="FieldDescriptorProto[label='LABEL_REPEATED']">
     <xsl:variable name="type"><xsl:apply-templates select="." mode="type"/></xsl:variable>
     <xsl:variable name="format"><xsl:apply-templates select="." mode="format"/></xsl:variable>
