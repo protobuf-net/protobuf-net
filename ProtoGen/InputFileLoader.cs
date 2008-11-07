@@ -31,8 +31,7 @@ namespace ProtoBuf.CodeGenerator
             {
                 if(deletePath)
                 {
-                    try {File.Delete(path);}
-                    catch {}
+                    File.Delete(path);
                 }
             }
         }
@@ -75,7 +74,7 @@ namespace ProtoBuf.CodeGenerator
             }
             catch
             {
-                try {File.Delete(tmp);} catch {}
+                File.Delete(tmp);
                 throw;
             }
         }

@@ -6,16 +6,41 @@ using google.protobuf;
 using System.Xml;
 using System.Text;
 using System.Xml.Serialization;
+using System.Runtime.CompilerServices;
+using System.ComponentModel;
 
 namespace ProtoBuf.CodeGenerator
 {
     public sealed class CommandLineOptions
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Obsolete("Not intended for direct usage; please use Parse(...).Execute() instead.", false)]
+        public static int Main(params string[] args)
+        {
+            CommandLineOptions opt = null;
+            try
+            {
+                opt = Parse(Console.Out, args);
+                opt.Execute();
+                return opt.ShowHelp ? 1 : 0; // count help as a non-success (we didn't generate code)
+            }
+            catch (Exception ex)
+            {
+                Console.Error.Write(ex.Message);
+                return 1;
+            }
+        }
+
         private string template = TemplateCSharp, outPath = "";
-        private bool noLogo, showHelp;
+        private bool showLogo = true, showHelp;
         private readonly List<string> inPaths = new List<string>();
+
+        private int messageCount;
+        public int MessageCount { get { return messageCount; } }
+
         public string Template { get { return template;} set { template = value;} }
-        public bool NoLogo { get { return noLogo; } set { noLogo = value; } }
+        public bool ShowLogo { get { return showLogo; } set { showLogo = value; } }
         public string OutPath { get { return outPath; } set { outPath = value; } }
         public bool ShowHelp { get { return showHelp; } set { showHelp = value; } }
         private readonly XsltArgumentList xsltOptions = new XsltArgumentList();
@@ -24,7 +49,7 @@ namespace ProtoBuf.CodeGenerator
 
         private readonly TextWriter messageOutput;
 
-        public static CommandLineOptions Parse(TextWriter messageOutput, string[] args)
+        public static CommandLineOptions Parse(TextWriter messageOutput, params string[] args)
         {
             CommandLineOptions options = new CommandLineOptions(messageOutput);
 
@@ -52,7 +77,7 @@ namespace ProtoBuf.CodeGenerator
                 }
                 else if (arg == "-q") // quiet
                 {
-                    options.NoLogo = true;
+                    options.ShowLogo = false;
                 }
                 else if (arg.StartsWith("-i:"))
                 {
@@ -84,15 +109,16 @@ namespace ProtoBuf.CodeGenerator
             if(messageOutput == null) throw new ArgumentNullException("messageOutput");
             this.messageOutput = messageOutput;
 
-            // handling this (even trivially) suppresses the default write
-            XsltOptions.XsltMessageEncountered += delegate { };
+            // handling this (even trivially) suppresses the default write;
+            // we'll also use it to track any messages that are generated
+            XsltOptions.XsltMessageEncountered += delegate { messageCount++; };
         }
 
         public const string TemplateCSharp = "csharp";
 
         public void Execute()
         {
-            if(!NoLogo)
+            if(showLogo)
             {
                 messageOutput.WriteLine(Properties.Resources.LogoText);
             }
