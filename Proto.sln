@@ -21,6 +21,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net-CF35", "protob
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{79F36A47-30CF-4FEB-ADA5-BE09B05AF9D6}"
 	ProjectSection(SolutionItems) = preProject
+		buildkit.build = buildkit.build
 		..\wiki\ChangeHistory.wiki = ..\wiki\ChangeHistory.wiki
 		StartHere.txt = StartHere.txt
 	EndProjectSection

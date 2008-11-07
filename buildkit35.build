@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="BuildKit"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- This build file builds, tests and packages protobuf-net -->
+
+  <PropertyGroup>
+    <OutputDirectory>tmp</OutputDirectory>
+  </PropertyGroup>
+
+  <Target Name="BuildKit">
+
+
+    <RemoveDir Directories="protobuf-net-CF20\obj; protobuf-net-CF20\bin"/>
+    <MSBuild Projects="protobuf-net-CF20\protobuf-net-CF20.csproj" Properties="OutputPath=..\$(OutputDirectory)\CF20; Configuration=Release" Targets="Rebuild"/>
+    <RemoveDir Directories="protobuf-net-CF35\obj; protobuf-net-CF35\bin"/>
+    <MSBuild Projects="protobuf-net-CF35\protobuf-net-CF35.csproj" Properties="OutputPath=..\$(OutputDirectory)\CF35; Configuration=Release" Targets="Rebuild"/>
+    <RemoveDir Directories="protobuf-net_Silverlight\obj; protobuf-net_Silverlight\bin"/>
+    <MSBuild Projects="protobuf-net_Silverlight\protobuf-net_Silverlight.csproj" Properties="OutputPath=..\$(OutputDirectory)\SILVER20_tmp; Configuration=Release" Targets="Rebuild"/>
+    <MakeDir Directories="$(OutputDirectory)\SILVER20"/>
+    <Copy DestinationFolder="$(OutputDirectory)\SILVER20" SourceFiles="$(OutputDirectory)\SILVER20_tmp\Licence.txt"/>
+    <Copy DestinationFolder="$(OutputDirectory)\SILVER20" SourceFiles="$(OutputDirectory)\SILVER20_tmp\protobuf-net.dll"/>
+    <Copy DestinationFolder="$(OutputDirectory)\SILVER20" SourceFiles="$(OutputDirectory)\SILVER20_tmp\protobuf-net.pdb"/>
+    <Copy DestinationFolder="$(OutputDirectory)\SILVER20" SourceFiles="$(OutputDirectory)\SILVER20_tmp\protobuf-net.xml"/>
+    <RemoveDir Directories="$(OutputDirectory)\SILVER20_tmp"/>
+    <Copy DestinationFolder="$(OutputDirectory)" SourceFiles="Licence.txt"/>
+    <Copy DestinationFolder="$(OutputDirectory)" SourceFiles="..\wiki\ChangeHistory.wiki"/>
+  </Target>
+</Project>

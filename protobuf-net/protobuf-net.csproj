@@ -216,7 +216,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+<!--  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <PostBuildEvent>@%25SystemRoot%25\Microsoft.NET\Framework\v2.0.50727\MSBuild "$(ProjectPath)" /t:Rebuild /p:Configuration=Net20 /v:n</PostBuildEvent>
-  </PropertyGroup>
+  </PropertyGroup>-->
 </Project>

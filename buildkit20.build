@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="BuildKit"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- This build file builds, tests and packages protobuf-net -->
+
+  <PropertyGroup>
+    <OutputDirectory>tmp</OutputDirectory>
+  </PropertyGroup>
+
+  <Target Name="BuildKit">
+    <RemoveDir Directories="$(OutputDirectory)"/>
+    <MakeDir Directories="$(OutputDirectory)"/>
+    <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
+    <RemoveDir Directories="protogen\obj; protogen\bin"/>
+    <MSBuild Projects="protogen\protogen.csproj" Properties="OutputPath=..\$(OutputDirectory)\NET30; Configuration=Release" Targets="Rebuild"/>
+    <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
+    <RemoveDir Directories="protogen\obj; protogen\bin"/>
+    <MSBuild Projects="protogen\protogen.csproj" Properties="OutputPath=..\$(OutputDirectory)\NET20; Configuration=NET20" Targets="Rebuild"/>
+  </Target>
+ 
+
+</Project>
