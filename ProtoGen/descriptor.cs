@@ -1,5 +1,6 @@
 ﻿
 // see descriptor.proto
+using System;
 namespace google.protobuf
 {
 

@@ -292,7 +292,7 @@ namespace Examples.SimpleStream
 
                 pbnetBuffer = ms.ToArray();
             }
-            if (testProtoSharp)
+            /*if (testProtoSharp)
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
@@ -326,7 +326,7 @@ namespace Examples.SimpleStream
                     Console.WriteLine("||[http://code.google.com/p/protosharp/ proto#]||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
                         buffer.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
-            }
+            }*/
             if (testBinary)
             {
                 using (MemoryStream ms = new MemoryStream())

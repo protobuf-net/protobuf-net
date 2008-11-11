@@ -14,8 +14,6 @@ namespace ProtoBuf.CodeGenerator
     public sealed class CommandLineOptions
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        [Obsolete("Not intended for direct usage; please use Parse(...).Execute() instead.", false)]
         public static int Main(params string[] args)
         {
             CommandLineOptions opt = null;

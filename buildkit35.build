@@ -2,19 +2,61 @@
 <Project DefaultTargets="BuildKit"
          xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <!-- This build file builds, tests and packages protobuf-net -->
+  <!-- This build file builds protobuf-net for CF 2.0, CF 3.5 and Silverlight 2.0;
+    It also packages all builds.
+  
+  -->
+
+  <!-- See http://msbuildtasks.tigris.org -->
+  <Import Project="$(MSBuildExtensionsPath)\MSBuildCommunityTasks\MSBuild.Community.Tasks.Targets"/>
 
   <PropertyGroup>
     <OutputDirectory>tmp</OutputDirectory>
   </PropertyGroup>
 
   <Target Name="BuildKit">
+    
+    <!-- update the assembly / file versions with the last local revision -->    
+    <SvnInfo LocalPath=".">
+      <Output TaskParameter="Revision" PropertyName="BuildRev" />
+    </SvnInfo>
+    <FileUpdate Files="protobuf-net\Properties\AssemblyInfo.cs"
+            Regex='(\[\s*assembly:\s*AssemblyVersion\(\s*"[^\.]+\.[^\.]+)\.([^\.]+)(\.)([^\.]+)("\)\s*\])'
+            ReplacementText='$1.$2.$(BuildRev)$5' />
+    <FileUpdate Files="protobuf-net\Properties\AssemblyInfo.cs"
+            Regex='(\[\s*assembly:\s*AssemblyFileVersion\(\s*"[^\.]+\.[^\.]+)\.([^\.]+)(\.)([^\.]+)("\)\s*\])'
+            ReplacementText='$1.$2.$(BuildRev)$5' />
+    <FileUpdate Files="ProtoGen\Properties\AssemblyInfo.cs"
+            Regex='(\[\s*assembly:\s*AssemblyVersion\(\s*"[^\.]+\.[^\.]+)\.([^\.]+)(\.)([^\.]+)("\)\s*\])'
+            ReplacementText='$1.$2.$(BuildRev)$5' />
+    <FileUpdate Files="ProtoGen\Properties\AssemblyInfo.cs"
+            Regex='(\[\s*assembly:\s*AssemblyFileVersion\(\s*"[^\.]+\.[^\.]+)\.([^\.]+)(\.)([^\.]+)("\)\s*\])'
+            ReplacementText='$1.$2.$(BuildRev)$5' />
 
+    <Copy DestinationFolder="$(OutputDirectory)" SourceFiles="Licence.txt"/>
+    <Copy DestinationFolder="$(OutputDirectory)" SourceFiles="..\wiki\ChangeHistory.wiki"/>
 
+    <RemoveDir Directories="$(OutputDirectory)"/>
+    <MakeDir Directories="$(OutputDirectory)"/>
+    <MakeDir Directories="$(OutputDirectory)\Zips"/>
+    
+    <!-- build .NET 2.0 using the C# 2.0 compiler -->
+    <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
+    <RemoveDir Directories="protogen\obj; protogen\bin"/>
+    <Exec Command="%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\MSBuild buildkit20.build" />
+
+    <!-- build .NET 3.0 using the C# 3.0 compiler -->
+    <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
+    <RemoveDir Directories="protogen\obj; protogen\bin"/>
+    <MSBuild Projects="protogen\protogen.csproj" Properties="OutputPath=..\$(OutputDirectory)\NET30; Configuration=Release" Targets="Rebuild"/>
+
+    <!-- build for compact framework -->
     <RemoveDir Directories="protobuf-net-CF20\obj; protobuf-net-CF20\bin"/>
     <MSBuild Projects="protobuf-net-CF20\protobuf-net-CF20.csproj" Properties="OutputPath=..\$(OutputDirectory)\CF20; Configuration=Release" Targets="Rebuild"/>
     <RemoveDir Directories="protobuf-net-CF35\obj; protobuf-net-CF35\bin"/>
     <MSBuild Projects="protobuf-net-CF35\protobuf-net-CF35.csproj" Properties="OutputPath=..\$(OutputDirectory)\CF35; Configuration=Release" Targets="Rebuild"/>
+    
+    <!-- build for Silverlight -->
     <RemoveDir Directories="protobuf-net_Silverlight\obj; protobuf-net_Silverlight\bin"/>
     <MSBuild Projects="protobuf-net_Silverlight\protobuf-net_Silverlight.csproj" Properties="OutputPath=..\$(OutputDirectory)\SILVER20_tmp; Configuration=Release" Targets="Rebuild"/>
     <MakeDir Directories="$(OutputDirectory)\SILVER20"/>
@@ -23,7 +65,56 @@
     <Copy DestinationFolder="$(OutputDirectory)\SILVER20" SourceFiles="$(OutputDirectory)\SILVER20_tmp\protobuf-net.pdb"/>
     <Copy DestinationFolder="$(OutputDirectory)\SILVER20" SourceFiles="$(OutputDirectory)\SILVER20_tmp\protobuf-net.xml"/>
     <RemoveDir Directories="$(OutputDirectory)\SILVER20_tmp"/>
-    <Copy DestinationFolder="$(OutputDirectory)" SourceFiles="Licence.txt"/>
-    <Copy DestinationFolder="$(OutputDirectory)" SourceFiles="..\wiki\ChangeHistory.wiki"/>
+    
+    <!-- zip the various outputs -->
+    <ItemGroup>
+      <ZipN20 Include="$(OutputDirectory)\NET20\*.*" />
+      <ZipN30 Include="$(OutputDirectory)\NET30\*.*" />
+      <ZipCF20 Include="$(OutputDirectory)\CF20\*.*" />
+      <ZipCF35 Include="$(OutputDirectory)\CF35\*.*" />
+      <ZipS20 Include="$(OutputDirectory)\SILVER20\*.*" />
+    </ItemGroup>
+
+    <Zip WorkingDirectory="$(OutputDirectory)\NET20"
+         Files="@(ZipN20)"
+         ZipFileName="$(OutputDirectory)\Zips\NET20.zip" />
+    <Zip WorkingDirectory="$(OutputDirectory)\NET30"
+         Files="@(ZipN30)"
+         ZipFileName="$(OutputDirectory)\Zips\NET30.zip" />
+    <RemoveDir Directories="$(OutputDirectory)\NET20; $(OutputDirectory)\NET30"/>
+    
+    <Zip WorkingDirectory="$(OutputDirectory)\CF20"
+         Files="@(ZipCF20)"
+         ZipFileName="$(OutputDirectory)\Zips\CF20.zip" />
+    <Zip WorkingDirectory="$(OutputDirectory)\CF35"
+         Files="@(ZipCF35)"
+         ZipFileName="$(OutputDirectory)\Zips\CF35.zip" />
+    <RemoveDir Directories="$(OutputDirectory)\CF20; $(OutputDirectory)\CF35"/>
+    
+    <Zip WorkingDirectory="$(OutputDirectory)\SILVER20"
+         Files="@(ZipS20)"
+         ZipFileName="$(OutputDirectory)\Zips\SILVER20.zip" />
+    <RemoveDir Directories="$(OutputDirectory)\SILVER20"/>
+
+    <!-- package the separate archives into a single master package -->
+    <ItemGroup>
+      <ZipAll Include="$(OutputDirectory)\Zips\*.*" />
+    </ItemGroup>
+    <Zip WorkingDirectory="$(OutputDirectory)\Zips"
+         Files="@(ZipAll)"
+         ZipFileName="$(OutputDirectory)\protobuf-net r$(BuildRev).zip" />
+    <RemoveDir Directories="$(OutputDirectory)\Zips"/>
+
+    <!-- build the test project -->
+    <RemoveDir Directories="Examples\obj; Examples\bin"/>
+    <MSBuild Projects="Examples\Examples.csproj" Properties="OutputPath=..\$(OutputDirectory)\Test; Configuration=Release" Targets="Rebuild"/>
+
+    <!-- execute the unit tests (do this last as it is slower; allows interruption
+    and simple visibility of test results -->
+    <NUnit Assemblies="$(OutputDirectory)\Test\Examples.exe"
+       ToolPath="c:\Program Files\NUnit 2.4.8\bin"
+    />
+
+    <Message Text="protobuf r$(BuildRev); build/package/test complete"/>
   </Target>
 </Project>

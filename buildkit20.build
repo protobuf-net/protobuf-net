@@ -2,21 +2,16 @@
 <Project DefaultTargets="BuildKit"
          xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <!-- This build file builds, tests and packages protobuf-net -->
+  <!-- This build file builds protobuf-net for .NET 2.0 and .NET 3.0;
+    this is separated so that I can pass this to the 2.0 version of
+    MSBuild to ensure that we have retained C# 2.0 compatibility -->
 
   <PropertyGroup>
     <OutputDirectory>tmp</OutputDirectory>
   </PropertyGroup>
 
   <Target Name="BuildKit">
-    <RemoveDir Directories="$(OutputDirectory)"/>
-    <MakeDir Directories="$(OutputDirectory)"/>
-    <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
-    <RemoveDir Directories="protogen\obj; protogen\bin"/>
-    <MSBuild Projects="protogen\protogen.csproj" Properties="OutputPath=..\$(OutputDirectory)\NET30; Configuration=Release" Targets="Rebuild"/>
-    <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
-    <RemoveDir Directories="protogen\obj; protogen\bin"/>
-    <MSBuild Projects="protogen\protogen.csproj" Properties="OutputPath=..\$(OutputDirectory)\NET20; Configuration=NET20" Targets="Rebuild"/>
+    <MSBuild Projects="protogen\protogen.csproj" Properties="OutputPath=..\$(OutputDirectory)\NET20; Configuration=NET20" Targets="Rebuild"/>  
   </Target>
  
 

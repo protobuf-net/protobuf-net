@@ -7,8 +7,19 @@ using System.Xml.Serialization;
 using ProtoBuf;
 using ProtoSharp.Core;
 using Serializer = ProtoBuf.Serializer;
+
+namespace ProtoSharp.Core
+{
+    // throwaway [Tag] replacement from ProtoSharp
+    class TagAttribute : Attribute
+    {
+        public TagAttribute(int tag) { }
+    }
+}
 namespace DAL
 {
+    
+
     [ProtoContract, DataContract, Serializable]
     public class DatabaseCompat
     {
