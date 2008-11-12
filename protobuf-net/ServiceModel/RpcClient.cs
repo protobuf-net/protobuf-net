@@ -5,10 +5,12 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 #if NET_3_0
+using System.Runtime.InteropServices;
 using System.ServiceModel;
 #endif
 using System.Threading;
 
+#if DEBUG
 namespace ProtoBuf.ServiceModel
 {
     /// <summary>
@@ -16,6 +18,9 @@ namespace ProtoBuf.ServiceModel
     /// </summary>
     public class RpcClient : IDisposable
     {
+
+
+
         private readonly Type interfaceType;
         /// <summary>
         /// Create a new RpcClient for communicating over the given service.
@@ -191,37 +196,112 @@ namespace ProtoBuf.ServiceModel
             if (args == null) args = EmptyArgs;
 
             RpcMessage message = new RpcMessage();
-            message.Id = (uint)Interlocked.Increment(ref sequence);
+            message.Id = (uint) Interlocked.Increment(ref sequence);
             message.Name = method.Name;
             message.Type = RpcMessageType.Request;
+
+            using (MemoryStream ms = new MemoryStream()) {
+                PackParameters(true, method, args, ms);
+                message.Buffer = ms.ToArray();
+            }
+
+        Send(message);
+            return null;
+        }
+
+        static ParameterInfo VerifyCanBePassedUnwrapped(MethodInfo method)
+        {
+            if(method == null) throw new ArgumentNullException("method");
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length != 1 || !IsInputParameter(parameters[0]) || !Serializer.IsEntityType(parameters[0].ParameterType)
+                || method.ReturnType == null || !Serializer.IsEntityType(method.ReturnType))
+            {
+                throw new InvalidOperationException("To be passed unwrapped, the RPC method must have a single argument and return value, both serializable classes.");
+            }
+            return parameters[0];
+        }
+
+        protected void PackParameters(bool wrapped, MethodInfo method, object[] args, Stream destination)
+        {
+            if (method == null) throw new ArgumentNullException("method");
+            if (args == null) throw new ArgumentNullException("args");
+            if (destination == null) throw new ArgumentNullException("destination");
+
+            if(!wrapped)
+            {
+                ParameterInfo parameter = VerifyCanBePassedUnwrapped(method);
+
+                if (args.Length != 1) throw new InvalidOperationException("Parameter count mismatch.");
+                // this changes to the correct type and serializes
+                Switch.Serialize(destination, parameter.ParameterType, args[0], PrefixStyle.None);
+                return;
+            }
 
             ParameterInfo[] parameters = method.GetParameters();
             if (parameters.Length != args.Length) throw new InvalidOperationException("Parameter count mismatch.");
 
-            bool prefix = parameters.Length > 1;
-            PrefixStyle style = prefix ? PrefixStyle.Base128 : PrefixStyle.None;
-            byte[] buffer = prefix ? new byte[10] : null;
+            byte[] buffer = new byte[10];
 
-
-            using (MemoryStream ms = new MemoryStream())
+            for (int i = 0; i < args.Length; i++)
             {
-                for (int i = 0; i < args.Length; i++)
-                {
-                    if (prefix)
-                    {
-                        uint token = (uint)(((i + 1) << 3) | ((int)WireType.String & 7));
-                        int len = SerializationContext.EncodeUInt32(token, buffer, 0);
-                        ms.Write(buffer, 0, len);
-                    }
-                    ParameterInfo param = parameters[i];
-                    Switch.Serialize(ms, param.ParameterType, args[i], style);
-                }
-                message.Buffer = ms.ToArray();
+                ParameterInfo param = parameters[i];
+                if(!IsInputParameter(param)) continue;
+                // write the field prefix
+                uint token = (uint)(((i + 2) << 3) | ((int)WireType.String & 7));
+                int len = SerializationContext.EncodeUInt32(token, buffer, 0);
+                destination.Write(buffer, 0, len);
+
+                // this changes to the correct type and serializes the value
+                Switch.Serialize(destination, param.ParameterType, args[i], PrefixStyle.Base128);
+            }
+        }
+
+        protected object UnpackParameters(bool wrapped, MethodInfo method, object[] args, Stream source)
+        {
+            if (method == null) throw new ArgumentNullException("method");
+            if (args == null) throw new ArgumentNullException("args");
+            if (source == null) throw new ArgumentNullException("source");
+
+            if(!wrapped)
+            {
+                VerifyCanBePassedUnwrapped(method);
+                // this changes to the correct type and serializes
+                return Switch.Deserialize(source, method.ReturnType, PrefixStyle.None);
             }
 
-            Send(message);
-            return null;
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length != args.Length) throw new InvalidOperationException("Parameter count mismatch.");
+
+            uint token;
+            object result = null;
+            while(SerializationContext.TryDecodeUInt32(source, out token))
+            {
+                if((token & 7) != (int)WireType.String) throw new InvalidOperationException("Invalid field prefix found in response");
+                token >>= 3;
+                if(token == 1)
+                {
+                    result = Switch.Deserialize(source, method.ReturnType, PrefixStyle.Base128);
+                }
+                else if ((token < args.Length + 2) && IsOutputParameter(parameters[token - 2]))
+                {
+                    args[token - 2] = Switch.Deserialize(source, parameters[token - 2].ParameterType,
+                                                         PrefixStyle.Base128);
+                }
+            }
+
+            return result;
         }
+
+        static bool IsInputParameter(ParameterInfo param)
+        {   // can't use IsIn as it isn't supported on CF 2.0/3.5
+            return ((param.Attributes & ParameterAttributes.In) != ParameterAttributes.None);
+        }
+
+        static bool IsOutputParameter(ParameterInfo param)
+        {   // can't use IsOut as it isn't supported on CF 2.0/3.5
+            return ((param.Attributes & ParameterAttributes.Out) != ParameterAttributes.None);
+        }
+
         private void Send(RpcMessage message)
         {
             try
@@ -238,17 +318,31 @@ namespace ProtoBuf.ServiceModel
 
         static class Switch
         {
-            internal static void Serialize(Stream stream, Type type, object value, PrefixStyle style)
+            internal static void Serialize(Stream destination, Type type, object value, PrefixStyle style)
             {
                 typeof(Switch).GetMethod("SerializeGeneric", BindingFlags.Public | BindingFlags.Static)
-                    .MakeGenericMethod(type).Invoke(null, new object[] { stream, value, style });
+                    .MakeGenericMethod(type).Invoke(null, new object[] { destination, value, style });
             }
+            internal static object Deserialize(Stream source, Type type, PrefixStyle style)
+            {
+                return typeof(Switch).GetMethod("DeserializeGeneric", BindingFlags.Public | BindingFlags.Static)
+                    .MakeGenericMethod(type).Invoke(null, new object[] { source, style });
+            }
+
+            // these two need to be public for the Silverlight reflection security model - but
+            // the class is internal, so that is fine
             public static void SerializeGeneric<T>(Stream destination, T value, PrefixStyle style)
             {
                 Serializer.SerializeWithLengthPrefix<T>(destination, value, style);
             }
+            public static T DeserializeGeneric<T>(Stream source, PrefixStyle style)
+            {
+                return Serializer.DeserializeWithLengthPrefix<T>(source, style);
+            }
+
         }
 
     }
 }
+#endif
 #endif

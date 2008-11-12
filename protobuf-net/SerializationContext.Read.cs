@@ -47,15 +47,39 @@ namespace ProtoBuf
         /// </summary>
         public static uint DecodeUInt32(Stream source)
         {
+            uint value;
+            if(!TryDecodeUInt32(source, out value)) throw new EndOfStreamException();
+            return value;
+        }
+
+        /// <summary>
+        /// Slow (unbuffered) read from a stream; used to avoid issues
+        /// with buffers when performing network IO.
+        /// </summary>
+        /// <returns>True if there is data in the stream and a value can be obtained;
+        /// False if there is no data in the stream; note that an exception is still
+        /// thrown if the data is invalid.</returns>
+        public static bool TryDecodeUInt32(Stream source, out uint value)
+        {
             if (source == null) throw new ArgumentNullException("source");
 
             int b = source.ReadByte();
-            if (b < 0) throw new EndOfStreamException();
-            if ((b & 0x80) == 0) return (uint)b; // single-byte
+            if (b < 0)
+            {
+                value = 0;
+                return false;
+            }
+
+            if ((b & 0x80) == 0)
+            {
+                // single-byte
+                value = (uint) b;
+                return true;
+            }
 
             int shift = 7;
 
-            uint value = (uint)(b & 0x7F);
+            value = (uint)(b & 0x7F);
             bool keepGoing;
             int i = 0;
             do
@@ -71,7 +95,7 @@ namespace ProtoBuf
             {
                 throw new OverflowException();
             }
-            return value;
+            return true;
         }
 
         public uint DecodeUInt32()
