@@ -85,6 +85,66 @@ public class RpcPacking
         Assert.AreEqual(Wrapped.ResultOnlyExpectedResult, result, "result");
     }
 
+    [Test]
+    public void TestInputOutputResult()
+    {
+        object[] args = { 3, "abc", true };
+        var client = new Client<IWrapped>();
+        Wrapped wrapped = new Wrapped();
+        Assert.IsFalse(wrapped.InputOutputResultCalled);
+
+        object result = client.RoundTrip(wrapped, true, "InputOutputResult", args);
+
+        int len;
+        CheckBytes(client.Request, "request",
+            GetTag(1, WireType.String), GetBytes(2), GetTag(1, WireType.Variant), GetBytes(3),
+            GetTag(2, WireType.String), GetBytes(2 + (len=Encoding.UTF8.GetByteCount("abc"))), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes("abc"));
+
+        CheckBytes(client.Response, "response",
+                   GetTag(1, WireType.String), GetBytes(2 + (len = Encoding.UTF8.GetByteCount(Wrapped.InputOutputResultExpectedResult))), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes(Wrapped.InputOutputResultExpectedResult),
+                   GetTag(3, WireType.String), GetBytes(2 + (len = Encoding.UTF8.GetByteCount(Wrapped.InputOutputResultExpectedB))), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes(Wrapped.InputOutputResultExpectedB),
+                   GetTag(4, WireType.String), GetBytes(2), GetTag(1, WireType.Variant), GetBytes(1));
+
+        Assert.IsTrue(wrapped.InputOutputResultCalled, "called");
+        Assert.AreEqual(Wrapped.InputOutputResultExpectedResult, result, "result");
+        Assert.AreEqual(3, wrapped.InputOutputResultA, "in:a");
+        Assert.AreEqual("abc", wrapped.InputOutputResultB, "in:b");
+        Assert.AreEqual(Wrapped.InputOutputResultExpectedB, args[1], "out:b");
+        Assert.AreEqual(Wrapped.InputOutputResultExpectedC, args[2], "out:c");
+    }
+
+
+
+    [Test]
+    public void TestInputOutputNoResult()
+    {
+        object[] args = {3, "abc", true};
+        var client = new Client<IWrapped>();
+        Wrapped wrapped = new Wrapped();
+        Assert.IsFalse(wrapped.InputOutputNoResultCalled);
+
+        object result = client.RoundTrip(wrapped, true, "InputOutputNoResult", args);
+
+        int len = Encoding.UTF8.GetByteCount("abc");
+        CheckBytes(client.Request, "request",
+            GetTag(1, WireType.String), GetBytes(2), GetTag(1, WireType.Variant), GetBytes(3),
+            GetTag(2, WireType.String), GetBytes(2 + len), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes("abc"));
+
+        len = Encoding.UTF8.GetByteCount(Wrapped.InputOutputNoResultExpectedB);
+        CheckBytes(client.Response, "response",
+                   GetTag(3, WireType.String), GetBytes(2 + len), GetTag(1, WireType.String), GetBytes(len),
+                   Encoding.UTF8.GetBytes(Wrapped.InputOutputNoResultExpectedB),
+                   GetTag(4, WireType.String), GetBytes(2), GetTag(1, WireType.Variant), GetBytes(1));
+
+        Assert.IsTrue(wrapped.InputOutputNoResultCalled, "called");
+        Assert.IsNull(result, "result");
+        Assert.AreEqual(3, wrapped.InputOutputNoResultA, "in:a");
+        Assert.AreEqual("abc", wrapped.InputOutputNoResultB, "in:b");
+        Assert.AreEqual(Wrapped.InputOutputNoResultExpectedB, args[1], "out:b");
+        Assert.AreEqual(Wrapped.InputOutputNoResultExpectedC, args[2], "out:c");
+
+    }
+
     static byte[] GetBytes(params int[] values)
     {
         return Array.ConvertAll(values, x => (byte) x);
@@ -193,7 +253,6 @@ public class RpcPacking
         public bool InputOutputResultCalled { get; private set;}
         public int InputOutputResultA { get; private set;}
         public string InputOutputResultB { get; private set;}
-        public bool InputOutputResultC { get; private set;}
         public string InputOutputResult(int a, ref string b, out bool c)
         {
             InputOutputResultCalled = true;
@@ -210,7 +269,6 @@ public class RpcPacking
         public bool InputOutputNoResultCalled { get; private set; }
         public int InputOutputNoResultA { get; private set; }
         public string InputOutputNoResultB { get; private set; }
-        public bool InputOutputNoResultC { get; private set; }
         public void InputOutputNoResult(int a, ref string b, out bool c)
         {
             InputOutputNoResultCalled = true;

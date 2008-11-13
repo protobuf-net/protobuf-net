@@ -214,7 +214,7 @@ namespace ProtoBuf.ServiceModel
             if(method == null) throw new ArgumentNullException("method");
             ParameterInfo[] parameters = method.GetParameters();
             if (parameters.Length != 1 || !IsInputParameter(parameters[0]) || IsOutputParameter(parameters[0])
-                || !Serializer.IsEntityType(parameters[0].ParameterType)
+                || !Serializer.IsEntityType(GetEffectiveType(parameters[0].ParameterType))
                 || method.ReturnType == null || !Serializer.IsEntityType(method.ReturnType))
             {
                 throw new InvalidOperationException("To be passed unwrapped, the RPC method must have a single argument and return value, both serializable classes.");
@@ -234,7 +234,7 @@ namespace ProtoBuf.ServiceModel
 
                 if (args.Length != 1) throw new InvalidOperationException("Parameter count mismatch.");
                 // this changes to the correct type and serializes
-                Switch.Serialize(destination, parameter.ParameterType, args[0], PrefixStyle.None);
+                Switch.Serialize(destination, GetEffectiveType(parameter.ParameterType), args[0], PrefixStyle.None);
                 return;
             }
 
@@ -247,9 +247,19 @@ namespace ProtoBuf.ServiceModel
             {
                 ParameterInfo param = parameters[i];
                 if(!IsInputParameter(param)) continue;
-                
-                PackString(param.ParameterType, destination, i + 1, args[i], buffer);
+
+                PackString(GetEffectiveType(param.ParameterType), destination, i + 1, args[i], buffer);
             }
+        }
+
+        static Type GetEffectiveType(Type type)
+        {
+            return type.IsByRef ? type.GetElementType() : type;
+        }
+        static Type GetEffectiveType(Type type, out bool byRef)
+        {
+            byRef = type.IsByRef;
+            return byRef ? type.GetElementType() : type;
         }
 
         protected void PackResponseParameters(bool wrapped, MethodInfo method, object result, object[] args, Stream destination)
@@ -280,9 +290,11 @@ namespace ProtoBuf.ServiceModel
             for (int i = 0; i < args.Length; i++)
             {
                 ParameterInfo param = parameters[i];
-                if (!IsOutputParameter(param)) continue;
+                bool byRef;
+                Type effectiveType = GetEffectiveType(param.ParameterType, out byRef);
+                if (!byRef) continue; // !IsOutputParameter(param)
 
-                PackString(param.ParameterType, destination, i + 2, args[i], buffer);
+                PackString(effectiveType, destination, i + 2, args[i], buffer);
             }
         }
 
@@ -309,7 +321,7 @@ namespace ProtoBuf.ServiceModel
                 if (1 != args.Length) throw new InvalidOperationException("Parameter count mismatch.");
 
                 // this changes to the correct type and serializes
-                args[0] = Switch.Deserialize(source, parameter.ParameterType, PrefixStyle.None);
+                args[0] = Switch.Deserialize(source, GetEffectiveType(parameter.ParameterType), PrefixStyle.None);
                 return;
             }
 
@@ -323,7 +335,7 @@ namespace ProtoBuf.ServiceModel
                 token >>= 3;
                 if ((token < args.Length + 1) && IsInputParameter(parameters[token - 1]))
                 {
-                    args[token - 1] = Switch.Deserialize(source, parameters[token - 1].ParameterType,
+                    args[token - 1] = Switch.Deserialize(source, GetEffectiveType(parameters[token - 1].ParameterType),
                                                          PrefixStyle.Base128);
                 } else
                 {
@@ -375,7 +387,7 @@ namespace ProtoBuf.ServiceModel
                 }
                 else if ((token < args.Length + 2) && IsOutputParameter(parameters[token - 2]))
                 {
-                    args[token - 2] = Switch.Deserialize(source, parameters[token - 2].ParameterType,
+                    args[token - 2] = Switch.Deserialize(source, GetEffectiveType(parameters[token - 2].ParameterType),
                                                          PrefixStyle.Base128);
                 } else
                 {
@@ -394,7 +406,8 @@ namespace ProtoBuf.ServiceModel
 
         static bool IsOutputParameter(ParameterInfo param)
         {   // can't use IsOut as it isn't supported on CF 2.0/3.5
-            return ((param.Attributes & ParameterAttributes.Out) == ParameterAttributes.Out);
+            return param.ParameterType.IsByRef
+                || ((param.Attributes & ParameterAttributes.Out) == ParameterAttributes.Out);
         }
 
         private void Send(RpcMessage message)
