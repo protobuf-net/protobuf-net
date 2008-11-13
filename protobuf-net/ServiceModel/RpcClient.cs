@@ -201,7 +201,7 @@ namespace ProtoBuf.ServiceModel
             message.Type = RpcMessageType.Request;
 
             using (MemoryStream ms = new MemoryStream()) {
-                PackParameters(true, method, args, ms);
+                PackRequestParameters(true, method, args, ms);
                 message.Buffer = ms.ToArray();
             }
 
@@ -213,7 +213,8 @@ namespace ProtoBuf.ServiceModel
         {
             if(method == null) throw new ArgumentNullException("method");
             ParameterInfo[] parameters = method.GetParameters();
-            if (parameters.Length != 1 || !IsInputParameter(parameters[0]) || !Serializer.IsEntityType(parameters[0].ParameterType)
+            if (parameters.Length != 1 || !IsInputParameter(parameters[0]) || IsOutputParameter(parameters[0])
+                || !Serializer.IsEntityType(parameters[0].ParameterType)
                 || method.ReturnType == null || !Serializer.IsEntityType(method.ReturnType))
             {
                 throw new InvalidOperationException("To be passed unwrapped, the RPC method must have a single argument and return value, both serializable classes.");
@@ -221,7 +222,7 @@ namespace ProtoBuf.ServiceModel
             return parameters[0];
         }
 
-        protected void PackParameters(bool wrapped, MethodInfo method, object[] args, Stream destination)
+        protected void PackRequestParameters(bool wrapped, MethodInfo method, object[] args, Stream destination)
         {
             if (method == null) throw new ArgumentNullException("method");
             if (args == null) throw new ArgumentNullException("args");
@@ -246,17 +247,107 @@ namespace ProtoBuf.ServiceModel
             {
                 ParameterInfo param = parameters[i];
                 if(!IsInputParameter(param)) continue;
-                // write the field prefix
-                uint token = (uint)(((i + 2) << 3) | ((int)WireType.String & 7));
-                int len = SerializationContext.EncodeUInt32(token, buffer, 0);
-                destination.Write(buffer, 0, len);
-
-                // this changes to the correct type and serializes the value
-                Switch.Serialize(destination, param.ParameterType, args[i], PrefixStyle.Base128);
+                
+                PackString(param.ParameterType, destination, i + 1, args[i], buffer);
             }
         }
 
-        protected object UnpackParameters(bool wrapped, MethodInfo method, object[] args, Stream source)
+        protected void PackResponseParameters(bool wrapped, MethodInfo method, object result, object[] args, Stream destination)
+        {
+            if (method == null) throw new ArgumentNullException("method");
+            if (args == null) throw new ArgumentNullException("args");
+            if (destination == null) throw new ArgumentNullException("destination");
+
+            if (!wrapped)
+            {
+                ParameterInfo parameter = VerifyCanBePassedUnwrapped(method);
+
+                // this changes to the correct type and serializes
+                Switch.Serialize(destination, method.ReturnType, result, PrefixStyle.None);
+                return;
+            }
+
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length != args.Length) throw new InvalidOperationException("Parameter count mismatch.");
+
+            byte[] buffer = new byte[10];
+
+            if(method.ReturnType != typeof(void))
+            {
+                PackString(method.ReturnType, destination, 1, result, buffer);
+            }
+
+            for (int i = 0; i < args.Length; i++)
+            {
+                ParameterInfo param = parameters[i];
+                if (!IsOutputParameter(param)) continue;
+
+                PackString(param.ParameterType, destination, i + 2, args[i], buffer);
+            }
+        }
+
+        private static void PackString(Type type, Stream destination, int tag, object value, byte[] buffer)
+        {
+            // write the field prefix
+            uint token = (uint)((tag << 3) | ((int)WireType.String & 7));
+            int len = SerializationContext.EncodeUInt32(token, buffer, 0);
+            destination.Write(buffer, 0, len);
+
+            // this changes to the correct type and serializes the value
+            Switch.Serialize(destination, type, value, PrefixStyle.Base128);
+        }
+
+        protected void UnpackRequestParameters(bool wrapped, MethodInfo method, object[] args, Stream source)
+        {
+            if (method == null) throw new ArgumentNullException("method");
+            if (args == null) throw new ArgumentNullException("args");
+            if (source == null) throw new ArgumentNullException("source");
+          
+            if (!wrapped)
+            {
+                ParameterInfo parameter = VerifyCanBePassedUnwrapped(method);
+                if (1 != args.Length) throw new InvalidOperationException("Parameter count mismatch.");
+
+                // this changes to the correct type and serializes
+                args[0] = Switch.Deserialize(source, parameter.ParameterType, PrefixStyle.None);
+                return;
+            }
+
+            ParameterInfo[] parameters = method.GetParameters();
+            if (parameters.Length != args.Length) throw new InvalidOperationException("Parameter count mismatch.");
+
+            uint token;
+            while (SerializationContext.TryDecodeUInt32(source, out token))
+            {
+                if ((token & 7) != (int)WireType.String) throw new InvalidOperationException("Invalid field prefix found in response");
+                token >>= 3;
+                if ((token < args.Length + 1) && IsInputParameter(parameters[token - 1]))
+                {
+                    args[token - 1] = Switch.Deserialize(source, parameters[token - 1].ParameterType,
+                                                         PrefixStyle.Base128);
+                } else
+                {
+                    SkipStringData(source);
+                }
+            }
+        }
+
+        static readonly byte[] trashBuffer = new byte[1024];
+        static void SkipStringData(Stream stream)
+        {
+            int bytesRead, bytesRemaining = (int) SerializationContext.DecodeUInt32(stream);
+            while (bytesRemaining > trashBuffer.Length && (bytesRead = stream.Read(trashBuffer, 0, trashBuffer.Length)) > 0)
+            {
+                bytesRemaining -= bytesRead;   
+            }
+            while (bytesRemaining > 0 && (bytesRead = stream.Read(trashBuffer, 0, bytesRemaining)) > 0)
+            {
+                bytesRemaining -= bytesRead;
+            }
+            if(bytesRemaining != 0) throw new EndOfStreamException();
+        }
+
+        protected object UnpackResponseParameters(bool wrapped, MethodInfo method, object[] args, Stream source)
         {
             if (method == null) throw new ArgumentNullException("method");
             if (args == null) throw new ArgumentNullException("args");
@@ -286,6 +377,9 @@ namespace ProtoBuf.ServiceModel
                 {
                     args[token - 2] = Switch.Deserialize(source, parameters[token - 2].ParameterType,
                                                          PrefixStyle.Base128);
+                } else
+                {
+                    SkipStringData(source);
                 }
             }
 
@@ -294,12 +388,13 @@ namespace ProtoBuf.ServiceModel
 
         static bool IsInputParameter(ParameterInfo param)
         {   // can't use IsIn as it isn't supported on CF 2.0/3.5
-            return ((param.Attributes & ParameterAttributes.In) != ParameterAttributes.None);
+            return param.Attributes == ParameterAttributes.None
+                || ((param.Attributes & ParameterAttributes.In) == ParameterAttributes.In);
         }
 
         static bool IsOutputParameter(ParameterInfo param)
         {   // can't use IsOut as it isn't supported on CF 2.0/3.5
-            return ((param.Attributes & ParameterAttributes.Out) != ParameterAttributes.None);
+            return ((param.Attributes & ParameterAttributes.Out) == ParameterAttributes.Out);
         }
 
         private void Send(RpcMessage message)

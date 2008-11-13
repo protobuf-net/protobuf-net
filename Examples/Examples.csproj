@@ -154,6 +154,7 @@
     <Compile Include="Remoting\RemotingDemo.cs" />
     <Compile Include="Rpc.cs" />
     <Compile Include="RpcTest.cs" />
+    <Compile Include="ServiceModel\RpcPacking.cs" />
     <Compile Include="ServiceModel\WcfTest.cs" />
     <Compile Include="SimpleStream\Collections.cs" />
     <Compile Include="SimpleStream\GroupedData.cs" />
