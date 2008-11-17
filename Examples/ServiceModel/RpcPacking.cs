@@ -5,6 +5,7 @@ using ProtoBuf.ServiceModel;
 using System.IO;
 using System.Collections.Generic;
 using System.Text;
+using ProtoBuf;
 
 [TestFixture]
 public class RpcPacking
@@ -13,14 +14,14 @@ public class RpcPacking
     [Test]
     public void TestPing()
     {
-        var client = new Client<IWrapped>();
-        Wrapped wrapped = new Wrapped();
-        Assert.IsFalse(wrapped.PingCalled);
+        var client = new Client<IService>();
+        MyService myService = new MyService();
+        Assert.IsFalse(myService.PingCalled);
         
-        object result = client.RoundTrip(wrapped, true, "Ping");
+        object result = client.RoundTrip(myService, true, "Ping");
         CheckBytes(client.Request, "request");
         CheckBytes(client.Response, "response");
-        Assert.IsTrue(wrapped.PingCalled, "called");
+        Assert.IsTrue(myService.PingCalled, "called");
         Assert.IsNull(result, "result");
     }
 
@@ -47,53 +48,53 @@ public class RpcPacking
     [Test]
     public void TestNoResult()
     {
-        var client = new Client<IWrapped>();
-        Wrapped wrapped = new Wrapped();
-        Assert.IsFalse(wrapped.NoResultCalled);
+        var client = new Client<IService>();
+        MyService myService = new MyService();
+        Assert.IsFalse(myService.NoResultCalled);
 
-        object result = client.RoundTrip(wrapped, true, "NoResult", 12345, "abcde");
+        object result = client.RoundTrip(myService, true, "NoResult", 12345, "abcde");
 
         CheckBytes(client.Request, "request",
                    GetTag(1, WireType.String), GetBytes(3), GetTag(1, WireType.Variant), GetBytes(0xB9, 0x60),
                    GetTag(2, WireType.String), GetBytes(7), GetTag(1, WireType.String), GetBytes(5), Encoding.UTF8.GetBytes("abcde"));
         CheckBytes(client.Response, "response");
 
-        Assert.IsTrue(wrapped.NoResultCalled, "called");
-        Assert.AreEqual(12345, wrapped.NoResultA, "in:a");
-        Assert.AreEqual("abcde", wrapped.NoResultB, "in:b");
+        Assert.IsTrue(myService.NoResultCalled, "called");
+        Assert.AreEqual(12345, myService.NoResultA, "in:a");
+        Assert.AreEqual("abcde", myService.NoResultB, "in:b");
         Assert.IsNull(result, "result");
     }
 
     [Test]
     public void TestResultOnly()
     {
-        var client = new Client<IWrapped>();
-        Wrapped wrapped = new Wrapped();
-        Assert.IsFalse(wrapped.ResultOnlyCalled);
+        var client = new Client<IService>();
+        MyService myService = new MyService();
+        Assert.IsFalse(myService.ResultOnlyCalled);
 
-        string result = (string) client.RoundTrip(wrapped, true, "ResultOnly");
+        string result = (string) client.RoundTrip(myService, true, "ResultOnly");
         
         CheckBytes(client.Request, "request");
-        int len = Encoding.UTF8.GetByteCount(Wrapped.ResultOnlyExpectedResult);
+        int len = Encoding.UTF8.GetByteCount(MyService.ResultOnlyExpectedResult);
         CheckBytes(client.Response, "response",
                    GetTag(1, WireType.String),
                    GetBytes(2 + len),
                    GetTag(1, WireType.String),
                    GetBytes(len),
-                   Encoding.UTF8.GetBytes(Wrapped.ResultOnlyExpectedResult));
-        Assert.IsTrue(wrapped.ResultOnlyCalled, "called");
-        Assert.AreEqual(Wrapped.ResultOnlyExpectedResult, result, "result");
+                   Encoding.UTF8.GetBytes(MyService.ResultOnlyExpectedResult));
+        Assert.IsTrue(myService.ResultOnlyCalled, "called");
+        Assert.AreEqual(MyService.ResultOnlyExpectedResult, result, "result");
     }
 
     [Test]
     public void TestInputOutputResult()
     {
         object[] args = { 3, "abc", true };
-        var client = new Client<IWrapped>();
-        Wrapped wrapped = new Wrapped();
-        Assert.IsFalse(wrapped.InputOutputResultCalled);
+        var client = new Client<IService>();
+        MyService myService = new MyService();
+        Assert.IsFalse(myService.InputOutputResultCalled);
 
-        object result = client.RoundTrip(wrapped, true, "InputOutputResult", args);
+        object result = client.RoundTrip(myService, true, "InputOutputResult", args);
 
         int len;
         CheckBytes(client.Request, "request",
@@ -101,16 +102,16 @@ public class RpcPacking
             GetTag(2, WireType.String), GetBytes(2 + (len=Encoding.UTF8.GetByteCount("abc"))), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes("abc"));
 
         CheckBytes(client.Response, "response",
-                   GetTag(1, WireType.String), GetBytes(2 + (len = Encoding.UTF8.GetByteCount(Wrapped.InputOutputResultExpectedResult))), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes(Wrapped.InputOutputResultExpectedResult),
-                   GetTag(3, WireType.String), GetBytes(2 + (len = Encoding.UTF8.GetByteCount(Wrapped.InputOutputResultExpectedB))), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes(Wrapped.InputOutputResultExpectedB),
+                   GetTag(1, WireType.String), GetBytes(2 + (len = Encoding.UTF8.GetByteCount(MyService.InputOutputResultExpectedResult))), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes(MyService.InputOutputResultExpectedResult),
+                   GetTag(3, WireType.String), GetBytes(2 + (len = Encoding.UTF8.GetByteCount(MyService.InputOutputResultExpectedB))), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes(MyService.InputOutputResultExpectedB),
                    GetTag(4, WireType.String), GetBytes(2), GetTag(1, WireType.Variant), GetBytes(1));
 
-        Assert.IsTrue(wrapped.InputOutputResultCalled, "called");
-        Assert.AreEqual(Wrapped.InputOutputResultExpectedResult, result, "result");
-        Assert.AreEqual(3, wrapped.InputOutputResultA, "in:a");
-        Assert.AreEqual("abc", wrapped.InputOutputResultB, "in:b");
-        Assert.AreEqual(Wrapped.InputOutputResultExpectedB, args[1], "out:b");
-        Assert.AreEqual(Wrapped.InputOutputResultExpectedC, args[2], "out:c");
+        Assert.IsTrue(myService.InputOutputResultCalled, "called");
+        Assert.AreEqual(MyService.InputOutputResultExpectedResult, result, "result");
+        Assert.AreEqual(3, myService.InputOutputResultA, "in:a");
+        Assert.AreEqual("abc", myService.InputOutputResultB, "in:b");
+        Assert.AreEqual(MyService.InputOutputResultExpectedB, args[1], "out:b");
+        Assert.AreEqual(MyService.InputOutputResultExpectedC, args[2], "out:c");
     }
 
 
@@ -119,30 +120,69 @@ public class RpcPacking
     public void TestInputOutputNoResult()
     {
         object[] args = {3, "abc", true};
-        var client = new Client<IWrapped>();
-        Wrapped wrapped = new Wrapped();
-        Assert.IsFalse(wrapped.InputOutputNoResultCalled);
+        var client = new Client<IService>();
+        MyService myService = new MyService();
+        Assert.IsFalse(myService.InputOutputNoResultCalled);
 
-        object result = client.RoundTrip(wrapped, true, "InputOutputNoResult", args);
+        object result = client.RoundTrip(myService, true, "InputOutputNoResult", args);
 
         int len = Encoding.UTF8.GetByteCount("abc");
         CheckBytes(client.Request, "request",
             GetTag(1, WireType.String), GetBytes(2), GetTag(1, WireType.Variant), GetBytes(3),
             GetTag(2, WireType.String), GetBytes(2 + len), GetTag(1, WireType.String), GetBytes(len), Encoding.UTF8.GetBytes("abc"));
 
-        len = Encoding.UTF8.GetByteCount(Wrapped.InputOutputNoResultExpectedB);
+        len = Encoding.UTF8.GetByteCount(MyService.InputOutputNoResultExpectedB);
         CheckBytes(client.Response, "response",
                    GetTag(3, WireType.String), GetBytes(2 + len), GetTag(1, WireType.String), GetBytes(len),
-                   Encoding.UTF8.GetBytes(Wrapped.InputOutputNoResultExpectedB),
+                   Encoding.UTF8.GetBytes(MyService.InputOutputNoResultExpectedB),
                    GetTag(4, WireType.String), GetBytes(2), GetTag(1, WireType.Variant), GetBytes(1));
 
-        Assert.IsTrue(wrapped.InputOutputNoResultCalled, "called");
+        Assert.IsTrue(myService.InputOutputNoResultCalled, "called");
         Assert.IsNull(result, "result");
-        Assert.AreEqual(3, wrapped.InputOutputNoResultA, "in:a");
-        Assert.AreEqual("abc", wrapped.InputOutputNoResultB, "in:b");
-        Assert.AreEqual(Wrapped.InputOutputNoResultExpectedB, args[1], "out:b");
-        Assert.AreEqual(Wrapped.InputOutputNoResultExpectedC, args[2], "out:c");
+        Assert.AreEqual(3, myService.InputOutputNoResultA, "in:a");
+        Assert.AreEqual("abc", myService.InputOutputNoResultB, "in:b");
+        Assert.AreEqual(MyService.InputOutputNoResultExpectedB, args[1], "out:b");
+        Assert.AreEqual(MyService.InputOutputNoResultExpectedC, args[2], "out:c");
 
+    }
+    [Test]
+    public void TestNonWrapped()
+    {
+        FooRequest req = new FooRequest {QueryText = "abc DEF"};
+        var client = new Client<IService>();
+        MyService myService = new MyService();
+        Assert.IsFalse(myService.FooCalled);
+
+        FooResponse resp = (FooResponse) client.RoundTrip(myService, false, "Foo", req);
+        Assert.IsTrue(myService.FooCalled, "called");
+        Assert.AreEqual("abc DEF", myService.FooQueryText, "req:QueryText");
+        Assert.IsNotNull(resp, "response");
+        Assert.AreEqual(7, resp.Value1, "resp:Value1");
+        Assert.AreEqual("FED cba", resp.Value2, "resp:Value2");
+
+        CheckBytes(client.Request, "request",
+                   GetTag(1, WireType.String), GetBytes(7), Encoding.UTF8.GetBytes("abc DEF"));
+
+        CheckBytes(client.Response, "response",
+                   GetTag(1, WireType.Variant), GetBytes(14),
+                   GetTag(2, WireType.String), GetBytes(7), Encoding.UTF8.GetBytes("FED cba"));
+    }
+
+    [Test]
+    public void TestNonWrappedNulls()
+    {
+        FooRequest req = null;
+        var client = new Client<IService>();
+        MyService myService = new MyService();
+        Assert.IsFalse(myService.FooCalled);
+
+        FooResponse resp = (FooResponse)client.RoundTrip(myService, false, "Foo", req);
+        Assert.IsTrue(myService.FooCalled, "called");
+        Assert.IsNull(myService.FooQueryText, "req:QueryText");
+        Assert.IsNull(resp, "response");
+
+        CheckBytes(client.Request, "request");
+        CheckBytes(client.Response, "response");
     }
 
     static byte[] GetBytes(params int[] values)
@@ -215,8 +255,26 @@ public class RpcPacking
         }
     }
 
-    interface IWrapped
+
+    [ProtoContract]
+    public class FooResponse
     {
+        [ProtoMember(1, DataFormat = DataFormat.ZigZag)]
+        public int Value1 { get; set; }
+
+        [ProtoMember(2)]
+        public string Value2 { get; set; }
+    }
+    [ProtoContract]
+    public class FooRequest
+    {
+        [ProtoMember(1)]
+        public string QueryText { get; set; }
+    }
+
+    interface IService
+    {
+        FooResponse Foo(FooRequest request);
         void Ping();
         void NoResult(int a, string b);
         string ResultOnly();
@@ -224,12 +282,29 @@ public class RpcPacking
         void InputOutputNoResult(int a, ref string b, out bool c);
     }
 
-    class Wrapped : IWrapped
+    class MyService : IService
     {
         public bool PingCalled { get; private set;}
         public void Ping()
         {
             PingCalled = true;
+        }
+
+        internal static string Reverse(string value)
+        {
+            char[] chars = value.ToCharArray();
+            Array.Reverse(chars);
+            return new string(chars);
+        }
+
+        public bool FooCalled { get; private set; }
+        public string FooQueryText { get; private set; }
+        public FooResponse Foo(FooRequest request)
+        {
+            FooCalled = true;
+            if(request == null) return null;
+            FooQueryText = request.QueryText;
+            return new FooResponse {Value1 = request.QueryText.Length, Value2 = Reverse(request.QueryText)};
         }
 
         public bool NoResultCalled { get; private set;}
