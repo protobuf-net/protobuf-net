@@ -8,6 +8,7 @@ using ProtoBuf.ServiceModel;
 using System.Net.Sockets;
 using System.Runtime.Serialization;
 
+#if DEBUG
 namespace Examples
 {
     interface IFoo
@@ -59,3 +60,4 @@ namespace Examples
         }
     }
 }
+#endif

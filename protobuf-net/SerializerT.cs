@@ -270,6 +270,7 @@ namespace ProtoBuf
             // stack yet - we'll do that within each instance (otherwise deep
             // items could incorrectly count as cyclic).
             Type actualType = instance.GetType();
+            int total = 0, len;
             if (actualType != typeof(T))
             {
                 bool subclassFound = false;
@@ -277,7 +278,7 @@ namespace ProtoBuf
                 {
                     if (subclass.Key.IsAssignableFrom(actualType))
                     {
-                        subclass.Value.Serialize(instance, context);
+                        total += subclass.Value.Serialize(instance, context);
                         subclassFound = true;
                         break;
                     }
@@ -289,7 +290,6 @@ namespace ProtoBuf
             }
 
             context.Push(instance);
-            int total = 0, len;
             for (int i = 0; i < writeProps.Length; i++)
             {
                 // note that this serialization includes the headers...

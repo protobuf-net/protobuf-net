@@ -1,4 +1,4 @@
-
+#if DEBUG
     // Generated from rpc.proto
     // Option: xml serialization enabled  
     
@@ -92,7 +92,7 @@
   
     }
     
-    
+
     public class SearchServiceClient : ProtoBuf.ServiceModel.RpcClient
     {
       public SearchServiceClient() : base(typeof(ISearchService)) { }
@@ -105,4 +105,4 @@
     }
     
     }
-  
+#endif

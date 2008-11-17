@@ -6,7 +6,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Text;
 using ProtoBuf;
-
+#if DEBUG
 [TestFixture]
 public class RpcPacking
 {
@@ -357,3 +357,4 @@ public class RpcPacking
     }
 }
 
+#endif

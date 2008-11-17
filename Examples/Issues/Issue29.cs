@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using ProtoBuf;
@@ -14,11 +15,37 @@ namespace Examples.Issue29
     public class TestIssue29
     {
         [Test]
-        public void TestClone()
+        public void TestDeepClone()
         {
             Person person = Person.Create();
             Person clone = Serializer.DeepClone(person);
             CheckEqual(person, clone);
+        }
+
+        [Test]
+        public void TestMemoryStream()
+        {
+            Person person = Person.Create(), clone;
+            using(MemoryStream ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, person);
+                ms.Position = 0;
+                EchoStream("TestMemoryStream", ms);
+                ms.Position = 0;
+                clone = Serializer.Deserialize<Person>(ms);
+            }
+            CheckEqual(person,clone);
+        }
+
+        static void EchoStream(string caption, Stream stream)
+        {
+            StringBuilder sb = new StringBuilder();
+            int i;
+            while((i=stream.ReadByte()) >=0)
+            {
+                sb.Append(i.ToString("X2")).Append('.');
+            }
+            Debug.WriteLine(sb, caption);
         }
 
         [Test]
@@ -30,6 +57,11 @@ namespace Examples.Issue29
                 Serializer.Serialize(fs, person);
                 fs.Close();
             }
+            using (FileStream fs = File.OpenRead("issue29.dat"))
+            {
+                EchoStream("SaveToDisk", fs);
+            }
+
             using(FileStream fs = File.OpenRead("issue29.dat"))
             {
                 clone = Serializer.Deserialize<Person>(fs);
