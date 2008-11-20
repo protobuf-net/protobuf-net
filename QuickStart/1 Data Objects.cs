@@ -5,7 +5,7 @@ using System;
 namespace QuickStart
 {
     [ProtoContract]
-    class Customer
+    public class Customer
     {
         [ProtoMember(1)]
         public string CustomerId { get; set; }
@@ -58,7 +58,7 @@ namespace QuickStart
     }
 
     [ProtoContract]
-    class Contact
+    public class Contact
     {
         [ProtoMember(1)]
         public string Name { get; set; }
