@@ -15,6 +15,28 @@ namespace ProtoBuf
         public string Name { get { return name; } set { name = value; } }
         private string name;
 
+        /// <summary>
+        /// Gets or sets the fist offset to use with implicit field tags;
+        /// only uesd if ImplicitFields is set.
+        /// </summary>
+        public int ImplicitFirstTag
+        {
+            get { return implicitFirstTag; }
+            set
+            {
+                if (value < 1) throw new ArgumentOutOfRangeException("ImplicitFirstTag");
+                implicitFirstTag = value; }
+        }
+        private int implicitFirstTag;
+
+        /// <summary>
+        /// Gets or sets the mechanism used to automatically infer field tags
+        /// for members. This option should be used in advanced scenarios only.
+        /// Please review the important notes against the ImplicitFields enumeration.
+        /// </summary>
+        public ImplicitFields ImplicitFields { get { return implicitFields; } set { implicitFields = value; } }
+        private ImplicitFields implicitFields;
+
         #if NET_3_0
 
         private bool? inferTagFromName;

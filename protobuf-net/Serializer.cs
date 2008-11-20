@@ -67,12 +67,33 @@ namespace ProtoBuf
             }
         }
 
+        static void AddImplicitByDeclaringType<T>(Type declaringType, List<MemberInfo> list, T[] members)
+            where T : MemberInfo
+        {
+            int tag;
+            string name;
+            DataFormat fmt;
+            bool isRequired;
+            foreach(T member in members)
+            {
+                if(member.DeclaringType == declaringType
+                    && TryGetTag(member, out tag, out name, true, out fmt, out isRequired) && tag < 1) list.Add(member);
+            }
+        }
+
         internal static bool TryGetTag(MemberInfo member, out int tag, out string name, bool callerIsTagInference, out DataFormat format, out bool isRequired)
         {
             name = member.Name;
             format = DataFormat.Default;
             tag = -1;
             isRequired = false;
+
+            // check for exclusion
+            if(AttributeUtils.GetAttribute<ProtoIgnoreAttribute>(member) != null
+                  || AttributeUtils.GetAttribute<ProtoPartialIgnoreAttribute>(member.ReflectedType,
+                     delegate( ProtoPartialIgnoreAttribute ppia)
+                          { return ppia.MemberName == member.Name; }) != null) return false;
+            
             // check against the property
             ProtoMemberAttribute pm = AttributeUtils.GetAttribute<ProtoMemberAttribute>(member);
             if (pm == null)
@@ -88,6 +109,41 @@ namespace ProtoBuf
                 isRequired = pm.IsRequired;
                 return tag > 0;
             }
+
+            ProtoContractAttribute pca = AttributeUtils.GetAttribute<ProtoContractAttribute>(member.DeclaringType);
+            if(pca != null && pca.ImplicitFields != ImplicitFields.None)
+            {
+                if(callerIsTagInference) return true; // short-circuit
+
+                List<MemberInfo> members = new List<MemberInfo>();
+                switch(pca.ImplicitFields)
+                {
+                    case ImplicitFields.AllFields:
+                        AddImplicitByDeclaringType(member.DeclaringType, members,
+                            member.DeclaringType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
+                        break;
+                    case ImplicitFields.AllPublic:
+                        AddImplicitByDeclaringType(member.DeclaringType, members,
+                            member.DeclaringType.GetFields(BindingFlags.Instance | BindingFlags.Public));
+                        AddImplicitByDeclaringType(member.DeclaringType, members,
+                            member.DeclaringType.GetProperties(BindingFlags.Instance | BindingFlags.Public));
+                        break;
+                    default:
+                        throw new NotSupportedException("Unknown ImplicitFields option: " + pca.ImplicitFields);
+                }
+                members.Sort(delegate (MemberInfo x, MemberInfo y)
+                {
+                    return string.CompareOrdinal(x.Name, y.Name);
+                });
+                int index = members.IndexOf(member);
+                if(index >= 0)
+                {
+                    tag = index + pca.ImplicitFirstTag;
+                    return true;
+                }
+                return false;
+            }
+
 #if NET_3_0
             DataMemberAttribute dm = AttributeUtils.GetAttribute<DataMemberAttribute>(member);
             if (dm != null)
@@ -96,7 +152,6 @@ namespace ProtoBuf
                 tag = dm.Order;
                 if(!callerIsTagInference) // avoid infinite recursion
                 {
-                    ProtoContractAttribute pca = AttributeUtils.GetAttribute<ProtoContractAttribute>(member.DeclaringType);
                     if (pca != null && pca.InferTagFromName)
                     {
                         // since the type has inference enabled, identify the members for the

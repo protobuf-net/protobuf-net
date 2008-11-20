@@ -145,6 +145,7 @@
       <DependentUpon>Serializer.cs</DependentUpon>
     </Compile>
     <Compile Include="IExtension.cs" />
+    <Compile Include="ImplicitFields.cs" />
     <Compile Include="ObjectFactory.cs" />
     <Compile Include="PrefixStyle.cs" />
     <Compile Include="Property\PropertyPairString.cs" />
@@ -197,6 +198,7 @@
     <Compile Include="Base128Variant.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ProtoIgnoreAttribute.cs" />
     <Compile Include="SerializationContext.Read.cs">
       <DependentUpon>SerializationContext.cs</DependentUpon>
     </Compile>
@@ -216,7 +218,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-<!--  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <!--  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <PostBuildEvent>@%25SystemRoot%25\Microsoft.NET\Framework\v2.0.50727\MSBuild "$(ProjectPath)" /t:Rebuild /p:Configuration=Net20 /v:n</PostBuildEvent>
   </PropertyGroup>-->
 </Project>

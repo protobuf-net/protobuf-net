@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using ProtoBuf.Property;
+using System.Diagnostics;
 
 namespace ProtoBuf
 {
@@ -242,9 +243,11 @@ namespace ProtoBuf
                 }
                 subclasses = subclassList.ToArray();
             }
-            catch
+            catch (Exception ex)
             {
                 readProps = writeProps = null;
+                Debug.WriteLine("Build() failed for type: " + typeof(T).AssemblyQualifiedName);
+                Debug.WriteLine(ex);
                 throw;
             }
         }
