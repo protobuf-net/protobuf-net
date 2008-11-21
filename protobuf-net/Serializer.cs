@@ -88,6 +88,21 @@ namespace ProtoBuf
             tag = -1;
             isRequired = false;
 
+            // check for delegates (don't even try!)
+            Type valueType;
+            switch(member.MemberType)
+            {
+                case MemberTypes.Property:
+                    valueType = ((PropertyInfo)member).PropertyType;
+                    break;
+                case MemberTypes.Field:
+                    valueType = ((FieldInfo) member).FieldType;
+                    break;
+                default: // not sure what this is!
+                    return false;
+            }
+            if (valueType.IsSubclassOf(typeof(Delegate))) return false;
+
             // check for exclusion
             if(AttributeUtils.GetAttribute<ProtoIgnoreAttribute>(member) != null
                   || AttributeUtils.GetAttribute<ProtoPartialIgnoreAttribute>(member.ReflectedType,
@@ -113,6 +128,10 @@ namespace ProtoBuf
             ProtoContractAttribute pca = AttributeUtils.GetAttribute<ProtoContractAttribute>(member.DeclaringType);
             if(pca != null && pca.ImplicitFields != ImplicitFields.None)
             {
+#if !SILVERLIGHT
+                // skip [NonSerialized]
+                if(AttributeUtils.GetAttribute<NonSerializedAttribute>(member) != null) return false;
+#endif
                 if(callerIsTagInference) return true; // short-circuit
 
                 List<MemberInfo> members = new List<MemberInfo>();

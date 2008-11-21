@@ -207,8 +207,19 @@ namespace ProtoBuf
                         readPropList.Add(altProp);
                     }
                 }
-                readPropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
-                writePropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
+#if CF2
+                try 
+                {
+#endif
+                    readPropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
+                    writePropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
+#if CF2
+                }
+                catch (MethodAccessException ex)
+                {
+                    throw new InvalidOperationException("A known CF 2.0 runtime bug has tripped up protobuf-net; as a workaround, try making your entity classes public (including any outer-classes for nested types). This runtime bug is fixed in CF 3.5.", ex);
+                }
+#endif
                 readProps = readPropList.ToArray();
                 writeProps = writePropList.ToArray();
 

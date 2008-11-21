@@ -50,6 +50,9 @@ namespace Examples
         [ProtoPartialIgnore("g_ignoreIndirect")]
         public class ImplicitFieldPOCO
         {
+            public event EventHandler Foo;
+            public Action Bar;
+
             public int D_public;
 
             private int e_private;
@@ -73,6 +76,8 @@ namespace Examples
                 get { return g_ignoreIndirect; }
                 set { g_ignoreIndirect = value; }
             }
+            [NonSerialized]
+            public int H_nonSerialized;
 
             [ProtoMember(1)]
             private int x_explicitField;
@@ -103,30 +108,33 @@ namespace Examples
                                         E_private = 101,
                                         F_ignoreDirect = 102,
                                         G_ignoreIndirect = 103,
-                                        X_explicitField = 104,
-                                        Z_explicitProperty = 105
+                                        H_nonSerialized = 104,
+                                        X_explicitField = 105,
+                                        Z_explicitProperty = 106
 
                                     };
             Assert.AreEqual(100, foo.D_public, "D: pre");
             Assert.AreEqual(101, foo.E_private, "E: pre");
             Assert.AreEqual(102, foo.F_ignoreDirect, "F: pre");
             Assert.AreEqual(103, foo.G_ignoreIndirect, "G: pre");
-            Assert.AreEqual(104, foo.X_explicitField, "X: pre");
-            Assert.AreEqual(105, foo.Z_explicitProperty, "Z: pre");
+            Assert.AreEqual(104, foo.H_nonSerialized, "H: pre");
+            Assert.AreEqual(105, foo.X_explicitField, "X: pre");
+            Assert.AreEqual(106, foo.Z_explicitProperty, "Z: pre");
 
             ImplicitFieldPOCO bar = Serializer.DeepClone(foo);
             Assert.AreEqual(100, bar.D_public, "D: post");
             Assert.AreEqual(101, bar.E_private, "E: post");
             Assert.AreEqual(0, bar.F_ignoreDirect, "F: post");
             Assert.AreEqual(0, bar.G_ignoreIndirect, "G: post");
-            Assert.AreEqual(104, bar.X_explicitField, "X: post");
-            Assert.AreEqual(105, bar.Z_explicitProperty, "Z: post");
+            Assert.AreEqual(0, bar.H_nonSerialized, "H: post");
+            Assert.AreEqual(105, bar.X_explicitField, "X: post");
+            Assert.AreEqual(106, bar.Z_explicitProperty, "Z: post");
 
             ImplicitFieldPOCOEquiv equiv = Serializer.ChangeType<ImplicitFieldPOCO, ImplicitFieldPOCOEquiv>(foo);
             Assert.AreEqual(100, equiv.D, "D: equiv");
             Assert.AreEqual(101, equiv.E, "E: equiv");
-            Assert.AreEqual(104, equiv.X, "X: equiv");
-            Assert.AreEqual(105, equiv.Z, "Z: equiv");
+            Assert.AreEqual(105, equiv.X, "X: equiv");
+            Assert.AreEqual(106, equiv.Z, "Z: equiv");
 
 
         }
