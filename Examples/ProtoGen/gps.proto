@@ -1,0 +1,7 @@
+package issue32;
+message GPS
+{
+   required int64 Date=1;
+   optional double Latitude = 2;
+   optional double Longitude = 3;
+}
