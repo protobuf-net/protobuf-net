@@ -11,7 +11,8 @@
   <xsl:param name="observable"/>
   <xsl:param name="preObservable"/>
   <xsl:param name="partialMethods"/>
-  
+
+  <xsl:key name="fieldNames" match="//FieldDescriptorProto" use="name"/>
   
   <xsl:output method="text" indent="no" omit-xml-declaration="yes"/>
 
@@ -151,6 +152,14 @@
     </xsl:if>
   </xsl:template>
 
+  <xsl:template match="FieldDescriptorProto" mode="field">
+    <xsl:choose>
+      <xsl:when test="not(key('fieldNames',concat('_',name)))"><xsl:value-of select="concat('_',name)"/></xsl:when>
+      <xsl:when test="not(key('fieldNames',concat(name,'Field')))"><xsl:value-of select="concat(name,'Field')"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="concat('_',generate-id())"/></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  
   <xsl:template match="FieldDescriptorProto" mode="format">
     <xsl:choose>
       <xsl:when test="type='TYPE_DOUBLE' or type='TYPE_FLOAT'
@@ -166,7 +175,7 @@
   </xsl:template>
   <xsl:template match="FieldDescriptorProto" mode="type">
     <xsl:choose>
-      <xsl:when test="not(type)">int</xsl:when>
+      <xsl:when test="not(type)">double</xsl:when>
       <xsl:when test="type='TYPE_DOUBLE'">double</xsl:when>
       <xsl:when test="type='TYPE_FLOAT'">float</xsl:when>
       <xsl:when test="type='TYPE_INT64'">long</xsl:when>
@@ -237,7 +246,8 @@
     <xsl:variable name="type"><xsl:apply-templates select="." mode="type"/></xsl:variable>
     <xsl:variable name="format"><xsl:apply-templates select="." mode="format"/></xsl:variable>
     <xsl:variable name="defaultValue"><xsl:apply-templates select="." mode="defaultValue"/></xsl:variable>
-    private <xsl:value-of select="concat($type, ' _', generate-id())"/> = <xsl:value-of select="$defaultValue"/>;
+    <xsl:variable name="field"><xsl:apply-templates select="." mode="field"/></xsl:variable>
+    private <xsl:value-of select="concat($type, ' ', $field)"/> = <xsl:value-of select="$defaultValue"/>;
 
     [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired = false, Name=@"<xsl:value-of select="name"/>", DataFormat = ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)]
     [System.ComponentModel.DefaultValue(<xsl:value-of select="$defaultValue"/>)]
@@ -250,14 +260,15 @@
     <xsl:call-template name="WriteGetSet">
       <xsl:with-param name="type" select="$type"/>
       <xsl:with-param name="name" select="name"/>
-      <xsl:with-param name="field" select="concat('_',generate-id())"/>
+      <xsl:with-param name="field" select="$field"/>
     </xsl:call-template>
   </xsl:template>
   
   <xsl:template match="FieldDescriptorProto[label='LABEL_REQUIRED']">
     <xsl:variable name="type"><xsl:apply-templates select="." mode="type"/></xsl:variable>
     <xsl:variable name="format"><xsl:apply-templates select="." mode="format"/></xsl:variable>
-    private <xsl:value-of select="concat($type, ' _', generate-id())"/>;
+    <xsl:variable name="field"><xsl:apply-templates select="." mode="field"/></xsl:variable>
+    private <xsl:value-of select="concat($type, ' ', $field)"/>;
 
     [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired = true, Name=@"<xsl:value-of select="name"/>", DataFormat = ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)]
     <xsl:if test="$optionXml">
@@ -269,7 +280,7 @@
     <xsl:call-template name="WriteGetSet">
       <xsl:with-param name="type" select="$type"/>
       <xsl:with-param name="name" select="name"/>
-      <xsl:with-param name="field" select="concat('_',generate-id())"/>
+      <xsl:with-param name="field" select="$field"/>
     </xsl:call-template>    
   </xsl:template>
 
@@ -290,7 +301,8 @@
   <xsl:template match="FieldDescriptorProto[label='LABEL_REPEATED']">
     <xsl:variable name="type"><xsl:apply-templates select="." mode="type"/></xsl:variable>
     <xsl:variable name="format"><xsl:apply-templates select="." mode="format"/></xsl:variable>
-    private readonly System.Collections.Generic.List&lt;<xsl:value-of select="$type" />&gt; _<xsl:value-of select="generate-id()"/> = new System.Collections.Generic.List&lt;<xsl:value-of select="$type"/>&gt;();
+    <xsl:variable name="field"><xsl:apply-templates select="." mode="field"/></xsl:variable>
+    private readonly System.Collections.Generic.List&lt;<xsl:value-of select="$type" />&gt; <xsl:value-of select="$field"/> = new System.Collections.Generic.List&lt;<xsl:value-of select="$type"/>&gt;();
 
     [ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, Name=@"<xsl:value-of select="name"/>", DataFormat = ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)]
     <xsl:if test="$optionDataContract">
@@ -301,14 +313,14 @@
     </xsl:if>
     public System.Collections.Generic.List&lt;<xsl:value-of select="$type" />&gt; <xsl:value-of select="name"/>
     {
-      get { return _<xsl:value-of select="generate-id()"/>; }
+      get { return <xsl:value-of select="$field"/>; }
       <xsl:if test="$optionXml">
       set
       { // setter needed for XmlSerializer
-        _<xsl:value-of select="generate-id()"/>.Clear();
+        <xsl:value-of select="$field"/>.Clear();
         if(value != null)
         {
-          _<xsl:value-of select="generate-id()"/>.AddRange(value);
+          <xsl:value-of select="$field"/>.AddRange(value);
         }
       }
       </xsl:if>

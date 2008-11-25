@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using ProtoBuf.Property;
+using System.Diagnostics;
 
 namespace ProtoBuf
 {
@@ -27,8 +28,9 @@ namespace ProtoBuf
                             .MakeGenericMethod(typeof(T)).Invoke(null, null);
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Debug.WriteLine(ex.ToString(), "SerializerProxy.cctor");
                     // nope, can't do it...
                 }
             }

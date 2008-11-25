@@ -160,7 +160,7 @@ namespace ProtoBuf
             if (readProps != null) return;
             try
             {
-                readProps = new Property<T>[0]; // to prevent recursion
+                readProps = writeProps = new Property<T>[0]; // to prevent recursion
                 if (!Serializer.IsEntityType(typeof(T)))
                 {
                     throw new InvalidOperationException("Only concrete data-contract classes can be processed");
@@ -207,19 +207,15 @@ namespace ProtoBuf
                         readPropList.Add(altProp);
                     }
                 }
+
 #if CF2
-                try 
-                {
+                CrapSort(readPropList, delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
+                CrapSort(writePropList, delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
+#else
+                readPropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
+                writePropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
 #endif
-                    readPropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
-                    writePropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
-#if CF2
-                }
-                catch (MethodAccessException ex)
-                {
-                    throw new InvalidOperationException("A known CF 2.0 runtime bug has tripped up protobuf-net; as a workaround, try making your entity classes public (including any outer-classes for nested types). This runtime bug is fixed in CF 3.5.", ex);
-                }
-#endif
+                
                 readProps = readPropList.ToArray();
                 writeProps = writePropList.ToArray();
 
@@ -263,6 +259,30 @@ namespace ProtoBuf
             }
         }
 
+#if CF2
+        static void CrapSort<TValue>(IList<TValue> list, Comparison<TValue> comparer)
+        {
+            int len = list.Count;
+            for(int i = 0 ; i < len - 1; i++)
+            {
+                for(int j = 0 ; j < len - 1; j++)
+                {
+                    TValue x = list[j], y = list[j + 1];
+                    if(comparer(x,y)>0)
+                    { // swap
+                        list[j] = y;
+                        list[j + 1] = x;
+                    }
+                }
+            }
+#if DEBUG
+            for(int i = 0 ; i < len - 1 ; i++)
+            {
+                if (comparer(list[i], list[i + 1]) > 0) throw new NotImplementedException("I messed up the sort...");
+            }
+#endif
+        }
+#endif
         internal static int Serialize(T instance, Stream destination)
         {
             if (readProps == null) Build();

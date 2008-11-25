@@ -12,7 +12,7 @@ namespace Examples.ProtoGen
     [TestFixture]
     public class Generator
     {
-        static string GetCode(params string[] args)
+        public static string GetCode(params string[] args)
         {
 
             // ensure we have quiet mode enabled
@@ -77,7 +77,7 @@ namespace Examples.ProtoGen
             Assert.IsFalse(string.IsNullOrEmpty(doc.OuterXml), "xml should be non-empty");
         }
 
-        private static void TestCompileCSharp(string code, params string[] extraReferences)
+        public static void TestCompileCSharp(string code, params string[] extraReferences)
         {
             TestCompile<CSharpCodeProvider>(null, code, extraReferences);
         }
