@@ -120,6 +120,7 @@
   <ItemGroup>
     <Compile Include="Arrays.cs" />
     <Compile Include="AutoFields.cs" />
+    <Compile Include="DataMemberOffset.cs" />
     <Compile Include="DictionaryTests.cs" />
     <Compile Include="EnumTests.cs" />
     <Compile Include="ExtendedTimeTests.cs" />

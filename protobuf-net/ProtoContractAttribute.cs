@@ -55,6 +55,21 @@ namespace ProtoBuf
             set { inferTagFromName = value; }
         }
 
+        private int dataMemberOffset;
+
+        /// <summary>
+        /// Specifies an offset to apply to [DataMember(Order=...)] markers;
+        /// this is useful when working with mex-generated classes that have
+        /// a different origin (usually 1 vs 0) than the original data-contract.
+        /// 
+        /// This value is added to the Order of each member.
+        /// </summary>
+        public int DataMemberOffset
+        {
+            get { return dataMemberOffset; }
+            set { dataMemberOffset = value; }
+        }
+
         #endif
     }
 }

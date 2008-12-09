@@ -222,6 +222,9 @@ namespace ProtoBuf.ServiceModel
             return parameters[0];
         }
 
+        /// <summary>
+        /// Pack request parameters for sending to an RPC call.
+        /// </summary>
         protected void PackRequestParameters(bool wrapped, MethodInfo method, object[] args, Stream destination)
         {
             if (method == null) throw new ArgumentNullException("method");
@@ -262,6 +265,9 @@ namespace ProtoBuf.ServiceModel
             return byRef ? type.GetElementType() : type;
         }
 
+        /// <summary>
+        /// Pack response parameters for returning from an RPC call.
+        /// </summary>
         protected void PackResponseParameters(bool wrapped, MethodInfo method, object result, object[] args, Stream destination)
         {
             if (method == null) throw new ArgumentNullException("method");
@@ -308,7 +314,9 @@ namespace ProtoBuf.ServiceModel
             // this changes to the correct type and serializes the value
             Switch.Serialize(destination, type, value, PrefixStyle.Base128);
         }
-
+        /// <summary>
+        /// Unpack request parameters for processing an RPC call.
+        /// </summary>
         protected void UnpackRequestParameters(bool wrapped, MethodInfo method, object[] args, Stream source)
         {
             if (method == null) throw new ArgumentNullException("method");
@@ -359,6 +367,9 @@ namespace ProtoBuf.ServiceModel
             if(bytesRemaining != 0) throw new EndOfStreamException();
         }
 
+        /// <summary>
+        /// Unpack response parameters for completing an RPC call.
+        /// </summary>
         protected object UnpackResponseParameters(bool wrapped, MethodInfo method, object[] args, Stream source)
         {
             if (method == null) throw new ArgumentNullException("method");

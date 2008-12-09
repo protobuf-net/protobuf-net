@@ -169,6 +169,8 @@ namespace ProtoBuf
             {
                 if (!string.IsNullOrEmpty(dm.Name)) name = dm.Name;
                 tag = dm.Order;
+                if (pca != null) tag += pca.DataMemberOffset;
+
                 if(!callerIsTagInference) // avoid infinite recursion
                 {
                     if (pca != null && pca.InferTagFromName)
@@ -517,7 +519,6 @@ namespace ProtoBuf
                 Merge<T>(ms, instance);
             }
         }
-
 #endif
 
         /// <summary>
@@ -784,5 +785,18 @@ namespace ProtoBuf
             });
             return list;
         }
+
+        /// <summary>
+        /// Ensures that the serialization algorithm has been prepared for
+        /// the given type; this can be useful in highly threaded code to
+        /// ensure that all types are ready ahead of time, avoiding deadlock
+        /// scenarios.
+        /// </summary>
+        /// <typeparam name="T">The object type to prepare.</typeparam>
+        public static void PrepareSerializer<T>() where T : class
+        {
+            Serializer<T>.Build();
+        }
+
     }
 }

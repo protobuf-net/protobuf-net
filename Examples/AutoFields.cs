@@ -51,6 +51,10 @@ namespace Examples
         public class ImplicitFieldPOCO
         {
             public event EventHandler Foo;
+            protected virtual void OnFoo()
+            {
+                if (Foo != null) Foo(this, EventArgs.Empty);
+            }
             public Action Bar;
 
             public int D_public;

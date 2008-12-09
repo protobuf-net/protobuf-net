@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using ProtoBuf.Property;
-using System.Diagnostics;
 
 namespace ProtoBuf
 {
@@ -151,16 +152,33 @@ namespace ProtoBuf
 #endif
         private static Property<T>[] readProps, writeProps;
         private static KeyValuePair<Type, Property<T, T>>[] subclasses;
-
+        private static readonly object lockToken = new object();
 
 
 
         internal static void Build()
         {
-            if (readProps != null) return;
+            if (readProps != null) return; // completely built and ready for use
+#if CF // no wait option on CF
+            if (!Monitor.TryEnter(lockToken))
+#else // give it a few seconds on regular .NET
+            if (!Monitor.TryEnter(lockToken, 5000))
+#endif
+            {
+                throw new InvalidOperationException("Possible deadlock detected preparing serializer for " + typeof(T).Name + "; try using Serializer.PrepareSerializer to initialize this type at application startup.");
+            }
             try
             {
-                readProps = writeProps = new Property<T>[0]; // to prevent recursion
+                if (subclasses != null)
+                {
+                    // readProps = null, but subclasses != null -}
+                    // this scenario means that we are in the process of building the
+                    // serializer; since we have got into the lock, this must be re-entrancy, so simply ignore
+                    return; 
+                }
+                // otherwise we are building the serializer for the first time; initialize
+                // subclasses as a marker that we are in-progress
+                subclasses = new KeyValuePair<Type, Property<T, T>>[0]; // use this to prevent recursion
                 if (!Serializer.IsEntityType(typeof(T)))
                 {
                     throw new InvalidOperationException("Only concrete data-contract classes can be processed");
@@ -216,9 +234,6 @@ namespace ProtoBuf
                 writePropList.Sort(delegate(Property<T> x, Property<T> y) { return x.FieldPrefix.CompareTo(y.FieldPrefix); });
 #endif
                 
-                readProps = readPropList.ToArray();
-                writeProps = writePropList.ToArray();
-
                 List<KeyValuePair<Type, Property<T, T>>> subclassList = new List<KeyValuePair<Type, Property<T, T>>>();
                 foreach (ProtoIncludeAttribute pia in Attribute.GetCustomAttributes(typeof(T), typeof(ProtoIncludeAttribute), false))
                 {
@@ -249,13 +264,20 @@ namespace ProtoBuf
                     subclassList.Add(new KeyValuePair<Type, Property<T, T>>(subclassType, prop));
                 }
                 subclasses = subclassList.ToArray();
+                writeProps = writePropList.ToArray();
+                readProps = readPropList.ToArray(); // this must be last; this lets other threads see the data
             }
             catch (Exception ex)
             {
                 readProps = writeProps = null;
+                subclasses = null;
                 Debug.WriteLine("Build() failed for type: " + typeof(T).AssemblyQualifiedName);
                 Debug.WriteLine(ex);
                 throw;
+            }
+            finally
+            {
+                Monitor.Exit(lockToken);
             }
         }
 
