@@ -2,7 +2,7 @@
 <project name="protobuf-net" default="all">
   <property name="nant.settings.currentframework" value="mono-3.5" />
   <property name="project.version" value="0.0.0.1"/>
-  <property name="source.dir" value="."/>
+  <property name="source.dir" value=".."/>
   <property name="dependencies.dir" value="./Dependencies"/>
   <property name="build.dir" value="./bin/Debug"/>
   <property name="doc.dir" value="./docs"/>
@@ -16,46 +16,12 @@
     <mkdir dir="${doc.dir}" failonerror="false"/>
   </target>
 
-  <target name="ProtoBuf" depends="init">
+  <target name="protobuf-net" depends="init">
     <csc target="library" output="${build.dir}/${target::get-current-target()}.dll" define="NET_2_0;NET_3_5;REMOTING" debug="${not build.release}" optimize="${build.release}" doc="${doc.dir}/${target::get-current-target()}.xml">
       <sources>
         <include name="${source.dir}/protobuf-net/**/*.cs"/>
       </sources>
       <references>
-        <include name="System.dll"/>
-        <include name="System.Runtime.Serialization.dll"/>
-        <include name="System.Xml.dll"/>
-        <include name="System.ServiceModel.dll"/>
-      </references>
-    </csc>
-  </target>
-  
-  <target name="Examples" depends="ProtoBuf">
-    <csc target="exe" output="${build.dir}/${target::get-current-target()}.exe" define="NET_2_0;NET_3_5;REMOTING" debug="${not build.release}" optimize="${build.release}" doc="${doc.dir}/${target::get-current-target()}.xml">
-      <sources>
-        <include name="${source.dir}/Examples/**/*.cs"/>
-      </sources>
-      <references>
-        <include name="Tools/nunit.framework.dll"/>
-        <include name="${build.dir}/ProtoBuf.dll"/>
-        <include name="Tools/MiscUtil.dll"/>
-        <include name="System.dll"/>
-        <include name="System.Runtime.Serialization.dll"/>
-        <include name="System.Xml.dll"/>
-        <include name="System.ServiceModel.dll"/>
-        <include name="System.Runtime.Serialization.Formatters.Soap.dll"/>
-      </references>
-    </csc>
-  </target>
-
-  <target name="DatePipeline" depends="ProtoBuf">
-    <csc target="exe" output="${build.dir}/${target::get-current-target()}.exe" define="NET_2_0;NET_3_5;REMOTING" debug="${not build.release}" optimize="${build.release}" doc="${doc.dir}/${target::get-current-target()}.xml">
-      <sources>
-        <include name="${source.dir}/DataPipeline/**/*.cs"/>
-      </sources>
-      <references>
-        <include name="${build.dir}/ProtoBuf.dll"/>
-        <include name="Tools/MiscUtil.dll"/>
         <include name="System.dll"/>
         <include name="System.Runtime.Serialization.dll"/>
         <include name="System.Xml.dll"/>
@@ -87,9 +53,7 @@
 
   <target name="all">
     <call target="init"/>
-    <call target="ProtoBuf"/>
-    <call target="DatePipeline"/>
-    <call target="Examples"/>
+    <call target="protobuf-net"/>
   </target>
 
   <target name="clean">

@@ -129,10 +129,12 @@ namespace ProtoBuf.Property
             prop.Init(Tag, DataFormat, getValue, setValue, IsOptional, defaultValue);
             return prop;
         }
-        protected T CreateAlternative<T>(DataFormat format) where T : Property<TSource>, new()
+        protected T CreateAlternative<T>(DataFormat format) where T : new()
         {
             T alt = new T();
-            alt.Init(Tag, format, getValue, setValue, IsOptional, DefaultValue);
+            Property<TSource> forInit = alt as Property<TSource>;
+            if (forInit == null) throw new InvalidOperationException("Internal protobuf-net error; the type T in CreateAlternative must be a Property<TSource>; this cannot be enforced in a generic constraint due to a mono compiler issue. T was " + typeof(T).FullName);
+            forInit.Init(Tag, format, getValue, setValue, IsOptional, DefaultValue);
             return alt;
         }
         

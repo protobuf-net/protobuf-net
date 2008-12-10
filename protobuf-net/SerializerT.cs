@@ -169,11 +169,13 @@ namespace ProtoBuf
             }
             try
             {
-                if (subclasses != null)
+                if (readProps != null || subclasses != null)
                 {
-                    // readProps = null, but subclasses != null -}
+                    // readProps != null : double-checked locking
+
+                    // readProps == null, but subclasses != null :
                     // this scenario means that we are in the process of building the
-                    // serializer; since we have got into the lock, this must be re-entrancy, so simply ignore
+                    // serializer; since we hold the lock, this must be re-entrancy, so simply ignore
                     return; 
                 }
                 // otherwise we are building the serializer for the first time; initialize

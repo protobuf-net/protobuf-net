@@ -39,11 +39,15 @@
     <RemoveDir Directories="$(OutputDirectory)"/>
     <MakeDir Directories="$(OutputDirectory)"/>
     <MakeDir Directories="$(OutputDirectory)\Zips"/>
+
+    <!-- build mono using nant -->
+    <RemoveDir Directories="protobuf-net-mono\bin; protobuf-net-mono\bin\docs"/>
+    <Exec Command="&quot;%ProgramFiles%\Mono-2.0\share\NAnt\bin\NAnt&quot; -buildfile:protobuf-net-mono\protobuf-net-mono.build -D:build.release=true" />
     
     <!-- build .NET 2.0 using the C# 2.0 compiler -->
     <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
     <RemoveDir Directories="protogen\obj; protogen\bin"/>
-    <Exec Command="%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\MSBuild buildkit20.build" />
+    <Exec Command="&quot;%SystemRoot%\Microsoft.NET\Framework\v2.0.50727\MSBuild&quot; buildkit20.build" />
 
     <!-- build .NET 3.0 using the C# 3.0 compiler -->
     <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
@@ -65,6 +69,11 @@
     <Copy DestinationFolder="$(OutputDirectory)\SILVER20" SourceFiles="$(OutputDirectory)\SILVER20_tmp\protobuf-net.pdb"/>
     <Copy DestinationFolder="$(OutputDirectory)\SILVER20" SourceFiles="$(OutputDirectory)\SILVER20_tmp\protobuf-net.xml"/>
     <RemoveDir Directories="$(OutputDirectory)\SILVER20_tmp"/>
+
+    <MakeDir Directories="$(OutputDirectory)\MONO"/>
+    <Copy DestinationFolder="$(OutputDirectory)\MONO" SourceFiles="Licence.txt"/>
+    <Copy DestinationFolder="$(OutputDirectory)\MONO" SourceFiles="protobuf-net-mono\bin\Release\protobuf-net.dll"/>
+    <Copy DestinationFolder="$(OutputDirectory)\MONO" SourceFiles="protobuf-net-mono\docs\protobuf-net.xml"/>
     
     <!-- zip the various outputs -->
     <ItemGroup>
@@ -73,8 +82,14 @@
       <ZipCF20 Include="$(OutputDirectory)\CF20\*.*" />
       <ZipCF35 Include="$(OutputDirectory)\CF35\*.*" />
       <ZipS20 Include="$(OutputDirectory)\SILVER20\*.*" />
+      <ZipMONO Include="$(OutputDirectory)\MONO\*.*" />
     </ItemGroup>
 
+    <Zip WorkingDirectory="$(OutputDirectory)\MONO"
+         Files="@(ZipMONO)"
+         ZipFileName="$(OutputDirectory)\Zips\MONO.zip" />
+    <RemoveDir Directories="$(OutputDirectory)\MONO"/>
+    
     <Zip WorkingDirectory="$(OutputDirectory)\NET20"
          Files="@(ZipN20)"
          ZipFileName="$(OutputDirectory)\Zips\NET20.zip" />
@@ -112,8 +127,9 @@
     <!-- execute the unit tests (do this last as it is slower; allows interruption
     and simple visibility of test results -->
     <NUnit Assemblies="$(OutputDirectory)\Test\Examples.exe"
-       ToolPath="c:\Program Files\NUnit 2.4.8\bin"
-    />
+       ToolPath="c:\Program Files\NUnit 2.4.8\bin" />
+
+    <RemoveDir Directories="$(OutputDirectory)\Test"/>
 
     <Message Text="protobuf r$(BuildRev); build/package/test complete"/>
   </Target>
