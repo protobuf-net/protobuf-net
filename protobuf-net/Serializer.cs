@@ -35,7 +35,7 @@ namespace ProtoBuf
         internal static readonly Type[] EmptyTypes = new Type[0];
         internal static bool IsEntityType(Type type)
         {
-            return type.IsClass && type != typeof(void) && !type.IsAbstract
+            return type.IsClass && type != typeof(void) /* && !type.IsAbstract */
                     && type != typeof(string) && !type.IsArray
                     && (AttributeUtils.GetAttribute<ProtoContractAttribute>(type) != null
 #if NET_3_0

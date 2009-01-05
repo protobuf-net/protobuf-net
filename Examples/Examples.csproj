@@ -128,6 +128,7 @@
     <Compile Include="Fields.cs" />
     <Compile Include="GuidTests.cs" />
     <Compile Include="Inheritance.cs" />
+    <Compile Include="InheritanceMidLevel.cs" />
     <Compile Include="Issues\Issue26.cs" />
     <Compile Include="Issues\Issue27.cs" />
     <Compile Include="Issues\Issue29.cs" />
