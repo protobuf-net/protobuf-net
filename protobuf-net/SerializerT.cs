@@ -183,7 +183,7 @@ namespace ProtoBuf
                 subclasses = new KeyValuePair<Type, Property<T, T>>[0]; // use this to prevent recursion
                 if (!Serializer.IsEntityType(typeof(T)))
                 {
-                    throw new InvalidOperationException("Only concrete data-contract classes can be processed");
+                    throw new InvalidOperationException("Only data-contract classes can be processed (error processing " + typeof(T).Name + ")");
                 }
                 List<Property<T>> readPropList = new List<Property<T>>(), writePropList = new List<Property<T>>();
 

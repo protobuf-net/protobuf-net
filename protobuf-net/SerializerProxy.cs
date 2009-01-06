@@ -36,7 +36,7 @@ namespace ProtoBuf
             }
             if(Default == null)
             {
-                throw new InvalidOperationException("Only concrete data-contract classes (and lists/arrays of such) can be processed");
+                throw new InvalidOperationException("Only data-contract classes (and lists/arrays of such) can be processed (error processing " + typeof(T).Name + ")");
             }
         }
         public abstract int Serialize(T instance, Stream destination);
