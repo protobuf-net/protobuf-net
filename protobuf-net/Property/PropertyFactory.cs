@@ -194,10 +194,15 @@ namespace ProtoBuf.Property
             
             if (Serializer.IsEntityType(type))
             {
+                Type baseType = type;
+                while (Serializer.IsEntityType(baseType.BaseType))
+                {
+                    baseType = baseType.BaseType;
+                }
                 switch (format)
                 {
-                    case DataFormat.Default: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageString", type, type);
-                    case DataFormat.Group: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageGroup", type, type);
+                    case DataFormat.Default: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageString", type, baseType, baseType);
+                    case DataFormat.Group: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageGroup", type, baseType, baseType);
                 }
             }
 

@@ -254,10 +254,10 @@ namespace ProtoBuf
                     switch (pia.DataFormat)
                     {
                         case DataFormat.Default:
-                            prop = (Property<T, T>) PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageString", typeof(T), subclassType);
+                            prop = (Property<T, T>) PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageString", typeof(T), typeof(T), subclassType);
                             break;
                         case DataFormat.Group:
-                            prop = (Property<T, T>) PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageGroup", typeof(T), subclassType);
+                            prop = (Property<T, T>)PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageGroup", typeof(T), typeof(T), subclassType);
                             break;
                         default:
                             throw new ProtoException("Invalid ProtoIncludeAttribute data-format: " + pia.DataFormat);
