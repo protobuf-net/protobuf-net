@@ -347,24 +347,9 @@ namespace ProtoBuf.ServiceModel
                                                          PrefixStyle.Base128);
                 } else
                 {
-                    SkipStringData(source);
+                    SerializationContext.SkipStringData(source);
                 }
             }
-        }
-
-        static readonly byte[] trashBuffer = new byte[1024];
-        static void SkipStringData(Stream stream)
-        {
-            int bytesRead, bytesRemaining = (int) SerializationContext.DecodeUInt32(stream);
-            while (bytesRemaining > trashBuffer.Length && (bytesRead = stream.Read(trashBuffer, 0, trashBuffer.Length)) > 0)
-            {
-                bytesRemaining -= bytesRead;   
-            }
-            while (bytesRemaining > 0 && (bytesRead = stream.Read(trashBuffer, 0, bytesRemaining)) > 0)
-            {
-                bytesRemaining -= bytesRead;
-            }
-            if(bytesRemaining != 0) throw new EndOfStreamException();
         }
 
         /// <summary>
@@ -402,7 +387,7 @@ namespace ProtoBuf.ServiceModel
                                                          PrefixStyle.Base128);
                 } else
                 {
-                    SkipStringData(source);
+                    SerializationContext.SkipStringData(source);
                 }
             }
 

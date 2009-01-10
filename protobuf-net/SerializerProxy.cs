@@ -84,7 +84,7 @@ namespace ProtoBuf
             public SimpleWrapper() { }
             public SimpleWrapper(TValue value) { this.value = value; }
             private TValue value;
-            [ProtoMember(1)]
+            [ProtoMember(Serializer.ListItemTag)]
             public TValue Value
             {
                 get { return this.value; }

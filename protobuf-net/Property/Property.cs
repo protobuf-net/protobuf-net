@@ -17,11 +17,6 @@ namespace ProtoBuf.Property
     internal abstract class Property<TSource>
     {
         public abstract Type PropertyType { get; }
-        
-        protected static uint GetPrefix(int tag, WireType wireType)
-        {
-            return (uint)(tag << 3 | (int)wireType);
-        }
 
         public override string ToString()
         {
@@ -74,7 +69,7 @@ namespace ProtoBuf.Property
             this.defaultValue = defaultValue;
             this.dataFormat = dataFormat; // set initial format, and use the *field* for the "ref" so either usage is valid
             OnBeforeInit(member, getValue, setValue, tag, ref this.dataFormat);
-            this.prefix = GetPrefix(tag, WireType);
+            this.prefix = Serializer.GetFieldToken(tag, WireType);
             OnAfterInit();
         }
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using NUnit.Framework;
 using ProtoBuf;
+using System;
 
 namespace Examples
 {
@@ -47,6 +48,19 @@ namespace Examples
             CheckChild(test.Child, clone.Child);
         }
 
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void TestRoot()
+        {
+            IMLTestRoot test = new IMLTestRoot {Root = CreateChild()},
+                        clone = Serializer.DeepClone(test);
+        }
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void TestRoots()
+        {
+            IMLTestRoots test = new IMLTestRoots { Roots = {CreateChild()} },
+                        clone = Serializer.DeepClone(test);
+        }
+
         [Test]
         public void TestParents()
         {
@@ -68,8 +82,96 @@ namespace Examples
             Assert.AreEqual(1, clone.Children.Count);
             CheckChild(test.Children[0], clone.Children[0]);
         }
+
+        [Test]
+        public void TestCloneAsChild()
+        {
+            IMLChild child = CreateChild(),
+                     clone = Serializer.DeepClone(child);
+            CheckChild(child, clone);
+        }
+        [Test]
+        public void TestCloneAsParent()
+        {
+            IMLParent parent = CreateChild(),
+                clone = Serializer.DeepClone(parent);
+            CheckParent(parent, clone);
+        }
+
+        [Test]
+        public void TestCloneAsChildList()
+        {
+            var children = new List<IMLChild> { CreateChild()};
+            var clone = Serializer.DeepClone(children);
+            Assert.AreEqual(1, children.Count);
+            Assert.AreEqual(1, clone.Count);
+            CheckChild(children[0], clone[0]);
+        }
+        [Test]
+        public void TestCloneAsParentList()
+        {
+            var parents = new List<IMLParent> { CreateChild() };
+            var clone = Serializer.DeepClone(parents);
+            Assert.AreEqual(1, parents.Count);
+            Assert.AreEqual(1, clone.Count);
+            CheckParent(parents[0], clone[0]);
+        }
+        [Test]
+        public void TestCloneAsChildArray()
+        {
+            IMLChild[] children = { CreateChild() };
+            var clone = Serializer.DeepClone(children);
+            Assert.AreEqual(1, children.Length);
+            Assert.AreEqual(1, clone.Length);
+            CheckChild(children[0], clone[0]);
+        }
+
+        [Test]
+        public void TestCloneAsParentArray()
+        {
+            IMLParent[] parents = { CreateChild() };
+            var clone = Serializer.DeepClone(parents);
+            Assert.AreEqual(1, parents.Length);
+            Assert.AreEqual(1, clone.Length);
+            CheckParent(parents[0], clone[0]);
+        }
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void TestCloneAsRootArray()
+        {
+            IMLRoot[] roots = { CreateChild() };
+            var clone = Serializer.DeepClone(roots);
+        }
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void TestCloneAsRootList()
+        {
+            var roots = new List<IMLRoot> { CreateChild() };
+            var clone = Serializer.DeepClone(roots);
+        }
+
+
+
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void TestCloneAsRoot()
+        {
+            IMLRoot root = CreateChild(),
+                clone = Serializer.DeepClone(root);
+        }
+
     }
 
+    [ProtoContract]
+    class IMLTestRoot
+    {
+        [ProtoMember(1)]
+        public IMLRoot Root {get; set;}
+    }
+    [ProtoContract]
+    class IMLTestRoots
+    {
+        public IMLTestRoots() {Roots = new List<IMLRoot>();}
+        [ProtoMember(1)]
+        public List<IMLRoot> Roots { get; private set; }
+    }
 
     [ProtoContract]
     class IMLTest

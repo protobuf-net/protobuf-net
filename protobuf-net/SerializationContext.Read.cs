@@ -38,7 +38,34 @@ namespace ProtoBuf
             | (((uint)buffer[1]) << 8)
             | (((uint)buffer[2]) << 16)
             | (((uint)buffer[3]) << 24);
+        }
 
+        /// <summary>
+        /// Slow (unbuffered) read from a stream; used to avoid issues
+        /// with buffers when performing network IO.
+        /// </summary>
+        public static bool TryDecodeUInt32Fixed(Stream source, out uint value)
+        {
+            byte[] buffer = new byte[4];
+            int offset = 1, read;
+            int b = source.ReadByte();
+            if(b < 0)
+            {
+                value = 0;
+                return false;
+            }
+            buffer[0] = (byte) b;
+            while (offset < 3 && (read = source.Read(buffer, offset, 4 - offset)) > 0)
+            {
+                offset += read;
+            }
+            if (offset != 4) throw new EndOfStreamException();
+
+            value = ((uint)buffer[0])
+            | (((uint)buffer[1]) << 8)
+            | (((uint)buffer[2]) << 16)
+            | (((uint)buffer[3]) << 24);
+            return true;
         }
 
         /// <summary>
@@ -50,6 +77,26 @@ namespace ProtoBuf
             uint value;
             if(!TryDecodeUInt32(source, out value)) throw new EndOfStreamException();
             return value;
+        }
+
+        static readonly byte[] trashBuffer = new byte[1024];
+
+        /// <summary>
+        /// Jump a block of data using a base-128 length prefix.
+        /// </summary>
+        /// <param name="source">The input stream.</param>
+        public static void SkipStringData(Stream source)
+        {
+            int bytesRead, bytesRemaining = (int)SerializationContext.DecodeUInt32(source);
+            while (bytesRemaining > trashBuffer.Length && (bytesRead = source.Read(trashBuffer, 0, trashBuffer.Length)) > 0)
+            {
+                bytesRemaining -= bytesRead;
+            }
+            while (bytesRemaining > 0 && (bytesRead = source.Read(trashBuffer, 0, bytesRemaining)) > 0)
+            {
+                bytesRemaining -= bytesRead;
+            }
+            if (bytesRemaining != 0) throw new EndOfStreamException();
         }
 
         /// <summary>

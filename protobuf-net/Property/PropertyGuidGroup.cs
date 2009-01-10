@@ -14,7 +14,7 @@ namespace ProtoBuf.Property
         protected override void OnAfterInit()
         {
             base.OnAfterInit();
-            suffix = GetPrefix(Tag, WireType.EndGroup);
+            suffix = Serializer.GetFieldToken(Tag, WireType.EndGroup);
         }
         private uint suffix;
 
