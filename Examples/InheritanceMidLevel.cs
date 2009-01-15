@@ -12,16 +12,20 @@ namespace Examples
     [TestFixture]
     public class InheritanceMidLevel
     {
-        static IMLChild CreateChild()
+        internal static IMLChild CreateChild(int rootProperty, int parentProperty, int childProperty)
         {
-            return new IMLChild {ChildProperty = 123, ParentProperty = 456, RootProperty = 789};
+            return new IMLChild { ChildProperty = 123, ParentProperty = 456, RootProperty = 789 };
+        }
+        internal static IMLChild CreateChild()
+        {
+            return CreateChild(789, 456, 123);
         }
 
-        static void CheckParent(IMLParent original, IMLParent clone)
+        internal static void CheckParent(IMLParent original, IMLParent clone)
         {
             CheckChild((IMLChild)original, (IMLChild)clone);
         }
-        static void CheckChild(IMLChild original, IMLChild clone)
+        internal static void CheckChild(IMLChild original, IMLChild clone)
         {
             Assert.AreNotSame(original, clone);
             Assert.IsInstanceOfType(typeof(IMLChild), original, "Original type");

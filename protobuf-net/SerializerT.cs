@@ -307,15 +307,15 @@ namespace ProtoBuf
 #endif
         }
 #endif
-        internal static int Serialize(T instance, Stream destination)
+        internal static int SerializeChecked(T instance, SerializationContext destination)
         {
             if (readProps == null) Build();
             if (instance == null) throw new ArgumentNullException("instance");
             if (destination == null) throw new ArgumentNullException("destination");
-            SerializationContext ctx = new SerializationContext(destination, null);
-            int len = Serialize(instance, ctx);
-            ctx.CheckStackClean();
-            ctx.Flush();
+            
+            int len = Serialize(instance, destination);
+            destination.CheckStackClean();
+            destination.Flush();
             return len;
         }
 
@@ -373,15 +373,15 @@ namespace ProtoBuf
             return total;
         }
 
-        internal static void Deserialize(ref T instance, Stream source)
+        internal static void DeserializeChecked(ref T instance, SerializationContext source)
         {
             if (readProps == null) Build();
             //if (instance == null) throw new ArgumentNullException("instance");
             if (source == null) throw new ArgumentNullException("source");
-            SerializationContext ctx = new SerializationContext(source, null);
-            Deserialize(ref instance, ctx);
-            ctx.CheckStackClean();
+            Deserialize(ref instance, source);
+            source.CheckStackClean();
         }
+        
         internal static void Deserialize(ref T instance, SerializationContext context)
         {
             if (context == null) throw new ArgumentNullException("context");
@@ -400,7 +400,7 @@ namespace ProtoBuf
             
             try
             {
-                while ((prefix = context.TryReadFieldPrefix()) > 0)
+                while (context.TryReadFieldPrefix(out prefix))
                 {
                     // scan for the correct property
                     bool foundTag = false;
@@ -550,7 +550,7 @@ namespace ProtoBuf
                 case WireType.StartGroup:
                     read.StartGroup(fieldTag);
                     uint prefix;
-                    while ((prefix = read.TryReadFieldPrefix()) > 0)
+                    while (read.TryReadFieldPrefix(out prefix))
                     {
                         write.EncodeUInt32(prefix);
                         Serializer.ParseFieldToken(prefix, out wireType, out fieldTag);

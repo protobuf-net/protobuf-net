@@ -242,6 +242,11 @@ namespace ProtoBuf
         /// <returns>A new, initialized instance.</returns>
         public static T Deserialize<T>(Stream source)
         {
+            return Deserialize<T>(new SerializationContext(source, null));
+        }
+
+        private static T Deserialize<T>(SerializationContext source)
+        {
             T instance = default(T);
             try
             {
@@ -254,6 +259,7 @@ namespace ProtoBuf
             }
             return instance;
         }
+
 
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream that has a length-prefix
@@ -290,36 +296,30 @@ namespace ProtoBuf
         /// <param name="tag">The tag of records to return (if non-positive, then no tag is
         /// expected and all records are returned).</param>
         /// <returns>The sequence of deserialized objects.</returns>
-        public static IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int? tag)
+        public static IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int tag)
         {
             if (source == null) throw new ArgumentNullException("source");
             switch (style)
             {
                 case PrefixStyle.Fixed32:
-                    if (tag != null)
-                    {
-                        throw new ArgumentException("A tag cannot be used with fixed-length prefixes.", "tag");
-                    }
+                    if (tag > 0) throw new ArgumentException("A tag cannot be used with fixed-length prefixes.", "tag");
                     break;
                 case PrefixStyle.Base128:
-                    if (tag.HasValue && tag.GetValueOrDefault() <= 0)
-                    {
-                        throw new ArgumentOutOfRangeException("tag", "When a tag is specified, it must be positive.");
-                    }
                     break;
                 default:
                     throw new ArgumentException("Prefix style is not valid: " + style, "style");
             }
-            return DeserializeItemsWithLengthPrefixChecked<T>(source, style, tag.GetValueOrDefault());
+            return DeserializeItemsWithLengthPrefixChecked<T>(source, style, tag);
         }
 
         private static IEnumerable<T> DeserializeItemsWithLengthPrefixChecked<T>(Stream source, PrefixStyle style, int tag)
         {
-           T item;
-           while(TryDeserializeWithLengthPrefix(source, style, tag, out item))
-           {
-               yield return item;
-           }
+            SerializationContext ctx = new SerializationContext(source, null);
+            T item;
+            while(TryDeserializeWithLengthPrefix(ctx, style, tag, out item))
+            {
+                yield return item;
+            }
         }
 
         private static uint ReadPrefixLength(Stream source, PrefixStyle style)
@@ -331,6 +331,42 @@ namespace ProtoBuf
             }
             return value;
         }
+
+        private static bool TryReadPrefixLength(SerializationContext context, PrefixStyle style, int tag, out uint length)
+        {
+        MethodStart:
+            switch (style)
+            {
+                case PrefixStyle.None:
+                    length = uint.MaxValue;
+                    return true;
+                case PrefixStyle.Base128:
+                    
+                    if (tag <= 0) return context.TryDecodeUInt32(out length);
+                    uint expected = GetFieldToken(tag, WireType.String), actual;
+                    if (!context.TryDecodeUInt32(out actual))
+                    {
+                        length = 0;
+                        return false;
+                    }
+                    if (expected == actual)
+                    {
+                        length = context.DecodeUInt32();
+                        return true;
+                    }
+                    
+                    WireType wireType;
+                    int actualTag;
+                    ParseFieldToken(actual, out wireType, out actualTag);
+                    SkipData(context, actualTag, wireType);
+                    goto MethodStart;
+                case PrefixStyle.Fixed32:
+                    return context.TryDecodeUInt32Fixed(out length);
+                default:
+                    throw new NotSupportedException("Invalid prefix style: " + style);
+            }
+        }
+
         private static bool TryReadPrefixLength(Stream source, PrefixStyle style, int tag, out uint length)
         {
             MethodStart:
@@ -400,6 +436,33 @@ namespace ProtoBuf
                 throw new EndOfStreamException();
             }
             return item;
+        }
+
+
+
+        private static bool TryDeserializeWithLengthPrefix<T>(SerializationContext context, PrefixStyle style, int tag, out T item)
+        {
+            uint len;
+            if (!TryReadPrefixLength(context, style, tag, out len))
+            {
+                item = default(T);
+                return false;
+            }
+            item = default(T);
+            switch(len)
+            {
+                case 0: // nothing to do
+                    break;
+                case uint.MaxValue: // read to end
+                    SerializerProxy<T>.Default.Deserialize(ref item, context);
+                    break;
+                default: // limit and read sub-stream
+                    long restore = context.Limit(len);
+                    SerializerProxy<T>.Default.Deserialize(ref item, context);
+                    context.MaxReadPosition = restore;
+                    break;
+            }
+            return true;
         }
 
         private static bool TryDeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style, int tag, out T item)

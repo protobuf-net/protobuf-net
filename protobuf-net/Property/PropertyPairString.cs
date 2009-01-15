@@ -42,7 +42,7 @@ namespace ProtoBuf.Property
 
             long restore = context.LimitByLengthPrefix();
             uint field;
-            while((field = context.TryReadFieldPrefix()) > 0)
+            while(context.TryReadFieldPrefix(out field))
             {
                 if(field == keyProp.FieldPrefix)
                 {

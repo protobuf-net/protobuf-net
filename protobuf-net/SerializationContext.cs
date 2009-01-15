@@ -22,7 +22,13 @@ namespace ProtoBuf
         /// Indicates that we have previously obtained a field value from
         /// the stream that should be consumed next.
         /// </summary>
-        Peeked
+        Peeked,
+
+        /// <summary>
+        /// Indicates that we have found the end of the stream; this is **only**
+        /// used to commicate to "Try", and should not persist.
+        /// </summary>
+        Eof
     }
 
     internal sealed partial class SerializationContext
@@ -38,41 +44,47 @@ namespace ProtoBuf
 
         public bool TryPeekFieldPrefix(uint fieldPrefix)
         {
-            uint value = TryReadFieldPrefix();
-            if (value == 0) return false;
+            uint value;
+            if(!TryDecodeUInt32(out value) || value == 0) return false;
             if (value == fieldPrefix) return true;
             streamState = StreamState.Peeked;
             peekedValue = value;
             return false;
         }
-        public uint TryReadFieldPrefix()
+        public bool TryReadFieldPrefix(out uint value)
         {
-            if (position >= maxReadPosition) return 0;
-            uint value;
+            return TryDecodeUInt32(out value) && value != 0;
+        }
+        public bool TryDecodeUInt32(out uint value)
+        {
+            if (position >= maxReadPosition)
+            {
+                value = 0;
+                return false;
+            }
             switch (streamState)
             {
                 case StreamState.Normal:
                     streamState = StreamState.EofExpected;
                     value = this.DecodeUInt32();
-                    break;
+                    if (value == 0 && streamState == StreamState.Eof)
+                    {
+                        streamState = StreamState.Normal; // restore to avoid loss
+                        return false;                     // with substreams etc
+                    }
+                    streamState = StreamState.Normal;
+                    return true;
                 case StreamState.Peeked:
                     value = peekedValue;
-                    break;
+                    streamState = StreamState.Normal;
+                    return true;
                 default:
                     value = 0;
-                    break;
+                    return false;
             }
-            
-            streamState = StreamState.Normal;
-            return value;
         }
 
         private uint peekedValue;
-
-        public bool IsEofExpected
-        {
-            get { return streamState == StreamState.EofExpected; }
-        }
 
         private StreamState streamState;
         private readonly Stream stream;
@@ -280,10 +292,16 @@ namespace ProtoBuf
         internal long LimitByLengthPrefix()
         {
             // length-prefixed
-            int len = (int)this.DecodeUInt32();
+            return Limit(this.DecodeUInt32());
+        }
+
+        internal long Limit(uint length)
+        {
             long oldMaxPos = this.MaxReadPosition;
-            this.MaxReadPosition = this.Position + len;
+            this.MaxReadPosition = this.Position + length;
             return oldMaxPos;
         }
+
+        
     }
 }

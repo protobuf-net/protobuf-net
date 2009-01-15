@@ -62,7 +62,7 @@ namespace ProtoBuf
                 SerializationContext ctx = new SerializationContext(stream, null);
                 uint fieldPrefix;
 
-                while ((fieldPrefix = ctx.TryReadFieldPrefix()) > 0)
+                while (ctx.TryReadFieldPrefix(out fieldPrefix))
                 {
                     WireType a;
                     int b;

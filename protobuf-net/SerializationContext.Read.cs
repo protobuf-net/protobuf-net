@@ -152,9 +152,10 @@ namespace ProtoBuf
                 if(inputStreamAvailable) Fill();
                 if (ioBufferIndex == ioBufferEffectiveSize)
                 {
-                    if (this.IsEofExpected)
+                    if (this.streamState == StreamState.EofExpected)
                     {
                         this.CheckNoRemainingGroups(); // if EOF then groups should be clean!
+                        this.streamState = StreamState.Eof;
                         return 0;
                     }
                     throw new EndOfStreamException();
@@ -412,6 +413,22 @@ namespace ProtoBuf
             ioBufferIndex += 8;
             position += 8;
             return value;
+        }
+        public bool TryDecodeUInt32Fixed(out uint value)
+        {
+            int first = ReadByte();
+            if (first < 0)
+            {
+                value = 0;
+                return false;
+            }
+            Fill(3,true);
+            value = (uint)first
+                | (((uint)ioBuffer[ioBufferIndex++]) << 8)
+                | (((uint)ioBuffer[ioBufferIndex++]) << 16)
+                | (((uint)ioBuffer[ioBufferIndex++]) << 24);
+            position += 3;
+            return true;
         }
         public int DecodeInt32Fixed()
         {

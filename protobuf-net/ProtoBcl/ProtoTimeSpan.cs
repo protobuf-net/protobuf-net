@@ -53,7 +53,7 @@ namespace ProtoBuf.ProtoBcl
 
             uint prefix;
             bool keepRunning = true;
-            while (keepRunning && (prefix = context.TryReadFieldPrefix()) > 0)
+            while (keepRunning && context.TryReadFieldPrefix(out prefix))
             {
                 switch (prefix)
                 {
