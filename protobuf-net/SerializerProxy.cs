@@ -54,7 +54,17 @@ namespace ProtoBuf
         public static SerializerProxy<TItem> MakeItem<TItem>()
             where TItem : class, T
         {
-            return new SerializerItemProxy<TItem>();
+            Type actualType = typeof(TItem), baseType = actualType;
+            while (Serializer.IsEntityType(baseType.BaseType))
+            {
+                baseType = baseType.BaseType;
+            }
+            if(baseType == actualType)
+            {
+                return new SerializerItemProxy<TItem, TItem>();
+            }
+            return (SerializerProxy<TItem>) Activator.CreateInstance(
+                typeof(SerializerItemProxy<,>).MakeGenericType(baseType, actualType));
         }
         public static SerializerProxy<TValue> MakeValue<TValue>()
         {
@@ -62,15 +72,19 @@ namespace ProtoBuf
         }
     }
 
-    sealed class SerializerItemProxy<TItem> : SerializerProxy<TItem> where TItem : class
+    sealed class SerializerItemProxy<TBaseClass, TActualClass> : SerializerProxy<TActualClass>
+        where TActualClass : class, TBaseClass
+        where TBaseClass : class
     {
-        public override int Serialize(TItem instance, SerializationContext destination)
+        public override int Serialize(TActualClass instance, SerializationContext destination)
         {
-            return Serializer<TItem>.SerializeChecked(instance, destination);
+            return Serializer<TBaseClass>.SerializeChecked(instance, destination);
         }
-        public override void Deserialize(ref TItem instance, SerializationContext source)
+        public override void Deserialize(ref TActualClass instance, SerializationContext source)
         {
-            Serializer<TItem>.DeserializeChecked(ref instance, source);
+            TBaseClass tmp = instance;
+            Serializer<TBaseClass>.DeserializeChecked<TActualClass>(ref tmp, source);
+            instance = (TActualClass) tmp;
         }
     }
     
@@ -83,7 +97,7 @@ namespace ProtoBuf
         public override void Deserialize(ref TValue value, SerializationContext source)
         {
             SimpleWrapper wrapper = null;
-            Serializer<SimpleWrapper>.DeserializeChecked(ref wrapper, source);
+            Serializer<SimpleWrapper>.DeserializeChecked<SimpleWrapper>(ref wrapper, source);
             if (wrapper != null) value = wrapper.Value;
         }
 

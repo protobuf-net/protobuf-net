@@ -50,7 +50,7 @@ namespace ProtoBuf.Property
 
             long restore = context.LimitByLengthPrefix();
 
-            Serializer<TEntityActual>.Deserialize(ref value, context);
+            Serializer<TEntityActual>.Deserialize<TEntityActual>(ref value, context);
             // restore the max-pos
             context.MaxReadPosition = restore;
 

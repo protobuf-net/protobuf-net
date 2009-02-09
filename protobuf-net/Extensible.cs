@@ -12,9 +12,12 @@ namespace ProtoBuf
     /// only the paths [such an object would ideally be IDisposable and use
     /// a finalizer to ensure that the files are removed].</remarks>
     /// <seealso cref="IExtensible"/>
-    [ProtoContract]
     public abstract class Extensible : IExtensible
     {
+        // note: not marked ProtoContract - no local state, and can't 
+        // predict sub-classes
+
+
         private IExtension extensionObject;
 
         IExtension IExtensible.GetExtensionObject(bool createIfMissing)

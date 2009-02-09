@@ -343,7 +343,8 @@ namespace ProtoBuf
                 }
                 if (!subclassFound)
                 {
-                    throw new ProtoException("Unexpected type found during serialization; types must be included with ProtoIncludeAttribute");
+                    throw new ProtoException("Unexpected type found during serialization; types must be included with ProtoIncludeAttribute; "
+                        + "found " + actualType.Name + " passed as " + typeof(T).Name);
                 }
             }
 
@@ -373,16 +374,18 @@ namespace ProtoBuf
             return total;
         }
 
-        internal static void DeserializeChecked(ref T instance, SerializationContext source)
+        internal static void DeserializeChecked<TCreation>(ref T instance, SerializationContext source)
+            where TCreation : class, T
         {
             if (readProps == null) Build();
             //if (instance == null) throw new ArgumentNullException("instance");
             if (source == null) throw new ArgumentNullException("source");
-            Deserialize(ref instance, source);
+            Deserialize<TCreation>(ref instance, source);
             source.CheckStackClean();
         }
         
-        internal static void Deserialize(ref T instance, SerializationContext context)
+        internal static void Deserialize<TCreation>(ref T instance, SerializationContext context)
+            where TCreation : class, T
         {
             if (context == null) throw new ArgumentNullException("context");
             context.Push();
@@ -458,7 +461,7 @@ namespace ProtoBuf
                     // not a sub-class, but *some* data there, so create an object
                     if (instance == null)
                     {
-                        instance = ObjectFactory<T>.Create();
+                        instance = ObjectFactory<TCreation>.Create();
                         extensible = instance as IExtensible;
                     }
                     if (foundTag)

@@ -923,7 +923,7 @@ namespace ProtoBuf
                     context.StartGroup(fieldTag); // will be ended internally
                     Serializer<UnknownType>.Build();
                     UnknownType ut = UnknownType.Default;
-                    Serializer<UnknownType>.Deserialize(ref ut, context);
+                    Serializer<UnknownType>.Deserialize<UnknownType>(ref ut, context);
                     break;
                 default:
                     throw new ProtoException("Unknown wire-type " + wireType.ToString());

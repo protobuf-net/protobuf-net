@@ -189,5 +189,24 @@ namespace Examples
             InheritanceMidLevel.CheckChild(b, list[1]);
             InheritanceMidLevel.CheckChild(c, list[2]);
         }
+
+        [Test]
+        public void TestEmptyStreams()
+        {
+            TestEmptyStreams<int>();
+            TestEmptyStreams<IMLChild>();
+            TestEmptyStreams<IMLParent>();
+        }
+
+        static void TestEmptyStreams<T>()
+        {
+            Assert.IsFalse(Serializer.DeserializeItems<T>(Stream.Null, PrefixStyle.Fixed32, 0).Any());
+            Assert.IsFalse(Serializer.DeserializeItems<T>(Stream.Null, PrefixStyle.Base128, 0).Any());
+            Assert.IsFalse(Serializer.DeserializeItems<T>(Stream.Null, PrefixStyle.Base128, 1).Any());
+
+            Assert.IsFalse(Serializer.DeserializeItems<T>(new MemoryStream(), PrefixStyle.Fixed32, 0).Any());
+            Assert.IsFalse(Serializer.DeserializeItems<T>(new MemoryStream(), PrefixStyle.Base128, 0).Any());
+            Assert.IsFalse(Serializer.DeserializeItems<T>(new MemoryStream(), PrefixStyle.Base128, 1).Any());
+        }
     }
 }

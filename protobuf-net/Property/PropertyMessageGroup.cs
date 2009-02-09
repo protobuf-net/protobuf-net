@@ -51,7 +51,7 @@ namespace ProtoBuf.Property
             TEntityActual value = Serializer<TEntityBase>.CheckSubType<TEntityActual>(GetValue(source));
 
             context.StartGroup(Tag); // will be ended internally
-            Serializer<TEntityActual>.Deserialize(ref value, context);
+            Serializer<TEntityActual>.Deserialize<TEntityActual>(ref value, context);
             return (TProperty)(object)value;
         }
      }
