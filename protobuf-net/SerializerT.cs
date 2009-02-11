@@ -186,7 +186,7 @@ namespace ProtoBuf
                     throw new InvalidOperationException("Only data-contract classes can be processed (error processing " + typeof(T).Name + ")");
                 }
                 List<Property<T>> readPropList = new List<Property<T>>(), writePropList = new List<Property<T>>();
-
+                List<int> tagsInUse = new List<int>();
                 foreach (MemberInfo prop in Serializer.GetProtoMembers(typeof(T)))
                 {
                     string name;
@@ -199,18 +199,16 @@ namespace ProtoBuf
                     }
 
                     // check for duplicates
-                    foreach (Property<T> item in readPropList)
-                    {
-                        if (item.Tag == tag)
-                        {
-                            throw new InvalidOperationException(
-                                string.Format("Duplicate tag {0} detected in {1}", tag, name));
-                        }
+                    if(tagsInUse.Contains(tag)) {
+                        throw new InvalidOperationException(
+                            string.Format("Duplicate tag {0} detected in {1}", tag, name));
                     }
+                    tagsInUse.Add(tag);
 
                     Property<T> actualProp = PropertyFactory.Create<T>(prop);
                     writePropList.Add(actualProp);
                     readPropList.Add(actualProp);
+                    
                     foreach (Property<T> altProp in actualProp.GetCompatibleReaders())
                     {
                         if (altProp.Tag != actualProp.Tag)
@@ -262,6 +260,13 @@ namespace ProtoBuf
                         default:
                             throw new ProtoException("Invalid ProtoIncludeAttribute data-format: " + pia.DataFormat);
                     }
+                    // check for duplicates
+                    if (tagsInUse.Contains(pia.Tag))
+                    {
+                        throw new InvalidOperationException(
+                            string.Format("Duplicate tag {0} detected in sub-type {1}", pia.Tag, subclassType.Name));
+                    }
+                    tagsInUse.Add(pia.Tag);
                     prop.Init(pia.Tag, pia.DataFormat, PropertyFactory.GetPassThru<T>(), null, true, null);
                     subclassList.Add(new KeyValuePair<Type, Property<T, T>>(subclassType, prop));
                 }
