@@ -149,6 +149,7 @@
     <Compile Include="ObjectFactory.cs" />
     <Compile Include="PrefixStyle.cs" />
     <Compile Include="Property\PropertyPairString.cs" />
+    <Compile Include="Property\PropertySpecified.cs" />
     <Compile Include="Property\PropertyTimeSpanFixed.cs" />
     <Compile Include="Property\PropertyDateTimeFixed.cs" />
     <Compile Include="Property\PropertyInclude.cs" />

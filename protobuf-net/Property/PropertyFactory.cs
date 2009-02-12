@@ -69,8 +69,17 @@ namespace ProtoBuf.Property
             {
                 throw new InvalidOperationException("Cannot be treated as a proto member: " + member.Name);
             }
-
-            Property<T> prop = CreateProperty<T>(type, ref format);
+            Property<T> prop;
+            PropertyInfo specifiedProp = PropertySpecified.GetSpecified(typeof (T), member.Name);
+            if(specifiedProp != null)
+            {
+                prop = PropertyUtil<T>.CreateTypedProperty("CreatePropertySpecified", type);
+                ((IPropertySpecified)prop).InitFromProperty(specifiedProp);
+            }
+            else
+            {
+                prop = CreateProperty<T>(type, ref format);    
+            }
             prop.Init(member);
             return prop;
         }

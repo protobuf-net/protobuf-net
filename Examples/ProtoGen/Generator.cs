@@ -6,6 +6,7 @@ using System.Xml;
 using Microsoft.CSharp;
 using NUnit.Framework;
 using ProtoBuf.CodeGenerator;
+using System.Diagnostics;
 
 namespace Examples.ProtoGen
 {
@@ -55,6 +56,13 @@ namespace Examples.ProtoGen
             TestCompileCSharp(code);
         }
 
+        [Test]
+        public void TestDescriptorAsCSharpDetectMissing()
+        {
+            string code = GetCode(@"-i:ProtoGen\descriptor.proto", "-p:detectMissing");
+            TestCompileCSharp(code);
+        }
+
         [Test, ExpectedException(typeof(InvalidOperationException))]
         public void TestDescriptorAsCSharpPartialMethodsLangVer2()
         {
@@ -62,10 +70,17 @@ namespace Examples.ProtoGen
             TestCompileCSharp(code);
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestDescriptorAsCSharpPartialMethodsLangVer3()
         {
             string code = GetCode(@"-i:ProtoGen\descriptor.proto", "-p:partialMethods");
+            TestCompileCSharpV3(code);
+        }
+
+        [Test]
+        public void TestDescriptorAsCSharpPartialMethodsLangVer3DetectMissing()
+        {
+            string code = GetCode(@"-i:ProtoGen\descriptor.proto", "-p:partialMethods", "-p:detectMissing");
             TestCompileCSharpV3(code);
         }
 
@@ -83,9 +98,17 @@ namespace Examples.ProtoGen
         }
         private static void TestCompileCSharpV3(string code, params string[] extraReferences)
         {
-            CSharpCodeProvider compiler = new CSharpCodeProvider();
+            CSharpCodeProvider compiler = new CSharpCodeProvider(new Dictionary<string, string>()
+            { { "CompilerVersion", "v3.5" } });
             TestCompile(compiler, code, extraReferences);
         }
+
+        [Conditional("DEBUG")]
+        static void DebugWriteAllText(string path, string contents)
+        {
+            File.WriteAllText(path,contents);
+        }
+
         private static void TestCompile<T>(T compiler, string code, params string[] extraReferences)
             where T : CodeDomProvider
         {
@@ -100,6 +123,7 @@ namespace Examples.ProtoGen
                 }
                 CompilerParameters args = new CompilerParameters(refs.ToArray(), path, false);
                 CompilerResults results = compiler.CompileAssemblyFromSource(args, code);
+                DebugWriteAllText("last.cs", code);
                 ShowErrors(results.Errors);
                 if(results.Errors.Count > 0)
                 {

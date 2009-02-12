@@ -25,6 +25,10 @@ namespace ProtoBuf.Property
         {
             return new PropertyNullable<T, TValue>();
         }
+        public static Property<T> CreatePropertySpecified<TValue>()
+        {
+            return new PropertySpecified<T, TValue>();
+        }
 
         public static Property<T> CreatePropertyList<TList, TValue>()
             where TList : ICollection<TValue>
