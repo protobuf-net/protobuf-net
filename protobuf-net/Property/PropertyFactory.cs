@@ -70,7 +70,7 @@ namespace ProtoBuf.Property
                 throw new InvalidOperationException("Cannot be treated as a proto member: " + member.Name);
             }
             Property<T> prop;
-            PropertyInfo specifiedProp = PropertySpecified.GetSpecified(typeof (T), member.Name);
+            PropertyInfo specifiedProp = isRequired ? null : PropertySpecified.GetSpecified(typeof (T), member.Name);
             if(specifiedProp != null)
             {
                 prop = PropertyUtil<T>.CreateTypedProperty("CreatePropertySpecified", type);

@@ -12,8 +12,12 @@ namespace ProtoBuf.Property
         public static PropertyInfo GetSpecified(Type type, string name)
         {
             PropertyInfo prop = type.GetProperty(name + "Specified");
-            if (prop != null && prop.CanRead && prop.CanWrite) return prop;
-            return null;
+            if (prop == null || !prop.CanRead || !prop.CanWrite) return null;
+            int tag;
+            DataFormat fmt;
+            bool isReq;
+            Serializer.TryGetTag(prop, out tag, out name, out fmt, out isReq);
+            return tag > 0 ? null : prop;
         }
     }
     internal sealed class PropertySpecified<TSource, TValue> : Property<TSource, TValue>, IPropertySpecified

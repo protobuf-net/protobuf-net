@@ -3,6 +3,7 @@ using System.IO;
 using System.Xml.Serialization;
 using NUnit.Framework;
 using ProtoBuf;
+using System.Runtime.Serialization;
 
 namespace Examples
 {
@@ -17,7 +18,7 @@ namespace Examples
             get { return foo ?? 5; }
             set { foo = value;}
         }
-        [XmlIgnore]
+        [XmlIgnore, Browsable(false)]
         public bool FooSpecified
         {
             get { return foo != null; }
@@ -35,7 +36,7 @@ namespace Examples
             get { return bar ?? "abc"; }
             set { bar = value;}
         }
-        [XmlIgnore]
+        [XmlIgnore, Browsable(false)]
         public bool BarSpecified
         {
             get { return bar != null; }

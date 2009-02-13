@@ -77,7 +77,8 @@ namespace ProtoBuf
             foreach(T member in members)
             {
                 if(member.DeclaringType == declaringType
-                    && TryGetTag(member, out tag, out name, true, out fmt, out isRequired) && tag < 1) list.Add(member);
+                   && member.GetCustomAttributes(typeof(XmlIgnoreAttribute), false).Length == 0
+                   && TryGetTag(member, out tag, out name, true, out fmt, out isRequired) && tag < 1) list.Add(member);
             }
         }
 
@@ -838,13 +839,11 @@ namespace ProtoBuf
         {
             if (exception != null && exception.InnerException != null)
             {
-
-                if (exception != null && exception.InnerException != null
-                    && (exception is TargetInvocationException
+                if (exception is TargetInvocationException
 #if !CF
                     || exception is TypeInitializationException
 #endif
-                    ))
+                )
                 {
                     ThrowInner(exception.InnerException);
                     throw exception.InnerException;
