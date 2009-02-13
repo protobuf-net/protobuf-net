@@ -22,7 +22,7 @@ namespace Examples
         public bool FooSpecified
         {
             get { return foo != null; }
-            set { foo = value ? Foo : (int?)null;}
+            set { if(value == (foo == null)) foo = value ? Foo : (int?)null;}
         }
 
         private bool ShouldSerializeFoo() {return FooSpecified; }
@@ -40,7 +40,7 @@ namespace Examples
         public bool BarSpecified
         {
             get { return bar != null; }
-            set { bar = value ? Bar : null;}
+            set { if (value == (bar == null)) bar = value ? Bar : (string)null; }
         }
         private bool ShouldSerializeBar() { return BarSpecified; }
         private void ResetBar() { BarSpecified = false; }

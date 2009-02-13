@@ -29,16 +29,21 @@ namespace Examples
             MemoryStream ms = new MemoryStream();
             Serializer.Serialize(ms, ed);
             byte[] buffer = ms.GetBuffer();
-
+            Assert.AreEqual(30, ms.Length);
             MemoryStream ms2 = new MemoryStream();
             ms2.Write(buffer, 0, (int)ms.Length - 5);
+            ms2.Position = 0;
             try
             {
                 Serializer.Deserialize<TraceErrorData>(ms2);
-            } catch(Exception ex)
+                Assert.Fail("Should have errored");
+            } catch(EndOfStreamException ex)
             {
                 Assert.IsTrue(ex.Data.Contains("protoSource"));
-                Assert.AreEqual("TraceErrorData:2", ex.Data["protoSource"]);
+                Assert.AreEqual("tag=2; wire-type=String; offset=25; depth=1; type=Examples.TraceErrorData", ex.Data["protoSource"]);
+            } catch(Exception ex)
+            {
+                Assert.Fail("Unexpected exception: " + ex);
             }
         }
     }

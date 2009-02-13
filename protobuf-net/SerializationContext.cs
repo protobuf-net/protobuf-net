@@ -134,13 +134,13 @@ namespace ProtoBuf
         /// <summary>
         /// Only used during debugging for the text nest-level
         /// </summary>
-        [Conditional(SerializationContext.VerboseSymbol)]
+        //[Conditional(SerializationContext.VerboseSymbol)]
         public void Push() { stackDepth++; }
 
         /// <summary>
         /// Only used during debugging for the text nest-level
         /// </summary>
-        [Conditional(SerializationContext.VerboseSymbol)]
+        //[Conditional(SerializationContext.VerboseSymbol)]
         public void Pop() { stackDepth--; }
 
         private void CheckStackForRecursion(object item)
@@ -258,7 +258,7 @@ namespace ProtoBuf
             this.inputStreamAvailable = context.inputStreamAvailable;
             this.ioBufferEffectiveSize = context.ioBufferEffectiveSize;
 
-            TraceChangeOrigin(context);
+            TraceChangeOrigin(context); // note ConditionalAttribute
 
             // IMPORTANT: don't copy the group stack; we want to 
             // validate that the group-stack is empty when finding the end of a stream

@@ -393,11 +393,11 @@ namespace ProtoBuf
             where TCreation : class, T
         {
             uint prefix = 0;
+            if (context == null) throw new ArgumentNullException("context");
 #if !CF
             try
             {
 #endif
-                if (context == null) throw new ArgumentNullException("context");
                 context.Push();
                 int propCount = readProps.Length;
                 //context.CheckSpace();
@@ -536,16 +536,16 @@ namespace ProtoBuf
 #if !CF
             } catch (Exception ex)
             {
+                const string ErrorDataKey = "protoSource";
                 if (!ex.Data.Contains(ErrorDataKey))
                 {
-                    ex.Data.Add(ErrorDataKey, typeof(T).Name + ":" + prefix);
-                }
+                    ex.Data.Add(ErrorDataKey, string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}; type={4}",
+                            (int) (prefix >> 3), (WireType) (prefix & 7),
+                            context.Position, context.Depth, typeof (T).FullName));}
                 throw;
             }
 #endif
         }
-
-        private const string ErrorDataKey = "protoSource";
 
         private static void ProcessExtraData(SerializationContext read, int fieldTag, WireType wireType, SerializationContext write)
         {

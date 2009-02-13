@@ -84,6 +84,20 @@ namespace Examples.ProtoGen
             TestCompileCSharpV3(code);
         }
 
+        [Test]
+        public void TestDescriptorAsCSharpPartialMethodsLangVer3DetectMissingWithXml()
+        {
+            string code = GetCode(@"-i:ProtoGen\descriptor.proto", "-p:partialMethods", "-p:detectMissing", "-p:xml");
+            TestCompileCSharpV3(code);
+        }
+
+        [Test]
+        public void TestDescriptorAsCSharpPartialMethodsLangVer3DetectMissingWithDataContract()
+        {
+            string code = GetCode(@"-i:ProtoGen\descriptor.proto", "-p:partialMethods", "-p:detectMissing", "-p:datacontract");
+            TestCompileCSharpV3(code, "System.Runtime.Serialization.dll");
+        }
+
 
         private static void TestLoadXml(string xml)
         {
