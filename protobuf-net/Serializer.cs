@@ -466,6 +466,35 @@ namespace ProtoBuf
             return true;
         }
 
+        /// <summary>Indicates the number of bytes expected for the next message.</summary>
+        /// <param name="buffer">The buffer containing the data to investigate for a length.</param>
+        /// <param name="index">The offset of the first byte to read from the buffer.</param>
+        /// <param name="count">The number of bytes to read from the buffer.</param>
+        /// <param name="style">The algorithm used to encode the length.</param>
+        /// <param name="length">The length of the message, if it could be identified.</param>
+        /// <returns>True if a length could be obtained, false otherwise.</returns>
+        public static bool TryReadLengthPrefix(byte[] buffer, int index, int count, PrefixStyle style, out int length)
+        {
+            using (Stream source = new MemoryStream(buffer, index, count))
+            {
+                uint len;
+                bool result;
+                switch (style)
+                {
+                    case PrefixStyle.Fixed32:
+                        result = SerializationContext.TryDecodeUInt32Fixed(source, out len);
+                        break;
+                    case PrefixStyle.Base128:
+                        result = SerializationContext.TryDecodeUInt32Fixed(source, out len);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("style", "Invalid prefix style: " + style);
+                }
+                length = (int) len;
+                return result;
+            }
+        }
+
         private static bool TryDeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style, int tag, out T item)
         {
             uint len;

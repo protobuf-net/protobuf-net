@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Reflection;
+#if !CF
+using System.Reflection.Emit;
+#endif
 
 namespace ProtoBuf.Property
 {
@@ -182,10 +185,29 @@ namespace ProtoBuf.Property
                         }
                         break;
                     case MemberTypes.Field:
-                        // basic boxing/reflection
                         FieldInfo field = (FieldInfo)member;
+#if CF
+                        // basic boxing/reflection
                         this.getValue = delegate(TSource source) { return (TValue)field.GetValue(source); };
                         this.setValue = delegate(TSource source, TValue value) { field.SetValue(source, value); };
+#else
+                        // custom IL
+                        DynamicMethod method = new DynamicMethod("stfld_" + field.Name, null, new Type[] { typeof(TSource), typeof(TValue)}, field.DeclaringType);
+                        ILGenerator il = method.GetILGenerator();
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldarg_1);
+                        il.Emit(OpCodes.Stfld, field);
+                        il.Emit(OpCodes.Ret);
+                        this.setValue = (Setter<TSource, TValue>)method.CreateDelegate(typeof(Setter<TSource, TValue>));
+
+                        method = new DynamicMethod("ldfild_" + field.Name, typeof(TValue), new Type[] { typeof(TSource) }, field.DeclaringType);
+                        il = method.GetILGenerator();
+                        il.Emit(OpCodes.Ldarg_0);
+                        il.Emit(OpCodes.Ldfld, field);
+                        il.Emit(OpCodes.Ret);
+                        this.getValue = (Getter<TSource, TValue>)method.CreateDelegate(typeof(Getter<TSource, TValue>));
+#endif
+     
                         break;
                     default:
                         throw new ArgumentException(member.MemberType.ToString() + " not supported for serialization: ", "member");

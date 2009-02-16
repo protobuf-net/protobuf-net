@@ -146,6 +146,7 @@
     </Compile>
     <Compile Include="IExtension.cs" />
     <Compile Include="ImplicitFields.cs" />
+    <Compile Include="ISerializerCallback.cs" />
     <Compile Include="ObjectFactory.cs" />
     <Compile Include="PrefixStyle.cs" />
     <Compile Include="Property\PropertyPairString.cs" />
