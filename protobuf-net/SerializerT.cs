@@ -185,6 +185,7 @@ namespace ProtoBuf
                 {
                     throw new InvalidOperationException("Only data-contract classes can be processed (error processing " + typeof(T).Name + ")");
                 }
+                isRootType = !Serializer.IsEntityType(typeof(T).BaseType);
                 List<Property<T>> readPropList = new List<Property<T>>(), writePropList = new List<Property<T>>();
                 List<int> tagsInUse = new List<int>();
                 foreach (MemberInfo prop in Serializer.GetProtoMembers(typeof(T)))
@@ -334,6 +335,10 @@ namespace ProtoBuf
             // items could incorrectly count as cyclic).
             Type actualType = instance.GetType();
             int total = 0, len;
+
+            ISerializerCallback callback = isRootType ? (instance as ISerializerCallback) : null;
+            if(callback != null) callback.OnSerializing();
+
             if (actualType != typeof(T))
             {
                 bool subclassFound = false;
@@ -376,6 +381,7 @@ namespace ProtoBuf
                 }               
             }
             context.Pop(instance);
+            if (callback != null) callback.OnSerialized();
             return total;
         }
 
@@ -389,6 +395,7 @@ namespace ProtoBuf
             source.CheckStackClean();
         }
         
+        private static  bool isRootType;
         internal static void Deserialize<TCreation>(ref T instance, SerializationContext context)
             where TCreation : class, T
         {
@@ -398,6 +405,12 @@ namespace ProtoBuf
             try
             {
 #endif
+                if(isRootType)
+                {
+                    ISerializerCallback callback = instance as ISerializerCallback;
+                    if(callback != null) callback.OnDeserializing();
+                }
+
                 context.Push();
                 int propCount = readProps.Length;
                 //context.CheckSpace();
@@ -470,7 +483,7 @@ namespace ProtoBuf
                         // not a sub-class, but *some* data there, so create an object
                         if (instance == null)
                         {
-                            instance = ObjectFactory<TCreation>.Create();
+                            instance = ObjectFactory<TCreation>.Create(true);
                             extensible = instance as IExtensible;
                         }
                         if (foundTag)
@@ -530,9 +543,18 @@ namespace ProtoBuf
                 // messages (otherwise instance should already be non-null)
                 if (instance == null)
                 {
-                    instance = ObjectFactory<T>.Create();
+                    instance = ObjectFactory<T>.Create(true);
                 }
                 context.Pop();
+                // call the callback
+                if (isRootType)
+                { // note: can't cache "callback", as inheritance means it might have changed
+                    ISerializerCallback callback = instance as ISerializerCallback;
+                    if (callback != null)
+                    {
+                        callback.OnDeserialized();
+                    }
+                }
 #if !CF
             } catch (Exception ex)
             {
@@ -613,7 +635,7 @@ namespace ProtoBuf
                 using (MemoryStream ms = new MemoryStream())
                 {
                     Serializer.Serialize<T>(ms, instance);
-                    actual = ObjectFactory<TValueActual>.Create();
+                    actual = ObjectFactory<TValueActual>.Create(false);
                     ms.Position = 0;
                     Serializer.Merge<T>(ms, actual);
                 }

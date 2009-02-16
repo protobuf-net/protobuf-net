@@ -2,7 +2,7 @@
 namespace ProtoBuf
 {
     /// <summary>Allows an object to execute additional code during the serialization/deserialization proces.</summary>
-    interface ISerializerCallback
+    public interface ISerializerCallback
     {
         /// <summary>Invoked before an object is serialized.</summary>
         void OnSerializing();
