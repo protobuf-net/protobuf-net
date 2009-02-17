@@ -9,7 +9,6 @@ using System.Text;
 using System.Threading;
 using ProtoBuf.Property;
 #if !SILVERLIGHT && !CF
-using System.ServiceModel;
 using System.Runtime.Serialization;
 #endif
 

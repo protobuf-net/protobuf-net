@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 #if NET_3_0
-using System.Runtime.InteropServices;
 using System.ServiceModel;
 #endif
 using System.Threading;
