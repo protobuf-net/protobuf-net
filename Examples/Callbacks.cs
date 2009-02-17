@@ -1,17 +1,23 @@
-﻿using NUnit.Framework;
+﻿using System.IO;
+using NUnit.Framework;
 using ProtoBuf;
+using System.Runtime.Serialization;
 namespace Examples
 {
     [ProtoContract]
-    public class CallbackSimple : ISerializerCallback, ICallbackTest
+    public class CallbackSimple : ICallbackTest
     {
         [ProtoMember(1)]
         public string Bar { get; set;}
 
-        void ISerializerCallback.OnDeserialized() { History += ";OnDeserialized"; }
-        void ISerializerCallback.OnDeserializing() { History += ";OnDeserializing"; }
-        void ISerializerCallback.OnSerialized() { History += ";OnSerialized"; }
-        void ISerializerCallback.OnSerializing() { History += ";OnSerializing"; }
+        [OnDeserialized]
+        void OnDeserialized() { History += ";OnDeserialized"; }
+        [OnDeserializing]
+        void OnDeserializing() { History += ";OnDeserializing"; }
+        [OnSerialized]
+        void OnSerialized() { History += ";OnSerialized"; }
+        [OnSerializing]
+        void OnSerializing() { History += ";OnSerializing"; }
         public CallbackSimple() { History = "ctor"; }
         public string History { get; private set; }
     }
@@ -19,16 +25,20 @@ namespace Examples
     
     [ProtoContract]
     [ProtoInclude(1, typeof(TestInheritedImplementedAtRootDerived))]
-    abstract class TestInheritedImplementedAtRoot : ISerializerCallback, ICallbackTest
+    abstract class TestInheritedImplementedAtRoot : ICallbackTest
     {
         
         protected abstract string BarCore { get; set;}
         string ICallbackTest.Bar {get { return BarCore;} set { BarCore = value;}}
 
-        void ISerializerCallback.OnDeserialized() { History += ";OnDeserialized"; }
-        void ISerializerCallback.OnDeserializing() { History += ";OnDeserializing"; }
-        void ISerializerCallback.OnSerialized() { History += ";OnSerialized"; }
-        void ISerializerCallback.OnSerializing() { History += ";OnSerializing"; }
+        [OnDeserialized]
+        void OnDeserialized() { History += ";OnDeserialized"; }
+        [OnDeserializing]
+        void OnDeserializing() { History += ";OnDeserializing"; }
+        [OnSerialized]
+        void OnSerialized() { History += ";OnSerialized"; }
+        [OnSerializing]
+        void OnSerializing() { History += ";OnSerializing"; }
         protected TestInheritedImplementedAtRoot() { History = "ctor"; }
         public string History { get; private set; }
     }
@@ -46,6 +56,90 @@ namespace Examples
     }
 
     [ProtoContract]
+    [ProtoInclude(1, typeof (TestInheritedVirtualAtRootDerived))]
+    internal abstract class TestInheritedVirtualAtRoot : ICallbackTest
+    {
+
+        protected abstract string BarCore { get; set; }
+        string ICallbackTest.Bar { get { return BarCore; } set { BarCore = value; } }
+
+        [OnDeserialized]
+        protected abstract void OnDeserialized();
+
+        [OnDeserializing]
+        protected abstract void OnDeserializing();
+
+        [OnSerialized]
+        protected abstract void OnSerialized();
+
+        [OnSerializing]
+        protected abstract void OnSerializing();
+
+        protected TestInheritedVirtualAtRoot() { History = "ctor"; }
+        public string History { get; protected set; }
+    }
+
+    [ProtoContract]
+    class TestInheritedVirtualAtRootDerived : TestInheritedVirtualAtRoot
+    {
+        protected override string BarCore
+        {
+            get { return Bar; }
+            set { Bar = value; }
+        }
+        [ProtoMember(1)]
+        public string Bar { get; set; }
+
+        protected override void OnDeserialized() {History += ";OnDeserialized";}
+        protected override void OnSerialized() { History += ";OnSerialized"; }
+        protected override void OnDeserializing() { History += ";OnDeserializing"; }
+        protected override void OnSerializing() { History += ";OnSerializing"; }
+    }
+
+    [ProtoContract]
+    [ProtoInclude(1, typeof(TestInheritedVirtualAtRootDerivedProtoAttribs))]
+    internal abstract class TestInheritedVirtualAtRootProtoAttribs : ICallbackTest
+    {
+
+        protected abstract string BarCore { get; set; }
+        string ICallbackTest.Bar { get { return BarCore; } set { BarCore = value; } }
+
+        [ProtoAfterDeserialization]
+        protected abstract void OnDeserialized();
+
+        [ProtoBeforeDeserialization]
+        protected abstract void OnDeserializing();
+
+        [ProtoAfterSerialization]
+        protected abstract void OnSerialized();
+
+        [ProtoBeforeSerialization]
+        protected abstract void OnSerializing();
+
+        protected TestInheritedVirtualAtRootProtoAttribs() { History = "ctor"; }
+        public string History { get; protected set; }
+    }
+
+    [ProtoContract]
+    class TestInheritedVirtualAtRootDerivedProtoAttribs : TestInheritedVirtualAtRootProtoAttribs
+    {
+        protected override string BarCore
+        {
+            get { return Bar; }
+            set { Bar = value; }
+        }
+        [ProtoMember(1)]
+        public string Bar { get; set; }
+
+        protected override void OnDeserialized() { History += ";OnDeserialized"; }
+        protected override void OnSerialized() { History += ";OnSerialized"; }
+        protected override void OnDeserializing() { History += ";OnDeserializing"; }
+        protected override void OnSerializing() { History += ";OnSerializing"; }
+    }
+
+
+
+    [ProtoContract]
     [ProtoInclude(1, typeof(TestInheritedImplementedAtChildDerived))]
     abstract class TestInheritedImplementedAtChild : ICallbackTest
     {
@@ -58,13 +152,17 @@ namespace Examples
     }
 
     [ProtoContract]
-    class TestInheritedImplementedAtChildDerived : TestInheritedImplementedAtChild, ISerializerCallback
+    class TestInheritedImplementedAtChildDerived : TestInheritedImplementedAtChild
     {
-        void ISerializerCallback.OnDeserialized() { History += ";OnDeserialized"; }
-        void ISerializerCallback.OnDeserializing() { History += ";OnDeserializing"; }
-        void ISerializerCallback.OnSerialized() { History += ";OnSerialized"; }
-        void ISerializerCallback.OnSerializing() { History += ";OnSerializing"; }
-        
+        [OnDeserialized]
+        void OnDeserialized() { History += ";OnDeserialized"; }
+        [OnDeserializing]
+        void OnDeserializing() { History += ";OnDeserializing"; }
+        [OnSerialized]
+        void OnSerialized() { History += ";OnSerialized"; }
+        [OnSerializing]
+        void OnSerializing() { History += ";OnSerializing"; }
+
         protected override string BarCore
         {
             get { return Bar; }
@@ -84,7 +182,7 @@ namespace Examples
     public class Callbacks
     {
         public static void Test<T, TCreate>()
-            where TCreate : T, ISerializerCallback, new()
+            where TCreate : T, new()
             where T : class, ICallbackTest
         {
             TCreate cs = new TCreate();
@@ -113,6 +211,16 @@ namespace Examples
 
         }
 
+        [ProtoContract]
+        class DuplicateCallbacks
+        {
+            [ProtoBeforeSerialization]
+            void Foo() {}
+
+            [ProtoBeforeSerialization]
+            void Bar() { }
+        }
+
         [Test]
         public void TestSimple()
         {
@@ -120,15 +228,33 @@ namespace Examples
         } 
 
         [Test]
+        public void TestInheritedVirtualAtRoot()
+        {
+            Test<TestInheritedVirtualAtRoot, TestInheritedVirtualAtRootDerived>();
+        }
+
+        [Test]
+        public void TestInheritedVirtualAtRootProtoAttribs()
+        {
+            Test<TestInheritedVirtualAtRootProtoAttribs, TestInheritedVirtualAtRootDerivedProtoAttribs>();
+        }
+
+        [Test]
         public void TestInheritedImplementedAtRoot()
         {
             Test<TestInheritedImplementedAtRoot, TestInheritedImplementedAtRootDerived>();
         }
 
-        [Test]
+        [Test, ExpectedException(typeof(ProtoException), ExpectedMessage = "Callbacks are only supported on the root contract type in an inheritance tree; consider implementing callbacks as virtual methods on Examples.TestInheritedImplementedAtChild")]
         public void TestInheritedImplementedAtChild()
         {
             Test<TestInheritedImplementedAtChild, TestInheritedImplementedAtChildDerived>();
+        }
+
+        [Test, ExpectedException(typeof(ProtoException), ExpectedMessage = "Conflicting callback methods (decorated with ProtoBeforeSerializationAttribute) found for DuplicateCallbacks: Foo and Bar")]
+        public void TestDuplicateCallbacks()
+        {
+            Serializer.Serialize(Stream.Null, new DuplicateCallbacks());
         }
 
     }

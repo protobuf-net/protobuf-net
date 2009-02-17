@@ -140,13 +140,13 @@
     <Compile Include="BufferExtension.cs">
       <DependentUpon>IExtension.cs</DependentUpon>
     </Compile>
+    <Compile Include="CallbackAttributes.cs" />
     <Compile Include="Formatter.cs" />
     <Compile Include="GlobalOptions.cs">
       <DependentUpon>Serializer.cs</DependentUpon>
     </Compile>
     <Compile Include="IExtension.cs" />
     <Compile Include="ImplicitFields.cs" />
-    <Compile Include="ISerializerCallback.cs" />
     <Compile Include="ObjectFactory.cs" />
     <Compile Include="PrefixStyle.cs" />
     <Compile Include="Property\PropertyPairString.cs" />

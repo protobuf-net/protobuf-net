@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+#if !SILVERLIGHT && !CF
+using System.Runtime.Serialization;
+#endif
 
 namespace ProtoBuf
 {
@@ -33,8 +36,10 @@ namespace ProtoBuf
 
     internal sealed partial class SerializationContext
     {
-        //TODO: reinstate
-        //public readonly ProtoGuid GuidTemplate = null; //new ProtoGuid();
+#if !SILVERLIGHT && !CF
+        internal static readonly StreamingContext EmptyStreamingContext
+            = new StreamingContext(StreamingContextStates.All);
+#endif
         
         public const string VerboseSymbol = "VERBOSE", DebugCategory = "protobuf-net";
         private Stack<object> objectStack = new Stack<object>();

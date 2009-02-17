@@ -8,11 +8,17 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using ProtoBuf.Property;
+#if !SILVERLIGHT && !CF
+using System.ServiceModel;
+using System.Runtime.Serialization;
+#endif
 
 namespace ProtoBuf
 {
     internal static class Serializer<T> where T : class
     {
+        private delegate void SerializationCallback(T instance);
+
 #if !CF
         public static string GetProto()
         {
@@ -45,6 +51,7 @@ namespace ProtoBuf
             }
             return sb.ToString();
         }
+
         
         public static void WalkTypes(List<Type> knownTypes)
         {
@@ -152,10 +159,9 @@ namespace ProtoBuf
 #endif
         private static Property<T>[] readProps, writeProps;
         private static KeyValuePair<Type, Property<T, T>>[] subclasses;
+        private static SerializationCallback[] callbacks;
         private static readonly object lockToken = new object();
-
-
-
+        
         internal static void Build()
         {
             if (readProps != null) return; // completely built and ready for use
@@ -185,7 +191,7 @@ namespace ProtoBuf
                 {
                     throw new InvalidOperationException("Only data-contract classes can be processed (error processing " + typeof(T).Name + ")");
                 }
-                isRootType = !Serializer.IsEntityType(typeof(T).BaseType);
+                BuildCallbacks();
                 List<Property<T>> readPropList = new List<Property<T>>(), writePropList = new List<Property<T>>();
                 List<int> tagsInUse = new List<int>();
                 foreach (MemberInfo prop in Serializer.GetProtoMembers(typeof(T)))
@@ -336,8 +342,7 @@ namespace ProtoBuf
             Type actualType = instance.GetType();
             int total = 0, len;
 
-            ISerializerCallback callback = isRootType ? (instance as ISerializerCallback) : null;
-            if(callback != null) callback.OnSerializing();
+            Callback(CallbackType.BeforeSerialization, instance);
 
             if (actualType != typeof(T))
             {
@@ -381,7 +386,7 @@ namespace ProtoBuf
                 }               
             }
             context.Pop(instance);
-            if (callback != null) callback.OnSerialized();
+            Callback(CallbackType.AfterSerialization, instance);
             return total;
         }
 
@@ -395,7 +400,6 @@ namespace ProtoBuf
             source.CheckStackClean();
         }
         
-        private static  bool isRootType;
         internal static void Deserialize<TCreation>(ref T instance, SerializationContext context)
             where TCreation : class, T
         {
@@ -405,10 +409,9 @@ namespace ProtoBuf
             try
             {
 #endif
-                if(isRootType)
+                if(instance != null)
                 {
-                    ISerializerCallback callback = instance as ISerializerCallback;
-                    if(callback != null) callback.OnDeserializing();
+                    Callback(CallbackType.BeforeDeserialization, instance);
                 }
 
                 context.Push();
@@ -483,7 +486,8 @@ namespace ProtoBuf
                         // not a sub-class, but *some* data there, so create an object
                         if (instance == null)
                         {
-                            instance = ObjectFactory<TCreation>.Create(true);
+                            instance = ObjectFactory<TCreation>.Create();
+                            Callback(CallbackType.ObjectCreation, instance);
                             extensible = instance as IExtensible;
                         }
                         if (foundTag)
@@ -543,18 +547,11 @@ namespace ProtoBuf
                 // messages (otherwise instance should already be non-null)
                 if (instance == null)
                 {
-                    instance = ObjectFactory<T>.Create(true);
+                    instance = ObjectFactory<T>.Create();
+                    Callback(CallbackType.ObjectCreation, instance);
                 }
                 context.Pop();
-                // call the callback
-                if (isRootType)
-                { // note: can't cache "callback", as inheritance means it might have changed
-                    ISerializerCallback callback = instance as ISerializerCallback;
-                    if (callback != null)
-                    {
-                        callback.OnDeserialized();
-                    }
-                }
+                Callback(CallbackType.AfterDeserialization, instance);
 #if !CF
             } catch (Exception ex)
             {
@@ -635,13 +632,134 @@ namespace ProtoBuf
                 using (MemoryStream ms = new MemoryStream())
                 {
                     Serializer.Serialize<T>(ms, instance);
-                    actual = ObjectFactory<TValueActual>.Create(false);
+                    actual = ObjectFactory<TValueActual>.Create();
+                    // (note - don't use ObjectCreation callback here - Merge will own the callbacks)
                     ms.Position = 0;
                     Serializer.Merge<T>(ms, actual);
                 }
             }
             return actual;
         }
+        internal static void Callback(CallbackType callbackType, T instance)
+        {
+            if(callbacks != null)
+            {
+                SerializationCallback callback;
+                if ((callback = callbacks[(int)callbackType]) != null) callback(instance);
+            }
+        }
 
+        private static void BuildCallbacks()
+        {
+            MethodInfo[] methods = typeof (T).GetMethods(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+                | BindingFlags.DeclaredOnly);
+
+            // protobuf-net specific
+            FindCallback(methods, CallbackType.BeforeSerialization, typeof (ProtoBeforeSerializationAttribute));
+            FindCallback(methods, CallbackType.AfterSerialization, typeof(ProtoAfterSerializationAttribute));
+            FindCallback(methods, CallbackType.BeforeDeserialization, typeof(ProtoBeforeDeserializationAttribute));
+            FindCallback(methods, CallbackType.AfterDeserialization, typeof(ProtoAfterDeserializationAttribute));
+
+#if !SILVERLIGHT && !CF 
+            // regular framework
+            FindCallback(methods, CallbackType.BeforeSerialization, typeof (OnSerializingAttribute));
+            FindCallback(methods, CallbackType.AfterSerialization, typeof(OnSerializedAttribute));
+            FindCallback(methods, CallbackType.BeforeDeserialization, typeof(OnDeserializingAttribute));
+            FindCallback(methods, CallbackType.AfterDeserialization, typeof(OnDeserializedAttribute));
+#endif
+            
+            Type root = typeof (T).BaseType;
+            bool isRoot = !Serializer.IsEntityType(root);
+            if (!isRoot) {
+                while (Serializer.IsEntityType(root.BaseType))
+                {
+                    root = root.BaseType;
+                }
+            }
+            if(callbacks != null)
+            {
+                if (!isRoot)
+                {
+                    throw new ProtoException(
+                        "Callbacks are only supported on the root contract type in an inheritance tree; consider implementing callbacks as virtual methods on " +
+                        root.FullName);
+                }
+                // otherwise, use BeforeDeserialization for ObjectCreation:
+                callbacks[(int) CallbackType.ObjectCreation] = callbacks[(int) CallbackType.BeforeDeserialization];
+            } else
+            {
+                methods = root.GetMethods(
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+                    | BindingFlags.DeclaredOnly);
+
+                FindCallback(methods, CallbackType.ObjectCreation, typeof(ProtoBeforeDeserializationAttribute));
+#if !SILVERLIGHT && !CF 
+                FindCallback(methods, CallbackType.ObjectCreation, typeof(OnDeserializingAttribute));
+#endif
+            }
+
+        }
+
+        private static void FindCallback(MethodInfo[] methods, CallbackType callbackType, Type attributeType)
+        {
+            if(callbacks != null && callbacks[(int)callbackType] != null) return; // already found
+            MethodInfo found = null;
+            for(int i = 0 ; i < methods.Length ; i++)
+            {
+                if(Attribute.GetCustomAttribute(methods[i], attributeType) != null)
+                {
+                    if (found != null)
+                    {
+                        throw new ProtoException(
+                            "Conflicting callback methods (decorated with " + attributeType.Name +
+                            ") found for " + typeof(T).Name + ": " + found.Name + " and " + methods[i].Name);
+                    }
+                    found = methods[i];
+                }
+            }
+            if(found != null)
+            {
+                ParameterInfo[] args = found.GetParameters();
+                SerializationCallback callback;
+                if(found.ReturnType == typeof(void) && args.Length == 0)
+                {
+#if CF2
+                    callback = delegate(T instance) { found.Invoke(instance, null); };
+#else
+                    callback = (SerializationCallback)Delegate.CreateDelegate(
+                        typeof(SerializationCallback), null, found);
+#endif
+
+                }
+#if !SILVERLIGHT && !CF
+                else if (found.ReturnType == typeof(void) && args.Length == 1
+                    && args[0].ParameterType == typeof(StreamingContext))
+                {
+                    Setter<T, StreamingContext> inner = (Setter<T, StreamingContext>)
+                        Delegate.CreateDelegate(typeof (Setter<T, StreamingContext>), null, found);
+                    callback = delegate(T instance)
+                    {
+                        inner(instance, SerializationContext.EmptyStreamingContext);
+                    };
+                }
+#endif
+                else
+                {
+                    throw new ProtoException("Unexpected signature on callback: " + typeof(T).Name + "." + found.Name);
+                }
+                if(callbacks == null) callbacks = new SerializationCallback[5];
+                callbacks[(int) callbackType] = callback;
+            }
+        }
     }
+    internal enum CallbackType
+    {
+        BeforeSerialization = 0,
+        AfterSerialization = 1,
+        BeforeDeserialization = 2,
+        AfterDeserialization = 3,
+        ObjectCreation = 4
+    }
+
 }

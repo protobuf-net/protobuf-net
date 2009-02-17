@@ -29,19 +29,9 @@ namespace ProtoBuf
         /// <summary>
         /// Create a new instance of the given type.
         /// </summary>
-        /// <param name="invokeOnDeserializing">Should the ISerializerCallback.OnDeserializing method be invoked (if available).</param>
-        /// <returns></returns>
-        public static T Create(bool invokeOnDeserializing)
+        public static T Create()
         {
-            T value = impl.CreateImpl();
-
-            if (invokeOnDeserializing)
-            {
-                ISerializerCallback callback = value as ISerializerCallback;
-                if (callback != null) callback.OnDeserializing();
-            }
-
-        return value;
+            return impl.CreateImpl();
         }
         protected abstract T CreateImpl();
 
