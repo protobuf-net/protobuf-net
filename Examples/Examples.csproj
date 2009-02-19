@@ -173,6 +173,7 @@
     <Compile Include="TagInference.cs" />
     <Compile Include="TestNumbers\NumberTests.cs" />
     <Compile Include="TraceError.cs" />
+    <Compile Include="ValueWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Tools\nwind.proto.bin">

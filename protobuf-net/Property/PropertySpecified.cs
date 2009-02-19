@@ -11,8 +11,9 @@ namespace ProtoBuf.Property
     {
         public static PropertyInfo GetSpecified(Type type, string name)
         {
-            PropertyInfo prop = type.GetProperty(name + "Specified");
-            if (prop == null || !prop.CanRead || !prop.CanWrite) return null;
+            PropertyInfo prop = type.GetProperty(name + "Specified",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            if (prop == null || !prop.CanRead) return null;
             int tag;
             DataFormat fmt;
             bool isReq;
@@ -30,12 +31,17 @@ namespace ProtoBuf.Property
         {
 #if CF2
             getSpecified = delegate(TSource source) { return (bool)property.GetValue(source, null); };
-            setSpecified = delegate(TSource source, bool value) {property.SetValue(source, value, null); };
+            if (property.CanWrite)
+            {
+                setSpecified = delegate(TSource source, bool value) { property.SetValue(source, value, null); };
+            }
 #else
             getSpecified = (Getter<TSource, bool>)Delegate.CreateDelegate(typeof(Getter<TSource, bool>), null, property.GetGetMethod(true))
                                 ?? delegate { throw new ProtoException("Property cannot be read: " + property.Name); };
-            setSpecified = (Setter<TSource, bool>)Delegate.CreateDelegate(typeof(Setter<TSource, bool>), null, property.GetSetMethod(true))
-                                ?? delegate { throw new ProtoException("Property cannot be written: " + property.Name); };
+            if (property.CanWrite)
+            {
+                setSpecified = (Setter<TSource, bool>)Delegate.CreateDelegate(typeof(Setter<TSource, bool>), null, property.GetSetMethod(true));
+            }
 #endif
         }
 
@@ -67,7 +73,10 @@ namespace ProtoBuf.Property
         }
         public override TValue DeserializeImpl(TSource source, SerializationContext context)
         {
-            setSpecified(source, true);
+            if (setSpecified != null)
+            {
+                setSpecified(source, true);
+            }
             return innerProperty.DeserializeImpl(GetValue(source), context);
         }
     }
