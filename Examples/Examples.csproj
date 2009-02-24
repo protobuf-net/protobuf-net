@@ -136,6 +136,7 @@
     <Compile Include="Issues\Issue29.cs" />
     <Compile Include="Issues\Issue32.cs" />
     <Compile Include="Issues\Issue41.cs" />
+    <Compile Include="Issues\Issue45.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListTests.cs" />
     <Compile Include="NWind\CompatDb.cs" />
@@ -231,6 +232,10 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\LateLoaded\bin\Release\LateLoaded.dll">
+      <Link>LateLoaded.dll</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\Tools\protoc-license.txt">
       <Link>protoc-license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

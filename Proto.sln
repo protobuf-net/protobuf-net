@@ -13,8 +13,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverlightExtended", "Silv
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL", "DAL\DAL.csproj", "{DF9B0042-47FD-4B20-998D-C9D3CF3CFBF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlClr", "SqlClr\SqlClr.csproj", "{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net-CF20", "protobuf-net-CF20\protobuf-net-CF20.csproj", "{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net-CF35", "protobuf-net-CF35\protobuf-net-CF35.csproj", "{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}"
@@ -30,6 +28,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protorpc-net", "protorpc-net\protorpc-net.csproj", "{D883F810-825F-4496-AAC4-F55AD424A407}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoGen", "ProtoGen\ProtoGen.csproj", "{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LateLoaded", "LateLoaded\LateLoaded.csproj", "{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -96,15 +96,6 @@ Global
 		{DF9B0042-47FD-4B20-998D-C9D3CF3CFBF3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF9B0042-47FD-4B20-998D-C9D3CF3CFBF3}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{DF9B0042-47FD-4B20-998D-C9D3CF3CFBF3}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
-		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Net20|Any CPU.ActiveCfg = Release|Any CPU
-		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Net20|Any CPU.Build.0 = Release|Any CPU
-		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Profile|Any CPU.ActiveCfg = Release|Any CPU
-		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
-		{FE5617F2-F9F7-4E68-9DBF-2A4F23969FD6}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
 		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5603E8F8-6425-43BF-849E-C95F1D7A8AEB}.Net20|Any CPU.ActiveCfg = Release|Any CPU
@@ -155,6 +146,16 @@ Global
 		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Profile|Any CPU.ActiveCfg = Release|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Profile|Any CPU.Build.0 = Release|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
+		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
