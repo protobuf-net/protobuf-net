@@ -52,6 +52,8 @@
     <!-- build .NET 3.0 using the C# 3.0 compiler -->
     <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
     <RemoveDir Directories="protogen\obj; protogen\bin"/>
+
+    <MSBuild Projects="LateLoaded\LateLoaded.csproj" Targets="Rebuild" Properties="Configuration=Release"/>
     <MSBuild Projects="protogen\protogen.csproj" Properties="OutputPath=..\$(OutputDirectory)\NET30; Configuration=Release" Targets="Rebuild"/>
 
     <!-- build for compact framework -->

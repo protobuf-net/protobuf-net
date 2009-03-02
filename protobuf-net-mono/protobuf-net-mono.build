@@ -17,7 +17,7 @@
   </target>
 
   <target name="protobuf-net" depends="init">
-    <csc target="library" output="${build.dir}/${target::get-current-target()}.dll" define="NET_2_0;NET_3_5;REMOTING" debug="${not build.release}" optimize="${build.release}" doc="${doc.dir}/${target::get-current-target()}.xml">
+    <csc target="library" keyfile="../ProtoBuf.snk" output="${build.dir}/${target::get-current-target()}.dll" define="NET_2_0;NET_3_5;REMOTING" debug="${not build.release}" optimize="${build.release}" doc="${doc.dir}/${target::get-current-target()}.xml">
       <sources>
         <include name="${source.dir}/protobuf-net/**/*.cs"/>
       </sources>
