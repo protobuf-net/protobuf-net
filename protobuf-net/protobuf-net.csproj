@@ -126,8 +126,6 @@
     <Compile Include="ExtensibleUtil.cs">
       <DependentUpon>IExtensible.cs</DependentUpon>
     </Compile>
-    <Compile Include="Net\ProtoClient.cs" />
-    <Compile Include="Net\ProtoServer.cs" />
     <Compile Include="ProtoException.cs" />
     <Compile Include="UnknownType.cs" />
   </ItemGroup>
@@ -137,6 +135,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AsyncUtility.cs" />
     <Compile Include="BufferExtension.cs">
       <DependentUpon>IExtension.cs</DependentUpon>
     </Compile>
@@ -147,6 +146,7 @@
     </Compile>
     <Compile Include="IExtension.cs" />
     <Compile Include="ImplicitFields.cs" />
+    <Compile Include="NonGeneric.cs" />
     <Compile Include="ObjectFactory.cs" />
     <Compile Include="PrefixStyle.cs" />
     <Compile Include="Property\PropertyPairString.cs" />
@@ -208,9 +208,16 @@
       <DependentUpon>SerializationContext.cs</DependentUpon>
     </Compile>
     <Compile Include="SerializerProxy.cs" />
-    <Compile Include="ServiceModel\RpcClient.cs" />
-    <Compile Include="ServiceModel\RpcMessage.cs" />
+    <Compile Include="ServiceModel\ExceptionEventArgs.cs" />
+    <Compile Include="ServiceModel\Client\HttpBasicTransport.cs" />
+    <Compile Include="ServiceModel\Server\HttpServer.cs" />
+    <Compile Include="ServiceModel\Client\IClientTransport.cs" />
+    <Compile Include="ServiceModel\Client\ProtoClient.cs" />
+    <Compile Include="ServiceModel\Client\ServiceRequest.cs" />
     <None Include="Web\TODO.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Net\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

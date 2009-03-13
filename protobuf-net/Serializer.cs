@@ -714,11 +714,12 @@ namespace ProtoBuf
         /// <typeparam name="T">The type being serialized.</typeparam>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
         /// <param name="info">The destination SerializationInfo to write to.</param>
-        public static void Serialize<T>(SerializationInfo info, T instance) where T : ISerializable
+        public static void Serialize<T>(SerializationInfo info, T instance) where T : class, ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
             if (instance == null) throw new ArgumentNullException("instance");
+            if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", "instance");
             using (MemoryStream ms = new MemoryStream())
             {
                 Serialize<T>(ms, instance);
@@ -729,23 +730,31 @@ namespace ProtoBuf
         }
 
         
+        
+
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
         /// </summary>
         /// <typeparam name="T">The type being merged.</typeparam>
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="info">The SerializationInfo containing the data to apply to the instance (cannot be null).</param>
-        public static void Merge<T>(SerializationInfo info, T instance) where T : ISerializable
+        public static void Merge<T>(SerializationInfo info, T instance) where T : class, ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException("info");
             if (instance == null) throw new ArgumentNullException("instance");
+            if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", "instance");
+
             //string s = info.GetString(ProtoBinaryField);
             //using (MemoryStream ms = new MemoryStream(Convert.FromBase64String(s)))
             byte[] buffer = (byte[])info.GetValue(ProtoBinaryField, typeof(byte[]));
             using (MemoryStream ms = new MemoryStream(buffer))
             {
-                Merge<T>(ms, instance);
+                T result = Merge<T>(ms, instance);
+                if(!ReferenceEquals(result,instance))
+                {
+                    throw new ProtoException("Deserialization changed the instance; cannot succeed.");
+                }
             }
         }
 #endif

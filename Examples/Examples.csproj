@@ -139,6 +139,7 @@
     <Compile Include="Issues\Issue45.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListTests.cs" />
+    <Compile Include="NonGeneric.cs" />
     <Compile Include="NWind\CompatDb.cs" />
     <Compile Include="NWind\DataContext.cs" />
     <Compile Include="NWind\NWind.cs" />
@@ -164,7 +165,7 @@
     <Compile Include="Remoting\RemotingDemo.cs" />
     <Compile Include="Rpc.cs" />
     <Compile Include="RpcTest.cs" />
-    <Compile Include="ServiceModel\RpcPacking.cs" />
+    <Compile Include="Rpc\HttpBasic.cs" />
     <Compile Include="ServiceModel\WcfTest.cs" />
     <Compile Include="SimpleStream\Collections.cs" />
     <Compile Include="SimpleStream\GroupedData.cs" />
@@ -194,14 +195,17 @@
     <None Include="ProtoGen\jons.bin">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="ProtoGen\person.bin" />
-    <None Include="ProtoGen\person.proto" />
+    <None Include="ProtoGen\person.bin">
+    </None>
+    <None Include="ProtoGen\person.proto">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="ProtoGen\rpc.bin" />
     <None Include="ProtoGen\rpc.proto" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
-      <Project>{8649E5E9-4159-4214-B85D-4539799EB09B}</Project>
+      <Project>{8374E4D7-2A91-48F1-9360-09B09CF27C3F}</Project>
       <Name>protobuf-net</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProtoGen\ProtoGen.csproj">

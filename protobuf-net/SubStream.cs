@@ -29,7 +29,7 @@ namespace ProtoBuf
 
         private void CheckDisposed()
         {
-            if (parent == null) throw new ObjectDisposedException(GetType().Name);
+            if (parent == null) throw new ObjectDisposedException(ToString());
         }
 
         protected override void Dispose(bool disposing)

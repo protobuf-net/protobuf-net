@@ -30,6 +30,14 @@ namespace Examples.ProtoGen
         }
 
         [Test]
+        public void TestPersonAsCSharp()
+        {
+            string csharp = GetCode(@"-i:ProtoGen\person.proto", "-p:detectMissing");
+            File.WriteAllText(@"ProtoGen\person.cs", csharp);
+            TestCompileCSharp(csharp);
+
+        }
+        [Test]
         public void TestDescriptorAsXml()
         {
             string xml = GetCode(@"-i:ProtoGen\descriptor.proto", "-t:xml");
