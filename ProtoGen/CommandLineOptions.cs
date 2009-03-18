@@ -33,6 +33,7 @@ namespace ProtoBuf.CodeGenerator
         private string template = TemplateCSharp, outPath = "";
         private bool showLogo = true, showHelp;
         private readonly List<string> inPaths = new List<string>();
+        private readonly List<string> args = new List<string>();
 
         private int messageCount;
         public int MessageCount { get { return messageCount; } }
@@ -44,6 +45,7 @@ namespace ProtoBuf.CodeGenerator
         private readonly XsltArgumentList xsltOptions = new XsltArgumentList();
         public XsltArgumentList XsltOptions { get { return xsltOptions; } }
         public List<string> InPaths { get { return inPaths; } }
+        public List<string> Arguments { get { return args; } }
 
         private readonly TextWriter messageOutput;
 
@@ -76,6 +78,10 @@ namespace ProtoBuf.CodeGenerator
                 else if (arg == "-q") // quiet
                 {
                     options.ShowLogo = false;
+                }
+                else if (arg == "-d")
+                {
+                    options.Arguments.Add("--include_imports");
                 }
                 else if (arg.StartsWith("-i:"))
                 {
@@ -146,7 +152,7 @@ namespace ProtoBuf.CodeGenerator
 
             foreach (string inPath in options.InPaths)
             {
-                InputFileLoader.Merge(set, inPath);
+                InputFileLoader.Merge(set, Path.GetFullPath(inPath), options.Arguments.ToArray());
             }
 
             XmlSerializer xser = new XmlSerializer(typeof(FileDescriptorSet));
@@ -173,7 +179,14 @@ namespace ProtoBuf.CodeGenerator
             using (TextWriter writer = new StringWriter(sb))
             {
                 XslCompiledTransform xslt = new XslCompiledTransform();
-                xslt.Load(Path.ChangeExtension(options.Template, "xslt"));
+                string xsltTemplate = Path.ChangeExtension(options.Template, "xslt");
+                if (!File.Exists(xsltTemplate))
+                {
+                    string localXslt = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), xsltTemplate);
+                    if (File.Exists(localXslt))
+                        xsltTemplate = localXslt;
+                }
+                xslt.Load(xsltTemplate);
                 xslt.Transform(reader, options.XsltOptions, writer);
             }
             return sb.ToString();

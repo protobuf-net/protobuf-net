@@ -13,6 +13,8 @@
   <xsl:param name="partialMethods"/>
   <xsl:param name="detectMissing"/>
   <xsl:param name="lightFramework"/>
+  <xsl:param name="asynchronous"/>
+  <xsl:param name="clientProxy"/>
   
   <xsl:key name="fieldNames" match="//FieldDescriptorProto" use="name"/>
   
@@ -27,6 +29,8 @@
   <xsl:variable name="optionPartialMethods" select="$partialMethods='true'"/>
   <xsl:variable name="optionDetectMissing" select="$detectMissing='true'"/>
   <xsl:variable name="optionFullFramework" select="not($lightFramework='true')"/>
+  <xsl:variable name="optionAsynchronous" select="$asynchronous='true'"/>
+  <xsl:variable name="optionClientProxy" select="$clientProxy='true'"/>
 
   <xsl:template match="*">
     <xsl:message terminate="yes">
@@ -55,6 +59,8 @@
           "partialMethods" - provide partial methods for changes (requires C# 3.0)
           "detectMissing" - provide *Specified properties to indicate whether fields are present
           "lightFramework" - omit additional attributes not included in CF/Silverlight
+          "asynchronous" - emit asynchronous methods for use with WCF
+          "clientProxy" - emit asynchronous client proxy class
       </xsl:message>
     </xsl:if>
 
@@ -375,6 +381,8 @@
       <xsl:apply-templates select="method/MethodDescriptorProto" mode="protoRpc"/>
     }
     </xsl:if>
+    <xsl:apply-templates select="." mode="clientProxy"/>
+    
   </xsl:template>
 
   <xsl:template match="MethodDescriptorProto">
@@ -382,6 +390,11 @@
       [System.ServiceModel.OperationContract(Name = @"<xsl:value-of select="name"/>")]
     </xsl:if>
       <xsl:apply-templates select="output_type"/><xsl:text xml:space="preserve"> </xsl:text><xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request);
+    <xsl:if test="$optionAsynchronous and $optionDataContract">
+    [System.ServiceModel.OperationContract(AsyncPattern = true, Name = @"<xsl:value-of select="name"/>")]
+    System.IAsyncResult Begin<xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request, System.AsyncCallback callback, object state);
+    <xsl:apply-templates select="output_type"/> End<xsl:value-of select="name"/>(System.IAsyncResult ar);
+    </xsl:if>
   </xsl:template>
 
   <xsl:template match="MethodDescriptorProto" mode="protoRpc">
@@ -394,4 +407,127 @@
   <xsl:template match="MethodDescriptorProto/input_type | MethodDescriptorProto/output_type">
     <xsl:value-of select="substring-after(.,'.')"/>
   </xsl:template>
+
+  <xsl:template match="MethodDescriptorProto" mode="CompleteEvent">
+  <xsl:if test="$optionAsynchronous and $optionDataContract">
+    public partial class <xsl:value-of select="name"/>CompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs
+    {
+        private object[] results;
+
+        public <xsl:value-of select="name"/>CompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState)
+            : base(exception, cancelled, userState) 
+        {
+            this.results = results;
+        }
+        
+        public <xsl:apply-templates select="output_type"/> Result
+        {
+            get { 
+                base.RaiseExceptionIfNecessary();
+                return (<xsl:apply-templates select="output_type"/>)(this.results[0]); 
+            }
+        }
+    }
+  </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="ServiceDescriptorProto" mode="clientProxy">
+  <xsl:if test="$optionAsynchronous and $optionDataContract and $optionClientProxy">
+    <xsl:apply-templates select="method/MethodDescriptorProto" mode="CompleteEvent"/>
+    
+    [System.Diagnostics.DebuggerStepThroughAttribute()]
+    public partial class <xsl:value-of select="name"/>Client : System.ServiceModel.ClientBase&lt;I<xsl:value-of select="name"/>&gt;, I<xsl:value-of select="name"/>
+    {
+
+        public <xsl:value-of select="name"/>Client()
+        {}
+        public <xsl:value-of select="name"/>Client(string endpointConfigurationName) 
+            : base(endpointConfigurationName) 
+        {}
+        public <xsl:value-of select="name"/>Client(string endpointConfigurationName, string remoteAddress) 
+            : base(endpointConfigurationName, remoteAddress)
+        {}
+        public <xsl:value-of select="name"/>Client(string endpointConfigurationName, System.ServiceModel.EndpointAddress remoteAddress)
+            : base(endpointConfigurationName, remoteAddress)
+        {}
+        public <xsl:value-of select="name"/>Client(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress)
+            : base(binding, remoteAddress)
+        {}
+
+        <xsl:apply-templates select="method/MethodDescriptorProto" mode="clientProxy"/>
+    }  
+  </xsl:if>
+  </xsl:template>
+
+  <xsl:template match="MethodDescriptorProto" mode="clientProxy">
+  <xsl:if test="$optionAsynchronous and $optionDataContract and $optionClientProxy">
+        private BeginOperationDelegate onBegin<xsl:value-of select="name"/>Delegate;
+        private EndOperationDelegate onEnd<xsl:value-of select="name"/>Delegate;
+        private System.Threading.SendOrPostCallback on<xsl:value-of select="name"/>CompletedDelegate;
+
+        public event System.EventHandler&lt;<xsl:value-of select="name"/>CompletedEventArgs&gt; <xsl:value-of select="name"/>Completed;
+
+        public <xsl:apply-templates select="output_type"/><xsl:text xml:space="preserve"> </xsl:text><xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request)
+        {
+            return base.Channel.<xsl:value-of select="name"/>(request);
+        }
+
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public System.IAsyncResult Begin<xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request, System.AsyncCallback callback, object asyncState)
+        {
+            return base.Channel.Begin<xsl:value-of select="name"/>(request, callback, asyncState);
+        }
+
+        [System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)]
+        public <xsl:apply-templates select="output_type"/> End<xsl:value-of select="name"/>(System.IAsyncResult result)
+        {
+            return base.Channel.End<xsl:value-of select="name"/>(result);
+        }
+
+        private System.IAsyncResult OnBegin<xsl:value-of select="name"/>(object[] inValues, System.AsyncCallback callback, object asyncState)
+        {
+            <xsl:apply-templates select="input_type"/> request = ((<xsl:apply-templates select="input_type"/>)(inValues[0]));
+            return this.Begin<xsl:value-of select="name"/>(request, callback, asyncState);
+        }
+
+        private object[] OnEnd<xsl:value-of select="name"/>(System.IAsyncResult result)
+        {
+            <xsl:apply-templates select="output_type"/> retVal = this.End<xsl:value-of select="name"/>(result);
+            return new object[] {
+                retVal};
+        }
+
+        private void On<xsl:value-of select="name"/>Completed(object state)
+        {
+            if ((this.<xsl:value-of select="name"/>Completed != null))
+            {
+                InvokeAsyncCompletedEventArgs e = ((InvokeAsyncCompletedEventArgs)(state));
+                this.<xsl:value-of select="name"/>Completed(this, new <xsl:value-of select="name"/>CompletedEventArgs(e.Results, e.Error, e.Cancelled, e.UserState));
+            }
+        }
+
+        public void <xsl:value-of select="name"/>Async(<xsl:apply-templates select="input_type"/> request)
+        {
+            this.<xsl:value-of select="name"/>Async(request, null);
+        }
+
+        public void <xsl:value-of select="name"/>Async(<xsl:apply-templates select="input_type"/> request, object userState)
+        {
+            if ((this.onBegin<xsl:value-of select="name"/>Delegate == null))
+            {
+                this.onBegin<xsl:value-of select="name"/>Delegate = new BeginOperationDelegate(this.OnBegin<xsl:value-of select="name"/>);
+            }
+            if ((this.onEnd<xsl:value-of select="name"/>Delegate == null))
+            {
+                this.onEnd<xsl:value-of select="name"/>Delegate = new EndOperationDelegate(this.OnEnd<xsl:value-of select="name"/>);
+            }
+            if ((this.on<xsl:value-of select="name"/>CompletedDelegate == null))
+            {
+                this.on<xsl:value-of select="name"/>CompletedDelegate = new System.Threading.SendOrPostCallback(this.On<xsl:value-of select="name"/>Completed);
+            }
+            base.InvokeAsync(this.onBegin<xsl:value-of select="name"/>Delegate, new object[] {
+                    request}, this.onEnd<xsl:value-of select="name"/>Delegate, this.on<xsl:value-of select="name"/>CompletedDelegate, userState);
+        }
+    </xsl:if>
+    </xsl:template>
 </xsl:stylesheet>

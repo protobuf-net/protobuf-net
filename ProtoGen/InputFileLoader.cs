@@ -9,7 +9,7 @@ namespace ProtoBuf.CodeGenerator
 {
     public static class InputFileLoader
     {
-        public static void Merge(FileDescriptorSet files, string path)
+        public static void Merge(FileDescriptorSet files, string path, params string[] args)
         {
             if (files == null) throw new ArgumentNullException("files");
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException("path");
@@ -17,7 +17,7 @@ namespace ProtoBuf.CodeGenerator
             bool deletePath = false;
             if(!IsValidBinary(path))
             { // try to use protoc
-                path = CompileDescriptor(path);
+                path = CompileDescriptor(path, args);
                 deletePath = true;
             }
             try
@@ -36,7 +36,7 @@ namespace ProtoBuf.CodeGenerator
             }
         }
 
-        private static string CompileDescriptor(string path)
+        private static string CompileDescriptor(string path, params string[] args)
         {
             string tmp = Path.GetTempFileName();
             
@@ -44,8 +44,9 @@ namespace ProtoBuf.CodeGenerator
             {
                 ProcessStartInfo psi = new ProcessStartInfo(
                     "protoc.exe", string.Format(
-                                      @"""--descriptor_set_out={0}"" --include_imports ""{1}""",
-                                      tmp, path));
+                                      @"""--descriptor_set_out={0}"" ""{1}""",
+                                      tmp, path, string.Join(" ", args)));
+                psi.WorkingDirectory = Path.GetDirectoryName(path);
                 psi.CreateNoWindow = true;
                 psi.WindowStyle = ProcessWindowStyle.Hidden;
 
