@@ -204,6 +204,10 @@
     <None Include="ProtoGen\rpc.proto" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\protobuf-net.Extensions\protobuf-net.Extensions.csproj">
+      <Project>{927AB924-08B5-4629-B505-3BC78A61B0D6}</Project>
+      <Name>protobuf-net.Extensions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
       <Project>{8374E4D7-2A91-48F1-9360-09B09CF27C3F}</Project>
       <Name>protobuf-net</Name>
@@ -248,6 +252,9 @@
       <Link>protoc.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bin\Debug\" />

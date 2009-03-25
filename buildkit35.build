@@ -52,9 +52,11 @@
     <!-- build .NET 3.0 using the C# 3.0 compiler -->
     <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>
     <RemoveDir Directories="protogen\obj; protogen\bin"/>
+    <RemoveDir Directories="protobuf-net.Extensions\obj; protobuf-net.Extensions\bin"/>
 
     <MSBuild Projects="LateLoaded\LateLoaded.csproj" Targets="Rebuild" Properties="Configuration=Release"/>
     <MSBuild Projects="protogen\protogen.csproj" Properties="OutputPath=..\$(OutputDirectory)\NET30; Configuration=Release" Targets="Rebuild"/>
+    <MSBuild Projects="protobuf-net.Extensions\protobuf-net.Extensions.csproj" Properties="OutputPath=..\$(OutputDirectory)\NET30; Configuration=Release" Targets="Rebuild"/>
 
     <!-- build for compact framework -->
     <RemoveDir Directories="protobuf-net-CF20\obj; protobuf-net-CF20\bin"/>

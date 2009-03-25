@@ -35,13 +35,7 @@ namespace ProtoBuf
         internal static readonly Type[] EmptyTypes = new Type[0];
         internal static bool IsEntityType(Type type)
         {
-            return type.IsClass && type != typeof(void) /* && !type.IsAbstract */
-                    && type != typeof(string) && !type.IsArray
-                    && (AttributeUtils.GetAttribute<ProtoContractAttribute>(type) != null
-#if NET_3_0
-                        || AttributeUtils.GetAttribute<DataContractAttribute>(type) != null
-#endif
-                        || AttributeUtils.GetAttribute<XmlTypeAttribute>(type) != null);
+            return Entity.IsEntity(type);            
         }
 
         /// <summary>
@@ -326,7 +320,7 @@ namespace ProtoBuf
         private static uint ReadPrefixLength(Stream source, PrefixStyle style)
         {
             uint value;
-            if(!TryReadPrefixLength(source, style, 0, out value))
+            if(!TryReadPrefixLength(source, style, 0, out value, null))
             {
                 throw new EndOfStreamException();
             }
@@ -368,7 +362,7 @@ namespace ProtoBuf
             }
         }
 
-        private static bool TryReadPrefixLength(Stream source, PrefixStyle style, int tag, out uint length)
+        private static bool TryReadPrefixLength(Stream source, PrefixStyle style, int tag, out uint length, Getter<int,bool> processField)
         {
             MethodStart:
             switch (style)
@@ -384,14 +378,25 @@ namespace ProtoBuf
                         length = 0;
                         return false;
                     }
-                    if(expected == actual)
+
+                    WireType wireType;
+                    int actualTag;
+                    ParseFieldToken(actual, out wireType, out actualTag);
+
+                    if (processField != null)
+                    {
+                        if (processField(actualTag))
+                        {
+                            length = SerializationContext.DecodeUInt32(source);
+                            return true;
+                        }
+                    }
+                    else if(expected == actual)
                     {
                         length = SerializationContext.DecodeUInt32(source);
                         return true;
                     }
-                    WireType wireType;
-                    int actualTag;
-                    ParseFieldToken(actual, out wireType, out actualTag);
+                    
                     switch(wireType)
                     {
                         case WireType.String:
@@ -498,7 +503,7 @@ namespace ProtoBuf
         private static bool TryDeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style, int tag, out T item)
         {
             uint len;
-            if(!TryReadPrefixLength(source, style, tag, out len))
+            if(!TryReadPrefixLength(source, style, tag, out len, null))
             {
                 item = default(T);
                 return false;
@@ -891,30 +896,8 @@ namespace ProtoBuf
 
         internal static string GetDefinedTypeName<T>()
         {
-            string name = typeof(T).Name;
-            ProtoContractAttribute pc = AttributeUtils.GetAttribute<ProtoContractAttribute>(typeof(T));
-            if (pc != null)
-            {
-                if (!string.IsNullOrEmpty(pc.Name)) name = pc.Name;
-                return name;
-            }
-#if NET_3_0
-            DataContractAttribute dc = AttributeUtils.GetAttribute<DataContractAttribute>(typeof(T));
-            if (dc != null)
-            {
-                if (!string.IsNullOrEmpty(dc.Name)) name = dc.Name;
-                return name;
-            }
-#endif
-
-            XmlTypeAttribute xt = AttributeUtils.GetAttribute<XmlTypeAttribute>(typeof(T));
-            if (xt != null)
-            {
-                if (!string.IsNullOrEmpty(xt.TypeName)) name = xt.TypeName;
-                return name;
-            }
-
-            return name;
+            Entity e = Entity.Get(typeof(T));
+            return e == null ? typeof(T).Name : e.Name;
         }
         
         internal static int GetPrefixLength(int tag)

@@ -181,8 +181,10 @@ namespace ProtoBuf
                     // readProps == null, but subclasses != null :
                     // this scenario means that we are in the process of building the
                     // serializer; since we hold the lock, this must be re-entrancy, so simply ignore
+                    //Trace.WriteLine("Re-entrant short-circuit: " + typeof(T).FullName, "ProtoBuf.Serializer:Build");
                     return; 
                 }
+                //Trace.WriteLine("Building: " + typeof(T).FullName, "ProtoBuf.Serializer:Build");
                 // otherwise we are building the serializer for the first time; initialize
                 // subclasses as a marker that we are in-progress
                 subclasses = new KeyValuePair<Type, Property<T, T>>[0]; // use this to prevent recursion

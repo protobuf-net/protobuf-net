@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoGen", "ProtoGen\ProtoG
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LateLoaded", "LateLoaded\LateLoaded.csproj", "{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.Extensions", "protobuf-net.Extensions\protobuf-net.Extensions.csproj", "{927AB924-08B5-4629-B505-3BC78A61B0D6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -156,6 +158,16 @@ Global
 		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{E1EB9E1A-8BC0-4DA8-983A-6896F523BEE3}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Profile|Any CPU.ActiveCfg = Release|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Profile|Any CPU.Build.0 = Release|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
+		{927AB924-08B5-4629-B505-3BC78A61B0D6}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

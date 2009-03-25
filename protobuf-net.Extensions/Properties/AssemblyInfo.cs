@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("protobuf-net")]
-[assembly: AssemblyDescription("Protocol Buffers for .NET")]
+[assembly: AssemblyTitle("protobuf-net (3.5 extensions)")]
+[assembly: AssemblyDescription("Protocol Buffers for .NET - extension methods")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("protobuf-net")]
@@ -21,7 +20,7 @@ using System.Runtime.CompilerServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("224e5fc5-09f7-4fe3-a0a3-cf72b9f3593e")]
+[assembly: Guid("d7dd679d-4a03-4dce-9585-689cf7a1f7f0")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -33,8 +32,8 @@ using System.Runtime.CompilerServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.243")]
+[assembly: AssemblyVersion("1.0.0.242")]
 #if !CF
-[assembly: AssemblyFileVersion("1.0.0.243")]
+[assembly: AssemblyFileVersion("1.0.0.242")]
 #endif
 [assembly: CLSCompliant(true)]

@@ -94,8 +94,8 @@
 
   <xsl:template match="FileDescriptorProto">
     namespace <xsl:choose>
-      <xsl:when test="package"><xsl:value-of select="translate(package,'/','.')"/></xsl:when>
-      <xsl:otherwise><xsl:value-of select="translate(name,'/','.')"/></xsl:otherwise>
+      <xsl:when test="package"><xsl:value-of select="translate(package,':-/\','__..')"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="translate(name,':-/\','__..')"/></xsl:otherwise>
     </xsl:choose>
     {
       <xsl:apply-templates select="message_type | enum_type | service"/>

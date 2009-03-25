@@ -2,6 +2,8 @@
 using System;
 using System.IO;
 using System.Net;
+using System.Reflection;
+using System.Diagnostics;
 namespace ProtoBuf.ServiceModel.Client
 {
     /// <summary>
@@ -52,22 +54,24 @@ namespace ProtoBuf.ServiceModel.Client
             Uri requestUri = new Uri(uri.Replace(TOKEN_ACTION, request.Action));
             HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(requestUri);
             httpRequest.Method = "POST";
-            httpRequest.Accept = httpRequest.ContentType = "application/x-protobuf";            
+            httpRequest.Accept = httpRequest.ContentType = RpcUtils.HTTP_RPC_MIME_TYPE;
 #if !SILVERLIGHT && !CF2
             httpRequest.AutomaticDecompression = DecompressionMethods.None;
 #endif
 #if !SILVERLIGHT
             httpRequest.UserAgent = "protobuf-net";
+            httpRequest.Headers.Add(RpcUtils.HTTP_RPC_VERSION_HEADER, "0.1");
 #endif
-            Action<Exception> handler = delegate(Exception ex) { request.OnException(ex); };
+            Action<Exception> handler = delegate(Exception ex) {
+                request.OnException(ex);
+            };
             Action<WebResponse> onResponse = delegate(WebResponse webResponse)
             {
                 try
                 {
                     using (Stream stream = webResponse.GetResponseStream())
                     {
-                        object result = Serializer.NonGeneric.Deserialize(
-                            request.Method.ReturnType, stream);
+                        object result = RpcUtils.UnpackArgs(stream, request.Method, request.Args, RpcUtils.IsResponseArgument);
                         request.OnResponse(result);
                     }
                 }
@@ -77,13 +81,21 @@ namespace ProtoBuf.ServiceModel.Client
             {
                 try
                 {
-                    Serializer.NonGeneric.Serialize(stream, request.RequestObject);
+                    RpcUtils.PackArgs(stream, request.Method, null, request.Args, RpcUtils.IsRequestArgument);
                     stream.Close();
                     AsyncUtility.RunAsync(httpRequest.BeginGetResponse, httpRequest.EndGetResponse, onResponse, handler);
                 }
-                catch (Exception ex) { handler(ex); }
+                catch (Exception ex) {
+                    //Trace.WriteLine(ex, GetType() + ":" + request.Method.DeclaringType.Name);
+                    handler(ex);
+                }
             };
             AsyncUtility.RunAsync(httpRequest.BeginGetRequestStream, httpRequest.EndGetRequestStream, onGetRequest, handler);
+        }
+
+        private static bool HasFlag(ParameterInfo property, ParameterAttributes flag)
+        {
+            return property == null || ((property.Attributes & flag) != flag);
         }
     }
 }

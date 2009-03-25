@@ -140,6 +140,8 @@
       <DependentUpon>IExtension.cs</DependentUpon>
     </Compile>
     <Compile Include="CallbackAttributes.cs" />
+    <Compile Include="Delegates.cs" />
+    <Compile Include="Entity.cs" />
     <Compile Include="Formatter.cs" />
     <Compile Include="GlobalOptions.cs">
       <DependentUpon>Serializer.cs</DependentUpon>
@@ -210,6 +212,7 @@
     <Compile Include="SerializerProxy.cs" />
     <Compile Include="ServiceModel\ExceptionEventArgs.cs" />
     <Compile Include="ServiceModel\Client\HttpBasicTransport.cs" />
+    <Compile Include="ServiceModel\RpcUtils.cs" />
     <Compile Include="ServiceModel\Server\HttpServer.cs" />
     <Compile Include="ServiceModel\Client\IClientTransport.cs" />
     <Compile Include="ServiceModel\Client\ProtoClient.cs" />

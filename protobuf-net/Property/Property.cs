@@ -9,10 +9,6 @@ using System.Reflection.Emit;
 
 namespace ProtoBuf.Property
 {
-
-    internal delegate TValue Getter<TEntity, TValue>(TEntity instance);
-    internal delegate void Setter<TEntity, TValue>(TEntity instance, TValue value);
-
     internal interface ILengthProperty<TValue>
     {
         int Serialize(TValue value, SerializationContext context);

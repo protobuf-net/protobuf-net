@@ -12,12 +12,13 @@ namespace ProtoBuf.ServiceModel.Client
     public class ServiceRequest
     {
         
-        private readonly object userState, requestObject;
+        private readonly object userState;
+        private readonly object[] args;
         /// <summary>Caller-defined state for this operation.</summary>
         public object UserState { get { return userState; } }
-        private readonly Action<ServiceRequest> callback;
+        private readonly Action<AsyncResult> callback;
         /// <summary>The object graph representing the query request object.</summary>
-        public object RequestObject { get { return requestObject; } }
+        public object[] Args { get { return args; } }
         private object responseObject;
         /// <summary>The object graph representing the server's response.</summary>
         public object ResponseObject {
@@ -40,7 +41,16 @@ namespace ProtoBuf.ServiceModel.Client
         {
             Exception = exception;
             ResponseObject = responseObject;
-            callback(this);
+            if (callback != null) {
+                if (exception != null)
+                {
+                    callback(delegate { throw Exception; });
+                }
+                else
+                {
+                    callback(delegate { return ResponseObject; });
+                }
+            }
         }
         private readonly string action;
         /// <summary>The contract-based name of the operation to perform.</summary>
@@ -52,16 +62,16 @@ namespace ProtoBuf.ServiceModel.Client
         /// <summary>Create a new service request.</summary>
         /// <param name="action">The contract-based name of the operation to perform.</param>
         /// <param name="method">Provides reflection access to the contract member representing the operation.</param>
-        /// <param name="requestObject">The object graph representing the query request object.</param>
+        /// <param name="args">The argument values for the method.</param>
         /// <param name="userState">Caller-defined state for this operation.</param>
         /// <param name="callback">The operation to perform when this request has completed.</param>
         public ServiceRequest(
             string action, MethodInfo method,
-            object requestObject, object userState,
-            Action<ServiceRequest> callback)
+            object[] args, object userState,
+            Action<AsyncResult> callback)
         {
             this.userState = userState;
-            this.requestObject = requestObject;
+            this.args = args;
             this.action = action;
             this.method = method;
             this.callback = callback;

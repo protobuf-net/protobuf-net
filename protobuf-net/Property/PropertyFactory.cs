@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Diagnostics;
 
 namespace ProtoBuf.Property
 {
@@ -71,14 +72,15 @@ namespace ProtoBuf.Property
             }
             Property<T> prop;
             PropertyInfo specifiedProp = isRequired ? null : PropertySpecified.GetSpecified(typeof (T), member.Name);
-            if(specifiedProp != null)
+            
+            if (specifiedProp != null)
             {
                 prop = PropertyUtil<T>.CreateTypedProperty("CreatePropertySpecified", type);
                 ((IPropertySpecified)prop).InitFromProperty(specifiedProp);
             }
             else
             {
-                prop = CreateProperty<T>(type, ref format);    
+                prop = CreateProperty<T>(type, ref format);
             }
             prop.Init(member);
             return prop;

@@ -9,6 +9,7 @@ using ProtoBuf.ServiceModel.Client;
 #if NET_3_0
 using System.ServiceModel;
 #endif
+using System.Text;
 
 namespace ProtoBuf.ServiceModel.Server
 {
@@ -49,7 +50,7 @@ namespace ProtoBuf.ServiceModel.Server
             foreach (MethodInfo method in serviceContractType.GetMethods(BindingFlags.Instance | BindingFlags.Public))
             {
                 if (method.IsGenericMethod || method.IsGenericMethodDefinition) continue;
-                string key = ProtoClient.ResolveActionStandard(method);
+                string key = RpcUtils.ResolveActionStandard(method);
                 if (actions.ContainsKey(key))
                 {
                     throw new ArgumentException("Duplicate action \"" + key + "\" found on service-contract " + serviceContractType.FullName, "serviceContractType");
@@ -88,7 +89,9 @@ namespace ProtoBuf.ServiceModel.Server
             CheckDisposed();
             if (!listener.IsListening)
             {
+                Trace.WriteLine("Starting server on " + uriPrefix);
                 listener.Start();
+                Trace.WriteLine("(started)");
                 ListenForContext();
             }
         }
@@ -108,25 +111,35 @@ namespace ProtoBuf.ServiceModel.Server
 
         private void ProcessContext(HttpListenerContext context)
         {
+            string rpcVer = context.Request.Headers[RpcUtils.HTTP_RPC_VERSION_HEADER];
+            if (!string.IsNullOrEmpty(rpcVer) && rpcVer != "0.1")
+            {
+                throw new InvalidOperationException("Incorrect RPC version");
+            }
+            
             string action = uriPrefix.MakeRelativeUri(context.Request.Url).ToString();
             MethodInfo method = ResolveMethod(action);
             if (method == null) throw new InvalidOperationException("Action not found: " + action);
             if (method.IsGenericMethod || method.IsGenericMethodDefinition) throw new InvalidOperationException("Cannot process generic method: " + method.Name);
             if (method.DeclaringType != serviceContractType) throw new ArgumentException(method.Name + " is not defined on service " + serviceContractType.FullName, "method");
             ParameterInfo[] parameters = method.GetParameters();
-            if(parameters.Length != 1 || method.ReturnType == typeof(void))
-            {
-                throw new InvalidOperationException("The service signature for " + serviceContractType.FullName + "." + method.Name + " does not match");
-            }
-            object requestObj = Serializer.NonGeneric.Deserialize(parameters[0].ParameterType, context.Request.InputStream);
+            object[] args = new object[parameters.Length];
+
+            RpcUtils.UnpackArgs(context.Request.InputStream, method, args, RpcUtils.IsRequestArgument);
+            
             bool createObj = serviceSingleton != null;
             object serviceInstance = createObj ? Activator.CreateInstance(serviceImplementationType) : serviceSingleton;
             try
             {
-                object responseObj = method.Invoke(serviceInstance, new object[] { requestObj });
-                if (responseObj == null) throw new InvalidOperationException("As a temporary restriction, only non-null responses can be sent");
+                object responseObj = method.Invoke(serviceInstance, args);
                 context.Response.StatusCode = (int)HttpStatusCode.OK;
-                Serializer.NonGeneric.Serialize(context.Response.OutputStream, responseObj);
+                context.Response.ContentType = RpcUtils.HTTP_RPC_MIME_TYPE;
+                RpcUtils.PackArgs(context.Response.OutputStream, method, responseObj, args, RpcUtils.IsResponseArgument);
+            }
+            catch (Exception ex)
+            {
+                Trace.WriteLine(ex, GetType() + ":" + serviceContractType.Name);
+                throw;
             }
             finally // release the singleton if we own it...
             {
@@ -151,7 +164,17 @@ namespace ProtoBuf.ServiceModel.Server
             try
             {
                 context.Response.StatusCode = (int)HttpStatusCode.BadRequest; // assume failure...
-                ProcessContext(context);                
+                ProcessContext(context);
+            }
+            catch (Exception ex)
+            {
+                try
+                {
+                    context.Response.ContentType = "text/plain";
+                    byte[] buffer = Encoding.UTF8.GetBytes(ex.Message);
+                    context.Response.OutputStream.Write(buffer, 0, buffer.Length);
+                }
+                catch { }
             }
             finally
             {
@@ -180,7 +203,9 @@ namespace ProtoBuf.ServiceModel.Server
         {
             if (listener != null)
             {
+                Trace.WriteLine("Stopping server on " + uriPrefix);
                 listener.Close();
+                Trace.WriteLine("(stopped)");
                 Dispose(ref listener);
             }
             Dispose(ref serviceSingleton);
