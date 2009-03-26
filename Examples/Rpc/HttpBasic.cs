@@ -69,7 +69,8 @@ namespace Examples.Rpc
         public void StartServer()
         {
             StopServer();
-            server = new HttpServer(HTTP_PREFIX, typeof(IBasicService), new BasicService());
+            server = new HttpServer(HTTP_PREFIX);
+            server.Add<IBasicService>(new BasicService());
             server.Start();
         }
 
@@ -159,7 +160,9 @@ namespace Examples.Rpc
         static HttpServer CreateServer() { return CreateServer(new BasicService()); }
         static HttpServer CreateServer(IBasicService service)
         {
-            return new HttpServer(HTTP_PREFIX, typeof(IBasicService), service);
+            HttpServer server = new HttpServer(HTTP_PREFIX);
+            server.Add<IBasicService>(service);
+            return server;
         }
 
         [Test]

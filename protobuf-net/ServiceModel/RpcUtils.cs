@@ -15,7 +15,7 @@ namespace ProtoBuf.ServiceModel
     {
         internal const string HTTP_RPC_VERSION_HEADER = "pb-net-rpc";
         internal const string HTTP_RPC_MIME_TYPE = "application/x-protobuf";
-        internal static string ResolveActionStandard(MethodInfo method)
+        internal static string GetActionName(MethodInfo method)
         {
 #if NET_3_0
             OperationContractAttribute oca = (OperationContractAttribute)Attribute.GetCustomAttribute(
@@ -103,6 +103,17 @@ namespace ProtoBuf.ServiceModel
                 }
             }
             return result;
+        }
+
+        /// <summary>
+        /// Returns the name associated with a service contract.
+        /// </summary>
+        /// <param name="type">The service-contract type.</param>
+        /// <returns>The name of the service.</returns>
+        public static string GetServiceName(Type type)
+        {
+            string basicName = type.Name;
+            return basicName[0] == 'I' ? basicName.Substring(1) : basicName;
         }
     }
 

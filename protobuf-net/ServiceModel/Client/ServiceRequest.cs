@@ -52,27 +52,32 @@ namespace ProtoBuf.ServiceModel.Client
                 }
             }
         }
-        private readonly string action;
+        private readonly string action, service;
         /// <summary>The contract-based name of the operation to perform.</summary>
         public string Action { get { return action; } }
+
+        /// <summary>The contract-based name of the service to ues.</summary>
+        public string Service { get { return service; } }
         private readonly MethodInfo method;
         /// <summary>Provides reflection access to the contract member representing the operation.</summary>
         public MethodInfo Method { get { return method; } }
         //public int RequestNumber { get; private set; }
         /// <summary>Create a new service request.</summary>
         /// <param name="action">The contract-based name of the operation to perform.</param>
+        /// <param name="service">The contract-based name of the service to use.</param>
         /// <param name="method">Provides reflection access to the contract member representing the operation.</param>
         /// <param name="args">The argument values for the method.</param>
         /// <param name="userState">Caller-defined state for this operation.</param>
         /// <param name="callback">The operation to perform when this request has completed.</param>
         public ServiceRequest(
-            string action, MethodInfo method,
+            string service, string action, MethodInfo method,
             object[] args, object userState,
             Action<AsyncResult> callback)
         {
             this.userState = userState;
             this.args = args;
             this.action = action;
+            this.service = service;
             this.method = method;
             this.callback = callback;
         }

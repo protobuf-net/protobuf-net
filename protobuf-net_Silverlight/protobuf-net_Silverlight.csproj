@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\protobuf-net\**\*.cs" />
+    <Compile Include="..\protobuf-net.Extensions\**\*.cs" Exclude="..\protobuf-net.Extensions\Properties\AssemblyInfo.cs" />
     <None Include="..\Licence.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -12,7 +12,7 @@ namespace ProtoBuf.ServiceModel.Client
     public class HttpBasicTransport : ITransport
     {
 
-        const string TOKEN_ACTION = "{action}";
+        const string TOKEN_ACTION = "{action}", TOKEN_SERVICE = "{service}";
         /// <summary>Create a new HttpBasicTransport instance.</summary>
         /// <param name="uri">The endpoint for the service. By default, the servic
         /// is assumed to be RESTful, and the action is appended as a route; the
@@ -22,7 +22,7 @@ namespace ProtoBuf.ServiceModel.Client
             if (string.IsNullOrEmpty(uri)) throw new ArgumentNullException("uri");
             if (uri.IndexOf(TOKEN_ACTION) < 0)
             {
-                uri = uri + (uri.EndsWith("/") ? TOKEN_ACTION : ("/" + TOKEN_ACTION));
+                uri = uri + (uri.EndsWith("/") ? "" : "/") + TOKEN_SERVICE + "/" + TOKEN_ACTION;
             }
             this.uri = uri;
         }
@@ -51,7 +51,7 @@ namespace ProtoBuf.ServiceModel.Client
         void ITransport.SendRequestAsync(ServiceRequest request)
         {
             if (request == null) throw new ArgumentNullException("request");
-            Uri requestUri = new Uri(uri.Replace(TOKEN_ACTION, request.Action));
+            Uri requestUri = new Uri(uri.Replace(TOKEN_ACTION, request.Action).Replace(TOKEN_SERVICE, request.Service));
             HttpWebRequest httpRequest = (HttpWebRequest)WebRequest.Create(requestUri);
             httpRequest.Method = "POST";
             httpRequest.Accept = httpRequest.ContentType = RpcUtils.HTTP_RPC_MIME_TYPE;

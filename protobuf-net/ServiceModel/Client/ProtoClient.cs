@@ -102,7 +102,7 @@ namespace ProtoBuf.ServiceModel.Client
             return Invoke(ResolveMethod(methodName), args);
         }
 
-        private ManualResetEvent waitEvent;
+        private ManualResetEvent waitEvent = new ManualResetEvent(false);
 
         /// <summary>
         /// Performs an RPC invokation synchrononously.
@@ -116,14 +116,8 @@ namespace ProtoBuf.ServiceModel.Client
         {
             CheckDisposed();
             if (args == null) throw new ArgumentNullException("args");
-            if (waitEvent == null)
-            {
-                waitEvent = new ManualResetEvent(false);
-            }
-            else
-            {
-                waitEvent.Reset();
-            }
+            
+            waitEvent.Reset();
             AsyncResult result = null;
             SendRequestAsync(method, delegate(AsyncResult ar)
             {
@@ -167,7 +161,17 @@ namespace ProtoBuf.ServiceModel.Client
         /// <returns>The action to use.</returns>
         protected virtual string ResolveAction(MethodInfo method)
         {
-            return RpcUtils.ResolveActionStandard(method);
+            return RpcUtils.GetActionName(method);
+        }
+
+        /// <summary>
+        /// Identify the service to use for a given method.
+        /// </summary>
+        /// <param name="serviceType">The service requested.</param>
+        /// <returns>The service to use.</returns>
+        protected virtual string ResolveService(Type serviceType)
+        {
+            return RpcUtils.GetServiceName(serviceType);
         }
 
         private void SendRequestAsync(
@@ -187,7 +191,7 @@ namespace ProtoBuf.ServiceModel.Client
             }
 
             ServiceRequest reqWrapper = new ServiceRequest(
-                ResolveAction(method), method, args, callback, callback);
+                ResolveService(typeof(TService)), ResolveAction(method), method, args, callback, callback);
 
             transport.SendRequestAsync(reqWrapper);
         }
