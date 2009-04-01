@@ -1,0 +1,17 @@
+﻿<configuration>
+    <system.serviceModel>
+        <bindings>
+            <basicHttpBinding>
+                <binding name="BasicHttpBinding_Northwind" maxBufferSize="2147483647"
+                    maxReceivedMessageSize="2147483647">
+                    <security mode="None" />
+                </binding>
+            </basicHttpBinding>
+        </bindings>
+        <client>
+            <endpoint address="http://localhost:12398/Northwind.svc" binding="basicHttpBinding"
+                bindingConfiguration="BasicHttpBinding_Northwind" contract="NorthwindService.Northwind"
+                name="BasicHttpBinding_Northwind" />
+        </client>
+    </system.serviceModel>
+</configuration>

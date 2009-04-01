@@ -217,6 +217,7 @@
     <Compile Include="ServiceModel\Client\IClientTransport.cs" />
     <Compile Include="ServiceModel\Client\ProtoClient.cs" />
     <Compile Include="ServiceModel\Client\ServiceRequest.cs" />
+    <Compile Include="ServiceModel\Server\ServerBase.cs" />
     <None Include="Web\TODO.txt" />
   </ItemGroup>
   <ItemGroup>

@@ -1,0 +1,11 @@
+﻿<UserControl x:Class="demo_rpc_client_silverlight.Page"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" 
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" 
+    Width="400" Height="300" Background="Red">
+    <Grid x:Name="LayoutRoot" Background="LightBlue">
+        <Button Height="10" Width="10" Content="abc" Click="Button_Click" />
+        <ListBox Name="list" VerticalAlignment="Bottom" Height="150">
+            
+        </ListBox>
+    </Grid>
+</UserControl>
