@@ -198,11 +198,19 @@ namespace ProtoBuf
                             return result;
                         });
                         // find the current item
+                        // (can't use FindIndex because of Silverlight)
                         tmpName = name;
-                        tag = 1 + members.FindIndex(delegate(KeyValuePair<string, int> x)
+                        int index = 1;
+                        tag = 0;
+                        foreach (KeyValuePair<string, int> x in members)
                         {
-                            return x.Key == tmpName;
-                        });
+                            if (x.Key == tmpName)
+                            {
+                                tag = index;
+                                break;
+                            }
+                            index++;
+                        }
                     }
                 }
                 isRequired = dm.IsRequired;

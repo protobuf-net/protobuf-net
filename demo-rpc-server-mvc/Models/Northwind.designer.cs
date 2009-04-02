@@ -18,6 +18,7 @@ namespace demo_rpc_server_mvc.Models
 	using System.Reflection;
 	using System.Linq;
 	using System.Linq.Expressions;
+	using System.Runtime.Serialization;
 	using System.ComponentModel;
 	using System;
 	
@@ -108,6 +109,7 @@ namespace demo_rpc_server_mvc.Models
 	}
 	
 	[Table(Name="dbo.Orders")]
+	[DataContract()]
 	public partial class Order : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
@@ -145,6 +147,8 @@ namespace demo_rpc_server_mvc.Models
 		
 		private EntityRef<Customer> _Customer;
 		
+		private bool serializing;
+		
     #region Extensibility Method Definitions
     partial void OnLoaded();
     partial void OnValidate(System.Data.Linq.ChangeAction action);
@@ -181,12 +185,11 @@ namespace demo_rpc_server_mvc.Models
 		
 		public Order()
 		{
-			this._Order_Details = new EntitySet<Order_Detail>(new Action<Order_Detail>(this.attach_Order_Details), new Action<Order_Detail>(this.detach_Order_Details));
-			this._Customer = default(EntityRef<Customer>);
-			OnCreated();
+			this.Initialize();
 		}
 		
 		[Column(Storage="_OrderID", AutoSync=AutoSync.OnInsert, DbType="Int NOT NULL IDENTITY", IsPrimaryKey=true, IsDbGenerated=true)]
+		[DataMember(Order=1)]
 		public int OrderID
 		{
 			get
@@ -207,6 +210,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_CustomerID", DbType="NChar(5)")]
+		[DataMember(Order=2)]
 		public string CustomerID
 		{
 			get
@@ -231,6 +235,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_EmployeeID", DbType="Int")]
+		[DataMember(Order=3)]
 		public System.Nullable<int> EmployeeID
 		{
 			get
@@ -251,6 +256,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_OrderDate", DbType="DateTime")]
+		[DataMember(Order=4)]
 		public System.Nullable<System.DateTime> OrderDate
 		{
 			get
@@ -271,6 +277,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_RequiredDate", DbType="DateTime")]
+		[DataMember(Order=5)]
 		public System.Nullable<System.DateTime> RequiredDate
 		{
 			get
@@ -291,6 +298,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ShippedDate", DbType="DateTime")]
+		[DataMember(Order=6)]
 		public System.Nullable<System.DateTime> ShippedDate
 		{
 			get
@@ -311,6 +319,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ShipVia", DbType="Int")]
+		[DataMember(Order=7)]
 		public System.Nullable<int> ShipVia
 		{
 			get
@@ -331,6 +340,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_Freight", DbType="Money")]
+		[DataMember(Order=8)]
 		public System.Nullable<decimal> Freight
 		{
 			get
@@ -351,6 +361,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ShipName", DbType="NVarChar(40)")]
+		[DataMember(Order=9)]
 		public string ShipName
 		{
 			get
@@ -371,6 +382,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ShipAddress", DbType="NVarChar(60)")]
+		[DataMember(Order=10)]
 		public string ShipAddress
 		{
 			get
@@ -391,6 +403,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ShipCity", DbType="NVarChar(15)")]
+		[DataMember(Order=11)]
 		public string ShipCity
 		{
 			get
@@ -411,6 +424,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ShipRegion", DbType="NVarChar(15)")]
+		[DataMember(Order=12)]
 		public string ShipRegion
 		{
 			get
@@ -431,6 +445,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ShipPostalCode", DbType="NVarChar(10)")]
+		[DataMember(Order=13)]
 		public string ShipPostalCode
 		{
 			get
@@ -451,6 +466,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ShipCountry", DbType="NVarChar(15)")]
+		[DataMember(Order=14)]
 		public string ShipCountry
 		{
 			get
@@ -471,10 +487,16 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Association(Name="Order_Order_Detail", Storage="_Order_Details", ThisKey="OrderID", OtherKey="OrderID")]
+		[DataMember(Order=15, EmitDefaultValue=false)]
 		public EntitySet<Order_Detail> Order_Details
 		{
 			get
 			{
+				if ((this.serializing 
+							&& (this._Order_Details.HasLoadedOrAssignedValues == false)))
+				{
+					return null;
+				}
 				return this._Order_Details;
 			}
 			set
@@ -548,9 +570,38 @@ namespace demo_rpc_server_mvc.Models
 			this.SendPropertyChanging();
 			entity.Order = null;
 		}
+		
+		private void Initialize()
+		{
+			this._Order_Details = new EntitySet<Order_Detail>(new Action<Order_Detail>(this.attach_Order_Details), new Action<Order_Detail>(this.detach_Order_Details));
+			this._Customer = default(EntityRef<Customer>);
+			OnCreated();
+		}
+		
+		[OnDeserializing()]
+		[System.ComponentModel.EditorBrowsableAttribute(EditorBrowsableState.Never)]
+		public void OnDeserializing(StreamingContext context)
+		{
+			this.Initialize();
+		}
+		
+		[OnSerializing()]
+		[System.ComponentModel.EditorBrowsableAttribute(EditorBrowsableState.Never)]
+		public void OnSerializing(StreamingContext context)
+		{
+			this.serializing = true;
+		}
+		
+		[OnSerialized()]
+		[System.ComponentModel.EditorBrowsableAttribute(EditorBrowsableState.Never)]
+		public void OnSerialized(StreamingContext context)
+		{
+			this.serializing = false;
+		}
 	}
 	
 	[Table(Name="dbo.[Order Details]")]
+	[DataContract()]
 	public partial class Order_Detail : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
@@ -586,11 +637,11 @@ namespace demo_rpc_server_mvc.Models
 		
 		public Order_Detail()
 		{
-			this._Order = default(EntityRef<Order>);
-			OnCreated();
+			this.Initialize();
 		}
 		
 		[Column(Storage="_OrderID", DbType="Int NOT NULL", IsPrimaryKey=true)]
+		[DataMember(Order=1)]
 		public int OrderID
 		{
 			get
@@ -615,6 +666,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ProductID", DbType="Int NOT NULL", IsPrimaryKey=true)]
+		[DataMember(Order=2)]
 		public int ProductID
 		{
 			get
@@ -635,6 +687,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_UnitPrice", DbType="Money NOT NULL")]
+		[DataMember(Order=3)]
 		public decimal UnitPrice
 		{
 			get
@@ -655,6 +708,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_Quantity", DbType="SmallInt NOT NULL")]
+		[DataMember(Order=4)]
 		public short Quantity
 		{
 			get
@@ -675,6 +729,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_Discount", DbType="Real NOT NULL")]
+		[DataMember(Order=5)]
 		public float Discount
 		{
 			get
@@ -747,9 +802,23 @@ namespace demo_rpc_server_mvc.Models
 				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 			}
 		}
+		
+		private void Initialize()
+		{
+			this._Order = default(EntityRef<Order>);
+			OnCreated();
+		}
+		
+		[OnDeserializing()]
+		[System.ComponentModel.EditorBrowsableAttribute(EditorBrowsableState.Never)]
+		public void OnDeserializing(StreamingContext context)
+		{
+			this.Initialize();
+		}
 	}
 	
 	[Table(Name="dbo.Customers")]
+	[DataContract()]
 	public partial class Customer : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
@@ -778,6 +847,8 @@ namespace demo_rpc_server_mvc.Models
 		private string _Fax;
 		
 		private EntitySet<Order> _Orders;
+		
+		private bool serializing;
 		
     #region Extensibility Method Definitions
     partial void OnLoaded();
@@ -809,11 +880,11 @@ namespace demo_rpc_server_mvc.Models
 		
 		public Customer()
 		{
-			this._Orders = new EntitySet<Order>(new Action<Order>(this.attach_Orders), new Action<Order>(this.detach_Orders));
-			OnCreated();
+			this.Initialize();
 		}
 		
 		[Column(Storage="_CustomerID", DbType="NChar(5) NOT NULL", CanBeNull=false, IsPrimaryKey=true)]
+		[DataMember(Order=1)]
 		public string CustomerID
 		{
 			get
@@ -834,6 +905,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_CompanyName", DbType="NVarChar(40) NOT NULL", CanBeNull=false)]
+		[DataMember(Order=2)]
 		public string CompanyName
 		{
 			get
@@ -854,6 +926,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ContactName", DbType="NVarChar(30)")]
+		[DataMember(Order=3)]
 		public string ContactName
 		{
 			get
@@ -874,6 +947,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_ContactTitle", DbType="NVarChar(30)")]
+		[DataMember(Order=4)]
 		public string ContactTitle
 		{
 			get
@@ -894,6 +968,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_Address", DbType="NVarChar(60)")]
+		[DataMember(Order=5)]
 		public string Address
 		{
 			get
@@ -914,6 +989,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_City", DbType="NVarChar(15)")]
+		[DataMember(Order=6)]
 		public string City
 		{
 			get
@@ -934,6 +1010,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_Region", DbType="NVarChar(15)")]
+		[DataMember(Order=7)]
 		public string Region
 		{
 			get
@@ -954,6 +1031,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_PostalCode", DbType="NVarChar(10)")]
+		[DataMember(Order=8)]
 		public string PostalCode
 		{
 			get
@@ -974,6 +1052,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_Country", DbType="NVarChar(15)")]
+		[DataMember(Order=9)]
 		public string Country
 		{
 			get
@@ -994,6 +1073,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_Phone", DbType="NVarChar(24)")]
+		[DataMember(Order=10)]
 		public string Phone
 		{
 			get
@@ -1014,6 +1094,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_Fax", DbType="NVarChar(24)")]
+		[DataMember(Order=11)]
 		public string Fax
 		{
 			get
@@ -1034,10 +1115,16 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Association(Name="Customer_Order", Storage="_Orders", ThisKey="CustomerID", OtherKey="CustomerID")]
+		[DataMember(Order=12, EmitDefaultValue=false)]
 		public EntitySet<Order> Orders
 		{
 			get
 			{
+				if ((this.serializing 
+							&& (this._Orders.HasLoadedOrAssignedValues == false)))
+				{
+					return null;
+				}
 				return this._Orders;
 			}
 			set
@@ -1077,9 +1164,37 @@ namespace demo_rpc_server_mvc.Models
 			this.SendPropertyChanging();
 			entity.Customer = null;
 		}
+		
+		private void Initialize()
+		{
+			this._Orders = new EntitySet<Order>(new Action<Order>(this.attach_Orders), new Action<Order>(this.detach_Orders));
+			OnCreated();
+		}
+		
+		[OnDeserializing()]
+		[System.ComponentModel.EditorBrowsableAttribute(EditorBrowsableState.Never)]
+		public void OnDeserializing(StreamingContext context)
+		{
+			this.Initialize();
+		}
+		
+		[OnSerializing()]
+		[System.ComponentModel.EditorBrowsableAttribute(EditorBrowsableState.Never)]
+		public void OnSerializing(StreamingContext context)
+		{
+			this.serializing = true;
+		}
+		
+		[OnSerialized()]
+		[System.ComponentModel.EditorBrowsableAttribute(EditorBrowsableState.Never)]
+		public void OnSerialized(StreamingContext context)
+		{
+			this.serializing = false;
+		}
 	}
 	
 	[Table(Name="dbo.Region")]
+	[DataContract()]
 	public partial class Region : INotifyPropertyChanging, INotifyPropertyChanged
 	{
 		
@@ -1101,10 +1216,11 @@ namespace demo_rpc_server_mvc.Models
 		
 		public Region()
 		{
-			OnCreated();
+			this.Initialize();
 		}
 		
 		[Column(Storage="_RegionID", DbType="Int NOT NULL", IsPrimaryKey=true)]
+		[DataMember(Order=1)]
 		public int RegionID
 		{
 			get
@@ -1125,6 +1241,7 @@ namespace demo_rpc_server_mvc.Models
 		}
 		
 		[Column(Storage="_RegionDescription", DbType="NChar(50) NOT NULL", CanBeNull=false)]
+		[DataMember(Order=2)]
 		public string RegionDescription
 		{
 			get
@@ -1162,6 +1279,18 @@ namespace demo_rpc_server_mvc.Models
 			{
 				this.PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
 			}
+		}
+		
+		private void Initialize()
+		{
+			OnCreated();
+		}
+		
+		[OnDeserializing()]
+		[System.ComponentModel.EditorBrowsableAttribute(EditorBrowsableState.Never)]
+		public void OnDeserializing(StreamingContext context)
+		{
+			this.Initialize();
 		}
 	}
 }

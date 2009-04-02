@@ -1,4 +1,4 @@
-﻿#if NET_3_0
+﻿#if NET_3_0 && !SILVERLIGHT
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;

@@ -26,14 +26,14 @@
         <elementListCompartment Id="c45b452f-5098-4d8a-8e55-733c1952422b" absoluteBounds="0.765, 6.21, 1.9700000000000002, 0.53615315755208326" name="DataPropertiesCompartment" titleTextColor="Black" itemTextColor="Black" />
       </nestedChildShapes>
     </classShape>
-    <associationConnector edgePoints="[(5.5 : 2.54459757486979); (6.25 : 2.54459757486979)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+    <associationConnector edgePoints="[(5.5 : 2.54459757486979); (6.25 : 2.54459757486979)]" fixedFrom="NotFixed" fixedTo="NotFixed">
       <AssociationMoniker Name="/NorthwindDataContext/Order/Order_Order_Detail" />
       <nodes>
         <classShapeMoniker Id="50c85dd9-a961-4ced-8fbe-6839df2e3fed" />
         <classShapeMoniker Id="768f15e4-29bd-4e44-89ff-4e555e803696" />
       </nodes>
     </associationConnector>
-    <associationConnector edgePoints="[(2.75 : 2.53763956705729); (3.5 : 2.53763956705729)]" fixedFrom="Algorithm" fixedTo="Algorithm">
+    <associationConnector edgePoints="[(2.75 : 2.53763956705729); (3.5 : 2.53763956705729)]" fixedFrom="NotFixed" fixedTo="NotFixed">
       <AssociationMoniker Name="/NorthwindDataContext/Customer/Customer_Order" />
       <nodes>
         <classShapeMoniker Id="884b8675-2e37-4d7a-a128-66b3d336434e" />

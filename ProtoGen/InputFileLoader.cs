@@ -42,16 +42,22 @@ namespace ProtoBuf.CodeGenerator
             
             try
             {
+                string loaderPath = typeof(InputFileLoader).Assembly.CodeBase;
+                
+                loaderPath = Path.Combine(Path.GetDirectoryName(loaderPath), "protoc.exe");
+                if(loaderPath.StartsWith(@"file:\")) {
+                    loaderPath = loaderPath.Substring(6);
+                }
                 ProcessStartInfo psi = new ProcessStartInfo(
-                    "protoc.exe", string.Format(
-                                      @"""--descriptor_set_out={0}"" ""{1}""",
+                    loaderPath, string.Format(
+                                      @"""--descriptor_set_out={0}"" ""{1}"" {2}",
                                       tmp, path, string.Join(" ", args)));
-                psi.WorkingDirectory = Path.GetDirectoryName(path);
+                Debug.WriteLine(psi.FileName, "protoc");
+                Debug.WriteLine(psi.Arguments, "protoc");
+                
                 psi.CreateNoWindow = true;
                 psi.WindowStyle = ProcessWindowStyle.Hidden;
-
-                string loaderPath = typeof (InputFileLoader).Assembly.CodeBase;
-                
+                psi.WorkingDirectory = Environment.CurrentDirectory;
                 psi.UseShellExecute = false;
                 psi.RedirectStandardOutput = psi.RedirectStandardError = true;
 

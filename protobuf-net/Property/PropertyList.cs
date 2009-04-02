@@ -44,13 +44,14 @@ namespace ProtoBuf.Property
         }
         public override TList DeserializeImpl(TSource source, SerializationContext context)
         {
-            throw new InvalidOperationException("DeserializeImpl should not be called for PropertyList");
+           return DeserializeImpl(source, context, false);
         }
         public override void Deserialize(TSource source, SerializationContext context)
         {
-            
-            
-
+            DeserializeImpl(source, context, true);
+        }
+        private TList DeserializeImpl(TSource source, SerializationContext context, bool canSetValue)
+        {
             TList list = GetValue(source);
             bool set = list == null;
             if (set) list = (TList)Activator.CreateInstance(typeof(TList));
@@ -58,10 +59,9 @@ namespace ProtoBuf.Property
             {
                 list.Add(innerProperty.DeserializeImpl(default(TValue), context));
             } while (context.TryPeekFieldPrefix(FieldPrefix));
-            
-            if (set) SetValue(source, list);
+
+            if (set && canSetValue) SetValue(source, list);
+            return list;
         }
-
-
     }
 }
