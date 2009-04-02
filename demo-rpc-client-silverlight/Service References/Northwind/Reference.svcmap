@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ReferenceGroup xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ID="794725d4-9791-4279-a7af-e8478bd12d8f" xmlns="urn:schemas-microsoft-com:xml-wcfservicemap">
+  <ClientOptions>
+    <GenerateAsynchronousMethods>true</GenerateAsynchronousMethods>
+    <EnableDataBinding>true</EnableDataBinding>
+    <ExcludedTypes />
+    <ImportXmlTypes>false</ImportXmlTypes>
+    <GenerateInternalTypes>false</GenerateInternalTypes>
+    <GenerateMessageContracts>false</GenerateMessageContracts>
+    <NamespaceMappings />
+    <CollectionMappings>
+      <CollectionMapping TypeName="System.Collections.ObjectModel.ObservableCollection`1" Category="List" />
+    </CollectionMappings>
+    <GenerateSerializableTypes>false</GenerateSerializableTypes>
+    <Serializer>Auto</Serializer>
+    <ReferenceAllAssemblies>true</ReferenceAllAssemblies>
+    <ReferencedAssemblies />
+    <ReferencedDataContractTypes />
+    <ServiceContractMappings />
+  </ClientOptions>
+  <MetadataSources>
+    <MetadataSource Address="http://localhost:12398/Northwind.svc/mex" Protocol="mex" SourceId="1" />
+  </MetadataSources>
+  <Metadata>
+    <MetadataFile FileName="service.wsdl" MetadataType="Wsdl" ID="836eeeaf-6c53-4b30-800b-e6480107050c" SourceId="1" SourceUrl="http://localhost:12398/Northwind.svc/mex" />
+    <MetadataFile FileName="service1.wsdl" MetadataType="Wsdl" ID="f357d2cb-2f2e-4d6e-9db2-5a0d82b8b603" SourceId="1" SourceUrl="http://localhost:12398/Northwind.svc/mex" />
+    <MetadataFile FileName="service.xsd" MetadataType="Schema" ID="376aeaad-4a0d-42b0-b0e2-900fd03c3dae" SourceId="1" SourceUrl="http://localhost:12398/Northwind.svc/mex" />
+    <MetadataFile FileName="service1.xsd" MetadataType="Schema" ID="926fa1cd-9f18-467c-a4f5-fe561c1a6079" SourceId="1" SourceUrl="http://localhost:12398/Northwind.svc/mex" />
+    <MetadataFile FileName="demo_rpc_server_mvc.Models.xsd" MetadataType="Schema" ID="f316a6ac-6a8b-41b3-a7c5-187acc96349f" SourceId="1" SourceUrl="http://localhost:12398/Northwind.svc/mex" />
+  </Metadata>
+  <Extensions>
+    <ExtensionFile FileName="configuration91.svcinfo" Name="configuration91.svcinfo" />
+    <ExtensionFile FileName="configuration.svcinfo" Name="configuration.svcinfo" />
+  </Extensions>
+</ReferenceGroup>

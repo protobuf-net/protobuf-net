@@ -10,7 +10,7 @@
         </bindings>
         <client>
             <endpoint address="http://localhost:12398/Northwind.svc" binding="basicHttpBinding"
-                bindingConfiguration="BasicHttpBinding_Northwind" contract="NorthwindService.Northwind"
+                bindingConfiguration="BasicHttpBinding_Northwind" contract="Northwind.Northwind"
                 name="BasicHttpBinding_Northwind" />
         </client>
     </system.serviceModel>

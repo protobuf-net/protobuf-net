@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <xs:schema elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-  <xs:import schemaLocation="http://localhost:12398/Northwind.svc?xsd=xsd2" namespace="http://schemas.datacontract.org/2004/07/demo_rpc_server_mvc.Models" />
+  <xs:import namespace="http://schemas.datacontract.org/2004/07/demo_rpc_server_mvc.Models" />
   <xs:element name="GetCustomers">
     <xs:complexType>
       <xs:sequence />

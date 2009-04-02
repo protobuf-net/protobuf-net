@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<SavedWcfConfigurationInformation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="9.1" CheckSum="OVCF/7X6izjIlbzjABvYaWsi+iY=">
+<SavedWcfConfigurationInformation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="9.1" CheckSum="T99CEjDFOjVKxrpBZjA+lp6TpAw=">
   <bindingConfigurations>
     <bindingConfiguration bindingType="basicHttpBinding" name="BasicHttpBinding_Northwind">
       <properties>
@@ -100,7 +100,7 @@
     </bindingConfiguration>
   </bindingConfigurations>
   <endpoints>
-    <endpoint name="BasicHttpBinding_Northwind" contract="NorthwindService.Northwind" bindingType="basicHttpBinding" address="http://localhost:12398/Northwind.svc" bindingConfiguration="BasicHttpBinding_Northwind">
+    <endpoint name="BasicHttpBinding_Northwind" contract="Northwind.Northwind" bindingType="basicHttpBinding" address="http://localhost:12398/Northwind.svc" bindingConfiguration="BasicHttpBinding_Northwind">
       <properties>
         <property path="/address" isComplexType="false" isExplicitlyDefined="true" clrType="System.Uri, System, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <serializedValue>http://localhost:12398/Northwind.svc</serializedValue>
@@ -115,7 +115,7 @@
           <serializedValue>BasicHttpBinding_Northwind</serializedValue>
         </property>
         <property path="/contract" isComplexType="false" isExplicitlyDefined="true" clrType="System.String, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
-          <serializedValue>NorthwindService.Northwind</serializedValue>
+          <serializedValue>Northwind.Northwind</serializedValue>
         </property>
         <property path="/headers" isComplexType="true" isExplicitlyDefined="false" clrType="System.ServiceModel.Configuration.AddressHeaderCollectionElement, System.ServiceModel, Version=3.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
           <serializedValue>System.ServiceModel.Configuration.AddressHeaderCollectionElement</serializedValue>

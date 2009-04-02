@@ -9,7 +9,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Shapes;
-using demo_rpc_client_silverlight.NorthwindService;
+using demo_rpc_client_silverlight.Northwind;
+//using demo_rpc_client_silverlight.NorthwindService;
 
 namespace demo_rpc_client_silverlight
 {
@@ -26,7 +27,6 @@ namespace demo_rpc_client_silverlight
             client.GetCustomersCompleted += new EventHandler<GetCustomersCompletedEventArgs>(client_GetCustomersCompleted);
             client.GetCustomersAsync();
         }
-
         void client_GetCustomersCompleted(object sender, GetCustomersCompletedEventArgs e)
         {
             Dispatcher.BeginInvoke(() =>
