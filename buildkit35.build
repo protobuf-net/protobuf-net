@@ -26,6 +26,12 @@
     <FileUpdate Files="protobuf-net\Properties\AssemblyInfo.cs"
             Regex='(\[\s*assembly:\s*AssemblyFileVersion\(\s*"[^\.]+\.[^\.]+)\.([^\.]+)(\.)([^\.]+)("\)\s*\])'
             ReplacementText='$1.$2.$(BuildRev)$5' />
+    <FileUpdate Files="protobuf-net.Extensions\Properties\AssemblyInfo.cs"
+            Regex='(\[\s*assembly:\s*AssemblyVersion\(\s*"[^\.]+\.[^\.]+)\.([^\.]+)(\.)([^\.]+)("\)\s*\])'
+            ReplacementText='$1.$2.$(BuildRev)$5' />
+    <FileUpdate Files="protobuf-net.Extensions\Properties\AssemblyInfo.cs"
+            Regex='(\[\s*assembly:\s*AssemblyFileVersion\(\s*"[^\.]+\.[^\.]+)\.([^\.]+)(\.)([^\.]+)("\)\s*\])'
+            ReplacementText='$1.$2.$(BuildRev)$5' />
     <FileUpdate Files="ProtoGen\Properties\AssemblyInfo.cs"
             Regex='(\[\s*assembly:\s*AssemblyVersion\(\s*"[^\.]+\.[^\.]+)\.([^\.]+)(\.)([^\.]+)("\)\s*\])'
             ReplacementText='$1.$2.$(BuildRev)$5' />
@@ -60,10 +66,13 @@
 
     <!-- build for compact framework -->
     <RemoveDir Directories="protobuf-net-CF20\obj; protobuf-net-CF20\bin"/>
-    <MSBuild Projects="protobuf-net-CF20\protobuf-net-CF20.csproj" Properties="OutputPath=..\$(OutputDirectory)\CF20; Configuration=Release" Targets="Rebuild"/>
     <RemoveDir Directories="protobuf-net-CF35\obj; protobuf-net-CF35\bin"/>
+    <RemoveDir Directories="protobuf-net.Extensions-CF35\obj; protobuf-net.Extensions-CF35\bin"/>
+
+    <MSBuild Projects="protobuf-net-CF20\protobuf-net-CF20.csproj" Properties="OutputPath=..\$(OutputDirectory)\CF20; Configuration=Release" Targets="Rebuild"/>
     <MSBuild Projects="protobuf-net-CF35\protobuf-net-CF35.csproj" Properties="OutputPath=..\$(OutputDirectory)\CF35; Configuration=Release" Targets="Rebuild"/>
-    
+    <MSBuild Projects="protobuf-net.Extensions-CF35\protobuf-net.Extensions-CF35.csproj" Properties="OutputPath=..\$(OutputDirectory)\CF35; Configuration=Release" Targets="Rebuild"/> 
+
     <!-- build for Silverlight -->
     <RemoveDir Directories="protobuf-net_Silverlight\obj; protobuf-net_Silverlight\bin"/>
     <MSBuild Projects="protobuf-net_Silverlight\protobuf-net_Silverlight.csproj" Properties="OutputPath=..\$(OutputDirectory)\SILVER20_tmp; Configuration=Release" Targets="Rebuild"/>

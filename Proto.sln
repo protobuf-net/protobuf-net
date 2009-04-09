@@ -31,6 +31,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "demo-rpc-client-silverlight
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "demo-rpc-server-mvc", "demo-rpc-server-mvc\demo-rpc-server-mvc.csproj", "{2F293C90-1DE4-4CE1-AFA7-D0B36E0CA8A9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.Extensions-CF35", "protobuf-net.Extensions-CF35\protobuf-net.Extensions-CF35.csproj", "{414BC396-98D1-46F8-B3AA-A77CC87C7C82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -158,6 +160,16 @@ Global
 		{2F293C90-1DE4-4CE1-AFA7-D0B36E0CA8A9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2F293C90-1DE4-4CE1-AFA7-D0B36E0CA8A9}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{2F293C90-1DE4-4CE1-AFA7-D0B36E0CA8A9}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Net20|Any CPU.ActiveCfg = Release|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Net20|Any CPU.Build.0 = Release|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Profile|Any CPU.ActiveCfg = Release|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Profile|Any CPU.Build.0 = Release|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
+		{414BC396-98D1-46F8-B3AA-A77CC87C7C82}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

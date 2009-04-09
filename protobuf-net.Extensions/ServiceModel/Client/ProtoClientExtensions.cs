@@ -152,8 +152,12 @@ namespace ProtoBuf.ServiceModel.Client
             object value;
             if (!TryEvaluate(operation, out value))
             {
+#if CF35
+                throw new NotSupportedException("The expression is too complicated to be evaluated on this framework; try simplifying the expression.");
+#else
                 // use compile / invoke as a fall-back
                 value = Expression.Lambda(operation).Compile().DynamicInvoke();
+#endif
             }
             return value;
         }

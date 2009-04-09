@@ -4,16 +4,16 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}</ProjectGuid>
+    <ProjectGuid>{414BC396-98D1-46F8-B3AA-A77CC87C7C82}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProtoBuf</RootNamespace>
-    <AssemblyName>protobuf-net</AssemblyName>
+    <RootNamespace>protobuf_net.Extensions</RootNamespace>
+    <AssemblyName>protobuf-net.Extensions</AssemblyName>
     <ProjectTypeGuids>{4D628B5B-2FBC-4AA6-8C16-197242AEB884};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <PlatformFamilyName>PocketPC</PlatformFamilyName>
     <PlatformID>4118C335-430C-497f-BE48-11C3316B135E</PlatformID>
     <OSVersion>5.1</OSVersion>
-    <DeployDirSuffix>protobuf_net_CF35</DeployDirSuffix>
+    <DeployDirSuffix>protobuf_net.Extensions_CF35</DeployDirSuffix>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <NativePlatformName>Windows Mobile 5.0 Pocket PC SDK</NativePlatformName>
     <FormFactorID>
@@ -33,34 +33,43 @@
     <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <DocumentationFile>bin\Debug\protobuf-net.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\protobuf-net.Extensions.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;PocketPC CF</DefineConstants>
+    <DefineConstants>TRACE;PocketPC CF CF35</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
     <FileAlignment>512</FileAlignment>
     <WarningLevel>4</WarningLevel>
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
-    <DocumentationFile>bin\Release\protobuf-net.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\protobuf-net.Extensions.XML</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
     <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\protobuf-net\**\*.cs" />
+    <Compile Include="..\protobuf-net.Extensions\**\*.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\Licence.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net-CF35\protobuf-net-CF35.csproj">
+      <Project>{C12D2EDB-76A0-4025-AF7A-28766D6AF78C}</Project>
+      <Name>protobuf-net-CF35</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
