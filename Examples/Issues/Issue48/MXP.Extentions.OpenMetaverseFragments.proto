@@ -1,0 +1,190 @@
+import "MXP.Common.proto";
+
+// Primitive object extension according to SecondLife parametrization scheme.
+message OmSlPrimitiveExt {  
+required uint32 State=1;
+required uint32 Material=2;
+required uint32 ClickAction=3;
+required MsdVector3f Scale=4;
+required uint32 UpdateFlags=5;
+required uint32 PathCurve=6;
+required uint32 ProfileCurve=7;
+required uint32 PathBegin=8;
+required uint32 PathEnd=9;
+required uint32 PathScaleX=10;
+required uint32 PathScaleY=11;
+required uint32 PathShearX=12;
+required uint32 PathShearY=13;
+required sint32 PathTwist=14;
+required sint32 PathTwistBegin=15;
+required sint32 PathRadiusOffset=16;
+required sint32 PathTaperX=17;
+required sint32 PathTaperY=18;
+required uint32 PathRevolutions=19;
+required sint32 PathSkew=20;
+required uint32 ProfileBegin=21;
+required uint32 ProfileEnd=22;
+required uint32 ProfileHollow=23;
+required bytes TextureEntry=24;
+required bytes TextureAnim=25;
+required string NameValue=26;
+required bytes Data=27;
+required string Text=28;
+required MsdColor4f TextColor=29;
+required string MediaURL=30;
+optional bytes PSBlock=31;
+optional bytes ExtraParams=32;
+optional bytes SoundId=33;
+optional uint32 SoundGain=34;
+optional float SoundRadius=35;
+optional uint32 JointType=36;
+optional MsdVector3f JointPivot=37;
+optional MsdVector3f JointAxisOrAnchor=38;
+}
+
+// Terrain object extension for simple heightmap based terrains.
+// Bitmap terrain is defined as heightmap and in future vegetation and other suitable layers.
+// Heightmap layer is scaled to fit the object are in X,Z-plane.
+// Layer values are adressed in the array as follows:
+// float floatValue=heightMap[x+y*width]
+// Float array presenting height map is first encoded to short array as follows:
+// short shortValue=(short)((floatValue-offset)*Scale)
+// This is further compressed with deflate algorithm.
+message OmBitmapTerrainExt {
+required uint32 Width=1;
+required uint32 Height=2;
+required float WaterLevel=3;
+required float Offset=4;
+required float Scale=5;
+required bytes HeightMap=6;
+}
+
+message OmChatExt {  
+required string Message = 1;  
+}
+
+// Camera parameters.
+// Should this contain projection parameters?
+message OmCamera {
+required MsdVector3f Location=1;
+required MsdQuaternion4f Orientation=2;
+}
+
+// Biped specific default bones. Not all bones are necessarily used
+// and more bones will be added according to demand.
+enum OmBipedBones {
+Root=0;
+Pelvis=1;
+Spine=2;
+Spine1=3;
+Spine2=4;
+Spine3=5;
+Neck=6;
+Neck1=7;
+Neck2=8;
+Neck3=9;
+Head=10;
+LeftClavicle=11;
+LeftUpperArm=12;
+LeftForearm=13;
+LeftHand=14;
+LeftFinger0=15;
+LeftFinger01=16;
+LeftFinger02=17;
+LeftFinger0Nub=18;
+LeftFinger1=19;
+LeftFinger11=20;
+LeftFinger12=21;
+LeftFinger1Nub=22;
+LeftFinger2=23;
+LeftFinger21=24;
+LeftFinger22=25;
+LeftFinger2Nub=26;
+LeftFinger3=27;
+LeftFinger31=28;
+LeftFinger32=29;
+LeftFinger3Nub=30;
+LeftFinger4=31;
+LeftFinger41=32;
+LeftFinger42=33;
+LeftFinger4Nub=34;
+RightClavicle=35;
+RightUpperArm=36;
+RightForearm=37;
+RightHand=38;
+RightFinger0=39;
+RightFinger01=40;
+RightFinger02=41;
+RightFinger0Nub=42;
+RightFinger1=43;
+RightFinger11=44;
+RightFinger12=45;
+RightFinger1Nub=46;
+RightFinger2=47;
+RightFinger21=48;
+RightFinger22=49;
+RightFinger2Nub=50;
+RightFinger3=51;
+RightFinger31=52;
+RightFinger32=53;
+RightFinger4Nub=54;
+RightFinger4=55;
+RightFinger41=56;
+RightFinger42=57;
+RightFinger5Nub=58;
+LeftThigh=59;
+LeftCalf=60;
+LeftFoot=61;
+LeftToe0=62;
+LeftToe0Nub=63;
+RightThigh=64;
+RightCalf=65;
+RightFoot=66;
+RightToe0=67;
+RightToe0Nub=68;     
+}
+
+// Combination of bone enumation value and orientation.
+message OmBipedBoneOrientation
+{
+required OmBipedBones Bone = 1;
+required MsdQuaternion4f Orientation=2;
+}
+
+// Custom bones are model specific and are indexed
+// according to native bone indexing.
+message OmCustomBoneOrientation
+{
+required uint32 BoneIndex = 1;
+required MsdQuaternion4f Orientation=2;
+}
+
+enum OmBodyType {
+Custom = 1;
+Biped = 2;
+}
+
+// Humanoid body parameters. 
+// Only changed bone orientations are transmitted.
+// Orientations are defined in the coordinate space of the parent bone.
+message OmBody {
+required OmBodyType BodyType = 1 [default = Biped];
+repeated OmBipedBoneOrientation BipedBoneOrientations = 2;
+repeated OmCustomBoneOrientation CustomBoneOrientations = 3;
+}
+
+enum OmAvatarState {
+None = 0;
+Typing = 4;
+Editing = 16;
+}
+
+// Avatar object extension.
+message OmAvatarExt {
+required OmAvatarState State=1 [default = None];
+optional OmBody Body=2;
+optional OmCamera Camera=3;
+optional MsdVector3f MovementDirection=4;
+optional MsdVector3f TargetLocation=5;
+optional MsdQuaternion4f TargetOrientation=6;
+}

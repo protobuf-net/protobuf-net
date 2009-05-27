@@ -30,7 +30,7 @@ namespace ProtoBuf.CodeGenerator
             }
         }
 
-        private string template = TemplateCSharp, outPath = "";
+        private string template = TemplateCSharp, outPath = "", defaultNamespace;
         private bool showLogo = true, showHelp;
         private readonly List<string> inPaths = new List<string>();
         private readonly List<string> args = new List<string>();
@@ -39,6 +39,7 @@ namespace ProtoBuf.CodeGenerator
         public int MessageCount { get { return messageCount; } }
 
         public string Template { get { return template;} set { template = value;} }
+        public string DefaultNamespace { get { return defaultNamespace; } set { defaultNamespace = value; } }
         public bool ShowLogo { get { return showLogo; } set { showLogo = value; } }
         public string OutPath { get { return outPath; } set { outPath = value; } }
         public bool ShowHelp { get { return showHelp; } set { showHelp = value; } }
@@ -70,6 +71,10 @@ namespace ProtoBuf.CodeGenerator
                 else if (arg.StartsWith("-t:"))
                 {
                     options.Template = arg.Substring(3).Trim();
+                }
+                else if (arg.StartsWith("-ns:"))
+                {
+                    options.DefaultNamespace = arg.Substring(4).Trim();
                 }
                 else if (arg == "/?" || arg == "-h")
                 {
@@ -152,7 +157,7 @@ namespace ProtoBuf.CodeGenerator
 
             foreach (string inPath in options.InPaths)
             {
-                InputFileLoader.Merge(set, Path.GetFullPath(inPath), options.Arguments.ToArray());
+                InputFileLoader.Merge(set, inPath, options.Arguments.ToArray());
             }
 
             XmlSerializer xser = new XmlSerializer(typeof(FileDescriptorSet));
@@ -182,11 +187,16 @@ namespace ProtoBuf.CodeGenerator
                 string xsltTemplate = Path.ChangeExtension(options.Template, "xslt");
                 if (!File.Exists(xsltTemplate))
                 {
-                    string localXslt = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), xsltTemplate);
+                    string localXslt = InputFileLoader.CombinePathFromAppRoot(xsltTemplate);
                     if (File.Exists(localXslt))
                         xsltTemplate = localXslt;
                 }
                 xslt.Load(xsltTemplate);
+                options.XsltOptions.RemoveParam("defaultNamespace", "");
+                if (options.DefaultNamespace != null)
+                {
+                    options.XsltOptions.AddParam("defaultNamespace", "", options.DefaultNamespace);
+                }
                 xslt.Transform(reader, options.XsltOptions, writer);
             }
             return sb.ToString();

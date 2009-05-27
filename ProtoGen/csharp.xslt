@@ -15,6 +15,8 @@
   <xsl:param name="lightFramework"/>
   <xsl:param name="asynchronous"/>
   <xsl:param name="clientProxy"/>
+  <xsl:param name="defaultNamespace"/>
+  <xsl:param name="import"/>
   
   <xsl:key name="fieldNames" match="//FieldDescriptorProto" use="name"/>
   
@@ -40,6 +42,20 @@
       </xsl:for-each>
     </xsl:message>
   </xsl:template>
+
+  <xsl:template name="WriteUsings">
+    <xsl:param name="ns"/>
+    <xsl:if test="$ns != ''"><xsl:choose>
+   <xsl:when test="contains($ns,';')">
+using <xsl:value-of select="substring-before($ns,';')"/>;<!--
+ --><xsl:call-template name="WriteUsings">
+       <xsl:with-param name="ns" select="substring-after($ns,';')"/>
+  </xsl:call-template>
+  </xsl:when>
+   <xsl:otherwise>
+using <xsl:value-of select="$ns"/>;
+   </xsl:otherwise>
+ </xsl:choose></xsl:if></xsl:template>
   
   <xsl:template match="FileDescriptorSet">
     <xsl:if test="$help='true'">
@@ -61,6 +77,7 @@
           "lightFramework" - omit additional attributes not included in CF/Silverlight
           "asynchronous" - emit asynchronous methods for use with WCF
           "clientProxy" - emit asynchronous client proxy class
+          "import" - additional namespaces to import (semicolon delimited)
       </xsl:message>
     </xsl:if>
 
@@ -69,39 +86,53 @@
         Invalid options: xml and data-contract serialization are mutually exclusive.
       </xsl:message>
     </xsl:if>
-      // Generated from <xsl:value-of select="name"/>
     <xsl:if test="$optionXml">
-      // Option: xml serialization ([XmlType]/[XmlElement]) enabled
+// Option: xml serialization ([XmlType]/[XmlElement]) enabled
     </xsl:if><xsl:if test="$optionDataContract">
-      // Option: data-contract serialization ([DataContract]/[DataMember]) enabled
+// Option: data-contract serialization ([DataContract]/[DataMember]) enabled
     </xsl:if><xsl:if test="$optionBinary">
-      // Option: binary serialization (ISerializable) enabled
+// Option: binary serialization (ISerializable) enabled
     </xsl:if><xsl:if test="$optionObservable">
-      // Option: observable (OnPropertyChanged) enabled
+// Option: observable (OnPropertyChanged) enabled
     </xsl:if><xsl:if test="$optionPreObservable">
-      // Option: pre-observable (OnPropertyChanging) enabled
+// Option: pre-observable (OnPropertyChanging) enabled
     </xsl:if><xsl:if test="$partialMethods">
-      // Option: partial methods (On*Changing/On*Changed) enabled
+// Option: partial methods (On*Changing/On*Changed) enabled
     </xsl:if><xsl:if test="$detectMissing">
-      // Option: missing-value detection (*Specified/ShouldSerialize*/Reset*) enabled
+// Option: missing-value detection (*Specified/ShouldSerialize*/Reset*) enabled
     </xsl:if><xsl:if test="not($optionFullFramework)">
-      // Option: light framework (CF/Silverlight) enabled
+// Option: light framework (CF/Silverlight) enabled
     </xsl:if><xsl:if test="$optionProtoRpc">
-      // Option: proto-rpc enabled
+// Option: proto-rpc enabled
   </xsl:if>
+    <xsl:call-template name="WriteUsings">
+      <xsl:with-param name="ns" select="$import"/>
+    </xsl:call-template>
     <xsl:apply-templates select="file/FileDescriptorProto"/>
   </xsl:template>
 
-  <xsl:template match="FileDescriptorProto">
-    namespace <xsl:choose>
-      <xsl:when test="package"><xsl:value-of select="translate(package,':-/\','__..')"/></xsl:when>
-      <xsl:otherwise><xsl:value-of select="translate(name,':-/\','__..')"/></xsl:otherwise>
-    </xsl:choose>
-    {
-      <xsl:apply-templates select="message_type | enum_type | service"/>
-    }
-  </xsl:template>
+  <xsl:template name="PickNamespace"><xsl:choose>
+      <xsl:when test="package"><xsl:value-of select="package"/></xsl:when>
+      <xsl:when test="$defaultNamespace"><xsl:value-of select="$defaultNamespace"/></xsl:when>
+      <xsl:when test="substring(name,string-length(name)-5,6)='.proto'"><xsl:value-of select="substring(name,1,string-length(name)-6)"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="name"/></xsl:otherwise>
+    </xsl:choose></xsl:template>
   
+  <xsl:template match="FileDescriptorProto">
+// Generated from: <xsl:value-of select="name"/>
+    <xsl:apply-templates select="dependency/string[.!='']"/>
+    <xsl:variable name="namespace"><xsl:call-template name="PickNamespace"/></xsl:variable>
+    <xsl:if test="string($namespace) != ''">
+namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
+{</xsl:if>
+    <xsl:apply-templates select="message_type | enum_type | service"/>
+    <xsl:if test="string($namespace) != ''">
+}</xsl:if></xsl:template>
+  
+  <xsl:template match="FileDescriptorProto/dependency/string">
+// Note: requires additional types generated from: <xsl:value-of select="."/></xsl:template>
+
+
   <xsl:template match="DescriptorProto">
     [System.Serializable, ProtoBuf.ProtoContract(Name=@"<xsl:value-of select="name"/>")]<!--
     --><xsl:if test="$optionDataContract">

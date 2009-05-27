@@ -36,20 +36,30 @@ namespace ProtoBuf.CodeGenerator
             }
         }
 
+        public static string CombinePathFromAppRoot(string path)
+        {
+            string loaderPath = AppDomain.CurrentDomain.SetupInformation.ApplicationBase;
+            if (!string.IsNullOrEmpty(loaderPath)
+                && loaderPath[loaderPath.Length - 1] != Path.DirectorySeparatorChar
+                && loaderPath[loaderPath.Length - 1] != Path.AltDirectorySeparatorChar)
+            {
+                loaderPath += Path.DirectorySeparatorChar;
+            }
+            if (loaderPath.StartsWith(@"file:\"))
+            {
+                loaderPath = loaderPath.Substring(6);
+            }
+            return Path.Combine(Path.GetDirectoryName(loaderPath), path);
+            
+        }
         private static string CompileDescriptor(string path, params string[] args)
         {
-            string tmp = Path.GetTempFileName();
-            
+            string tmp = Path.GetTempFileName();            
             try
             {
-                string loaderPath = typeof(InputFileLoader).Assembly.CodeBase;
-                
-                loaderPath = Path.Combine(Path.GetDirectoryName(loaderPath), "protoc.exe");
-                if(loaderPath.StartsWith(@"file:\")) {
-                    loaderPath = loaderPath.Substring(6);
-                }
                 ProcessStartInfo psi = new ProcessStartInfo(
-                    loaderPath, string.Format(
+                    CombinePathFromAppRoot("protoc.exe"),
+                    string.Format(
                                       @"""--descriptor_set_out={0}"" ""{1}"" {2}",
                                       tmp, path, string.Join(" ", args)));
                 Debug.WriteLine(psi.FileName, "protoc");
@@ -91,7 +101,11 @@ namespace ProtoBuf.CodeGenerator
             return (ThreadStart) delegate
              {
                  string line;
-                 while ((line = reader.ReadLine()) != null) writer.WriteLine(line);
+                 while ((line = reader.ReadLine()) != null)
+                 {
+                     Debug.WriteLine(line);
+                     writer.WriteLine(line);
+                 }
              };
         }
 

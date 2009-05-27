@@ -151,6 +151,7 @@
     <Compile Include="NonGeneric.cs" />
     <Compile Include="ObjectFactory.cs" />
     <Compile Include="PrefixStyle.cs" />
+    <Compile Include="Property\PropertyPackedList.cs" />
     <Compile Include="Property\PropertyPairString.cs" />
     <Compile Include="Property\PropertySpecified.cs" />
     <Compile Include="Property\PropertyTimeSpanFixed.cs" />

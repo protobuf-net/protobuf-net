@@ -6,6 +6,7 @@ usage: protogen -i:{infile2} [-i:{infile2}] [-o:{outfile}] [-t:{template}] [-p:{
 -p: Property for the template; value defaults to true; use -p:help to view available options
 -q: Quiet; suppresses header
 -d: Include all dependencies of the input files in the set so the set is self-contained.
+-ns: Default namespace; used in code generation when no package is specified
 
 Examples:
 

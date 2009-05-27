@@ -65,6 +65,19 @@ namespace Examples.ProtoGen
         }
 
         [Test]
+        public void TestDefaultNamespace()
+        {
+            CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:a.proto");
+            Assert.IsNull(opt.DefaultNamespace);
+
+            opt = CommandLineOptions.Parse(Console.Out, "-i:a.proto", "-ns:");
+            Assert.AreEqual("", opt.DefaultNamespace);
+
+            opt = CommandLineOptions.Parse(Console.Out, "-i:a.proto", "-ns:Foo");
+            Assert.AreEqual("Foo", opt.DefaultNamespace);
+        }
+
+        [Test]
         public void TestSingleInputWithTemplate()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "-t:bespoke" );

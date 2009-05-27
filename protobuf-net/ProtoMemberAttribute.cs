@@ -46,6 +46,13 @@ namespace ProtoBuf
         /// </summary>
         public bool IsRequired { get { return isRequired; } set { isRequired = value; } }
         private bool isRequired;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this member is packed (lists/arrays).
+        /// </summary>
+
+        public bool IsPacked { get { return isPacked; } set { isPacked = value; } }
+        private bool isPacked;
     }
 
     /// <summary>

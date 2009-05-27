@@ -89,12 +89,18 @@ namespace ProtoBuf.Property
 
         private uint prefix;
         public uint FieldPrefix { get { return prefix; } }
+        private bool suppressPrefix;
+        public bool SuppressPrefix
+        {
+            get { return suppressPrefix; }
+            set { suppressPrefix = value; }
+        }
         public int Tag { get { return (int)(prefix >> 3); } }
         public abstract WireType WireType { get; }
 
         protected int WritePrefix(SerializationContext context)
         {
-            return context.EncodeUInt32(FieldPrefix);
+            return suppressPrefix ? 0 : context.EncodeUInt32(FieldPrefix);
         }
 
         public abstract int Serialize(TSource source, SerializationContext context);
