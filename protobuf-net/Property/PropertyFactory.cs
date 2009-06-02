@@ -11,6 +11,19 @@ namespace ProtoBuf.Property
     /// </summary>
     internal static class PropertyFactory
     {
+
+        internal static bool CanPack(WireType wireType)
+        {
+            switch (wireType)
+            {
+                case WireType.Fixed32:
+                case WireType.Fixed64:
+                case WireType.Variant:
+                    return true;
+                default:
+                    return false;
+            }
+        }
         /// <summary>
         /// Stores, per T, a pass-thru Getter&lt;T,T&gt; delegate.
         /// </summary>
@@ -37,9 +50,14 @@ namespace ProtoBuf.Property
         /// to encode/decode values for the given type.
         /// </summary>
         public static Property<T,T> CreatePassThru<T>(int tag, ref DataFormat format) {
-            Property<T,T> prop = (Property<T, T>)CreateProperty<T>(typeof(T), ref format);
+            Property<T,T> prop = (Property<T, T>)CreateProperty<T>(typeof(T), ref format, MemberSerializationOptions.None);
             prop.Init(tag, format, GetPassThru<T>(), null, false, null);
             return prop;
+        }
+
+        internal static bool HasOption(MemberSerializationOptions options, MemberSerializationOptions required)
+        {
+            return (options & required) == required;
         }
 
         /// <summary>
@@ -52,7 +70,7 @@ namespace ProtoBuf.Property
             int tag;
             string name;
             DataFormat format;
-            bool isRequired;
+            MemberSerializationOptions options;
             Type type;
             switch (member.MemberType)
             {
@@ -66,12 +84,12 @@ namespace ProtoBuf.Property
                     type = null;
                     break;
             }
-            if(type == null || !Serializer.TryGetTag(member, out tag, out name, out format, out isRequired))
+            if(type == null || !Serializer.TryGetTag(member, out tag, out name, out format, out options))
             {
                 throw new InvalidOperationException("Cannot be treated as a proto member: " + member.Name);
             }
             Property<T> prop;
-            PropertyInfo specifiedProp = isRequired ? null : PropertySpecified.GetSpecified(typeof (T), member.Name);
+            PropertyInfo specifiedProp = HasOption(options, MemberSerializationOptions.Required) ? null : PropertySpecified.GetSpecified(typeof (T), member.Name);
             
             if (specifiedProp != null)
             {
@@ -80,7 +98,7 @@ namespace ProtoBuf.Property
             }
             else
             {
-                prop = CreateProperty<T>(type, ref format);
+                prop = CreateProperty<T>(type, ref format, options);
             }
             prop.Init(member);
             return prop;
@@ -90,7 +108,7 @@ namespace ProtoBuf.Property
         /// Responsible for deciding how to encode/decode a given data-type; maybe
         /// not the most elegant solution, but it is simple and quick.
         /// </summary>
-        private static Property<T> CreateProperty<T>(Type type, ref DataFormat format)
+        private static Property<T> CreateProperty<T>(Type type, ref DataFormat format, MemberSerializationOptions options)
         {
             if (type == typeof(int))
             {
@@ -255,7 +273,9 @@ namespace ProtoBuf.Property
             }
             if (type.IsArray && listItemType != null) // second check is for byte[]
             {
-                return PropertyUtil<T>.CreateTypedProperty("CreatePropertyArray", listItemType);
+                return PropertyUtil<T>.CreateTypedProperty(
+                    (PropertyFactory.HasOption(options, MemberSerializationOptions.Packed)
+                        ? "CreatePropertyPackedArray" : "CreatePropertyArray"), listItemType);
             }
 
             if (listItemType != null)
@@ -265,13 +285,15 @@ namespace ProtoBuf.Property
                     if (GetAddMethod(type, listItemType) != null)
                     {
                         return PropertyUtil<T>.CreateTypedProperty(
-                            "CreatePropertyEnumerable", type, listItemType);
+                            (PropertyFactory.HasOption(options, MemberSerializationOptions.Packed)
+                            ? "CreatePropertyPackedEnumerable" : "CreatePropertyEnumerable"), type, listItemType);
                     }
                 }
                 else
                 {
                     return PropertyUtil<T>.CreateTypedProperty(
-                        "CreatePropertyList", type, listItemType);
+                        (PropertyFactory.HasOption(options, MemberSerializationOptions.Packed)
+                        ? "CreatePropertyPackedList" : "CreatePropertyList"), type, listItemType);
                 }
             }
 
@@ -326,6 +348,11 @@ namespace ProtoBuf.Property
                 }
             }
             return null;
+        }
+
+        internal static void VerifyCanPack(WireType wireType)
+        {
+            if (!CanPack(wireType)) throw new InvalidOperationException("Only simple data-types can use packed encoding");
         }
     }
 }

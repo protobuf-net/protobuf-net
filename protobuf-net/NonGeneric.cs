@@ -146,9 +146,8 @@ namespace ProtoBuf
                 foreach (MethodInfo method in typeof(Serializer).GetMethods(
                     BindingFlags.Static | BindingFlags.Public))
                 {
-                    ParameterInfo[] p;
                     if (method.Name == "DeepClone" && method.IsGenericMethod
-                        && (p = method.GetParameters()).Length == 1)
+                        && method.GetParameters().Length == 1)
                     {
                         return method.MakeGenericMethod(instance.GetType()).Invoke(
                             null, new object[] { instance });

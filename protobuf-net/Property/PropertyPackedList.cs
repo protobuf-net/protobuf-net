@@ -6,25 +6,11 @@ namespace ProtoBuf.Property
     internal class PropertyPackedList<TSource, TList, TValue> : Property<TSource, TList>, ILengthProperty<TList>
         where TList : ICollection<TValue>
     {
-        internal static bool CanPack(WireType wireType)
-        {
-            switch (wireType)
-            {
-                case WireType.Fixed32:
-                case WireType.Fixed64:
-                case WireType.Variant:
-                    return true;
-                default:
-                    return false;
-            }
-        }
         private Property<TValue, TValue> innerProperty;
 
         public override IEnumerable<Property<TSource>> GetCompatibleReaders()
         {
-            foreach (Property<TValue> alt in innerProperty.GetCompatibleReaders())
-            {
-                if (CanPack(alt.WireType)) yield return CreateAlternative<PropertyPackedList<TSource, TList, TValue>>(alt.DataFormat);
+            foreach (Property<TValue> alt in innerProperty.GetCompatibleReaders()) {
                 yield return CreateAlternative<PropertyList<TSource, TList, TValue>>(alt.DataFormat);
             }
             yield return CreateAlternative<PropertyList<TSource, TList, TValue>>(innerProperty.DataFormat);
@@ -33,6 +19,7 @@ namespace ProtoBuf.Property
         protected override void OnBeforeInit(int tag, ref DataFormat format)
         {
             innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, ref format);
+            PropertyFactory.VerifyCanPack(innerProperty.WireType);
             base.OnBeforeInit(tag, ref format);
         }
         public override WireType WireType
@@ -49,7 +36,13 @@ namespace ProtoBuf.Property
         public override int Serialize(TSource source, SerializationContext context)
         {
             TList list = GetValue(source);
-            if (list == null || list.Count == 0) return 0;
+            if (list == null) return 0;
+            if (list.Count == 0)
+            {
+                int len = WritePrefix(context) + 1;
+                context.WriteByte(0);
+                return len;
+            }
             return WritePrefix(context) + context.WriteLengthPrefixed(list, 0, this);
         }
         public override TList DeserializeImpl(TSource source, SerializationContext context)

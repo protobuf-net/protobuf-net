@@ -39,18 +39,19 @@ namespace ProtoBuf.Property
             yield break;
         }
 
+
         private void InitPrivate(int tag, DataFormat dataFormat, bool isOptional, MemberInfo member, Delegate getValue, Delegate setValue, object defaultValue)
         {
             if (this.prefix != 0) throw new InvalidOperationException("Can only initialise a property once");
 
             if(member != null)
             {
-                bool isRequired;
-                if (!Serializer.TryGetTag(member, out tag, out name, out dataFormat, out isRequired))
+                MemberSerializationOptions options;
+                if (!Serializer.TryGetTag(member, out tag, out name, out dataFormat, out options))
                 {
                     throw new ArgumentException(member.Name + " cannot be used for serialization", "member");
                 }
-                isOptional = !isRequired;
+                isOptional = !PropertyFactory.HasOption(options, MemberSerializationOptions.Required);
                 {
                     DefaultValueAttribute dva = AttributeUtils.GetAttribute<DefaultValueAttribute>(member);
                     defaultValue = dva == null ? null : dva.Value;

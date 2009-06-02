@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ProtoBuf.Property
 {
-    internal class PropertyArray<TSource, TValue> : Property<TSource, TValue[]>
+    internal class PropertyPackedArray<TSource, TValue> : Property<TSource, TValue[]>, ILengthProperty<TValue[]>
     {
         public override IEnumerable<Property<TSource>> GetCompatibleReaders()
         {
@@ -11,7 +11,7 @@ namespace ProtoBuf.Property
             {
                 yield return CreateAlternative<PropertyArray<TSource, TValue>>(alt.DataFormat);
             }
-            if (PropertyFactory.CanPack(innerProperty.WireType)) yield return CreateAlternative<PropertyPackedArray<TSource, TValue>>(innerProperty.DataFormat);
+            yield return CreateAlternative<PropertyArray<TSource, TValue>>(innerProperty.DataFormat);
         }
 
         private Property<TValue, TValue> innerProperty;
@@ -19,53 +19,57 @@ namespace ProtoBuf.Property
         protected override void OnBeforeInit(int tag, ref DataFormat format)
         {
             innerProperty = PropertyFactory.CreatePassThru<TValue>(tag, ref format);
+            PropertyFactory.VerifyCanPack(innerProperty.WireType);
             base.OnBeforeInit(tag, ref format);
+        }
+        protected override void OnAfterInit()
+        {
+            base.OnAfterInit();
+            innerProperty.SuppressPrefix = true;
         }
         public override WireType WireType
         {
-            get { return innerProperty.WireType; }
+            get { return WireType.String; }
         }
 
         public override string DefinedType
         {
             get { return innerProperty.DefinedType; }
         }
-        public override bool IsRepeated {get {return true;}}
+        public override bool IsRepeated { get { return true; } }
 
         public override int Serialize(TSource source, SerializationContext context)
         {
             TValue[] arr = GetValue(source);
-            if (arr == null || arr.Length == 0) return 0;
-            int total = 0;
-            for(int i = 0 ; i < arr.Length ; i++)
+            if (arr == null) return 0;
+            if (arr.Length == 0)
             {
-                total += innerProperty.Serialize(arr[i], context);
+                int len = WritePrefix(context) + 1;
+                context.WriteByte(0);
+                return len;
             }
-            return total;
+            return WritePrefix(context) + context.WriteLengthPrefixed(arr, 0, this);
         }
         public override TValue[] DeserializeImpl(TSource source, SerializationContext context)
         {
             TValue[] arr = GetValue(source);
-            TValue value = innerProperty.DeserializeImpl(default(TValue), context);
-            if (context.TryPeekFieldPrefix(FieldPrefix))
+
+            long restore = context.LimitByLengthPrefix();
+            List<TValue> list = new List<TValue>();
+            while (context.Position < context.MaxReadPosition)
             {
-                List<TValue> list = new List<TValue>();
-                list.Add(value);
-                do
-                {
-                    list.Add(innerProperty.DeserializeImpl(default(TValue), context));
-                } while (context.TryPeekFieldPrefix(FieldPrefix));
-                int index = Resize(ref arr, list.Count);
-                list.CopyTo(arr, index);
+                list.Add(innerProperty.DeserializeImpl(default(TValue), context));
             }
-            else
-            {
-                Resize(ref arr, 1);
-                arr[arr.Length - 1] = value;
-            }
+            // restore the max-pos
+            context.MaxReadPosition = restore;
+
+            int index = Resize(ref arr, list.Count);
+            list.CopyTo(arr, index);
+
             return arr;
         }
-        private static int Resize(ref TValue[] array, int delta) {
+        private static int Resize(ref TValue[] array, int delta)
+        {
             if (array == null)
             {
                 array = new TValue[delta];
@@ -80,6 +84,14 @@ namespace ProtoBuf.Property
                 return len;
             }
         }
-        
+        int ILengthProperty<TValue[]>.Serialize(TValue[] arr, SerializationContext context)
+        {
+            int total = 0;
+            for (int i = 0; i < arr.Length; i++)
+            {
+                total += innerProperty.Serialize(arr[i], context);
+            }
+            return total;
+        }
     }
 }

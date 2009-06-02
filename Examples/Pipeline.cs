@@ -62,13 +62,13 @@ message EnumWrapper {
         public void TestEnumerableBinary()
         {
             EnumParentStandardWrapper obj = new EnumParentStandardWrapper();
-            Program.CheckBytes(obj,
+            Assert.IsTrue(Program.CheckBytes(obj,
                 0x0A, 0x0A,  // field 1: obj, 10 bytes
                 0x08, 0x01,  // field 1: variant, 1
                 0x08, 0x02,  // field 1: variant, 2
                 0x08, 0x03,  // field 1: variant, 3
                 0x08, 0x04,  // field 1: variant, 4
-                0x08, 0x05); // field 1: variant, 5
+                0x08, 0x05)); // field 1: variant, 5
         }
         [Test]
         public void TestEnumerableStandard()

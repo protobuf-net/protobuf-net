@@ -16,8 +16,8 @@ namespace ProtoBuf.Property
             if (prop == null || !prop.CanRead) return null;
             int tag;
             DataFormat fmt;
-            bool isReq;
-            Serializer.TryGetTag(prop, out tag, out name, out fmt, out isReq);
+            MemberSerializationOptions options;
+            Serializer.TryGetTag(prop, out tag, out name, out fmt, out options);
             return tag > 0 ? null : prop;
         }
     }

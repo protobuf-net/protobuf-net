@@ -107,7 +107,7 @@ namespace Examples
             bits[0] = 9;
 
             Int64Fixed i64 = new Int64Fixed { Value = ticks };
-            Program.CheckBytes(i64, bits);
+            Assert.IsTrue(Program.CheckBytes(i64, bits));
 
             Int64Fixed i64Clone = Serializer.DeepClone(i64);
             Assert.AreEqual(ticks, i64Clone.Value, "Int64 roundtrip:" + ticks.ToString() + " (" + when.ToString() + ")");

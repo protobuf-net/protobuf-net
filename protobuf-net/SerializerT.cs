@@ -200,8 +200,8 @@ namespace ProtoBuf
                     string name;
                     DataFormat format;
                     int tag;
-                    bool isRequired;
-                    if (!Serializer.TryGetTag(prop, out tag, out name, out format, out isRequired))
+                    MemberSerializationOptions options;
+                    if (!Serializer.TryGetTag(prop, out tag, out name, out format, out options))
                     {
                         continue; // didn't recognise this as a usable property
                     }

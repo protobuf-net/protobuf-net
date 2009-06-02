@@ -12,14 +12,8 @@ namespace ProtoBuf.Property
         {
             foreach(Property<TValue> alt in innerProperty.GetCompatibleReaders()) {
                 yield return CreateAlternative<PropertyList<TSource, TList, TValue>>(alt.DataFormat);
-                if (CanPack(alt.WireType)) CreateAlternative<PropertyPackedList<TSource, TList, TValue>>(alt.DataFormat);
             }
-            if (CanPack(innerProperty.WireType)) yield return CreateAlternative<PropertyPackedList<TSource, TList, TValue>>(innerProperty.DataFormat);            
-        }
-
-        private static bool CanPack(WireType wireType)
-        {
-            return PropertyPackedList<TSource, TList, TValue>.CanPack(wireType);
+            if (PropertyFactory.CanPack(innerProperty.WireType)) yield return CreateAlternative<PropertyPackedList<TSource, TList, TValue>>(innerProperty.DataFormat);            
         }
 
         protected override void OnBeforeInit(int tag, ref DataFormat format)

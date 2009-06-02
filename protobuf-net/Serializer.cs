@@ -44,9 +44,9 @@ namespace ProtoBuf
         /// [DataMember], [XmlElement] are supported for compatibility.
         /// In any event, there must be a unique positive Tag/Order.
         /// </summary>
-        internal static bool TryGetTag(MemberInfo member, out int tag, out string name, out DataFormat format, out bool isRequired)
+        internal static bool TryGetTag(MemberInfo member, out int tag, out string name, out DataFormat format, out MemberSerializationOptions options)
         {
-            return TryGetTag(member, out tag, out name, false, out format, out isRequired);
+            return TryGetTag(member, out tag, out name, false, out format, out options);
         }
 
         internal static IEnumerable<MemberInfo> GetProtoMembers(Type type)
@@ -67,21 +67,21 @@ namespace ProtoBuf
             int tag;
             string name;
             DataFormat fmt;
-            bool isRequired;
+            MemberSerializationOptions options;
             foreach(T member in members)
             {
                 if(member.DeclaringType == declaringType
                    && member.GetCustomAttributes(typeof(XmlIgnoreAttribute), false).Length == 0
-                   && TryGetTag(member, out tag, out name, true, out fmt, out isRequired) && tag < 1) list.Add(member);
+                   && TryGetTag(member, out tag, out name, true, out fmt, out options) && tag < 1) list.Add(member);
             }
         }
 
-        internal static bool TryGetTag(MemberInfo member, out int tag, out string name, bool callerIsTagInference, out DataFormat format, out bool isRequired)
+        internal static bool TryGetTag(MemberInfo member, out int tag, out string name, bool callerIsTagInference, out DataFormat format, out MemberSerializationOptions options)
         {
             name = member.Name;
             format = DataFormat.Default;
             tag = -1;
-            isRequired = false;
+            options = MemberSerializationOptions.None;
 
             // check for delegates (don't even try!)
             Type valueType;
@@ -116,7 +116,7 @@ namespace ProtoBuf
                 format = pm.DataFormat;
                 if (!string.IsNullOrEmpty(pm.Name)) name = pm.Name;
                 tag = pm.Tag;
-                isRequired = pm.IsRequired;
+                options = pm.Options;
                 return tag > 0;
             }
 
@@ -184,8 +184,8 @@ namespace ProtoBuf
                         {
                             int tmpTag;
                             DataFormat tmpFormat;
-                            bool tmpIsReq;
-                            if(TryGetTag(prop, out tmpTag, out tmpName, true, out tmpFormat, out tmpIsReq))
+                            MemberSerializationOptions tmpOptions;
+                            if (TryGetTag(prop, out tmpTag, out tmpName, true, out tmpFormat, out tmpOptions))
                             {
                                 members.Add(new KeyValuePair<string,int>(tmpName, tmpTag));
                             }
@@ -213,7 +213,7 @@ namespace ProtoBuf
                         }
                     }
                 }
-                isRequired = dm.IsRequired;
+                if(dm.IsRequired) options |= MemberSerializationOptions.Required;
                 return callerIsTagInference || tag > 0;
             }
 #endif

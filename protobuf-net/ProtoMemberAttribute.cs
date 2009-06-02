@@ -44,15 +44,41 @@ namespace ProtoBuf
         /// <summary>
         /// Gets or sets a value indicating whether this member is mandatory.
         /// </summary>
-        public bool IsRequired { get { return isRequired; } set { isRequired = value; } }
-        private bool isRequired;
+        public bool IsRequired {
+            get { return (options & MemberSerializationOptions.Required) == MemberSerializationOptions.Required; }
+            set {
+                if (value) options |= MemberSerializationOptions.Required;
+                else options &= ~MemberSerializationOptions.Required;
+            }
+        }
 
         /// <summary>
         /// Gets or sets a value indicating whether this member is packed (lists/arrays).
         /// </summary>
+        public MemberSerializationOptions Options { get { return options; } set { options = value; } }
+        private MemberSerializationOptions options;
 
-        public bool IsPacked { get { return isPacked; } set { isPacked = value; } }
-        private bool isPacked;
+        
+    }
+
+    /// <summary>
+    /// Additional (optional) settings that control serialization of members
+    /// </summary>
+    [Flags]
+    public enum MemberSerializationOptions
+    {
+        /// <summary>
+        /// Default; no additional options
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// Indicates that repeated elements should use packed (length-prefixed) encoding
+        /// </summary>
+        Packed = 1,
+        /// <summary>
+        /// Indicates that the given item is required
+        /// </summary>
+        Required = 2
     }
 
     /// <summary>

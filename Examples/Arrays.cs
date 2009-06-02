@@ -56,7 +56,7 @@ namespace Examples
     }
     
     [TestFixture]
-    public class Arrays
+    public class ArrayTests
     {
 
         [Test]

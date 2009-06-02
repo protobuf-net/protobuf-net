@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Property
 {
-    internal class PropertyEnumerable<TSource, TList, TValue> : Property<TSource, TList>
+    internal class PropertyPackedEnumerable<TSource, TList, TValue> : Property<TSource, TList>, ILengthProperty<TList>
         where TList : IEnumerable<TValue>
     {
         public override IEnumerable<Property<TSource>> GetCompatibleReaders()
@@ -13,7 +13,7 @@ namespace ProtoBuf.Property
             {
                 yield return CreateAlternative<PropertyEnumerable<TSource, TList, TValue>>(alt.DataFormat);
             }
-            if (PropertyFactory.CanPack(innerProperty.WireType)) yield return CreateAlternative<PropertyPackedEnumerable<TSource, TList, TValue>>(innerProperty.DataFormat);
+            yield return CreateAlternative<PropertyEnumerable<TSource, TList, TValue>>(innerProperty.DataFormat);
         }
 
         private Property<TValue, TValue> innerProperty;
@@ -28,23 +28,33 @@ namespace ProtoBuf.Property
 #else
             add = (Setter<TList, TValue>)Delegate.CreateDelegate(typeof(Setter<TList, TValue>), null, addMethod);
 #endif
+            PropertyFactory.VerifyCanPack(innerProperty.WireType);
             base.OnBeforeInit(tag, ref format);
+        }
+        protected override void OnAfterInit()
+        {
+            base.OnAfterInit();
+            innerProperty.SuppressPrefix = true;
         }
         public override WireType WireType
         {
-            get { return innerProperty.WireType; }
+            get { return WireType.String; }
         }
 
         public override string DefinedType
         {
             get { return innerProperty.DefinedType; }
         }
-        public override bool IsRepeated {get {return true;}}
+        public override bool IsRepeated { get { return true; } }
 
         public override int Serialize(TSource source, SerializationContext context)
         {
             TList list = GetValue(source);
             if (list == null) return 0;
+            return WritePrefix(context) + context.WriteLengthPrefixed(list, 0, this);
+        }
+        int ILengthProperty<TList>.Serialize(TList list, SerializationContext context)
+        {
             int total = 0;
             foreach (TValue value in list)
             {
@@ -60,20 +70,23 @@ namespace ProtoBuf.Property
         {
             DeserializeImpl(source, context, true);
         }
+
         private TList DeserializeImpl(TSource source, SerializationContext context, bool canSetValue)
         {
             TList list = GetValue(source);
             bool set = list == null;
             if (set) list = (TList)Activator.CreateInstance(typeof(TList));
-            do
+
+            long restore = context.LimitByLengthPrefix();
+            while (context.Position < context.MaxReadPosition)
             {
                 add(list, innerProperty.DeserializeImpl(default(TValue), context));
-            } while (context.TryPeekFieldPrefix(FieldPrefix));
+            }
+            // restore the max-pos
+            context.MaxReadPosition = restore;
 
             if (set && canSetValue) SetValue(source, list);
             return list;
         }
-
-
     }
 }

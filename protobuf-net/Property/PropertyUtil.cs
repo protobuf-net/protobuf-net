@@ -30,12 +30,22 @@ namespace ProtoBuf.Property
             return new PropertySpecified<T, TValue>();
         }
 
+        public static Property<T> CreatePropertyPackedList<TList, TValue>()
+            where TList : ICollection<TValue>
+        {
+            return new PropertyPackedList<T, TList, TValue>();
+        }
         public static Property<T> CreatePropertyList<TList, TValue>()
             where TList : ICollection<TValue>
         {
             return new PropertyList<T, TList, TValue>();
         }
 
+        public static Property<T> CreatePropertyPackedEnumerable<TList, TValue>()
+            where TList : IEnumerable<TValue>
+        {
+            return new PropertyPackedEnumerable<T, TList, TValue>();
+        }
         public static Property<T> CreatePropertyEnumerable<TList, TValue>()
             where TList : IEnumerable<TValue>
         {
@@ -56,6 +66,10 @@ namespace ProtoBuf.Property
         public static Property<T> CreatePropertyArray<TValue>()
         {
             return new PropertyArray<T, TValue>();
+        }
+        public static Property<T> CreatePropertyPackedArray<TValue>()
+        {
+            return new PropertyPackedArray<T, TValue>();
         }
         public static Property<T> CreatePropertyParseable<TValue>()
         {
