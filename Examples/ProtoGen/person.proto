@@ -12,4 +12,6 @@ message Person {
     optional PhoneType type = 2 [default = HOME]; 
   } 
   repeated PhoneNumber phone = 4; 
+  repeated int32 testPacked = 5 [packed = true];
+  optional int32 testDeprecated = 6 [deprecated = true];
 }

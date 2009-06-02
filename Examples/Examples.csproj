@@ -185,6 +185,10 @@
     <Compile Include="ValueWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\ProtoGen\descriptor.proto">
+      <Link>ProtoGen\descriptor.proto</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="..\Tools\nwind.proto.bin">
       <Link>NWind\nwind.proto.bin</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -204,9 +208,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="ProtoGen\csharp_options.proto">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="ProtoGen\descriptor.proto">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="ProtoGen\jons.bin">

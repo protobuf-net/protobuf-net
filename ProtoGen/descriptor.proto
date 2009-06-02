@@ -250,7 +250,9 @@ message FileOptions {
     SPEED = 1;      // Generate complete code for parsing, serialization, etc.
     CODE_SIZE = 2;  // Use ReflectionOps to implement these methods.
   }
-  optional OptimizeMode optimize_for = 9 [default=CODE_SIZE];
+  optional OptimizeMode optimize_for = 9 [default=SPEED];
+
+
 
   // The parser stores options it doesn't recognize here. See above.
   repeated UninterpretedOption uninterpreted_option = 999;
@@ -298,6 +300,17 @@ message FieldOptions {
 
     STRING_PIECE = 2;
   }
+  // The packed option can be enabled for repeated primitive fields to enable
+  // a more efficient representation on the wire. Rather than repeatedly
+  // writing the tag and type for each element, the entire array is encoded as
+  // a single length-delimited blob.
+  optional bool packed = 2;
+
+  // Is this field deprecated?
+  // Depending on the target platform, this can emit Deprecated annotations
+  // for accessors, or it will be completely ignored; in the very least, this
+  // is a formalization for deprecating fields.
+  optional bool deprecated = 3 [default=false];
 
   // EXPERIMENTAL.  DO NOT USE.
   // For "map" fields, the name of the field in the enclosed type that
@@ -321,6 +334,7 @@ message FieldOptions {
 }
 
 message EnumOptions {
+
   // The parser stores options it doesn't recognize here. See above.
   repeated UninterpretedOption uninterpreted_option = 999;
 
