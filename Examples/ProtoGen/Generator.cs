@@ -7,6 +7,7 @@ using Microsoft.CSharp;
 using NUnit.Framework;
 using ProtoBuf.CodeGenerator;
 using System.Diagnostics;
+using Microsoft.VisualBasic;
 
 namespace Examples.ProtoGen
 {
@@ -35,6 +36,14 @@ namespace Examples.ProtoGen
             string csharp = GetCode(@"-i:ProtoGen\person.proto", "-p:detectMissing");
             File.WriteAllText(@"ProtoGen\person.cs", csharp);
             TestCompileCSharp(csharp);
+        }
+
+        [Test]
+        public void TestPersonAsVB()
+        {
+            string code = GetCode(@"-i:ProtoGen\person.proto", "-t:vb");
+            File.WriteAllText(@"ProtoGen\person.vb", code);
+            TestCompileVisualBasic(code);
         }
 
         [Test]
@@ -68,6 +77,14 @@ namespace Examples.ProtoGen
         {
             string code = GetCode(@"-i:ProtoGen\descriptor.proto");
             TestCompileCSharp(code);
+        }
+
+        [Test, Ignore("Working on it...")]
+        public void TestDescriptorAsVB_Basic()
+        {
+            string code = GetCode(@"-i:ProtoGen\descriptor.proto", "-t:vb");
+            File.WriteAllText(@"ProtoGen\descriptor.vb", code);
+            TestCompileVisualBasic(code);
         }
 
         [Test]
@@ -124,6 +141,10 @@ namespace Examples.ProtoGen
         {
             TestCompile<CSharpCodeProvider>(null, code, extraReferences);
         }
+        public static void TestCompileVisualBasic(string code, params string[] extraReferences)
+        {
+            TestCompile<VBCodeProvider>(null, code, extraReferences);
+        }
         private static void TestCompileCSharpV3(string code, params string[] extraReferences)
         {
             CSharpCodeProvider compiler = new CSharpCodeProvider(new Dictionary<string, string>()
@@ -155,6 +176,10 @@ namespace Examples.ProtoGen
                 ShowErrors(results.Errors);
                 if(results.Errors.Count > 0)
                 {
+                    foreach (CompilerError err in results.Errors)
+                    {
+                        Console.Error.WriteLine(err);
+                    }
                     throw new InvalidOperationException(
                         string.Format("{0} found {1} code errors errors",
                             typeof(T).Name, results.Errors.Count));

@@ -15,3 +15,4 @@ message Person {
   repeated int32 testPacked = 5 [packed = true];
   optional int32 testDeprecated = 6 [deprecated = true];
 }
+message OpaqueMessageList { repeated bytes messages=1; }
