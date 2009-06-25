@@ -15,6 +15,10 @@
   <xsl:param name="lightFramework"/>
   <xsl:param name="asynchronous"/>
   <xsl:param name="clientProxy"/>
+  <xsl:param name="defaultNamespace"/>
+  <xsl:param name="fixCase"/>
+  
+  <xsl:include href="common.xslt"/>
   
   <xsl:key name="fieldNames" match="//FieldDescriptorProto" use="name"/>
   
@@ -31,7 +35,8 @@
   <xsl:variable name="optionFullFramework" select="not($lightFramework='true')"/>
   <xsl:variable name="optionAsynchronous" select="$asynchronous='true'"/>
   <xsl:variable name="optionClientProxy" select="$clientProxy='true'"/>
-
+  <xsl:variable name="optionFixCase" select="$fixCase='true'"/>
+  
   <xsl:template match="*">
     <xsl:message terminate="yes">
       Node not handled: <xsl:for-each select="ancestor-or-self::*">/<xsl:value-of select="name()"/></xsl:for-each>
@@ -93,8 +98,18 @@
   </xsl:template>
 
   <xsl:template match="FileDescriptorProto">
-      <xsl:apply-templates select="message_type | enum_type | service"/>
-  </xsl:template>
+' Generated from: <xsl:value-of select="name"/>
+    <xsl:apply-templates select="dependency/string[.!='']"/>
+    <xsl:variable name="namespace"><xsl:call-template name="PickNamespace">
+      <xsl:with-param name="defaultNamespace" select="$defaultNamespace"/>
+        </xsl:call-template>
+      </xsl:variable>
+    <xsl:if test="string($namespace) != ''">
+Namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
+</xsl:if>
+    <xsl:apply-templates select="message_type | enum_type | service"/>
+    <xsl:if test="string($namespace) != ''">
+End Namespace</xsl:if></xsl:template>
   
 <xsl:template match="DescriptorProto">
 <xsl:choose>
@@ -707,4 +722,12 @@ End Class
         }
     </xsl:if>
     </xsl:template>
+  
+  <xsl:template name="escapeKeyword"><xsl:param name="value"/><xsl:choose>
+      <xsl:when test="contains($keywordsUpper,concat('|',translate($value, $alpha, $ALPHA),'|'))">[<xsl:value-of select="$value"/>]</xsl:when>
+      <xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
+    </xsl:choose></xsl:template>
+  <xsl:variable name="keywords">|AddHandler|AddressOf|Alias|And|AndAlso|As|Boolean|ByRef|Byte|ByVal|Call|Case|Catch|CBool|CByte|CChar|CDate|CDec|CDbl|Char|CInt|Class|CLng|CObj|Const|Continue|CSByte|CShort|CSng|CStr|CType|CUInt|CULng|CUShort|Date|Decimal|Declare|Default|Delegate|Dim|DirectCast|Do|Double|Each|Else|ElseIf|End|EndIf|Enum|Erase|Error|Event|Exit|False|Finally|For|Friend|Function|Get|GetType|GetXMLNamespace|Global|GoSub|GoTo|Handles|If|Implements|Imports|In|Inherits|Integer|Interface|Is|IsNot|Let|Lib|Like|Long|Loop|Me|Mod|Module|MustInherit|MustOverride|MyBase|MyClass|Namespace|Narrowing|New|Next|Not|Nothing|NotInheritable|NotOverridable|Object|Of|On|Operator|Option|Optional|Or|OrElse|Overloads|Overridable|Overrides|ParamArray|Partial|Private|Property|Protected|Public|RaiseEvent|ReadOnly|ReDim|REM|RemoveHandler|Resume|Return|SByte|Select|Set|Shadows|Shared|Short|Single|Static|Step|Stop|String|Structure|Sub|SyncLock|Then|Throw|To|True|Try|TryCast|TypeOf|Variant|Wend|UInteger|ULong|UShort|Using|When|While|Widening|With|WithEvents|WriteOnly|Xor|</xsl:variable>
+  <xsl:variable name="keywordsUpper" select="translate($keywords, $alpha, $ALPHA)"/>
+
 </xsl:stylesheet>

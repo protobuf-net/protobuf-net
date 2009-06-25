@@ -20,10 +20,12 @@ namespace Examples.ProtoGen
         }
 
         [Test]
-        public void TestMainSuccess()
+        public void TestDescriptorSuccess()
         {
             Assert.AreEqual(0, CommandLineOptions.Main(@"-i:ProtoGen/descriptor.proto", "-o:descriptor.cs"));
         }
+
+        
 
         [Test]
         public void TestMainStupid()

@@ -79,6 +79,14 @@ namespace Examples.ProtoGen
             TestCompileCSharp(code);
         }
 
+        [Test]
+        public void TestPersonAsCSharpCased()
+        {
+            string code = GetCode(@"-i:ProtoGen\person.proto", "-p:fixCase");
+            File.WriteAllText(@"ProtoGen\personCased.cs", code);
+            TestCompileCSharp(code);
+        }
+
         [Test, Ignore("Working on it...")]
         public void TestDescriptorAsVB_Basic()
         {

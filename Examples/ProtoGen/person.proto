@@ -1,18 +1,20 @@
-message Person { 
+package people;
+message person { 
   required string name = 1; 
   optional int32 id = 2; 
   optional string email = 3; 
-  enum PhoneType { 
-    MOBILE = 0; 
-    HOME = 1; 
-    WORK = 2; 
+  enum phone_type { 
+    mobile = 0; 
+    home = 1; 
+    work = 2; 
   } 
-  message PhoneNumber { 
+  message phone_number { 
     required string number = 1; 
-    optional PhoneType type = 2 [default = HOME]; 
+    optional phone_type type = 2 [default = home]; 
   } 
-  repeated PhoneNumber phone = 4; 
-  repeated int32 testPacked = 5 [packed = true];
-  optional int32 testDeprecated = 6 [deprecated = true];
+  repeated phone_number phone = 4; 
+  repeated int32 test_packed = 5 [packed = true];
+  optional int32 test_deprecated = 6 [deprecated = true];
+  optional int32 foreach = 7;
 }
-message OpaqueMessageList { repeated bytes messages=1; }
+message opaque_message_list { repeated bytes messages_list=1; }

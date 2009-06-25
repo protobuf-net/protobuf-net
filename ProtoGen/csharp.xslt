@@ -17,10 +17,12 @@
   <xsl:param name="clientProxy"/>
   <xsl:param name="defaultNamespace"/>
   <xsl:param name="import"/>
+  <xsl:param name="fixCase"/>
   
   <xsl:key name="fieldNames" match="//FieldDescriptorProto" use="name"/>
-  
   <xsl:output method="text" indent="no" omit-xml-declaration="yes"/>
+  
+  <xsl:include href="common.xslt"/>
 
   <xsl:variable name="optionXml" select="$xml='true'"/>
   <xsl:variable name="optionDataContract" select="$datacontract='true'"/>
@@ -33,8 +35,10 @@
   <xsl:variable name="optionFullFramework" select="not($lightFramework='true')"/>
   <xsl:variable name="optionAsynchronous" select="$asynchronous='true'"/>
   <xsl:variable name="optionClientProxy" select="$clientProxy='true'"/>
+  <xsl:variable name="optionFixCase" select="$fixCase='true'"/>
 
-  <xsl:template match="*">
+  
+    <xsl:template match="*">
     <xsl:message terminate="yes">
       Node not handled: <xsl:for-each select="ancestor-or-self::*">/<xsl:value-of select="name()"/></xsl:for-each>
       <xsl:for-each select="*">
@@ -78,6 +82,7 @@ using <xsl:value-of select="$ns"/>;
           "asynchronous" - emit asynchronous methods for use with WCF
           "clientProxy" - emit asynchronous client proxy class
           "import" - additional namespaces to import (semicolon delimited)
+          "fixCase" - change type/member names (types/properties become PascalCase; fields become camelCase)
       </xsl:message>
     </xsl:if>
 
@@ -111,17 +116,14 @@ using <xsl:value-of select="$ns"/>;
     <xsl:apply-templates select="file/FileDescriptorProto"/>
   </xsl:template>
 
-  <xsl:template name="PickNamespace"><xsl:choose>
-      <xsl:when test="package"><xsl:value-of select="package"/></xsl:when>
-      <xsl:when test="$defaultNamespace"><xsl:value-of select="$defaultNamespace"/></xsl:when>
-      <xsl:when test="substring(name,string-length(name)-5,6)='.proto'"><xsl:value-of select="substring(name,1,string-length(name)-6)"/></xsl:when>
-      <xsl:otherwise><xsl:value-of select="name"/></xsl:otherwise>
-    </xsl:choose></xsl:template>
   
   <xsl:template match="FileDescriptorProto">
 // Generated from: <xsl:value-of select="name"/>
     <xsl:apply-templates select="dependency/string[.!='']"/>
-    <xsl:variable name="namespace"><xsl:call-template name="PickNamespace"/></xsl:variable>
+    <xsl:variable name="namespace"><xsl:call-template name="PickNamespace">
+      <xsl:with-param name="defaultNamespace" select="$defaultNamespace"/>
+        </xsl:call-template>
+      </xsl:variable>
     <xsl:if test="string($namespace) != ''">
 namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
 {</xsl:if>
@@ -133,6 +135,18 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
 // Note: requires additional types generated from: <xsl:value-of select="."/></xsl:template>
 
 
+  <xsl:template name="camel">
+    <xsl:param name="value" select="name"/>
+    <xsl:param name="delimiter" select="'_'"/>
+    <xsl:choose>
+      <xsl:when test="$optionFixCase"><xsl:call-template name="toCamelCase">
+          <xsl:with-param name="value" select="$value"/>
+          <xsl:with-param name="delimiter" select="$delimiter"/>
+        </xsl:call-template></xsl:when>
+      <xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  
   <xsl:template match="DescriptorProto">
     [System.Serializable, ProtoBuf.ProtoContract(Name=@"<xsl:value-of select="name"/>")]<!--
     --><xsl:if test="$optionDataContract">
@@ -140,14 +154,14 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
     </xsl:if><xsl:if test="$optionXml">
     [System.Xml.Serialization.XmlType(TypeName=@"<xsl:value-of select="name"/>")]
     </xsl:if>
-    public partial class <xsl:value-of select="name"/> : ProtoBuf.IExtensible<!--
+    public partial class <xsl:call-template name="pascal"/> : ProtoBuf.IExtensible<!--
     --><xsl:if test="$optionBinary">, System.Runtime.Serialization.ISerializable</xsl:if><!--
     --><xsl:if test="$optionObservable">, System.ComponentModel.INotifyPropertyChanged</xsl:if><!--
     --><xsl:if test="$optionPreObservable">, System.ComponentModel.INotifyPropertyChanging</xsl:if>
     {
-      public <xsl:value-of select="name"/>() {}
+      public <xsl:call-template name="pascal"/>() {}
       <xsl:apply-templates select="*"/><xsl:if test="$optionBinary">
-      protected <xsl:value-of select="name"/>(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
+      protected <xsl:call-template name="pascal"/>(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
         : this() { ProtoBuf.Serializer.Merge(info, this); }
       void System.Runtime.Serialization.ISerializable.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
         { ProtoBuf.Serializer.Serialize(info, this); }
@@ -176,14 +190,14 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
   </xsl:template>
 
   <xsl:template match="EnumDescriptorProto">
-    public enum <xsl:value-of select="name"/>
+    public enum <xsl:call-template name="pascal"/>
     {
       <xsl:apply-templates select="value"/>
     }
   </xsl:template>
 
   <xsl:template match="EnumValueDescriptorProto">
-    <xsl:value-of select="name"/><xsl:text xml:space="preserve"> = </xsl:text><xsl:choose>
+    <xsl:call-template name="pascal"/><xsl:text xml:space="preserve"> = </xsl:text><xsl:choose>
       <xsl:when test="number"><xsl:value-of select="number"/></xsl:when>
       <xsl:otherwise>0</xsl:otherwise>
     </xsl:choose><xsl:if test="position()!=last()">,
@@ -191,13 +205,27 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
   </xsl:template>
 
   <xsl:template match="FieldDescriptorProto" mode="field">
-    <xsl:choose>
-      <xsl:when test="not(key('fieldNames',concat('_',name)))"><xsl:value-of select="concat('_',name)"/></xsl:when>
-      <xsl:when test="not(key('fieldNames',concat(name,'Field')))"><xsl:value-of select="concat(name,'Field')"/></xsl:when>
+    <xsl:variable name="field"><xsl:choose>
+      <xsl:when test="$optionFixCase"><xsl:call-template name="toCamelCase">
+          <xsl:with-param name="value" select="name"/>
+        </xsl:call-template></xsl:when>
+      <xsl:otherwise><xsl:value-of select="name"/></xsl:otherwise>
+    </xsl:choose></xsl:variable>
+    <xsl:call-template name="escapeKeyword">
+      <xsl:with-param name="value"><xsl:choose>
+      <xsl:when test="not(key('fieldNames',concat('_',$field)))"><xsl:value-of select="concat('_',$field)"/></xsl:when>
+      <xsl:when test="not(key('fieldNames',concat($field,'Field')))"><xsl:value-of select="concat($field,'Field')"/></xsl:when>
       <xsl:otherwise><xsl:value-of select="concat('_',generate-id())"/></xsl:otherwise>
-    </xsl:choose>
+    </xsl:choose></xsl:with-param>
+    </xsl:call-template>
   </xsl:template>
-  
+
+  <xsl:template name="escapeKeyword">
+    <xsl:param name="value"/>
+    <xsl:if test="contains($keywords,concat('|',$value,'|'))">@</xsl:if><xsl:value-of select="$value"/>
+  </xsl:template>
+  <xsl:variable name="keywords">|abstract|as|base|bool|break|byte|case|catch|char|checked|class|const|continue|decimal|default|delegate|do|double|else|enum|event|explicit|extern|false|finally|fixed|float|for|foreach|goto|if|implicit|in|int|interface|internal|is|lock|long|namespace|new|null|object|operator|out|override|params|private|protected|public|readonly|ref|return|sbyte|sealed|short|sizeof|stackalloc|static|string|struct|switch|this|throw|true|try|typeof|uint|ulong|unchecked|unsafe|ushort|using|virtual|void|volatile|while|</xsl:variable>
+
   <xsl:template match="FieldDescriptorProto" mode="format">
     <xsl:choose>
       <xsl:when test="type='TYPE_DOUBLE' or type='TYPE_FLOAT'
@@ -256,7 +284,9 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
       <xsl:when test="type='TYPE_SFIXED64'">long</xsl:when>
       <xsl:when test="type='TYPE_SINT32'">int</xsl:when>
       <xsl:when test="type='TYPE_SINT64'">long</xsl:when>
-      <xsl:when test="type='TYPE_GROUP' or type='TYPE_MESSAGE' or type='TYPE_ENUM'"><xsl:value-of select="substring-after(type_name,'.')"/></xsl:when>
+      <xsl:when test="type='TYPE_GROUP' or type='TYPE_MESSAGE' or type='TYPE_ENUM'"><xsl:call-template name="pascal">
+        <xsl:with-param name="value" select="substring-after(type_name,'.')"/>
+      </xsl:call-template></xsl:when>
       <xsl:otherwise>
         <xsl:message terminate="yes">
           Field type not implemented: <xsl:value-of select="type"/> (<xsl:value-of select="../../name"/>.<xsl:value-of select="name"/>)
@@ -269,7 +299,9 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
   <xsl:template match="FieldDescriptorProto[default_value]" mode="defaultValue">
     <xsl:choose>
       <xsl:when test="type='TYPE_STRING'">@"<xsl:value-of select="default_value"/>"</xsl:when>
-      <xsl:when test="type='TYPE_ENUM'"><xsl:apply-templates select="." mode="type"/>.<xsl:value-of select="default_value"/></xsl:when>
+      <xsl:when test="type='TYPE_ENUM'"><xsl:apply-templates select="." mode="type"/>.<xsl:call-template name="pascal">
+        <xsl:with-param name="value" select="default_value"/>
+      </xsl:call-template></xsl:when>
       <xsl:when test="type='TYPE_BYTES'"> /* 
         <xsl:value-of select="default_value"/>
         */ null </xsl:when>
@@ -291,7 +323,8 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
       <xsl:variable name="fullName">
         <xsl:for-each select="ancestor::FileDescriptorProto">.<xsl:value-of select="package"/></xsl:for-each>
         <xsl:for-each select="ancestor::DescriptorProto">.<xsl:value-of select="name"/></xsl:for-each>
-        <xsl:value-of select="concat('.',name)"/>
+        <xsl:value-of select="'.'"/>
+        <xsl:call-template name="pascal"/>
       </xsl:variable>
       <xsl:if test="$fullName=$hunt"><xsl:value-of select="(value/EnumValueDescriptorProto)[1]/name"/></xsl:if>
     </xsl:for-each>
@@ -319,7 +352,7 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
     <xsl:variable name="specified" select="$optionDetectMissing and ($primitiveType='struct' or $primitiveType='class')"/>
     <xsl:variable name="fieldType"><xsl:value-of select="$propType"/><xsl:if test="$specified and $primitiveType='struct'">?</xsl:if></xsl:variable>
 
-    private <xsl:value-of select="concat($fieldType,' ',$field)"/><xsl:if test="not($specified)"> =<xsl:value-of select="$defaultValue"/></xsl:if>;
+    private <xsl:value-of select="concat($fieldType,' ',$field)"/><xsl:if test="not($specified)"> = <xsl:value-of select="$defaultValue"/></xsl:if>;
     [<xsl:apply-templates select="." mode="checkDeprecated"/>ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired = false, Name=@"<xsl:value-of select="name"/>", DataFormat = ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)]<!--
     --><xsl:if test="not($specified)">[System.ComponentModel.DefaultValue(<xsl:value-of select="$defaultValue"/>)]</xsl:if><!--
     --><xsl:if test="$optionXml">
@@ -329,7 +362,7 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
     </xsl:if><xsl:call-template name="WriteGetSet">
       <xsl:with-param name="fieldType" select="$fieldType"/>
       <xsl:with-param name="propType" select="$propType"/>
-      <xsl:with-param name="name" select="name"/>
+      <xsl:with-param name="name"><xsl:call-template name="pascal"/></xsl:with-param>
       <xsl:with-param name="field" select="$field"/>
       <xsl:with-param name="defaultValue" select="$defaultValue"/>
       <xsl:with-param name="specified" select="$specified"/>
@@ -349,11 +382,19 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
     </xsl:if><xsl:call-template name="WriteGetSet">
       <xsl:with-param name="fieldType" select="$type"/>
       <xsl:with-param name="propType" select="$type"/>
-      <xsl:with-param name="name" select="name"/>
+      <xsl:with-param name="name"><xsl:call-template name="pascal"/></xsl:with-param>
       <xsl:with-param name="field" select="$field"/>
     </xsl:call-template>    
   </xsl:template>
 
+  <xsl:template name="stripKeyword">
+    <xsl:param name="value"/>
+    <xsl:choose>
+      <xsl:when test="starts-with($value,'@')"><xsl:value-of select="substring-after($value,'@')"/></xsl:when>
+      <xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
+    </xsl:choose>
+  </xsl:template>
+  
   <xsl:template name="WriteGetSet">
     <xsl:param name="fieldType"/>
     <xsl:param name="propType"/>
@@ -361,22 +402,26 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
     <xsl:param name="field"/>
     <xsl:param name="specified" select="false()"/>
     <xsl:param name="defaultValue"/>
+    <xsl:variable name="nameNoKeyword">
+      <xsl:call-template name="stripKeyword">
+        <xsl:with-param name="value" select="$name"/>
+      </xsl:call-template></xsl:variable>
     public <xsl:value-of select="concat($propType,' ',$name)"/>
     {
       get { return <xsl:value-of select="$field"/> <xsl:if test="$specified">?? <xsl:value-of select="$defaultValue"/></xsl:if>; }
-      set { <xsl:if test="$optionPartialMethods">On<xsl:value-of select="$name"/>Changing(value); </xsl:if><xsl:if test="$optionPreObservable">OnPropertyChanging(@"<xsl:value-of select="$name"/>"); </xsl:if><xsl:value-of select="$field"/> = value; <xsl:if test="$optionObservable">OnPropertyChanged(@"<xsl:value-of select="$name"/>"); </xsl:if><xsl:if test="$optionPartialMethods">On<xsl:value-of select="$name"/>Changed();</xsl:if>}
+      set { <xsl:if test="$optionPartialMethods">On<xsl:value-of select="$nameNoKeyword"/>Changing(value); </xsl:if><xsl:if test="$optionPreObservable">OnPropertyChanging(@"<xsl:value-of select="$nameNoKeyword"/>"); </xsl:if><xsl:value-of select="$field"/> = value; <xsl:if test="$optionObservable">OnPropertyChanged(@"<xsl:value-of select="$nameNoKeyword"/>"); </xsl:if><xsl:if test="$optionPartialMethods">On<xsl:value-of select="$nameNoKeyword"/>Changed();</xsl:if>}
     }<xsl:if test="$optionPartialMethods">
-    partial void On<xsl:value-of select="$name"/>Changing(<xsl:value-of select="$propType"/> value);
-    partial void On<xsl:value-of select="$name"/>Changed();</xsl:if><xsl:if test="$specified">
+    partial void On<xsl:value-of select="$nameNoKeyword"/>Changing(<xsl:value-of select="$propType"/> value);
+    partial void On<xsl:value-of select="$nameNoKeyword"/>Changed();</xsl:if><xsl:if test="$specified">
     [System.Xml.Serialization.XmlIgnore]
     <xsl:if test="$optionFullFramework">[System.ComponentModel.Browsable(false)]</xsl:if>
-    public bool <xsl:value-of select="$name"/>Specified
+    public bool <xsl:value-of select="$nameNoKeyword"/>Specified
     {
       get { return <xsl:value-of select="$field"/> != null; }
       set { if (value == (<xsl:value-of select="$field"/>== null)) <xsl:value-of select="$field"/> = value ? <xsl:value-of select="$name"/> : (<xsl:value-of select="$fieldType"/>)null; }
     }
-    private bool ShouldSerialize<xsl:value-of select="$name"/>() { return <xsl:value-of select="$name"/>Specified; }
-    private void Reset<xsl:value-of select="$name"/>() { <xsl:value-of select="$name"/>Specified = false; }
+    private bool ShouldSerialize<xsl:value-of select="$nameNoKeyword"/>() { return <xsl:value-of select="$nameNoKeyword"/>Specified; }
+    private void Reset<xsl:value-of select="$nameNoKeyword"/>() { <xsl:value-of select="$nameNoKeyword"/>Specified = false; }
     </xsl:if>
   </xsl:template>
   <xsl:template match="FieldDescriptorProto[label='LABEL_REPEATED']">
@@ -390,7 +435,7 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
     </xsl:if><xsl:if test="$optionXml">
     [System.Xml.Serialization.XmlElement(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
     </xsl:if>
-    public System.Collections.Generic.List&lt;<xsl:value-of select="$type" />&gt; <xsl:value-of select="name"/>
+    public System.Collections.Generic.List&lt;<xsl:value-of select="$type" />&gt; <xsl:call-template name="pascal"/>
     {
       get { return <xsl:value-of select="$field"/>; }<!--
       --><xsl:if test="$optionXml">

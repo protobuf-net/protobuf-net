@@ -38,7 +38,7 @@ namespace Examples
 
         [ProtoMember(2, Options = MemberSerializationOptions.Packed)]
         public List<int> ListNoDefault { get; set; }
-
+        
         [ProtoMember(3, Options = MemberSerializationOptions.Packed)]
         public int[] ItemArray { get; set; }
 
@@ -67,6 +67,41 @@ namespace Examples
     [TestFixture]
     public class ListTests
     {
+        [Test]
+        public void ListOfByteArray()
+        {
+            var data = new List<byte[]> {
+                new byte[] {0,1,2,3,4},
+                new byte[] {5,6,7},
+                new byte[] {8,9,10}
+            };
+            var clone = Serializer.DeepClone(data);
+
+            Assert.AreNotSame(data, clone);
+            Assert.AreEqual(3, clone.Count);
+            Assert.IsTrue(data[0].SequenceEqual(clone[0]));
+            Assert.IsTrue(data[1].SequenceEqual(clone[1]));
+            Assert.IsTrue(data[2].SequenceEqual(clone[2]));
+        }
+
+        [Test]
+        public void JaggedByteArray()
+        {
+            var data = new[] {
+                new byte[] {0,1,2,3,4},
+                new byte[] {5,6,7},
+                new byte[] {8,9,10}
+            };
+            var clone = Serializer.DeepClone(data);
+
+            Assert.AreNotSame(data, clone);
+            Assert.AreEqual(3, clone.Length);
+            Assert.IsTrue(data[0].SequenceEqual(clone[0]));
+            Assert.IsTrue(data[1].SequenceEqual(clone[1]));
+            Assert.IsTrue(data[2].SequenceEqual(clone[2]));
+        }
+
+
         [Test]
         public void TestUnpackedIntListLayout()
         {

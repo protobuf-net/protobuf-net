@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace ProtoBuf
 {
@@ -55,6 +56,27 @@ namespace ProtoBuf
                 return Type.GetType(KnownTypeName);
             }
         }
+
+        internal Type ResolveKnownType(Assembly assembly)
+        {
+            if (string.IsNullOrEmpty(KnownTypeName)) return null;
+            try
+            {
+                Type type = Type.GetType(KnownTypeName);
+                if (type != null) return type;
+            }
+            catch { }
+            try
+            {
+                int i = KnownTypeName.IndexOf(',');
+                string fullName = (i > 0 ? KnownTypeName.Substring(0, i) : KnownTypeName).Trim();
+                Type type = (assembly ?? Assembly.GetCallingAssembly()).GetType(fullName);
+                if (type != null) return type;
+            }
+            catch { }
+            return null;
+        }
+
 
         /// <summary>
         /// Specifies whether the inherited sype's sub-message should be

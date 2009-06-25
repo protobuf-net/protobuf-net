@@ -245,7 +245,7 @@ namespace ProtoBuf
                 List<KeyValuePair<Type, Property<T, T>>> subclassList = new List<KeyValuePair<Type, Property<T, T>>>();
                 foreach (ProtoIncludeAttribute pia in Attribute.GetCustomAttributes(typeof(T), typeof(ProtoIncludeAttribute), false))
                 {
-                    Type subclassType = pia.KnownType;
+                    Type subclassType = pia.ResolveKnownType(typeof(T).Assembly);
                     if (subclassType == null)
                     {
                         throw new ProtoException("Unable to identify known-type for ProtoIncludeAttribute: " + pia.KnownTypeName);

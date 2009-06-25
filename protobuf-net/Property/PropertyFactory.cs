@@ -257,12 +257,12 @@ namespace ProtoBuf.Property
                 }
             }
 
-            if (listItemType != null)
+            if (listItemType != null && listItemType != typeof(byte[]))
             {
                 bool dummy;
                 if (GetListType(listItemType, out dummy) != null)
                 {
-                    throw new NotSupportedException("Nested (jagged) arrays/lists are not supported; consider an array/list of a class-type with an inner array/list instead");
+                    throw new NotSupportedException("Nested (jagged) arrays/lists are not supported (except for byte[]); consider an array/list of a class-type with an inner array/list instead");
                 }
             }
 
