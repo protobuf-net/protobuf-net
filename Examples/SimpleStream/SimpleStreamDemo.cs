@@ -222,6 +222,14 @@ namespace Examples.SimpleStream
             [XmlElement(Order = 2), DefaultValue(SomeEnum.Bar)]
             public SomeEnum Enum { get; set; }
         }
+        [XmlType]
+        public class SomeEnumEntityWithoutDefault : Extensible
+        {
+            public SomeEnumEntityWithoutDefault() { }
+            [XmlElement(Order = 2)]
+            public SomeEnum? Enum { get; set; }
+        }
+
         [Test]
         public void TestDuffEnum()
         {
@@ -234,10 +242,36 @@ namespace Examples.SimpleStream
             SomeEnumEntity dee = new SomeEnumEntity { Enum = 0};
             Serializer.Serialize(Stream.Null, dee);
         }
-        [Test, ExpectedException(ExceptionType = typeof(ProtoException))]
+        [Test]
         public void TestDeserializeUndefinedEnum()
         {
-            Program.Build<SomeEnumEntity>(0x10, 0x09);
+            var see = Program.Build<SomeEnumEntity>(0x10, 0x09);
+            Assert.AreEqual(SomeEnum.Bar, see.Enum);
+        }
+        [Test]
+        public void TestDeserializeDefinedEnumWithoutDefault()
+        {
+            var see = Program.Build<SomeEnumEntityWithoutDefault>(0x10, 0x03);
+            Assert.IsTrue(see.Enum.HasValue);
+            Assert.AreEqual(SomeEnum.Foo, see.Enum.Value);
+            
+        }
+        [Test]
+        public void TestDeserializeUndefinedEnumWithoutDefault()
+        {
+            // check we can deserialize with the extra data
+            var see = Program.Build<SomeEnumEntityWithoutDefault>(0x10, 0x09);
+
+            // shouldn't set the property
+            Assert.IsFalse(see.Enum.HasValue);
+
+            // data should be available via extension API
+            int val;
+            Assert.IsTrue(Extensible.TryGetValue<int>(see, 2, DataFormat.Default, true, out val));
+            Assert.AreEqual(9, val);
+
+            // and check it re-serializes OK
+            Program.CheckBytes(see, 0x10, 0x09); 
         }
 
         public class NotAContract

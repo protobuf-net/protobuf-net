@@ -4,6 +4,7 @@ using System.IO;
 using System.Diagnostics;
 using System.Text;
 using System.Threading;
+using System.Reflection;
 
 namespace ProtoBuf.CodeGenerator
 {
@@ -49,22 +50,43 @@ namespace ProtoBuf.CodeGenerator
             {
                 loaderPath = loaderPath.Substring(6);
             }
-            return Path.Combine(Path.GetDirectoryName(loaderPath), path);
-            
+            return Path.Combine(Path.GetDirectoryName(loaderPath), path);   
+        }
+        public static string ExtractResourceToTempFolder(string name, out string folder)
+        {
+            folder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("n"));
+            Directory.CreateDirectory(folder);
+            string path = Path.Combine(folder, name);
+            using(Stream resStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
+                typeof(InputFileLoader).Namespace + "." + name))
+            using(Stream outFile = File.OpenWrite(path))
+            {
+                long len = 0;
+                int bytesRead;
+                byte[] buffer = new byte[4096];
+                while((bytesRead = resStream.Read(buffer, 0, buffer.Length)) > 0) {
+                    outFile.Write(buffer, 0, bytesRead);
+                    len += bytesRead;
+                }
+                outFile.SetLength(len);
+            }
+            return path;
         }
         private static string CompileDescriptor(string path, params string[] args)
         {
-            string tmp = Path.GetTempFileName();            
+            string tmp = Path.GetTempFileName();
+            string tmpFolder = null, protocPath = null;
             try
             {
+                protocPath = ExtractResourceToTempFolder("protoc.exe", out tmpFolder);
                 ProcessStartInfo psi = new ProcessStartInfo(
-                    CombinePathFromAppRoot("protoc.exe"),
+                    protocPath,
                     string.Format(
                                       @"""--descriptor_set_out={0}"" ""{1}"" {2}",
                                       tmp, path, string.Join(" ", args)));
                 Debug.WriteLine(psi.FileName, "protoc");
                 Debug.WriteLine(psi.Arguments, "protoc");
-                
+
                 psi.CreateNoWindow = true;
                 psi.WindowStyle = ProcessWindowStyle.Hidden;
                 psi.WorkingDirectory = Environment.CurrentDirectory;
@@ -91,8 +113,23 @@ namespace ProtoBuf.CodeGenerator
             }
             catch
             {
-                File.Delete(tmp);
+                try { File.Delete(tmp); }
+                catch { } // swallow
                 throw;
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(protocPath))
+                {
+                    try { File.Delete(protocPath); }
+                    catch { } // swallow
+                }
+                if (!string.IsNullOrEmpty(tmpFolder))
+                {
+                    try { Directory.Delete(tmpFolder); }
+                    catch { } // swallow
+                }
+                
             }
         }
 

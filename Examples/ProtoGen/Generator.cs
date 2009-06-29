@@ -8,6 +8,8 @@ using NUnit.Framework;
 using ProtoBuf.CodeGenerator;
 using System.Diagnostics;
 using Microsoft.VisualBasic;
+using System.Text;
+using ProtoBuf;
 
 namespace Examples.ProtoGen
 {
@@ -87,7 +89,7 @@ namespace Examples.ProtoGen
             TestCompileCSharp(code);
         }
 
-        [Test, Ignore("Working on it...")]
+        [Test, Ignore("VB compiled, but problem with reference?")]
         public void TestDescriptorAsVB_Basic()
         {
             string code = GetCode(@"-i:ProtoGen\descriptor.proto", "-t:vb");
@@ -173,14 +175,18 @@ namespace Examples.ProtoGen
             string path = Path.GetTempFileName();
             try
             {
-                List<string> refs = new List<string> { "System.dll", "System.Xml.dll", "protobuf-net.dll"};
+                List<string> refs = new List<string> {
+                    typeof(Uri).Assembly.Location,
+                    typeof(XmlDocument).Assembly.Location,
+                    typeof(Serializer).Assembly.Location
+                };
                 if(extraReferences != null && extraReferences.Length > 0)
                 {
                     refs.AddRange(extraReferences);
                 }
                 CompilerParameters args = new CompilerParameters(refs.ToArray(), path, false);
                 CompilerResults results = compiler.CompileAssemblyFromSource(args, code);
-                DebugWriteAllText("last.cs", code);
+                DebugWriteAllText(Path.ChangeExtension("last.cs", compiler.FileExtension), code);
                 ShowErrors(results.Errors);
                 if(results.Errors.Count > 0)
                 {

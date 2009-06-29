@@ -16,6 +16,7 @@
     </TargetFrameworkSubset>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>../ProtoBuf.snk</AssemblyOriginatorKeyFile>
+    <ApplicationIcon>ProtoGen.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -72,10 +73,10 @@
       <Link>protoc-license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Tools\protoc.exe">
+    <EmbeddedResource Include="..\Tools\protoc.exe">
       <Link>protoc.exe</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </EmbeddedResource>
+    <None Include="ProtoGen.ico" />
     <None Include="Properties\Usage.txt" />
     <None Include="common.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

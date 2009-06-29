@@ -420,130 +420,132 @@ namespace ProtoBuf
                 //context.CheckSpace();
                 IExtensible extensible = instance as IExtensible;
                 IExtension extn = null;
-                SerializationContext extraData = null;
-                Stream extraStream = null;
                 Property<T> prop = propCount == 0 ? null : readProps[0];
 
                 int lastIndex = prop == null ? -1 : 0;
                 uint lastPrefix = prop == null ? uint.MaxValue : prop.FieldPrefix;
 
-                try
+                while (context.TryReadFieldPrefix(out prefix))
                 {
-                    while (context.TryReadFieldPrefix(out prefix))
+                    // scan for the correct property
+                    bool foundTag = false;
+                    if (prefix == lastPrefix)
                     {
-                        // scan for the correct property
-                        bool foundTag = false;
-                        if (prefix == lastPrefix)
+                        foundTag = true;
+                    }
+                    else if (prefix > lastPrefix)
+                    {
+                        for (int i = lastIndex + 1; i < propCount; i++)
                         {
-                            foundTag = true;
-                        }
-                        else if (prefix > lastPrefix)
-                        {
-                            for (int i = lastIndex + 1; i < propCount; i++)
+                            if (readProps[i].FieldPrefix == prefix)
                             {
-                                if (readProps[i].FieldPrefix == prefix)
-                                {
-                                    prop = readProps[i];
-                                    lastIndex = i;
-                                    lastPrefix = prefix;
-                                    foundTag = true;
-                                    break;
-                                }
-                                if (readProps[i].FieldPrefix > prefix) break; // too far
+                                prop = readProps[i];
+                                lastIndex = i;
+                                lastPrefix = prefix;
+                                foundTag = true;
+                                break;
+                            }
+                            if (readProps[i].FieldPrefix > prefix) break; // too far
+                        }
+                    }
+                    else
+                    {
+                        for (int i = lastIndex - 1; i >= 0; i--)
+                        {
+                            if (readProps[i].FieldPrefix == prefix)
+                            {
+                                prop = readProps[i];
+                                lastIndex = i;
+                                lastPrefix = prefix;
+                                foundTag = true;
+                                break;
+                            }
+                            if (readProps[i].FieldPrefix < prefix) break; // too far
+                        }
+                    }
+
+                    if (!foundTag)
+                    {
+                        // check for subclass creation
+                        foreach (KeyValuePair<Type, Property<T, T>> subclass in subclasses)
+                        {
+                            // deserialize the nested data
+                            if (prefix == subclass.Value.FieldPrefix)
+                            {
+                                foundTag = true;
+                                instance = subclass.Value.DeserializeImpl(instance, context);
+                                break;
                             }
                         }
-                        else
-                        {
-                            for (int i = lastIndex - 1; i >= 0; i--)
-                            {
-                                if (readProps[i].FieldPrefix == prefix)
-                                {
-                                    prop = readProps[i];
-                                    lastIndex = i;
-                                    lastPrefix = prefix;
-                                    foundTag = true;
-                                    break;
-                                }
-                                if (readProps[i].FieldPrefix < prefix) break; // too far
-                            }
-                        }
+                        if (foundTag) continue; // nothing more to do for this...
+                    }
 
-                        if (!foundTag)
-                        {
-                            // check for subclass creation
-                            foreach (KeyValuePair<Type, Property<T, T>> subclass in subclasses)
-                            {
-                                // deserialize the nested data
-                                if (prefix == subclass.Value.FieldPrefix)
-                                {
-                                    foundTag = true;
-                                    instance = subclass.Value.DeserializeImpl(instance, context);
-                                    break;
-                                }
-                            }
-                            if (foundTag) continue; // nothing more to do for this...
-                        }
+                    // not a sub-class, but *some* data there, so create an object
+                    if (instance == null)
+                    {
+                        instance = ObjectFactory<TCreation>.Create();
+                        Callback(CallbackType.ObjectCreation, instance);
+                        extensible = instance as IExtensible;
+                    }
+                    if (foundTag)
+                    {
+                        // found it by seeking; deserialize and continue
 
-                        // not a sub-class, but *some* data there, so create an object
-                        if (instance == null)
+                        // ReSharper disable PossibleNullReferenceException
+                        try
                         {
-                            instance = ObjectFactory<TCreation>.Create();
-                            Callback(CallbackType.ObjectCreation, instance);
-                            extensible = instance as IExtensible;
-                        }
-                        if (foundTag)
-                        {
-                            // found it by seeking; deserialize and continue
-
-                            // ReSharper disable PossibleNullReferenceException
                             prop.Deserialize(instance, context);
-                            // ReSharper restore PossibleNullReferenceException
-                            continue;
                         }
-
-                        WireType wireType;
-                        int fieldTag;
-                        Serializer.ParseFieldToken(prefix, out wireType, out fieldTag);
-                        if (wireType == WireType.EndGroup)
+                        catch (UnexpectedDataException ex)
                         {
-                            context.EndGroup(fieldTag);
-                            break; // this ends the entity, so stop the loop
-                        }
-
-                        // so we couldn't find it...
-                        if (extensible != null)
-                        {
-                            if (extn == null) extn = extensible.GetExtensionObject(true);
-                            if (extraData == null && extn != null)
+                            if (extensible != null)
                             {
-                                extraStream = extn.BeginAppend();
-                                extraData = new SerializationContext(extraStream, null);
+                                if (extn == null) extn = extensible.GetExtensionObject(true);
+                                ex.Serialize(extn);
                             }
+                            // DON'T re-throw; we've handled this
+                        }
+                        // ReSharper restore PossibleNullReferenceException
+                        continue;
+                    }
+
+                    WireType wireType;
+                    int fieldTag;
+                    Serializer.ParseFieldToken(prefix, out wireType, out fieldTag);
+                    if (wireType == WireType.EndGroup)
+                    {
+                        context.EndGroup(fieldTag);
+                        break; // this ends the entity, so stop the loop
+                    }
+
+                    // so we couldn't find it...
+                    if (extensible != null)
+                    {
+                        if (extn == null) extn = extensible.GetExtensionObject(true);
+                        Stream extraStream  = extn.BeginAppend();
+                        try {
+                            SerializationContext extraData = new SerializationContext(extraStream, null);
 
                             // copy the data into the output stream
                             // ReSharper disable PossibleNullReferenceException
                             extraData.EncodeUInt32(prefix);
                             // ReSharper restore PossibleNullReferenceException
                             ProcessExtraData(context, fieldTag, wireType, extraData);
-                        }
-                        else
-                        {
-                            // unexpected fields for an inextensible object; discard the data
-                            Serializer.SkipData(context, fieldTag, wireType);
+                            extraData.Flush();
+                            extn.EndAppend(extraStream, true);
+                        } catch {
+                            extn.EndAppend(extraStream, false);
+                            throw;
                         }
                     }
-                    if (extraStream != null)
+                    else
                     {
-                        extraData.Flush();
-                        extn.EndAppend(extraStream, true);
+                        // unexpected fields for an inextensible object; discard the data
+                        Serializer.SkipData(context, fieldTag, wireType);
                     }
                 }
-                catch
-                {
-                    if (extraStream != null) extn.EndAppend(extraStream, false);
-                    throw;
-                }
-
+            
+                
                 // final chance to create an instance - this only gets invoked for empty
                 // messages (otherwise instance should already be non-null)
                 if (instance == null)

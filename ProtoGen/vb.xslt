@@ -385,7 +385,7 @@ End Class
 	--><xsl:call-template name="WriteGetSet">
       <xsl:with-param name="fieldType" select="$fieldType"/>
       <xsl:with-param name="propType" select="$propType"/>
-      <xsl:with-param name="name" select="name"/>
+      <xsl:with-param name="name"><xsl:call-template name="pascal"/></xsl:with-param>
       <xsl:with-param name="field" select="$field"/>
       <xsl:with-param name="defaultValue" select="$defaultValue"/>
       <xsl:with-param name="specified" select="$specified"/>

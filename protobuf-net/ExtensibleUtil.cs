@@ -19,13 +19,13 @@ namespace ProtoBuf
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
         /// the caller must respect the fields defined for the type they pass in.
         /// </summary>
-        internal static IEnumerable<TValue> GetExtendedValues<TValue>(IExtensible instance, int tag, DataFormat format, bool singleton)
+        internal static IEnumerable<TValue> GetExtendedValues<TValue>(IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
         {
             if (instance == null) throw new ArgumentNullException("instance");
             return (IEnumerable<TValue>)typeof(ExtensibleUtil)
                 .GetMethod("GetExtendedValuesTyped", BindingFlags.Public | BindingFlags.Static)
                 .MakeGenericMethod(instance.GetType(), typeof(TValue))
-                .Invoke(null, new object[] { instance, tag, format, singleton });
+                .Invoke(null, new object[] { instance, tag, format, singleton, allowDefinedTag });
         }
 
         /// <summary>
@@ -37,12 +37,12 @@ namespace ProtoBuf
         /// </summary>
         /// <remarks>Needs to be public to be callable thru reflection in Silverlight</remarks>
         public static IEnumerable<TValue> GetExtendedValuesTyped<TSource, TValue>(
-            TSource instance, int tag, DataFormat format, bool singleton)
+            TSource instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
             where TSource : class, IExtensible
         {
             if (instance == null) throw new ArgumentNullException("instance");
 
-            Serializer<TSource>.CheckTagNotInUse(tag);
+            if (!allowDefinedTag) { Serializer<TSource>.CheckTagNotInUse(tag); }
             Property<TValue, TValue> prop = PropertyFactory.CreatePassThru<TValue>(tag, ref format);
             List<Property<TValue, TValue>> props = new List<Property<TValue, TValue>>();
             foreach (Property<TValue, TValue> altProp in prop.GetCompatibleReaders())

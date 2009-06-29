@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\9.0\Generators\{FAE04EC1-301F-11D3-BF4B-00C04F79EFBC}\ProtoBufTool]
+@="ProtoBufTool"
+"CLSID"="{2095cd09-6c00-4ede-ad3f-adc5e971bb9b}"
+"GeneratesDesignTimeSource"=dword:00000001
+"GeneratesSharedDesignTimeSource"=dword:00000001
+

@@ -113,7 +113,7 @@ namespace ProtoBuf.CodeGenerator
             value = parts.Length > 1 ? parts[1].Trim() : null;
         }
 
-        private CommandLineOptions(TextWriter messageOutput)
+        public CommandLineOptions(TextWriter messageOutput)
         {
             if(messageOutput == null) throw new ArgumentNullException("messageOutput");
             this.messageOutput = messageOutput;
@@ -125,6 +125,9 @@ namespace ProtoBuf.CodeGenerator
 
         public const string TemplateCSharp = "csharp";
 
+        private string code;
+        public string Code { get { return code; } private set { code = value; } }
+        
         public void Execute()
         {
             if(showLogo)
@@ -138,14 +141,15 @@ namespace ProtoBuf.CodeGenerator
             }
             
             string xml = LoadFilesAsXml(this);
-            string code = ApplyTransform(this, xml);
-            if (!string.IsNullOrEmpty(this.OutPath))
+            Code = ApplyTransform(this, xml);
+            if (this.OutPath == "-") { }
+            else if (!string.IsNullOrEmpty(this.OutPath))
             {
-                File.WriteAllText(this.OutPath, code);
+                File.WriteAllText(this.OutPath, Code);
             }
-            if (string.IsNullOrEmpty(this.OutPath))
+            else if (string.IsNullOrEmpty(this.OutPath))
             {
-                messageOutput.Write(code);
+                messageOutput.Write(Code);
             }
 
         }

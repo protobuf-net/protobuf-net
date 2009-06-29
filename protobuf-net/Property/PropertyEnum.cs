@@ -46,14 +46,13 @@ namespace ProtoBuf.Property
             }
         }
 
-        private static TEnum GetKey(int value)
+        private TEnum GetKey(int value)
         {
             for (int i = 0; i < values.Length; i++)
             {
                 if (values[i].Value == value) return values[i].Key;
             }
-
-            throw new ProtoException(string.Format("No key found for {0}", value));
+            throw new UnexpectedEnumException(FieldPrefix, value);
         }
 
         private static bool TryGetWireValue(TEnum key, out int value) 
