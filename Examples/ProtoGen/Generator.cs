@@ -89,7 +89,7 @@ namespace Examples.ProtoGen
             TestCompileCSharp(code);
         }
 
-        [Test, Ignore("VB compiled, but problem with reference?")]
+        [Test] //, Ignore("VB compiled, but problem with reference?")]
         public void TestDescriptorAsVB_Basic()
         {
             string code = GetCode(@"-i:ProtoGen\descriptor.proto", "-t:vb");

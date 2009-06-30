@@ -229,6 +229,7 @@
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
       <Project>{8374E4D7-2A91-48F1-9360-09B09CF27C3F}</Project>
       <Name>protobuf-net</Name>
+      <Private>True</Private>
     </ProjectReference>
     <ProjectReference Include="..\ProtoGen\ProtoGen.csproj">
       <Project>{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}</Project>

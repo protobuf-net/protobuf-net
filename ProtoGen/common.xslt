@@ -9,6 +9,14 @@
     <xsl:value-of select="substring($value,2)"/>
   </xsl:template>
   -->
+  <xsl:param name="fixCase"/>
+  <xsl:variable name="optionFixCase" select="$fixCase='true'"/>
+  
+  <xsl:template name="escapeKeyword">
+    <xsl:param name="value"/>
+    <xsl:value-of select="$value"/>
+  </xsl:template>
+  
   <xsl:template name="toCamelCase">
     <xsl:param name="value"/>
     <xsl:param name="delimiter" select="'_'"/>

@@ -3,6 +3,7 @@
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:msxsl="urn:schemas-microsoft-com:xslt" exclude-result-prefixes="xsl msxsl"
 >
+  <xsl:import href="common.xslt"/>
   <xsl:param name="help"/>
   <xsl:param name="xml"/>
   <xsl:param name="datacontract"/>
@@ -16,14 +17,12 @@
   <xsl:param name="asynchronous"/>
   <xsl:param name="clientProxy"/>
   <xsl:param name="defaultNamespace"/>
-  <xsl:param name="fixCase"/>
   
-  <xsl:include href="common.xslt"/>
   
   <xsl:key name="fieldNames" match="//FieldDescriptorProto" use="name"/>
   
   <xsl:output method="text" indent="no" omit-xml-declaration="yes"/>
-
+  <xsl:variable name="types" select="//EnumDescriptorProto | //DescriptorProto"/>
   <xsl:variable name="optionXml" select="$xml='true'"/>
   <xsl:variable name="optionDataContract" select="$datacontract='true'"/>
   <xsl:variable name="optionBinary" select="$binary='true'"/>
@@ -36,7 +35,7 @@
   <xsl:variable name="optionAsynchronous" select="$asynchronous='true'"/>
   <xsl:variable name="optionClientProxy" select="$clientProxy='true'"/>
   <xsl:variable name="optionFixCase" select="$fixCase='true'"/>
-  
+
   <xsl:template match="*">
     <xsl:message terminate="yes">
       Node not handled: <xsl:for-each select="ancestor-or-self::*">/<xsl:value-of select="name()"/></xsl:for-each>
@@ -45,6 +44,8 @@
       </xsl:for-each>
     </xsl:message>
   </xsl:template>
+
+  
   
   <xsl:template match="FileDescriptorSet">
     <xsl:if test="$help='true'">
@@ -114,53 +115,55 @@ End Namespace</xsl:if></xsl:template>
 <xsl:template match="DescriptorProto">
 <xsl:choose>
 <xsl:when test="$optionDataContract">
-&lt;System.Serializable, ProtoBuf.ProtoContract(Name:="<xsl:value-of select="name"/>")&gt; _
-&lt;System.Runtime.Serialization.DataContract(Name:="<xsl:value-of select="name"/>")&gt; _
+&lt;Global.System.Serializable, Global.ProtoBuf.ProtoContract(Name:="<xsl:value-of select="name"/>")&gt; _
+&lt;Global.System.Runtime.Serialization.DataContract(Name:="<xsl:value-of select="name"/>")&gt; _
 </xsl:when>
 <xsl:when test="$optionXml">
-&lt;System.Serializable, ProtoBuf.ProtoContract(Name:="<xsl:value-of select="name"/>")&gt; _
-&lt;System.Xml.Serialization.XmlType(TypeName:="<xsl:value-of select="name"/>")&gt; _
+&lt;Global.System.Serializable, Global.ProtoBuf.ProtoContract(Name:="<xsl:value-of select="name"/>")&gt; _
+&lt;Global.System.Xml.Serialization.XmlType(TypeName:="<xsl:value-of select="name"/>")&gt; _
 </xsl:when>
 <xsl:otherwise>
-&lt;System.Serializable, ProtoBuf.ProtoContract(Name:="<xsl:value-of select="name"/>")&gt; _
+&lt;Global.System.Serializable, Global.ProtoBuf.ProtoContract(Name:="<xsl:value-of select="name"/>")&gt; _
 </xsl:otherwise>
 </xsl:choose><!--
--->Public Partial Class <xsl:value-of select="name"/> 
-    implements ProtoBuf.IExtensible<!--
-    --><xsl:if test="$optionBinary">, System.Runtime.Serialization.ISerializable</xsl:if><!--
-    --><xsl:if test="$optionObservable">, System.ComponentModel.INotifyPropertyChanged</xsl:if><!--
-    --><xsl:if test="$optionPreObservable">, System.ComponentModel.INotifyPropertyChanging</xsl:if>
+-->Public Partial Class <xsl:call-template name="pascal"/>
+    implements Global.ProtoBuf.IExtensible<!--
+    --><xsl:if test="$optionBinary">, Global.System.Runtime.Serialization.ISerializable</xsl:if><!--
+    --><xsl:if test="$optionObservable">, Global.System.ComponentModel.INotifyPropertyChanged</xsl:if><!--
+    --><xsl:if test="$optionPreObservable">, Global.System.ComponentModel.INotifyPropertyChanging</xsl:if>
 	
 	Public Sub New
 	End Sub
     <xsl:apply-templates select="*"/><xsl:if test="$optionBinary">
-    Protected Sub New(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext)
+    Protected Sub New(ByVal info As Global.System.Runtime.Serialization.SerializationInfo, ByVal context As Global.System.Runtime.Serialization.StreamingContext)
           MyBase.New()
-          ProtoBuf.Serializer.Merge(info, Me)
+          Global.ProtoBuf.Serializer.Merge(info, Me)
     End Sub
 	  
-	Sub GetObjectData(ByVal info As System.Runtime.Serialization.SerializationInfo, ByVal context As System.Runtime.Serialization.StreamingContext) implements System.Runtime.Serialization.ISerializable.GetObjectData
-		ProtoBuf.Serializer.Serialize(info, Me)
+	Sub GetObjectData(ByVal info As Global.System.Runtime.Serialization.SerializationInfo, ByVal context As Global.System.Runtime.Serialization.StreamingContext) implements Global.System.Runtime.Serialization.ISerializable.GetObjectData
+		Global.ProtoBuf.Serializer.Serialize(info, Me)
 	End Sub
 	
       </xsl:if><xsl:if test="$optionObservable">
-    Public Event PropertyChanged As System.ComponentModel.PropertyChangedEventHandler Implements System.ComponentModel.INotifyPropertyChanged.PropertyChanged
+    Public Event PropertyChanged As Global.System.ComponentModel.PropertyChangedEventHandler Implements Global.System.ComponentModel.INotifyPropertyChanged.PropertyChanged
     Protected Overridable Sub OnPropertyChanged(ByVal propertyName As String)
-        RaiseEvent PropertyChanged(Me, New System.ComponentModel.PropertyChangedEventArgs(propertyName))
+        RaiseEvent PropertyChanged(Me, New Global.System.ComponentModel.PropertyChangedEventArgs(propertyName))
     End Sub
     </xsl:if><xsl:if test="$optionPreObservable">
-	Public Event PropertyChanging As System.ComponentModel.PropertyChangingEventHandler Implements System.ComponentModel.INotifyPropertyChanging.PropertyChanging
+	Public Event PropertyChanging As Global.System.ComponentModel.PropertyChangingEventHandler Implements Global.System.ComponentModel.INotifyPropertyChanging.PropertyChanging
 	Protected Overridable Sub OnPropertyChanging(ByVal propertyName As String)
-		RaiseEvent PropertyChanging(Me, New System.ComponentModel.PropertyChangingEventArgs(propertyName))
+		RaiseEvent PropertyChanging(Me, New Global.System.ComponentModel.PropertyChangingEventArgs(propertyName))
 	End Sub
 	</xsl:if>
-    Private extensionObject As ProtoBuf.IExtension
-		Function GetExtensionObject(createIfMissing As Boolean) As ProtoBuf.IExtension Implements ProtoBuf.IExtensible.GetExtensionObject
-			Return ProtoBuf.Extensible.GetExtensionObject(extensionObject, createIfMissing)
+    Private extensionObject As Global.ProtoBuf.IExtension
+		Function GetExtensionObject(createIfMissing As Boolean) As Global.ProtoBuf.IExtension Implements Global.ProtoBuf.IExtensible.GetExtensionObject
+			Return Global.ProtoBuf.Extensible.GetExtensionObject(extensionObject, createIfMissing)
 		End Function
 End Class
   </xsl:template>
 
+  
+  
   <xsl:template match="DescriptorProto/name | DescriptorProto/extension_range | DescriptorProto/extension"/>
   
   <xsl:template match="
@@ -171,7 +174,7 @@ End Class
   </xsl:template>
 
   <xsl:template match="EnumDescriptorProto">
-    Public Enum <xsl:value-of select="name"/>
+    Public Enum <xsl:call-template name="pascal"/>
       <xsl:apply-templates select="value"/>
     End Enum
   </xsl:template>
@@ -253,7 +256,9 @@ End Class
       <xsl:when test="type='TYPE_SFIXED64'">Long</xsl:when>
       <xsl:when test="type='TYPE_SINT32'">Integer</xsl:when>
       <xsl:when test="type='TYPE_SINT64'">Long</xsl:when>
-      <xsl:when test="type='TYPE_GROUP' or type='TYPE_MESSAGE' or type='TYPE_ENUM'"><xsl:value-of select="substring-after(type_name,'.')"/></xsl:when>
+      <xsl:when test="type='TYPE_GROUP' or type='TYPE_MESSAGE' or type='TYPE_ENUM'"><xsl:call-template name="pascal">
+          <xsl:with-param name="value" select="substring-after(type_name,'.')"/>
+        </xsl:call-template></xsl:when>
       <xsl:otherwise>
         <xsl:message terminate="yes">
           Field type not implemented: <xsl:value-of select="type"/> (<xsl:value-of select="../../name"/>.<xsl:value-of select="name"/>)
@@ -267,10 +272,8 @@ End Class
     <xsl:choose>
       <xsl:when test="type='TYPE_STRING'">"<xsl:value-of select="default_value"/>"</xsl:when>
       <xsl:when test="type='TYPE_ENUM'"><xsl:apply-templates select="." mode="type"/>.<xsl:value-of select="default_value"/></xsl:when>
-      <xsl:when test="type='TYPE_BYTES'"> /* 
-        <xsl:value-of select="default_value"/>
-        */ null </xsl:when>
-      <xsl:otherwise>(<xsl:apply-templates select="." mode="type"/>)<xsl:value-of select="default_value"/></xsl:otherwise>
+      <xsl:when test="type='TYPE_BYTES'"> ' <xsl:value-of select="default_value"/></xsl:when>
+      <xsl:otherwise>CType(<xsl:value-of select="default_value"/>, <xsl:apply-templates select="." mode="type"/>)</xsl:otherwise>
     </xsl:choose>
   </xsl:template>
 
@@ -336,59 +339,75 @@ End Class
 	</xsl:choose>
 	<xsl:choose>
 		<xsl:when test="not($specified) and $optionXml">
-    &lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
+    &lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
 	<xsl:choose>
 		<xsl:when test="substring-after($fieldType, 'google.protobuf.')">
-    &lt;System.ComponentModel.DefaultValue(GetType(<xsl:value-of select="substring-after($fieldType, 'google.protobuf.')"/>), "<xsl:value-of select="$defaultValue"/>")&gt; _
+    &lt;Global.System.ComponentModel.DefaultValue(CType(<xsl:value-of select="$defaultValue"/>, <xsl:value-of select="substring-after($fieldType, 'google.protobuf.')"/>))&gt; _
 		</xsl:when>
 		<xsl:otherwise>
-    &lt;System.ComponentModel.DefaultValue(GetType(<xsl:value-of select="$fieldType"/>), "<xsl:value-of select="$defaultValue"/>")&gt; _
+    &lt;Global.System.ComponentModel.DefaultValue(CType(<xsl:value-of select="$defaultValue"/>, <xsl:value-of select="$fieldType"/>))&gt; _
 		</xsl:otherwise>
 	</xsl:choose>
-    &lt;System.Xml.Serialization.XmlElement("<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>)&gt; _ <!--
+    &lt;Global.System.Xml.Serialization.XmlElement("<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>)&gt; _ <!--
 		--></xsl:when>
 		<xsl:when test="not($specified) and $optionDataContract">
-    &lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
+    &lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
     <xsl:choose>
 		<xsl:when test="substring-after($fieldType, 'google.protobuf.')">
-    &lt;System.ComponentModel.DefaultValue(GetType(<xsl:value-of select="substring-after($fieldType, 'google.protobuf.')"/>), "<xsl:value-of select="$defaultValue"/>")&gt; _
+    &lt;Global.System.ComponentModel.DefaultValue(CType(<xsl:value-of select="$defaultValue"/>, <xsl:value-of select="substring-after($fieldType, 'google.protobuf.')"/>))&gt; _
 		</xsl:when>
 		<xsl:otherwise>
-    &lt;System.ComponentModel.DefaultValue(GetType(<xsl:value-of select="$fieldType"/>), "<xsl:value-of select="$defaultValue"/>")&gt; _
+    &lt;Global.System.ComponentModel.DefaultValue(CType(<xsl:value-of select="$defaultValue"/>, <xsl:value-of select="$fieldType"/>))&gt; _
 		</xsl:otherwise>
 	</xsl:choose>
-    &lt;System.Runtime.Serialization.DataMember(Name:="<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>, IsRequired:=False)&gt; _ <!--
+    &lt;Global.System.Runtime.Serialization.DataMember(Name:="<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>, IsRequired:=False)&gt; _ <!--
 		--></xsl:when>
 		<xsl:when test="not($specified)">
-    &lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _ <!--
+    &lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _ <!--
     --><xsl:choose>
 		<xsl:when test="substring-after($fieldType, 'google.protobuf.')">
-    &lt;System.ComponentModel.DefaultValue(GetType(<xsl:value-of select="substring-after($fieldType, 'google.protobuf.')"/>), "<xsl:value-of select="$defaultValue"/>")&gt; _ <!--
+    &lt;Global.System.ComponentModel.DefaultValue(CType(<xsl:value-of select="$defaultValue"/>, <xsl:value-of select="substring-after($fieldType, 'google.protobuf.')"/>))&gt; _ <!--
 		--></xsl:when>
 		<xsl:otherwise>
-    &lt;System.ComponentModel.DefaultValue(GetType(<xsl:value-of select="$fieldType"/>), "<xsl:value-of select="$defaultValue"/>")&gt; _ <!--
+    &lt;Global.System.ComponentModel.DefaultValue(CType(<xsl:value-of select="$defaultValue"/>, <xsl:value-of select="$fieldType"/>))&gt; _ <!--
 		--></xsl:otherwise>
 	</xsl:choose><!--
 		--></xsl:when>
 		<xsl:when test="$optionDataContract">
-    &lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
-    &lt;System.Runtime.Serialization.DataMember(Name:="<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>, IsRequired:=False)&gt; _ <!--
+    &lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
+    &lt;Global.System.Runtime.Serialization.DataMember(Name:="<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>, IsRequired:=False)&gt; _ <!--
 		--></xsl:when>
 		<xsl:when test="$optionXml">
-    &lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
-    &lt;System.Xml.Serialization.XmlElement("<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>)&gt; _ <!--
+    &lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
+    &lt;Global.System.Xml.Serialization.XmlElement("<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>)&gt; _ <!--
 		--></xsl:when>
 		<xsl:otherwise>
-    &lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _ <!--
+    &lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=False, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _ <!--
 		--></xsl:otherwise>
 	</xsl:choose><!--
 	--><xsl:call-template name="WriteGetSet">
       <xsl:with-param name="fieldType" select="$fieldType"/>
       <xsl:with-param name="propType" select="$propType"/>
-      <xsl:with-param name="name"><xsl:call-template name="pascal"/></xsl:with-param>
+      <xsl:with-param name="name"><xsl:call-template name="pascalPropName"/></xsl:with-param>
       <xsl:with-param name="field" select="$field"/>
       <xsl:with-param name="defaultValue" select="$defaultValue"/>
       <xsl:with-param name="specified" select="$specified"/>
+    </xsl:call-template>
+  </xsl:template>
+
+  <xsl:template name="pascalPropName">
+    <xsl:param name="value" select="name"/>
+    <xsl:param name="delimiter" select="'_'"/>
+    <xsl:variable name="valueUC" select="translate($value,$alpha,$ALPHA)"/>
+    <xsl:variable name="finalName">
+      <xsl:choose>
+        <xsl:when test="$types[translate(name,$alpha,$ALPHA)=$valueUC]"><xsl:value-of select="concat($value,$delimiter,'Property')"/></xsl:when>
+        <xsl:otherwise><xsl:value-of select="$value"/></xsl:otherwise>
+      </xsl:choose>
+    </xsl:variable>
+    <xsl:call-template name="pascal">
+      <xsl:with-param name="value" select="$finalName"/>
+      <xsl:with-param name="delimiter" select="$delimiter"/>
     </xsl:call-template>
   </xsl:template>
   
@@ -399,15 +418,15 @@ End Class
     Private <xsl:value-of select="concat($field, ' As ', $type)"/>
 	<xsl:choose>
 		<xsl:when test="$optionDataContract">
-    &lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=True, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
-    &lt;System.Runtime.Serialization.DataMember(Name:="<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>, IsRequired:=True)&gt; _ <!--
+    &lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=True, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
+    &lt;Global.System.Runtime.Serialization.DataMember(Name:="<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>, IsRequired:=True)&gt; _ <!--
 		--></xsl:when>
 		<xsl:when test="$optionXml">
-    &lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=True, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
-    &lt;System.Xml.Serialization.XmlElement("<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>)&gt; _ <!--
+    &lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=True, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
+    &lt;Global.System.Xml.Serialization.XmlElement("<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>)&gt; _ <!--
 		--></xsl:when>
 		<xsl:otherwise>
-    &lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=True, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _ <!--
+    &lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired:=True, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _ <!--
 		--></xsl:otherwise>
 	</xsl:choose><!--
     --><xsl:call-template name="WriteGetSet">
@@ -468,8 +487,8 @@ End Class
     <xsl:if test="$optionPartialMethods">
     partial void On<xsl:value-of select="$name"/>Changing(<xsl:value-of select="$propType"/> value);
     partial void On<xsl:value-of select="$name"/>Changed();</xsl:if><xsl:if test="$specified">
-    &lt;System.Xml.Serialization.XmlIgnore&gt; _
-    <xsl:if test="$optionFullFramework">&lt;System.ComponentModel.Browsable(false)&gt; _ </xsl:if>
+    &lt;Global.System.Xml.Serialization.XmlIgnore&gt; _
+    <xsl:if test="$optionFullFramework">&lt;Global.System.ComponentModel.Browsable(false)&gt; _ </xsl:if>
 	<xsl:choose>
 		<xsl:when test="$specified and $primitiveType='struct'">
 	Public Property <xsl:value-of select="$name"/>Specified As Boolean
@@ -514,31 +533,31 @@ End Class
     <xsl:variable name="field"><xsl:apply-templates select="." mode="field"/></xsl:variable>
 	<xsl:choose>
 		<xsl:when test="substring-after($type, 'google.protobuf.')">
-    Private <xsl:if test="not($optionXml)">ReadOnly </xsl:if> <xsl:value-of select="$field"/> as System.Collections.Generic.List(Of <xsl:value-of select="substring-after($type, 'google.protobuf.')" />) = New System.Collections.Generic.List(Of <xsl:value-of select="substring-after($type, 'google.protobuf.')"/>)()
+    Private <xsl:if test="not($optionXml)">ReadOnly </xsl:if> <xsl:value-of select="$field"/> as Global.System.Collections.Generic.List(Of <xsl:value-of select="substring-after($type, 'google.protobuf.')" />) = New Global.System.Collections.Generic.List(Of <xsl:value-of select="substring-after($type, 'google.protobuf.')"/>)()
 		</xsl:when>
 		<xsl:otherwise>
-    Private <xsl:if test="not($optionXml)">ReadOnly </xsl:if> <xsl:value-of select="$field"/> as System.Collections.Generic.List(Of <xsl:value-of select="$type" />) = New System.Collections.Generic.List(Of <xsl:value-of select="$type"/>)()
+    Private <xsl:if test="not($optionXml)">ReadOnly </xsl:if> <xsl:value-of select="$field"/> as Global.System.Collections.Generic.List(Of <xsl:value-of select="$type" />) = New Global.System.Collections.Generic.List(Of <xsl:value-of select="$type"/>)()
 		</xsl:otherwise>
 	</xsl:choose>
 	<xsl:choose>
 		<xsl:when test="$optionDataContract">
-	&lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
-	&lt;System.Runtime.Serialization.DataMember(Name:="<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>, IsRequired:=False)&gt; _ 
+	&lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
+	&lt;Global.System.Runtime.Serialization.DataMember(Name:="<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>, IsRequired:=False)&gt; _ 
 		</xsl:when>
 		<xsl:when test="$optionXml">
-	&lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
-	&lt;System.Xml.Serialization.XmlElement("<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>)&gt; _
+	&lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
+	&lt;Global.System.Xml.Serialization.XmlElement("<xsl:value-of select="name"/>", Order:=<xsl:value-of select="number"/>)&gt; _
 		</xsl:when>
 		<xsl:otherwise>
-	&lt;ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, Name:="<xsl:value-of select="name"/>", DataFormat:=ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
+	&lt;Global.ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, Name:="<xsl:value-of select="name"/>", DataFormat:=Global.ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)&gt; _
 		</xsl:otherwise>
 	</xsl:choose><!--
 	--><xsl:choose>
 		<xsl:when test="substring-after($type, 'google.protobuf.')"><!--
-    -->Public <xsl:if test="not($optionXml)">ReadOnly </xsl:if>Property <xsl:value-of select="name"/> As System.Collections.Generic.List(Of <xsl:value-of select="substring-after($type, 'google.protobuf.')" />)
+    -->Public <xsl:if test="not($optionXml)">ReadOnly </xsl:if>Property <xsl:value-of select="name"/> As Global.System.Collections.Generic.List(Of <xsl:value-of select="substring-after($type, 'google.protobuf.')" />)
 		</xsl:when>
 		<xsl:otherwise><!--
-    -->Public <xsl:if test="not($optionXml)">ReadOnly </xsl:if>Property <xsl:value-of select="name"/> As System.Collections.Generic.List(Of <xsl:value-of select="$type" />)
+    -->Public <xsl:if test="not($optionXml)">ReadOnly </xsl:if>Property <xsl:value-of select="name"/> As Global.System.Collections.Generic.List(Of <xsl:value-of select="$type" />)
 		</xsl:otherwise>
 	</xsl:choose>
 		Get
@@ -547,10 +566,10 @@ End Class
 		<!----><xsl:if test="$optionXml">
 		<xsl:choose>
 			<xsl:when test="substring-after($type, 'google.protobuf.')">
-		Set (value As System.Collections.Generic.List(Of <xsl:value-of select="substring-after($type, 'google.protobuf.')" />))
+		Set (value As Global.System.Collections.Generic.List(Of <xsl:value-of select="substring-after($type, 'google.protobuf.')" />))
 			</xsl:when>
 			<xsl:otherwise>
-		Set (value As System.Collections.Generic.List(Of <xsl:value-of select="$type" />))
+		Set (value As Global.System.Collections.Generic.List(Of <xsl:value-of select="$type" />))
 			</xsl:otherwise>
 		</xsl:choose>
 			<xsl:value-of select="$field"/> = value 
@@ -561,14 +580,14 @@ End Class
 
   <xsl:template match="ServiceDescriptorProto">
     <xsl:if test="$optionDataContract">
-    &lt;System.ServiceModel.ServiceContract(Name:="<xsl:value-of select="name"/>")&gt; _
+    &lt;Global.System.ServiceModel.ServiceContract(Name:="<xsl:value-of select="name"/>")&gt; _
     </xsl:if>
     Public Interface I<xsl:value-of select="name"/>
       <xsl:apply-templates select="method"/>
     End Interface
     
     <xsl:if test="$optionProtoRpc">
-    Public Class <xsl:value-of select="name"/>Client : ProtoBuf.ServiceModel.RpcClient
+    Public Class <xsl:value-of select="name"/>Client : Global.ProtoBuf.ServiceModel.RpcClient
       public <xsl:value-of select="name"/>Client() : base(typeof(I<xsl:value-of select="name"/>)) { }
 
       <xsl:apply-templates select="method/MethodDescriptorProto" mode="protoRpc"/>
@@ -580,13 +599,13 @@ End Class
 
   <xsl:template match="MethodDescriptorProto">
     <xsl:if test="$optionDataContract">
-      &lt;System.ServiceModel.OperationContract(Name:="<xsl:value-of select="name"/>")&gt; _
+      &lt;Global.System.ServiceModel.OperationContract(Name:="<xsl:value-of select="name"/>")&gt; _
     </xsl:if>
       <xsl:apply-templates select="output_type"/><xsl:text xml:space="preserve"> </xsl:text><xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request);
     <xsl:if test="$optionAsynchronous and $optionDataContract">
-    &lt;System.ServiceModel.OperationContract(AsyncPattern:=True, Name:="<xsl:value-of select="name"/>")&gt; _
-    System.IAsyncResult Begin<xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request, System.AsyncCallback callback, object state);
-    <xsl:apply-templates select="output_type"/> End<xsl:value-of select="name"/>(System.IAsyncResult ar);
+    &lt;Global.System.ServiceModel.OperationContract(AsyncPattern:=True, Name:="<xsl:value-of select="name"/>")&gt; _
+    Global.System.IAsyncResult Begin<xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request, Global.System.AsyncCallback callback, object state);
+    <xsl:apply-templates select="output_type"/> End<xsl:value-of select="name"/>(Global.System.IAsyncResult ar);
     </xsl:if>
   </xsl:template>
 
@@ -603,10 +622,10 @@ End Class
 
   <xsl:template match="MethodDescriptorProto" mode="CompleteEvent">
   <xsl:if test="$optionAsynchronous and $optionDataContract">
-    Public Class <xsl:value-of select="name"/>CompletedEventArgs : System.ComponentModel.AsyncCompletedEventArgs
+    Public Class <xsl:value-of select="name"/>CompletedEventArgs : Global.System.ComponentModel.AsyncCompletedEventArgs
         private object[] results;
 
-        public <xsl:value-of select="name"/>CompletedEventArgs(object[] results, System.Exception exception, bool cancelled, object userState)
+        public <xsl:value-of select="name"/>CompletedEventArgs(object[] results, Global.System.Exception exception, bool cancelled, object userState)
             : base(exception, cancelled, userState) 
         {
             this.results = results;
@@ -627,8 +646,8 @@ End Class
   <xsl:if test="$optionAsynchronous and $optionDataContract and $optionClientProxy">
     <xsl:apply-templates select="method/MethodDescriptorProto" mode="CompleteEvent"/>
     
-    &lt;System.Diagnostics.DebuggerStepThroughAttribute()&gt; _
-    public partial class <xsl:value-of select="name"/>Client : System.ServiceModel.ClientBase&lt;I<xsl:value-of select="name"/>&gt;, I<xsl:value-of select="name"/>
+    &lt;Global.System.Diagnostics.DebuggerStepThroughAttribute()&gt; _
+    public partial class <xsl:value-of select="name"/>Client : Global.System.ServiceModel.ClientBase&lt;I<xsl:value-of select="name"/>&gt;, I<xsl:value-of select="name"/>
     {
 
         public <xsl:value-of select="name"/>Client()
@@ -639,10 +658,10 @@ End Class
         public <xsl:value-of select="name"/>Client(string endpointConfigurationName, string remoteAddress) 
             : base(endpointConfigurationName, remoteAddress)
         {}
-        public <xsl:value-of select="name"/>Client(string endpointConfigurationName, System.ServiceModel.EndpointAddress remoteAddress)
+        public <xsl:value-of select="name"/>Client(string endpointConfigurationName, Global.System.ServiceModel.EndpointAddress remoteAddress)
             : base(endpointConfigurationName, remoteAddress)
         {}
-        public <xsl:value-of select="name"/>Client(System.ServiceModel.Channels.Binding binding, System.ServiceModel.EndpointAddress remoteAddress)
+        public <xsl:value-of select="name"/>Client(Global.System.ServiceModel.Channels.Binding binding, Global.System.ServiceModel.EndpointAddress remoteAddress)
             : base(binding, remoteAddress)
         {}
 
@@ -655,34 +674,34 @@ End Class
   <xsl:if test="$optionAsynchronous and $optionDataContract and $optionClientProxy">
         private BeginOperationDelegate onBegin<xsl:value-of select="name"/>Delegate;
         private EndOperationDelegate onEnd<xsl:value-of select="name"/>Delegate;
-        private System.Threading.SendOrPostCallback on<xsl:value-of select="name"/>CompletedDelegate;
+        private Global.System.Threading.SendOrPostCallback on<xsl:value-of select="name"/>CompletedDelegate;
 
-        public event System.EventHandler&lt;<xsl:value-of select="name"/>CompletedEventArgs&gt; <xsl:value-of select="name"/>Completed;
+        public event Global.System.EventHandler&lt;<xsl:value-of select="name"/>CompletedEventArgs&gt; <xsl:value-of select="name"/>Completed;
 
         public <xsl:apply-templates select="output_type"/><xsl:text xml:space="preserve"> </xsl:text><xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request)
         {
             return base.Channel.<xsl:value-of select="name"/>(request);
         }
 
-        &lt;System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)&gt; _
-        public System.IAsyncResult Begin<xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request, System.AsyncCallback callback, object asyncState)
+        &lt;Global.System.ComponentModel.EditorBrowsableAttribute(Global.System.ComponentModel.EditorBrowsableState.Advanced)&gt; _
+        public Global.System.IAsyncResult Begin<xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request, Global.System.AsyncCallback callback, object asyncState)
         {
             return base.Channel.Begin<xsl:value-of select="name"/>(request, callback, asyncState);
         }
 
-        &lt;System.ComponentModel.EditorBrowsableAttribute(System.ComponentModel.EditorBrowsableState.Advanced)&gt; _
-        public <xsl:apply-templates select="output_type"/> End<xsl:value-of select="name"/>(System.IAsyncResult result)
+        &lt;Global.System.ComponentModel.EditorBrowsableAttribute(Global.System.ComponentModel.EditorBrowsableState.Advanced)&gt; _
+        public <xsl:apply-templates select="output_type"/> End<xsl:value-of select="name"/>(Global.System.IAsyncResult result)
         {
             return base.Channel.End<xsl:value-of select="name"/>(result);
         }
 
-        private System.IAsyncResult OnBegin<xsl:value-of select="name"/>(object[] inValues, System.AsyncCallback callback, object asyncState)
+        private Global.System.IAsyncResult OnBegin<xsl:value-of select="name"/>(object[] inValues, Global.System.AsyncCallback callback, object asyncState)
         {
             <xsl:apply-templates select="input_type"/> request = ((<xsl:apply-templates select="input_type"/>)(inValues[0]));
             return this.Begin<xsl:value-of select="name"/>(request, callback, asyncState);
         }
 
-        private object[] OnEnd<xsl:value-of select="name"/>(System.IAsyncResult result)
+        private object[] OnEnd<xsl:value-of select="name"/>(Global.System.IAsyncResult result)
         {
             <xsl:apply-templates select="output_type"/> retVal = this.End<xsl:value-of select="name"/>(result);
             return new object[] {
@@ -715,7 +734,7 @@ End Class
             }
             if ((this.on<xsl:value-of select="name"/>CompletedDelegate == null))
             {
-                this.on<xsl:value-of select="name"/>CompletedDelegate = new System.Threading.SendOrPostCallback(this.On<xsl:value-of select="name"/>Completed);
+                this.on<xsl:value-of select="name"/>CompletedDelegate = new Global.System.Threading.SendOrPostCallback(this.On<xsl:value-of select="name"/>Completed);
             }
             base.InvokeAsync(this.onBegin<xsl:value-of select="name"/>Delegate, new object[] {
                     request}, this.onEnd<xsl:value-of select="name"/>Delegate, this.on<xsl:value-of select="name"/>CompletedDelegate, userState);

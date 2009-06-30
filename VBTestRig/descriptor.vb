@@ -2,15 +2,15 @@
 ' Generated from 
 ' Generated from: ProtoGen/person.proto
 Namespace people
-    <System.Serializable(), ProtoBuf.ProtoContract(Name:="person")> _
+    <Global.System.Serializable(), Global.ProtoBuf.ProtoContract(Name:="person")> _
     Partial Public Class person
-        Implements ProtoBuf.IExtensible
+        Implements Global.ProtoBuf.IExtensible
 
         Public Sub New()
         End Sub
 
         Private _name As String
-        <ProtoBuf.ProtoMember(1, IsRequired:=True, Name:="name", DataFormat:=ProtoBuf.DataFormat.Default)> _
+        <Global.ProtoBuf.ProtoMember(1, IsRequired:=True, Name:="name", DataFormat:=Global.ProtoBuf.DataFormat.Default)> _
         Public Property name() As String
             Get
                 Return _name
@@ -23,8 +23,8 @@ Namespace people
         End Property
 
         Private _id As Integer = 0
-        <ProtoBuf.ProtoMember(2, IsRequired:=False, Name:="id", DataFormat:=ProtoBuf.DataFormat.TwosComplement)> _
-        <System.ComponentModel.DefaultValue(GetType(Integer), "0")> _
+        <Global.ProtoBuf.ProtoMember(2, IsRequired:=False, Name:="id", DataFormat:=Global.ProtoBuf.DataFormat.TwosComplement)> _
+        <Global.System.ComponentModel.DefaultValue(CType(0, Integer))> _
         Public Property id() As Integer
             Get
                 Return _id
@@ -37,8 +37,8 @@ Namespace people
         End Property
 
         Private _email As String = ""
-        <ProtoBuf.ProtoMember(3, IsRequired:=False, Name:="email", DataFormat:=ProtoBuf.DataFormat.Default)> _
-        <System.ComponentModel.DefaultValue(GetType(String), """")> _
+        <Global.ProtoBuf.ProtoMember(3, IsRequired:=False, Name:="email", DataFormat:=Global.ProtoBuf.DataFormat.Default)> _
+        <Global.System.ComponentModel.DefaultValue(CType("", String))> _
         Public Property email() As String
             Get
                 Return _email
@@ -50,10 +50,10 @@ Namespace people
             End Set
         End Property
 
-        Private ReadOnly _phone As System.Collections.Generic.List(Of people.person.phone_number) = New System.Collections.Generic.List(Of people.person.phone_number)()
+        Private ReadOnly _phone As Global.System.Collections.Generic.List(Of people.person.phone_number) = New Global.System.Collections.Generic.List(Of people.person.phone_number)()
 
-        <ProtoBuf.ProtoMember(4, Name:="phone", DataFormat:=ProtoBuf.DataFormat.Default)> _
-         Public ReadOnly Property phone() As System.Collections.Generic.List(Of people.person.phone_number)
+        <Global.ProtoBuf.ProtoMember(4, Name:="phone", DataFormat:=Global.ProtoBuf.DataFormat.Default)> _
+         Public ReadOnly Property phone() As Global.System.Collections.Generic.List(Of people.person.phone_number)
 
             Get
                 Return _phone
@@ -61,10 +61,10 @@ Namespace people
 
         End Property
 
-        Private ReadOnly _test_packed As System.Collections.Generic.List(Of Integer) = New System.Collections.Generic.List(Of Integer)()
+        Private ReadOnly _test_packed As Global.System.Collections.Generic.List(Of Integer) = New Global.System.Collections.Generic.List(Of Integer)()
 
-        <ProtoBuf.ProtoMember(5, Name:="test_packed", DataFormat:=ProtoBuf.DataFormat.TwosComplement)> _
-         Public ReadOnly Property test_packed() As System.Collections.Generic.List(Of Integer)
+        <Global.ProtoBuf.ProtoMember(5, Name:="test_packed", DataFormat:=Global.ProtoBuf.DataFormat.TwosComplement)> _
+         Public ReadOnly Property test_packed() As Global.System.Collections.Generic.List(Of Integer)
 
             Get
                 Return _test_packed
@@ -73,8 +73,8 @@ Namespace people
         End Property
 
         Private _test_deprecated As Integer = 0
-        <ProtoBuf.ProtoMember(6, IsRequired:=False, Name:="test_deprecated", DataFormat:=ProtoBuf.DataFormat.TwosComplement)> _
-        <System.ComponentModel.DefaultValue(GetType(Integer), "0")> _
+        <Global.ProtoBuf.ProtoMember(6, IsRequired:=False, Name:="test_deprecated", DataFormat:=Global.ProtoBuf.DataFormat.TwosComplement)> _
+        <Global.System.ComponentModel.DefaultValue(CType(0, Integer))> _
         Public Property test_deprecated() As Integer
             Get
                 Return _test_deprecated
@@ -87,8 +87,8 @@ Namespace people
         End Property
 
         Private _foreach As Integer = 0
-        <ProtoBuf.ProtoMember(7, IsRequired:=False, Name:="foreach", DataFormat:=ProtoBuf.DataFormat.TwosComplement)> _
-        <System.ComponentModel.DefaultValue(GetType(Integer), "0")> _
+        <Global.ProtoBuf.ProtoMember(7, IsRequired:=False, Name:="foreach", DataFormat:=Global.ProtoBuf.DataFormat.TwosComplement)> _
+        <Global.System.ComponentModel.DefaultValue(CType(0, Integer))> _
         Public Property foreach() As Integer
             Get
                 Return _foreach
@@ -100,15 +100,15 @@ Namespace people
             End Set
         End Property
 
-        <System.Serializable(), ProtoBuf.ProtoContract(Name:="phone_number")> _
+        <Global.System.Serializable(), Global.ProtoBuf.ProtoContract(Name:="phone_number")> _
         Partial Public Class phone_number
-            Implements ProtoBuf.IExtensible
+            Implements Global.ProtoBuf.IExtensible
 
             Public Sub New()
             End Sub
 
             Private _number As String
-            <ProtoBuf.ProtoMember(1, IsRequired:=True, Name:="number", DataFormat:=ProtoBuf.DataFormat.Default)> _
+            <Global.ProtoBuf.ProtoMember(1, IsRequired:=True, Name:="number", DataFormat:=Global.ProtoBuf.DataFormat.Default)> _
             Public Property number() As String
                 Get
                     Return _number
@@ -121,8 +121,8 @@ Namespace people
             End Property
 
             Private _type As people.person.phone_type = people.person.phone_type.home
-            <ProtoBuf.ProtoMember(2, IsRequired:=False, Name:="type", DataFormat:=ProtoBuf.DataFormat.TwosComplement)> _
-            <System.ComponentModel.DefaultValue(GetType(people.person.phone_type), "people.person.phone_type.home")> _
+            <Global.ProtoBuf.ProtoMember(2, IsRequired:=False, Name:="type", DataFormat:=Global.ProtoBuf.DataFormat.TwosComplement)> _
+            <Global.System.ComponentModel.DefaultValue(CType(people.person.phone_type.home, people.person.phone_type))> _
             Public Property type() As people.person.phone_type
                 Get
                     Return _type
@@ -134,9 +134,9 @@ Namespace people
                 End Set
             End Property
 
-            Private extensionObject As ProtoBuf.IExtension
-            Function GetExtensionObject(ByVal createIfMissing As Boolean) As ProtoBuf.IExtension Implements ProtoBuf.IExtensible.GetExtensionObject
-                Return ProtoBuf.Extensible.GetExtensionObject(extensionObject, createIfMissing)
+            Private extensionObject As Global.ProtoBuf.IExtension
+            Function GetExtensionObject(ByVal createIfMissing As Boolean) As Global.ProtoBuf.IExtension Implements Global.ProtoBuf.IExtensible.GetExtensionObject
+                Return Global.ProtoBuf.Extensible.GetExtensionObject(extensionObject, createIfMissing)
             End Function
         End Class
 
@@ -146,23 +146,23 @@ Namespace people
             work = 2
         End Enum
 
-        Private extensionObject As ProtoBuf.IExtension
-        Function GetExtensionObject(ByVal createIfMissing As Boolean) As ProtoBuf.IExtension Implements ProtoBuf.IExtensible.GetExtensionObject
-            Return ProtoBuf.Extensible.GetExtensionObject(extensionObject, createIfMissing)
+        Private extensionObject As Global.ProtoBuf.IExtension
+        Function GetExtensionObject(ByVal createIfMissing As Boolean) As Global.ProtoBuf.IExtension Implements Global.ProtoBuf.IExtensible.GetExtensionObject
+            Return Global.ProtoBuf.Extensible.GetExtensionObject(extensionObject, createIfMissing)
         End Function
     End Class
 
-    <System.Serializable(), ProtoBuf.ProtoContract(Name:="opaque_message_list")> _
+    <Global.System.Serializable(), Global.ProtoBuf.ProtoContract(Name:="opaque_message_list")> _
     Partial Public Class opaque_message_list
-        Implements ProtoBuf.IExtensible
+        Implements Global.ProtoBuf.IExtensible
 
         Public Sub New()
         End Sub
 
-        Private ReadOnly _messages_list As System.Collections.Generic.List(Of Byte()) = New System.Collections.Generic.List(Of Byte())()
+        Private ReadOnly _messages_list As Global.System.Collections.Generic.List(Of Byte()) = New Global.System.Collections.Generic.List(Of Byte())()
 
-        <ProtoBuf.ProtoMember(1, Name:="messages_list", DataFormat:=ProtoBuf.DataFormat.Default)> _
-         Public ReadOnly Property messages_list() As System.Collections.Generic.List(Of Byte())
+        <Global.ProtoBuf.ProtoMember(1, Name:="messages_list", DataFormat:=Global.ProtoBuf.DataFormat.Default)> _
+         Public ReadOnly Property messages_list() As Global.System.Collections.Generic.List(Of Byte())
 
             Get
                 Return _messages_list
@@ -170,9 +170,9 @@ Namespace people
 
         End Property
 
-        Private extensionObject As ProtoBuf.IExtension
-        Function GetExtensionObject(ByVal createIfMissing As Boolean) As ProtoBuf.IExtension Implements ProtoBuf.IExtensible.GetExtensionObject
-            Return ProtoBuf.Extensible.GetExtensionObject(extensionObject, createIfMissing)
+        Private extensionObject As Global.ProtoBuf.IExtension
+        Function GetExtensionObject(ByVal createIfMissing As Boolean) As Global.ProtoBuf.IExtension Implements Global.ProtoBuf.IExtensible.GetExtensionObject
+            Return Global.ProtoBuf.Extensible.GetExtensionObject(extensionObject, createIfMissing)
         End Function
     End Class
 
