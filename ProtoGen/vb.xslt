@@ -201,8 +201,8 @@ End Class
   <xsl:template match="FieldDescriptorProto" mode="format">
     <xsl:choose>
       <xsl:when test="type='TYPE_DOUBLE' or type='TYPE_FLOAT'
-                or type='FIXED32' or type='FIXED64'
-                or type='SFIXED32' or type='SFIXED64'">FixedSize</xsl:when>
+                or type='TYPE_FIXED32' or type='TYPE_FIXED64'
+                or type='TYPE_SFIXED32' or type='TYPE_SFIXED64'">FixedSize</xsl:when>
       <xsl:when test="type='TYPE_GROUP'">Group</xsl:when>
       <xsl:when test="not(type) or type='TYPE_INT32' or type='TYPE_INT64'
                 or type='TYPE_UINT32' or type='TYPE_UINT64'
