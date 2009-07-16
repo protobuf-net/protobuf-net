@@ -1,213 +1,196 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.VisualStudio.Shell;
 using VSLangProj;
-using System.IO;
-using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Diagnostics;
-using System.Threading;
-//using ProtoBuf.CodeGenerator;
-
-// namespace = <namespace>;propA,propB,propC,...
+using System.Text;
 
 namespace ProtoBufGenerator
 {
     [ComVisible(true)]
-    [Guid("2095cd09-6c00-4ede-ad3f-adc5e971bb9b")]
-    [CustomToolRegistration("ProtoBufTool", typeof(ProtoBufTool))]
+    [DefaultRegistryRoot(@"Software\Microsoft\VisualStudio\9.0")]
+    [PackageRegistration(UseManagedResourcesOnly=true, RegisterUsing=RegistrationMethod.CodeBase)]
+    [InstalledProductRegistration(false,"#102","#103","1.0", IconResourceID=100)]
+    [ProvideLoadKey("Standard", "1.0", "protobuf-net", "Marc Gravell",101)]
+    [Guid("3128D6BC-FF6D-4b39-98F4-681146FD7623")]
+    [CustomToolRegistration("ProtoBufTool", typeof(ProtoBufTool), FileExtension=".proto")]
     [ProvideObject(typeof(ProtoBufTool))]
     public class ProtoBufTool : CustomToolBase
     {
-        protected string _sTmpPath;
-        protected const string _sPGNamespace = "ProtoBufGenerator.";
-
         public ProtoBufTool()
         {
-            // Build the tmp path...
-            _sTmpPath = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-
-            // Extract the files we need to generate .cs
-            ExtractProtoGen();
-
             // Listen for generate events
-            this.OnGenerateCode += GenerationHandler;
+            this.OnGenerateCode += GenerationHandler; 
         }
+        static string installPath;
+        public static string GetInstallPath(string filename)
+        {            
+            if (installPath == null)
+            {
+                installPath = Path.GetDirectoryName(typeof(ProtoBufTool).Assembly.Location);
+            }
+            return string.IsNullOrEmpty(filename) ? installPath : Path.Combine(installPath, filename);
+        }
+        const string PBNETDLL = "protobuf-net.dll";
 
-        ~ProtoBufTool()
+        static string[] GetProtoGenArgs(string inputPath, string outputPath, string language, string namespaceOptions)
         {
-            // Cleanup
-            CleaupProtoGen();
+            List<string> args = new List<string>();
+            switch(language) {
+                case ".cs":
+                    language = "csharp"; 
+                    break;
+                default:
+                    language = language.TrimStart('.');
+                    break;
+            }
+            args.Add("-writeErrors"); // include error output in outputPath
+            args.Add("-i:" + inputPath); // input
+            args.Add("-w:" + Path.GetDirectoryName(inputPath)); // working path
+            args.Add("-t:" + language); // template
+            args.Add("-o:" + outputPath); // output
+            args.Add("-q"); // quiet
+            string[] parts = namespaceOptions.Split(';');
+            if(parts.Length > 0) args.Add("-ns:" + parts[0]); // default namespace
+            for(int i = 1 ; i < parts.Length ; i++)
+            {
+                args.Add("-p:" + parts[i]); // parameter
+            }
+            return args.ToArray();
         }
-
         public void GenerationHandler(object s, GenerationEventArgs e)
         {
             // Fail on any error
             e.FailOnError = true;
-
-            #region ensure protobuf-net.dll is in the project:
-
+            
+            string tmp = Path.GetTempFileName();
             try
             {
-                VSProject project = (VSProject)e.ProjectItem.ContainingProject.Object;
-
-                var pbNet = (from r in project.References.Cast<Reference>()
-                             where r != null
-                                && string.Compare(r.Name.ToLower(), "protobuf-net".ToLower(), true) == 0
-                             select r).FirstOrDefault();
-
-                if (pbNet == null)
+                string[] args = GetProtoGenArgs(e.InputFilePath, tmp, e.OutputFileExtension, e.Namespace);
+                bool writeWhatWeDid = true;
+                string root = GetInstallPath(null), app = GetInstallPath("protogen.exe");
+                if (!File.Exists(app))
                 {
-                    // Extract protobuf-net
-                    string tempPath = Path.Combine(Path.GetDirectoryName(e.ProjectItem.ContainingProject.FullName), "protobuf-net.dll");
-                    ExtractResource("ProtoBufGenerator.protobuf-net.dll", tempPath);
-   
-                    // add protobuf-net:
-                    project.References.Add(tempPath);
+                    e.GenerateError("Missing: " + app);
+                    return;
                 }
-            }
-            catch (Exception ex)
-            {
-                e.Errors.Add(
-                    new GenerationError
-                    {
-                        Message = string.Format("The following exception occurred while trying to add protobuf-net:\r\n{0}", ex)
-                    });
-            }
-            #endregion
 
-            // Autogen Header
-            OutputAutoGenHeader(e);
+                int result;
 
-            // Extract the arguments from the namespace param
-            // TODO: Is it possible to extend the "Properties" to have more fields
-            //       so we don't need to abuse the namespace field?
-            string sNamespace = e.Namespace;
-            string sProps = string.Empty;
-            List<string> xsltOptions = new List<string>();
-            if(e.Namespace.Contains(';'))
-            {
-                sNamespace = e.Namespace.Split(';')[0];
-                sProps = e.Namespace.Split(';')[1];
-                string[] arrProps = sProps.Split(',');
-                foreach(string sProp in arrProps)
+                ProcessStartInfo psi = new ProcessStartInfo(app);
+                psi.CreateNoWindow = true;
+                psi.WorkingDirectory = root;
+                StringBuilder sb = new StringBuilder();
+                foreach (string arg in args)
                 {
-                    xsltOptions.Add(sProp.Trim());
+                    sb.Append("\"" + arg + "\" ");
                 }
-            }
+                psi.Arguments = sb.ToString();
+                psi.WindowStyle = ProcessWindowStyle.Hidden;
+                using (Process proc = Process.Start(psi))
+                {
+                    proc.WaitForExit();
+                    result = proc.ExitCode;
+                }
 
-            if (string.IsNullOrEmpty(sProps))
-            {
-                e.GenerateWarning("ProtoGen properties can be specified in the namespace property, example: \"MyNameSpace;xml,binary,detectMissing\" or \";xml,binary,detectMissing\" (must be after a semi-colon and comma seperated");
-            }
+                /*AppDomain ad = AppDomain.CreateDomain("protogen", null, root, "", false);
+                
+                try
+                {
+                    result = ad.ExecuteAssembly(app, null, args);
+                    writeWhatWeDid = result != 0;
+                }
+                finally
+                {
+                    AppDomain.Unload(ad);
+                }*/
 
-            // Call ProtoGen to do the real work
-            RunProtoGen(e, sProps, sNamespace, xsltOptions);
-        }
+                if (writeWhatWeDid)
+                {
+#if DEBUG2
+                    e.GenerateWarning(app);
+                    foreach (string arg in args) e.GenerateWarning(arg);
+#endif
+                }
 
-        void RunProtoGen(GenerationEventArgs e, string sProps, string defaultNamespace, List<string> xsltOptions)
-        {
-            // Because protobuf freaks out if we pass a full path for the .proto
-            // ("<fullpath.proto>: File does not reside within any path specified
-            //  using --proto_path (or -I).  You must specify a --proto_path which
-            //  encompasses this file.")
-            // we instead pass only the .proto filename and set the working directory to match
-
-            // Build the cmdline args
-            string sArgs = String.Format("-i:{0} -t:csharp -q {1}", Path.GetFileName(e.InputFilePath), sProps);
-
-            // Start the process
-            ProcessStartInfo psi = new ProcessStartInfo(Path.Combine(_sTmpPath, "ProtoGen.exe"), sArgs);
-            Debug.WriteLine(psi.FileName, "ProtoBufGenerator");
-            Debug.WriteLine(psi.Arguments, "ProtoBufGenerator");
-
-            using (StringWriter messages = new StringWriter())
-            {
-                try {
-                    /*
-                    CommandLineOptions opt = new CommandLineOptions(messages);
-                    opt.InPaths.Add(_sTmpPath);
-                    opt.DefaultNamespace = defaultNamespace;
-                    opt.OutPath = "-";
-                    opt.ShowHelp = false;
-                    opt.ShowLogo = false;
-                    opt.Template = "csharp";
-                    opt.DefaultNamespace = "foo";
-                    foreach (string s in xsltOptions)
+                using(var lineReader = File.OpenText(tmp))
+                {
+                    string line;
+                    switch(result)
                     {
-                        opt.XsltOptions.AddParam(s,"","true");
+                        case 0:
+                            while((line = lineReader.ReadLine()) != null) {
+                                e.OutputCode.AppendLine(line);
+                            }
+                            break;
+                        default:
+                            bool hasErrorText = false;
+                            while((line = lineReader.ReadLine()) != null) {
+                                GenerateErrorWithPosition(line, e);
+                                hasErrorText = true;
+                            }
+                            if(!hasErrorText) {
+                                e.GenerateError("Code generation failed with exit-code " + result);
+                            }
+                            break;
                     }
-                    opt.Execute();
-                    // We succeeded, add the code
-                    e.OutputCode.Append(opt.Code);
-                    string warn = messages.ToString();
-                    if (!string.IsNullOrEmpty(warn))
+                }
+                #region ensure protobuf-net.dll is in the project:
+
+                try
+                {
+                    VSProject project = (VSProject)e.ProjectItem.ContainingProject.Object;
+                    bool hasRef = project.References.Cast<Reference>()
+                        .Any(r => r != null && string.Equals(r.Name, "protobuf-net", StringComparison.InvariantCultureIgnoreCase));
+
+                    if (!hasRef)
                     {
-                        e.GenerateWarning(warn);
-                    }*/
-                } catch {
-                    e.GenerateError(messages.ToString());
+                        string toolPath = GetInstallPath(PBNETDLL);
+
+                        /* REMOVED: copy dll into local project
+                        string projectPath = Path.Combine(
+                                Path.GetDirectoryName(e.ProjectItem.ContainingProject.FullName),
+                                PBNETDLL);
+                        // copy it into the project if needed
+                        if(!File.Exists(projectPath))
+                        {
+                            File.Copy(toolPath, projectPath);
+                        }
+                         */
+                        // add the reference (from the install location)
+                        Reference dllRef = project.References.Add(toolPath);
+                        dllRef.CopyLocal = true;
+                    }
                 }
+                catch (Exception ex)
+                {
+                    e.GenerateWarning("Failed to add reference to protobuf-net:" + ex.Message);
+                }
+                #endregion
+            }
+            finally
+            {
+                try { File.Delete(tmp); }
+                catch (Exception ex) { e.GenerateWarning(ex.Message); }
             }
         }
 
-        void OutputAutoGenHeader(GenerationEventArgs e)
+        static readonly Regex gccErrorFormat = new Regex(@"\:([0-9]+)\:([0-9]+)\:", RegexOptions.Compiled);
+        static void GenerateErrorWithPosition(string line, GenerationEventArgs e)
         {
-            e.OutputCode.AppendLine("//------------------------------------------------------------------------------");
-            e.OutputCode.AppendLine("// <auto-generated>");
-            e.OutputCode.AppendLine("//     This code was generated by a tool.");
-            e.OutputCode.AppendLine(String.Format("//     Runtime Version:{0}", RuntimeEnvironment.GetSystemVersion()));
-            e.OutputCode.AppendLine("//");
-            e.OutputCode.AppendLine("//     Changes to this file may cause incorrect behavior and will be lost if");
-            e.OutputCode.AppendLine("//     the code is regenerated.");
-            e.OutputCode.AppendLine("// </auto-generated>");
-            e.OutputCode.AppendLine("//------------------------------------------------------------------------------");
-            e.OutputCode.AppendLine();
-        }
-
-        void ExtractResource(string sResName, string sFileName)
-        {
-            byte[] buffer = typeof(ProtoBufTool).Assembly.GetManifestResourceStream(sResName).ReadToEnd();
-            File.WriteAllBytes(sFileName, buffer);
-        }
-
-        void ExtractProtoGen()
-        {
-            if(!Directory.Exists(_sTmpPath))
-                Directory.CreateDirectory(_sTmpPath);
-
-            // Find ProtoGen related resources
-            Assembly executingAssembly = Assembly.GetExecutingAssembly();
-            foreach (string resourceName in executingAssembly.GetManifestResourceNames())
-            {
-                if (resourceName.StartsWith(_sPGNamespace))
-                {
-                    string sFileName = Path.Combine(_sTmpPath, resourceName.Remove(0, _sPGNamespace.Length));
-                    if(!File.Exists(sFileName))
-                        ExtractResource(resourceName, sFileName);
-                }
+            Match match = gccErrorFormat.Match(line);
+            int row, col;
+            if(match.Success && int.TryParse(match.Groups[1].Value, out row)
+                && int.TryParse(match.Groups[2].Value, out col)) {
+                e.GenerateError(line, row-1, col-1); // note offsets!
+            } else {
+                e.GenerateError(line);
             }
-        }
-
-        void CleaupProtoGen()
-        {
-            if (Directory.Exists(_sTmpPath))
-                Directory.Delete(_sTmpPath, true);
-        }
-
-        static ThreadStart DumpStream(TextReader reader, TextWriter writer)
-        {
-            return (ThreadStart)delegate
-            {
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                {
-                    //Debug.WriteLine(line);
-                    writer.WriteLine(line);
-                }
-            };
         }
     }
 }

@@ -579,7 +579,7 @@ End Class
   </xsl:template>
 
   <xsl:template match="ServiceDescriptorProto">
-    <xsl:if test="$optionDataContract">
+    <xsl:if test="($optionClientProxy or $optionDataContract)">
     &lt;Global.System.ServiceModel.ServiceContract(Name:="<xsl:value-of select="name"/>")&gt; _
     </xsl:if>
     Public Interface I<xsl:value-of select="name"/>
@@ -599,9 +599,10 @@ End Class
 
   <xsl:template match="MethodDescriptorProto">
     <xsl:if test="$optionDataContract">
-      &lt;Global.System.ServiceModel.OperationContract(Name:="<xsl:value-of select="name"/>")&gt; _
+    &lt;Global.System.ServiceModel.OperationContract(Name:="<xsl:value-of select="name"/>")&gt; _
+    &lt;Global.ProtoBuf.ServiceModel.ProtoBehavior()&gt; _
     </xsl:if>
-      <xsl:apply-templates select="output_type"/><xsl:text xml:space="preserve"> </xsl:text><xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request);
+    <xsl:apply-templates select="output_type"/><xsl:text xml:space="preserve"> </xsl:text><xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request);
     <xsl:if test="$optionAsynchronous and $optionDataContract">
     &lt;Global.System.ServiceModel.OperationContract(AsyncPattern:=True, Name:="<xsl:value-of select="name"/>")&gt; _
     Global.System.IAsyncResult Begin<xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request, Global.System.AsyncCallback callback, object state);

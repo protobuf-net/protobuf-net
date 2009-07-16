@@ -1,11 +1,12 @@
 @echo off
-rem regasm.exe /nologo /CodeBase "%1"
+rem "%windir%\Microsoft.NET\Framework\v2.0.50727\regasm.exe" /nologo /CodeBase "%1"
 rem if errorlevel 1 goto BuildEventFailed
 
-gacutil.exe /nologo /f /i "%1"
+rem "%ProgramFiles%\Microsoft SDKs\Windows\v6.0A\bin\gacutil.exe" /nologo /f /i "%1"
 rem if errorlevel 1 goto BuildEventFailed
 
-Regpkg.exe /pkgdeffile:..\bin\debug\ProtoBufGenerator.pkgdef /codebase ..\bin\debug\ProtoBufGenerator.dll
+rem "%ProgramFiles%\Microsoft Visual Studio 2008 SDK\VisualStudioIntegration\Tools\Bin\RegPkg.exe" /pkgdeffile:"%2" /codebase "%1"
+rem "%ProgramFiles%\Microsoft Visual Studio 2008 SDK\VisualStudioIntegration\Tools\Bin\RegPkg.exe" /regfile:"%3" /codebase "%1"
 
 REM Exit properly because the build will not fail
 REM unless the final step exits with an error code

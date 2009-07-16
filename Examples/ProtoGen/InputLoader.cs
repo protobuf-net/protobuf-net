@@ -16,28 +16,28 @@ namespace Examples.ProtoGen
         [Test, ExpectedException(typeof(ArgumentNullException))]
         public void TestNullFileSet()
         {
-            InputFileLoader.Merge(null, "abc");
+            InputFileLoader.Merge(null, "abc", Console.Error);
         }
 
         [Test, ExpectedException(typeof(ArgumentNullException))]
         public void TestNullPath()
         {
             FileDescriptorSet files = new FileDescriptorSet();
-            InputFileLoader.Merge(files, null);
+            InputFileLoader.Merge(files, null, Console.Error);
         }
 
         [Test, ExpectedException(typeof(ArgumentNullException))]
         public void TestEmptyPath()
         {
             FileDescriptorSet files = new FileDescriptorSet();
-            InputFileLoader.Merge(files, "");
+            InputFileLoader.Merge(files, "", Console.Error);
         }
 
         [Test, ExpectedException(typeof(FileNotFoundException))]
         public void TestMissingInput()
         {
             FileDescriptorSet files = new FileDescriptorSet();
-            InputFileLoader.Merge(files, @"ProtoGen\NoneSuch.bin");
+            InputFileLoader.Merge(files, @"ProtoGen\NoneSuch.bin", Console.Error);
         }
 
         [Test]
@@ -49,7 +49,7 @@ namespace Examples.ProtoGen
             // process .bin
             FileDescriptorSet files = new FileDescriptorSet();
             Assert.AreEqual(0, files.file.Count);
-            InputFileLoader.Merge(files, @"ProtoGen\descriptor.bin");
+            InputFileLoader.Merge(files, @"ProtoGen\descriptor.bin", Console.Error);
             Assert.AreEqual(1, files.file.Count);
         }
 
@@ -58,7 +58,7 @@ namespace Examples.ProtoGen
         {
             FileDescriptorSet files = new FileDescriptorSet();
             Assert.AreEqual(0, files.file.Count);
-            InputFileLoader.Merge(files, @"ProtoGen\descriptor.proto");
+            InputFileLoader.Merge(files, @"ProtoGen\descriptor.proto", Console.Error);
             Assert.AreEqual(1, files.file.Count);
         }
 
@@ -69,12 +69,13 @@ namespace Examples.ProtoGen
         {
             FileDescriptorSet files = new FileDescriptorSet();
             try {
-                InputFileLoader.Merge(files, @"ProtoGen\InputLoader.cs");
+                InputFileLoader.Merge(files, @"ProtoGen\InputLoader.cs", Console.Error);
                 Assert.Fail("Should have barfed");
             }
-            catch(ArgumentException ex)
+            catch(ProtoParseException ex)
             {
-                Assert.IsTrue(ex.Message.StartsWith("The input file could not be parsed."));
+                bool sw = ex.Message.StartsWith("An error occurred parsing InputLoader.cs");
+                if (!sw) Assert.Fail("Expected message not found: " + ex.Message);
             }
             catch
             {

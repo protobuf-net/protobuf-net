@@ -10,15 +10,17 @@ namespace ProtoBuf.CodeGenerator
 {
     public static class InputFileLoader
     {
-        public static void Merge(FileDescriptorSet files, string path, params string[] args)
+
+        public static void Merge(FileDescriptorSet files, string path, TextWriter stderr, params string[] args)
         {
+            if (stderr == null) throw new ArgumentNullException("stderr");
             if (files == null) throw new ArgumentNullException("files");
             if (string.IsNullOrEmpty(path)) throw new ArgumentNullException("path");
-
+            
             bool deletePath = false;
             if(!IsValidBinary(path))
             { // try to use protoc
-                path = CompileDescriptor(path, args);
+                path = CompileDescriptor(path, stderr, args);
                 deletePath = true;
             }
             try
@@ -52,13 +54,22 @@ namespace ProtoBuf.CodeGenerator
             }
             return Path.Combine(Path.GetDirectoryName(loaderPath), path);   
         }
-        public static string ExtractResourceToTempFolder(string name, out string folder)
+        public static string GetProtocPath(out string folder)
         {
+            const string Name = "protoc.exe";
+            string lazyPath = InputFileLoader.CombinePathFromAppRoot(Name);
+            if (File.Exists(lazyPath))
+            {   // use protoc.exe from the existing location (faster)
+                folder = null;
+                return lazyPath;
+            }
             folder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("n"));
             Directory.CreateDirectory(folder);
-            string path = Path.Combine(folder, name);
+            string path = Path.Combine(folder, Name);
+            
+            // look inside ourselves...
             using(Stream resStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
-                typeof(InputFileLoader).Namespace + "." + name))
+                typeof(InputFileLoader).Namespace + "." + Name))
             using(Stream outFile = File.OpenWrite(path))
             {
                 long len = 0;
@@ -72,20 +83,26 @@ namespace ProtoBuf.CodeGenerator
             }
             return path;
         }
-        private static string CompileDescriptor(string path, params string[] args)
+        
+        private static string CompileDescriptor(string path, TextWriter stderr, params string[] args)
         {
+            
             string tmp = Path.GetTempFileName();
             string tmpFolder = null, protocPath = null;
             try
             {
-                protocPath = ExtractResourceToTempFolder("protoc.exe", out tmpFolder);
+                protocPath = GetProtocPath(out tmpFolder);
                 ProcessStartInfo psi = new ProcessStartInfo(
                     protocPath,
-                    string.Format(
-                                      @"""--descriptor_set_out={0}"" ""{1}"" {2}",
-                                      tmp, path, string.Join(" ", args)));
-                Debug.WriteLine(psi.FileName, "protoc");
-                Debug.WriteLine(psi.Arguments, "protoc");
+                    string.Format(@"""--descriptor_set_out={0}"" ""--proto_path={1}"" ""--proto_path={2}"" --error_format=gcc ""{3}"" {4}",
+                             tmp, // output file
+                             Environment.CurrentDirectory, // primary search path
+                             Path.GetDirectoryName(protocPath), // secondary search path
+                             Path.Combine(Environment.CurrentDirectory, path), // input file
+                             string.Join(" ", args) // extra args
+                    )
+                );
+                Debug.WriteLine(psi.FileName + " " + psi.Arguments, "protoc");
 
                 psi.CreateNoWindow = true;
                 psi.WindowStyle = ProcessWindowStyle.Hidden;
@@ -95,41 +112,56 @@ namespace ProtoBuf.CodeGenerator
 
                 using (Process proc = Process.Start(psi))
                 {
-                    Thread stdErr = new Thread(DumpStream(proc.StandardError, Console.Error));
-                    Thread stdOut = new Thread(DumpStream(proc.StandardOutput, Console.Out));
-                    stdErr.Name = "stderr reader";
-                    stdOut.Name = "stdout reader";
-                    stdErr.Start();
-                    stdOut.Start();
+                    Thread errThread = new Thread(DumpStream(proc.StandardError, stderr));
+                    Thread outThread = new Thread(DumpStream(proc.StandardOutput, stderr));
+                    errThread.Name = "stderr reader";
+                    outThread.Name = "stdout reader";
+                    errThread.Start();
+                    outThread.Start();
                     proc.WaitForExit();
-                    stdOut.Join();
-                    stdErr.Join();
+                    outThread.Join();
+                    errThread.Join();
                     if (proc.ExitCode != 0)
                     {
-                        throw new ArgumentException("The input file could not be parsed.", "path");
+                        if (HasByteOrderMark(path))
+                        {
+                            stderr.WriteLine("The input file should be UTF8 without a byte-order-mark (in Visual Studio use \"File\" -> \"Advanced Save Options...\" to rectify)");
+                        }
+                        throw new ProtoParseException(Path.GetFileName(path));
                     }
                     return tmp;
                 }
             }
             catch
             {
-                try { File.Delete(tmp); }
+                try { if(File.Exists(tmp)) File.Delete(tmp); }
                 catch { } // swallow
                 throw;
             }
             finally
             {
-                if (!string.IsNullOrEmpty(protocPath))
-                {
-                    try { File.Delete(protocPath); }
-                    catch { } // swallow
-                }
                 if (!string.IsNullOrEmpty(tmpFolder))
                 {
-                    try { Directory.Delete(tmpFolder); }
+                    try { Directory.Delete(tmpFolder, true); }
                     catch { } // swallow
                 }
                 
+            }
+        }
+
+        private static bool HasByteOrderMark(string path)
+        {
+            try
+            {
+                using (Stream s = File.OpenRead(path))
+                {
+                    return s.ReadByte() > 127;
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex); // log only
+                return false;
             }
         }
 
@@ -156,10 +188,14 @@ namespace ProtoBuf.CodeGenerator
                     return file != null;
                 }
             }
-            catch(ProtoException)
+            catch
             {
                 return false;
             }
         }
+    }
+    public sealed class ProtoParseException : Exception
+    {
+        public ProtoParseException(string file) : base("An error occurred parsing " + file) { }
     }
 }

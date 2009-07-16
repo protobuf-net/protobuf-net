@@ -53,9 +53,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="csharp.xslt">
+    <Content Include="csharp.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
     <None Include="descriptor.proto">
     </None>
   </ItemGroup>
@@ -78,15 +78,15 @@
     </EmbeddedResource>
     <None Include="ProtoGen.ico" />
     <None Include="Properties\Usage.txt" />
-    <None Include="common.xslt">
+    <Content Include="common.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="vb.xslt">
+    </Content>
+    <Content Include="vb.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="xml.xslt">
+    </Content>
+    <Content Include="xml.xslt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

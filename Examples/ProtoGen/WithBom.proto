@@ -1,0 +1,4 @@
+﻿package WithBom;
+message expectToFail {
+    required string name = 1; 
+}

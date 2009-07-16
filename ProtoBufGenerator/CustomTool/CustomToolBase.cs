@@ -15,7 +15,7 @@ namespace ProtoBufGenerator
     /// to easily create and deploy a new Visual Studio 2008 Custom Tool.
     /// </summary>
     [ComVisible(true)]
-    public abstract class CustomToolBase : IVsSingleFileGenerator, IObjectWithSite
+    public abstract class CustomToolBase : Package, IVsSingleFileGenerator, IObjectWithSite
     {
         public CustomToolBase()
         {

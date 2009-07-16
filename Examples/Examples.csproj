@@ -219,7 +219,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="ProtoGen\rpc.bin" />
-    <None Include="ProtoGen\rpc.proto" />
+    <None Include="ProtoGen\rpc.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net.Extensions\protobuf-net.Extensions.csproj">
@@ -269,6 +271,12 @@
     </Content>
     <None Include="..\Tools\protoc.exe">
       <Link>protoc.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ProtoGen\Empty.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ProtoGen\WithBom.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

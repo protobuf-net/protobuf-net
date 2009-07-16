@@ -1,15 +1,14 @@
 ﻿using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Xml;
 using Microsoft.CSharp;
-using NUnit.Framework;
-using ProtoBuf.CodeGenerator;
-using System.Diagnostics;
 using Microsoft.VisualBasic;
-using System.Text;
+using NUnit.Framework;
 using ProtoBuf;
+using ProtoBuf.CodeGenerator;
 
 namespace Examples.ProtoGen
 {
@@ -17,6 +16,10 @@ namespace Examples.ProtoGen
     public class Generator
     {
         public static string GetCode(params string[] args)
+        {
+            return GetCode(Console.Error, args);
+        }
+        public static string GetCode(TextWriter stderr, params string[] args)
         {
 
             // ensure we have quiet mode enabled
@@ -27,7 +30,9 @@ namespace Examples.ProtoGen
             }
 
             StringWriter sw = new StringWriter();
-            CommandLineOptions.Parse(sw, args).Execute();
+            var opt = CommandLineOptions.Parse(sw, args);
+            opt.ErrorWriter = stderr;
+            opt.Execute();
             return sw.ToString();
 
         }
@@ -39,6 +44,57 @@ namespace Examples.ProtoGen
             File.WriteAllText(@"ProtoGen\person.cs", csharp);
             TestCompileCSharp(csharp);
         }
+        [Test]
+        public void TestRpcAsCSharp()
+        {
+            string csharp = GetCode(@"-i:ProtoGen\rpc.proto", "-p:clientProxy");
+            File.WriteAllText(@"ProtoGen\rpc.cs", csharp);
+            TestCompileCSharp(csharp,@"C:\Program Files\Reference Assemblies\Microsoft\Framework\v3.0\System.ServiceModel.dll");
+        }
+        [Test, Ignore("interface needs some work")]
+        public void TestRpcAsVB()
+        {
+            string vb = GetCode(@"-i:ProtoGen\rpc.proto","-t:vb", "-p:clientProxy");
+            File.WriteAllText(@"ProtoGen\rpc.vb", vb);
+            TestCompileVisualBasic(vb, @"C:\Program Files\Reference Assemblies\Microsoft\Framework\v3.0\System.ServiceModel.dll");
+        }
+        [Test]
+        public void TestWithBomAsCSharp()
+        {
+            StringWriter stderr = new StringWriter();
+            try
+            {
+                
+                GetCode(stderr, @"-i:ProtoGen\WithBom.proto");
+                Assert.Fail("Should have failed parsing WithBom.proto");
+            }
+            catch (ProtoParseException)
+            {
+                string s = stderr.ToString();
+                Assert.IsTrue(s.Contains("The input file should be UTF8 without a byte-order-mark"));
+            }
+        }
+
+        [Test]
+        public void TestWithBomAsCSharpWriteErrorsToFile()
+        {
+            StringWriter stderr = new StringWriter();
+            try
+            {
+
+                File.WriteAllText("errors.txt", "");
+                GetCode(stderr, @"-i:ProtoGen\WithBom.proto", "-writeErrors", "-o:errors.txt");
+                Assert.Fail("Should have failed parsing WithBom.proto");
+            }
+            catch (ProtoParseException)
+            {
+                string s = stderr.ToString();
+                Assert.AreEqual("", s);
+                s = File.ReadAllText("errors.txt");
+                Assert.IsTrue(s.Contains("The input file should be UTF8 without a byte-order-mark"));
+            }
+        }
+
 
         [Test]
         public void TestPersonAsVB()
@@ -78,6 +134,12 @@ namespace Examples.ProtoGen
         public void TestDescriptorAsCSharpBasic()
         {
             string code = GetCode(@"-i:ProtoGen\descriptor.proto");
+            TestCompileCSharp(code);
+        }
+        [Test]
+        public void TestEmptyAsCSharpBasic()
+        {
+            string code = GetCode(@"-i:ProtoGen\empty.proto");
             TestCompileCSharp(code);
         }
 

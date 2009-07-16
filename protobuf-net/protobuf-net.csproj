@@ -132,9 +132,9 @@
     <Compile Include="UnknownType.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\Licence.txt">
+    <Content Include="..\Licence.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsyncUtility.cs" />

@@ -40,6 +40,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoBufGenerator", "ProtoB
 EndProject
 Project("{F184B08F-C81C-45F6-A57F-5ABD9991F28F}") = "VBTestRig", "VBTestRig\VBTestRig.vbproj", "{5298B531-E3E3-4E3B-B8D2-62459C52163B}"
 EndProject
+Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "protobuf-net-VS9", "protobuf-net-VS9\protobuf-net-VS9.vdproj", "{6F537CE4-FB43-40F0-8F7C-F83BDC11CAE4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -197,6 +199,11 @@ Global
 		{5298B531-E3E3-4E3B-B8D2-62459C52163B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5298B531-E3E3-4E3B-B8D2-62459C52163B}.Silverlight2|Any CPU.ActiveCfg = Release|Any CPU
 		{5298B531-E3E3-4E3B-B8D2-62459C52163B}.Silverlight2|Any CPU.Build.0 = Release|Any CPU
+		{6F537CE4-FB43-40F0-8F7C-F83BDC11CAE4}.Debug|Any CPU.ActiveCfg = Debug
+		{6F537CE4-FB43-40F0-8F7C-F83BDC11CAE4}.Net20|Any CPU.ActiveCfg = Release
+		{6F537CE4-FB43-40F0-8F7C-F83BDC11CAE4}.Profile|Any CPU.ActiveCfg = Release
+		{6F537CE4-FB43-40F0-8F7C-F83BDC11CAE4}.Release|Any CPU.ActiveCfg = Release
+		{6F537CE4-FB43-40F0-8F7C-F83BDC11CAE4}.Silverlight2|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

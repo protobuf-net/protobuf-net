@@ -8,11 +8,33 @@ using System.Text;
 using System.Xml.Serialization;
 using System.Runtime.CompilerServices;
 using System.ComponentModel;
+using System.Diagnostics;
 
 namespace ProtoBuf.CodeGenerator
 {
     public sealed class CommandLineOptions
     {
+        private TextWriter errorWriter = Console.Error;
+        private string workingDirectory = Environment.CurrentDirectory;
+
+        /// <summary>
+        /// Root directory for the session
+        /// </summary>
+        public string WorkingDirectory
+        {
+            get { return workingDirectory;}
+            set { workingDirectory = value; }
+        }
+
+        /// <summary>
+        /// Nominates a writer for error messages (else stderr is used)
+        /// </summary>
+        public TextWriter ErrorWriter
+        {
+            get { return errorWriter; }
+            set { errorWriter = value; }
+        }
+
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static int Main(params string[] args)
         {
@@ -31,13 +53,13 @@ namespace ProtoBuf.CodeGenerator
         }
 
         private string template = TemplateCSharp, outPath = "", defaultNamespace;
-        private bool showLogo = true, showHelp;
+        private bool showLogo = true, showHelp, writeErrorsToFile;
         private readonly List<string> inPaths = new List<string>();
         private readonly List<string> args = new List<string>();
 
         private int messageCount;
         public int MessageCount { get { return messageCount; } }
-
+        public bool WriteErrorsToFile { get { return writeErrorsToFile; } set { writeErrorsToFile = value; } }
         public string Template { get { return template;} set { template = value;} }
         public string DefaultNamespace { get { return defaultNamespace; } set { defaultNamespace = value; } }
         public bool ShowLogo { get { return showLogo; } set { showLogo = value; } }
@@ -92,6 +114,14 @@ namespace ProtoBuf.CodeGenerator
                 {
                     options.InPaths.Add(arg.Substring(3).Trim());
                 }
+                else if (arg == "-writeErrors")
+                {
+                    options.WriteErrorsToFile = true;
+                }
+                else if (arg.StartsWith("-w:"))
+                {
+                    options.WorkingDirectory = arg.Substring(3).Trim();
+                }
                 else
                 {
                     options.ShowHelp = true;
@@ -130,28 +160,62 @@ namespace ProtoBuf.CodeGenerator
         
         public void Execute()
         {
-            if(showLogo)
+            StringBuilder errors = new StringBuilder();
+            string oldDir = Environment.CurrentDirectory;
+            Environment.CurrentDirectory = WorkingDirectory;
+            try
             {
-                messageOutput.WriteLine(Properties.Resources.LogoText);
-            }
-            if(ShowHelp)
-            {
-                messageOutput.WriteLine(Properties.Resources.Usage);
-                return;
-            }
-            
-            string xml = LoadFilesAsXml(this);
-            Code = ApplyTransform(this, xml);
-            if (this.OutPath == "-") { }
-            else if (!string.IsNullOrEmpty(this.OutPath))
-            {
-                File.WriteAllText(this.OutPath, Code);
-            }
-            else if (string.IsNullOrEmpty(this.OutPath))
-            {
-                messageOutput.Write(Code);
-            }
+                if (string.IsNullOrEmpty(OutPath))
+                {
+                    WriteErrorsToFile = false; // can't be
+                }
+                else if (WriteErrorsToFile)
+                {
+                    ErrorWriter = new StringWriter(errors);
+                }
+                try
+                {
+                    if (ShowLogo)
+                    {
+                        messageOutput.WriteLine(Properties.Resources.LogoText);
+                    }
+                    if (ShowHelp)
+                    {
+                        messageOutput.WriteLine(Properties.Resources.Usage);
+                        return;
+                    }
 
+                    string xml = LoadFilesAsXml(this);
+                    Code = ApplyTransform(this, xml);
+                    if (this.OutPath == "-") { }
+                    else if (!string.IsNullOrEmpty(this.OutPath))
+                    {
+                        File.WriteAllText(this.OutPath, Code);
+                    }
+                    else if (string.IsNullOrEmpty(this.OutPath))
+                    {
+                        messageOutput.Write(Code);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (WriteErrorsToFile)
+                    {
+                        // if we had a parse fail and were able to capture something
+                        // sensible, then just write that; otherwise use the exception
+                        // as well
+                        string body = (ex is ProtoParseException && errors.Length > 0) ?
+                            errors.ToString() : (ex.Message + Environment.NewLine + errors);
+                        File.WriteAllText(this.OutPath, body);
+                    }
+                    throw;
+                }
+            }
+            finally
+            {
+                try { Environment.CurrentDirectory = oldDir; }
+                catch (Exception ex) { Trace.WriteLine(ex); }
+            }
         }
 
 
@@ -161,7 +225,7 @@ namespace ProtoBuf.CodeGenerator
 
             foreach (string inPath in options.InPaths)
             {
-                InputFileLoader.Merge(set, inPath, options.Arguments.ToArray());
+                InputFileLoader.Merge(set, inPath, options.ErrorWriter, options.Arguments.ToArray());
             }
 
             XmlSerializer xser = new XmlSerializer(typeof(FileDescriptorSet));
@@ -195,7 +259,14 @@ namespace ProtoBuf.CodeGenerator
                     if (File.Exists(localXslt))
                         xsltTemplate = localXslt;
                 }
-                xslt.Load(xsltTemplate);
+                try
+                {
+                    xslt.Load(xsltTemplate);
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("Unable to load tranform: " + options.Template, ex);
+                }
                 options.XsltOptions.RemoveParam("defaultNamespace", "");
                 if (options.DefaultNamespace != null)
                 {
