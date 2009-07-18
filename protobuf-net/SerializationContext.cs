@@ -168,7 +168,7 @@ namespace ProtoBuf
         /// <param name="obj">The item being processed (end).</param>
         public void Pop(object obj)
         {
-            if(stackDepth-- >= RecursionThreshold)
+            if(--stackDepth >= RecursionThreshold)
             {
                 objectStack.Pop();
             }
@@ -207,7 +207,7 @@ namespace ProtoBuf
 
         public void CheckStackClean()
         {
-            if (stackDepth != 0) throw new ProtoException("Stack corruption; the stack depth ended as: " + stackDepth.ToString());
+            if (stackDepth != 0 || objectStack.Count != 0) throw new ProtoException("Stack corruption; the stack depth ended as: " + stackDepth.ToString());
             CheckNoRemainingGroups();
         }
         public void CheckNoRemainingGroups()

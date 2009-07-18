@@ -33,7 +33,7 @@ namespace Examples.ProtoGen
             InputFileLoader.Merge(files, "", Console.Error);
         }
 
-        [Test, ExpectedException(typeof(FileNotFoundException))]
+        [Test, ExpectedException(typeof(ProtoParseException))]
         public void TestMissingInput()
         {
             FileDescriptorSet files = new FileDescriptorSet();

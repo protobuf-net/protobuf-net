@@ -139,6 +139,7 @@
     <Compile Include="Issues\Issue45.cs" />
     <Compile Include="Issues\Issue48.cs" />
     <Compile Include="Issues\Issue54.cs" />
+    <Compile Include="Issues\Issue62.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListTests.cs" />
     <Compile Include="NonGeneric.cs" />
