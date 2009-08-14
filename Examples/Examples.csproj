@@ -168,6 +168,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Compile>
     <Compile Include="ProtoGen\OptionParser.cs" />
+    <Compile Include="ProtoGen\searchRequest.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>searchRequest.proto</DependentUpon>
+    </Compile>
     <Compile Include="Recursion.cs" />
     <Compile Include="Remoting.cs" />
     <Compile Include="Remoting\RemotingDemo.cs" />
@@ -276,6 +282,11 @@
     </None>
     <None Include="ProtoGen\Empty.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ProtoGen\searchRequest.proto">
+      <CustomToolNamespace>%3bfixCase%3bdatacontract</CustomToolNamespace>
+      <Generator>ProtoBufTool</Generator>
+      <LastGenOutput>searchRequest.cs</LastGenOutput>
     </None>
     <None Include="ProtoGen\WithBom.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

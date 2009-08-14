@@ -1,0 +1,6 @@
+package protobuf_net;
+import "descriptor.proto";
+
+extend google.protobuf.FileOptions {
+  optional string namespace = 52500;
+}

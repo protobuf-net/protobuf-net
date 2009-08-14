@@ -1,0 +1,17 @@
+import "protobuf-net.proto";
+option (protobuf_net.namespace) = "protobuf.options.example";
+message searchRequest {
+  required string query = 1;
+  optional int32 page_number = 2;
+  optional int32 result_per_page = 3 [default = 10];
+  enum corpus {
+    universal = 0;
+    web = 1;
+    images = 2;
+    local = 3;
+    news = 4;
+    products = 5;
+    video = 6;
+  }
+  optional corpus corpus1 = 4 [default = universal];
+}

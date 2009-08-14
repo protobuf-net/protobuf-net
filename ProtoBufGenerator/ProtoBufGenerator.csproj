@@ -114,7 +114,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="ItemTemplates\csharp\data\1033\ProtoBuf.zip" />
-    <None Include="Tools\Copy of ProtoBufGenerator.reg" />
     <None Include="Tools\ProtoBufGenerator.reg" />
     <None Include="Tools\register.bat" />
     <None Include="Tools\unregister.bat" />
