@@ -20,9 +20,9 @@ namespace Examples.ProtoGen
         }
 
         [Test]
-        public void TestDescriptorSuccess()
+        public void TestCompileDescriptorAndWriteMainDescriptorCS_Success()
         {
-            Assert.AreEqual(0, CommandLineOptions.Main(@"-i:ProtoGen/descriptor.proto", "-o:descriptor.cs"));
+            Assert.AreEqual(0, CommandLineOptions.Main(@"-i:ProtoGen/descriptor.proto", "-i:protobuf-net.proto", "-o:descriptor.cs"));
         }
 
         

@@ -192,9 +192,15 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
   
   <xsl:template match="
                 FileDescriptorProto/message_type | FileDescriptorProto/enum_type | FileDescriptorProto/service
-                | DescriptorProto/field | DescriptorProto/enum_type | DescriptorProto/message_type
+                | DescriptorProto/enum_type | DescriptorProto/message_type
                 | DescriptorProto/nested_type | EnumDescriptorProto/value | ServiceDescriptorProto/method">
     <xsl:apply-templates select="*"/>
+  </xsl:template>
+
+  <xsl:template match="DescriptorProto/field">
+    <xsl:apply-templates select="*"/>
+    <xsl:variable name="extName" select="concat('.',(ancestor::FileDescriptorProto/package)[1],'.',../name)"/>
+    <xsl:apply-templates select="//FieldDescriptorProto[extendee=$extName]"/>
   </xsl:template>
 
   <xsl:template match="EnumDescriptorProto">

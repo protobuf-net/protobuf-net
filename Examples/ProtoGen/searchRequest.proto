@@ -1,7 +1,13 @@
 import "protobuf-net.proto";
 option (protobuf_net.namespace) = "protobuf.options.example";
+
+extend protobuf_net.Test {
+  optional string blop = 101;
+}
+
 message searchRequest {
   required string query = 1;
+  
   optional int32 page_number = 2;
   optional int32 result_per_page = 3 [default = 10];
   enum corpus {

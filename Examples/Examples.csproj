@@ -276,6 +276,10 @@
       <Link>protoc-license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="..\ProtoGen\protobuf-net.proto">
+      <Link>protobuf-net.proto</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="..\Tools\protoc.exe">
       <Link>protoc.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -287,6 +291,7 @@
       <CustomToolNamespace>%3bfixCase%3bdatacontract</CustomToolNamespace>
       <Generator>ProtoBufTool</Generator>
       <LastGenOutput>searchRequest.cs</LastGenOutput>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="ProtoGen\WithBom.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

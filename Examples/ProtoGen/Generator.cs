@@ -61,18 +61,19 @@ namespace Examples.ProtoGen
         [Test]
         public void TestWithBomAsCSharp()
         {
-            StringWriter stderr = new StringWriter();
-            try
-            {
-                
-                GetCode(stderr, @"-i:ProtoGen\WithBom.proto");
-                Assert.Fail("Should have failed parsing WithBom.proto");
-            }
-            catch (ProtoParseException)
-            {
-                string s = stderr.ToString();
-                Assert.IsTrue(s.Contains("The input file should be UTF8 without a byte-order-mark"));
-            }
+            using(StringWriter stderr = new StringWriter()) {
+                try
+                {
+                    
+                    GetCode(stderr, @"-i:ProtoGen\WithBom.proto");
+                    Assert.Fail("Should have failed parsing WithBom.proto");
+                }
+                catch (ProtoParseException)
+                {
+                    string s = stderr.ToString();
+                    Assert.IsTrue(s.Contains("The input file should be UTF8 without a byte-order-mark"));
+                }
+                }
         }
 
         [Test]
@@ -110,11 +111,19 @@ namespace Examples.ProtoGen
             string csharp = GetCode(@"-i:ProtoGen\person.proto", "-t:xml");
             File.WriteAllText(@"ProtoGen\person.xml", csharp);
         }
+
+        [Test]
+        public void TestSearchRequestAsXml()
+        {
+            string csharp = GetCode(@"-i:ProtoGen\searchRequest.proto", "-t:xml");
+            File.WriteAllText(@"ProtoGen\searchRequest.xml", csharp);
+        }
         [Test]
         public void TestDescriptorAsXml()
         {
-            string xml = GetCode(@"-i:ProtoGen\descriptor.proto", "-t:xml");
+            string xml = GetCode(@"-i:ProtoGen\descriptor.proto", @"-i:protobuf-net.proto", "-t:xml");
             TestLoadXml(xml);
+            File.WriteAllText("descriptor.xml", xml);
         }
 
         [Test]
@@ -133,7 +142,7 @@ namespace Examples.ProtoGen
         [Test]
         public void TestDescriptorAsCSharpBasic()
         {
-            string code = GetCode(@"-i:ProtoGen\descriptor.proto");
+            string code = GetCode(@"-i:ProtoGen\descriptor.proto", @"-i:protobuf-net.proto");
             TestCompileCSharp(code);
         }
         [Test]
