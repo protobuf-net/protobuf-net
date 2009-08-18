@@ -189,7 +189,7 @@ namespace ProtoBuf.Property
                         break;
                     case MemberTypes.Field:
                         FieldInfo field = (FieldInfo)member;
-#if CF
+#if (CF || SILVERLIGHT)
                         // basic boxing/reflection
                         this.getValue = delegate(TSource source) { return (TValue)field.GetValue(source); };
                         this.setValue = delegate(TSource source, TValue value) { field.SetValue(source, value); };
