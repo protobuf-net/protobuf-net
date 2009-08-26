@@ -158,7 +158,7 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
   </xsl:template>
   
   <xsl:template match="DescriptorProto">
-  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"<xsl:value-of select="name"/>")]
+  [<xsl:if test="$optionFullFramework">global::System.Serializable, </xsl:if>global::ProtoBuf.ProtoContract(Name=@"<xsl:value-of select="name"/>")]
   <xsl:if test="$optionDataContract">[global::System.Runtime.Serialization.DataContract(Name=@"<xsl:value-of select="name"/>")]
   </xsl:if><xsl:if test="$optionXml">[global::System.Xml.Serialization.XmlType(TypeName=@"<xsl:value-of select="name"/>")]
   </xsl:if><!--
