@@ -492,7 +492,7 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
   <xsl:template match="MethodDescriptorProto">
     <xsl:if test="($optionClientProxy or $optionDataContract)">
         [global::System.ServiceModel.OperationContract(Name = @"<xsl:value-of select="name"/>")]
-        [global::ProtoBuf.ServiceModel.ProtoBehavior]
+        <xsl:if test="$optionFullFramework">[global::ProtoBuf.ServiceModel.ProtoBehavior]</xsl:if>
     </xsl:if>
         <xsl:apply-templates select="output_type"/><xsl:text xml:space="preserve"> </xsl:text><xsl:value-of select="name"/>(<xsl:apply-templates select="input_type"/> request);
     <xsl:if test="$optionAsynchronous and ($optionClientProxy or $optionDataContract)">
