@@ -102,7 +102,7 @@ namespace ProtoBuf
         }
 
         [ProtoContract]
-        sealed class SimpleWrapper
+        public sealed class SimpleWrapper
         {
             public SimpleWrapper() { }
             public SimpleWrapper(TValue value) { this.value = value; }

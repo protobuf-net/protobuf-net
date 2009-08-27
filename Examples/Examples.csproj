@@ -131,6 +131,7 @@
     <Compile Include="GuidTests.cs" />
     <Compile Include="Inheritance.cs" />
     <Compile Include="InheritanceMidLevel.cs" />
+    <Compile Include="Issues\ComplexGenerics\ComplexGenericExample.cs" />
     <Compile Include="Issues\Issue26.cs" />
     <Compile Include="Issues\Issue27.cs" />
     <Compile Include="Issues\Issue29.cs" />
@@ -141,6 +142,7 @@
     <Compile Include="Issues\Issue54.cs" />
     <Compile Include="Issues\Issue62.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
+    <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListTests.cs" />
     <Compile Include="NonGeneric.cs" />
     <Compile Include="NWind\CompatDb.cs" />
@@ -290,8 +292,8 @@
     <None Include="ProtoGen\searchRequest.proto">
       <CustomToolNamespace>%3bfixCase%3bdatacontract</CustomToolNamespace>
       <Generator>ProtoBufTool</Generator>
-      <LastGenOutput>searchRequest.cs</LastGenOutput>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <LastGenOutput>searchRequest.cs</LastGenOutput>
     </None>
     <None Include="ProtoGen\WithBom.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

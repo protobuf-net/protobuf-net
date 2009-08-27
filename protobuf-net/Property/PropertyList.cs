@@ -55,7 +55,17 @@ namespace ProtoBuf.Property
         {
             TList list = GetValue(source);
             bool set = list == null;
-            if (set) list = (TList)Activator.CreateInstance(typeof(TList));
+            if (set)
+            {
+                if(typeof(TList) == typeof(List<TValue>) || typeof(TList) == typeof(IList<TValue>))
+                {
+                    list = (TList)(object)new List<TValue>(); // reasonable default for IList<T>, and faster for List<T>
+                }
+                else
+                {
+                    list = (TList)Activator.CreateInstance(typeof(TList));
+                }
+            }
             do
             {
                 list.Add(innerProperty.DeserializeImpl(default(TValue), context));
