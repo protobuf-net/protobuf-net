@@ -91,17 +91,17 @@ namespace Examples.SimpleStream
         public void PerfTestSimple(int count, bool runLegacy)
         {
             Test1 t1 = new Test1 { A = 150 };
-            Assert.IsTrue(LoadTestItem(t1, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t1, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x08, 0x96, 0x01));
         }
         public void PerfTestString(int count, bool runLegacy)
         {
             Test2 t2 = new Test2 { B = "testing" };
-            Assert.IsTrue(LoadTestItem(t2, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+            Assert.IsTrue(LoadTestItem(t2, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
         public void PerfTestEmbedded(int count, bool runLegacy)
         {
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
-            Assert.IsTrue(LoadTestItem(t3, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.IsTrue(LoadTestItem(t3, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
         [Test]
@@ -116,7 +116,7 @@ namespace Examples.SimpleStream
         public void PerfTestEnum(int count, bool runLegacy)
         {
             Test4 t4 = new Test4 { D = TestEnum.D };
-            Assert.IsTrue(LoadTestItem(t4, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, 0x20, 0x03));
+            Assert.IsTrue(LoadTestItem(t4, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x20, 0x03));
         }
 
 
@@ -285,7 +285,7 @@ namespace Examples.SimpleStream
             Serializer.Serialize(Stream.Null, nac);
         }
 
-        public static bool LoadTestItem<T>(T item, int count, int protoCount, bool testBinary, bool testSoap, bool testXml, bool testProtoSharp, bool writeJson, params byte[] expected) where T : class, new()
+        public static bool LoadTestItem<T>(T item, int count, int protoCount, bool testBinary, bool testSoap, bool testXml, bool testProtoSharp, bool writeJson, bool testNetDcs, params byte[] expected) where T : class, new()
         {
             bool pass = true;
             string name = typeof(T).Name;
@@ -432,6 +432,31 @@ namespace Examples.SimpleStream
                     }
                     deserializeWatch.Stop();
                     Console.WriteLine("||`XmlSerializer`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
+                        ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
+                }
+            }
+            if (testNetDcs)
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    NetDataContractSerializer nxser = new NetDataContractSerializer();
+                    nxser.WriteObject(ms, item);
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    serializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        nxser.WriteObject(Stream.Null, item);
+                    }
+                    serializeWatch.Stop();
+                    GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                    deserializeWatch = Stopwatch.StartNew();
+                    for (int i = 0; i < count; i++)
+                    {
+                        ms.Position = 0;
+                        nxser.ReadObject(ms);
+                    }
+                    deserializeWatch.Stop();
+                    Console.WriteLine("||`NetDataContractSerializer`||{0:###,###,###}||{1:###,###,###}||{2:###,###,###}||",
                         ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
             }

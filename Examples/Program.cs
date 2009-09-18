@@ -12,23 +12,23 @@ namespace Examples
         static void Main() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
             //const int COUNT = 1000000;
-            const bool RUN_LEGACY = false;
+            const bool RUN_LEGACY = true;
             //demo.PerfTestSimple(COUNT, RUN_LEGACY);
             //demo.PerfTestString(COUNT, RUN_LEGACY);
             //demo.PerfTestEmbedded(COUNT, RUN_LEGACY);
             //demo.PerfTestEnum(COUNT, true);
             //demo.PerfTestArray(COUNT, true);
-            
+
             const int NWIND_COUNT = 1000;
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
             Console.WriteLine("Sub-object format: {0}", DAL.Database.SubObjectFormat);
-            SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, null);
+            SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, false, null);
 
             DatabaseCompat compat = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompat>();
-            SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, RUN_LEGACY, false, RUN_LEGACY, true, false, null);
+            SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, RUN_LEGACY, false, RUN_LEGACY, true, false, true, null);
 
             DatabaseCompatRem compatRem = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompatRem>();
-            SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, false, false, null);
+            SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, false, false, false, null);
             
         }
 
