@@ -112,6 +112,9 @@ Namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
     <xsl:if test="string($namespace) != ''">
 End Namespace</xsl:if></xsl:template>
   
+<xsl:template match="FileDescriptorProto/dependency/string">
+' Note: requires additional types generated from: <xsl:value-of select="."/></xsl:template>
+
 <xsl:template match="DescriptorProto">
 <xsl:choose>
 <xsl:when test="$optionDataContract">
