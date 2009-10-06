@@ -34,18 +34,7 @@
   <xsl:variable name="optionFullFramework" select="not($lightFramework='true')"/>
   <xsl:variable name="optionAsynchronous" select="$asynchronous='true'"/>
   <xsl:variable name="optionClientProxy" select="$clientProxy='true'"/>
-  <xsl:variable name="optionFixCase" select="$fixCase='true'"/>
-
-  <xsl:template match="*">
-    <xsl:message terminate="yes">
-      Node not handled: <xsl:for-each select="ancestor-or-self::*">/<xsl:value-of select="name()"/></xsl:for-each>
-      <xsl:for-each select="*">
-        ; <xsl:value-of select="concat(name(),'=',.)"/>
-      </xsl:for-each>
-    </xsl:message>
-  </xsl:template>
-
-  
+  <xsl:variable name="optionFixCase" select="$fixCase='true'"/>  
   
   <xsl:template match="FileDescriptorSet">
     <xsl:if test="$help='true'">

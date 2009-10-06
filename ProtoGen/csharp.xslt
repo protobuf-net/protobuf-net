@@ -46,15 +46,6 @@
 </xsl:text><!--
     --><xsl:apply-templates select="*"/><!--
   --></xsl:template>
-  
-    <xsl:template match="*">
-    <xsl:message terminate="yes">
-      Node not handled: <xsl:for-each select="ancestor-or-self::*">/<xsl:value-of select="name()"/></xsl:for-each>
-      <xsl:for-each select="*">
-        ; <xsl:value-of select="concat(name(),'=',.)"/>
-      </xsl:for-each>
-    </xsl:message>
-  </xsl:template>
 
   <xsl:template name="WriteUsings">
     <xsl:param name="ns"/>

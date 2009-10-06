@@ -9,6 +9,14 @@
     <xsl:value-of select="substring($value,2)"/>
   </xsl:template>
   -->
+  <xsl:template match="*">
+    <xsl:message terminate="yes">
+      Node not handled: <xsl:for-each select="ancestor-or-self::*">/<xsl:value-of select="name()"/></xsl:for-each>
+      <xsl:for-each select="*">
+        ; <xsl:value-of select="concat(name(),'=',.)"/>
+      </xsl:for-each>
+    </xsl:message>
+  </xsl:template>
   <xsl:param name="fixCase"/>
   <xsl:variable name="optionFixCase" select="$fixCase='true'"/>
   
@@ -91,4 +99,11 @@
     </xsl:call-template></xsl:otherwise>    
   </xsl:choose></xsl:template>
 
+  <xsl:template match="FieldDescriptorProto/options"/>
+  <xsl:template match="FileDescriptorProto/options"/>
+  <xsl:template match="DescriptorProto/options"/>
+  <xsl:template match="EnumValueDescriptorProto/options"/>
+  <xsl:template match="EnumDescriptorProto/options"/>
+  <xsl:template match="ServiceDescriptorProto/options"/>
+  <xsl:template match="MethodDescriptorProto/options"/>
 </xsl:stylesheet>
