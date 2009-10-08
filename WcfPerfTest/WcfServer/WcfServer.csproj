@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30428</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{BA39F9B3-F49E-4BC4-A0F6-E6738CAAC3BD}</ProjectGuid>
     <ProjectTypeGuids>{349c5851-65df-11da-9384-00065b846f21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
@@ -83,10 +83,27 @@
     <Service Include="{3259AA49-8AA1-44D3-9025-A0B520596A8C}" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BasicMessage.proto">
+      <Generator>ProtoBufTool</Generator>
+      <LastGenOutput>BasicMessage.cs</LastGenOutput>
+      <CustomToolNamespace>%3bfixCase%3bdatacontract%3bclientProxy%3basynchronous</CustomToolNamespace>
+    </None>
     <None Include="NWind.dbml.layout">
       <DependentUpon>NWind.dbml</DependentUpon>
     </None>
+    <Compile Include="BasicMessage.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>BasicMessage.proto</DependentUpon>
+    </Compile>
     <Compile Include="NWindService.svc.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\protobuf-net\protobuf-net.csproj">
+      <Project>{8374E4D7-2A91-48F1-9360-09B09CF27C3F}</Project>
+      <Name>protobuf-net</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

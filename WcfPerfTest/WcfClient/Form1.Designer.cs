@@ -54,7 +54,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(92, 13);
+            this.button2.Location = new System.Drawing.Point(192, 13);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(46, 23);
             this.button2.TabIndex = 1;
@@ -96,7 +96,7 @@
             this.dataGridView1.Location = new System.Drawing.Point(175, 42);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(353, 265);
+            this.dataGridView1.Size = new System.Drawing.Size(521, 265);
             this.dataGridView1.TabIndex = 3;
             // 
             // orderIDDataGridViewTextBoxColumn
@@ -150,19 +150,19 @@
             // 
             this.button3.Location = new System.Drawing.Point(12, 13);
             this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(34, 23);
+            this.button3.Size = new System.Drawing.Size(83, 23);
             this.button3.TabIndex = 5;
-            this.button3.Text = "Foo";
+            this.button3.Text = "vanilla WCF";
             this.button3.UseVisualStyleBackColor = true;
             this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(52, 13);
+            this.button4.Location = new System.Drawing.Point(101, 13);
             this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(34, 23);
+            this.button4.Size = new System.Drawing.Size(85, 23);
             this.button4.TabIndex = 6;
-            this.button4.Text = "Bar";
+            this.button4.Text = "protobuf-net";
             this.button4.UseVisualStyleBackColor = true;
             this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
@@ -170,7 +170,7 @@
             // 
             this.checkBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBox1.AutoSize = true;
-            this.checkBox1.Location = new System.Drawing.Point(476, 17);
+            this.checkBox1.Location = new System.Drawing.Point(644, 17);
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(52, 17);
             this.checkBox1.TabIndex = 7;
@@ -181,9 +181,9 @@
             // 
             this.progressBar1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar1.Location = new System.Drawing.Point(144, 13);
+            this.progressBar1.Location = new System.Drawing.Point(244, 13);
             this.progressBar1.Name = "progressBar1";
-            this.progressBar1.Size = new System.Drawing.Size(211, 22);
+            this.progressBar1.Size = new System.Drawing.Size(279, 22);
             this.progressBar1.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressBar1.TabIndex = 8;
             this.progressBar1.Value = 25;
@@ -193,7 +193,7 @@
             // 
             this.checkBox2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.checkBox2.AutoSize = true;
-            this.checkBox2.Location = new System.Drawing.Point(407, 17);
+            this.checkBox2.Location = new System.Drawing.Point(575, 17);
             this.checkBox2.Name = "checkBox2";
             this.checkBox2.Size = new System.Drawing.Size(63, 17);
             this.checkBox2.TabIndex = 9;
@@ -203,7 +203,7 @@
             // numericUpDown1
             // 
             this.numericUpDown1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.numericUpDown1.Location = new System.Drawing.Point(361, 14);
+            this.numericUpDown1.Location = new System.Drawing.Point(529, 14);
             this.numericUpDown1.Maximum = new decimal(new int[] {
             150,
             0,
@@ -222,7 +222,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(540, 319);
+            this.ClientSize = new System.Drawing.Size(708, 319);
             this.Controls.Add(this.numericUpDown1);
             this.Controls.Add(this.checkBox2);
             this.Controls.Add(this.progressBar1);

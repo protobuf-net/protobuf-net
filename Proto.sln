@@ -5,7 +5,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples", "Examples\Exampl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net", "protobuf-net\protobuf-net.csproj", "{8374E4D7-2A91-48F1-9360-09B09CF27C3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net_Silverlight", "protobuf-net_Silverlight\protobuf-net_Silverlight.csproj", "{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}"
+Project("{00000000-0000-0000-0000-000000000000}") = "protobuf-net_Silverlight", "protobuf-net_Silverlight\protobuf-net_Silverlight.csproj", "{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SilverlightExtended", "SilverlightExtended\SilverlightExtended.csproj", "{05A18144-D234-46D7-A36C-CD45BA884746}"
 EndProject
@@ -27,7 +27,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LateLoaded", "LateLoaded\La
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.Extensions", "protobuf-net.Extensions\protobuf-net.Extensions.csproj", "{927AB924-08B5-4629-B505-3BC78A61B0D6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "demo-rpc-client-silverlight", "demo-rpc-client-silverlight\demo-rpc-client-silverlight.csproj", "{7C741476-7F39-4C17-9806-C839A5683463}"
+Project("{00000000-0000-0000-0000-000000000000}") = "demo-rpc-client-silverlight", "demo-rpc-client-silverlight\demo-rpc-client-silverlight.csproj", "{7C741476-7F39-4C17-9806-C839A5683463}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "demo-rpc-server-mvc", "demo-rpc-server-mvc\demo-rpc-server-mvc.csproj", "{2F293C90-1DE4-4CE1-AFA7-D0B36E0CA8A9}"
 EndProject

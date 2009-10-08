@@ -141,6 +141,8 @@
     <Compile Include="Issues\Issue48.cs" />
     <Compile Include="Issues\Issue54.cs" />
     <Compile Include="Issues\Issue62.cs" />
+    <Compile Include="Issues\Issue70.cs">
+    </Compile>
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListTests.cs" />
@@ -168,6 +170,12 @@
     <Compile Include="ProtoGen\Generator.cs" />
     <Compile Include="ProtoGen\InputLoader.cs">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Compile>
+    <Compile Include="ProtoGen\NewTest.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>NewTest.proto</DependentUpon>
     </Compile>
     <Compile Include="ProtoGen\OptionParser.cs" />
     <Compile Include="ProtoGen\searchRequest.cs">
@@ -288,6 +296,10 @@
     </None>
     <None Include="ProtoGen\Empty.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ProtoGen\NewTest.proto">
+      <Generator>ProtoBufTool</Generator>
+      <LastGenOutput>NewTest.cs</LastGenOutput>
     </None>
     <None Include="ProtoGen\searchRequest.proto">
       <CustomToolNamespace>%3bfixCase%3bdatacontract</CustomToolNamespace>

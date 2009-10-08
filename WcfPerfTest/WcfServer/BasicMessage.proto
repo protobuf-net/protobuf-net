@@ -1,0 +1,13 @@
+package BasicProtoDemo;
+message BasicMessage {
+    required int32 id = 1; 
+    required string name = 2;
+}
+message BasicOperationResponse {
+  required BasicMessage result = 1;
+}
+message BasicOperationRequest {
+}
+service BasicService {
+  rpc BasicOperation (BasicOperationRequest) returns (BasicOperationResponse);
+}

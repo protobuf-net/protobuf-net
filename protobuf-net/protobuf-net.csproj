@@ -81,6 +81,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -217,6 +218,8 @@
     <Compile Include="SerializerProxy.cs" />
     <Compile Include="ServiceModel\ExceptionEventArgs.cs" />
     <Compile Include="ServiceModel\Client\HttpBasicTransport.cs" />
+    <Compile Include="ServiceModel\ProtoBehaviorExtensionElement.cs" />
+    <Compile Include="ServiceModel\ProtoEndpointBehavior.cs" />
     <Compile Include="ServiceModel\RpcUtils.cs" />
     <Compile Include="ServiceModel\Server\HttpServer.cs" />
     <Compile Include="ServiceModel\Client\IClientTransport.cs" />

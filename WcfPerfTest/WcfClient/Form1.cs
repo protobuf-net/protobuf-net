@@ -48,7 +48,7 @@ namespace WcfClient
 
                 int count = cheekyCount;
                 copy = set;
-                string key = "Foo via " + config;
+                string key = "Vanilla WCF via " + config;
                 Stopwatch fooWatch = Stopwatch.StartNew();
                 for (int i = 0; i < count; i++)
                 {
@@ -60,7 +60,7 @@ namespace WcfClient
                 }
                 fooWatch.Stop();
                 copy = set;
-                key = "Bar via " + config;
+                key = "protobuf-net via " + config;
                 Stopwatch barWatch = Stopwatch.StartNew();
                 for (int i = 0; i < count; i++)
                 {
@@ -74,7 +74,7 @@ namespace WcfClient
 
                 decimal pc = (barWatch.ElapsedMilliseconds * 100.0M) / fooWatch.ElapsedMilliseconds;
 
-                e.Result = string.Format("x{2} via {3} - Foo: {0:###,##0}ms, Bar: {1:###,##0}ms ({4:##.#}%)",
+                e.Result = string.Format("x{2} via {3} - Vanilla WCF: {0:###,##0}ms, protobuf-net: {1:###,##0}ms ({4:##.#}%)",
                     fooWatch.ElapsedMilliseconds, barWatch.ElapsedMilliseconds, count, config, pc);
             }
         }
@@ -95,10 +95,14 @@ namespace WcfClient
 
         private void button3_Click(object sender, EventArgs e)
         {
+            
             using (var client = new NWindServiceClient(ConfigName))
             {
-                nwindSource.DataSource = client.LoadFoo();
-                Text = "Loaded Foo via " + ConfigName;
+                Stopwatch watch = Stopwatch.StartNew();
+                var data = client.LoadFoo();
+                watch.Stop();
+                nwindSource.DataSource = data;
+                Text = "Loaded Vanilla WCF via " + ConfigName + " (" + watch.ElapsedMilliseconds + "ms)";
             }
         }
 
@@ -106,8 +110,11 @@ namespace WcfClient
         {
             using (var client = new NWindServiceClient(ConfigName))
             {
-                nwindSource.DataSource = client.LoadBar();
-                Text = "Loaded Bar via " + ConfigName;
+                Stopwatch watch = Stopwatch.StartNew();
+                var data = client.LoadBar();
+                watch.Stop();
+                nwindSource.DataSource = data;
+                Text = "Loaded protobuf-net via " + ConfigName + " (" + watch.ElapsedMilliseconds + "ms)";
             }
         }
     }
