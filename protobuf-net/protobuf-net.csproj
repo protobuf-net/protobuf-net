@@ -154,6 +154,7 @@
     <Compile Include="NonGeneric.cs" />
     <Compile Include="ObjectFactory.cs" />
     <Compile Include="PrefixStyle.cs" />
+    <Compile Include="Property\PropertyUInt16Variant.cs" />
     <Compile Include="Property\PropertyPackedArray.cs" />
     <Compile Include="Property\PropertyPackedEnumerable.cs" />
     <Compile Include="Property\PropertyPackedList.cs" />

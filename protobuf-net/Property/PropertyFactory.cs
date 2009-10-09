@@ -110,6 +110,20 @@ namespace ProtoBuf.Property
         /// </summary>
         private static Property<T> CreateProperty<T>(Type type, ref DataFormat format, MemberSerializationOptions options)
         {
+
+            if (type.IsEnum)
+            {
+                if (format != DataFormat.Default && Attribute.IsDefined(type, typeof(FlagsAttribute)))
+                {
+                    type = Enum.GetUnderlyingType(type);
+                }
+                else
+                {
+                    format = DataFormat.TwosComplement;
+                    return PropertyUtil<T>.CreateTypedProperty("CreatePropertyEnum", type);
+                }
+            }
+
             if (type == typeof(int))
             {
                 switch (format)
@@ -122,6 +136,18 @@ namespace ProtoBuf.Property
                         return new PropertyInt32ZigZag<T>();
                     case DataFormat.FixedSize:
                         return new PropertyInt32Fixed<T>();
+                }
+            }
+            if (type == typeof(short))
+            {
+                switch (format)
+                {
+                    case DataFormat.Default:
+                    case DataFormat.TwosComplement:
+                        format = DataFormat.TwosComplement;
+                        return new PropertyInt16Variant<T>();
+                    case DataFormat.ZigZag:
+                        return new PropertyInt16ZigZag<T>();
                 }
             }
             if (type == typeof(long))
@@ -162,16 +188,15 @@ namespace ProtoBuf.Property
                         return new PropertyUInt64Fixed<T>();
                 }
             }
-            if (type == typeof(short))
+
+            if (type == typeof(ushort))
             {
                 switch (format)
                 {
                     case DataFormat.Default:
                     case DataFormat.TwosComplement:
                         format = DataFormat.TwosComplement;
-                        return new PropertyInt16Variant<T>();
-                    case DataFormat.ZigZag:
-                        return new PropertyInt16ZigZag<T>();
+                        return new PropertyUInt16Variant<T>();
                 }
             }
 
@@ -233,12 +258,6 @@ namespace ProtoBuf.Property
                     case DataFormat.Default: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageString", type, baseType, baseType);
                     case DataFormat.Group: return PropertyUtil<T>.CreateTypedProperty("CreatePropertyMessageGroup", type, baseType, baseType);
                 }
-            }
-
-            if (type.IsEnum)
-            {
-                format = DataFormat.TwosComplement;
-                return PropertyUtil<T>.CreateTypedProperty("CreatePropertyEnum", type);
             }
 
             if (type.IsValueType && type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
