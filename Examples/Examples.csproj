@@ -144,6 +144,7 @@
     <Compile Include="Issues\Issue70.cs">
     </Compile>
     <Compile Include="Issues\Issue79.cs" />
+    <Compile Include="Issues\Issue80.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListTests.cs" />

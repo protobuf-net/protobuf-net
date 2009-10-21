@@ -480,6 +480,30 @@ namespace ProtoBuf
         }
 
         /// <summary>Indicates the number of bytes expected for the next message.</summary>
+        /// <param name="source">The stream containing the data to investigate for a length.</param>
+        /// <param name="style">The algorithm used to encode the length.</param>
+        /// <param name="length">The length of the message, if it could be identified.</param>
+        /// <returns>True if a length could be obtained, false otherwise.</returns>
+        public static bool TryReadLengthPrefix(Stream source, PrefixStyle style, out int length)
+        {
+            uint len;
+            bool result;
+            switch (style)
+            {
+                case PrefixStyle.Fixed32:
+                    result = SerializationContext.TryDecodeUInt32Fixed(source, out len);
+                    break;
+                case PrefixStyle.Base128:
+                    result = SerializationContext.TryDecodeUInt32(source, out len);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("style", "Invalid prefix style: " + style);
+            }
+            length = (int)len;
+            return result;
+        }
+
+        /// <summary>Indicates the number of bytes expected for the next message.</summary>
         /// <param name="buffer">The buffer containing the data to investigate for a length.</param>
         /// <param name="index">The offset of the first byte to read from the buffer.</param>
         /// <param name="count">The number of bytes to read from the buffer.</param>
@@ -490,21 +514,7 @@ namespace ProtoBuf
         {
             using (Stream source = new MemoryStream(buffer, index, count))
             {
-                uint len;
-                bool result;
-                switch (style)
-                {
-                    case PrefixStyle.Fixed32:
-                        result = SerializationContext.TryDecodeUInt32Fixed(source, out len);
-                        break;
-                    case PrefixStyle.Base128:
-                        result = SerializationContext.TryDecodeUInt32Fixed(source, out len);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException("style", "Invalid prefix style: " + style);
-                }
-                length = (int) len;
-                return result;
+                return TryReadLengthPrefix(source, style, out length);
             }
         }
 
