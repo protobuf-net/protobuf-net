@@ -1,0 +1,1 @@
+See blog for notes on this: http://marcgravell.blogspot.com/2009/11/controlling-wcf-protobuf-net-at.html

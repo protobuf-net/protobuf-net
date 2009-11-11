@@ -43,7 +43,8 @@ namespace ProtoBuf.ServiceModel
             {
                 using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
                 {
-                    return Serializer.Deserialize<T>(ms);
+                    T val = Serializer.Deserialize<T>(ms);
+                    return val;
                 }
             }
             finally
