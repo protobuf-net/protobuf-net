@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Reflection;
 using System.Collections.Generic;
+#if !(CF || SILVERLIGHT)
 using System.Reflection.Emit;
+#endif
 
 namespace ProtoBuf
 {
