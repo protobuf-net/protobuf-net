@@ -82,19 +82,88 @@ namespace Examples.Dictionary
             
             AssertEqual(lookup, clone);
         }
-
-        static void AssertEqual<TKey,TValue>(
+        static void AssertEqual<TKey, TValue>(
             IDictionary<TKey, TValue> expected,
             IDictionary<TKey, TValue> actual)
         {
             Assert.AreNotSame(expected, actual, "Instance");
             Assert.AreEqual(expected.Count, actual.Count, "Count");
-            foreach(var pair in expected)
+            foreach (var pair in expected)
             {
                 TValue value;
                 Assert.IsTrue(actual.TryGetValue(pair.Key, out value), "Missing: " + pair.Key);
                 Assert.AreEqual(pair.Value, value, "Value: " + pair.Key);
             }
+        }
+    }
+
+    [TestFixture]
+    public class NestedDictionaryTests {
+
+        [Test]
+        public void TestNestedConcreteConcreteDictionary()
+        {
+            Dictionary<string, Dictionary<string, String>> data = new Dictionary<string, Dictionary<string, string>>
+            {
+                { "abc", new Dictionary<string,string> {{"def","ghi"}}},
+                { "jkl", new Dictionary<string,string> {{"mno","pqr"},{"stu","vwx"}}}
+            };
+            CheckNested(data, "original");
+            var clone = Serializer.DeepClone(data);
+            CheckNested(clone, "clone");
+        }
+
+        [Test]
+        public void TestNestedInterfaceInterfaceDictionary()
+        {
+            IDictionary<string, IDictionary<string, String>> data = new Dictionary<string, IDictionary<string, string>>
+            {
+                { "abc", new Dictionary<string,string> {{"def","ghi"}}},
+                { "jkl", new Dictionary<string,string> {{"mno","pqr"},{"stu","vwx"}}}
+            };
+            CheckNested(data, "original");
+            var clone = Serializer.DeepClone(data);
+            CheckNested(clone, "clone");
+        }
+
+        [Test]
+        public void TestNestedInterfaceConcreteDictionary()
+        {
+            IDictionary<string, Dictionary<string, String>> data = new Dictionary<string, Dictionary<string, string>>
+            {
+                { "abc", new Dictionary<string,string> {{"def","ghi"}}},
+                { "jkl", new Dictionary<string,string> {{"mno","pqr"},{"stu","vwx"}}}
+            };
+            CheckNested(data, "original");
+            var clone = Serializer.DeepClone(data);
+            CheckNested(clone, "clone");
+        }
+        [Test]
+        public void TestNestedConcreteInterfaceDictionary()
+        {
+            Dictionary<string, IDictionary<string, String>> data = new Dictionary<string, IDictionary<string, string>>
+            {
+                { "abc", new Dictionary<string,string> {{"def","ghi"}}},
+                { "jkl", new Dictionary<string,string> {{"mno","pqr"},{"stu","vwx"}}}
+            };
+            CheckNested(data, "original");
+            var clone = Serializer.DeepClone(data);
+            CheckNested(clone, "clone");
+        }
+
+        static void CheckNested<TInner>(IDictionary<string, TInner> data, string message)
+            where TInner : IDictionary<string, string>
+        {
+            Assert.IsNotNull(data, message);
+            Assert.AreEqual(2, data.Keys.Count, message);
+            var inner = data["abc"];
+            Assert.AreEqual(1, inner.Keys.Count, message);
+            Assert.AreEqual(inner["def"], "ghi", message);
+            inner = data["jkl"];
+            Assert.AreEqual(2, inner.Keys.Count, message);
+            Assert.AreEqual(inner["mno"], "pqr", message);
+            Assert.AreEqual(inner["stu"], "vwx", message);
+
         }
     }
 }

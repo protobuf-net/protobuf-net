@@ -1034,6 +1034,5 @@ namespace ProtoBuf
         {
             Serializer<T>.Build();
         }
-
     }
 }

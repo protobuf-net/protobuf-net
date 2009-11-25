@@ -451,6 +451,12 @@ namespace Examples
             Uri uri = new Uri("http://test.example.com/demo");
             Assert.AreEqual(uri, TestUri(uri), "not null");
         }
+        [Test]
+        public void TestEncodedUri()
+        {
+            Uri uri = new Uri("http://www.example.com/for%2bbar");
+            Assert.AreEqual(uri, TestUri(uri), "null");
+        }
         static Uri TestUri(Uri value)
         {
             return Serializer.DeepClone(new UriData { Foo = value }).Foo;

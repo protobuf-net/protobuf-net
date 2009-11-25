@@ -1,8 +1,72 @@
 ﻿using System;
 using System.Reflection;
+using System.Collections.Generic;
+using System.Reflection.Emit;
 
 namespace ProtoBuf
 {
+
+    internal delegate T Ctor<T>();
+    internal static class ObjectFactory {
+        private static Ctor<T> MakeCtor<T>(Type concreteType) {
+            ConstructorInfo ctor = concreteType.GetConstructor(
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
+                    null, Serializer.EmptyTypes, null);
+            
+            if(ctor == null) {
+                string message = "No parameterless constructor found for " + typeof(T).Name;
+                return delegate {
+                    throw new ProtoException(message);
+                };
+            }
+#if (CF || SILVERLIGHT)
+            if (ctor.IsPublic) {
+                if (ctor.DeclaringType == typeof(T)) {
+                    return delegate { return Activator.CreateInstance<T>(); };
+                } else { // for example, T=IList<string>, concrete=List<string>
+                    Type finalType = ctor.DeclaringType;
+                    return delegate { return (T) Activator.CreateInstance(finalType); };
+                }
+            }
+            return delegate {
+                return (T)ctor.Invoke(null);
+            };
+#else
+            DynamicMethod dyn = new DynamicMethod("ctorWrapper", MethodAttributes.Static | MethodAttributes.Public,
+                CallingConventions.Standard, typeof(T), Serializer.EmptyTypes, concreteType, true);
+            ILGenerator il = dyn.GetILGenerator();
+            il.Emit(OpCodes.Newobj, ctor);
+            il.Emit(OpCodes.Ret);
+            return (Ctor<T>)dyn.CreateDelegate(typeof(Ctor<T>));
+#endif
+        }
+        internal static Ctor<T> MakeCtor<T>() {
+            // also handles IList<T> / IDictionary<T> etc
+            Type type = GetConcreteType(typeof(T));
+            return ObjectFactory.MakeCtor<T>(type);
+        }
+
+        private static Type GetConcreteType(Type type)
+        {
+            if (type.IsInterface)
+            {
+                if (type.IsGenericType)
+                {
+                    Type typeDef = type.GetGenericTypeDefinition(), listType = null;
+
+                    if (typeDef == typeof(IList<>)) listType = typeof(List<>);
+                    else if (typeDef == typeof(IDictionary<,>)) listType = typeof(Dictionary<,>);
+                    if (listType != null)
+                    {
+                        type = listType.MakeGenericType(type.GetGenericArguments());
+                    }
+                }
+            }
+            return type;
+        }
+
+    }
+
     /// <summary>
     /// Abstract object factory, used to negate the need for a ": new()" generic constraint
     /// on Serializer-of-T.
@@ -10,76 +74,10 @@ namespace ProtoBuf
     /// <typeparam name="T">The type of object to be created.</typeparam>
     internal abstract class ObjectFactory<T>
     {
-        private static readonly ObjectFactory<T> impl;
-        static ObjectFactory()
-        {
-            ConstructorInfo ctor = typeof(T).GetConstructor(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance,
-                null, Serializer.EmptyTypes, null);
-
-            if (ctor != null && ctor.IsPublic)
-            {
-                impl = (ObjectFactory<T>)typeof(ObjectFactory<T>)
-                    .GetMethod("CreateGeneric").MakeGenericMethod(typeof(T)).Invoke(null, null);
-            }
-            else
-            {
-                impl = new ConstructorFactory<T>(ctor);
-            }
-        }
-        /// <summary>
-        /// Create a new instance of the given type.
-        /// </summary>
-        public static T Create()
-        {
-            return impl.CreateImpl();
-        }
-        protected abstract T CreateImpl();
-
-        /// <summary>
-        /// Wrapper method used via reflection to add the ": new()" constraint at
-        /// runtime. In practice, TActual is always T once we have verified that
-        /// there is a public parameterless constructor.
-        /// </summary>
-        /// <remarks>
-        /// This method is public (not private) due to the reflection demands of
-        /// (for example) Silverlight.
-        /// </remarks>
-        public static ObjectFactory<TActual> CreateGeneric<TActual>() where TActual : new()
-        {
-            return new GenericFactory<TActual>();            
-        }
-    }
-
-    /// <summary>
-    /// Represents a factory for creating objects with a public parameterless constructor;
-    /// the "new()" generic constraint provides an optimisation over reflection.
-    /// </summary>
-    /// <typeparam name="T">The type of object to be created.</typeparam>
-    internal sealed class GenericFactory<T> : ObjectFactory<T> where T : new()
-    {
-        protected override T CreateImpl()
-        {
-            return new T();
-        }        
-    }
-
-    /// <summary>
-    /// Represents a factory for creating objects with a non-public parameterless
-    /// constructor (via reflection), or for lazily throwing a suitable error
-    /// if no such constructor exists.
-    /// </summary>
-    /// <typeparam name="T">The type of object to be created.</typeparam>
-    internal sealed class ConstructorFactory<T> : ObjectFactory<T>
-    {
-        private readonly ConstructorInfo ctor;
-        public ConstructorFactory(ConstructorInfo ctor)
-        {
-            this.ctor = ctor;
-        }
-        protected override T CreateImpl()
-        {
-            if (ctor == null) throw new ProtoException("No parameterless constructor found for " + typeof(T).Name);
-            return (T) ctor.Invoke(null);
+        private static Ctor<T> impl;
+        public static T Create() {
+            if (impl == null) impl = ObjectFactory.MakeCtor<T>();
+            return impl();
         }
     }
 }

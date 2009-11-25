@@ -36,7 +36,8 @@ namespace ProtoBuf.Property
         public override DateTime DeserializeImpl(TSource source, SerializationContext context)
         {
             context.StartGroup(Tag); // will be ended internally
-            return ProtoTimeSpan.DeserializeDateTime(context);
+            DateTime value = ProtoTimeSpan.DeserializeDateTime(context);
+            return value;
         }
     }
 }

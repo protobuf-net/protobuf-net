@@ -1,5 +1,6 @@
 ﻿using System;
 using ProtoBuf.ProtoBcl;
+using System.Diagnostics;
 
 namespace ProtoBuf.Property
 {

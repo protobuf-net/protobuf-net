@@ -75,7 +75,9 @@ namespace ProtoBuf.Property
         {
             TList list = GetValue(source);
             bool set = list == null;
-            if (set) list = (TList)Activator.CreateInstance(typeof(TList));
+            if (set) {
+                list = ObjectFactory<TList>.Create();
+            }
 
             long restore = context.LimitByLengthPrefix();
             while (context.Position < context.MaxReadPosition)

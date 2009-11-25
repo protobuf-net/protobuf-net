@@ -17,7 +17,7 @@ namespace ProtoBuf.ProtoBcl
             }
         }
 
-        internal static readonly DateTime EpochOrigin = new DateTime(1970, 1, 1);
+        internal static readonly DateTime EpochOrigin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified);
         public static int SerializeDateTime(DateTime value, SerializationContext context, bool lengthPrefixed)
         {
             TimeSpan delta;

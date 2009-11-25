@@ -27,7 +27,8 @@ namespace ProtoBuf.Property
         public override DateTime DeserializeImpl(TSource source, SerializationContext context)
         {
             long ticks = context.DecodeInt64Fixed();
-            return ProtoTimeSpan.EpochOrigin.AddTicks(ticks);
+            DateTime value = ProtoTimeSpan.EpochOrigin.AddTicks(ticks);
+            return value;
         }
     }
 }

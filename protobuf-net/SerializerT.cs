@@ -540,6 +540,7 @@ namespace ProtoBuf
                     }
                     else
                     {
+                        Debug.WriteLine("Dropping:" + fieldTag);
                         // unexpected fields for an inextensible object; discard the data
                         Serializer.SkipData(context, fieldTag, wireType);
                     }

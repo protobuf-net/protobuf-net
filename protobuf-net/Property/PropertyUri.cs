@@ -18,7 +18,7 @@ namespace ProtoBuf.Property
         {
             Uri value = GetValue(source);
             if (value == null || (IsOptional && value == DefaultValue)) return 0;
-            return innerSerializer.Serialize(value.ToString(), context);
+            return innerSerializer.Serialize(value.AbsoluteUri, context);
         }
 
         public override Uri DeserializeImpl(TSource source, SerializationContext context)
