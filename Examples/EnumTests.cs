@@ -2,6 +2,7 @@
 using System.IO;
 using NUnit.Framework;
 using ProtoBuf;
+using System.Runtime.Serialization;
 
 namespace Examples.DesignIdeas
 {
@@ -214,6 +215,26 @@ enum blah {
         public void TestNegEnumnotDefinedPos()
         {
             TestNegEnum((NegEnum) 2);
+        }
+        [Test]
+        public void ShouldBeAbleToSerializeExactDuplicatedEnumValues()
+        {
+            var obj = new HasDuplicatedEnumProp { Value = NastDuplicates.B };
+            var clone = Serializer.DeepClone(obj);
+            Assert.AreEqual(NastDuplicates.A, clone.Value);
+            Assert.AreEqual(NastDuplicates.B, clone.Value);
+        }
+        [ProtoContract]
+        class HasDuplicatedEnumProp
+        {
+            [ProtoMember(1)]
+            public NastDuplicates Value { get; set; }
+        }
+        enum NastDuplicates
+        {
+            None = 0,
+            A = 1,
+            B = 1
         }
 
         private static void TestNegEnum(NegEnum value)

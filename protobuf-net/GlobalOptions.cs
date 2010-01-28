@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using ProtoBuf.Property;
@@ -12,8 +12,6 @@ namespace ProtoBuf
         /// </summary>
         public static class GlobalOptions
         {
-            #if NET_3_0
-
             private static bool inferTagFromName;
             /// <summary>
             /// Global default for that
@@ -28,8 +26,6 @@ namespace ProtoBuf
                 get { return inferTagFromName; }
                 set { inferTagFromName = value; }
             }
-
-            #endif
         }
         
         internal static bool HasAddMethod(Type list, Type item)

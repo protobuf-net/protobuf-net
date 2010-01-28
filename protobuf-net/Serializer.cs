@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Xml.Serialization;
@@ -75,7 +75,8 @@ namespace ProtoBuf
                    && TryGetTag(member, out tag, out name, true, out fmt, out options) && tag < 1) list.Add(member);
             }
         }
-
+        internal const string DataMemberAttributeFullName = "System.Runtime.Serialization.DataMemberAttribute";
+		internal const string DataContractAttributeFullName = "System.Runtime.Serialization.DataContractAttribute";
         internal static bool TryGetTag(MemberInfo member, out int tag, out string name, bool callerIsTagInference, out DataFormat format, out MemberSerializationOptions options)
         {
             name = member.Name;
@@ -157,13 +158,21 @@ namespace ProtoBuf
                 }
                 return false;
             }
-
+			
 #if NET_3_0
-            DataMemberAttribute dm = AttributeUtils.GetAttribute<DataMemberAttribute>(member);
+			DataMemberAttribute dm = AttributeUtils.GetAttribute<DataMemberAttribute>(member);
+#else
+			Attribute dm = AttributeUtils.GetAttribute(member, DataMemberAttributeFullName);
+#endif
             if (dm != null)
             {
-                if (!string.IsNullOrEmpty(dm.Name)) name = dm.Name;
-                tag = dm.Order;
+				string dmName;
+				int dmOrder;
+				bool dmIsRequired;
+				ParseDataMemberAttribute(dm, out dmName, out dmOrder, out dmIsRequired);
+
+                if (!string.IsNullOrEmpty(dmName)) name = dmName;
+                tag = dmOrder;
                 if (pca != null) tag += pca.DataMemberOffset;
 
                 if(!callerIsTagInference) // avoid infinite recursion
@@ -213,10 +222,9 @@ namespace ProtoBuf
                         }
                     }
                 }
-                if(dm.IsRequired) options |= MemberSerializationOptions.Required;
+                if(dmIsRequired) options |= MemberSerializationOptions.Required;
                 return callerIsTagInference || tag > 0;
             }
-#endif
             
             XmlElementAttribute xe = AttributeUtils.GetAttribute<XmlElementAttribute>(member);
             if (xe != null)
@@ -236,6 +244,39 @@ namespace ProtoBuf
 
             return false;
         }
+
+        internal static void ParseDataContractAttribute(
+            Attribute attribute, out string name)
+        {
+            if (attribute == null) throw new ArgumentNullException("attribute");
+#if NET_3_0
+			name = ((DataContractAttribute)attribute).Name;
+#else
+            name = AttributeUtils.GetValue<string>(attribute, "Name");
+#endif
+        }
+
+
+		internal static void ParseDataMemberAttribute (
+#if NET_3_0
+			DataMemberAttribute attribute,
+#else
+		    Attribute attribute,                           
+#endif
+			out string name, out int order, out bool isRequired)
+		{
+			if(attribute == null) throw new ArgumentNullException("attribute");
+#if NET_3_0
+			name = attribute.Name;
+			order = attribute.Order;
+			isRequired = attribute.IsRequired;
+#else
+			name = AttributeUtils.GetValue<string>(attribute, "Name");
+			order = AttributeUtils.GetValue<int>(attribute, "Order");
+			isRequired = AttributeUtils.GetValue<bool>(attribute,"IsRequired");
+#endif
+		}
+
 
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream

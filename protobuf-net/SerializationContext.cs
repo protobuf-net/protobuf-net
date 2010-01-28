@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 #if !SILVERLIGHT && !CF
 using System.Runtime.Serialization;
+using System.Collections;
 #endif
 
 namespace ProtoBuf
@@ -262,13 +263,24 @@ namespace ProtoBuf
             this.ioBufferIndex = context.ioBufferIndex;
             this.inputStreamAvailable = context.inputStreamAvailable;
             this.ioBufferEffectiveSize = context.ioBufferEffectiveSize;
-
+            this.stringCache = context.stringCache;
             TraceChangeOrigin(context); // note ConditionalAttribute
 
             // IMPORTANT: don't copy the group stack; we want to 
             // validate that the group-stack is empty when finding the end of a stream
         }
-
+        private Dictionary<string, string> stringCache;
+        public string Intern(string value)
+        {
+            if (stringCache == null) stringCache = new Dictionary<string, string>(StringComparer.Ordinal);
+            string result;
+            if (!stringCache.TryGetValue(value, out result))
+            {
+                stringCache.Add(value, value);
+                result = value;
+            }
+            return result;
+        }
         public static void Reverse4(byte[] buffer, int index)
         {
             byte tmp = buffer[index + 0];

@@ -48,7 +48,7 @@
 
     <!-- build mono using nant -->
     <RemoveDir Directories="protobuf-net-mono\bin; protobuf-net-mono\bin\docs"/>
-    <Exec Command="&quot;%ProgramFiles%\Mono-2.4.2.3\share\NAnt\bin\NAnt&quot; -buildfile:protobuf-net-mono\protobuf-net-mono.build -D:build.release=true" />
+    <Exec Command="&quot;%ProgramFiles%\Mono-2.6\share\NAnt\bin\NAnt&quot; -buildfile:protobuf-net-mono\protobuf-net-mono.build -D:build.release=true" />
     
     <!-- build .NET 2.0 using the C# 2.0 compiler -->
     <RemoveDir Directories="protobuf-net\obj; protobuf-net\bin"/>

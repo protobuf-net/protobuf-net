@@ -70,7 +70,7 @@ namespace ProtoBuf.Property
             {
                 if (len > SerializationContext.InitialBufferLength) context.CheckSpace(len);
                 context.ReadBlock(len);
-                value = utf8.GetString(context.Workspace, 0, len);
+                value = context.Intern(utf8.GetString(context.Workspace, 0, len));
             }
             return value;
 

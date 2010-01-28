@@ -27,18 +27,41 @@ namespace ProtoBuf
                     BindingFlags.Static | BindingFlags.Public))
                 {
                     ParameterInfo[] p;
-                    if (method.Name == "SerializeWithLengthPrefix" && method.IsGenericMethod
-                        && (p = method.GetParameters()).Length == 4
-                        && p[0].ParameterType == typeof(Stream)
-                        && p[2].ParameterType == typeof(PrefixStyle)
-                        && p[3].ParameterType == typeof(int))
+                    if (method.Name == "SerializeWithLengthPrefix" && method.IsGenericMethod)
                     {
-                        method.MakeGenericMethod(instance.GetType()).Invoke(
-                            null, new object[] { destination, instance, style, tag });
-                        return;
+                        MethodInfo genericMethod = method.MakeGenericMethod(instance.GetType());
+                        if((p = genericMethod.GetParameters()).Length == 4
+                            && p[0].ParameterType == typeof(Stream)
+                            && p[2].ParameterType == typeof(PrefixStyle)
+                            && p[3].ParameterType == typeof(int))
+                        {
+                            genericMethod.Invoke(
+                               null, new object[] { destination, instance, style, tag });
+                            return;
+                        }                        
                     }
                 }
                 throw new ProtoException("Unable to resolve SerializeWithLengthPrefix method");
+            }
+
+            /// <summary>
+            /// Can the given type be meaningfully with protobuf-net?
+            /// </summary>
+            public static bool CanSerialize(Type type)
+            {
+                if (type == null) throw new ArgumentNullException("type");
+                if (type.IsValueType) return false;
+
+                // serialize as item?
+                if (Serializer.IsEntityType(type)) return true;
+
+                // serialize as list?
+                bool enumOnly;
+                Type itemType = PropertyFactory.GetListType(type, out enumOnly);
+                if (itemType != null
+                    && (!enumOnly || Serializer.HasAddMethod(type, itemType))
+                    && Serializer.IsEntityType(itemType)) return true;
+                return false;
             }
 
             /// <summary>

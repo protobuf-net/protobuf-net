@@ -22,17 +22,26 @@ namespace ProtoBuf.Property
             List<KeyValuePair<TEnum, int>> list = new List<KeyValuePair<TEnum, int>>();
             foreach (Serializer.ProtoEnumValue<TEnum> value in Serializer.GetEnumValues<TEnum>())
             {
+                bool add = true;
                 foreach (KeyValuePair<TEnum, int> existing in list)
                 {
-                    if ((existing.Value == value.WireValue) || enumComparer.Equals(existing.Key, value.EnumValue))
+                    int match = 0;
+                    if (existing.Value == value.WireValue) match++;
+                    if (enumComparer.Equals(existing.Key, value.EnumValue)) match++;
+                    switch(match)
                     {
-                        errMsg = string.Format("The enum {0} has conflicting values {1} and {2}",
+                        case 2:
+                            add = false;
+                            break; // exact dup in the enum definition; it doesn't matter
+                        case 1:
+                            errMsg = string.Format("The enum {0} has conflicting values {1} and {2}",
                             typeof(TEnum), existing.Key, value.Name);
-                        return; // but throw from the *regular* ctor to prevent obscure type init errors
+                            return; // but throw from the *regular* ctor to prevent obscure type init errors
                     }
                 }
-
-                list.Add(new KeyValuePair<TEnum, int>(value.EnumValue, value.WireValue));
+                if (add) {
+                    list.Add(new KeyValuePair<TEnum, int>(value.EnumValue, value.WireValue));
+                }
             }
 
             values = list.ToArray();

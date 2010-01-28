@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -56,20 +56,15 @@ namespace ProtoBuf
                     break;
                 }
             }                
-#if NET_3_0
             if(!isEntity) {
-                for (int i = 0; i < attribs.Length; i++)
-                {
-                    if (attribs[i] is DataContractAttribute)
-                    {
-                        DataContractAttribute dca = (DataContractAttribute)attribs[i];
-                        name = dca.Name;
+                for (int i = 0; i < attribs.Length; i++) {
+                    if (attribs[i].GetType().FullName == Serializer.DataContractAttributeFullName) {
+						Serializer.ParseDataContractAttribute(attribs[i], out name);
                         isEntity = true;
                         break;
                     }
                 }
             }
-#endif
             if(!isEntity) {
                 for (int i = 0; i < attribs.Length; i++)
                 {

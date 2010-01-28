@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace ProtoBuf
 {
@@ -37,7 +37,7 @@ namespace ProtoBuf
         public ImplicitFields ImplicitFields { get { return implicitFields; } set { implicitFields = value; } }
         private ImplicitFields implicitFields;
 
-        #if NET_3_0
+  
 
         private bool? inferTagFromName;
         /// <summary>
@@ -70,6 +70,5 @@ namespace ProtoBuf
             set { dataMemberOffset = value; }
         }
 
-        #endif
     }
 }

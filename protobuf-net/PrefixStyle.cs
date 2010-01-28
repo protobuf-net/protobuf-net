@@ -15,7 +15,7 @@ namespace ProtoBuf
         /// </summary>
         Base128,
         /// <summary>
-        /// A fixed-length (big-endian) length prefix is applied to the data (useful for compatibility).
+        /// A fixed-length (little-endian) length prefix is applied to the data (useful for compatibility).
         /// </summary>
         Fixed32
     }
