@@ -63,7 +63,7 @@ namespace ProtoBuf.Meta
 
         IEnumerable GetFields() { return fields; }
 
-#if !FX11
+#if FEAT_COMPILER && !FX11
         internal void CompileInPlace()
         {
             serializer = CompiledSerializer.Wrap(Serializer);

@@ -26,7 +26,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NET_3_0 REMOTING</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FEAT_COMPILER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -38,7 +38,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;NET_3_0 REMOTING</DefineConstants>
+    <DefineConstants>TRACE;FEAT_COMPILER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -98,7 +98,6 @@
   <ItemGroup>
     <Compile Include="BufferPool.cs" />
     <Compile Include="Compiler\CompiledSerializer.cs" />
-    <Compile Include="Compiler\CompilerAction.cs" />
     <Compile Include="Compiler\CompilerContext.cs" />
     <Compile Include="Compiler\Local.cs" />
     <Compile Include="DataFormat.cs">
@@ -117,6 +116,11 @@
     <Compile Include="ProtoWriter.cs" />
     <Compile Include="RuntimeSerializer.cs" />
     <Compile Include="Serializers\CompiledSerializer.cs" />
+    <Compile Include="Serializers\UInt32Serializer.cs" />
+    <Compile Include="Serializers\UInt64Serializer.cs" />
+    <Compile Include="Serializers\Int64Serializer.cs" />
+    <Compile Include="Serializers\DoubleSerializer.cs" />
+    <Compile Include="Serializers\SingleSerializer.cs" />
     <Compile Include="Serializers\FieldDecorator.cs" />
     <Compile Include="Serializers\Int32Serializer.cs" />
     <Compile Include="Serializers\IProtoSerializer.cs" />

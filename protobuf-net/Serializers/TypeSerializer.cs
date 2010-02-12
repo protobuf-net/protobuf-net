@@ -1,5 +1,6 @@
 ﻿using System;
-using ProtoBuf.Compiler;
+using System.Diagnostics;
+
 
 namespace ProtoBuf.Serializers
 {
@@ -11,11 +12,11 @@ namespace ProtoBuf.Serializers
         private readonly int[] fieldNumbers;
         public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers)
         {
-            if (forType == null) throw new ArgumentNullException("forType");
+            Debug.Assert(forType != null);
+            Debug.Assert(fieldNumbers != null);
+            Debug.Assert(serializers != null);
+            Debug.Assert(fieldNumbers.Length == serializers.Length);
             this.forType = forType;
-            if (fieldNumbers == null) throw new ArgumentNullException("fieldNumbers");
-            if (serializers == null) throw new ArgumentNullException("serializers");
-            if (fieldNumbers.Length != serializers.Length) throw new InvalidOperationException();
             this.serializers = serializers;
             this.fieldNumbers = fieldNumbers;
         }
@@ -27,30 +28,19 @@ namespace ProtoBuf.Serializers
                 serializers[i].Write(value, dest);
             }
         }
-        void IProtoSerializer.Write(CompilerContext ctx)
+#if FEAT_COMPILER
+        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type expected = ExpectedType;
-            // for a reference, we can just copy the reference and access members in turn;
-            // for a struct, we need to write it to a variable so we can use "ldloca"
-            // and access members via the address
-            using (Local entity = expected.IsValueType ? ctx.GetLocal(expected) : null)
+            using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
             {
-                if (entity != null) { ctx.StoreValue(entity); }
                 for (int i = 0; i < serializers.Length; i++)
                 {
-                    if (expected.IsValueType)
-                    {
-                        ctx.LoadAddress(entity);
-                    }
-                    else
-                    {
-                        ctx.CopyValue();
-                    }
-                    serializers[i].Write(ctx);
+                    serializers[i].EmitWrite(ctx, loc);
                 }
-                if (entity == null) { ctx.DiscardValue(); }
             }
         }
+#endif
     }
 
 }

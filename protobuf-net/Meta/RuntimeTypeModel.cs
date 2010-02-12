@@ -3,7 +3,7 @@ using System.Collections;
 using System.IO;
 using System.Reflection;
 using System.Reflection.Emit;
-using ProtoBuf.Compiler;
+
 using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Meta
@@ -134,19 +134,21 @@ namespace ProtoBuf.Meta
         {
             throw new NotImplementedException();
         }
-        internal ProtoSerializer GetSerializer(Type type, bool compiled)
+#if FEAT_COMPILER
+        internal Compiler.ProtoSerializer GetSerializer(Type type, bool compiled)
         {
             int key = GetKey(type);
             IProtoSerializer ser = ((MetaType)types[key]).Serializer;
             return GetSerializer(ser, compiled);
         }
-        internal static ProtoSerializer GetSerializer(IProtoSerializer serializer, bool compiled)
+
+        internal static Compiler.ProtoSerializer GetSerializer(IProtoSerializer serializer, bool compiled)
         {
             if (serializer == null) throw new ArgumentNullException("serializer");
-#if !FX11
-            if (compiled) return CompilerContext.BuildSerializer(serializer);
+#if FEAT_COMPILER && !FX11
+            if (compiled) return Compiler.CompilerContext.BuildSerializer(serializer);
 #endif
-            return new ProtoSerializer(serializer.Write);
+            return new Compiler.ProtoSerializer(serializer.Write);
         }
 
 #if !FX11
@@ -163,6 +165,7 @@ namespace ProtoBuf.Meta
             }
         }
 #endif
+#endif
         //internal override IProtoSerializer GetTypeSerializer(Type type)
         //{   // this list is thread-safe for reading
         //    .Serializer;
@@ -175,7 +178,7 @@ namespace ProtoBuf.Meta
 
         //}
 
-
+#if FEAT_COMPILER
         public TypeModel Compile()
         {
             return Compile(null);
@@ -211,7 +214,7 @@ namespace ProtoBuf.Meta
             TypeBuilder type = module.DefineType(Name,
                 (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed,
                 baseType);
-            CompilerContext ctx;
+            Compiler.CompilerContext ctx;
             // the keys in the model are guaranteed to be unique, but may not
             // be contiguous (threading etc); we'll normalize the keys
             MethodBuilder[] typeSerializers = new MethodBuilder[types.Count];
@@ -231,9 +234,8 @@ namespace ProtoBuf.Meta
             index = 0;
             foreach (MetaType metaType in types)
             {
-                ctx = new CompilerContext(bodies[index], true, true);
-                ctx.LoadInputValue();
-                metaType.Serializer.Write(ctx);
+                ctx = new Compiler.CompilerContext(bodies[index], true, true);
+                metaType.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
                 ctx.Return();
                 index++;
             }
@@ -249,7 +251,7 @@ namespace ProtoBuf.Meta
             il.Emit(OpCodes.Ret);
             
             il = Override(type, "Serialize");
-            ctx = new CompilerContext(il, true, false);
+            ctx = new Compiler.CompilerContext(il, true, false);
             // arg0 = this, arg1 = key, arg2=obj, arg3=dest
             Label[] jumpTable = new Label[types.Count];
             for (int i = 0; i < jumpTable.Length; i++) {
@@ -280,14 +282,14 @@ namespace ProtoBuf.Meta
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Call, baseType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)[0]);
             il.Emit(OpCodes.Ldarg_0);
-            CompilerContext.LoadValue(il, types.Count);
+            Compiler.CompilerContext.LoadValue(il, types.Count);
             il.Emit(OpCodes.Newarr, typeof(Type));
             
             index = 0;
             foreach(MetaType metaType in types)
             {
                 il.Emit(OpCodes.Dup);
-                CompilerContext.LoadValue(il, index);
+                Compiler.CompilerContext.LoadValue(il, index);
                 il.Emit(OpCodes.Ldtoken, metaType.Type);
                 il.EmitCall(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle"), null);
                 il.Emit(OpCodes.Stelem_Ref);
@@ -307,5 +309,6 @@ namespace ProtoBuf.Meta
 
             return (TypeModel)Activator.CreateInstance(finalType);
         }
+#endif
     }
 }

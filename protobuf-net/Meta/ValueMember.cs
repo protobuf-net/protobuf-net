@@ -83,10 +83,24 @@ namespace ProtoBuf.Meta
                 case TypeCode.Int32:
                     wireType = GetIntWireType(dataFormat, 32);
                     return new Int32Serializer();
+                case TypeCode.UInt32:
+                    wireType = GetIntWireType(dataFormat, 32);
+                    return new UInt32Serializer();
+                case TypeCode.Int64:
+                    wireType = GetIntWireType(dataFormat, 64);
+                    return new Int64Serializer();
+                case TypeCode.UInt64:
+                    wireType = GetIntWireType(dataFormat, 64);
+                    return new Int64Serializer();
                 case TypeCode.String:
                     wireType = WireType.String;
                     return new StringSerializer();
-                
+                case TypeCode.Single:
+                    wireType = WireType.Fixed32;
+                    return new SingleSerializer();
+                case TypeCode.Double:
+                    wireType = WireType.Fixed64;
+                    return new DoubleSerializer();
             }
             throw new NotSupportedException("No serializer defined for type: " + type.FullName);
         }

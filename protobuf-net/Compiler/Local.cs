@@ -1,11 +1,18 @@
-﻿using System;
+﻿#if FEAT_COMPILER
+using System;
 using System.Reflection.Emit;
 
 namespace ProtoBuf.Compiler
 {
     internal sealed class Local : IDisposable
     {
+        public static readonly Local InputValue = new Local(null, null);
         LocalBuilder value;
+        public Local AsCopy()
+        {
+            if (ctx == null) return this; // can re-use if context-free
+            return new Local(value);
+        }
         internal LocalBuilder Value
         {
             get
@@ -21,12 +28,17 @@ namespace ProtoBuf.Compiler
             value = null;
             ctx = null;
         }
-        internal Local(CompilerContext ctx, Type type)
+        private Local(LocalBuilder value)
+        {
+            this.value = value;
+        }
+        internal Local(Compiler.CompilerContext ctx, Type type)
         {
             this.ctx = ctx;
-            value = ctx.GetFromPool(type);
+            if (ctx != null) { value = ctx.GetFromPool(type); }
         }
     }
 
 
 }
+#endif

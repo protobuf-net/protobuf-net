@@ -26,9 +26,10 @@ namespace ProtoBuf.Serializers
         public NilSerializer(Type type) { this.type = type; }
         void IProtoSerializer.Write(object value, ProtoWriter dest) { }
 
-        void IProtoSerializer.Write(CompilerContext ctx)
+        void IProtoSerializer.EmitWrite(CompilerContext ctx, Local valueFrom)
         {
-            ctx.DiscardValue();
+            // burn the value off the stack if needed (creates a variable and does a stloc)
+            using (Local tmp = ctx.GetLocalWithValue(type, valueFrom)) { }
         }
     }
 }

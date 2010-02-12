@@ -1,6 +1,7 @@
-﻿#if !FX11
+﻿#if FEAT_COMPILER && !FX11
 using System;
-using ProtoBuf.Compiler;
+using System.Diagnostics;
+
 
 namespace ProtoBuf.Serializers
 {
@@ -8,16 +9,22 @@ namespace ProtoBuf.Serializers
     {
         public static CompiledSerializer Wrap(IProtoSerializer head)
         {
-            return (head as CompiledSerializer) ?? new CompiledSerializer(head);
+            CompiledSerializer result = head as CompiledSerializer;
+            if (result == null)
+            {
+                result = new CompiledSerializer(head);
+                Debug.Assert(((IProtoSerializer)result).ExpectedType == head.ExpectedType);
+            }
+            return result;
         }
-        private readonly IProtoSerializer head; 
-        private readonly ProtoSerializer serializer;
-        private readonly ProtoDeserializer deserializer;
+        private readonly IProtoSerializer head;
+        private readonly Compiler.ProtoSerializer serializer;
+        private readonly Compiler.ProtoSerializer deserializer;
 
         private CompiledSerializer(IProtoSerializer head)
         {
             this.head = head;
-            serializer = CompilerContext.BuildSerializer(head);
+            serializer = Compiler.CompilerContext.BuildSerializer(head);
         }
 
         Type IProtoSerializer.ExpectedType
@@ -30,9 +37,9 @@ namespace ProtoBuf.Serializers
             serializer(value, dest);
         }
 
-        void IProtoSerializer.Write(CompilerContext ctx)
+        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            head.Write(ctx);
+            head.EmitWrite(ctx, valueFrom);
         }
     }
 }

@@ -1,5 +1,5 @@
 ﻿using System;
-using ProtoBuf.Compiler;
+
 
 namespace ProtoBuf.Serializers
 {
@@ -23,19 +23,19 @@ namespace ProtoBuf.Serializers
             dest.WriteFieldHeader(fieldNumber, wireType);
             Tail.Write(value, dest);
         }
-        protected override void Write(CompilerContext ctx)
+#if FEAT_COMPILER
+        protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            using (Local loc = ctx.GetLocal(Tail.ExpectedType))
+            using (Compiler.Local loc = ctx.GetLocalWithValue(Tail.ExpectedType, valueFrom))
             {
-                ctx.StoreValue(loc);
                 ctx.LoadDest();
                 ctx.LoadValue((int)fieldNumber);
                 ctx.LoadValue((int)wireType);
                 ctx.EmitWrite("WriteFieldHeader");
-                ctx.LoadValue(loc);
-            }
-            Tail.Write(ctx);
+                Tail.EmitWrite(ctx, loc);
+            }            
         }
+#endif
     }
     
 }

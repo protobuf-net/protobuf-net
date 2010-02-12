@@ -1,5 +1,5 @@
 ﻿using System;
-using ProtoBuf.Compiler;
+
 
 namespace ProtoBuf.Serializers
 {
@@ -21,12 +21,13 @@ namespace ProtoBuf.Serializers
         {
             dest.WriteObject(value, key);
         }
-
-        void IProtoSerializer.Write(CompilerContext ctx)
+#if FEAT_COMPILER
+        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.InjectStore(type);
+            ctx.InjectStore(type, valueFrom);
             ctx.LoadValue(key);
             ctx.EmitWrite("WriteObject");
         }
+#endif
     }
 }

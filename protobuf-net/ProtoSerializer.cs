@@ -5,7 +5,7 @@
 //using ProtoBuf.Serializers;
 //using System.Reflection;
 //using System.Reflection.Emit;
-//using ProtoBuf.Compiler;
+//
 //using ProtoBuf.Meta;
 
 //namespace ProtoBuf

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
-using ProtoBuf.Compiler;
+using System.Diagnostics;
+
 
 namespace ProtoBuf.Serializers
 {
@@ -11,7 +12,7 @@ namespace ProtoBuf.Serializers
         public PropertyDecorator(PropertyInfo property, IProtoSerializer tail)
             : base(tail)
         {
-            if (property == null) throw new ArgumentNullException("property");
+            Debug.Assert(property != null);
             this.property = property;
         }
         public override void Write(object value, ProtoWriter dest)
@@ -19,10 +20,13 @@ namespace ProtoBuf.Serializers
             value = property.GetValue(value, null);
             if(value != null) Tail.Write(value, dest);
         }
-        protected override void Write(CompilerContext ctx)
+#if FEAT_COMPILER
+        protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
+            ctx.LoadAddress(valueFrom, ExpectedType);
             ctx.LoadValue(property);
-            ctx.NullCheckedTail(property.PropertyType, Tail);
+            ctx.NullCheckedTail(property.PropertyType, Tail, null);
         }
+#endif
     }
 }

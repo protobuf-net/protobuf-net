@@ -3,17 +3,17 @@
 
 namespace ProtoBuf.Serializers
 {
-    sealed class Int32Serializer : IProtoSerializer
+    sealed class DoubleSerializer : IProtoSerializer
     {
-        public Type ExpectedType { get { return typeof(int); } }
+        public Type ExpectedType { get { return typeof(double); } }
         public void Write(object value, ProtoWriter dest)
         {
-            dest.WriteInt32((int)value);
+            dest.WriteDouble((double)value);
         }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite("WriteInt32", typeof(int), valueFrom);
+            ctx.EmitWrite("WriteDouble", typeof(double), valueFrom);
         }
 #endif
     }

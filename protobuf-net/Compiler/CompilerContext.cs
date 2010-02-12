@@ -1,4 +1,5 @@
-﻿//#define DEBUG_COMPILE
+﻿#if FEAT_COMPILER
+//#define DEBUG_COMPILE
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -27,42 +28,45 @@ namespace ProtoBuf.Compiler
 #if DEBUG_COMPILE
         int label;
 #endif
-        public void Branch(IBranchAction branch)
+        public void Branch(IProtoSerializer @if, IProtoSerializer @else, Type type, Compiler.Local fromValue)
         {
-            Label ifLabel = il.DefineLabel(),
-                continuePoint = il.DefineLabel();
+            using (Compiler.Local loc = GetLocalWithValue(type, fromValue))
+            {
+                Label ifLabel = il.DefineLabel(),
+                    continuePoint = il.DefineLabel();
 #if DEBUG_COMPILE
             int ifLabelIndex = label++, continueLabelIndex = label++;
 #endif
 
-            il.Emit(OpCodes.Brtrue, ifLabel);
+                il.Emit(OpCodes.Brtrue, ifLabel);
 #if DEBUG_COMPILE
             Debug.WriteLine(OpCodes.Brtrue + " >>> " + ifLabelIndex);
 #endif
-            branch.Else(this);
-            il.Emit(OpCodes.Br, continuePoint);
+                if (@else != null) { @else.EmitWrite(this, loc); }
+                il.Emit(OpCodes.Br, continuePoint);
 #if DEBUG_COMPILE
             Debug.WriteLine(OpCodes.Br + " >>> " + continueLabelIndex);
 #endif
-            il.MarkLabel(ifLabel);
+                il.MarkLabel(ifLabel);
 #if DEBUG_COMPILE
             Debug.WriteLine("<<< " + ifLabelIndex);
 #endif
-            branch.If(this);
+                if (@if != null) { @if.EmitWrite(this, loc); }
 
-            il.MarkLabel(continuePoint);
+                il.MarkLabel(continuePoint);
 #if DEBUG_COMPILE
             Debug.WriteLine("<<< " + continueLabelIndex);
-#endif            
+#endif
+            }
         }
 #if !FX11
         public static ProtoSerializer BuildSerializer(IProtoSerializer head)
         {
             Type type = head.ExpectedType;
             CompilerContext ctx = new CompilerContext(type, true, true);
-            ctx.Emit(OpCodes.Ldarg_0);
+            ctx.LoadValue(Local.InputValue);
             ctx.CastFromObject(type);
-            ctx.NullCheckedTail(type, head);
+            ctx.NullCheckedTail(type, head, null);
             ctx.Emit(OpCodes.Ret);
             return (ProtoSerializer)ctx.method.CreateDelegate(
                 typeof(ProtoSerializer));
@@ -132,21 +136,12 @@ namespace ProtoBuf.Compiler
 #endif
         private readonly ILGenerator il;
 
-        public void DiscardValue()
-        {
-            Emit(OpCodes.Pop);
-
-        }
         private void Emit(OpCode opcode)
         {
             il.Emit(opcode);
 #if DEBUG_COMPILE
             Debug.WriteLine(opcode);
 #endif
-        }
-        internal void CopyValue()
-        {
-            Emit(OpCodes.Dup);
         }
         public void LoadValue(int value)
         {
@@ -218,26 +213,39 @@ namespace ProtoBuf.Compiler
         }
         public void LoadValue(Local local)
         {
-            il.Emit(OpCodes.Ldloc, local.Value);
+            if (local == null) { /* nothing to do; top of stack */}
+            else if (local == Local.InputValue)
+            {
+                Emit(isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldloc, local.Value);
 #if DEBUG_COMPILE
             Debug.WriteLine(OpCodes.Ldloc + ": $" + local.Value.LocalIndex);
 #endif
+            }
         }
 
-        internal void InjectStore(Type type)
+        internal void InjectStore(Type type, Compiler.Local valueFrom)
         {
-            using (Local loc = GetLocal(type))
+            using (Compiler.Local loc = GetLocalWithValue(type, valueFrom))
             {
-                this.StoreValue(loc);
                 this.LoadDest();
                 this.LoadValue(loc);
             }
         }
-        public Local GetLocal(Type type) { return new Local(this, type); }
+        public Local GetLocalWithValue(Type type, Compiler.Local fromValue) {
+            if (fromValue != null) { return fromValue.AsCopy(); }
+            // need to store the value from the stack
+            Local result = new Local(this, type);
+            StoreValue(result);
+            return result;
+        }
 
-        internal void EmitWrite(string methodName, Type injectForType)
+        internal void EmitWrite(string methodName, Type injectForType, Compiler.Local fromValue)
         {
-            this.InjectStore(injectForType);
+            this.InjectStore(injectForType, fromValue);
             EmitWrite(methodName);
         }
 
@@ -261,25 +269,8 @@ namespace ProtoBuf.Compiler
         {
             Emit(OpCodes.Ldnull);
         }
-        private class TailBranchAction : IBranchAction
-        {
-            public TailBranchAction(
-                Local loc, IProtoSerializer tail)
-            {
-                this.loc = loc;
-                this.tail = tail;
-            }
-            private readonly Local loc;
-            private readonly IProtoSerializer tail;
-            public void If(CompilerContext ctx) { }
-            public void Else(CompilerContext ctx)
-            {
-                ctx.LoadValue(loc);
-                loc.Dispose();
-                tail.Write(ctx);
-            }
-        }
-        internal void NullCheckedTail(Type type, IProtoSerializer tail)
+
+        internal void NullCheckedTail(Type type, IProtoSerializer tail, Compiler.Local valueFrom)
         {
             if (type.IsValueType)
             {
@@ -289,7 +280,7 @@ namespace ProtoBuf.Compiler
 #endif
                 if (nullType == null)
                 { // not a nullable T; can invoke directly
-                    tail.Write(this);
+                    tail.EmitWrite(this, valueFrom);
                 }
                 else
                 { // nullable T; check HasValue
@@ -298,13 +289,12 @@ namespace ProtoBuf.Compiler
             }
             else
             { // ref-type; do a null-check
-                using (Local loc = GetLocal(type))
+                using (Compiler.Local loc = GetLocalWithValue(type, valueFrom))
                 {
-                    CopyValue();
-                    StoreValue(loc);
+                    LoadValue(loc);
                     LoadNull();
                     OpEqual();
-                    Branch(new TailBranchAction(loc, tail));
+                    Branch(null, tail, type, loc);
                 }
 
 
@@ -344,11 +334,6 @@ namespace ProtoBuf.Compiler
             EmitCall(property.GetGetMethod());
         }
 
-        internal void LoadInputValue()
-        {
-            Emit(isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
-        }
-
         internal void EmitInstance()
         {
             if (isStatic) throw new InvalidOperationException();
@@ -358,8 +343,8 @@ namespace ProtoBuf.Compiler
         /* it turns out that this isn't really any faster 
         internal void BuildWriterWrapper(MethodBuilder method)
         {
-            using (Local result = GetLocal(typeof(int)))
-            using (Local writer = GetLocal(typeof(ProtoWriter)))
+            using (Compiler.Local result = GetLocal(typeof(int)))
+            using (Compiler.Local writer = GetLocal(typeof(ProtoWriter)))
             {
             
             
@@ -409,12 +394,36 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        internal void LoadAddress(Local local)
+        internal void LoadAddress(Local local, Type type)
         {
-            il.Emit(OpCodes.Ldloca, local.Value);
+            if (type.IsValueType)
+            {
+                // if the value is on the stack we'll need a local variable to it;
+                // may as well use GetLocalWithValue which handles all scenarios
+                using (Compiler.Local tmp = GetLocalWithValue(type, local))
+                {
+                    if (tmp == Local.InputValue)
+                    {
+                        il.Emit(OpCodes.Ldarga, (isStatic ? 0 : 1));
 #if DEBUG_COMPILE
-            Debug.WriteLine(OpCodes.Ldloca + ": $" + local.Value.LocalIndex);
+                        Debug.WriteLine(OpCodes.Ldarga + ": $" + (isStatic ? 0 : 1));
 #endif
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldloca, tmp.Value);
+#if DEBUG_COMPILE
+                        Debug.WriteLine(OpCodes.Ldloca + ": $" + local.Value.LocalIndex);
+#endif
+                    }
+                }
+
+            }
+            else
+            {   // reference-type; already *is* the address; just load it
+                LoadValue(local);
+            }
         }
     }
 }
+#endif
