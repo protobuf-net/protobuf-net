@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Reflection;
 
 
 namespace ProtoBuf.Serializers
@@ -15,6 +17,8 @@ namespace ProtoBuf.Serializers
             this.fieldNumber = fieldNumber;
             this.wireType = wireType;
         }
+        public override bool RequiresOldValue { get { return Tail.RequiresOldValue; } }
+        public override bool ReturnsValue { get { return Tail.ReturnsValue; } }
         
         private readonly int fieldNumber;
         private readonly WireType wireType;
@@ -23,17 +27,33 @@ namespace ProtoBuf.Serializers
             dest.WriteFieldHeader(fieldNumber, wireType);
             Tail.Write(value, dest);
         }
+        public override object Read(object value, ProtoReader source)
+        {
+            Debug.Assert(fieldNumber == source.FieldNumber);
+            if (wireType == WireType.SignedVariant) { source.SetSignedVariant(); }
+            return Tail.Read(value, source);
+        }
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             using (Compiler.Local loc = ctx.GetLocalWithValue(Tail.ExpectedType, valueFrom))
             {
-                ctx.LoadDest();
+                ctx.LoadReaderWriter();
                 ctx.LoadValue((int)fieldNumber);
                 ctx.LoadValue((int)wireType);
                 ctx.EmitWrite("WriteFieldHeader");
                 Tail.EmitWrite(ctx, loc);
             }            
+        }
+        protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
+        {
+            if (wireType == WireType.SignedVariant)
+            {
+                Debug.Assert(!Tail.RequiresOldValue); // so no value expected on the stack
+                ctx.LoadReaderWriter();
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("SetSignedVariant"));
+            }   
+            Tail.EmitRead(ctx, valueFrom);
         }
 #endif
     }

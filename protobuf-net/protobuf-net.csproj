@@ -116,6 +116,7 @@
     <Compile Include="ProtoWriter.cs" />
     <Compile Include="RuntimeSerializer.cs" />
     <Compile Include="Serializers\CompiledSerializer.cs" />
+    <Compile Include="Serializers\BooleanSerializer.cs" />
     <Compile Include="Serializers\UInt32Serializer.cs" />
     <Compile Include="Serializers\UInt64Serializer.cs" />
     <Compile Include="Serializers\Int64Serializer.cs" />

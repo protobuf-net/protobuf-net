@@ -30,14 +30,17 @@ namespace ProtoBuf
             if (buffer == null) return;
             try
             {
-                lock (pool)
+                if (buffer.Length == BufferLength)
                 {
-                    for (int i = 0; i < pool.Length; i++)
+                    lock (pool)
                     {
-                        if (pool[i] == null)
+                        for (int i = 0; i < pool.Length; i++)
                         {
-                            pool[i] = buffer;
-                            break;
+                            if (pool[i] == null)
+                            {
+                                pool[i] = buffer;
+                                break;
+                            }
                         }
                     }
                 }

@@ -101,6 +101,9 @@ namespace ProtoBuf.Meta
                 case TypeCode.Double:
                     wireType = WireType.Fixed64;
                     return new DoubleSerializer();
+                case TypeCode.Boolean:
+                    wireType = WireType.Variant;
+                    return new BooleanSerializer();
             }
             throw new NotSupportedException("No serializer defined for type: " + type.FullName);
         }

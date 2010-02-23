@@ -230,7 +230,7 @@ namespace ProtoBuf
             ioBuffer[ioIndex - 1] &= 0x7F;
             position += count;
         }
-        private Encoder encoder = encoding.GetEncoder();
+        //private Encoder encoder = encoding.GetEncoder();
         private int Space
         {
             get { return ioBuffer.Length - ioIndex; }
@@ -402,6 +402,8 @@ namespace ProtoBuf
                     return;
             }
         }
+
+
         public void WriteInt32(int value)
         {
             switch (wireType)
@@ -452,17 +454,7 @@ namespace ProtoBuf
             }
             
         }
-        private static void Reverse(byte[] arr, int offset, int count)
-        {
-            Debug.Assert(count > 0);
-            int end = offset + count;
-            while (offset < end)
-            {
-                byte tmp = arr[offset];
-                arr[offset++] = arr[end];
-                arr[end--] = tmp;
-            }
-        }
+
         public unsafe void WriteDouble(double value)
         {
             switch (wireType)
@@ -478,10 +470,6 @@ namespace ProtoBuf
                     return;
                 case WireType.Fixed64:
                     WriteInt64(*(long*)&value);
-                    if (!BitConverter.IsLittleEndian)
-                    {   // not fully tested, but this *should* work
-                        Reverse(ioBuffer, ioIndex - 8, 8);
-                    }
                     return;
                 default:
                     BorkedIt();
@@ -494,10 +482,6 @@ namespace ProtoBuf
             {
                 case WireType.Fixed32:
                     WriteInt32(*(int*)&value);
-                    if (!BitConverter.IsLittleEndian)
-                    { // not fully tested, but this *should* work
-                        Reverse(ioBuffer, ioIndex - 4, 4);
-                    }
                     return;
                 case WireType.Fixed64:
                     WriteDouble((double)value);
@@ -510,6 +494,11 @@ namespace ProtoBuf
         private void BorkedIt()
         {
             throw new ProtoException();
+        }
+
+        public void WriteBoolean(bool value)
+        {
+            WriteUInt32(value ? (uint)1 : (uint)0);
         }
     }
 }

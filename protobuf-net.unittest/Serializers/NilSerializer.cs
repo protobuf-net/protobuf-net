@@ -18,11 +18,10 @@ namespace ProtoBuf.Serializers
     sealed class NilSerializer : IProtoSerializer
     {
         private readonly Type type;
-
-        Type IProtoSerializer.ExpectedType
-        {
-            get { return type; }
-        }
+        public bool ReturnsValue { get { return true; } }
+        public bool RequiresOldValue { get { return true; } }
+        public object Read(object value, ProtoReader reader) { return value; }
+        Type IProtoSerializer.ExpectedType { get { return type; } }
         public NilSerializer(Type type) { this.type = type; }
         void IProtoSerializer.Write(object value, ProtoWriter dest) { }
 
@@ -30,6 +29,10 @@ namespace ProtoBuf.Serializers
         {
             // burn the value off the stack if needed (creates a variable and does a stloc)
             using (Local tmp = ctx.GetLocalWithValue(type, valueFrom)) { }
+        }
+        void IProtoSerializer.EmitRead(CompilerContext ctx, Local valueFrom)
+        {
+            throw new NotImplementedException();
         }
     }
 }

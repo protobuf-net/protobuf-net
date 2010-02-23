@@ -16,17 +16,29 @@ namespace ProtoBuf.Serializers
         {
             get { return type; }
         }
+        bool IProtoSerializer.RequiresOldValue { get { return true; } }
+        bool IProtoSerializer.ReturnsValue { get { return true; } }
 
         void IProtoSerializer.Write(object value, ProtoWriter dest)
         {
             dest.WriteObject(value, key);
+        }
+        object IProtoSerializer.Read(object value, ProtoReader source)
+        {
+            return source.ReadObject(value, key);
         }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.InjectStore(type, valueFrom);
             ctx.LoadValue(key);
-            ctx.EmitWrite("WriteObject");
+            ctx.EmitWrite("WriteObject"); //TODO: box?
+        }
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        {
+            ctx.InjectStore(type, valueFrom);
+            ctx.LoadValue(key);
+            ctx.EmitWrite("ReadObject"); //TODO: box and unbox?
         }
 #endif
     }

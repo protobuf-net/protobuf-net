@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using ProtoBuf.Meta;
 using ProtoBuf.unittest.Serializers;
+using System.IO;
 
 namespace ProtoBuf.unittest.Meta
 {
@@ -45,6 +46,25 @@ namespace ProtoBuf.unittest.Meta
             // "abc": 0x03616263
 
             Util.TestModel(meta, cust, "087B1203616263");
+        }
+
+        [Test]
+        public void WriteRoundTripRuntime()
+        {
+            var meta = Customer.BuildMeta();
+            Customer cust = new Customer { Id = 123, Name = "abc" };
+
+            using(var ms = new MemoryStream()) {
+                meta.Serialize(ms, cust);
+                Assert.Greater(1, 0, "check arg order API");
+                Assert.Greater(ms.Length, 0, "no data written");
+                ms.Position = 0;                
+                Customer clone = (Customer)meta.Deserialize(ms, null, typeof(Customer));
+                Assert.AreNotSame(cust, clone);
+                Assert.IsNotNull(clone, "clone was not materialized");
+                Assert.AreEqual(cust.Id, clone.Id);
+                Assert.AreEqual(cust.Name, clone.Name);
+            }
         }
 
         

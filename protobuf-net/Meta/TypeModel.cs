@@ -14,13 +14,24 @@ namespace ProtoBuf.Meta
                 Serialize(key, value, writer);
             }
         }
-        public object Deserialize(Stream source, Type type)
+        public object Deserialize(Stream source, object value, Type type)
         {
-            if (type == null) throw new ArgumentNullException("type");
+            if (type == null)
+            {
+                if (value == null)
+                {
+                    throw new ArgumentNullException("type");
+                } else {
+                    type = value.GetType();
+                }
+            }
+#if !FX11
+            type = Nullable.GetUnderlyingType(type) ?? type;
+#endif
             int key = GetKey(type);
             using (ProtoReader reader = new ProtoReader(source, this))
             {
-                return Deserialize(key, reader);
+                return Deserialize(key, value, reader);
             }
         }
         public static RuntimeTypeModel Create(string name)
@@ -29,7 +40,7 @@ namespace ProtoBuf.Meta
         }
         protected abstract int GetKey(Type type);
         protected internal abstract void Serialize(int key, object value, ProtoWriter dest);
-        protected internal abstract object Deserialize(int key, ProtoReader source);
+        protected internal abstract object Deserialize(int key, object value, ProtoReader source);
 
         //internal ProtoSerializer Create(IProtoSerializer head)
         //{

@@ -1,31 +1,34 @@
 ﻿using System;
+#if FEAT_COMPILER
+using System.Reflection.Emit;
+#endif
 using System.Diagnostics;
 
 
 namespace ProtoBuf.Serializers
 {
-    sealed class UInt64Serializer : IProtoSerializer
+    sealed class BooleanSerializer : IProtoSerializer
     {
-        public Type ExpectedType { get { return typeof(ulong); } }
+        public Type ExpectedType { get { return typeof(bool); } }
         public void Write(object value, ProtoWriter dest)
         {
-            dest.WriteUInt64((ulong)value);
+            dest.WriteBoolean((bool)value);
         }
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
         public object Read(object value, ProtoReader source)
         {
             Debug.Assert(value == null); // since replaces
-            return source.ReadUInt64();
+            return source.ReadBoolean();
         }
+        bool IProtoSerializer.RequiresOldValue { get { return false; } }
+        bool IProtoSerializer.ReturnsValue { get { return true; } }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite("WriteUInt64", typeof(ulong), valueFrom);
+            ctx.EmitWrite("WriteBoolean", typeof(bool), valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicRead("ReadUInt64", ExpectedType);
+            ctx.EmitBasicRead("ReadBoolean", ExpectedType);
         }
 #endif
     }

@@ -19,27 +19,33 @@ namespace ProtoBuf.Serializers
         }
         private readonly IProtoSerializer head;
         private readonly Compiler.ProtoSerializer serializer;
-        private readonly Compiler.ProtoSerializer deserializer;
-
+        private readonly Compiler.ProtoDeserializer deserializer;
         private CompiledSerializer(IProtoSerializer head)
         {
             this.head = head;
             serializer = Compiler.CompilerContext.BuildSerializer(head);
         }
+        bool IProtoSerializer.RequiresOldValue { get { return head.RequiresOldValue; } }
+        bool IProtoSerializer.ReturnsValue { get { return head.ReturnsValue; } }
 
-        Type IProtoSerializer.ExpectedType
-        {
-            get { return head.ExpectedType; }
-        }
+        Type IProtoSerializer.ExpectedType { get { return head.ExpectedType; } }
 
         void IProtoSerializer.Write(object value, ProtoWriter dest)
         {
             serializer(value, dest);
         }
+        object IProtoSerializer.Read(object value, ProtoReader source)
+        {
+            return deserializer(value, source);
+        }
 
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             head.EmitWrite(ctx, valueFrom);
+        }
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        {
+            head.EmitRead(ctx, valueFrom);
         }
     }
 }

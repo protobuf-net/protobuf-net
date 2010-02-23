@@ -130,9 +130,16 @@ namespace ProtoBuf.Meta
             ((MetaType)types[key]).Serializer.Write(value, dest);
         }
     
-        protected internal override object Deserialize(int key, ProtoReader source)
+        protected internal override object Deserialize(int key, object value, ProtoReader source)
         {
-            throw new NotImplementedException();
+            IProtoSerializer ser = ((MetaType)types[key]).Serializer;
+            if (value == null && ser.ExpectedType.IsValueType) {
+                int pos = source.Position;
+                value = ser.Read(Activator.CreateInstance(ser.ExpectedType), source);
+                return pos == source.Position ? null : value; // but null nothing was read
+            } else {
+                return ser.Read(value, source);
+            }
         }
 #if FEAT_COMPILER
         internal Compiler.ProtoSerializer GetSerializer(Type type, bool compiled)
@@ -217,26 +224,39 @@ namespace ProtoBuf.Meta
             Compiler.CompilerContext ctx;
             // the keys in the model are guaranteed to be unique, but may not
             // be contiguous (threading etc); we'll normalize the keys
-            MethodBuilder[] typeSerializers = new MethodBuilder[types.Count];
-            ILGenerator[] bodies = new ILGenerator[types.Count];
+            MethodBuilder[] typeSerializers = new MethodBuilder[types.Count],
+                typeDeserializers = new MethodBuilder[types.Count];
+            ILGenerator[] serBodies = new ILGenerator[types.Count],
+                deserBodies = new ILGenerator[types.Count];
 
             int index = 0;
             foreach (MetaType metaType in types)
             {
-                MethodBuilder typeMethod = type.DefineMethod("Serialize_" + metaType.Type.Name + "_" + index.ToString(),
+                MethodBuilder typeMethod = type.DefineMethod("Write",
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     typeof(void), new Type[] { metaType.Type, typeof(ProtoWriter) });
                 typeSerializers[index] = typeMethod;
-                bodies[index] = typeMethod.GetILGenerator();
+                serBodies[index] = typeMethod.GetILGenerator();
+
+                typeMethod = type.DefineMethod("Read",
+                    MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
+                    metaType.Type, new Type[] { metaType.Type, typeof(ProtoReader) });
+                typeDeserializers[index] = typeMethod;
+                deserBodies[index] = typeMethod.GetILGenerator();
                 
                 index++;
             }
             index = 0;
             foreach (MetaType metaType in types)
             {
-                ctx = new Compiler.CompilerContext(bodies[index], true, true);
+                ctx = new Compiler.CompilerContext(serBodies[index], true, true);
                 metaType.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
                 ctx.Return();
+
+                ctx = new Compiler.CompilerContext(deserBodies[index], false, true);
+                metaType.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
+                ctx.Return();
+
                 index++;
             }
 
@@ -268,11 +288,95 @@ namespace ProtoBuf.Meta
                 il.Emit(OpCodes.Ldarg_3);
                 il.EmitCall(OpCodes.Call, typeSerializers[i], null);
                 ctx.Return();
-            }               
+            }
 
             il = Override(type, "Deserialize");
-            il.Emit(OpCodes.Ldnull);
-            il.Emit(OpCodes.Ret);
+            ctx = new Compiler.CompilerContext(il, false, false);
+            Compiler.Local pos = null;
+            try
+            {
+                // arg0 = this, arg1 = key, arg2=obj, arg3=source
+                for (int i = 0; i < jumpTable.Length; i++)
+                {
+                    jumpTable[i] = il.DefineLabel();
+                }
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Switch, jumpTable);
+                ctx.LoadNull();
+                ctx.Return();
+                for (int i = 0; i < jumpTable.Length; i++)
+                {
+                    il.MarkLabel(jumpTable[i]);
+                    Type keyType = ((MetaType)types[i]).Type;
+                    if (keyType.IsValueType)
+                    {
+                        
+                        Compiler.CodeLabel ifNull = ctx.DefineLabel();
+                        il.Emit(OpCodes.Ldarg_2);
+                        ctx.LoadNull();
+                        ctx.BranchIfEqual(ifNull);
+
+                        // not null here; unbox and always return
+                        il.Emit(OpCodes.Ldarg_2);
+                        ctx.CastFromObject(keyType);
+                        il.Emit(OpCodes.Ldarg_3);
+                        il.EmitCall(OpCodes.Call, typeDeserializers[i], null);
+                        ctx.CastToObject(keyType);
+                        ctx.Return();
+
+                        
+                        ctx.MarkLabel(ifNull);
+                        /* TODO: check pos etc
+                        if (pos == null) pos = new Compiler.Local(ctx, typeof(int));
+                        using (Compiler.Local typedVar = new Compiler.Local(ctx, keyType))
+                        {
+                            PropertyInfo readerPos = typeof(ProtoReader).GetProperty("Position");
+                            il.Emit(OpCodes.Ldarg_3);
+                            ctx.LoadValue(readerPos);
+                            ctx.StoreValue(pos);
+
+                            ctx.LoadAddress(typedVar, keyType);
+                            ctx.EmitCtor(keyType);
+                            ctx.LoadValue(typedVar);
+                            il.Emit(OpCodes.Ldarg_3);
+                            il.EmitCall(OpCodes.Call, typeDeserializers[i], null);
+
+                            ctx.LoadValue(pos);
+                            il.Emit(OpCodes.Ldarg_3);
+                            ctx.LoadValue(readerPos);
+                            Compiler.CodeLabel noData = ctx.DefineLabel();
+                            ctx.BranchIfEqual(noData);
+                            // had data, so box and return
+                            ctx.CastToObject(keyType);
+                            ctx.Return();
+
+                            ctx.MarkLabel(noData);
+                            ctx.DiscardValue(); // pop the value
+                            ctx.LoadNull();
+                            ctx.Return();
+                        }*/
+                        ctx.LoadNull();
+                        ctx.Return();
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldarg_2);
+                        ctx.CastFromObject(keyType);
+                        il.Emit(OpCodes.Ldarg_3);
+                        il.EmitCall(OpCodes.Call, typeDeserializers[i], null);
+                        ctx.CastToObject(keyType);
+                        ctx.Return();
+                    }                    
+                    
+                    
+                    
+
+                }
+            }
+            finally
+            {
+                if (pos != null) pos.Dispose();
+            }
 
             
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 
 
 namespace ProtoBuf.Serializers
@@ -10,11 +11,23 @@ namespace ProtoBuf.Serializers
         {
             dest.WriteInt32((int)value);
         }
+        bool IProtoSerializer.RequiresOldValue { get { return false; } }
+        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        public object Read(object value, ProtoReader source)
+        {
+            Debug.Assert(value == null); // since replaces
+            return source.ReadInt32();
+        }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitWrite("WriteInt32", typeof(int), valueFrom);
         }
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        {
+            ctx.EmitBasicRead("ReadInt32", ExpectedType);
+        }
 #endif
+
     }
 }

@@ -24,9 +24,15 @@ namespace ProtoBuf.Compiler
         CompilerContext ctx;
         public void Dispose()
         {
-            if (ctx != null) { ctx.ReleaseToPool(value); }
-            value = null;
-            ctx = null;
+            if (ctx != null)
+            {
+                // only *actually* dispose if this is context-bound; note that non-bound
+                // objects are cheekily re-used, and *must* be left intact agter a "using" etc
+                ctx.ReleaseToPool(value);
+                value = null; 
+                ctx = null;
+            }            
+            
         }
         private Local(LocalBuilder value)
         {
