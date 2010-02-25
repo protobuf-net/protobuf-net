@@ -3,47 +3,10 @@ using ProtoBuf.Meta;
 using System.IO;
 using System;
 using ProtoBuf;
+using SampleDto;
 namespace FX11
 {
-    public class Customer
-    {
-        private int id;
-        public int Id { get { return id; } set { id = value; } }
-        public string Name;
-#if !FX11
-        private double? howMuch;
-        public double? HowMuch { get { return howMuch; } set { howMuch = value; } }
-        public bool? HasValue;
-#endif
-        public override string ToString()
-        {
-            string s = id + ": " + Name;
-#if !FX11
-            s += "\t" + howMuch + " / " + HasValue;
-#endif
-            return s;
-        }
-        
-    }
-    public struct CustomerStruct
-    {
-        private int id;
-        public int Id { get { return id; } set { id = value; } }
-        public string Name;
-#if !FX11
-        private double? howMuch;
-        public double? HowMuch { get { return howMuch; } set { howMuch = value; } }
-        public bool? HasValue;
-#endif
-        public override string ToString()
-        {
-            string s = id + ": " + Name;
-#if !FX11
-            s += "\t" + howMuch + " / " + HasValue;
-#endif
-            return s;
-        }
-    }
+    
     public class FX11_Program
     {
         public static RuntimeTypeModel BuildMeta()
@@ -70,6 +33,7 @@ namespace FX11
         }
         public static void Main()
         {
+            
             WriteHeading(".NET version");
             Console.WriteLine(Environment.Version);
             
@@ -92,9 +56,24 @@ namespace FX11
 #endif
 #if FEAT_COMPILER
 
-            TypeModel compiled = model.Compile("CustomerModel.dll");
-            WriteCustomer(compiled, "Compiled - class", cust2);
-            WriteCustomer(compiled, "Compiled - struct", cust2);
+           // TypeModel compiled = model.Compile("CustomerModel.dll");
+           // WriteCustomer(compiled, "Compiled - class", cust2);
+           // WriteCustomer(compiled, "Compiled - struct", cust2);
+            
+            CustomerModel serializer = new CustomerModel();
+            using (MemoryStream ms = new MemoryStream())
+            {
+                Customer cust = new Customer();
+                cust.Id = 123;
+                cust.Name = "Fred";
+                serializer.Serialize(ms, cust);
+                ms.Position = 0;
+                Customer clone = (Customer)serializer.Deserialize(ms, null, typeof(Customer));
+                Console.WriteLine(clone.Id);
+                Console.WriteLine(clone.Name);
+            }
+
+
 #endif
         }
         static void WriteHeading(string caption)

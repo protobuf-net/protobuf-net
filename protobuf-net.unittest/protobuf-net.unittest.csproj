@@ -69,6 +69,10 @@
       <Project>{8374E4D7-2A91-48F1-9360-09B09CF27C3F}</Project>
       <Name>protobuf-net</Name>
     </ProjectReference>
+    <ProjectReference Include="..\SampleDto\SampleDto.csproj">
+      <Project>{8D53345D-C5D6-4510-8FDB-B6D8A63D65AE}</Project>
+      <Name>SampleDto</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
