@@ -20,6 +20,8 @@ namespace ProtoBuf.Meta
             this.expectedType = expectedType;
         }
 
+        public Type ExpectedType {get { return expectedType; } }
+
         private IProtoSerializer serializer;
         internal IProtoSerializer Serializer
         {

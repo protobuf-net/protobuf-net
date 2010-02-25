@@ -89,10 +89,6 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
-        static void WTF(object sender, EventArgs args)
-        {
-            Console.WriteLine("wtf?");
-        }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type expected = ExpectedType;

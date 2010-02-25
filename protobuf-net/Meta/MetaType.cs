@@ -61,7 +61,7 @@ namespace ProtoBuf.Meta
 
         private readonly BasicList fields = new BasicList();
 
-        IEnumerable GetFields() { return fields; }
+        //IEnumerable GetFields() { return fields; }
 
 #if FEAT_COMPILER && !FX11
         internal void CompileInPlace()

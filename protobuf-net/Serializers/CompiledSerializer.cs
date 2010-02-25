@@ -24,6 +24,7 @@ namespace ProtoBuf.Serializers
         {
             this.head = head;
             serializer = Compiler.CompilerContext.BuildSerializer(head);
+            deserializer = Compiler.CompilerContext.BuildDeserializer(head);
         }
         bool IProtoSerializer.RequiresOldValue { get { return head.RequiresOldValue; } }
         bool IProtoSerializer.ReturnsValue { get { return head.ReturnsValue; } }

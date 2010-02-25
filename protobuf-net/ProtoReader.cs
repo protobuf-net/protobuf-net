@@ -121,7 +121,7 @@ namespace ProtoBuf
         public int Position { get { return position; } }
         internal void Ensure(int count, bool strict)
         {
-            Debug.Assert(count <= available, "Asking for data without checking first");
+            Debug.Assert(available <= count, "Asking for data without checking first");
             Debug.Assert(count <= ioBuffer.Length, "Asking for too much data");
 
             if (ioIndex + count >= ioBuffer.Length)
@@ -183,19 +183,52 @@ namespace ProtoBuf
         }
         public long ReadInt64()
         {
+            switch (wireType)
+            {
+                case WireType.Variant:
+                    return (long)ReadUInt64Variant();
+                case WireType.Fixed32:
+                    return ReadInt32();
+                case WireType.Fixed64:
+                    if (available < 8) Ensure(8, true);
+                    position += 8;
+                    available -= 8;
+
+                    long value = ((long)ioBuffer[ioIndex++])
+                        | (((long)ioBuffer[ioIndex++]) << 8)
+                        | (((long)ioBuffer[ioIndex++]) << 16)
+                        | (((long)ioBuffer[ioIndex++]) << 24)
+                        | (((long)ioBuffer[ioIndex++]) << 32)
+                        | (((long)ioBuffer[ioIndex++]) << 40)
+                        | (((long)ioBuffer[ioIndex++]) << 48)
+                        | (((long)ioBuffer[ioIndex++]) << 56);
+                    return value;
+                case WireType.SignedVariant:
+                    return Zag(ReadUInt64Variant());
+                default:
+                    throw BorkedIt();
+            }
+        }
+
+        private ulong ReadUInt64Variant()
+        {
             throw new NotImplementedException();
         }
 
         static readonly UTF8Encoding encoding = new UTF8Encoding(false);
         public string ReadString()
         {
-            int bytes = (int)ReadUInt32Variant();
-            if (bytes == 0) return "";
-            if (available < bytes) Ensure(bytes, true);
-            string s = encoding.GetString(ioBuffer, ioIndex, bytes);
-            available -= bytes;
-            position += bytes;
-            return s;
+            if (wireType == WireType.String)
+            {
+                int bytes = (int)ReadUInt32Variant();
+                if (bytes == 0) return "";
+                if (available < bytes) Ensure(bytes, true);
+                string s = encoding.GetString(ioBuffer, ioIndex, bytes);
+                available -= bytes;
+                position += bytes;
+                return s;
+            }
+            throw BorkedIt();
         }
         private Exception BorkedIt()
         {

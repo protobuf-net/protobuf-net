@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 
 using ProtoBuf.Serializers;
+using System.Diagnostics;
 
 namespace ProtoBuf.Meta
 {
@@ -249,12 +250,13 @@ namespace ProtoBuf.Meta
             index = 0;
             foreach (MetaType metaType in types)
             {
-                ctx = new Compiler.CompilerContext(serBodies[index], true, true);
+                ctx = new Compiler.CompilerContext(serBodies[index], true);
                 metaType.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
                 ctx.Return();
 
-                ctx = new Compiler.CompilerContext(deserBodies[index], false, true);
+                ctx = new Compiler.CompilerContext(deserBodies[index], true);
                 metaType.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
+                ctx.LoadValue(Compiler.Local.InputValue);
                 ctx.Return();
 
                 index++;
@@ -271,7 +273,7 @@ namespace ProtoBuf.Meta
             il.Emit(OpCodes.Ret);
             
             il = Override(type, "Serialize");
-            ctx = new Compiler.CompilerContext(il, true, false);
+            ctx = new Compiler.CompilerContext(il, false);
             // arg0 = this, arg1 = key, arg2=obj, arg3=dest
             Label[] jumpTable = new Label[types.Count];
             for (int i = 0; i < jumpTable.Length; i++) {
@@ -291,7 +293,7 @@ namespace ProtoBuf.Meta
             }
 
             il = Override(type, "Deserialize");
-            ctx = new Compiler.CompilerContext(il, false, false);
+            ctx = new Compiler.CompilerContext(il, false);
             Compiler.Local pos = null;
             try
             {
@@ -326,7 +328,7 @@ namespace ProtoBuf.Meta
 
                         
                         ctx.MarkLabel(ifNull);
-                        /* TODO: check pos etc
+                        
                         if (pos == null) pos = new Compiler.Local(ctx, typeof(int));
                         using (Compiler.Local typedVar = new Compiler.Local(ctx, keyType))
                         {
@@ -340,6 +342,7 @@ namespace ProtoBuf.Meta
                             ctx.LoadValue(typedVar);
                             il.Emit(OpCodes.Ldarg_3);
                             il.EmitCall(OpCodes.Call, typeDeserializers[i], null);
+                            ctx.StoreValue(typedVar);
 
                             ctx.LoadValue(pos);
                             il.Emit(OpCodes.Ldarg_3);
@@ -347,16 +350,16 @@ namespace ProtoBuf.Meta
                             Compiler.CodeLabel noData = ctx.DefineLabel();
                             ctx.BranchIfEqual(noData);
                             // had data, so box and return
+                            ctx.LoadValue(typedVar);
                             ctx.CastToObject(keyType);
                             ctx.Return();
 
-                            ctx.MarkLabel(noData);
-                            ctx.DiscardValue(); // pop the value
+                            ctx.MarkLabel(noData);   
                             ctx.LoadNull();
                             ctx.Return();
-                        }*/
-                        ctx.LoadNull();
-                        ctx.Return();
+                        }
+                        //ctx.LoadNull();
+                        //ctx.Return();
                     }
                     else
                     {
@@ -367,10 +370,6 @@ namespace ProtoBuf.Meta
                         ctx.CastToObject(keyType);
                         ctx.Return();
                     }                    
-                    
-                    
-                    
-
                 }
             }
             finally

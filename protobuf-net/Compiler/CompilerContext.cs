@@ -25,17 +25,10 @@ namespace ProtoBuf.Compiler
     internal class CompilerContext
     {
         
-        static int GetLen(string s)
-        {
-            if (s == null) return 0;
-            return s.Length;
-        }
 #if !FX11
         readonly DynamicMethod method;
         static int next;
 #endif
-        private readonly bool isWriter;
-
 
         internal CodeLabel DefineLabel()
         {
@@ -182,19 +175,18 @@ namespace ProtoBuf.Compiler
             }
         }
         private readonly bool isStatic;
-        private CompilerContext(bool isWriter, bool isStatic)
+        private CompilerContext(bool isStatic)
         {
             this.isStatic = isStatic;
-            this.isWriter = isWriter;
         }
-        internal CompilerContext(ILGenerator il, bool isWriter, bool isStatic)
-            : this(isWriter, isStatic)
+        internal CompilerContext(ILGenerator il, bool isStatic)
+            : this(isStatic)
         {
             this.il = il;
         }
 #if !FX11
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic)
-            : this(isWriter, isStatic)
+            : this(isStatic)
         {
             Type[] paramTypes;
             Type returnType;
