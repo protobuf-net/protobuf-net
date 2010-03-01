@@ -56,10 +56,10 @@ namespace FX11
 #endif
 #if FEAT_COMPILER
 
-           // TypeModel compiled = model.Compile("CustomerModel.dll");
-           // WriteCustomer(compiled, "Compiled - class", cust2);
-           // WriteCustomer(compiled, "Compiled - struct", cust2);
-            
+           TypeModel compiled = model.Compile("CustomerModel.dll");
+           WriteCustomer(compiled, "Compiled - class", cust2);
+           WriteCustomer(compiled, "Compiled - struct", cust2);
+            /*
             CustomerModel serializer = new CustomerModel();
             using (MemoryStream ms = new MemoryStream())
             {
@@ -72,6 +72,7 @@ namespace FX11
                 Console.WriteLine(clone.Id);
                 Console.WriteLine(clone.Name);
             }
+             */
 
 
 #endif

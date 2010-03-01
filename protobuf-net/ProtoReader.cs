@@ -194,7 +194,7 @@ namespace ProtoBuf
                     position += 8;
                     available -= 8;
 
-                    long value = ((long)ioBuffer[ioIndex++])
+                    return ((long)ioBuffer[ioIndex++])
                         | (((long)ioBuffer[ioIndex++]) << 8)
                         | (((long)ioBuffer[ioIndex++]) << 16)
                         | (((long)ioBuffer[ioIndex++]) << 24)
@@ -202,7 +202,7 @@ namespace ProtoBuf
                         | (((long)ioBuffer[ioIndex++]) << 40)
                         | (((long)ioBuffer[ioIndex++]) << 48)
                         | (((long)ioBuffer[ioIndex++]) << 56);
-                    return value;
+
                 case WireType.SignedVariant:
                     return Zag(ReadUInt64Variant());
                 default:
@@ -210,9 +210,79 @@ namespace ProtoBuf
             }
         }
 
+        private int TryReadUInt64VariantWithoutMoving(out ulong value)
+        {
+            if (available < 10) Ensure(10, false);
+            if (available == 0)
+            {
+                value = 0;
+                return 0;
+            }
+            int readPos = ioIndex;
+            value = ioBuffer[readPos++];
+            if ((value & 0x80) == 0) return 1;
+            value &= 0x7F;
+            if (available == 1) throw new EndOfStreamException();
+
+            ulong chunk = ioBuffer[readPos++];
+            value |= (chunk & 0x7F) << 7;
+            if ((chunk & 0x80) == 0) return 2;
+            if (available == 2) throw new EndOfStreamException();
+
+            chunk = ioBuffer[readPos++];
+            value |= (chunk & 0x7F) << 14;
+            if ((chunk & 0x80) == 0) return 3;
+            if (available == 3) throw new EndOfStreamException();
+
+            chunk = ioBuffer[readPos++];
+            value |= (chunk & 0x7F) << 21;
+            if ((chunk & 0x80) == 0) return 4;
+            if (available == 4) throw new EndOfStreamException();
+
+            chunk = ioBuffer[readPos++];
+            value |= (chunk & 0x7F) << 28;
+            if ((chunk & 0x80) == 0) return 5;
+            if (available == 5) throw new EndOfStreamException();
+
+            chunk = ioBuffer[readPos++];
+            value |= (chunk & 0x7F) << 35;
+            if ((chunk & 0x80) == 0) return 6;
+            if (available == 6) throw new EndOfStreamException();
+
+            chunk = ioBuffer[readPos++];
+            value |= (chunk & 0x7F) << 42;
+            if ((chunk & 0x80) == 0) return 7;
+            if (available == 7) throw new EndOfStreamException();
+
+
+            chunk = ioBuffer[readPos++];
+            value |= (chunk & 0x7F) << 49;
+            if ((chunk & 0x80) == 0) return 8;
+            if (available == 8) throw new EndOfStreamException();
+
+            chunk = ioBuffer[readPos++];
+            value |= (chunk & 0x7F) << 56;
+            if ((chunk & 0x80) == 0) return 9;
+            if (available == 9) throw new EndOfStreamException();
+
+            chunk = ioBuffer[readPos];
+            value |= chunk << 63; // can only use 1 bit from this chunk
+
+            if ((chunk & ~(ulong)0x01) != 0) throw new OverflowException();
+            return 10;            
+        }
         private ulong ReadUInt64Variant()
         {
-            throw new NotImplementedException();
+            ulong value;
+            int read = TryReadUInt64VariantWithoutMoving(out value);
+            if (read > 0)
+            {
+                ioIndex += read;
+                available -= read;
+                position += read;
+                return value;
+            }
+            throw new EndOfStreamException();
         }
 
         static readonly UTF8Encoding encoding = new UTF8Encoding(false);
@@ -286,19 +356,109 @@ namespace ProtoBuf
 
         public void SetSignedVariant()
         {
-            if (wireType == WireType.Variant) { wireType = WireType.SignedVariant; }
+            switch (wireType)
+            {
+                case WireType.Variant: wireType = WireType.SignedVariant; break;
+                case WireType.SignedVariant: break; // nothing to do
+                default: throw BorkedIt();
+            }
         }
 
         public void SkipField()
         {
-            throw new NotImplementedException();
+            switch (wireType)
+            {
+                case WireType.Fixed32:
+                    Ensure(4, true);
+                    available -= 4;
+                    ioIndex += 4;
+                    position += 4;
+                    return;
+                case WireType.Fixed64:
+                    Ensure(8, true);
+                    available -= 8;
+                    ioIndex += 8;
+                    position += 8;
+                    return;
+                case WireType.String:
+                    int len = (int)ReadUInt32Variant();
+                    if (len <= available)
+                    { // just jump it!
+                        available -= len;
+                        ioIndex += len;
+                        position += len;
+                        return;
+                    }
+                    // everything remaining in the buffer is garbage
+                    position += len; // assumes success, but if it fails we're screwed anyway
+                    len -= available; // discount anything we've got to-hand
+                    ioIndex = available = 0; // note that we have no data in the buffer
+                    if (source.CanSeek)
+                    {   // ask the underlying stream to do the seeking
+                        source.Seek(len, SeekOrigin.Current);
+                    }
+                    else
+                    {   // do it the hard way
+                        int bytesRead;
+                        // use full buffers while we can
+                        while (len > ioBuffer.Length && 
+                            (bytesRead = source.Read(ioBuffer, 0, ioBuffer.Length)) > 0)
+                        {
+                            len -= bytesRead;
+                        }
+                        // then switch to partial buffers (hopefully only one of these!)
+                        while (len > 0 &&
+                             (bytesRead = source.Read(ioBuffer, 0, len)) > 0)
+                        {
+                            len -= bytesRead;    
+                        }
+                        if (len > 0) throw new EndOfStreamException();
+                    }
+                    return;
+                case WireType.Variant:
+                case WireType.SignedVariant:
+                    ReadUInt64Variant(); // and drop it
+                    return;
+                case WireType.StartGroup:
+                    int originalFieldNumber = this.fieldNumber;
+                    while(ReadFieldHeader() > 0) { SkipField(); }
+                    if (wireType == WireType.EndGroup && fieldNumber == originalFieldNumber)
+                    { // we expect to exit in a similar state to how we entered
+                        return;
+                    }
+                    throw BorkedIt();
+                case WireType.Error: // treat as explicit errorr
+                case WireType.EndGroup: // treat as explicit error
+                default: // treat as implicit error
+                    throw BorkedIt();
+            }
         }
 
         public ulong ReadUInt64()
         {
-            throw new NotImplementedException();
-        }
+            switch (wireType)
+            {
+                case WireType.Variant:
+                    return ReadUInt64Variant();
+                case WireType.Fixed32:
+                    return ReadUInt32();
+                case WireType.Fixed64:
+                    if (available < 8) Ensure(8, true);
+                    position += 8;
+                    available -= 8;
 
+                    return ((ulong)ioBuffer[ioIndex++])
+                        | (((ulong)ioBuffer[ioIndex++]) << 8)
+                        | (((ulong)ioBuffer[ioIndex++]) << 16)
+                        | (((ulong)ioBuffer[ioIndex++]) << 24)
+                        | (((ulong)ioBuffer[ioIndex++]) << 32)
+                        | (((ulong)ioBuffer[ioIndex++]) << 40)
+                        | (((ulong)ioBuffer[ioIndex++]) << 48)
+                        | (((ulong)ioBuffer[ioIndex++]) << 56);
+                default:
+                    throw BorkedIt();
+            }
+        }
         public unsafe float ReadSingle()
         {
             switch (wireType)
@@ -331,6 +491,53 @@ namespace ProtoBuf
                 case 0: return false;
                 case 1: return true;
                 default: throw BorkedIt();
+            }
+        }
+
+        public byte[] AppendBytes(byte[] value)
+        {
+            switch (wireType)
+            {
+                case WireType.String:
+                    int len = (int)ReadUInt32Variant();
+                    if (len == 0) return value;
+                    int offset;
+                    if(value == null) {
+                        offset = 0;
+                        value = new byte[len];
+                    } else {
+                        offset = value.Length;
+                        byte[] tmp = new byte[value.Length + len];
+                        Buffer.BlockCopy(value, 0, tmp, 0, value.Length);
+                        value = tmp;
+                    }
+                    // value is now sized with the final length, and (if necessary)
+                    // contains the old data up to "offset"
+                    position += len; // assume success
+                    while(len > available)
+                    {
+                        if (available > 0)
+                        {
+                            // copy what we *do* have
+                            Buffer.BlockCopy(ioBuffer, ioIndex, value, offset, available);
+                            len -= available;
+                            offset += available;
+                            ioIndex = available = 0; // we've drained the buffer
+                        }
+                        //  now refill the buffer (without overflowing it)
+                        int count = len > ioBuffer.Length ? ioBuffer.Length : len;
+                        if (count > 0) Ensure(count, true);
+                    }
+                    // at this point, we know that len <= available
+                    if (len > 0)
+                    {   // still need data, but we have enough buffered
+                        Buffer.BlockCopy(ioBuffer, ioIndex, value, offset, len);
+                        ioIndex += len;
+                        available -= len;
+                    }
+                    return value;
+                default:
+                    throw BorkedIt();
             }
         }
     }

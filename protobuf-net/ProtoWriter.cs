@@ -54,8 +54,9 @@ namespace ProtoBuf
                         position += len;
                     }
                     else
-                    {
-                        Flush();
+                    {   // writing data that is bigger than the buffer
+                        Flush(); // commit any existing data from the buffer
+                        // now just write directly to the underlying stream
                         dest.Write(data, 0, data.Length);
                         position += len;
                     }
@@ -500,5 +501,6 @@ namespace ProtoBuf
         {
             WriteUInt32(value ? (uint)1 : (uint)0);
         }
+
     }
 }
