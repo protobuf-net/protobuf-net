@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_RUNTIME
+using System;
 
 
 namespace ProtoBuf.Serializers
@@ -43,3 +44,4 @@ namespace ProtoBuf.Serializers
 #endif
     }
 }
+#endif

@@ -1,9 +1,13 @@
 ﻿
 using System;
-using System.Diagnostics;
+
 using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
+#if MF
+using EndOfStreamException = System.ApplicationException;
+using OverflowException = System.ApplicationException;
+#endif
 
 namespace ProtoBuf
 {
@@ -121,13 +125,13 @@ namespace ProtoBuf
         public int Position { get { return position; } }
         internal void Ensure(int count, bool strict)
         {
-            Debug.Assert(available <= count, "Asking for data without checking first");
-            Debug.Assert(count <= ioBuffer.Length, "Asking for too much data");
+            Helpers.DebugAssert(available <= count, "Asking for data without checking first");
+            Helpers.DebugAssert(count <= ioBuffer.Length, "Asking for too much data");
 
             if (ioIndex + count >= ioBuffer.Length)
             {
                 // need to shift the buffer data to the left to make space
-                Buffer.BlockCopy(ioBuffer, ioIndex, ioBuffer, 0, available);
+                Helpers.BlockCopy(ioBuffer, ioIndex, ioBuffer, 0, available);
                 ioIndex = 0;
             }
             count -= available;
@@ -145,6 +149,14 @@ namespace ProtoBuf
 
         }
 
+        public short ReadInt16()
+        {
+            checked { return (short)ReadInt32(); }
+        }
+        public ushort ReadUInt16()
+        {
+            checked { return (ushort)ReadUInt32(); }
+        }
         public int ReadInt32()
         {
             switch (wireType)
@@ -285,7 +297,7 @@ namespace ProtoBuf
             throw new EndOfStreamException();
         }
 
-        static readonly UTF8Encoding encoding = new UTF8Encoding(false);
+        static readonly UTF8Encoding encoding = new UTF8Encoding();
         public string ReadString()
         {
             if (wireType == WireType.String)
@@ -293,9 +305,22 @@ namespace ProtoBuf
                 int bytes = (int)ReadUInt32Variant();
                 if (bytes == 0) return "";
                 if (available < bytes) Ensure(bytes, true);
+#if MF
+                byte[] tmp;
+                if(ioIndex == 0 && bytes == ioBuffer.Length) {
+                    // unlikely, but...
+                    tmp = ioBuffer;
+                } else {
+                    tmp = new byte[bytes];
+                    Helpers.BlockCopy(ioBuffer, ioIndex, tmp, 0, bytes);
+                }
+                string s = new string(encoding.GetChars(tmp));
+#else
                 string s = encoding.GetString(ioBuffer, ioIndex, bytes);
+#endif
                 available -= bytes;
                 position += bytes;
+                ioIndex += bytes;
                 return s;
             }
             throw BorkedIt();
@@ -324,24 +349,55 @@ namespace ProtoBuf
             {
                 throw new InvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
             }
-            int token = StartSubItem(value);
+            int token = StartSubItem();
             value = model.Deserialize(key, value, this);
             EndSubItem(token);
             return value;
         }
 
-        private void EndSubItem(int token)
+        public void EndSubItem(int token)
         {
-            throw new NotImplementedException();
+            switch (wireType)
+            {
+                case WireType.EndGroup:
+                    if (token >= 0) throw new ArgumentException("token");
+                    if (-token != fieldNumber) throw BorkedIt(); // wrong group ended!
+                    wireType = WireType.Error; // this releases ReadFieldHeader
+                    break;
+                default:
+                    if (token < position) throw new ArgumentException("token");
+                    if (blockEnd != position) throw BorkedIt(); 
+                    blockEnd = token;
+                    break;
+            }
         }
 
-        private int StartSubItem(object value)
+        public int StartSubItem()
         {
-            throw new NotImplementedException();
+            switch (wireType)
+            {
+                case WireType.StartGroup:
+                    wireType = WireType.Error; // to prevent glitches from double-calling
+                    return -fieldNumber;
+                case WireType.String:
+                    int len = (int)ReadUInt32Variant();
+                    if (len < 0) throw new InvalidOperationException();
+                    int lastEnd = blockEnd;
+                    blockEnd = position + len;
+                    return lastEnd;
+                default:
+                    BorkedIt(); // throws
+                    return 0;
+            }
         }
 
+        int blockEnd = int.MaxValue;
         public int ReadFieldHeader()
         {
+            // at the end of a group the caller must call EndSubItem to release the
+            // reader (which moves the status to Error, since ReadFieldHeader must
+            // then be called)
+            if (blockEnd == position || wireType == WireType.EndGroup) { return 0; } 
             uint tag;
             if (TryReadUInt32Variant(out tag))
             {
@@ -351,7 +407,8 @@ namespace ProtoBuf
                 wireType = WireType.Error;
                 fieldNumber = 0;
             }
-            return fieldNumber;
+            // watch for end-of-group
+            return wireType == WireType.EndGroup ? 0 : fieldNumber; 
         }
 
         public void SetSignedVariant()
@@ -472,8 +529,8 @@ namespace ProtoBuf
                     {
                         double value = ReadDouble();
                         float f = (float)value;
-                        if (float.IsInfinity(f)
-                            && !double.IsInfinity(value))
+                        if (Helpers.IsInfinity(f)
+                            && !Helpers.IsInfinity(value))
                         {
                             throw new OverflowException();
                         }
@@ -508,7 +565,7 @@ namespace ProtoBuf
                     } else {
                         offset = value.Length;
                         byte[] tmp = new byte[value.Length + len];
-                        Buffer.BlockCopy(value, 0, tmp, 0, value.Length);
+                        Helpers.BlockCopy(value, 0, tmp, 0, value.Length);
                         value = tmp;
                     }
                     // value is now sized with the final length, and (if necessary)
@@ -519,7 +576,7 @@ namespace ProtoBuf
                         if (available > 0)
                         {
                             // copy what we *do* have
-                            Buffer.BlockCopy(ioBuffer, ioIndex, value, offset, available);
+                            Helpers.BlockCopy(ioBuffer, ioIndex, value, offset, available);
                             len -= available;
                             offset += available;
                             ioIndex = available = 0; // we've drained the buffer
@@ -531,7 +588,7 @@ namespace ProtoBuf
                     // at this point, we know that len <= available
                     if (len > 0)
                     {   // still need data, but we have enough buffered
-                        Buffer.BlockCopy(ioBuffer, ioIndex, value, offset, len);
+                        Helpers.BlockCopy(ioBuffer, ioIndex, value, offset, len);
                         ioIndex += len;
                         available -= len;
                     }

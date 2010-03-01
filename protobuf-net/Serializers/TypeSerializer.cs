@@ -1,6 +1,5 @@
-﻿using System;
-using System.Diagnostics;
-using System.Reflection.Emit;
+﻿#if !NO_RUNTIME
+using System;
 
 
 namespace ProtoBuf.Serializers
@@ -13,15 +12,15 @@ namespace ProtoBuf.Serializers
         private readonly int[] fieldNumbers;
         public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers)
         {
-            Debug.Assert(forType != null);
-            Debug.Assert(fieldNumbers != null);
-            Debug.Assert(serializers != null);
-            Debug.Assert(fieldNumbers.Length == serializers.Length);
-            Array.Sort(fieldNumbers, serializers);
+            Helpers.DebugAssert(forType != null);
+            Helpers.DebugAssert(fieldNumbers != null);
+            Helpers.DebugAssert(serializers != null);
+            Helpers.DebugAssert(fieldNumbers.Length == serializers.Length);
+            Helpers.Sort(fieldNumbers, serializers);
             this.forType = forType;
             this.serializers = serializers;
             this.fieldNumbers = fieldNumbers;
-#if !FX11
+#if !NO_GENERICS
             if (Nullable.GetUnderlyingType(forType) != null)
             {
                 throw new ArgumentException("Cannot create a TypeSerializer for nullable types", "forType");
@@ -92,7 +91,7 @@ namespace ProtoBuf.Serializers
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type expected = ExpectedType;
-            Debug.Assert(valueFrom != null);
+            Helpers.DebugAssert(valueFrom != null);
             using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
             using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
@@ -139,7 +138,7 @@ namespace ProtoBuf.Serializers
 
         private static void CreateIfNull(Compiler.CompilerContext ctx, Type type, Compiler.Local storage)
         {
-            Debug.Assert(storage != null);
+            Helpers.DebugAssert(storage != null);
             if (!type.IsValueType)
             {
                 Compiler.CodeLabel afterNullCheck = ctx.DefineLabel(),
@@ -158,3 +157,4 @@ namespace ProtoBuf.Serializers
     }
 
 }
+#endif

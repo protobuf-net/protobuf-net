@@ -5,30 +5,31 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class UInt64Serializer : IProtoSerializer
+    sealed class DateTimeSerializer : IProtoSerializer
     {
-        public Type ExpectedType { get { return typeof(ulong); } }
+        public Type ExpectedType { get { return typeof(DateTime); } }
         public void Write(object value, ProtoWriter dest)
         {
-            dest.WriteUInt64((ulong)value);
+            BclHelpers.WriteDateTime((DateTime)value, dest);
         }
         bool IProtoSerializer.RequiresOldValue { get { return false; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
         public object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadUInt64();
+            return BclHelpers.ReadDateTime(source);
         }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite("WriteUInt64", typeof(ulong), valueFrom);
+            ctx.EmitWrite(typeof(BclHelpers), "WriteDateTime", valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicRead("ReadUInt64", ExpectedType);
+            ctx.EmitBasicRead(typeof(BclHelpers), "ReadDateTime", ExpectedType);
         }
 #endif
+
     }
 }
 #endif

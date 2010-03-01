@@ -36,6 +36,7 @@ using System.Runtime.CompilerServices;
 [assembly: AssemblyVersion("2.0.0.280")]
 #if !CF
 [assembly: AssemblyFileVersion("2.0.0.280")]
+#endif
 #if !FX11
 [assembly: InternalsVisibleTo("protobuf-net.unittest, PublicKey="
     + "002400000480000094000000060200000024000052534131000400000100010009ed9caa457bfc"
@@ -44,5 +45,5 @@ using System.Runtime.CompilerServices;
     + "0815a096e4483605139a32a76ec2fef196507487329c12047bf6a68bca8ee9354155f4d01daf6e"
     + "ec5ff6bc")]
 #endif
-#endif
+
 [assembly: CLSCompliant(false)]

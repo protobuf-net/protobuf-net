@@ -1,9 +1,11 @@
-﻿
-using System;
-using System.Diagnostics;
+﻿using System;
+
 using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
+#if MF
+using OverflowException = System.ApplicationException;
+#endif
 namespace ProtoBuf
 {
     public sealed class ProtoWriter : IDisposable
@@ -49,7 +51,7 @@ namespace ProtoBuf
                     if (flushLock != 0 || data.Length <= ioBuffer.Length)
                     {
                         Ensure(len);
-                        Buffer.BlockCopy(data, 0, ioBuffer, ioIndex, len);
+                        Helpers.BlockCopy(data, 0, ioBuffer, ioIndex, len);
                         ioIndex += len;
                         position += len;
                     }
@@ -109,7 +111,7 @@ namespace ProtoBuf
                     else
                     {
                         Ensure(offset);
-                        Buffer.BlockCopy(ioBuffer, token + 1,
+                        Helpers.BlockCopy(ioBuffer, token + 1,
                             ioBuffer, token + 1 + offset, len);
                         tmp = (uint)len;
                         do
@@ -142,10 +144,14 @@ namespace ProtoBuf
             if (dest != null)
             {
                 try { Flush(); }
+#if CF
+                catch {}
+#else
                 catch (Exception ex)
                 {
-                    Trace.WriteLine(ex); // but swallow and keey running
+                    Helpers.TraceWriteLine(ex.ToString()); // but swallow and keey runningf
                 }
+#endif
                 dest = null;
             }
             model = null;
@@ -174,7 +180,7 @@ namespace ProtoBuf
                 }
 
                 byte[] newBuffer = new byte[newLen];
-                Buffer.BlockCopy(ioBuffer, 0, newBuffer, 0, ioIndex);
+                Helpers.BlockCopy(ioBuffer, 0, newBuffer, 0, ioIndex);
                 if (ioBuffer.Length == BufferPool.BufferLength)
                 {
                     BufferPool.ReleaseBufferToPool(ref ioBuffer);
@@ -209,7 +215,7 @@ namespace ProtoBuf
             position += count;
         }
  
-        static readonly UTF8Encoding encoding = new UTF8Encoding(false);
+        static readonly UTF8Encoding encoding = new UTF8Encoding();
 
         internal static uint Zig(int value)
         {        
@@ -246,14 +252,22 @@ namespace ProtoBuf
                 WriteUInt32Variant(0);
                 return; // just a header
             }
-
+#if MF
+            byte[] bytes = encoding.GetBytes(value);
+            int actual = bytes.Length;
+            WriteUInt32Variant((uint)actual);
+            Ensure(actual);
+            Helpers.BlockCopy(bytes, 0, ioBuffer, ioIndex, actual);
+#else
             int predicted = encoding.GetByteCount(value);
             WriteUInt32Variant((uint)predicted);
             Ensure(predicted);
             int actual = encoding.GetBytes(value, 0, value.Length, ioBuffer, ioIndex);
+            Helpers.DebugAssert(predicted == actual);
+#endif
             ioIndex += actual;
             position += actual;
-            Debug.Assert(predicted == actual);
+
             /*
 
             int maxNeededBytes = encoding.GetMaxByteCount(len), space = Space;
@@ -268,7 +282,7 @@ namespace ProtoBuf
                     && maxNeededBytes <= 127)
                 {
                     actualBytes = encoder.GetBytes(chars, len, bytes + ioIndex + 1, space, true);
-                    Debug.Assert(actualBytes <= 127);
+                    Helpers.DebugAssert(actualBytes <= 127);
                     bytes[ioIndex] = (byte)(actualBytes++); // backfill the length prefix
                     ioIndex += actualBytes;
                     position += actualBytes;
@@ -405,6 +419,14 @@ namespace ProtoBuf
         }
 
 
+        public void WriteInt16(short value)
+        {
+            WriteInt32(value);
+        }
+        public void WriteUInt16(ushort value)
+        {
+            WriteUInt32(value);
+        }
         public void WriteInt32(int value)
         {
             switch (wireType)
@@ -462,8 +484,8 @@ namespace ProtoBuf
             {
                 case WireType.Fixed32:
                     float f = (float)value;
-                    if (float.IsInfinity(f)
-                        && !double.IsInfinity(value))
+                    if (Helpers.IsInfinity(f)
+                        && !Helpers.IsInfinity(value))
                     {
                         throw new OverflowException();
                     }

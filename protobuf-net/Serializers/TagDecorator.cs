@@ -1,5 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿#if !NO_RUNTIME
+using System;
+
 using System.Reflection;
 
 
@@ -29,7 +30,7 @@ namespace ProtoBuf.Serializers
         }
         public override object Read(object value, ProtoReader source)
         {
-            Debug.Assert(fieldNumber == source.FieldNumber);
+            Helpers.DebugAssert(fieldNumber == source.FieldNumber);
             if (wireType == WireType.SignedVariant) { source.SetSignedVariant(); }
             return Tail.Read(value, source);
         }
@@ -49,7 +50,7 @@ namespace ProtoBuf.Serializers
         {
             if (wireType == WireType.SignedVariant)
             {
-                Debug.Assert(!Tail.RequiresOldValue); // so no value expected on the stack
+                Helpers.DebugAssert(!Tail.RequiresOldValue); // so no value expected on the stack
                 ctx.LoadReaderWriter();
                 ctx.EmitCall(typeof(ProtoReader).GetMethod("SetSignedVariant"));
             }   
@@ -59,3 +60,4 @@ namespace ProtoBuf.Serializers
     }
     
 }
+#endif

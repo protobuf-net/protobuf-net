@@ -1,6 +1,6 @@
-﻿using System;
+﻿#if !NO_RUNTIME
+using System;
 using System.Collections;
-using System.Diagnostics;
 
 namespace ProtoBuf.Meta
 {
@@ -89,7 +89,7 @@ namespace ProtoBuf.Meta
             public readonly int Length;
             internal Node(object[] data, int length)
             {
-                Debug.Assert((data == null && length == 0) ||
+                Helpers.DebugAssert((data == null && length == 0) ||
                     (data != null && length > 0 && length <= data.Length));
                 this.data = data;
 
@@ -143,3 +143,4 @@ namespace ProtoBuf.Meta
         }
     }
 }
+#endif

@@ -96,6 +96,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BclHelpers.cs" />
     <Compile Include="BufferPool.cs" />
     <Compile Include="Compiler\CompiledSerializer.cs" />
     <Compile Include="Compiler\CompilerContext.cs" />
@@ -117,6 +118,11 @@
     <Compile Include="RuntimeSerializer.cs" />
     <Compile Include="Serializers\CompiledSerializer.cs" />
     <Compile Include="Serializers\BooleanSerializer.cs" />
+    <Compile Include="Serializers\UInt16Serializer.cs" />
+    <Compile Include="Serializers\Int16Serializer.cs" />
+    <Compile Include="Serializers\DecimalSerializer.cs" />
+    <Compile Include="Serializers\TimeSpanSerializer.cs" />
+    <Compile Include="Serializers\DateTimeSerializer.cs" />
     <Compile Include="Serializers\UInt32Serializer.cs" />
     <Compile Include="Serializers\UInt64Serializer.cs" />
     <Compile Include="Serializers\Int64Serializer.cs" />

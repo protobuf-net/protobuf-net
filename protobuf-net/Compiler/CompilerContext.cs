@@ -6,9 +6,6 @@ using System.Reflection.Emit;
 using System.Threading;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
-#if DEBUG_COMPILE
-using System.Diagnostics;
-#endif
 
 namespace ProtoBuf.Compiler
 {
@@ -39,7 +36,7 @@ namespace ProtoBuf.Compiler
         {
             il.MarkLabel(label.Value);
 #if DEBUG_COMPILE
-            Debug.WriteLine("#: " + label.Index);
+            Helpers.DebugWriteLine("#: " + label.Index);
 #endif
         }
 
@@ -135,14 +132,14 @@ namespace ProtoBuf.Compiler
             {
                 il.Emit(OpCodes.Box, type);
 #if DEBUG_COMPILE
-                Debug.WriteLine(OpCodes.Box + ": " + type);
+                Helpers.DebugWriteLine(OpCodes.Box + ": " + type);
 #endif
             }
             else
             {
                 il.Emit(OpCodes.Castclass, typeof(object));
 #if DEBUG_COMPILE
-                Debug.WriteLine(OpCodes.Castclass + ": " + type);
+                Helpers.DebugWriteLine(OpCodes.Castclass + ": " + type);
 #endif
             }
         }
@@ -155,13 +152,13 @@ namespace ProtoBuf.Compiler
                 il.Emit(OpCodes.Unbox, type);
                 il.Emit(OpCodes.Ldobj, type);
 #if DEBUG_COMPILE
-                Debug.WriteLine(OpCodes.Unbox + ": " + type);
-                Debug.WriteLine(OpCodes.Ldobj + ": " + type);
+                Helpers.DebugWriteLine(OpCodes.Unbox + ": " + type);
+                Helpers.DebugWriteLine(OpCodes.Ldobj + ": " + type);
 #endif
 #else
                 il.Emit(OpCodes.Unbox_Any, type);
 #if DEBUG_COMPILE
-                Debug.WriteLine(OpCodes.Unbox_Any + ": " + type);
+                Helpers.DebugWriteLine(OpCodes.Unbox_Any + ": " + type);
 #endif
 #endif
 
@@ -170,7 +167,7 @@ namespace ProtoBuf.Compiler
             {
                 il.Emit(OpCodes.Castclass, type);
 #if DEBUG_COMPILE
-                Debug.WriteLine(OpCodes.Castclass + ": " + type);
+                Helpers.DebugWriteLine(OpCodes.Castclass + ": " + type);
 #endif
             }
         }
@@ -211,7 +208,7 @@ namespace ProtoBuf.Compiler
         {
             il.Emit(opcode);
 #if DEBUG_COMPILE
-            Debug.WriteLine(opcode);
+            Helpers.DebugWriteLine(opcode.ToString());
 #endif
         }
         public void LoadValue(int value)
@@ -231,7 +228,7 @@ namespace ProtoBuf.Compiler
                 default:
                     il.Emit(OpCodes.Ldc_I4, value);
 #if DEBUG_COMPILE
-                    Debug.WriteLine(OpCodes.Ldc_I4 + ": " + value);
+                    Helpers.DebugWriteLine(OpCodes.Ldc_I4 + ": " + value);
 #endif
                     break;
 
@@ -254,7 +251,7 @@ namespace ProtoBuf.Compiler
             }
             LocalBuilder result = il.DeclareLocal(type);
 #if DEBUG_COMPILE
-            Debug.WriteLine("$ " + result + ": " + type);
+            Helpers.DebugWriteLine("$ " + result + ": " + type);
 #endif
             return result;
         }
@@ -283,7 +280,7 @@ namespace ProtoBuf.Compiler
                 byte b = isStatic ? (byte) 0 : (byte)1;
                 il.Emit(OpCodes.Starg_S, b);
 #if DEBUG_COMPILE
-                Debug.WriteLine(OpCodes.Starg_S + ": $" + b);
+                Helpers.DebugWriteLine(OpCodes.Starg_S + ": $" + b);
 #endif                
             }
             else
@@ -300,7 +297,7 @@ namespace ProtoBuf.Compiler
                         OpCode code = UseShortForm(local) ? OpCodes.Stloc_S : OpCodes.Stloc;
                         il.Emit(code, local.Value);
 #if DEBUG_COMPILE
-                        Debug.WriteLine(code + ": $" + local.Value);
+                        Helpers.DebugWriteLine(code + ": $" + local.Value);
 #endif
 #if !FX11
                         break;
@@ -329,7 +326,7 @@ namespace ProtoBuf.Compiler
                         OpCode code = UseShortForm(local) ? OpCodes.Ldloc_S :  OpCodes.Ldloc;
                         il.Emit(code, local.Value);
 #if DEBUG_COMPILE
-                        Debug.WriteLine(code + ": $" + local.Value);
+                        Helpers.DebugWriteLine(code + ": $" + local.Value);
 #endif
 #if !FX11
                         break;
@@ -362,6 +359,15 @@ namespace ProtoBuf.Compiler
             LoadReaderWriter();
             EmitCall(method);            
         }
+        internal void EmitBasicRead(Type helperType, string methodName, Type expectedType)
+        {
+            MethodInfo method = helperType.GetMethod(
+                methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (method == null || method.ReturnType != expectedType
+                || method.GetParameters().Length != 1) throw new ArgumentException("methodName");
+            LoadReaderWriter();
+            EmitCall(method);
+        }
         internal void EmitWrite(string methodName, Type injectForType, Compiler.Local fromValue)
         {
             this.InjectStore(injectForType, fromValue);
@@ -376,21 +382,31 @@ namespace ProtoBuf.Compiler
             if (method == null || method.ReturnType != typeof(void)) throw new ArgumentException("methodName");
             EmitCall(method);
         }
+        internal void EmitWrite(Type helperType, string methodName, Compiler.Local valueFrom)
+        {
+            if (Helpers.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
+            MethodInfo method = helperType.GetMethod(
+                methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            if (method == null || method.ReturnType != typeof(void)) throw new ArgumentException("methodName");
+            LoadValue(valueFrom);
+            LoadReaderWriter();
+            EmitCall(method);
+        }
         public void EmitCall(MethodInfo method)
         {
             OpCode opcode = (method.IsStatic || method.DeclaringType.IsValueType) ? OpCodes.Call : OpCodes.Callvirt;
             il.EmitCall(opcode, method, null);
 #if DEBUG_COMPILE
-            Debug.WriteLine(opcode + ": " + method + " on " + method.DeclaringType);
+            Helpers.DebugWriteLine(opcode + ": " + method + " on " + method.DeclaringType);
 #endif
         }
         public void LoadNull()
         {
             Emit(OpCodes.Ldnull);
         }
-#if DEBUG_COMPILE
+
         private int nextLabel;
-#endif
+
         internal void WriteNullCheckedTail(Type type, IProtoSerializer tail, Compiler.Local valueFrom)
         {
             if (type.IsValueType)
@@ -446,7 +462,7 @@ namespace ProtoBuf.Compiler
                 }
                 else
                 {
-                    Debug.Assert(valueFrom == null); // not expecting a valueFrom in this case
+                    Helpers.DebugAssert(valueFrom == null); // not expecting a valueFrom in this case
                 }
                 tail.EmitRead(this, null); // either unwrapped on the stack or not provided
                 if (tail.ReturnsValue)
@@ -469,13 +485,13 @@ namespace ProtoBuf.Compiler
         }
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
-            Debug.Assert(type != null);
-            Debug.Assert(parameterTypes != null);
+            Helpers.DebugAssert(type != null);
+            Helpers.DebugAssert(parameterTypes != null);
             if (type.IsValueType && parameterTypes.Length == 0)
             {
                 il.Emit(OpCodes.Initobj, type);
 #if DEBUG_COMPILE
-                Debug.WriteLine(OpCodes.Initobj + ": " + type);
+                Helpers.DebugWriteLine(OpCodes.Initobj + ": " + type);
 #endif
             }
             else
@@ -486,7 +502,7 @@ namespace ProtoBuf.Compiler
                 if (ctor == null) throw new InvalidOperationException("No suitable constructor found");
                 il.Emit(OpCodes.Newobj, ctor);
 #if DEBUG_COMPILE
-                Debug.WriteLine(OpCodes.Newobj + ": " + type);
+                Helpers.DebugWriteLine(OpCodes.Newobj + ": " + type);
 #endif
             }
         }
@@ -496,7 +512,7 @@ namespace ProtoBuf.Compiler
             OpCode code = field.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld;
             il.Emit(code, field);
 #if DEBUG_COMPILE
-            Debug.WriteLine(code + ": " + field + " on " + field.DeclaringType);
+            Helpers.DebugWriteLine(code + ": " + field + " on " + field.DeclaringType);
 #endif
         }
         public void StoreValue(FieldInfo field)
@@ -504,7 +520,7 @@ namespace ProtoBuf.Compiler
             OpCode code = field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld;
             il.Emit(code, field);
 #if DEBUG_COMPILE
-            Debug.WriteLine(code + ": " + field + " on " + field.DeclaringType);
+            Helpers.DebugWriteLine(code + ": " + field + " on " + field.DeclaringType);
 #endif
         }
         public void LoadValue(PropertyInfo property)
@@ -560,7 +576,7 @@ namespace ProtoBuf.Compiler
                     {
                         il.Emit(OpCodes.Ldarga_S, (isStatic ? (byte)0 : (byte)1));
 #if DEBUG_COMPILE
-                        Debug.WriteLine(OpCodes.Ldarga_S + ": $" + (isStatic ? 0 : 1));
+                        Helpers.DebugWriteLine(OpCodes.Ldarga_S + ": $" + (isStatic ? 0 : 1));
 #endif
                     }
                     else
@@ -568,7 +584,7 @@ namespace ProtoBuf.Compiler
                         OpCode code = UseShortForm(tmp) ? OpCodes.Ldloca_S : OpCodes.Ldloca;
                         il.Emit(code, tmp.Value);
 #if DEBUG_COMPILE
-                        Debug.WriteLine(code + ": $" + local.Value);
+                        Helpers.DebugWriteLine(code + ": $" + local.Value);
 #endif
                     }
                 }
@@ -583,14 +599,14 @@ namespace ProtoBuf.Compiler
         {
             il.Emit(OpCodes.Br, label.Value);
 #if DEBUG_COMPILE
-            Debug.WriteLine(OpCodes.Br + ": " + label.Index);
+            Helpers.DebugWriteLine(OpCodes.Br + ": " + label.Index);
 #endif
         }
         internal void BranchIfFalse(CodeLabel label)
         {
             il.Emit(OpCodes.Brfalse, label.Value);
 #if DEBUG_COMPILE
-            Debug.WriteLine(OpCodes.Brfalse + ": " + label.Index);
+            Helpers.DebugWriteLine(OpCodes.Brfalse + ": " + label.Index);
 #endif
         }
 
@@ -599,14 +615,14 @@ namespace ProtoBuf.Compiler
         {
             il.Emit(OpCodes.Brtrue, label.Value);
 #if DEBUG_COMPILE
-            Debug.WriteLine(OpCodes.Brtrue + ": " + label.Index);
+            Helpers.DebugWriteLine(OpCodes.Brtrue + ": " + label.Index);
 #endif
         }
         internal void BranchIfEqual(CodeLabel label)
         {
             il.Emit(OpCodes.Beq, label.Value);
 #if DEBUG_COMPILE
-            Debug.WriteLine(OpCodes.Beq + ": " + label.Index);
+            Helpers.DebugWriteLine(OpCodes.Beq + ": " + label.Index);
 #endif
         }
         internal void TestEqual()
@@ -624,7 +640,7 @@ namespace ProtoBuf.Compiler
         {
             il.Emit(OpCodes.Bgt, label.Value);
 #if DEBUG_COMPILE
-            Debug.WriteLine(OpCodes.Bgt + ": " + label.Index);
+            Helpers.DebugWriteLine(OpCodes.Bgt + ": " + label.Index);
 #endif
         }
 

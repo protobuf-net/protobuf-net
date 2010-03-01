@@ -1,6 +1,9 @@
 ﻿using System;
+#if !FX11
 using System.Collections.Generic;
+#endif
 using System.Text;
+using System.Diagnostics;
 
 namespace SampleDto
 {

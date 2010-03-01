@@ -1,6 +1,6 @@
 ﻿#if FEAT_COMPILER && !FX11
 using System;
-using System.Diagnostics;
+
 
 
 namespace ProtoBuf.Serializers
@@ -13,7 +13,7 @@ namespace ProtoBuf.Serializers
             if (result == null)
             {
                 result = new CompiledSerializer(head);
-                Debug.Assert(((IProtoSerializer)result).ExpectedType == head.ExpectedType);
+                Helpers.DebugAssert(((IProtoSerializer)result).ExpectedType == head.ExpectedType);
             }
             return result;
         }

@@ -25,7 +25,7 @@ namespace ProtoBuf.Meta
                     type = value.GetType();
                 }
             }
-#if !FX11
+#if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;
 #endif
             int key = GetKey(type);
@@ -34,10 +34,12 @@ namespace ProtoBuf.Meta
                 return Deserialize(key, value, reader);
             }
         }
+        #if !NO_RUNTIME
         public static RuntimeTypeModel Create(string name)
         {
             return new RuntimeTypeModel(name, false);
         }
+#endif
         protected abstract int GetKey(Type type);
         protected internal abstract void Serialize(int key, object value, ProtoWriter dest);
         protected internal abstract object Deserialize(int key, object value, ProtoReader source);
@@ -47,6 +49,25 @@ namespace ProtoBuf.Meta
         //    return new RuntimeSerializer(head, this);
         //}
         //internal ProtoSerializer Compile
+
+        public object DeepClone(object value)
+        {
+            if (value == null) return null;
+            int key = GetKey(value.GetType());
+            
+            using (MemoryStream ms = new MemoryStream())
+            {
+                using(ProtoWriter writer = new ProtoWriter(ms, this))
+                {
+                    Serialize(key, value, writer);
+                }
+                ms.Position = 0;
+                using (ProtoReader reader = new ProtoReader(ms, this))
+                {
+                    return Deserialize(key, value, reader);
+                }
+            }
+        }
     }
 
 }

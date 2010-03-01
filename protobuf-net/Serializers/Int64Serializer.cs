@@ -1,5 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿#if !NO_RUNTIME
+using System;
+
 
 
 namespace ProtoBuf.Serializers
@@ -15,7 +16,7 @@ namespace ProtoBuf.Serializers
         bool IProtoSerializer.ReturnsValue { get { return true; } }
         public object Read(object value, ProtoReader source)
         {
-            Debug.Assert(value == null); // since replaces
+            Helpers.DebugAssert(value == null); // since replaces
             return source.ReadInt64();
         }
 #if FEAT_COMPILER
@@ -30,3 +31,4 @@ namespace ProtoBuf.Serializers
 #endif
     }
 }
+#endif

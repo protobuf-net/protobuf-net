@@ -1,11 +1,14 @@
-﻿using System;
+﻿#if !NO_RUNTIME
+using System;
 using System.Collections;
 using System.IO;
 using System.Reflection;
+#if FEAT_COMPILER
 using System.Reflection.Emit;
+#endif
 
 using ProtoBuf.Serializers;
-using System.Diagnostics;
+
 
 namespace ProtoBuf.Meta
 {
@@ -263,13 +266,14 @@ namespace ProtoBuf.Meta
             }
 
             FieldBuilder knownTypes = type.DefineField("knownTypes", typeof(Type[]), FieldAttributes.Private | FieldAttributes.InitOnly);
-
+            
             ILGenerator il = Override(type, "GetKey");
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldfld, knownTypes);
             il.Emit(OpCodes.Ldarg_1);
-            il.EmitCall(OpCodes.Call,typeof(Array).GetMethod("IndexOf",
-                new Type[] { typeof(Array), typeof(object) }), null);
+            // note that Array.IndexOf is not supported under CF
+            il.EmitCall(OpCodes.Callvirt,typeof(IList).GetMethod(
+                "IndexOf", new Type[] { typeof(object) }), null);
             il.Emit(OpCodes.Ret);
             
             il = Override(type, "Serialize");
@@ -415,3 +419,4 @@ namespace ProtoBuf.Meta
 #endif
     }
 }
+#endif

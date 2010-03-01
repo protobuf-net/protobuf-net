@@ -1,6 +1,7 @@
-﻿using System;
+﻿#if !NO_RUNTIME
+using System;
 using System.Reflection;
-using System.Diagnostics;
+
 
 
 namespace ProtoBuf.Serializers
@@ -13,18 +14,18 @@ namespace ProtoBuf.Serializers
         public override bool ReturnsValue { get { return false; } }
         public PropertyDecorator(PropertyInfo property, IProtoSerializer tail) : base(tail)
         {
-            Debug.Assert(property != null);
+            Helpers.DebugAssert(property != null);
             this.property = property;
         }
         public override void Write(object value, ProtoWriter dest)
         {
-            Debug.Assert(value != null);
+            Helpers.DebugAssert(value != null);
             value = property.GetValue(value, null);
             if(value != null) Tail.Write(value, dest);
         }
         public override object Read(object value, ProtoReader source)
         {
-            Debug.Assert(value != null);
+            Helpers.DebugAssert(value != null);
             property.SetValue(
                 value,
                 Tail.Read((Tail.RequiresOldValue ? property.GetValue(value, null) : null), source),
@@ -57,3 +58,4 @@ namespace ProtoBuf.Serializers
 #endif
     }
 }
+#endif

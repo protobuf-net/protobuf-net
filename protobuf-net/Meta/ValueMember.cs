@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_RUNTIME
+using System;
 using System.Reflection;
 using ProtoBuf.Serializers;
 
@@ -76,11 +77,11 @@ namespace ProtoBuf.Meta
         }
         private IProtoSerializer GetCoreSerializer(Type type, DataFormat dataFormat, out WireType wireType)
         {
-#if !FX11
+#if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;
 #endif
-
-            switch (Type.GetTypeCode(type))
+            TypeCode code = Type.GetTypeCode(type);
+            switch (code)
             {
                 case TypeCode.Int32:
                     wireType = GetIntWireType(dataFormat, 32);
@@ -106,9 +107,31 @@ namespace ProtoBuf.Meta
                 case TypeCode.Boolean:
                     wireType = WireType.Variant;
                     return new BooleanSerializer();
+                case TypeCode.DateTime:
+                    wireType = WireType.String;
+                    return new DateTimeSerializer();
+                case TypeCode.Decimal:
+                    wireType = WireType.String;
+                    return new DecimalSerializer();
+                case TypeCode.Byte:
+                case TypeCode.SByte:
+                case TypeCode.Char:
+                    throw new NotImplementedException("Pull your finger out, Marc... " + code);
+                case TypeCode.Int16:
+                    wireType = WireType.Variant;
+                    return new Int16Serializer();
+                case TypeCode.UInt16:
+                    wireType = WireType.Variant;
+                    return new UInt16Serializer();
+            }
+            if (type == typeof(TimeSpan))
+            {
+                wireType = WireType.String;
+                return new TimeSpanSerializer();
             }
             throw new NotSupportedException("No serializer defined for type: " + type.FullName);
         }
 
     }
 }
+#endif
