@@ -71,10 +71,6 @@ namespace ProtoBuf
 
             throw new OverflowException();
         }
-        public bool TryPreviewUInt32Variant(out uint value)
-        {
-            return TryReadUInt32VariantWithoutMoving(out value) > 0;
-        }
         private uint ReadUInt32Variant()
         {
             uint value;
@@ -397,7 +393,7 @@ namespace ProtoBuf
             // at the end of a group the caller must call EndSubItem to release the
             // reader (which moves the status to Error, since ReadFieldHeader must
             // then be called)
-            if (blockEnd == position || wireType == WireType.EndGroup) { return 0; } 
+            if (blockEnd <= position || wireType == WireType.EndGroup) { return 0; } 
             uint tag;
             if (TryReadUInt32Variant(out tag))
             {
@@ -410,6 +406,30 @@ namespace ProtoBuf
             // watch for end-of-group
             return wireType == WireType.EndGroup ? 0 : fieldNumber; 
         }
+        /// <summary>
+        /// Looks ahead to see whether the next field in the stream is what we expect
+        /// (typically; what we've just finished reading - for example ot read successive list items)
+        /// </summary>
+        public bool TryReadFieldHeader(int field)
+        {
+            // check for virtual end of stream
+            if (blockEnd <= position || wireType == WireType.EndGroup) { return false; }
+            uint tag;
+            int read = TryReadUInt32VariantWithoutMoving(out tag);
+            WireType tmpWireType; // need to catch this to exclude (early) any "end group" tokens
+            if (read > 0 && ((int)tag >> 3) == field
+                && (tmpWireType = (WireType)(tag & 7)) != WireType.EndGroup)
+            {
+                wireType = tmpWireType;
+                fieldNumber = field;                
+                position += read;
+                ioIndex += read;
+                available -= read;
+                return true;
+            }
+            return false;
+        }
+
 
         public void SetSignedVariant()
         {

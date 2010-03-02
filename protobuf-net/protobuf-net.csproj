@@ -118,6 +118,7 @@
     <Compile Include="RuntimeSerializer.cs" />
     <Compile Include="Serializers\CompiledSerializer.cs" />
     <Compile Include="Serializers\BooleanSerializer.cs" />
+    <Compile Include="Serializers\ListDecorator.cs" />
     <Compile Include="Serializers\UInt16Serializer.cs" />
     <Compile Include="Serializers\Int16Serializer.cs" />
     <Compile Include="Serializers\DecimalSerializer.cs" />

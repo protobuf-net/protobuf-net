@@ -6,11 +6,21 @@ using ProtoBuf;
 using SampleDto;
 using NETCFClient;
 using System.Diagnostics;
+using System.Reflection;
 namespace FX11
 {
     
     public class FX11_Program
     {
+        
+        private static void DumpObject(string header, PropertyInfo[] props, object obj) {
+            Console.WriteLine();
+            Console.WriteLine(header);
+            Console.WriteLine();
+            foreach(PropertyInfo prop in props) {
+                Console.WriteLine("\t" + prop.Name + "\t" + Convert.ToString(prop.GetValue(obj, null)));
+            }
+        }
         public static RuntimeTypeModel BuildMeta()
         {
             
@@ -32,14 +42,6 @@ namespace FX11
                 .Add(12, "ShipRegion")
                 .Add(13, "ShipPostalCode")
                 .Add(14, "ShipCountry");
-#if FX30
-            model.Add(typeof(Product), false)
-                .Add(1, "ProductID")
-                .Add(2, "ProductName")
-                .Add(4, "CategoryID")
-                .Add(6, "UnitPrice")
-                .Add(12, "CreationDate");
-#else
             model.Add(typeof(Product), false)
                 .Add(1, "ProductID")
                 .Add(2, "ProductName")
@@ -53,22 +55,62 @@ namespace FX11
                 .Add(10, "Discontinued")
                 .Add(11, "LastEditDate")
                 .Add(12, "CreationDate");
-#endif
-            TypeModel compiled = model.Compile("ThinkSerializer.dll");
 
-            
+            TypeModel compiled = model.Compile("ThinkSerializer.dll");
+            Type type = typeof(Product);
+            PropertyInfo[] props = type.GetProperties();
 
             Product prod = new Product();
-            prod.CategoryID = 123;
-            prod.ProductName = "abc";
+            prod.ProductID = 123;
+            prod.ProductName = "abc devil";
+            prod.SupplierID = 456;
+            prod.CategoryID = 13;
+            prod.QuantityPerUnit = "1";
+            prod.UnitPrice = 12.99M;
+            prod.UnitsInStock = 96;
+            prod.UnitsOnOrder = 12;
+            prod.ReorderLevel = 30;
+            prod.Discontinued = false;
+            prod.LastEditDate = new DateTime(2009, 5, 7);
             prod.CreationDate = new DateTime(2009, 1, 3);
-            prod.ProductID = 13;
-            prod.UnitPrice = 123.45M;
 
-            const int loop = 10000;
+            DumpObject("Original", props, prod);
+            
+            const int loop = 100000;
+            Console.WriteLine("Iterations: " + loop);
             Stopwatch watch;
             MemoryStream reuseDump = new MemoryStream(100 * 1024);
 #if FX30
+            System.Runtime.Serialization.DataContractSerializer dcs = new System.Runtime.Serialization.DataContractSerializer(type);
+            
+            using (MemoryStream ms = new MemoryStream()) {
+                dcs.WriteObject(ms, prod);
+                Console.WriteLine("DataContractSerializer: {0} bytes", ms.Length);
+            }
+            
+            watch = Stopwatch.StartNew();
+            for (int i = 0; i < loop; i++)
+            {
+                reuseDump.SetLength(0);
+                dcs.WriteObject(reuseDump, prod);                
+            }
+            watch.Stop();
+            Console.WriteLine("DataContractSerializer serialize: {0} ms", watch.ElapsedMilliseconds);
+            watch = Stopwatch.StartNew();
+            for (int i = 0; i < loop; i++)
+            {
+                reuseDump.Position = 0;
+                dcs.ReadObject(reuseDump);
+            }
+            watch.Stop();
+            Console.WriteLine("DataContractSerializer deserialize: {0} ms", watch.ElapsedMilliseconds);
+
+            {
+            reuseDump.Position = 0;
+            Product p1 = (Product) dcs.ReadObject(reuseDump);
+            DumpObject("DataContractSerializer", props, p1);
+            }
+
             System.Runtime.Serialization.NetDataContractSerializer ndcs = new System.Runtime.Serialization.NetDataContractSerializer();
             
             using (MemoryStream ms = new MemoryStream()) {
@@ -96,7 +138,7 @@ namespace FX11
             {
             reuseDump.Position = 0;
             Product p1 = (Product) ndcs.Deserialize(reuseDump);
-            Console.WriteLine(p1.CategoryID + " / " + p1.CreationDate + " / " + p1.ProductID + " / " + p1.ProductName + " / " + p1.UnitPrice);
+            DumpObject("NetDataContractSerializer", props, p1);
             }
 #endif
 
@@ -120,7 +162,7 @@ namespace FX11
             }
             watch.Stop();
             Console.WriteLine("protobuf-net v2 serialize: {0} ms", watch.ElapsedMilliseconds);
-            Type type = typeof(Product);
+            
             watch = Stopwatch.StartNew();
             for (int i = 0; i < loop; i++)
             {
@@ -133,7 +175,7 @@ namespace FX11
             {
             reuseDump.Position = 0;
             Product p1 = (Product)compiled.Deserialize(reuseDump, null, type);
-            Console.WriteLine(p1.CategoryID + " / " + p1.CreationDate + " / " + p1.ProductID + " / " + p1.ProductName + " / " + p1.UnitPrice);
+            DumpObject("protobuf-net v2", props, p1);
             }
 
             

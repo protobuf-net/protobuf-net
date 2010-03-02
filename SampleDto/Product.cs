@@ -53,7 +53,9 @@ namespace NETCFClient
                 }
             }
         }
-
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public System.Nullable<int> SupplierID
         {
             get
@@ -86,7 +88,9 @@ namespace NETCFClient
             }
         }
 
-        
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public string QuantityPerUnit
         {
             get
@@ -120,7 +124,9 @@ namespace NETCFClient
             }
         }
 
-        
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public System.Nullable<short> UnitsInStock
         {
             get
@@ -136,7 +142,9 @@ namespace NETCFClient
             }
         }
 
-        
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public System.Nullable<short> UnitsOnOrder
         {
             get
@@ -152,7 +160,9 @@ namespace NETCFClient
             }
         }
 
-        
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public System.Nullable<short> ReorderLevel
         {
             get
@@ -168,7 +178,9 @@ namespace NETCFClient
             }
         }
 
-        
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public bool Discontinued
         {
             get
@@ -184,7 +196,9 @@ namespace NETCFClient
             }
         }
 
-        
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public System.Nullable<System.DateTime> LastEditDate
         {
             get
