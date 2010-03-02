@@ -6,6 +6,7 @@ using System.Reflection.Emit;
 using System.Threading;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
+using System.Text;
 
 namespace ProtoBuf.Compiler
 {
@@ -69,23 +70,22 @@ namespace ProtoBuf.Compiler
                 else
                 {   // check if the input obj is null; if so capture the position (otherwise use -1)
                     ctx.LoadValue(Local.InputValue);
-                    ctx.LoadNull();
-                    CodeLabel ifNull = ctx.DefineLabel(), endNull = ctx.DefineLabel();
-                    ctx.BranchIfEqual(ifNull);
+                    CodeLabel notNull = ctx.DefineLabel(), endNull = ctx.DefineLabel();
+                    ctx.BranchIfTrue(notNull, true);
 
-                    ctx.LoadValue(-1);
-                    ctx.StoreValue(position);
-                    ctx.LoadValue(Local.InputValue);
-                    ctx.CastFromObject(type);
-                    ctx.StoreValue(typedVal);
-                    ctx.Branch(endNull);
-
-                    ctx.MarkLabel(ifNull);
                     ctx.LoadReaderWriter();
                     ctx.LoadValue(typeof(ProtoReader).GetProperty("Position"));
                     ctx.StoreValue(position);
                     ctx.LoadAddress(typedVal, type);
                     ctx.EmitCtor(type);
+                    ctx.Branch(endNull, true);
+
+                    ctx.MarkLabel(notNull);
+                    ctx.LoadValue(-1);
+                    ctx.StoreValue(position);
+                    ctx.LoadValue(Local.InputValue);
+                    ctx.CastFromObject(type);
+                    ctx.StoreValue(typedVal);
 
                     ctx.MarkLabel(endNull);
                 }
@@ -106,14 +106,14 @@ namespace ProtoBuf.Compiler
                     ctx.LoadReaderWriter();
                     ctx.LoadValue(typeof(ProtoReader).GetProperty("Position"));
                     CodeLabel noData = ctx.DefineLabel(), endData = ctx.DefineLabel();
-                    ctx.BranchIfEqual(noData);
+                    ctx.BranchIfEqual(noData, true);
 
                     ctx.LoadValue(typedVal);
                     ctx.CastToObject(type);
-                    ctx.Branch(endData);
+                    ctx.Branch(endData, true);
 
                     ctx.MarkLabel(noData);
-                    ctx.LoadNull();
+                    ctx.LoadNullRef();
                     ctx.MarkLabel(endData);
                 }
             }
@@ -400,7 +400,12 @@ namespace ProtoBuf.Compiler
             Helpers.DebugWriteLine(opcode + ": " + method + " on " + method.DeclaringType);
 #endif
         }
-        public void LoadNull()
+        /// <summary>
+        /// Pushes a null reference onto the stack. Note that this should only
+        /// be used to return a null (or set a variable to null); for null-tests
+        /// use BranchIfTrue / BranchIfFalse.
+        /// </summary>
+        public void LoadNullRef()
         {
             Emit(OpCodes.Ldnull);
         }
@@ -426,7 +431,7 @@ namespace ProtoBuf.Compiler
                         LoadAddress(valOrNull, type);
                         LoadValue(type.GetProperty("HasValue"));
                         CodeLabel @end = DefineLabel();
-                        BranchIfFalse(@end);
+                        BranchIfFalse(@end, false);
                         LoadAddress(valOrNull, type);
                         EmitCall(type.GetMethod("GetValueOrDefault", Type.EmptyTypes));
                         tail.EmitWrite(this, null);
@@ -439,9 +444,8 @@ namespace ProtoBuf.Compiler
                 using (Compiler.Local loc = GetLocalWithValue(type, valueFrom))
                 {
                     LoadValue(loc);
-                    LoadNull();
                     CodeLabel @end = DefineLabel();
-                    BranchIfEqual(@end);
+                    BranchIfFalse(@end, false);
                     tail.EmitWrite(this, loc);
                     MarkLabel(@end);
                 }
@@ -595,34 +599,38 @@ namespace ProtoBuf.Compiler
                 LoadValue(local);
             }
         }
-        internal void Branch(CodeLabel label)
+        internal void Branch(CodeLabel label, bool @short)
         {
-            il.Emit(OpCodes.Br, label.Value);
+            OpCode code = @short ? OpCodes.Br_S : OpCodes.Br;
+            il.Emit(code, label.Value);
 #if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Br + ": " + label.Index);
+            Helpers.DebugWriteLine(code + ": " + label.Index);
 #endif
         }
-        internal void BranchIfFalse(CodeLabel label)
+        internal void BranchIfFalse(CodeLabel label, bool @short)
         {
-            il.Emit(OpCodes.Brfalse, label.Value);
+            OpCode code = @short ? OpCodes.Brfalse_S :  OpCodes.Brfalse;
+            il.Emit(code, label.Value);
 #if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Brfalse + ": " + label.Index);
+            Helpers.DebugWriteLine(code + ": " + label.Index);
 #endif
         }
 
 
-        internal void BranchIfTrue(CodeLabel label)
+        internal void BranchIfTrue(CodeLabel label, bool @short)
         {
-            il.Emit(OpCodes.Brtrue, label.Value);
+            OpCode code = @short ? OpCodes.Brtrue_S : OpCodes.Brtrue;
+            il.Emit(code, label.Value);
 #if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Brtrue + ": " + label.Index);
+            Helpers.DebugWriteLine(code + ": " + label.Index);
 #endif
         }
-        internal void BranchIfEqual(CodeLabel label)
+        internal void BranchIfEqual(CodeLabel label, bool @short)
         {
-            il.Emit(OpCodes.Beq, label.Value);
+            OpCode code = @short ? OpCodes.Beq_S : OpCodes.Beq;
+            il.Emit(code, label.Value);
 #if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Beq + ": " + label.Index);
+            Helpers.DebugWriteLine(code + ": " + label.Index);
 #endif
         }
         internal void TestEqual()
@@ -636,17 +644,45 @@ namespace ProtoBuf.Compiler
             Emit(OpCodes.Dup);
         }
 
-        internal void BranchIfGreater(CodeLabel label)
+        internal void BranchIfGreater(CodeLabel label, bool @short)
         {
-            il.Emit(OpCodes.Bgt, label.Value);
+            OpCode code = @short ? OpCodes.Bgt_S : OpCodes.Bgt;
+            il.Emit(code, label.Value);
 #if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Bgt + ": " + label.Index);
+            Helpers.DebugWriteLine(code + ": " + label.Index);
 #endif
         }
 
         internal void DiscardValue()
         {
             Emit(OpCodes.Pop);
+        }
+
+        public void Subtract()
+        {
+            Emit(OpCodes.Sub);
+        }
+
+
+
+        public void Switch(CodeLabel[] jumpTable)
+        {
+            Label[] labels = new Label[jumpTable.Length];
+#if DEBUG_COMPILE
+            StringBuilder sb = new StringBuilder(OpCodes.Switch.ToString());
+#endif
+            for (int i = 0; i < labels.Length; i++)
+            {
+                labels[i] = jumpTable[i].Value;
+#if DEBUG_COMPILE
+                sb.Append("; ").Append(i).Append("=>").Append(jumpTable[i].Index);
+#endif
+            }
+
+            il.Emit(OpCodes.Switch, labels);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(sb.ToString());
+#endif
         }
     }
 }

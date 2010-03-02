@@ -308,7 +308,7 @@ namespace ProtoBuf.Meta
                 }
                 il.Emit(OpCodes.Ldarg_1);
                 il.Emit(OpCodes.Switch, jumpTable);
-                ctx.LoadNull();
+                ctx.LoadNullRef();
                 ctx.Return();
                 for (int i = 0; i < jumpTable.Length; i++)
                 {
@@ -316,11 +316,9 @@ namespace ProtoBuf.Meta
                     Type keyType = ((MetaType)types[i]).Type;
                     if (keyType.IsValueType)
                     {
-                        
                         Compiler.CodeLabel ifNull = ctx.DefineLabel();
                         il.Emit(OpCodes.Ldarg_2);
-                        ctx.LoadNull();
-                        ctx.BranchIfEqual(ifNull);
+                        ctx.BranchIfFalse(ifNull, true);
 
                         // not null here; unbox and always return
                         il.Emit(OpCodes.Ldarg_2);
@@ -352,14 +350,14 @@ namespace ProtoBuf.Meta
                             il.Emit(OpCodes.Ldarg_3);
                             ctx.LoadValue(readerPos);
                             Compiler.CodeLabel noData = ctx.DefineLabel();
-                            ctx.BranchIfEqual(noData);
+                            ctx.BranchIfEqual(noData, true);
                             // had data, so box and return
                             ctx.LoadValue(typedVar);
                             ctx.CastToObject(keyType);
                             ctx.Return();
 
                             ctx.MarkLabel(noData);   
-                            ctx.LoadNull();
+                            ctx.LoadNullRef();
                             ctx.Return();
                         }
                         //ctx.LoadNull();

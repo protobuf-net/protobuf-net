@@ -12,6 +12,7 @@ namespace FX11
     {
         public static RuntimeTypeModel BuildMeta()
         {
+            
             RuntimeTypeModel model;
 #if !FX11
             model = TypeModel.Create("ThinkSerializer");
@@ -104,22 +105,55 @@ namespace FX11
             model = TypeModel.Create("CustomerModel");
             model.Add(typeof(Customer), false)
                .Add(1, "Id")
-               .Add(2, "Name")
+               .Add(3, "Name")
 #if !FX11
-               .Add(3, "HowMuch")
-               .Add(4, "HasValue")
+               .Add(5, "HowMuch")
+               .Add(6, "HasValue")
 #endif
                ;
         ;
             model.Add(typeof(CustomerStruct), false)
                 .Add(1, "Id")
-                .Add(2, "Name")
+                .Add(3, "Name")
 #if !FX11
-                .Add(3, "HowMuch")
-                .Add(4, "HasValue")
+                .Add(5, "HowMuch")
+                .Add(6, "HasValue")
 #endif
                 ;
             return model;
+        }
+
+        private static Product Read(Product product1, ProtoReader reader1)
+        {
+            int num;
+            while ((num = reader1.ReadFieldHeader()) > 0)
+            {
+                switch (num)
+                {
+                    case 1:
+                        if (product1 == null)
+                        {
+                            product1 = new Product();
+                        }
+                        product1.ProductID = reader1.ReadInt32();
+                        continue;
+                    case 2:
+                        if (product1 == null)
+                        {
+                            product1 = new Product();
+                        }
+                        product1.ProductName = reader1.ReadString();
+                        continue;
+                    case 3:
+                        if (product1 == null)
+                        {
+                            product1 = new Product();
+                        }
+                        product1.SupplierID = new int?(reader1.ReadInt32());
+                        continue;
+                }
+            }
+            return product1;
         }
         public static void Main()
         {
