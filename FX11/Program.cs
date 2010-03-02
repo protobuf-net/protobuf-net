@@ -5,6 +5,7 @@ using System;
 using ProtoBuf;
 using SampleDto;
 using NETCFClient;
+using System.Diagnostics;
 namespace FX11
 {
     
@@ -31,6 +32,14 @@ namespace FX11
                 .Add(12, "ShipRegion")
                 .Add(13, "ShipPostalCode")
                 .Add(14, "ShipCountry");
+#if FX30
+            model.Add(typeof(Product), false)
+                .Add(1, "ProductID")
+                .Add(2, "ProductName")
+                .Add(4, "CategoryID")
+                .Add(6, "UnitPrice")
+                .Add(12, "CreationDate");
+#else
             model.Add(typeof(Product), false)
                 .Add(1, "ProductID")
                 .Add(2, "ProductName")
@@ -44,7 +53,10 @@ namespace FX11
                 .Add(10, "Discontinued")
                 .Add(11, "LastEditDate")
                 .Add(12, "CreationDate");
+#endif
             TypeModel compiled = model.Compile("ThinkSerializer.dll");
+
+            
 
             Product prod = new Product();
             prod.CategoryID = 123;
@@ -52,17 +64,79 @@ namespace FX11
             prod.CreationDate = new DateTime(2009, 1, 3);
             prod.ProductID = 13;
             prod.UnitPrice = 123.45M;
+
+            const int loop = 10000;
+            Stopwatch watch;
+            MemoryStream reuseDump = new MemoryStream(100 * 1024);
+#if FX30
+            System.Runtime.Serialization.NetDataContractSerializer ndcs = new System.Runtime.Serialization.NetDataContractSerializer();
+            
+            using (MemoryStream ms = new MemoryStream()) {
+                ndcs.Serialize(ms, prod);
+                Console.WriteLine("NetDataContractSerializer: {0} bytes", ms.Length);
+            }
+            
+            watch = Stopwatch.StartNew();
+            for (int i = 0; i < loop; i++)
+            {
+                reuseDump.SetLength(0);
+                ndcs.Serialize(reuseDump, prod);                
+            }
+            watch.Stop();
+            Console.WriteLine("NetDataContractSerializer serialize: {0} ms", watch.ElapsedMilliseconds);
+            watch = Stopwatch.StartNew();
+            for (int i = 0; i < loop; i++)
+            {
+                reuseDump.Position = 0;
+                ndcs.Deserialize(reuseDump);
+            }
+            watch.Stop();
+            Console.WriteLine("NetDataContractSerializer deserialize: {0} ms", watch.ElapsedMilliseconds);
+
+            {
+            reuseDump.Position = 0;
+            Product p1 = (Product) ndcs.Deserialize(reuseDump);
+            Console.WriteLine(p1.CategoryID + " / " + p1.CreationDate + " / " + p1.ProductID + " / " + p1.ProductName + " / " + p1.UnitPrice);
+            }
+#endif
+
             using (MemoryStream ms = new MemoryStream())
             {
                 compiled.Serialize(ms, prod);
                 byte[] buffer = ms.GetBuffer();
                 int len = (int)ms.Length;
+                Console.WriteLine("protobuf-net v2: {0} bytes", len);
                 for (int i = 0; i < len; i++)
                 {
                     Console.Write(buffer[i].ToString("x2"));                    
                 }
                 Console.WriteLine();
             }
+            watch = Stopwatch.StartNew();
+            for (int i = 0; i < loop; i++)
+            {
+                reuseDump.SetLength(0);
+                compiled.Serialize(reuseDump, prod);
+            }
+            watch.Stop();
+            Console.WriteLine("protobuf-net v2 serialize: {0} ms", watch.ElapsedMilliseconds);
+            Type type = typeof(Product);
+            watch = Stopwatch.StartNew();
+            for (int i = 0; i < loop; i++)
+            {
+                reuseDump.Position = 0;
+                compiled.Deserialize(reuseDump, null, type);
+            }
+            watch.Stop();
+            
+            Console.WriteLine("protobuf-net v2 deserialize: {0} ms", watch.ElapsedMilliseconds);
+            {
+            reuseDump.Position = 0;
+            Product p1 = (Product)compiled.Deserialize(reuseDump, null, type);
+            Console.WriteLine(p1.CategoryID + " / " + p1.CreationDate + " / " + p1.ProductID + " / " + p1.ProductName + " / " + p1.UnitPrice);
+            }
+
+            
             // 080d 1203(616263) 207b
             // 3205(08b9601804)
             // 5000 6204(08cede01)

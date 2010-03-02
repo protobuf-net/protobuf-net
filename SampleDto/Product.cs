@@ -1,6 +1,9 @@
 ﻿#if !FX11
 namespace NETCFClient
 {
+#if FX30
+    [System.Runtime.Serialization.DataContract]
+#endif
     public partial class Product
     {
         private int _ProductID;
@@ -16,6 +19,9 @@ namespace NETCFClient
         private System.Nullable<System.DateTime> _LastEditDate;
         private System.Nullable<System.DateTime> _CreationDate;
 
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public int ProductID
         {
             get
@@ -30,7 +36,9 @@ namespace NETCFClient
                 }
             }
         }
-
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public string ProductName
         {
             get
@@ -60,7 +68,9 @@ namespace NETCFClient
                 }
             }
         }
-
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public System.Nullable<int> CategoryID
         {
             get
@@ -92,7 +102,9 @@ namespace NETCFClient
             }
         }
 
-        
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public System.Nullable<decimal> UnitPrice
         {
             get
@@ -188,7 +200,9 @@ namespace NETCFClient
             }
         }
 
-        
+#if FX30
+        [System.Runtime.Serialization.DataMember]
+#endif
         public System.Nullable<System.DateTime> CreationDate
         {
             get
