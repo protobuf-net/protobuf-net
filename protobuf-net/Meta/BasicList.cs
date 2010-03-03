@@ -141,6 +141,15 @@ namespace ProtoBuf.Meta
         {
             bool IsMatch(object obj);
         }
+
+        internal bool Contains(object value)
+        {
+            foreach (object obj in this)
+            {
+                if (object.Equals(obj, value)) return true;
+            }
+            return false;
+        }
     }
 }
 #endif

@@ -1,8 +1,8 @@
-﻿using System.Linq;
+﻿using System.IO;
+using System.Linq;
 using NUnit.Framework;
 using ProtoBuf.Meta;
 using ProtoBuf.unittest.Serializers;
-using System.IO;
 
 namespace ProtoBuf.unittest.Meta
 {
@@ -54,11 +54,12 @@ namespace ProtoBuf.unittest.Meta
             var meta = Customer.BuildMeta();
             Customer cust = new Customer { Id = 123, Name = "abc" };
 
-            using(var ms = new MemoryStream()) {
+            using (var ms = new MemoryStream())
+            {
                 meta.Serialize(ms, cust);
                 Assert.Greater(1, 0, "check arg order API");
                 Assert.Greater(ms.Length, 0, "no data written");
-                ms.Position = 0;                
+                ms.Position = 0;
                 Customer clone = (Customer)meta.Deserialize(ms, null, typeof(Customer));
                 Assert.AreNotSame(cust, clone);
                 Assert.IsNotNull(clone, "clone was not materialized");
@@ -66,7 +67,6 @@ namespace ProtoBuf.unittest.Meta
                 Assert.AreEqual(cust.Name, clone.Name);
             }
         }
-
         
     }
 

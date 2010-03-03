@@ -1,5 +1,5 @@
 ﻿#if FEAT_COMPILER
-#define DEBUG_COMPILE
+//#define DEBUG_COMPILE
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
@@ -433,7 +433,7 @@ namespace ProtoBuf.Compiler
                         CodeLabel @end = DefineLabel();
                         BranchIfFalse(@end, false);
                         LoadAddress(valOrNull, type);
-                        EmitCall(type.GetMethod("GetValueOrDefault", Type.EmptyTypes));
+                        EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
                         tail.EmitWrite(this, null);
                         MarkLabel(@end);
                     }
@@ -462,7 +462,7 @@ namespace ProtoBuf.Compiler
                 {
                     // we expect the input value to be in valueFrom; need to unpack it from T?
                     LoadAddress(valueFrom, type);
-                    EmitCall(type.GetMethod("GetValueOrDefault", Type.EmptyTypes)); 
+                    EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes)); 
                 }
                 else
                 {
@@ -485,7 +485,7 @@ namespace ProtoBuf.Compiler
 
         public void EmitCtor(Type type)
         {
-            EmitCtor(type, Type.EmptyTypes);
+            EmitCtor(type, Helpers.EmptyTypes);
         }
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
@@ -682,6 +682,56 @@ namespace ProtoBuf.Compiler
             il.Emit(OpCodes.Switch, labels);
 #if DEBUG_COMPILE
             Helpers.DebugWriteLine(sb.ToString());
+#endif
+        }
+
+        internal void EndFinally()
+        {
+            il.EndExceptionBlock();
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine("EndExceptionBlock");
+#endif
+        }
+
+        internal void BeginFinally()
+        {
+            il.BeginFinallyBlock();
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine("BeginFinallyBlock");
+#endif
+        }
+
+        internal void EndTry(CodeLabel label, bool @short)
+        {
+            OpCode code = @short ? OpCodes.Leave_S : OpCodes.Leave;
+            il.Emit(code, label.Value);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(code + ": " + label.Index);
+#endif
+        }
+
+        internal CodeLabel BeginTry()
+        {
+            CodeLabel label = new CodeLabel(il.BeginExceptionBlock(), nextLabel++);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine("BeginExceptionBlock: " + label.Index);
+#endif
+            return label;
+        }
+
+        internal void Constrain(Type type)
+        {
+            il.Emit(OpCodes.Constrained, type);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(OpCodes.Constrained + ": " + type);
+#endif
+        }
+
+        internal void TryCast(Type type)
+        {
+            il.Emit(OpCodes.Isinst, type);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(OpCodes.Isinst + ": " + type);
 #endif
         }
     }

@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Reflection;
 namespace ProtoBuf
 {
     /// <summary>
@@ -95,6 +96,11 @@ namespace ProtoBuf
             return float.IsInfinity(value);
 #endif
         }
+        internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
+        {
+            return declaringType.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                null, types ?? EmptyTypes, null);
+        }
         public static bool IsInfinity(double value)
         {
 #if MF
@@ -104,7 +110,7 @@ namespace ProtoBuf
             return double.IsInfinity(value);
 #endif
         }
-//        public readonly static Type[] EmptyTypes = new Type[0];
+        public readonly static Type[] EmptyTypes = new Type[0];
 //        internal static object CreateInstance(Type forType)
 //        {
 //#if MF

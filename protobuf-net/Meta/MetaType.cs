@@ -49,9 +49,39 @@ namespace ProtoBuf.Meta
 
         public MetaType Add(int fieldNumber, string memberName)
         {
+            return Add(fieldNumber, memberName, null, null);
+        }
+        public MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType)
+        {
             MemberInfo[] members = type.GetMember(memberName);
             if(members == null || members.Length != 1) throw new ArgumentException("Unable to determine member: " + memberName, "memberName");
-            ValueMember member = new ValueMember(type, fieldNumber, members[0]);
+            MemberInfo mi = members[0];
+            Type miType;
+            switch (mi.MemberType)
+            {
+                case MemberTypes.Field:
+                    miType = ((FieldInfo)mi).FieldType; break;
+                case MemberTypes.Property:
+                    miType = ((PropertyInfo)mi).PropertyType; break;
+                default:
+                    throw new NotSupportedException();
+            }
+            if (itemType == null) { itemType = ListDecorator.GetItemType(miType); }
+
+            if (itemType != null && defaultType == null)
+            {
+                if (miType.IsClass && !miType.IsAbstract && miType.GetConstructor(Helpers.EmptyTypes) != null)
+                {
+                    defaultType = miType;
+                }
+                if (defaultType == null && miType.IsInterface)
+                {
+                    defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
+                }
+                // verify that the default type is appropriate
+                if (defaultType != null && !miType.IsAssignableFrom(defaultType)) defaultType = null;
+            }
+            ValueMember member = new ValueMember(type, fieldNumber, mi, miType, itemType, defaultType);
             lock (fields)
             {
                 ThrowIfFrozen();
@@ -59,7 +89,17 @@ namespace ProtoBuf.Meta
             }
             return this;
         }
-
+        public ValueMember this[int fieldNumber]
+        {
+            get
+            {
+                foreach (ValueMember member in fields)
+                {
+                    if (member.FieldNumber == fieldNumber) return member;
+                }
+                return null;
+            }
+        }
         private readonly BasicList fields = new BasicList();
 
         //IEnumerable GetFields() { return fields; }

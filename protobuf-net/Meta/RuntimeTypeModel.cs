@@ -37,6 +37,7 @@ namespace ProtoBuf.Meta
             this.name = name;
             this.isDefault = isDefault;
         }
+        public MetaType this[Type type] { get { return Find(type); } }
         MetaType Find(Type type)
         {
             // this list is thread-safe for reading
@@ -381,7 +382,7 @@ namespace ProtoBuf.Meta
 
             
 
-            ConstructorBuilder ctor = type.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, Type.EmptyTypes);
+            ConstructorBuilder ctor = type.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, Helpers.EmptyTypes);
             
             il = ctor.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);

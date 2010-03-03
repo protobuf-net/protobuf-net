@@ -10,18 +10,25 @@ namespace ProtoBuf.Meta
         private readonly int fieldNumber;
         public int FieldNumber { get { return fieldNumber; } }
         private MemberInfo member;
-        private readonly Type expectedType;
-        public ValueMember(Type expectedType, int fieldNumber, MemberInfo member)
+        private readonly Type parentType, itemType, defaultType, memberType;
+        public Type ItemType { get { return itemType; } }
+        public Type MemberType { get { return memberType; } }
+        public Type DefaultType { get { return defaultType; } }
+        public Type ParentType { get { return parentType; } }
+        public ValueMember(Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType)
+            
         {
             if (fieldNumber < 1) throw new ArgumentOutOfRangeException("fieldNumber");
             if (member == null) throw new ArgumentNullException("member");
-            if (expectedType == null) throw new ArgumentNullException("expectedType");
+            if (parentType == null) throw new ArgumentNullException("parentType");
+            if (memberType == null) throw new ArgumentNullException("memberType");
             this.fieldNumber = fieldNumber;
+            this.memberType = memberType;
             this.member = member;
-            this.expectedType = expectedType;
+            this.itemType = itemType;
+            this.defaultType = defaultType;
+            this.parentType = parentType;
         }
-
-        public Type ExpectedType {get { return expectedType; } }
 
         private IProtoSerializer serializer;
         internal IProtoSerializer Serializer
@@ -30,14 +37,6 @@ namespace ProtoBuf.Meta
             {
                 if (serializer == null) serializer = BuildSerializer();
                 return serializer;
-            }
-        }
-        private Type GetValueType()
-        {
-            switch (member.MemberType) {
-                case MemberTypes.Field: return ((FieldInfo)member).FieldType;
-                case MemberTypes.Property: return ((PropertyInfo)member).PropertyType;
-                default: throw new NotSupportedException(member.MemberType.ToString());
             }
         }
 
@@ -49,10 +48,13 @@ namespace ProtoBuf.Meta
         }
         private IProtoSerializer BuildSerializer()
         {
-            Type type = GetValueType();
             WireType wireType;
-            IProtoSerializer ser = GetCoreSerializer(type, DataFormat, out wireType);
+            IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, DataFormat, out wireType);
+            // apply tags
             ser = new TagDecorator(fieldNumber, wireType, ser);
+            // apply lists if appropriate
+            if (itemType != null) { ser = new ListDecorator(memberType, defaultType, ser); }
+            
             switch (member.MemberType)
             {
                 case MemberTypes.Property:

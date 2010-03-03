@@ -56,6 +56,7 @@
     </Compile>
     <Compile Include="FX11.cs" />
     <Compile Include="Meta\Basic.cs" />
+    <Compile Include="Meta\Lists.cs" />
     <Compile Include="Meta\Struct.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serializers\DateTimeTests.cs" />

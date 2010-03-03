@@ -32,7 +32,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>bin\Debug\protobuf-net.xml</DocumentationFile>
     <UseVSHostingProcess>false</UseVSHostingProcess>
-    <LangVersion>ISO-1</LangVersion>
+    <LangVersion>ISO-2</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>

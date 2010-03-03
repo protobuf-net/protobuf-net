@@ -34,7 +34,7 @@ namespace ProtoBuf.Meta
                 return Deserialize(key, value, reader);
             }
         }
-        #if !NO_RUNTIME
+#if !NO_RUNTIME
         public static RuntimeTypeModel Create(string name)
         {
             return new RuntimeTypeModel(name, false);
