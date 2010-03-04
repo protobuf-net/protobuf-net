@@ -734,6 +734,97 @@ namespace ProtoBuf.Compiler
             Helpers.DebugWriteLine(OpCodes.Isinst + ": " + type);
 #endif
         }
+
+        internal void Cast(Type type)
+        {
+            il.Emit(OpCodes.Castclass, type);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(OpCodes.Castclass + ": " + type);
+#endif
+        }
+        public IDisposable Using(Local local)
+        {
+            return new UsingBlock(this, local);
+        }
+        private class UsingBlock : IDisposable{
+            private Local local;
+            CompilerContext ctx;
+            CodeLabel label;
+            /// <summary>
+            /// Creates a new "using" block (equivalent) around a variable;
+            /// the variable must exist, and note that (unlike in C#) it is
+            /// the variables *final* value that gets disposed. If you need
+            /// *original* disposal, copy your variable first.
+            /// 
+            /// It is the callers responsibility to ensure that the variable's
+            /// scope fully-encapsulates the "using"; if not, the variable
+            /// may be re-used (and thus re-assigned) unexpectedly.
+            /// </summary>
+            public UsingBlock(CompilerContext ctx, Local local)
+            {
+                if (ctx == null) throw new ArgumentNullException("ctx");
+                if (local == null) throw new ArgumentNullException("local");
+
+                Type type = local.Type;
+                // check if **never** disposable
+                if ((type.IsValueType || type.IsSealed) &&
+                    !typeof(IDisposable).IsAssignableFrom(type))
+                {
+                    return; // nothing to do! easiest "using" block ever
+                    // (note that C# wouldn't allow this as a "using" block,
+                    // but we'll be generous and simply not do anything)
+                }
+                this.local = local;
+                this.ctx = ctx;
+                label = ctx.BeginTry();
+                
+            }
+            public void Dispose()
+            {
+                if (local == null || ctx == null) return;
+
+                ctx.EndTry(label, false);
+                ctx.BeginFinally();
+                MethodInfo dispose = typeof(IDisposable).GetMethod("Dispose");
+                Type type = local.Type;
+                // remember that we've already (in the .ctor) excluded the case
+                // where it *cannot* be disposable
+                if (type.IsValueType)
+                {
+                    ctx.LoadAddress(local, type);
+                    ctx.Constrain(type);
+                    ctx.EmitCall(dispose);                    
+                }
+                else
+                {
+                    Compiler.CodeLabel @null = ctx.DefineLabel();
+                    if (typeof(IDisposable).IsAssignableFrom(type))
+                    {   // *known* to be IDisposable; just needs a null-check                            
+                        ctx.LoadValue(local);
+                        ctx.BranchIfFalse(@null, true);
+                        ctx.LoadAddress(local, type);
+                    }
+                    else
+                    {   // *could* be IDisposable; test via "as"
+                        using (Compiler.Local disp = new Compiler.Local(ctx, typeof(IDisposable)))
+                        {
+                            ctx.LoadValue(local);
+                            ctx.TryCast(typeof(IDisposable));
+                            ctx.CopyValue();
+                            ctx.StoreValue(disp);
+                            ctx.BranchIfFalse(@null, true);
+                            ctx.LoadAddress(disp, typeof(IDisposable));
+                        }
+                    }
+                    ctx.EmitCall(dispose);
+                    ctx.MarkLabel(@null);
+                }
+                ctx.EndFinally();
+                this.local = null;
+                this.ctx = null;
+                label = default(CodeLabel);
+            }
+        }
     }
 }
 #endif

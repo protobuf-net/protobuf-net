@@ -205,14 +205,6 @@ namespace ProtoBuf.Serializers
         }
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
-            /* Note: I considered (and discarded) the scenario of customer iterators (GetEnumerator()) that
-             * are structs or sealed classes and which don't implement IDisposable (and thus could *never*
-             * be disposable) - based on a search starting with a winform and cascading all references, there
-             * are only 19 such in the CLR, and none interesting - so not worth special-casing the scenario.
-             * This means we *always* need the try/catch.
-             * 
-             */
-
             using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
             {
                 MethodInfo moveNext, current, getEnumerator = GetEnumeratorInfo(out moveNext, out current);
@@ -225,57 +217,27 @@ namespace ProtoBuf.Serializers
                     ctx.LoadAddress(list, ExpectedType);
                     ctx.EmitCall(getEnumerator);
                     ctx.StoreValue(iter);
+                    using (ctx.Using(iter))
+                    {
+                        Compiler.CodeLabel body = ctx.DefineLabel(), @next = ctx.DefineLabel();
+                        ctx.Branch(@next, false);
+                        ctx.MarkLabel(body);
 
-                    Compiler.CodeLabel @try = ctx.BeginTry();
-                    Compiler.CodeLabel body = ctx.DefineLabel(), @next = ctx.DefineLabel();
-                    ctx.Branch(@next, false);
-                    ctx.MarkLabel(body);
-
-                    ctx.LoadAddress(iter, enumeratorType);
-                    ctx.EmitCall(current);
-                    Tail.EmitWrite(ctx, null);
-
-                    ctx.MarkLabel(@next);
-                    ctx.LoadAddress(iter, enumeratorType);
-                    ctx.EmitCall(moveNext);
-                    ctx.BranchIfTrue(body, false);
-
-                    ctx.EndTry(@try, false);
-                    ctx.BeginFinally();
-                    MethodInfo dispose = typeof(IDisposable).GetMethod("Dispose");
-                    bool alwaysDisposable = typeof(IDisposable).IsAssignableFrom(enumeratorType);
-                    if(enumeratorType.IsValueType) {
-                        if(alwaysDisposable) {
-                            // TODO: need to check re boxing
-                            ctx.LoadAddress(iter, enumeratorType);
-                            ctx.Constrain(enumeratorType);
-                            ctx.EmitCall(dispose);
+                        ctx.LoadAddress(iter, enumeratorType);
+                        ctx.EmitCall(current);
+                        Type itemType = Tail.ExpectedType;
+                        if (itemType != typeof(object) && current.ReturnType == typeof(object))
+                        {
+                            ctx.CastFromObject(itemType);
                         }
-                        // but don't need to worry about "maybe", so no "else"
-                    } else {
-                        Compiler.CodeLabel @null = ctx.DefineLabel();
-                        if(alwaysDisposable) {
-                            // just needs a null-check                            
-                            ctx.LoadValue(iter);
-                            ctx.BranchIfFalse(@null, true);
-                            ctx.LoadAddress(iter, enumeratorType);
-                            ctx.EmitCall(dispose);
-                        } else {
-                            // test via "as"
-                            using (Compiler.Local disp = new Compiler.Local(ctx, typeof(IDisposable)))
-                            {
-                                ctx.LoadValue(iter);
-                                ctx.TryCast(typeof(IDisposable));
-                                ctx.StoreValue(disp);
-                                ctx.LoadValue(disp);
-                                ctx.BranchIfFalse(@null, true);
-                                ctx.LoadAddress(iter, enumeratorType);
-                                ctx.EmitCall(dispose);   
-                            }
-                        }
-                        ctx.MarkLabel(@null);
+                        Tail.EmitWrite(ctx, null);
+
+                        ctx.MarkLabel(@next);
+                        ctx.LoadAddress(iter, enumeratorType);
+                        ctx.EmitCall(moveNext);
+                        ctx.BranchIfTrue(body, false);
                     }
-                    ctx.EndFinally();
+                    
                 }
             }
         }

@@ -8,6 +8,9 @@ namespace ProtoBuf.Compiler
     {
         public static readonly Local InputValue = new Local(null, null);
         LocalBuilder value;
+        public Type Type { get {
+            return value == null ? null : value.LocalType;
+        } }
         public Local AsCopy()
         {
             if (ctx == null) return this; // can re-use if context-free
