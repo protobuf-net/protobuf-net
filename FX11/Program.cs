@@ -26,7 +26,7 @@ namespace FX11
             
             RuntimeTypeModel model;
 #if !FX11
-            model = TypeModel.Create("ThinkSerializer");
+            model = TypeModel.Create();
             model.Add(typeof(Order), false)
                 .Add(1, "OrderID")
                 .Add(2, "CustomerID")
@@ -56,7 +56,7 @@ namespace FX11
                 .Add(11, "LastEditDate")
                 .Add(12, "CreationDate");
 
-            TypeModel compiled = model.Compile("ThinkSerializer.dll");
+            TypeModel compiled = model.Compile();
             Type type = typeof(Product);
             PropertyInfo[] props = type.GetProperties();
 
@@ -218,7 +218,7 @@ namespace FX11
 
 
 #endif
-            model = TypeModel.Create("CustomerModel");
+            model = TypeModel.Create();
             model.Add(typeof(Customer), false)
                .Add(1, "Id")
                .Add(3, "Name")
@@ -296,7 +296,7 @@ namespace FX11
 #endif
 #if FEAT_COMPILER
 
-           TypeModel compiled = model.Compile("CustomerModel.dll");
+            TypeModel compiled = model.Compile("CustomerModel", "CustomerModel.dll");
            WriteCustomer(compiled, "Compiled - class", cust2);
            WriteCustomer(compiled, "Compiled - struct", cust2);
             /*

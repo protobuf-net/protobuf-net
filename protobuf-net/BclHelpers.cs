@@ -169,18 +169,10 @@ namespace ProtoBuf
             {
                 switch (fieldNumber)
                 {
-                    case FieldDecimalLow:
-                        low = reader.ReadUInt64();
-                        break;
-                    case FieldDecimalHigh:
-                        high = reader.ReadUInt32();
-                        break;
-                    case FieldDecimalSignScale:
-                        signScale = reader.ReadUInt32();
-                        break;
-                    default:
-                        reader.SkipField();
-                        break;
+                    case FieldDecimalLow: low = reader.ReadUInt64(); break;
+                    case FieldDecimalHigh: high = reader.ReadUInt32(); break;
+                    case FieldDecimalSignScale: signScale = reader.ReadUInt32(); break;
+                    default: reader.SkipField(); break;
                 }
                 
             }
@@ -220,6 +212,44 @@ namespace ProtoBuf
                 writer.WriteUInt32(signScale);
             }
             writer.EndSubItem(token);
+        }
+
+        const int FieldGuidLow = 1, FieldGuidHigh = 2;
+        public static void WriteGuid(Guid value, ProtoWriter dest)
+        {
+            byte[] blob = value.ToByteArray();
+
+            int token = dest.StartSubItem(dummy);
+            if (value != Guid.Empty)
+            {
+                dest.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
+                dest.WriteBytes(blob, 0, 8);
+                dest.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
+                dest.WriteBytes(blob, 8, 8);
+            }
+            dest.EndSubItem(token);
+        }
+        public static Guid ReadGuid(ProtoReader source)
+        {
+            ulong low = 0, high = 0;
+            int fieldNumber;
+            int token = source.StartSubItem();
+            while ((fieldNumber = source.ReadFieldHeader()) > 0)
+            {
+                switch (fieldNumber)
+                {
+                    case FieldGuidLow: low = source.ReadUInt64(); break;
+                    case FieldGuidHigh: high = source.ReadUInt64(); break;
+                    default: source.SkipField(); break;
+                }
+            }
+            source.EndSubItem(token);
+            if(low == 0 && high == 0) return Guid.Empty;
+            uint a = (uint)(low >> 32), b = (uint)low, c = (uint)(high >> 32), d= (uint)high;
+            return new Guid(b, (ushort)a, (ushort)(a >> 16), 
+                (byte)d, (byte)(d >> 8), (byte)(d >> 16), (byte)(d >> 24),
+                (byte)c, (byte)(c >> 8), (byte)(c >> 16), (byte)(c >> 24));
+            
         }
     }
 }

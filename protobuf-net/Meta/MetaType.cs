@@ -74,9 +74,12 @@ namespace ProtoBuf.Meta
                 {
                     defaultType = miType;
                 }
-                if (defaultType == null && miType.IsInterface)
+                if (defaultType == null)
                 {
-                    defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
+                    if (miType.IsInterface)
+                    {
+                        defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
+                    }
                 }
                 // verify that the default type is appropriate
                 if (defaultType != null && !miType.IsAssignableFrom(defaultType)) defaultType = null;

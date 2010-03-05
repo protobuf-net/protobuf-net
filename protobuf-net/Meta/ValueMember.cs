@@ -116,9 +116,14 @@ namespace ProtoBuf.Meta
                     wireType = WireType.String;
                     return new DecimalSerializer();
                 case TypeCode.Byte:
+                    wireType = WireType.Variant;
+                    throw new NotImplementedException();
                 case TypeCode.SByte:
+                    wireType = WireType.Variant;
+                    throw new NotImplementedException();
                 case TypeCode.Char:
-                    throw new NotImplementedException("Pull your finger out, Marc... " + code);
+                    wireType = WireType.Variant;
+                    return new CharSerializer();
                 case TypeCode.Int16:
                     wireType = WireType.Variant;
                     return new Int16Serializer();
@@ -130,6 +135,11 @@ namespace ProtoBuf.Meta
             {
                 wireType = WireType.String;
                 return new TimeSpanSerializer();
+            }
+            if (type == typeof(Guid))
+            {
+                wireType = WireType.String;
+                return new GuidSerializer();
             }
             throw new NotSupportedException("No serializer defined for type: " + type.FullName);
         }

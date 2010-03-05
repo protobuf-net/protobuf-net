@@ -14,15 +14,10 @@ namespace ProtoBuf.Meta
 {
     public class RuntimeTypeModel : TypeModel
     {
-        private readonly string name;
-        public string Name
-        {
-            get { return name; }
-        }
         private class Singleton
         {
             private Singleton() { }
-            internal static readonly RuntimeTypeModel Value = new RuntimeTypeModel("DefaultTypeModel", true);
+            internal static readonly RuntimeTypeModel Value = new RuntimeTypeModel(true);
         }
         public static RuntimeTypeModel Default
         {
@@ -30,11 +25,9 @@ namespace ProtoBuf.Meta
         }
         public IEnumerable GetTypes() { return types; }
         private readonly bool isDefault;
-        internal RuntimeTypeModel(string name, bool isDefault)
+        internal RuntimeTypeModel(bool isDefault)
         {
-            if (Helpers.IsNullOrEmpty(name) && !isDefault) throw new ArgumentException("name");
             AutoAddMissingTypes = true;
-            this.name = name;
             this.isDefault = isDefault;
         }
         public MetaType this[Type type] { get { return Find(type); } }
@@ -193,7 +186,7 @@ namespace ProtoBuf.Meta
 #if FEAT_COMPILER
         public TypeModel Compile()
         {
-            return Compile(null);
+            return Compile(null, null);
         }
         static ILGenerator Override(TypeBuilder type, string name)
         {
@@ -209,21 +202,26 @@ namespace ProtoBuf.Meta
             type.DefineMethodOverride(newMethod, baseMethod);
             return il;
         }
-        public TypeModel Compile(string path)
+        public TypeModel Compile(string name, string path)
         {
             Freeze();
             bool save = !Helpers.IsNullOrEmpty(path);
+            if (Helpers.IsNullOrEmpty(name))
+            {
+                if (save) throw new ArgumentNullException("name");
+                name = Guid.NewGuid().ToString();
+            }
 
             AssemblyName an = new AssemblyName();
-            an.Name = Name;
+            an.Name = name;
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
                 (save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.Run)
                 );
 
-            ModuleBuilder module = save ? asm.DefineDynamicModule(Name, path)
-                : asm.DefineDynamicModule(Name);
+            ModuleBuilder module = save ? asm.DefineDynamicModule(name, path)
+                : asm.DefineDynamicModule(name);
             Type baseType = typeof(TypeModel);
-            TypeBuilder type = module.DefineType(Name,
+            TypeBuilder type = module.DefineType(name,
                 (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed,
                 baseType);
             Compiler.CompilerContext ctx;

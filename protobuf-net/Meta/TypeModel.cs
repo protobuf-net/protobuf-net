@@ -35,9 +35,9 @@ namespace ProtoBuf.Meta
             }
         }
 #if !NO_RUNTIME
-        public static RuntimeTypeModel Create(string name)
+        public static RuntimeTypeModel Create()
         {
-            return new RuntimeTypeModel(name, false);
+            return new RuntimeTypeModel(false);
         }
 #endif
         protected abstract int GetKey(Type type);
@@ -64,7 +64,7 @@ namespace ProtoBuf.Meta
                 ms.Position = 0;
                 using (ProtoReader reader = new ProtoReader(ms, this))
                 {
-                    return Deserialize(key, value, reader);
+                    return Deserialize(key, null, reader);
                 }
             }
         }

@@ -26,7 +26,7 @@ namespace ProtoBuf.Serializers
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicRead("ReadUInt32", ExpectedType);
+            ctx.EmitBasicRead("ReadUInt32", typeof(uint));
         }
 #endif
     }

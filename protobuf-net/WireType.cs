@@ -5,7 +5,7 @@
         /// <summary>
         /// Represents an error condition
         /// </summary>
-        Error = -1,
+        None = -1,
 
         /// <summary>
         /// Base-128 variant-length encoding

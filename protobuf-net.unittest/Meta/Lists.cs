@@ -49,7 +49,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void EmitModelWithEverything()
         {
-            var model = TypeModel.Create("EmitModelWithEverything");
+            var model = TypeModel.Create();
             MetaType meta = model.Add(typeof(TypeWithLists), false);
             meta.Add(1, "ListString");
             meta.Add(2, "ListInt32");
@@ -62,7 +62,7 @@ namespace ProtoBuf.unittest.Meta
             meta.Add(8, "IListInt32Untyped", typeof(int), null);
 
             model.CompileInPlace();
-            model.Compile("EmitModelWithEverything.dll");
+            model.Compile("EmitModelWithEverything", "EmitModelWithEverything.dll");
 
             VerifyPE("EmitModelWithEverything.dll");
             
@@ -71,7 +71,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void AddOnTypedListShouldResolveCorrectly_String()
         {
-            var model = TypeModel.Create("AddOnTypedListShouldResolveCorrectly");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(1, "ListString");
             Assert.AreEqual(typeof(TypeWithLists), model[typeof(TypeWithLists)][1].ParentType, "ParentType");
             Assert.AreEqual(typeof(string), model[typeof(TypeWithLists)][1].ItemType, "ItemType");
@@ -82,7 +82,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void AddOnTypedListShouldResolveCorrectly_Int32()
         {
-            var model = TypeModel.Create("AddOnTypedListShouldResolveCorrectly");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(1, "ListInt32");
             Assert.AreEqual(typeof(TypeWithLists), model[typeof(TypeWithLists)][1].ParentType, "ParentType");
             Assert.AreEqual(typeof(int), model[typeof(TypeWithLists)][1].ItemType, "ItemType");
@@ -93,7 +93,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void AddOnTypedIListShouldResolveCorrectly_String()
         {
-            var model = TypeModel.Create("AddOnTypedIListShouldResolveCorrectly");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(2, "IListStringTyped");
             Assert.AreEqual(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType, "ParentType");
             Assert.AreEqual(typeof(string), model[typeof(TypeWithLists)][2].ItemType, "ItemType");
@@ -104,7 +104,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void AddOnTypedIListShouldResolveCorrectly_Int32()
         {
-            var model = TypeModel.Create("AddOnTypedIListShouldResolveCorrectly");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(2, "IListInt32Typed");
             Assert.AreEqual(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType, "ParentType");
             Assert.AreEqual(typeof(int), model[typeof(TypeWithLists)][2].ItemType, "ItemType");
@@ -115,7 +115,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void RoundTripTypedList_String()
         {
-            var model = TypeModel.Create("RoundTripTypedList");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(1, "ListString");
             TypeWithLists obj = new TypeWithLists();
             obj.ListString = new List<string>();
@@ -133,7 +133,7 @@ namespace ProtoBuf.unittest.Meta
             Assert.IsNotNull(clone.ListString);
             Assert.IsTrue(obj.ListString.SequenceEqual(clone.ListString));
 
-            clone = (TypeWithLists)model.Compile("RoundTripTypedList.dll").DeepClone(obj);
+            clone = (TypeWithLists)model.Compile().DeepClone(obj);
             Assert.IsNotNull(clone);
             Assert.IsNotNull(clone.ListString);
             Assert.IsTrue(obj.ListString.SequenceEqual(clone.ListString));
@@ -142,7 +142,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void RoundTripTypedIList_String()
         {
-            var model = TypeModel.Create("RoundTripTypedIList");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(2, "IListStringTyped");
             TypeWithLists obj = new TypeWithLists();
             obj.IListStringTyped = new List<string>();
@@ -170,7 +170,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void RoundTripArrayList_String()
         {
-            var model = TypeModel.Create("RoundTripArrayList");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(3, "ArrayListString", typeof(string), null);
             TypeWithLists obj = new TypeWithLists();
             obj.ArrayListString = new ArrayList();
@@ -197,7 +197,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void RoundTripIList_String()
         {
-            var model = TypeModel.Create("RoundTripIList");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(4, "IListStringUntyped", typeof(string), null);
             TypeWithLists obj = new TypeWithLists();
             obj.IListStringUntyped = new ArrayList();
@@ -224,7 +224,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void RoundTripTypedList_Int32()
         {
-            var model = TypeModel.Create("RoundTripTypedList");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(1, "ListInt32");
             TypeWithLists obj = new TypeWithLists();
             obj.ListInt32 = new List<int>();
@@ -251,7 +251,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void RoundTripTypedIList_Int32()
         {
-            var model = TypeModel.Create("RoundTripTypedIList");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(2, "IListInt32Typed");
             TypeWithLists obj = new TypeWithLists();
             obj.IListInt32Typed = new List<int>();
@@ -279,7 +279,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void RoundTripArrayList_Int32()
         {
-            var model = TypeModel.Create("RoundTripArrayList");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(3, "ArrayListInt32", typeof(int), null);
             TypeWithLists obj = new TypeWithLists();
             obj.ArrayListInt32 = new ArrayList();
@@ -306,7 +306,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void RoundTripIList_Int32()
         {
-            var model = TypeModel.Create("RoundTripIList");
+            var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(4, "IListInt32Untyped", typeof(int), null);
             TypeWithLists obj = new TypeWithLists();
             obj.IListInt32Untyped = new ArrayList();

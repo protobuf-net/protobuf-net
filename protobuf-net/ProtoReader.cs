@@ -18,7 +18,7 @@ namespace ProtoBuf
         TypeModel model;
 
         private int fieldNumber;
-        WireType wireType = WireType.Error;
+        WireType wireType = WireType.None;
         internal int FieldNumber { get { return fieldNumber; } }
 
         internal ProtoReader(Stream source, TypeModel model)
@@ -358,7 +358,7 @@ namespace ProtoBuf
                 case WireType.EndGroup:
                     if (token >= 0) throw new ArgumentException("token");
                     if (-token != fieldNumber) throw BorkedIt(); // wrong group ended!
-                    wireType = WireType.Error; // this releases ReadFieldHeader
+                    wireType = WireType.None; // this releases ReadFieldHeader
                     break;
                 default:
                     if (token < position) throw new ArgumentException("token");
@@ -367,13 +367,13 @@ namespace ProtoBuf
                     break;
             }
         }
-
+        
         public int StartSubItem()
         {
             switch (wireType)
             {
                 case WireType.StartGroup:
-                    wireType = WireType.Error; // to prevent glitches from double-calling
+                    wireType = WireType.None; // to prevent glitches from double-calling
                     return -fieldNumber;
                 case WireType.String:
                     int len = (int)ReadUInt32Variant();
@@ -400,7 +400,7 @@ namespace ProtoBuf
                 wireType = (WireType)(tag & 7);
                 fieldNumber = (int)(tag >> 3);
             } else {
-                wireType = WireType.Error;
+                wireType = WireType.None;
                 fieldNumber = 0;
             }
             // watch for end-of-group
@@ -504,7 +504,7 @@ namespace ProtoBuf
                         return;
                     }
                     throw BorkedIt();
-                case WireType.Error: // treat as explicit errorr
+                case WireType.None: // treat as explicit errorr
                 case WireType.EndGroup: // treat as explicit error
                 default: // treat as implicit error
                     throw BorkedIt();

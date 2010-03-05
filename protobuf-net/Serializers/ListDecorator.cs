@@ -45,6 +45,7 @@ namespace ProtoBuf.Serializers
         {
             if (declaredType == null) throw new ArgumentNullException("declaredType");
             this.declaredType = declaredType;
+            this.concreteType = concreteType;
             isList = typeof(IList).IsAssignableFrom(declaredType);
 
             Type[] types = { tail.ExpectedType };
