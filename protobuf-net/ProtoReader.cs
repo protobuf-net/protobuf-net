@@ -577,9 +577,10 @@ namespace ProtoBuf
             {
                 case WireType.String:
                     int len = (int)ReadUInt32Variant();
+                    wireType = WireType.None;
                     if (len == 0) return value;
                     int offset;
-                    if(value == null) {
+                    if(value == null || value.Length == 0) {
                         offset = 0;
                         value = new byte[len];
                     } else {

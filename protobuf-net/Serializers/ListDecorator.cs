@@ -44,6 +44,7 @@ namespace ProtoBuf.Serializers
         public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail) : base(tail)
         {
             if (declaredType == null) throw new ArgumentNullException("declaredType");
+            if (declaredType.IsArray) throw new ArgumentException("Cannot treat arrays as lists", "declaredType");
             this.declaredType = declaredType;
             this.concreteType = concreteType;
             isList = typeof(IList).IsAssignableFrom(declaredType);

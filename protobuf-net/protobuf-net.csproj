@@ -115,6 +115,7 @@
     <Compile Include="ProtoSerializer.cs" />
     <Compile Include="ProtoWriter.cs" />
     <Compile Include="RuntimeSerializer.cs" />
+    <Compile Include="Serializers\BlobSerializer.cs" />
     <Compile Include="Serializers\CharSerializer.cs" />
     <Compile Include="Serializers\CompiledSerializer.cs" />
     <Compile Include="Serializers\BooleanSerializer.cs" />
@@ -152,7 +153,6 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Serializers\app.config" />
     <None Include="Web\TODO.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

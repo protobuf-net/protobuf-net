@@ -49,13 +49,17 @@ namespace ProtoBuf.Meta
                 return ((MetaType)obj).Type == type;
             }
         }
-        int FindOrAddAuto(Type type)
+        internal int FindOrAddAuto(Type type, bool demand)
         {
             TypeFinder predicate = new TypeFinder(type);
             int key = types.IndexOf(predicate);
             if (key < 0)
             {
-                if (!autoAddMissingTypes) throw new ArgumentException("type");
+                if (!autoAddMissingTypes)
+                {
+                    if(demand)throw new ArgumentException("type");
+                    return key;
+                }
                 MetaType metaType = Create(type);
                 metaType.ApplyAttributes();
                 lock (types)
@@ -77,7 +81,7 @@ namespace ProtoBuf.Meta
         private MetaType Create(Type type)
         {
             ThrowIfFrozen();
-            return new MetaType(type);
+            return new MetaType(this, type);
         }
         public MetaType Add(Type type, bool applyAttributes)
         {
@@ -119,9 +123,10 @@ namespace ProtoBuf.Meta
         }
 
         private readonly BasicList types = new BasicList();
+
         protected override int GetKey(Type type)
         {
-            return FindOrAddAuto(type);
+            return FindOrAddAuto(type, true);
         }
         protected internal override void Serialize(int key, object value, ProtoWriter dest)
         {
@@ -140,13 +145,6 @@ namespace ProtoBuf.Meta
             }
         }
 #if FEAT_COMPILER
-        internal Compiler.ProtoSerializer GetSerializer(Type type, bool compiled)
-        {
-            int key = GetKey(type);
-            IProtoSerializer ser = ((MetaType)types[key]).Serializer;
-            return GetSerializer(ser, compiled);
-        }
-
         internal static Compiler.ProtoSerializer GetSerializer(IProtoSerializer serializer, bool compiled)
         {
             if (serializer == null) throw new ArgumentNullException("serializer");
@@ -184,6 +182,18 @@ namespace ProtoBuf.Meta
         //}
 
 #if FEAT_COMPILER
+        internal class SerializerPair
+        {
+            public readonly int MetaKey;
+            public readonly MethodBuilder Serialize, Deserialize;
+            public SerializerPair(int metaKey, MethodBuilder serialize, MethodBuilder deserialize)
+            {
+                this.MetaKey = metaKey;
+                this.Serialize = serialize;
+                this.Deserialize = deserialize;
+            }
+        }
+
         public TypeModel Compile()
         {
             return Compile(null, null);
@@ -227,36 +237,34 @@ namespace ProtoBuf.Meta
             Compiler.CompilerContext ctx;
             // the keys in the model are guaranteed to be unique, but may not
             // be contiguous (threading etc); we'll normalize the keys
-            MethodBuilder[] typeSerializers = new MethodBuilder[types.Count],
-                typeDeserializers = new MethodBuilder[types.Count];
             ILGenerator[] serBodies = new ILGenerator[types.Count],
                 deserBodies = new ILGenerator[types.Count];
+            BasicList methodPairs = new BasicList();
 
             int index = 0;
             foreach (MetaType metaType in types)
             {
-                MethodBuilder typeMethod = type.DefineMethod("Write",
+                MethodBuilder writeMethod = type.DefineMethod("Write",
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     typeof(void), new Type[] { metaType.Type, typeof(ProtoWriter) });
-                typeSerializers[index] = typeMethod;
-                serBodies[index] = typeMethod.GetILGenerator();
+                serBodies[index] = writeMethod.GetILGenerator();
 
-                typeMethod = type.DefineMethod("Read",
+                MethodBuilder readMethod = type.DefineMethod("Read",
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     metaType.Type, new Type[] { metaType.Type, typeof(ProtoReader) });
-                typeDeserializers[index] = typeMethod;
-                deserBodies[index] = typeMethod.GetILGenerator();
-                
+                deserBodies[index] = readMethod.GetILGenerator();
+
+                methodPairs.Add(new SerializerPair(GetKey(metaType.Type), writeMethod, readMethod));                
                 index++;
             }
             index = 0;
             foreach (MetaType metaType in types)
             {
-                ctx = new Compiler.CompilerContext(serBodies[index], true);
+                ctx = new Compiler.CompilerContext(serBodies[index], true, methodPairs);
                 metaType.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
                 ctx.Return();
 
-                ctx = new Compiler.CompilerContext(deserBodies[index], true);
+                ctx = new Compiler.CompilerContext(deserBodies[index], true, methodPairs);
                 metaType.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
                 ctx.LoadValue(Compiler.Local.InputValue);
                 ctx.Return();
@@ -276,7 +284,7 @@ namespace ProtoBuf.Meta
             il.Emit(OpCodes.Ret);
             
             il = Override(type, "Serialize");
-            ctx = new Compiler.CompilerContext(il, false);
+            ctx = new Compiler.CompilerContext(il, false, methodPairs);
             // arg0 = this, arg1 = key, arg2=obj, arg3=dest
             Label[] jumpTable = new Label[types.Count];
             for (int i = 0; i < jumpTable.Length; i++) {
@@ -291,12 +299,12 @@ namespace ProtoBuf.Meta
                 il.Emit(OpCodes.Ldarg_2);
                 ctx.CastFromObject(((MetaType)types[i]).Type);
                 il.Emit(OpCodes.Ldarg_3);
-                il.EmitCall(OpCodes.Call, typeSerializers[i], null);
+                il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Serialize, null);
                 ctx.Return();
             }
 
             il = Override(type, "Deserialize");
-            ctx = new Compiler.CompilerContext(il, false);
+            ctx = new Compiler.CompilerContext(il, false, methodPairs);
             Compiler.Local pos = null;
             try
             {
@@ -323,7 +331,7 @@ namespace ProtoBuf.Meta
                         il.Emit(OpCodes.Ldarg_2);
                         ctx.CastFromObject(keyType);
                         il.Emit(OpCodes.Ldarg_3);
-                        il.EmitCall(OpCodes.Call, typeDeserializers[i], null);
+                        il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Deserialize, null);
                         ctx.CastToObject(keyType);
                         ctx.Return();
 
@@ -342,7 +350,7 @@ namespace ProtoBuf.Meta
                             ctx.EmitCtor(keyType);
                             ctx.LoadValue(typedVar);
                             il.Emit(OpCodes.Ldarg_3);
-                            il.EmitCall(OpCodes.Call, typeDeserializers[i], null);
+                            il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Deserialize, null);
                             ctx.StoreValue(typedVar);
 
                             ctx.LoadValue(pos);
@@ -367,7 +375,7 @@ namespace ProtoBuf.Meta
                         il.Emit(OpCodes.Ldarg_2);
                         ctx.CastFromObject(keyType);
                         il.Emit(OpCodes.Ldarg_3);
-                        il.EmitCall(OpCodes.Call, typeDeserializers[i], null);
+                        il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Deserialize, null);
                         ctx.CastToObject(keyType);
                         ctx.Return();
                     }                    
@@ -413,7 +421,9 @@ namespace ProtoBuf.Meta
 
             return (TypeModel)Activator.CreateInstance(finalType);
         }
+        
 #endif
     }
+    
 }
 #endif

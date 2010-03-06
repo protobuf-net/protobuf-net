@@ -26,7 +26,8 @@ namespace ProtoBuf
         WireType wireType;
 
         public void WriteFieldHeader(int fieldNumber, WireType wireType) {
-            if (this.wireType != WireType.None) throw new InvalidOperationException("Cannot write another header until the data has been written");
+            if (this.wireType != WireType.None) throw new InvalidOperationException("Cannot write a " + wireType
+                + " header until the " + this.wireType + " data has been written");
             if(fieldNumber < 0) throw new ArgumentOutOfRangeException("fieldNumber");
 #if DEBUG
             switch (wireType)
@@ -103,7 +104,7 @@ namespace ProtoBuf
         }
         int depth;
         const int RecursionCheckDepth = 25;
-        internal int StartSubItem(object instance)
+        public int StartSubItem(object instance)
         {
             if (++depth > RecursionCheckDepth)
             {
@@ -124,7 +125,7 @@ namespace ProtoBuf
                     return 0;
             }
         }
-        internal void EndSubItem(int token)
+        public void EndSubItem(int token)
         {
             if (wireType != WireType.None) { throw CreateException(); }
             if (flushLock > 0)

@@ -28,7 +28,7 @@ namespace ProtoBuf.unittest.Meta
 
         }
 
-        static void VerifyPE(string path)
+        public static void VerifyPE(string path)
         {
             // note; PEVerify can be found %ProgramFiles%\Microsoft SDKs\Windows\v6.0A\bin
             const string exePath = "PEVerify.exe";
@@ -36,7 +36,7 @@ namespace ProtoBuf.unittest.Meta
             {
                 if (proc.WaitForExit(10000))
                 {
-                    Assert.AreEqual(0, proc.ExitCode);
+                    Assert.AreEqual(0, proc.ExitCode, path);
                 }
                 else
                 {

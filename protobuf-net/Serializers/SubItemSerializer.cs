@@ -29,17 +29,62 @@ namespace ProtoBuf.Serializers
             return source.ReadObject(value, key);
         }
 #if FEAT_COMPILER
+        void EmitReaderWriterObjectAndKey(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        {
+            using (Compiler.Local loc = ctx.GetLocalWithValue(type, valueFrom))
+            {
+                ctx.LoadReaderWriter(); // must do this *after* storing (GetLocalWithValue) the value from the stack (if any)
+                ctx.LoadValue(loc);
+                if (type.IsValueType) { ctx.CastToObject(type); }
+            }
+            ctx.LoadValue(key);
+        }
+        bool EmitDedicatedMethod(Compiler.CompilerContext ctx, Compiler.Local valueFrom, bool read)
+        {
+            System.Reflection.Emit.MethodBuilder method = ctx.GetDedicatedMethod(key, read);
+            if (method == null) return false;
+            using (Compiler.Local loc = ctx.GetLocalWithValue(type, valueFrom))
+            using (Compiler.Local token = new ProtoBuf.Compiler.Local(ctx, typeof(int)))
+            {
+                ctx.LoadReaderWriter();
+                Type rwType = read ? typeof(ProtoReader) : typeof(ProtoWriter);
+                if (!read)
+                {
+                    if (type.IsValueType) { ctx.LoadNullRef(); }
+                    else { ctx.LoadValue(loc); } 
+                }
+                ctx.EmitCall(rwType.GetMethod("StartSubItem"));
+                ctx.StoreValue(token);
+
+                ctx.LoadValue(loc);
+                ctx.LoadReaderWriter();
+                ctx.EmitCall(method);
+                if (read) { ctx.StoreValue(loc); }
+
+                ctx.LoadReaderWriter();
+                ctx.LoadValue(token);
+                ctx.EmitCall(rwType.GetMethod("EndSubItem"));
+
+                if (read) { ctx.LoadValue(loc); }
+            }
+            return true;
+        }
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.InjectStore(type, valueFrom);
-            ctx.LoadValue(key);
-            ctx.EmitWrite("WriteObject"); //TODO: box?
+            if (!EmitDedicatedMethod(ctx, valueFrom, false))
+            {
+                EmitReaderWriterObjectAndKey(ctx, valueFrom);
+                ctx.EmitWrite("WriteObject");
+            }
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.InjectStore(type, valueFrom);
-            ctx.LoadValue(key);
-            ctx.EmitWrite("ReadObject"); //TODO: box and unbox?
+            if (!EmitDedicatedMethod(ctx, valueFrom, true))
+            {
+                EmitReaderWriterObjectAndKey(ctx, valueFrom);
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("ReadObject"));
+                ctx.CastFromObject(type);
+            }
         }
 #endif
     }

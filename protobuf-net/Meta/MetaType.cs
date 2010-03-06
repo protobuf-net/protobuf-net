@@ -8,12 +8,14 @@ namespace ProtoBuf.Meta
 {
     public class MetaType
     {
-        
-        internal MetaType(Type type)
+        private readonly RuntimeTypeModel model;
+        internal MetaType(RuntimeTypeModel model, Type type)
         {
+            if (model == null) throw new ArgumentNullException("model");
             if (type == null) throw new ArgumentNullException("type");
             if (type.IsPrimitive) throw new ArgumentException("Not valid for primitive types", "type");
             this.type = type;
+            this.model = model;
         }
         protected void ThrowIfFrozen()
         {
@@ -51,6 +53,7 @@ namespace ProtoBuf.Meta
         {
             return Add(fieldNumber, memberName, null, null);
         }
+
         public MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType)
         {
             MemberInfo[] members = type.GetMember(memberName);
@@ -84,7 +87,7 @@ namespace ProtoBuf.Meta
                 // verify that the default type is appropriate
                 if (defaultType != null && !miType.IsAssignableFrom(defaultType)) defaultType = null;
             }
-            ValueMember member = new ValueMember(type, fieldNumber, mi, miType, itemType, defaultType);
+            ValueMember member = new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType);
             lock (fields)
             {
                 ThrowIfFrozen();

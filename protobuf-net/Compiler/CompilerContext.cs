@@ -172,19 +172,29 @@ namespace ProtoBuf.Compiler
             }
         }
         private readonly bool isStatic;
-        private CompilerContext(bool isStatic)
+        private readonly BasicList methodPairs;
+        internal MethodBuilder GetDedicatedMethod(int metaKey, bool read)
         {
-            this.isStatic = isStatic;
+            if (methodPairs == null) return null;
+            // but if we *do* have pairs, we demand that we find a match...
+            foreach (RuntimeTypeModel.SerializerPair pair in methodPairs)
+            {
+                if(pair.MetaKey == metaKey) { return read ? pair.Deserialize : pair.Serialize; }
+            }
+            throw new ArgumentException("Meta-key not found", "metaKey");
         }
-        internal CompilerContext(ILGenerator il, bool isStatic)
-            : this(isStatic)
+        internal CompilerContext(ILGenerator il, bool isStatic, BasicList methodPairs)
         {
+            if (il == null) throw new ArgumentNullException("il");
+            if (methodPairs == null) throw new ArgumentNullException("methodPairs");
+            this.isStatic = isStatic;
+            this.methodPairs = methodPairs;
             this.il = il;
         }
 #if !FX11
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic)
-            : this(isStatic)
         {
+            this.isStatic = isStatic;
             Type[] paramTypes;
             Type returnType;
             if (isWriter)
@@ -198,7 +208,7 @@ namespace ProtoBuf.Compiler
                 paramTypes = new Type[] { typeof(object), typeof(ProtoReader) };
             }
 
-            method = new DynamicMethod("proto_" + Interlocked.Increment(ref next), returnType, paramTypes, associatedType);
+            method = new DynamicMethod("proto_" + Interlocked.Increment(ref next), returnType, paramTypes, associatedType,true);
             this.il = method.GetILGenerator();
         }
 #endif

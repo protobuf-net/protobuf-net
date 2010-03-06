@@ -15,19 +15,22 @@ namespace ProtoBuf.Meta
         public Type MemberType { get { return memberType; } }
         public Type DefaultType { get { return defaultType; } }
         public Type ParentType { get { return parentType; } }
-        public ValueMember(Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType)
+        private readonly RuntimeTypeModel model;
+        public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType)
             
         {
             if (fieldNumber < 1) throw new ArgumentOutOfRangeException("fieldNumber");
             if (member == null) throw new ArgumentNullException("member");
             if (parentType == null) throw new ArgumentNullException("parentType");
             if (memberType == null) throw new ArgumentNullException("memberType");
+            if (model == null) throw new ArgumentNullException("model");
             this.fieldNumber = fieldNumber;
             this.memberType = memberType;
             this.member = member;
             this.itemType = itemType;
             this.defaultType = defaultType;
             this.parentType = parentType;
+            this.model = model;
         }
 
         private IProtoSerializer serializer;
@@ -77,7 +80,8 @@ namespace ProtoBuf.Meta
                 default: throw new InvalidOperationException();
             }
         }
-        private IProtoSerializer GetCoreSerializer(Type type, DataFormat dataFormat, out WireType wireType)
+
+        private IProtoSerializer GetCoreSerializer(Type type, DataFormat dataFormat, out WireType defaultWireType)
         {
 #if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;
@@ -86,60 +90,66 @@ namespace ProtoBuf.Meta
             switch (code)
             {
                 case TypeCode.Int32:
-                    wireType = GetIntWireType(dataFormat, 32);
+                    defaultWireType = GetIntWireType(dataFormat, 32);
                     return new Int32Serializer();
                 case TypeCode.UInt32:
-                    wireType = GetIntWireType(dataFormat, 32);
+                    defaultWireType = GetIntWireType(dataFormat, 32);
                     return new UInt32Serializer();
                 case TypeCode.Int64:
-                    wireType = GetIntWireType(dataFormat, 64);
+                    defaultWireType = GetIntWireType(dataFormat, 64);
                     return new Int64Serializer();
                 case TypeCode.UInt64:
-                    wireType = GetIntWireType(dataFormat, 64);
+                    defaultWireType = GetIntWireType(dataFormat, 64);
                     return new Int64Serializer();
                 case TypeCode.String:
-                    wireType = WireType.String;
+                    defaultWireType = WireType.String;
                     return new StringSerializer();
                 case TypeCode.Single:
-                    wireType = WireType.Fixed32;
+                    defaultWireType = WireType.Fixed32;
                     return new SingleSerializer();
                 case TypeCode.Double:
-                    wireType = WireType.Fixed64;
+                    defaultWireType = WireType.Fixed64;
                     return new DoubleSerializer();
                 case TypeCode.Boolean:
-                    wireType = WireType.Variant;
+                    defaultWireType = WireType.Variant;
                     return new BooleanSerializer();
                 case TypeCode.DateTime:
-                    wireType = WireType.String;
+                    defaultWireType = WireType.String;
                     return new DateTimeSerializer();
                 case TypeCode.Decimal:
-                    wireType = WireType.String;
+                    defaultWireType = WireType.String;
                     return new DecimalSerializer();
                 case TypeCode.Byte:
-                    wireType = WireType.Variant;
+                    defaultWireType = WireType.Variant;
                     throw new NotImplementedException();
                 case TypeCode.SByte:
-                    wireType = WireType.Variant;
+                    defaultWireType = WireType.Variant;
                     throw new NotImplementedException();
                 case TypeCode.Char:
-                    wireType = WireType.Variant;
+                    defaultWireType = WireType.Variant;
                     return new CharSerializer();
                 case TypeCode.Int16:
-                    wireType = WireType.Variant;
+                    defaultWireType = WireType.Variant;
                     return new Int16Serializer();
                 case TypeCode.UInt16:
-                    wireType = WireType.Variant;
+                    defaultWireType = WireType.Variant;
                     return new UInt16Serializer();
             }
             if (type == typeof(TimeSpan))
             {
-                wireType = WireType.String;
+                defaultWireType = WireType.String;
                 return new TimeSpanSerializer();
             }
             if (type == typeof(Guid))
             {
-                wireType = WireType.String;
+                defaultWireType = WireType.String;
                 return new GuidSerializer();
+            }
+            int key = model.FindOrAddAuto(type, false);
+            if (key >= 0)
+            {
+                defaultWireType = WireType.String;
+                return new SubItemSerializer(type, key);
             }
             throw new NotSupportedException("No serializer defined for type: " + type.FullName);
         }
