@@ -16,7 +16,23 @@ namespace ProtoBuf
         public static bool IsNullOrEmpty(string value)
         { // yes, FX11 lacks this!
             return value == null || value.Length == 0;
-        }        [System.Diagnostics.Conditional("DEBUG")]
+        }
+
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void DebugWriteLine(string message, object obj)
+        {
+            string suffix;
+            try
+            {
+                suffix = obj == null ? "(null)" : obj.ToString();
+            }
+            catch
+            {
+                suffix = "(exception)";
+            }
+            DebugWriteLine(message + ": " + suffix);
+        }
+        [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugWriteLine(string message)
         {
 #if MF      

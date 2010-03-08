@@ -130,11 +130,13 @@ namespace ProtoBuf.Meta
         }
         protected internal override void Serialize(int key, object value, ProtoWriter dest)
         {
+            //Helpers.DebugWriteLine("Serialize", value);
             ((MetaType)types[key]).Serializer.Write(value, dest);
         }
     
         protected internal override object Deserialize(int key, object value, ProtoReader source)
         {
+            //Helpers.DebugWriteLine("Deserialize", value);
             IProtoSerializer ser = ((MetaType)types[key]).Serializer;
             if (value == null && ser.ExpectedType.IsValueType) {
                 int pos = source.Position;

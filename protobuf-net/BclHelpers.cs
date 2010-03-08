@@ -23,8 +23,6 @@ namespace ProtoBuf
         
         internal static readonly DateTime EpochOrigin = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 
-        static readonly object dummy = new object();
-
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
             TimeSpanScale scale;
@@ -69,7 +67,7 @@ namespace ProtoBuf
                 scale = TimeSpanScale.Ticks;
             }
 
-            int token = dest.StartSubItem(dummy);
+            int token = ProtoWriter.StartSubItem(null, dest);
             
             if(value != 0) {
                 dest.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant);
@@ -79,7 +77,7 @@ namespace ProtoBuf
                 dest.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant);
                 dest.WriteInt32((int)scale);
             }
-            dest.EndSubItem(token);
+            ProtoWriter.EndSubItem(token, dest);
         }
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
@@ -110,7 +108,7 @@ namespace ProtoBuf
         }
 
         private static long ReadTimeSpanTicks(ProtoReader source) {
-            int token = source.StartSubItem();
+            int token = ProtoReader.StartSubItem(source);
             int fieldNumber;
             TimeSpanScale scale = TimeSpanScale.Days;
             long value = 0;
@@ -128,7 +126,7 @@ namespace ProtoBuf
                         break;
                 }
             }
-            source.EndSubItem(token);
+            ProtoReader.EndSubItem(token,source);
             switch (scale)
             {
                 case TimeSpanScale.Days:
@@ -164,7 +162,7 @@ namespace ProtoBuf
             uint signScale = 0;
 
             int fieldNumber;
-            int token = reader.StartSubItem();
+            int token = ProtoReader.StartSubItem(reader);
             while ((fieldNumber = reader.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
@@ -176,7 +174,7 @@ namespace ProtoBuf
                 }
                 
             }
-            reader.EndSubItem(token);
+            ProtoReader.EndSubItem(token, reader);
 
             if (low == 0 && high == 0) return decimal.Zero;
 
@@ -196,7 +194,7 @@ namespace ProtoBuf
             uint high = (uint)bits[2];
             uint signScale = (uint)(((bits[3] >> 15) & 0x01FE) | ((bits[3] >> 31) & 0x0001));
 
-            int token = writer.StartSubItem(dummy);
+            int token = ProtoWriter.StartSubItem(null, writer);
             if (low != 0) {
                 writer.WriteFieldHeader(FieldDecimalLow, WireType.Variant);
                 writer.WriteUInt64(low);
@@ -211,7 +209,7 @@ namespace ProtoBuf
                 writer.WriteFieldHeader(FieldDecimalSignScale, WireType.Variant);
                 writer.WriteUInt32(signScale);
             }
-            writer.EndSubItem(token);
+            ProtoWriter.EndSubItem(token, writer);
         }
 
         const int FieldGuidLow = 1, FieldGuidHigh = 2;
@@ -219,7 +217,7 @@ namespace ProtoBuf
         {
             byte[] blob = value.ToByteArray();
 
-            int token = dest.StartSubItem(dummy);
+            int token = ProtoWriter.StartSubItem(null, dest);
             if (value != Guid.Empty)
             {
                 dest.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
@@ -227,13 +225,13 @@ namespace ProtoBuf
                 dest.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
                 dest.WriteBytes(blob, 8, 8);
             }
-            dest.EndSubItem(token);
+            ProtoWriter.EndSubItem(token, dest);
         }
         public static Guid ReadGuid(ProtoReader source)
         {
             ulong low = 0, high = 0;
             int fieldNumber;
-            int token = source.StartSubItem();
+            int token = ProtoReader.StartSubItem(source);
             while ((fieldNumber = source.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
@@ -243,7 +241,7 @@ namespace ProtoBuf
                     default: source.SkipField(); break;
                 }
             }
-            source.EndSubItem(token);
+            ProtoReader.EndSubItem(token, source);
             if(low == 0 && high == 0) return Guid.Empty;
             uint a = (uint)(low >> 32), b = (uint)low, c = (uint)(high >> 32), d= (uint)high;
             return new Guid(b, (ushort)a, (ushort)(a >> 16), 

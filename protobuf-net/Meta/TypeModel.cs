@@ -12,6 +12,7 @@ namespace ProtoBuf.Meta
             using (ProtoWriter writer = new ProtoWriter(dest, this))
             {
                 Serialize(key, value, writer);
+                writer.Close();
             }
         }
         public object Deserialize(Stream source, object value, Type type)
@@ -60,6 +61,7 @@ namespace ProtoBuf.Meta
                 using(ProtoWriter writer = new ProtoWriter(ms, this))
                 {
                     Serialize(key, value, writer);
+                    writer.Close();
                 }
                 ms.Position = 0;
                 using (ProtoReader reader = new ProtoReader(ms, this))

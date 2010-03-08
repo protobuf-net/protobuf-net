@@ -64,8 +64,9 @@ namespace ProtoBuf.unittest.Meta
             for (int i = 0; i < count; i++)
             {
                 rand.NextBytes(buffer);
-                Data data = new Data { Value = new Guid(buffer), SomeTailData = (char)rand.Next(0, ushort.MaxValue) };
+                Data data = new Data { Value = new Guid(buffer), SomeTailData = (char)rand.Next(1, ushort.MaxValue) };
                 Data clone = (Data)model.DeepClone(data);
+                Assert.IsNotNull(clone);
                 Assert.AreEqual(data.Value, clone.Value);
                 Assert.AreEqual(data.SomeTailData, clone.SomeTailData);
             }

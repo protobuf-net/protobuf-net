@@ -112,15 +112,16 @@ namespace ProtoBuf.unittest.Meta
             Assert.AreEqual("abc", clone.InnerRef.String);
             Assert.AreEqual(456, clone.InnerVal.Int32);
             Assert.AreEqual("def", clone.InnerVal.String);
-
+            
             model.CompileInPlace();
             clone = (OuterVal)model.DeepClone(outer);
+            
             Assert.AreNotSame(outer, clone);
             Assert.AreEqual(123, clone.InnerRef.Int32);
             Assert.AreEqual("abc", clone.InnerRef.String);
             Assert.AreEqual(456, clone.InnerVal.Int32);
             Assert.AreEqual("def", clone.InnerVal.String);
-
+            
             clone = (OuterVal)model.Compile().DeepClone(outer);
             Assert.AreNotSame(outer, clone);
             Assert.AreEqual(123, clone.InnerRef.Int32);

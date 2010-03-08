@@ -22,6 +22,7 @@
 //            using (ProtoWriter writer = new ProtoWriter(dest, model))
 //            {
 //                return Serialize(obj, writer);
+//                  close?
 //            }
 //        }
 

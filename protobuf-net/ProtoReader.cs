@@ -339,50 +339,50 @@ namespace ProtoBuf
             }
         }
 
-        public object ReadObject(object value, int key)
+        public static object ReadObject(object value, int key, ProtoReader reader)
         {
-            if (model == null)
+            if (reader.model == null)
             {
                 throw new InvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
             }
-            int token = StartSubItem();
-            value = model.Deserialize(key, value, this);
-            EndSubItem(token);
+            int token = ProtoReader.StartSubItem(reader);
+            value = reader.model.Deserialize(key, value, reader);
+            ProtoReader.EndSubItem(token, reader);
             return value;
         }
 
-        public void EndSubItem(int token)
+        public static void EndSubItem(int token, ProtoReader reader)
         {
-            switch (wireType)
+            switch (reader.wireType)
             {
                 case WireType.EndGroup:
                     if (token >= 0) throw new ArgumentException("token");
-                    if (-token != fieldNumber) throw BorkedIt(); // wrong group ended!
-                    wireType = WireType.None; // this releases ReadFieldHeader
+                    if (-token != reader.fieldNumber) throw reader.BorkedIt(); // wrong group ended!
+                    reader.wireType = WireType.None; // this releases ReadFieldHeader
                     break;
                 default:
-                    if (token < position) throw new ArgumentException("token");
-                    if (blockEnd != position) throw BorkedIt(); 
-                    blockEnd = token;
+                    if (token < reader.position) throw new ArgumentException("token");
+                    if (reader.blockEnd != reader.position) throw reader.BorkedIt();
+                    reader.blockEnd = token;
                     break;
             }
         }
         
-        public int StartSubItem()
+        public static int StartSubItem(ProtoReader reader)
         {
-            switch (wireType)
+            switch (reader.wireType)
             {
                 case WireType.StartGroup:
-                    wireType = WireType.None; // to prevent glitches from double-calling
-                    return -fieldNumber;
+                    reader.wireType = WireType.None; // to prevent glitches from double-calling
+                    return -reader.fieldNumber;
                 case WireType.String:
-                    int len = (int)ReadUInt32Variant();
+                    int len = (int)reader.ReadUInt32Variant();
                     if (len < 0) throw new InvalidOperationException();
-                    int lastEnd = blockEnd;
-                    blockEnd = position + len;
+                    int lastEnd = reader.blockEnd;
+                    reader.blockEnd = reader.position + len;
                     return lastEnd;
                 default:
-                    BorkedIt(); // throws
+                    reader.BorkedIt(); // throws
                     return 0;
             }
         }

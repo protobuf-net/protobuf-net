@@ -12,15 +12,15 @@ namespace ProtoBuf
     {
         private Stream dest;
         TypeModel model;
-        public void WriteObject(object value, int key)
+        public static void WriteObject(object value, int key, ProtoWriter writer)
         {
-            if (model == null)
+            if (writer.model == null)
             {
                 throw new InvalidOperationException("Cannot serialize sub-objects unless a model is provided");
             }
-            int token = StartSubItem(value);
-            model.Serialize(key, value, this);
-            EndSubItem(token);
+            int token = StartSubItem(value, writer);
+            writer.model.Serialize(key, value, writer);
+            EndSubItem(token, writer);
         }
         private int fieldNumber, flushLock;
         WireType wireType;
@@ -102,69 +102,71 @@ namespace ProtoBuf
             position += length;
             wireType = WireType.None;
         }
-        int depth;
+        int depth = 0;
         const int RecursionCheckDepth = 25;
-        public int StartSubItem(object instance)
+        public static int StartSubItem(object instance, ProtoWriter writer)
         {
-            if (++depth > RecursionCheckDepth)
+            //Helpers.DebugWriteLine(writer.depth.ToString());
+            //Helpers.DebugWriteLine("StartSubItem", instance);
+            if (++writer.depth > RecursionCheckDepth)
             {
+                Helpers.DebugWriteLine(writer.depth.ToString());
                 throw new NotImplementedException();
             }
-            switch(wireType) {
+            switch (writer.wireType)
+            {
                 case WireType.StartGroup:
-                    wireType = WireType.None;
-                    return -fieldNumber;
+                    writer.wireType = WireType.None;
+                    return -writer.fieldNumber;
                 case WireType.String:
-                    wireType = WireType.None;
-                    Ensure(32); // make some space in anticipation...
-                    flushLock++;
-                    position++;                    
-                    return ioIndex++; // leave 1 space (optimistic) for length
+                    writer.wireType = WireType.None;
+                    writer.Ensure(32); // make some space in anticipation...
+                    writer.flushLock++;
+                    writer.position++;
+                    return writer.ioIndex++; // leave 1 space (optimistic) for length
                 default:
-                    throw CreateException();
-                    return 0;
+                    throw writer.CreateException();
             }
         }
-        public void EndSubItem(int token)
+        public static void EndSubItem(int token, ProtoWriter writer)
         {
-            if (wireType != WireType.None) { throw CreateException(); }
-            if (flushLock > 0)
+            if (writer.wireType != WireType.None) { throw writer.CreateException(); }
+            if (writer.depth-- > 0)
             {
-                depth--;
                 if (token < 0)
-                {
-                    WriteHeaderCore(-token, WireType.EndGroup);
+                { // group
+                    writer.WriteHeaderCore(-token, WireType.EndGroup);
                 }
                 else
-                {   
-                    int len = (int)((position - token) - 1);
+                { // string
+                    int len = (int)((writer.position - token) - 1);
                     int offset = 0;
                     uint tmp = (uint)len;
                     while ((tmp >>= 7) != 0) offset++;
                     if (offset == 0)
                     {
-                        ioBuffer[token] = (byte)(len & 0x7F);
+                        writer.ioBuffer[token] = (byte)(len & 0x7F);
                     }
                     else
                     {
-                        Ensure(offset);
-                        Helpers.BlockCopy(ioBuffer, token + 1,
-                            ioBuffer, token + 1 + offset, len);
+                        writer.Ensure(offset);
+                        byte[] blob = writer.ioBuffer;
+                        Helpers.BlockCopy(blob, token + 1, blob, token + 1 + offset, len);
                         tmp = (uint)len;
                         do
                         {
-                            ioBuffer[token++] = (byte)((tmp & 0x7F) | 0x80);
+                            blob[token++] = (byte)((tmp & 0x7F) | 0x80);
                         } while ((tmp >>= 7) != 0);
-                        position += offset;
-                        ioIndex += offset;
+                        writer.position += offset;
+                        writer.ioIndex += offset;
                     }
-                }
-                flushLock--;
-                wireType = WireType.None;
+                    writer.flushLock--;
+                }                
+                writer.wireType = WireType.None;
             }
             else
             {
-                throw CreateException();
+                throw writer.CreateException();
             }
         }
         public ProtoWriter(Stream dest, TypeModel model)
@@ -226,6 +228,11 @@ namespace ProtoBuf
                 }
                 ioBuffer = newBuffer;
             }
+        }
+        public void Close()
+        {
+            if (depth != 0 || flushLock != 0) throw new InvalidOperationException("Unable to close stream in an incomplete state");
+            Flush();
         }
         private void Flush()
         {
