@@ -183,6 +183,8 @@ namespace ProtoBuf.Compiler
             }
             throw new ArgumentException("Meta-key not found", "metaKey");
         }
+        private readonly bool nonPublic;
+        internal bool NonPublic { get { return nonPublic; } }
         internal CompilerContext(ILGenerator il, bool isStatic, BasicList methodPairs)
         {
             if (il == null) throw new ArgumentNullException("il");
@@ -190,11 +192,13 @@ namespace ProtoBuf.Compiler
             this.isStatic = isStatic;
             this.methodPairs = methodPairs;
             this.il = il;
+            nonPublic = false;
         }
 #if !FX11
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic)
         {
             this.isStatic = isStatic;
+            nonPublic = true;
             Type[] paramTypes;
             Type returnType;
             if (isWriter)
@@ -532,11 +536,11 @@ namespace ProtoBuf.Compiler
         }
         public void LoadValue(PropertyInfo property)
         {
-            EmitCall(property.GetGetMethod());
+            EmitCall(property.GetGetMethod(NonPublic));
         }
         public void StoreValue(PropertyInfo property)
         {
-            EmitCall(property.GetSetMethod());
+            EmitCall(property.GetSetMethod(NonPublic));
         }
 
         internal void EmitInstance()
@@ -575,25 +579,22 @@ namespace ProtoBuf.Compiler
         {
             if (type.IsValueType)
             {
-                // if the value is on the stack we'll need a local variable to it;
-                // may as well use GetLocalWithValue which handles all scenarios
-                using (Compiler.Local tmp = GetLocalWithValue(type, local))
+                if (local == null) throw new InvalidOperationException("Cannot load the address of a struct at the head of the stack");
+
+                if (local == Local.InputValue)
                 {
-                    if (tmp == Local.InputValue)
-                    {
-                        il.Emit(OpCodes.Ldarga_S, (isStatic ? (byte)0 : (byte)1));
+                    il.Emit(OpCodes.Ldarga_S, (isStatic ? (byte)0 : (byte)1));
 #if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(OpCodes.Ldarga_S + ": $" + (isStatic ? 0 : 1));
+                    Helpers.DebugWriteLine(OpCodes.Ldarga_S + ": $" + (isStatic ? 0 : 1));
 #endif
-                    }
-                    else
-                    {
-                        OpCode code = UseShortForm(tmp) ? OpCodes.Ldloca_S : OpCodes.Ldloca;
-                        il.Emit(code, tmp.Value);
+                }
+                else
+                {
+                    OpCode code = UseShortForm(local) ? OpCodes.Ldloca_S : OpCodes.Ldloca;
+                    il.Emit(code, local.Value);
 #if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(code + ": $" + local.Value);
+                    Helpers.DebugWriteLine(code + ": $" + local.Value);
 #endif
-                    }
                 }
 
             }

@@ -49,12 +49,18 @@ namespace ProtoBuf.Meta
             get { return dataFormat; }
             set { dataFormat = value; }
         }
+        private bool isStrict;
+        public bool IsStrict
+        {
+            get { return isStrict; }
+            set { isStrict = value; }
+        }
         private IProtoSerializer BuildSerializer()
         {
             WireType wireType;
             IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, DataFormat, out wireType);
             // apply tags
-            ser = new TagDecorator(fieldNumber, wireType, ser);
+            ser = new TagDecorator(fieldNumber, wireType, isStrict, ser);
             // apply lists if appropriate
             if (itemType != null) { ser = new ListDecorator(memberType, defaultType, ser); }
             

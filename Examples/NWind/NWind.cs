@@ -8,6 +8,26 @@ using NUnit.Framework;
 using ProtoBuf;
 using ProtoSharp.Core;
 using Serializer = ProtoBuf.Serializer;
+using Examples;
+using System.Diagnostics;
+using ProtoBuf.Meta;
+
+/*namespace ProtoBuf.Meta
+{
+    public class TypeModel {
+        public static RuntimeTypeModel Create() { return null; }
+        public object Deserialize(Stream source, object obj, Type type) { return null; }
+    }
+    public class RuntimeTypeModel : TypeModel
+    {
+        public static TypeModel Default;
+        public void CompileInPlace() { }
+        public TypeModel Compile() { return null; }
+        public TypeModel Compile(string s, string t) { return null; }
+
+        
+    }
+}*/
 namespace DAL
 {
     [ProtoContract, DataContract, Serializable]
@@ -23,30 +43,74 @@ namespace DAL
             Orders = new List<Order>();
         }
     }
-
     [TestFixture]
     public class NWindTests
     {
-        public static T LoadDatabaseFromFile<T>()
+        public static T LoadDatabaseFromFile<T>(TypeModel model)
             where T : class,new()
         {
             // otherwise...
             using (Stream fs = File.OpenRead(@"NWind\nwind.proto.bin"))
             {
-                return Serializer.Deserialize<T>(fs);
+                return (T)model.Deserialize(fs, null, typeof(T));
             }
         }
         
         [Test]
-        public void LoadTest()
+        public void LoadTestDefaultModel()
         {
-
-            Database db = LoadDatabaseFromFile<Database>();
+            Database db = LoadDatabaseFromFile<Database>(RuntimeTypeModel.Default);
             DbMetrics("Database", db);
 
         }
 
         [Test]
+        public void LoadTestCustomModel()
+        {
+            var model = TypeModel.Create();
+            Database db;
+            
+            db = LoadDatabaseFromFile<Database>(model);
+            DbMetrics("Database", db);
+
+            model.CompileInPlace();
+            db = LoadDatabaseFromFile<Database>(model);
+            DbMetrics("Database", db);
+
+            
+            db = LoadDatabaseFromFile<Database>(model.Compile());
+            DbMetrics("Database", db);
+
+            db = LoadDatabaseFromFile<Database>(model.Compile("NWindModel", "NWindModel.dll"));
+            PEVerify.AssertValid("NWindModel.dll");
+            DbMetrics("Database", db);
+        }
+
+        [Test]
+        public void PerfTestDb()
+        {
+            byte[] blob = File.ReadAllBytes(@"NWind\nwind.proto.bin");
+            using (MemoryStream ms = new MemoryStream(blob))
+            {
+                var model = TypeModel.Create();
+                Type type = typeof(Database);
+                model.Deserialize(ms, null, type);
+                var compiled = model.Compile();
+                /*erializer.PrepareSerializer<Database>();
+                Serializer.Deserialize<Database>(ms);*/
+                Stopwatch watch = Stopwatch.StartNew();
+                for (int i = 0; i < 1000; i++)
+                {
+                    ms.Position = 0;
+                    //Serializer.Deserialize<Database>(ms);
+                    compiled.Deserialize(ms, null, type);
+                }
+                watch.Stop();
+                Console.WriteLine(watch.ElapsedMilliseconds);
+            }
+        }
+
+        [Test, Ignore("GetProto not implemented")]
         public void TestProtoGen() {
             string proto = Serializer.GetProto<Database>();
         }

@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using DAL;
 using NUnit.Framework;
 using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace Examples.Remoting
 {
@@ -34,7 +35,7 @@ namespace Examples.Remoting
         [Test]
         public void LargePayload()
         {
-            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
+            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>(RuntimeTypeModel.Default);
             DatabaseCompat compat = Serializer.ChangeType<Database, DatabaseCompat>(db);
             DatabaseCompatRem rem = Serializer.ChangeType<Database, DatabaseCompatRem>(db);
 

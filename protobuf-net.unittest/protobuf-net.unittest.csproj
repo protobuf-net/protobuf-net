@@ -54,6 +54,7 @@
     <Compile Include="..\FX11\Program.cs">
       <Link>Program.cs</Link>
     </Compile>
+    <Compile Include="Attribs\Basic.cs" />
     <Compile Include="FX11.cs" />
     <Compile Include="Meta\Basic.cs" />
     <Compile Include="Meta\Guids.cs" />

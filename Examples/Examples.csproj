@@ -165,6 +165,7 @@
     <Compile Include="OptionalData.cs" />
     <Compile Include="Parseable.cs" />
     <Compile Include="PartialClasses.cs" />
+    <Compile Include="PEVerify.cs" />
     <Compile Include="Pipeline.cs" />
     <Compile Include="Ppt\Ppt.cs" />
     <Compile Include="Primatives.cs" />
@@ -195,12 +196,16 @@
     <Compile Include="Rpc.cs" />
     <Compile Include="RpcTest.cs" />
     <Compile Include="Rpc\HttpBasic.cs" />
-    <Compile Include="ServiceModel\WcfTest.cs" />
+    <Compile Include="ServiceModel\WcfTest.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="SimpleStream\Collections.cs" />
     <Compile Include="SimpleStream\GroupedData.cs" />
     <Compile Include="SimpleStream\NullTypes.cs" />
     <Compile Include="SimpleStream\SimplePerfTests.cs" />
-    <Compile Include="SimpleStream\SimpleStreamDemo.cs" />
+    <Compile Include="SimpleStream\SimpleStreamDemo.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="TagInference.cs" />
     <Compile Include="TestNumbers\NumberTests.cs" />
     <Compile Include="TraceError.cs" />
@@ -246,21 +251,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\protobuf-net.Extensions\protobuf-net.Extensions.csproj">
-      <Project>{927AB924-08B5-4629-B505-3BC78A61B0D6}</Project>
-      <Name>protobuf-net.Extensions</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
-      <Project>{8374E4D7-2A91-48F1-9360-09B09CF27C3F}</Project>
-      <Name>protobuf-net</Name>
-      <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\ProtoGen\ProtoGen.csproj">
-      <Project>{F6CBE303-3B5F-4CCC-B0B7-D81A6BD462C9}</Project>
-      <Name>ProtoGen</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
       <Visible>False</Visible>
       <ProductName>.NET Framework 2.0 %28x86%29</ProductName>
@@ -291,12 +281,18 @@
       <Link>protoc-license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="PEVerify.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="..\ProtoGen\protobuf-net.proto">
       <Link>protobuf-net.proto</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="..\Tools\protoc.exe">
       <Link>protoc.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="PEVerify.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="ProtoGen\Empty.proto">
@@ -314,6 +310,12 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
+      <Project>{8374E4D7-2A91-48F1-9360-09B09CF27C3F}</Project>
+      <Name>protobuf-net</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bin\" />

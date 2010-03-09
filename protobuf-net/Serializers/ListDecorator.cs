@@ -41,6 +41,7 @@ namespace ProtoBuf.Serializers
             }
             return candidates.Count == 1 ? (Type)candidates[0] : null;
         }
+        
         public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail) : base(tail)
         {
             if (declaredType == null) throw new ArgumentNullException("declaredType");
@@ -179,9 +180,14 @@ namespace ProtoBuf.Serializers
                 iteratorType = getEnumerator.ReturnType;
                 moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext", null);
                 PropertyInfo prop = iteratorType.GetProperty("Current", StandardFlags);
-                current = prop == null ? null : prop.GetGetMethod();
+                current = prop == null ? null : prop.GetGetMethod(false);
+                if (moveNext == null && typeof(IEnumerator).IsAssignableFrom(iteratorType))
+                {
+                    moveNext = Helpers.GetInstanceMethod(typeof(IEnumerator), "MoveNext", null);
+                }
                 // fully typed
-                if (moveNext.ReturnType == typeof(bool) && prop.PropertyType == itemType)
+                if (moveNext != null && moveNext.ReturnType == typeof(bool)
+                    && current != null && current.ReturnType == itemType)
                 {
                     return getEnumerator;
                 }
@@ -194,7 +200,7 @@ namespace ProtoBuf.Serializers
                 getEnumerator = enumeratorType.GetMethod("GetEnumerator");
                 iteratorType = getEnumerator.ReturnType;
                 moveNext = typeof(IEnumerator).GetMethod("MoveNext");
-                current = iteratorType.GetProperty("Current").GetGetMethod();
+                current = iteratorType.GetProperty("Current").GetGetMethod(false);
                 return getEnumerator;
             }
 
@@ -202,7 +208,7 @@ namespace ProtoBuf.Serializers
             getEnumerator = enumeratorType.GetMethod("GetEnumerator");
             iteratorType = getEnumerator.ReturnType;
             moveNext = iteratorType.GetMethod("MoveNext");
-            current = iteratorType.GetProperty("Current").GetGetMethod();
+            current = iteratorType.GetProperty("Current").GetGetMethod(false);
             return getEnumerator;
         }
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
@@ -260,7 +266,8 @@ namespace ProtoBuf.Serializers
                 IList list = (IList)value;
                 do
                 {
-                    list.Add(Tail.Read(null, source));
+                    object obj = Tail.Read(null, source);
+                    list.Add(obj);
                 } while (source.TryReadFieldHeader(field));
             }
             else

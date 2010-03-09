@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using NUnit.Framework;
 using ProtoBuf;
+using Examples.Ppt;
 
 namespace Examples.SimpleStream
 {

@@ -361,11 +361,15 @@ namespace ProtoBuf
                     if (-value != reader.fieldNumber) throw reader.BorkedIt(); // wrong group ended!
                     reader.wireType = WireType.None; // this releases ReadFieldHeader
                     break;
+                //case WireType.None: // TODO reinstate once reads reset the wire-type
                 default:
                     if (value < reader.position) throw new ArgumentException("token");
-                    if (reader.blockEnd != reader.position) throw reader.BorkedIt();
+                    if (reader.blockEnd != reader.position && reader.blockEnd != int.MaxValue) throw reader.BorkedIt();
                     reader.blockEnd = value;
                     break;
+                /*default:
+                    reader.BorkedIt(); // throws
+                    break;*/
             }
         }
 
@@ -432,6 +436,16 @@ namespace ProtoBuf
         }
 
 
+        public void ExpectField(WireType wireType)
+        {
+            if (this.wireType == wireType) { } // fine; everything as we expect
+            else  if (wireType == WireType.SignedVariant && this.wireType == WireType.Variant)
+            {   // allow implicit substitution to signed (to avoid need to call SetSignedVariant)
+                this.wireType = WireType.SignedVariant;
+            } else {
+                throw BorkedIt();
+            }
+        }
         public void SetSignedVariant()
         {
             switch (wireType)

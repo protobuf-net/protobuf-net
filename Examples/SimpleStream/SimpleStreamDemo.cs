@@ -1,4 +1,5 @@
-﻿using System;
+﻿#warning excised
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -20,7 +21,7 @@ using System.ComponentModel;
 
 namespace Examples.SimpleStream
 {
-    
+
     [TestFixture]
     public class SimpleStreamDemo
     {
@@ -43,7 +44,7 @@ namespace Examples.SimpleStream
             Test2 t2 = new Test2 { B = "Toms Spezialitäten" },
                 clone = Serializer.DeepClone(t2);
             Assert.AreEqual(t2.B, clone.B);
-            
+
         }
         [Test]
         public void MultiByteUTF8Len128() // started failing...
@@ -63,7 +64,7 @@ namespace Examples.SimpleStream
         {
             char mb = 'ä';
             Assert.AreEqual(2, Encoding.UTF8.GetByteCount(new char[] { mb }), "is multibyte");
-            
+
             for (int i = 0; i < 1024; i++)
             {
                 try
@@ -148,8 +149,8 @@ namespace Examples.SimpleStream
                     Serializer.Deserialize<Test5>(ms);
                 }
                 watch.Stop();
-                if(log)
-                Console.WriteLine("array x {0}; {1} ms", count, watch.ElapsedMilliseconds);
+                if (log)
+                    Console.WriteLine("array x {0}; {1} ms", count, watch.ElapsedMilliseconds);
             }
             return true;
         }
@@ -179,7 +180,7 @@ namespace Examples.SimpleStream
             Assert.AreEqual(150, t1.Foo, "Foo, descending");
             Assert.AreEqual(130, t1.Bar, "Bar, descending");
         }
-        
+
         [Test]
         public void MultipleSameField()
         {
@@ -211,7 +212,7 @@ namespace Examples.SimpleStream
         public enum SomeEnum
         {
             [ProtoEnum(Value = 3)]
-            Foo= 1,
+            Foo = 1,
             [ProtoEnum(Value = 4)]
             Bar = 2
         }
@@ -233,13 +234,13 @@ namespace Examples.SimpleStream
         [Test]
         public void TestDuffEnum()
         {
-            SomeEnumEntity dee = new SomeEnumEntity {Enum = SomeEnum.Foo};
+            SomeEnumEntity dee = new SomeEnumEntity { Enum = SomeEnum.Foo };
             Assert.IsTrue(Program.CheckBytes(dee, 0x10, 0x03));
         }
         [Test, ExpectedException(ExceptionType = typeof(ProtoException))]
         public void TestSerializeUndefinedEnum()
         {
-            SomeEnumEntity dee = new SomeEnumEntity { Enum = 0};
+            SomeEnumEntity dee = new SomeEnumEntity { Enum = 0 };
             Serializer.Serialize(Stream.Null, dee);
         }
         [Test]
@@ -254,7 +255,7 @@ namespace Examples.SimpleStream
             var see = Program.Build<SomeEnumEntityWithoutDefault>(0x10, 0x03);
             Assert.IsTrue(see.Enum.HasValue);
             Assert.AreEqual(SomeEnum.Foo, see.Enum.Value);
-            
+
         }
         [Test]
         public void TestDeserializeUndefinedEnumWithoutDefault()
@@ -271,7 +272,7 @@ namespace Examples.SimpleStream
             Assert.AreEqual(9, val);
 
             // and check it re-serializes OK
-            Program.CheckBytes(see, 0x10, 0x09); 
+            Program.CheckBytes(see, 0x10, 0x09);
         }
 
         public class NotAContract
@@ -386,7 +387,8 @@ namespace Examples.SimpleStream
                         ms.Length, serializeWatch.ElapsedMilliseconds, deserializeWatch.ElapsedMilliseconds);
                 }
             }
-            if(testSoap) {
+            if (testSoap)
+            {
                 using (MemoryStream ms = new MemoryStream())
                 {
                     SoapFormatter sf = new SoapFormatter();

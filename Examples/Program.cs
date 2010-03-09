@@ -4,12 +4,16 @@ using System.Text;
 using DAL;
 using Examples.SimpleStream;
 using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace Examples
 {
     class Program
     {
         static void Main() {
+            new NWindTests().PerfTestDb();
+        }
+        static void Main2() {
             SimpleStreamDemo demo = new SimpleStreamDemo();
             //const int COUNT = 1000000;
             const bool RUN_LEGACY = true;
@@ -20,14 +24,14 @@ namespace Examples
             //demo.PerfTestArray(COUNT, true);
 
             const int NWIND_COUNT = 1000;
-            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
+            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>(RuntimeTypeModel.Default);
             Console.WriteLine("Sub-object format: {0}", DAL.Database.SubObjectFormat);
             SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, false, null);
 
-            DatabaseCompat compat = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompat>();
+            DatabaseCompat compat = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompat>(RuntimeTypeModel.Default);
             SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, RUN_LEGACY, false, RUN_LEGACY, true, false, true, null);
 
-            DatabaseCompatRem compatRem = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompatRem>();
+            DatabaseCompatRem compatRem = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompatRem>(RuntimeTypeModel.Default);
             SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, false, false, false, null);
             
         }

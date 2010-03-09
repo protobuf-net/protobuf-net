@@ -8,6 +8,12 @@ using OverflowException = System.ApplicationException;
 #endif
 namespace ProtoBuf
 {
+    /// <summary>
+    /// Represents an output stream for writing protobuf data.
+    /// 
+    /// Why is the API backwards (static methods with writer arguments)?
+    /// See: http://marcgravell.blogspot.com/2010/03/last-will-be-first-and-first-will-be.html
+    /// </summary>
     public sealed class ProtoWriter : IDisposable
     {
         private Stream dest;
@@ -519,16 +525,6 @@ namespace ProtoBuf
         public static void WriteBoolean(bool value, ProtoWriter writer)
         {
             ProtoWriter.WriteUInt32(value ? (uint)1 : (uint)0, writer);
-        }
-
-        public static void SetSignedVariant(ProtoWriter writer)
-        {
-            switch (writer.wireType)
-            {
-                case WireType.Variant: writer.wireType = WireType.SignedVariant; break;
-                case WireType.SignedVariant: break; // nothing to do
-                default: throw CreateException(writer);
-            }
         }
     }
 }

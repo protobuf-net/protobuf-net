@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
 using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace Examples
 {
@@ -87,7 +88,7 @@ message EnumWrapper {
             // had 5 values added
             Assert.AreEqual(0, clone.Wrapper.SubData.IteratorCount, "clone IteratorCount");
             Assert.AreEqual(5, clone.Wrapper.SubData.Count, "clone Count");
-            Assert.AreEqual(1 + 2 + 3 + 4 + 5, clone.Wrapper.SubData.Sum, "clone Sum");            
+            Assert.AreEqual(1 + 2 + 3 + 4 + 5, clone.Wrapper.SubData.Sum, "clone Sum");
         }
 
         [Test]
@@ -110,15 +111,15 @@ message EnumWrapper {
         [Test]
         public void NWindPipeline()
         {
-            DAL.Database masterDb = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>();
+            DAL.Database masterDb = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>(RuntimeTypeModel.Default);
             int orderCount = masterDb.Orders.Count,
-                lineCount = masterDb.Orders.Sum(o=>o.Lines.Count),
-                unitCount = masterDb.Orders.SelectMany(o=>o.Lines).Sum(l=>(int)l.Quantity);
+                lineCount = masterDb.Orders.Sum(o => o.Lines.Count),
+                unitCount = masterDb.Orders.SelectMany(o => o.Lines).Sum(l => (int)l.Quantity);
 
             decimal freight = masterDb.Orders.Sum(order => order.Freight).GetValueOrDefault(),
                 value = masterDb.Orders.SelectMany(o => o.Lines).Sum(l => l.Quantity * l.UnitPrice);
 
-            DatabaseReader db = DAL.NWindTests.LoadDatabaseFromFile<DatabaseReader>();
+            DatabaseReader db = DAL.NWindTests.LoadDatabaseFromFile<DatabaseReader>(RuntimeTypeModel.Default);
 
             Assert.AreEqual(830, orderCount);
             Assert.AreEqual(2155, lineCount);
@@ -137,7 +138,7 @@ message EnumWrapper {
         {
             public DatabaseReader() { OrderReader = new OrderReader(); }
             [ProtoMember(1)]
-            public OrderReader OrderReader {get;private set;}
+            public OrderReader OrderReader { get; private set; }
         }
 
         class OrderReader : IEnumerable<DAL.Order>
@@ -193,7 +194,7 @@ message EnumWrapper {
         public EnumWrapper Wrapper { get; private set; }
     }
 
-    [ProtoContract(Name="EnumParentWrapper")]
+    [ProtoContract(Name = "EnumParentWrapper")]
     class EnumParentStandardWrapper
     {
         public EnumParentStandardWrapper() { Wrapper = new EnumWrapper(); }
@@ -206,7 +207,7 @@ message EnumWrapper {
     {
         public EnumWrapper() { SubData = new EnumData(); }
         [ProtoMember(1)]
-        public EnumData SubData {get;private set;}
+        public EnumData SubData { get; private set; }
     }
 
     public class EnumData : IEnumerable<int>

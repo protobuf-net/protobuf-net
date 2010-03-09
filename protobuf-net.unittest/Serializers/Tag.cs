@@ -13,7 +13,7 @@ namespace ProtoBuf.unittest.Serializers
         public void TestBasicTags()
         {
 
-            Util.Test("abc", nil => new TagDecorator(1, WireType.String, nil), "0A");
+            Util.Test("abc", nil => new TagDecorator(1, WireType.String, false, nil), "0A");
         }
     }
 }

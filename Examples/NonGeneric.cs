@@ -2,6 +2,7 @@
 using System.Runtime.Serialization;
 using NUnit.Framework;
 using ProtoBuf;
+using System;
 
 namespace Examples
 {
@@ -37,5 +38,8 @@ namespace Examples
             Assert.AreNotSame(ngb, clone);
             Assert.AreEqual(ngb.Value, clone.Value);
         }
+
+
     }
+
 }

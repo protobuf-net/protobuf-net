@@ -26,7 +26,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FEAT_COMPILER</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FEAT_COMPILER FEAT_SERVICEMODEL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -38,7 +38,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;FEAT_COMPILER</DefineConstants>
+    <DefineConstants>TRACE;FEAT_COMPILER FEAT_SERVICEMODEL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -83,36 +83,50 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(Configuration)' != 'Net20' ">
+    <Reference Include="System.configuration" />
     <Reference Include="System.Runtime.Serialization">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.ServiceModel">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BclHelpers.cs" />
+    <Compile Include="BufferExtension.cs" />
     <Compile Include="BufferPool.cs" />
+    <Compile Include="CallbackAttributes.cs" />
     <Compile Include="Compiler\CompiledSerializer.cs" />
     <Compile Include="Compiler\CompilerContext.cs" />
     <Compile Include="Compiler\Local.cs" />
     <Compile Include="DataFormat.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Extensible.cs" />
+    <Compile Include="ExtensibleUtil.cs" />
+    <Compile Include="GlobalOptions.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="IExtensible.cs" />
+    <Compile Include="IExtension.cs" />
+    <Compile Include="ImplicitFields.cs" />
     <Compile Include="Meta\BasicList.cs" />
     <Compile Include="Meta\MetaType.cs" />
     <Compile Include="Meta\RuntimeTypeModel.cs" />
     <Compile Include="Meta\TypeModel.cs" />
     <Compile Include="Meta\ValueMember.cs" />
+    <Compile Include="NonGeneric.cs" />
+    <Compile Include="PrefixStyle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ProtoContractAttribute.cs" />
+    <Compile Include="ProtoEnumAttribute.cs" />
     <Compile Include="ProtoException.cs" />
+    <Compile Include="ProtoIgnoreAttribute.cs" />
+    <Compile Include="ProtoIncludeAttribute.cs" />
+    <Compile Include="ProtoMemberAttribute.cs" />
     <Compile Include="ProtoReader.cs" />
     <Compile Include="ProtoWriter.cs" />
+    <Compile Include="Serializer.cs" />
     <Compile Include="Serializers\BlobSerializer.cs" />
     <Compile Include="Serializers\CharSerializer.cs" />
     <Compile Include="Serializers\CompiledSerializer.cs" />
@@ -138,6 +152,11 @@
     <Compile Include="Serializers\SubItemSerializer.cs" />
     <Compile Include="Serializers\TagDecorator.cs" />
     <Compile Include="Serializers\TypeSerializer.cs" />
+    <Compile Include="ServiceModel\ProtoBehaviorAttribute.cs" />
+    <Compile Include="ServiceModel\ProtoBehaviorExtensionElement.cs" />
+    <Compile Include="ServiceModel\ProtoEndpointBehavior.cs" />
+    <Compile Include="ServiceModel\ProtoOperationBehavior.cs" />
+    <Compile Include="ServiceModel\XmlProtoSerializer.cs" />
     <Compile Include="SubItemToken.cs" />
     <Compile Include="WireType.cs">
       <SubType>Code</SubType>

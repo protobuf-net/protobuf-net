@@ -34,9 +34,6 @@ namespace ProtoBuf.Serializers
             System.Reflection.Emit.MethodBuilder method = ctx.GetDedicatedMethod(key, read);
             if (method == null) return false;
 
-            // this is pretty optimised (to reduce the number of locals that are typed for each
-            // type in the model), and is not particularly reflector-friendly
-            // see: http://marcgravell.blogspot.com/2010/03/last-will-be-first-and-first-will-be.html
             using (Compiler.Local token = new ProtoBuf.Compiler.Local(ctx, typeof(SubItemToken)))
             {
                 Type rwType = read ? typeof(ProtoReader) : typeof(ProtoWriter);

@@ -63,6 +63,8 @@ namespace ProtoBuf.unittest.Meta
 
         }
 
+
+
         [Test]
         public void TestRoundTripOuterRef()
         {
@@ -154,6 +156,42 @@ namespace ProtoBuf.unittest.Meta
         {
             public int Int32 { get; set; }
             public string String { get; set; }
+        }
+
+        [Test]
+        public void TestTypeWithNullableProps()
+        {
+            var model = TypeModel.Create();
+            TypeWithNulls obj = new TypeWithNulls { First = 123, Second = 456.789M };
+            
+            var clone1 = (TypeWithNulls)model.DeepClone(obj);
+            
+            model.CompileInPlace();
+            var clone2 = (TypeWithNulls)model.DeepClone(obj);
+
+            
+            TypeModel compiled = model.Compile("TestTypeWithNullableProps", "TestTypeWithNullableProps.dll");
+            PocoListTests.VerifyPE("TestTypeWithNullableProps.dll");
+            var clone3 = (TypeWithNulls)compiled.DeepClone(obj);
+            Assert.AreEqual(123, clone1.First);
+            Assert.AreEqual(456.789, clone1.Second);
+
+            Assert.AreEqual(123, clone2.First);
+            Assert.AreEqual(456.789, clone2.Second);
+
+            Assert.AreEqual(123, clone3.First);
+            Assert.AreEqual(456.789, clone3.Second);
+
+        }
+
+        [ProtoContract]
+        public class TypeWithNulls
+        {
+            [ProtoMember(1)]
+            public int? First { get; set; }
+
+            [ProtoMember(2)]
+            public decimal? Second { get; set; }
         }
 
     }

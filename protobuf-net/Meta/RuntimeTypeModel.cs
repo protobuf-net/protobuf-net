@@ -60,7 +60,7 @@ namespace ProtoBuf.Meta
                     return key;
                 }
                 MetaType metaType = Create(type);
-                metaType.ApplyAttributes();
+                metaType.ApplyDefaultBehaviour();
                 lock (types)
                 {   // double-checked
                     int winner = types.IndexOf(predicate);
@@ -82,12 +82,12 @@ namespace ProtoBuf.Meta
             ThrowIfFrozen();
             return new MetaType(this, type);
         }
-        public MetaType Add(Type type, bool applyAttributes)
+        public MetaType Add(Type type, bool applyDefaultBehaviour)
         {
             if (type == null) throw new ArgumentNullException("type");
             if (Find(type) != null) throw new ArgumentException("Duplicate type", "type");
             MetaType newType = Create(type);
-            if (applyAttributes) { newType.ApplyAttributes(); }
+            if (applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
             lock (types)
             {
                 // double checked
@@ -364,9 +364,8 @@ namespace ProtoBuf.Meta
             Type finalType = type.CreateType();
             if(!Helpers.IsNullOrEmpty(path))
             {
-            
-                
                 asm.Save(path);
+                Helpers.DebugWriteLine("Wrote dll:" + path);
             }
 
             return (TypeModel)Activator.CreateInstance(finalType);
@@ -393,7 +392,7 @@ namespace ProtoBuf.Meta
             using(Compiler.Local typedVal = new Compiler.Local(ctx, valueType))
             using(Compiler.Local position = new Compiler.Local(ctx, typeof(int)))
             {
-                MethodInfo getPos = typeof(ProtoReader).GetProperty("Position").GetGetMethod();
+                MethodInfo getPos = typeof(ProtoReader).GetProperty("Position").GetGetMethod(ctx.NonPublic);
 
                 ctx.LoadReaderWriter();
                 ctx.EmitCall(getPos);
@@ -424,6 +423,11 @@ namespace ProtoBuf.Meta
         }
         
 #endif
+
+        internal bool IsDefined(Type type, int fieldNumber)
+        {
+            return Find(type).IsDefined(fieldNumber);
+        }
     }
     
 }
