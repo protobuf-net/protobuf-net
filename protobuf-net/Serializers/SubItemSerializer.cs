@@ -29,16 +29,6 @@ namespace ProtoBuf.Serializers
             return ProtoReader.ReadObject(value, key, source);
         }
 #if FEAT_COMPILER
-        void EmitReaderWriterObjectAndKey(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-        {
-            using (Compiler.Local loc = ctx.GetLocalWithValue(type, valueFrom))
-            {
-                ctx.LoadReaderWriter(); // must do this *after* storing (GetLocalWithValue) the value from the stack (if any)
-                ctx.LoadValue(loc);
-                if (type.IsValueType) { ctx.CastToObject(type); }
-            }
-            ctx.LoadValue(key);
-        }
         bool EmitDedicatedMethod(Compiler.CompilerContext ctx, Compiler.Local valueFrom, bool read)
         {
             System.Reflection.Emit.MethodBuilder method = ctx.GetDedicatedMethod(key, read);
@@ -47,7 +37,7 @@ namespace ProtoBuf.Serializers
             // this is pretty optimised (to reduce the number of locals that are typed for each
             // type in the model), and is not particularly reflector-friendly
             // see: http://marcgravell.blogspot.com/2010/03/last-will-be-first-and-first-will-be.html
-            using (Compiler.Local token = new ProtoBuf.Compiler.Local(ctx, typeof(int)))
+            using (Compiler.Local token = new ProtoBuf.Compiler.Local(ctx, typeof(SubItemToken)))
             {
                 Type rwType = read ? typeof(ProtoReader) : typeof(ProtoWriter);
                 ctx.LoadValue(valueFrom);

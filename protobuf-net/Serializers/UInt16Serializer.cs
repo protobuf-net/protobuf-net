@@ -10,7 +10,7 @@ namespace ProtoBuf.Serializers
         public virtual Type ExpectedType { get { return typeof(ushort); } }
         public virtual void Write(object value, ProtoWriter dest)
         {
-            dest.WriteUInt16((ushort)value);
+            ProtoWriter.WriteUInt16((ushort)value, dest);
         }
         bool IProtoSerializer.RequiresOldValue { get { return false; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
@@ -22,7 +22,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite("WriteUInt16", typeof(ushort), valueFrom);
+            ctx.EmitBasicWrite("WriteUInt16", valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

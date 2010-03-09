@@ -1,7 +1,6 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Collections;
-using System.IO;
 using System.Reflection;
 #if FEAT_COMPILER
 using System.Reflection.Emit;
@@ -141,7 +140,7 @@ namespace ProtoBuf.Meta
             if (value == null && ser.ExpectedType.IsValueType) {
                 int pos = source.Position;
                 value = ser.Read(Activator.CreateInstance(ser.ExpectedType), source);
-                return pos == source.Position ? null : value; // but null nothing was read
+                return pos == source.Position ? null : value; // but null if nothing was read
             } else {
                 return ser.Read(value, source);
             }
@@ -307,85 +306,34 @@ namespace ProtoBuf.Meta
 
             il = Override(type, "Deserialize");
             ctx = new Compiler.CompilerContext(il, false, methodPairs);
-            Compiler.Local pos = null;
-            try
+            // arg0 = this, arg1 = key, arg2=obj, arg3=source
+            for (int i = 0; i < jumpTable.Length; i++)
             {
-                // arg0 = this, arg1 = key, arg2=obj, arg3=source
-                for (int i = 0; i < jumpTable.Length; i++)
-                {
-                    jumpTable[i] = il.DefineLabel();
-                }
-                il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Switch, jumpTable);
-                ctx.LoadNullRef();
-                ctx.Return();
-                for (int i = 0; i < jumpTable.Length; i++)
-                {
-                    il.MarkLabel(jumpTable[i]);
-                    Type keyType = ((MetaType)types[i]).Type;
-                    if (keyType.IsValueType)
-                    {
-                        Compiler.CodeLabel ifNull = ctx.DefineLabel();
-                        il.Emit(OpCodes.Ldarg_2);
-                        ctx.BranchIfFalse(ifNull, true);
-
-                        // not null here; unbox and always return
-                        il.Emit(OpCodes.Ldarg_2);
-                        ctx.CastFromObject(keyType);
-                        il.Emit(OpCodes.Ldarg_3);
-                        il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Deserialize, null);
-                        ctx.CastToObject(keyType);
-                        ctx.Return();
-
-                        
-                        ctx.MarkLabel(ifNull);
-                        
-                        if (pos == null) pos = new Compiler.Local(ctx, typeof(int));
-                        using (Compiler.Local typedVar = new Compiler.Local(ctx, keyType))
-                        {
-                            PropertyInfo readerPos = typeof(ProtoReader).GetProperty("Position");
-                            il.Emit(OpCodes.Ldarg_3);
-                            ctx.LoadValue(readerPos);
-                            ctx.StoreValue(pos);
-
-                            ctx.LoadAddress(typedVar, keyType);
-                            ctx.EmitCtor(keyType);
-                            ctx.LoadValue(typedVar);
-                            il.Emit(OpCodes.Ldarg_3);
-                            il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Deserialize, null);
-                            ctx.StoreValue(typedVar);
-
-                            ctx.LoadValue(pos);
-                            il.Emit(OpCodes.Ldarg_3);
-                            ctx.LoadValue(readerPos);
-                            Compiler.CodeLabel noData = ctx.DefineLabel();
-                            ctx.BranchIfEqual(noData, true);
-                            // had data, so box and return
-                            ctx.LoadValue(typedVar);
-                            ctx.CastToObject(keyType);
-                            ctx.Return();
-
-                            ctx.MarkLabel(noData);   
-                            ctx.LoadNullRef();
-                            ctx.Return();
-                        }
-                        //ctx.LoadNull();
-                        //ctx.Return();
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Ldarg_2);
-                        ctx.CastFromObject(keyType);
-                        il.Emit(OpCodes.Ldarg_3);
-                        il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Deserialize, null);
-                        ctx.CastToObject(keyType);
-                        ctx.Return();
-                    }                    
-                }
+                jumpTable[i] = il.DefineLabel();
             }
-            finally
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Switch, jumpTable);
+            ctx.LoadNullRef();
+            ctx.Return();
+            for (int i = 0; i < jumpTable.Length; i++)
             {
-                if (pos != null) pos.Dispose();
+                il.MarkLabel(jumpTable[i]);
+                Type keyType = ((MetaType)types[i]).Type;
+                if (keyType.IsValueType)
+                {
+                    il.Emit(OpCodes.Ldarg_2);
+                    il.Emit(OpCodes.Ldarg_3);
+                    il.EmitCall(OpCodes.Call, EmitBoxedSerializer(type, i, keyType, methodPairs), null);
+                    ctx.Return();
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldarg_2);
+                    ctx.CastFromObject(keyType);
+                    il.Emit(OpCodes.Ldarg_3);
+                    il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Deserialize, null);
+                    ctx.Return();
+                }
             }
 
             
@@ -422,6 +370,57 @@ namespace ProtoBuf.Meta
             }
 
             return (TypeModel)Activator.CreateInstance(finalType);
+        }
+
+        private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, BasicList methodPairs)
+        {
+            MethodInfo dedicated = ((SerializerPair)methodPairs[i]).Deserialize;
+            MethodBuilder boxedSerializer = type.DefineMethod("_" + i, MethodAttributes.Static, CallingConventions.Standard,
+                typeof(object), new Type[] { typeof(object), typeof(ProtoReader) });
+            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, methodPairs);
+            ctx.LoadValue(Compiler.Local.InputValue);
+            Compiler.CodeLabel @null = ctx.DefineLabel();
+            ctx.BranchIfFalse(@null, true);
+
+            ctx.LoadValue(Compiler.Local.InputValue);
+            ctx.CastFromObject(valueType);
+            ctx.LoadReaderWriter();
+            ctx.EmitCall(dedicated);
+            ctx.CastToObject(valueType);
+            ctx.Return();
+
+            ctx.MarkLabel(@null);
+            using(Compiler.Local typedVal = new Compiler.Local(ctx, valueType))
+            using(Compiler.Local position = new Compiler.Local(ctx, typeof(int)))
+            {
+                MethodInfo getPos = typeof(ProtoReader).GetProperty("Position").GetGetMethod();
+
+                ctx.LoadReaderWriter();
+                ctx.EmitCall(getPos);
+                
+
+                // create a new valueType
+                ctx.LoadAddress(typedVal, valueType);
+                ctx.EmitCtor(valueType);
+                ctx.LoadValue(typedVal);
+                ctx.LoadReaderWriter();
+                ctx.EmitCall(dedicated);
+                ctx.StoreValue(typedVal);
+
+                ctx.LoadReaderWriter();
+                ctx.EmitCall(getPos);
+                Compiler.CodeLabel noData = ctx.DefineLabel();
+                ctx.BranchIfEqual(noData, true);
+
+                ctx.LoadValue(typedVal);
+                ctx.CastToObject(valueType);
+                ctx.Return();
+
+                ctx.MarkLabel(noData);
+                ctx.LoadNullRef();
+                ctx.Return();
+            }
+            return boxedSerializer;
         }
         
 #endif

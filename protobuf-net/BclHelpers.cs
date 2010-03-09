@@ -67,15 +67,15 @@ namespace ProtoBuf
                 scale = TimeSpanScale.Ticks;
             }
 
-            int token = ProtoWriter.StartSubItem(null, dest);
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
             
             if(value != 0) {
-                dest.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant);
-                dest.WriteInt64(value);            
+                ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant, dest);
+                ProtoWriter.WriteInt64(value, dest);
             }
             if(scale != TimeSpanScale.Days) {
-                dest.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant);
-                dest.WriteInt32((int)scale);
+                ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant, dest);
+                ProtoWriter.WriteInt32((int)scale, dest);
             }
             ProtoWriter.EndSubItem(token, dest);
         }
@@ -108,7 +108,7 @@ namespace ProtoBuf
         }
 
         private static long ReadTimeSpanTicks(ProtoReader source) {
-            int token = ProtoReader.StartSubItem(source);
+            SubItemToken token = ProtoReader.StartSubItem(source);
             int fieldNumber;
             TimeSpanScale scale = TimeSpanScale.Days;
             long value = 0;
@@ -162,7 +162,7 @@ namespace ProtoBuf
             uint signScale = 0;
 
             int fieldNumber;
-            int token = ProtoReader.StartSubItem(reader);
+            SubItemToken token = ProtoReader.StartSubItem(reader);
             while ((fieldNumber = reader.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
@@ -194,20 +194,20 @@ namespace ProtoBuf
             uint high = (uint)bits[2];
             uint signScale = (uint)(((bits[3] >> 15) & 0x01FE) | ((bits[3] >> 31) & 0x0001));
 
-            int token = ProtoWriter.StartSubItem(null, writer);
+            SubItemToken token = ProtoWriter.StartSubItem(null, writer);
             if (low != 0) {
-                writer.WriteFieldHeader(FieldDecimalLow, WireType.Variant);
-                writer.WriteUInt64(low);
+                ProtoWriter.WriteFieldHeader(FieldDecimalLow, WireType.Variant, writer);
+                ProtoWriter.WriteUInt64(low, writer);
             }
             if (high != 0)
             {
-                writer.WriteFieldHeader(FieldDecimalHigh, WireType.Variant);
-                writer.WriteUInt32(high);
+                ProtoWriter.WriteFieldHeader(FieldDecimalHigh, WireType.Variant, writer);
+                ProtoWriter.WriteUInt32(high, writer);
             }
             if (signScale != 0)
             {
-                writer.WriteFieldHeader(FieldDecimalSignScale, WireType.Variant);
-                writer.WriteUInt32(signScale);
+                ProtoWriter.WriteFieldHeader(FieldDecimalSignScale, WireType.Variant, writer);
+                ProtoWriter.WriteUInt32(signScale, writer);
             }
             ProtoWriter.EndSubItem(token, writer);
         }
@@ -217,13 +217,13 @@ namespace ProtoBuf
         {
             byte[] blob = value.ToByteArray();
 
-            int token = ProtoWriter.StartSubItem(null, dest);
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
             if (value != Guid.Empty)
             {
-                dest.WriteFieldHeader(FieldGuidLow, WireType.Fixed64);
-                dest.WriteBytes(blob, 0, 8);
-                dest.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64);
-                dest.WriteBytes(blob, 8, 8);
+                ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, dest);
+                ProtoWriter.WriteBytes(blob, 0, 8, dest);
+                ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, dest);
+                ProtoWriter.WriteBytes(blob, 8, 8, dest);
             }
             ProtoWriter.EndSubItem(token, dest);
         }
@@ -231,7 +231,7 @@ namespace ProtoBuf
         {
             ulong low = 0, high = 0;
             int fieldNumber;
-            int token = ProtoReader.StartSubItem(source);
+            SubItemToken token = ProtoReader.StartSubItem(source);
             while ((fieldNumber = source.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)

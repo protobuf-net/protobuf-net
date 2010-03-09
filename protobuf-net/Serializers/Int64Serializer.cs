@@ -10,7 +10,7 @@ namespace ProtoBuf.Serializers
         public Type ExpectedType { get { return typeof(long); } }
         public void Write(object value, ProtoWriter dest)
         {
-            dest.WriteInt64((long)value);
+            ProtoWriter.WriteInt64((long)value, dest);
         }
         bool IProtoSerializer.RequiresOldValue { get { return false; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
@@ -22,7 +22,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite("WriteInt64", typeof(long), valueFrom);
+            ctx.EmitBasicWrite("WriteInt64", valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

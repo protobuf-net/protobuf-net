@@ -13,7 +13,7 @@ namespace ProtoBuf.Serializers
         public Type ExpectedType { get { return typeof(bool); } }
         public void Write(object value, ProtoWriter dest)
         {
-            dest.WriteBoolean((bool)value);
+            ProtoWriter.WriteBoolean((bool)value, dest);
         }
         public object Read(object value, ProtoReader source)
         {
@@ -25,7 +25,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite("WriteBoolean", typeof(bool), valueFrom);
+            ctx.EmitBasicWrite("WriteBoolean", valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

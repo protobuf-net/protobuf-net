@@ -18,16 +18,16 @@ namespace ProtoBuf
             {
                 throw new InvalidOperationException("Cannot serialize sub-objects unless a model is provided");
             }
-            int token = StartSubItem(value, writer);
+            SubItemToken token = StartSubItem(value, writer);
             writer.model.Serialize(key, value, writer);
             EndSubItem(token, writer);
         }
         private int fieldNumber, flushLock;
         WireType wireType;
 
-        public void WriteFieldHeader(int fieldNumber, WireType wireType) {
-            if (this.wireType != WireType.None) throw new InvalidOperationException("Cannot write a " + wireType
-                + " header until the " + this.wireType + " data has been written");
+        public static void WriteFieldHeader(int fieldNumber, WireType wireType, ProtoWriter writer) {
+            if (writer.wireType != WireType.None) throw new InvalidOperationException("Cannot write a " + wireType
+                + " header until the " + writer.wireType + " data has been written");
             if(fieldNumber < 0) throw new ArgumentOutOfRangeException("fieldNumber");
 #if DEBUG
             switch (wireType)
@@ -45,27 +45,28 @@ namespace ProtoBuf
                     throw new ArgumentException("Invalid wire-type: " + wireType, "wireType");                
             }
 #endif
-            this.fieldNumber = fieldNumber;
-            this.wireType = wireType;
+            writer.fieldNumber = fieldNumber;
+            writer.wireType = wireType;
 
-            WriteHeaderCore(fieldNumber, wireType);
+            WriteHeaderCore(fieldNumber, wireType, writer);
         }
-        void WriteHeaderCore(int fieldNumber, WireType wireType)
+        static void WriteHeaderCore(int fieldNumber, WireType wireType, ProtoWriter writer)
         {
-            uint header = (((uint)fieldNumber) << 3)
-                | (((uint)wireType) & 7);
-            WriteUInt32Variant(header);
+            uint header = (((uint)writer.fieldNumber) << 3)
+                | (((uint)writer.wireType) & 7);
+            WriteUInt32Variant(header, writer);
         }
 
-        public void WriteBytes(byte[] data)
+        public static void WriteBytes(byte[] data, ProtoWriter writer)
         {
-            WriteBytes(data, 0, data.Length);
+            ProtoWriter.WriteBytes(data, 0, data.Length, writer);
         }
-        public void WriteBytes(byte[] data, int offset, int length)
+        public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer)
         {
             if (data == null) throw new ArgumentNullException("blob");
-            
-            switch(wireType) {
+
+            switch (writer.wireType)
+            {
                 case WireType.Fixed32:
                     if (length != 4) throw new ArgumentException("length");
                     goto CopyFixedLength;  // ugly but effective
@@ -73,38 +74,38 @@ namespace ProtoBuf
                     if (length != 8) throw new ArgumentException("length");
                     goto CopyFixedLength;  // ugly but effective
                 case WireType.String:
-                    WriteUInt32Variant((uint)length);
+                    WriteUInt32Variant((uint)length, writer);
                     if (length == 0) return;
-                    if (flushLock != 0 || length <= ioBuffer.Length) // write to the buffer
+                    if (writer.flushLock != 0 || length <= writer.ioBuffer.Length) // write to the buffer
                     {
                         goto CopyFixedLength; // ugly but effective
                     }
                     // writing data that is bigger than the buffer (and the buffer
                     // isn't currently locked due to a sub-object needing the size backfilled)
-                    Flush(); // commit any existing data from the buffer
+                    Flush(writer); // commit any existing data from the buffer
                     // now just write directly to the underlying stream
-                    dest.Write(data, offset, length);
-                    position += length; // since we've flushed offset etc is 0, and remains
+                    writer.dest.Write(data, offset, length);
+                    writer.position += length; // since we've flushed offset etc is 0, and remains
                                         // zero since we're writing directly to the stream
-                    wireType = WireType.None;
+                    writer.wireType = WireType.None;
                     return;
             }
-            throw CreateException();
+            throw CreateException(writer);
         CopyFixedLength: // no point duplicating this lots of times, and don't really want another stackframe
-            Ensure(length);
-            Helpers.BlockCopy(data, offset, ioBuffer, ioIndex, length);
-            IncrementedAndReset(length);
+            DemandSpace(length, writer);
+            Helpers.BlockCopy(data, offset, writer.ioBuffer, writer.ioIndex, length);
+            IncrementedAndReset(length, writer);
         }
-        private void IncrementedAndReset(int length)
+        private static void IncrementedAndReset(int length, ProtoWriter writer)
         {
             Helpers.DebugAssert(length >= 0);
-            ioIndex += length;
-            position += length;
-            wireType = WireType.None;
+            writer.ioIndex += length;
+            writer.position += length;
+            writer.wireType = WireType.None;
         }
         int depth = 0;
         const int RecursionCheckDepth = 25;
-        public static int StartSubItem(object instance, ProtoWriter writer)
+        public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
         {
             //Helpers.DebugWriteLine(writer.depth.ToString());
             //Helpers.DebugWriteLine("StartSubItem", instance);
@@ -117,45 +118,46 @@ namespace ProtoBuf
             {
                 case WireType.StartGroup:
                     writer.wireType = WireType.None;
-                    return -writer.fieldNumber;
+                    return new SubItemToken(-writer.fieldNumber);
                 case WireType.String:
                     writer.wireType = WireType.None;
-                    writer.Ensure(32); // make some space in anticipation...
+                    DemandSpace(32, writer); // make some space in anticipation...
                     writer.flushLock++;
                     writer.position++;
-                    return writer.ioIndex++; // leave 1 space (optimistic) for length
+                    return new SubItemToken(writer.ioIndex++); // leave 1 space (optimistic) for length
                 default:
-                    throw writer.CreateException();
+                    throw CreateException(writer);
             }
         }
-        public static void EndSubItem(int token, ProtoWriter writer)
+        public static void EndSubItem(SubItemToken token, ProtoWriter writer)
         {
-            if (writer.wireType != WireType.None) { throw writer.CreateException(); }
+            if (writer.wireType != WireType.None) { throw CreateException(writer); }
+            int value = token.value;
             if (writer.depth-- > 0)
             {
-                if (token < 0)
+                if (value < 0)
                 { // group
-                    writer.WriteHeaderCore(-token, WireType.EndGroup);
+                    WriteHeaderCore(-value, WireType.EndGroup, writer);
                 }
                 else
                 { // string
-                    int len = (int)((writer.position - token) - 1);
+                    int len = (int)((writer.position - value) - 1);
                     int offset = 0;
                     uint tmp = (uint)len;
                     while ((tmp >>= 7) != 0) offset++;
                     if (offset == 0)
                     {
-                        writer.ioBuffer[token] = (byte)(len & 0x7F);
+                        writer.ioBuffer[value] = (byte)(len & 0x7F);
                     }
                     else
                     {
-                        writer.Ensure(offset);
+                        DemandSpace(offset, writer);
                         byte[] blob = writer.ioBuffer;
-                        Helpers.BlockCopy(blob, token + 1, blob, token + 1 + offset, len);
+                        Helpers.BlockCopy(blob, value + 1, blob, value + 1 + offset, len);
                         tmp = (uint)len;
                         do
                         {
-                            blob[token++] = (byte)((tmp & 0x7F) | 0x80);
+                            blob[value++] = (byte)((tmp & 0x7F) | 0x80);
                         } while ((tmp >>= 7) != 0);
                         writer.position += offset;
                         writer.ioIndex += offset;
@@ -166,7 +168,7 @@ namespace ProtoBuf
             }
             else
             {
-                throw writer.CreateException();
+                throw CreateException(writer);
             }
         }
         public ProtoWriter(Stream dest, TypeModel model)
@@ -180,11 +182,11 @@ namespace ProtoBuf
             this.wireType = WireType.None;
         }
         
-        public void Dispose()
+        void IDisposable.Dispose()
         { // importantly, this does **not** own the stream, and does not dispose it
             if (dest != null)
             {
-                try { Flush(); }
+                try { Flush(this); }
 #if CF
                 catch {}
 #else
@@ -201,64 +203,66 @@ namespace ProtoBuf
 
         private byte[] ioBuffer;
         private int ioIndex;
-        internal int Position { get { return position; } }
+        internal static int GetPosition(ProtoWriter writer) { return writer.position; }
         private int position;
-        private void Ensure(int required)
+        private static void DemandSpace(int required, ProtoWriter writer)
         {
-            if (Space < required)
+            // check for enough space
+            if ((writer.ioBuffer.Length - writer.ioIndex) < required)
             {
-                if (flushLock == 0)
+                if (writer.flushLock == 0)
                 {
-                    Flush(); // try emptying the buffer
-                    if (Space >= required) return;
+                    Flush(writer); // try emptying the buffer
+                    if ((writer.ioBuffer.Length - writer.ioIndex) >= required) return;
                 }
                 // either can't empty the buffer, or
                 // that didn't help; try doubling it
-                int newLen = ioBuffer.Length * 2;
-                if (newLen < (required + ioIndex)) {
+                int newLen = writer.ioBuffer.Length * 2;
+                if (newLen < (required + writer.ioIndex))
+                {
                     // or just make it big enough!
-                    newLen = required + ioIndex;
+                    newLen = required + writer.ioIndex;
                 }
 
                 byte[] newBuffer = new byte[newLen];
-                Helpers.BlockCopy(ioBuffer, 0, newBuffer, 0, ioIndex);
-                if (ioBuffer.Length == BufferPool.BufferLength)
+                Helpers.BlockCopy(writer.ioBuffer, 0, newBuffer, 0, writer.ioIndex);
+                if (writer.ioBuffer.Length == BufferPool.BufferLength)
                 {
-                    BufferPool.ReleaseBufferToPool(ref ioBuffer);
+                    BufferPool.ReleaseBufferToPool(ref writer.ioBuffer);
                 }
-                ioBuffer = newBuffer;
+                writer.ioBuffer = newBuffer;
             }
         }
         public void Close()
         {
             if (depth != 0 || flushLock != 0) throw new InvalidOperationException("Unable to close stream in an incomplete state");
-            Flush();
+            Flush(this);
         }
-        private void Flush()
+        private static void Flush(ProtoWriter writer)
         {
-            if (flushLock == 0)
+            if (writer.flushLock == 0)
             {
-                if (ioIndex != 0)
+                if (writer.ioIndex != 0)
                 {
-                    dest.Write(ioBuffer, 0, ioIndex);
-                    ioIndex = 0;
+                    writer.dest.Write(writer.ioBuffer, 0, writer.ioIndex);
+                    writer.ioIndex = 0;
                 }
             }
             else
             {
-                throw CreateException();
+                throw CreateException(writer);
             }
         }
-        private void WriteUInt32Variant(uint value)
+        private static void WriteUInt32Variant(uint value, ProtoWriter writer)
         {
-            Ensure(5);
+            DemandSpace(5, writer);
             int count = 0;
             do {
-                ioBuffer[ioIndex++] = (byte)((value & 0x7F) | 0x80);
+                writer.ioBuffer[writer.ioIndex++] = (byte)((value & 0x7F) | 0x80);
                 count++;
             } while ((value >>= 7) != 0);
-            ioBuffer[ioIndex - 1] &= 0x7F;
-            position += count;
+            writer.ioBuffer[writer.ioIndex - 1] &= 0x7F;
+            writer.position += count;
         }
  
         static readonly UTF8Encoding encoding = new UTF8Encoding();
@@ -271,263 +275,210 @@ namespace ProtoBuf
         {
             return (ulong)((value << 1) ^ (value >> 63));
         }
-        private void WriteUInt64Variant(ulong value)
+        private static void WriteUInt64Variant(ulong value, ProtoWriter writer)
         {
-            Ensure(10);
+            DemandSpace(10, writer);
             int count = 0;
             do
             {
-                ioBuffer[ioIndex++] = (byte)((value & 0x7F) | 0x80);
+                writer.ioBuffer[writer.ioIndex++] = (byte)((value & 0x7F) | 0x80);
                 count++;
             } while ((value >>= 7) != 0);
-            ioBuffer[ioIndex - 1] &= 0x7F;
-            position += count;
+            writer.ioBuffer[writer.ioIndex - 1] &= 0x7F;
+            writer.position += count;
         }
-        //private Encoder encoder = encoding.GetEncoder();
-        private int Space
+        public static void WriteString(string value, ProtoWriter writer)
         {
-            get { return ioBuffer.Length - ioIndex; }
-        }
-        public void WriteString(string value)
-        {
-            if (wireType != WireType.String) throw CreateException();
+            if (writer.wireType != WireType.String) throw CreateException(writer);
             if (value == null) throw new ArgumentNullException("value"); // written header; now what?
             int len = value.Length;
             if (len == 0)
             {
-                WriteUInt32Variant(0);
-                wireType = WireType.None;
+                WriteUInt32Variant(0, writer);
+                writer.wireType = WireType.None;
                 return; // just a header
             }
 #if MF
             byte[] bytes = encoding.GetBytes(value);
             int actual = bytes.Length;
-            WriteUInt32Variant((uint)actual);
-            Ensure(actual);
-            Helpers.BlockCopy(bytes, 0, ioBuffer, ioIndex, actual);
+            writer.WriteUInt32Variant((uint)actual);
+            writer.Ensure(actual);
+            Helpers.BlockCopy(bytes, 0, writer.ioBuffer, writer.ioIndex, actual);
 #else
             int predicted = encoding.GetByteCount(value);
-            WriteUInt32Variant((uint)predicted);
-            Ensure(predicted);
-            int actual = encoding.GetBytes(value, 0, value.Length, ioBuffer, ioIndex);
+            WriteUInt32Variant((uint)predicted, writer);
+            DemandSpace(predicted, writer);
+            int actual = encoding.GetBytes(value, 0, value.Length, writer.ioBuffer, writer.ioIndex);
             Helpers.DebugAssert(predicted == actual);
 #endif
-            IncrementedAndReset(actual);
-            /*
-
-            int maxNeededBytes = encoding.GetMaxByteCount(len), space = Space;
-            if (maxNeededBytes > space && flushLock != 0) { Flush(); space = Space; }
-
-            fixed (char* chars = value)
-            fixed (byte* bytes = ioBuffer)
-            {
-                // if safe (note we can skip the check if it is short enough)
-                int actualBytes;
-                if (maxNeededBytes < space // not <= to allow for 1-byte length
-                    && maxNeededBytes <= 127)
-                {
-                    actualBytes = encoder.GetBytes(chars, len, bytes + ioIndex + 1, space, true);
-                    Helpers.DebugAssert(actualBytes <= 127);
-                    bytes[ioIndex] = (byte)(actualBytes++); // backfill the length prefix
-                    ioIndex += actualBytes;
-                    position += actualBytes;
-                } else {
-                    // do it the hard way...
-                    actualBytes = encoder.GetByteCount(chars, len, true);
-                    WriteUInt32Variant((uint)actualBytes);
-                    int maxBytesPerChar = ioBuffer.Length / encoding.GetMaxByteCount(1);
-                    int bytesRead, charOffset = 0;
-                    while ((bytesRead = PackBuffer(maxBytesPerChar,
-                        chars, ref charOffset, ref len,
-                        bytes, ref ioIndex, ioBuffer.Length - ioIndex)) > 0)
-                    {
-                        if (len > 0) Flush();
-                        position += bytesRead;
-                    }
-                }
-            }
-             * */
+            IncrementedAndReset(actual, writer);
         }
-        /*
-        private unsafe int PackBuffer(
-            int maxBytesPerChar,
-            char* chars, ref int charOffset, ref int charsRemaining,
-            byte* bytes, ref int byteOffset, int bytesRemaining)
+        public static void WriteUInt64(ulong value, ProtoWriter writer)
         {
-            int charsToRead, totalBytes = 0;
-            while (charsRemaining > 0
-                && (charsToRead = bytesRemaining / maxBytesPerChar) > 0)
-            {
-                bool flush = false;
-                if (charsToRead >= charsRemaining)
-                {
-                    // only flush at the end of the string; not just
-                    // because the buffer is full...
-                    charsToRead = charsRemaining;
-                    flush = true;
-                }
-                int bytesRead = encoder.GetBytes(chars + charOffset, charsToRead, bytes + byteOffset, bytesRemaining, flush);
-                charOffset += charsToRead;
-                charsRemaining -= charsToRead;
-                byteOffset += bytesRead;
-                bytesRemaining -= bytesRead;
-                totalBytes += bytesRead;
-            }
-            return totalBytes;
-        }*/
-
-        public void WriteUInt64(ulong value)
-        {
-            switch (wireType)
+            switch (writer.wireType)
             {
                 case WireType.Fixed64:
-                    WriteInt64((long)value);
+                    ProtoWriter.WriteInt64((long)value, writer);
                     return;
                 case WireType.Variant:
-                    WriteUInt64Variant(value);
-                    wireType = WireType.None;
+                    WriteUInt64Variant(value, writer);
+                    writer.wireType = WireType.None;
                     return;
                 case WireType.Fixed32:
-                    checked { WriteUInt32((uint)value); }
+                    checked { ProtoWriter.WriteUInt32((uint)value, writer); }
                     return;
                 default:
-                    throw CreateException();
+                    throw CreateException(writer);
             }
         }
 
-        public void WriteInt64(long value)
+        public static void WriteInt64(long value, ProtoWriter writer)
         {
-            switch (wireType)
+            byte[] buffer;
+            int index;
+            switch (writer.wireType)
             {
                 case WireType.Fixed64:
-                    Ensure(8);
-                    ioBuffer[ioIndex] = (byte)value;
-                    ioBuffer[ioIndex+1] = (byte)(value >> 8);
-                    ioBuffer[ioIndex+2] = (byte)(value >> 16);
-                    ioBuffer[ioIndex+3] = (byte)(value >> 24);
-                    ioBuffer[ioIndex+4] = (byte)(value >> 32);
-                    ioBuffer[ioIndex+5] = (byte)(value >> 40);
-                    ioBuffer[ioIndex+6] = (byte)(value >> 48);
-                    ioBuffer[ioIndex+7] = (byte)(value >> 56);
-                    IncrementedAndReset(8);
+                    DemandSpace(8, writer);
+                    buffer = writer.ioBuffer;
+                    index = writer.ioIndex;
+                    buffer[index] = (byte)value;
+                    buffer[index + 1] = (byte)(value >> 8);
+                    buffer[index + 2] = (byte)(value >> 16);
+                    buffer[index + 3] = (byte)(value >> 24);
+                    buffer[index + 4] = (byte)(value >> 32);
+                    buffer[index + 5] = (byte)(value >> 40);
+                    buffer[index + 6] = (byte)(value >> 48);
+                    buffer[index + 7] = (byte)(value >> 56);
+                    IncrementedAndReset(8, writer);
                     return;
                 case WireType.SignedVariant:
-                    WriteUInt64Variant(Zig(value));
-                    wireType = WireType.None;
+                    WriteUInt64Variant(Zig(value), writer);
+                    writer.wireType = WireType.None;
                     return;
                 case WireType.Variant:
                     if (value >= 0)
                     {
-                        WriteUInt64Variant((ulong)value);
-                        wireType = WireType.None;
+                        WriteUInt64Variant((ulong)value, writer);
+                        writer.wireType = WireType.None;
                     }
                     else
                     {
-                        Ensure(10);
-                        ioBuffer[ioIndex] = (byte)(value | 0x80);
-                        ioBuffer[ioIndex+1] = (byte)((int)(value >> 7) | 0x80);
-                        ioBuffer[ioIndex+2] = (byte)((int)(value >> 14) | 0x80);
-                        ioBuffer[ioIndex+3] = (byte)((int)(value >> 21) | 0x80);
-                        ioBuffer[ioIndex+4] = (byte)((int)(value >> 28) | 0x80);
-                        ioBuffer[ioIndex+5] = (byte)((int)(value >> 35) | 0x80);
-                        ioBuffer[ioIndex+6] = (byte)((int)(value >> 42) | 0x80);
-                        ioBuffer[ioIndex+7] = (byte)((int)(value >> 49) | 0x80);
-                        ioBuffer[ioIndex+8] = (byte)((int)(value >> 56) | 0x80);
-                        ioBuffer[ioIndex+9] = 0x01; // sign bit
-                        IncrementedAndReset(10);
+                        DemandSpace(10, writer);
+                        buffer = writer.ioBuffer;
+                        index = writer.ioIndex;
+                        buffer[index] = (byte)(value | 0x80);
+                        buffer[index + 1] = (byte)((int)(value >> 7) | 0x80);
+                        buffer[index + 2] = (byte)((int)(value >> 14) | 0x80);
+                        buffer[index + 3] = (byte)((int)(value >> 21) | 0x80);
+                        buffer[index + 4] = (byte)((int)(value >> 28) | 0x80);
+                        buffer[index + 5] = (byte)((int)(value >> 35) | 0x80);
+                        buffer[index + 6] = (byte)((int)(value >> 42) | 0x80);
+                        buffer[index + 7] = (byte)((int)(value >> 49) | 0x80);
+                        buffer[index + 8] = (byte)((int)(value >> 56) | 0x80);
+                        buffer[index + 9] = 0x01; // sign bit
+                        IncrementedAndReset(10, writer);
                     }
                     return;
                 case WireType.Fixed32:
-                    checked { WriteInt32((int)value); }
+                    checked { WriteInt32((int)value, writer); }
                     return;
                 default:
-                    throw CreateException();
+                    throw CreateException(writer);
             }
         }
 
-        public void WriteUInt32(uint value)
+        public static void WriteUInt32(uint value, ProtoWriter writer)
         {
-            switch (wireType)
+            switch (writer.wireType)
             {
                 case WireType.Fixed32:
-                    WriteInt32((int)value);
+                    ProtoWriter.WriteInt32((int)value, writer);
                     return;
                 case WireType.Fixed64:
-                    WriteInt64((int)value);
+                    ProtoWriter.WriteInt64((int)value, writer);
                     return;
                 case WireType.Variant:
-                    WriteUInt32Variant(value);
-                    wireType = WireType.None;
+                    WriteUInt32Variant(value, writer);
+                    writer.wireType = WireType.None;
                     return;
                 default:
-                    throw CreateException();
+                    throw CreateException(writer);
             }
         }
 
 
-        public void WriteInt16(short value)
+        public static void WriteInt16(short value, ProtoWriter writer)
         {
-            WriteInt32(value);
+            ProtoWriter.WriteInt32(value, writer);
         }
-        public void WriteUInt16(ushort value)
+        public static void WriteUInt16(ushort value, ProtoWriter writer)
         {
-            WriteUInt32(value);
+            ProtoWriter.WriteUInt32(value, writer);
         }
-        public void WriteInt32(int value)
+        public static void WriteInt32(int value, ProtoWriter writer)
         {
-            switch (wireType)
+            byte[] buffer;
+            int index;
+            switch (writer.wireType)
             {
                 case WireType.Fixed32:
-                    Ensure(4);
-                    ioBuffer[ioIndex] = (byte)value;
-                    ioBuffer[ioIndex+1] = (byte)(value >> 8);
-                    ioBuffer[ioIndex+2] = (byte)(value >> 16);
-                    ioBuffer[ioIndex+3] = (byte)(value >> 24);
-                    IncrementedAndReset(4);
+                    DemandSpace(4, writer);
+                    buffer = writer.ioBuffer;
+                    index = writer.ioIndex;
+                    buffer[index] = (byte)value;
+                    buffer[index + 1] = (byte)(value >> 8);
+                    buffer[index + 2] = (byte)(value >> 16);
+                    buffer[index + 3] = (byte)(value >> 24);
+                    IncrementedAndReset(4, writer);
                     return;
                 case WireType.Fixed64:
-                    Ensure(8);
-                    ioBuffer[ioIndex] = (byte)value;
-                    ioBuffer[ioIndex+1] = (byte)(value >> 8);
-                    ioBuffer[ioIndex+2] = (byte)(value >> 16);
-                    ioBuffer[ioIndex+3] = (byte)(value >> 24);
-                    ioBuffer[ioIndex+4] = ioBuffer[ioIndex+5] =
-                        ioBuffer[ioIndex+6] = ioBuffer[ioIndex+7] = 0;
-                    IncrementedAndReset(8);
+                    DemandSpace(8, writer);
+                    buffer = writer.ioBuffer;
+                    index = writer.ioIndex;
+                    buffer[index] = (byte)value;
+                    buffer[index + 1] = (byte)(value >> 8);
+                    buffer[index + 2] = (byte)(value >> 16);
+                    buffer[index + 3] = (byte)(value >> 24);
+                    buffer[index + 4] = buffer[index + 5] =
+                        buffer[index + 6] = buffer[index + 7] = 0;
+                    IncrementedAndReset(8, writer);
                     return;
                 case WireType.SignedVariant:
-                    WriteUInt32Variant(Zig(value));
-                    wireType = WireType.None;
+                    WriteUInt32Variant(Zig(value), writer);
+                    writer.wireType = WireType.None;
                     return;
                 case WireType.Variant:
                     if (value >= 0)
                     {
-                        WriteUInt32Variant((uint)value);
-                        wireType = WireType.None;
+                        WriteUInt32Variant((uint)value, writer);
+                        writer.wireType = WireType.None;
                     }
                     else
                     {
-                        Ensure(10);
-                        ioBuffer[ioIndex] = (byte)(value | 0x80);
-                        ioBuffer[ioIndex+1] = (byte)((value >> 7) | 0x80);
-                        ioBuffer[ioIndex+2] = (byte)((value >> 14) | 0x80);
-                        ioBuffer[ioIndex+3] = (byte)((value >> 21) | 0x80);
-                        ioBuffer[ioIndex+4] = (byte)((value >> 28) | 0x80);
-                        ioBuffer[ioIndex+5] = ioBuffer[ioIndex+6] =
-                            ioBuffer[ioIndex+7] = ioBuffer[ioIndex+8] = (byte)0xFF;
-                        ioBuffer[ioIndex+9] = (byte)0x01;
-                        IncrementedAndReset(10);
+                        DemandSpace(10, writer);
+                        buffer = writer.ioBuffer;
+                        index = writer.ioIndex;
+                        buffer[index] = (byte)(value | 0x80);
+                        buffer[index + 1] = (byte)((value >> 7) | 0x80);
+                        buffer[index + 2] = (byte)((value >> 14) | 0x80);
+                        buffer[index + 3] = (byte)((value >> 21) | 0x80);
+                        buffer[index + 4] = (byte)((value >> 28) | 0x80);
+                        buffer[index + 5] = buffer[index + 6] =
+                            buffer[index + 7] = buffer[index + 8] = (byte)0xFF;
+                        buffer[index + 9] = (byte)0x01;
+                        IncrementedAndReset(10, writer);
                     }
                     return;
                 default:
-                    throw CreateException();
+                    throw CreateException(writer);
             }
             
         }
 
-        public unsafe void WriteDouble(double value)
+        public unsafe static void WriteDouble(double value, ProtoWriter writer)
         {
-            switch (wireType)
+            switch (writer.wireType)
             {
                 case WireType.Fixed32:
                     float f = (float)value;
@@ -536,39 +487,48 @@ namespace ProtoBuf
                     {
                         throw new OverflowException();
                     }
-                    WriteSingle(f);
+                    ProtoWriter.WriteSingle(f, writer);
                     return;
                 case WireType.Fixed64:
-                    WriteInt64(*(long*)&value);
+                    ProtoWriter.WriteInt64(*(long*)&value, writer);
                     return;
                 default:
-                    throw CreateException();
+                    throw CreateException(writer);
             }
         }
-        public unsafe void WriteSingle(float value)
+        public unsafe static void WriteSingle(float value, ProtoWriter writer)
         {
-            switch (wireType)
+            switch (writer.wireType)
             {
                 case WireType.Fixed32:
-                    WriteInt32(*(int*)&value);
+                    ProtoWriter.WriteInt32(*(int*)&value, writer);
                     return;
                 case WireType.Fixed64:
-                    WriteDouble((double)value);
+                    ProtoWriter.WriteDouble((double)value, writer);
                     return;
                 default:
-                    throw CreateException();
+                    throw CreateException(writer);
             }
         }
         // general purpose serialization exception message
-        private Exception CreateException()
+        private static Exception CreateException(ProtoWriter writer)
         {
-            return new ProtoException("Invalid serialization operation with wire-type " + wireType + " at position " + position);
+            return new ProtoException("Invalid serialization operation with wire-type " + writer.wireType + " at position " + writer.position);
         }
 
-        public void WriteBoolean(bool value)
+        public static void WriteBoolean(bool value, ProtoWriter writer)
         {
-            WriteUInt32(value ? (uint)1 : (uint)0);
+            ProtoWriter.WriteUInt32(value ? (uint)1 : (uint)0, writer);
         }
 
+        public static void SetSignedVariant(ProtoWriter writer)
+        {
+            switch (writer.wireType)
+            {
+                case WireType.Variant: writer.wireType = WireType.SignedVariant; break;
+                case WireType.SignedVariant: break; // nothing to do
+                default: throw CreateException(writer);
+            }
+        }
     }
 }

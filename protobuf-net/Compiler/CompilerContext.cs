@@ -344,15 +344,6 @@ namespace ProtoBuf.Compiler
 #endif
             }
         }
-
-        internal void InjectStore(Type type, Compiler.Local valueFrom)
-        {
-            using (Compiler.Local loc = GetLocalWithValue(type, valueFrom))
-            {
-                LoadReaderWriter();
-                this.LoadValue(loc);
-            }
-        }
         public Local GetLocalWithValue(Type type, Compiler.Local fromValue) {
             if (fromValue != null) { return fromValue.AsCopy(); }
             // need to store the value from the stack
@@ -378,9 +369,10 @@ namespace ProtoBuf.Compiler
             LoadReaderWriter();
             EmitCall(method);
         }
-        internal void EmitWrite(string methodName, Type injectForType, Compiler.Local fromValue)
+        internal void EmitBasicWrite(string methodName, Compiler.Local fromValue)
         {
-            this.InjectStore(injectForType, fromValue);
+            LoadValue(fromValue);
+            LoadReaderWriter();
             EmitWrite(methodName);
         }
 
@@ -388,7 +380,7 @@ namespace ProtoBuf.Compiler
         {
             if (Helpers.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
             MethodInfo method = typeof(ProtoWriter).GetMethod(
-                methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (method == null || method.ReturnType != typeof(void)) throw new ArgumentException("methodName");
             EmitCall(method);
         }
@@ -451,14 +443,15 @@ namespace ProtoBuf.Compiler
             }
             else
             { // ref-type; do a null-check
-                using (Compiler.Local loc = GetLocalWithValue(type, valueFrom))
-                {
-                    LoadValue(loc);
-                    CodeLabel @end = DefineLabel();
-                    BranchIfFalse(@end, false);
-                    tail.EmitWrite(this, loc);
-                    MarkLabel(@end);
-                }
+                LoadValue(valueFrom);
+                CopyValue();
+                CodeLabel hasVal = DefineLabel(), @end = DefineLabel();
+                BranchIfTrue(hasVal, true);
+                DiscardValue();
+                Branch(@end, false);
+                MarkLabel(hasVal);
+                tail.EmitWrite(this, null);
+                MarkLabel(@end);
             }
         }
 

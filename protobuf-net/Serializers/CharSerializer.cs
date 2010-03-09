@@ -10,7 +10,7 @@ namespace ProtoBuf.Serializers
         public override Type ExpectedType { get { return typeof(char); } }
         public override void Write(object value, ProtoWriter dest)
         {
-            dest.WriteUInt16((ushort)(char)value);
+            ProtoWriter.WriteUInt16((ushort)(char)value, dest);
         }
         public override object Read(object value, ProtoReader source)
         {

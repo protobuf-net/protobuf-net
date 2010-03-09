@@ -38,7 +38,7 @@ namespace ProtoBuf.unittest.Serializers
                 using (ProtoWriter writer = new ProtoWriter(ms, RuntimeTypeModel.Default))
                 {
                     serializer(obj, writer);
-                    reported = writer.Position;
+                    reported = ProtoWriter.GetPosition(writer);
                 }
                 data = ms.ToArray();
                 Assert.AreEqual(reported, data.Length, message + ":reported/actual");

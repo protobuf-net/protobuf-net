@@ -112,9 +112,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtoException.cs" />
     <Compile Include="ProtoReader.cs" />
-    <Compile Include="ProtoSerializer.cs" />
     <Compile Include="ProtoWriter.cs" />
-    <Compile Include="RuntimeSerializer.cs" />
     <Compile Include="Serializers\BlobSerializer.cs" />
     <Compile Include="Serializers\CharSerializer.cs" />
     <Compile Include="Serializers\CompiledSerializer.cs" />
@@ -140,6 +138,7 @@
     <Compile Include="Serializers\SubItemSerializer.cs" />
     <Compile Include="Serializers\TagDecorator.cs" />
     <Compile Include="Serializers\TypeSerializer.cs" />
+    <Compile Include="SubItemToken.cs" />
     <Compile Include="WireType.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -25,7 +25,8 @@ namespace ProtoBuf.Serializers
         private readonly WireType wireType;
         public override void Write(object value, ProtoWriter dest)
         {
-            dest.WriteFieldHeader(fieldNumber, wireType);
+            ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest);
+            if (wireType == WireType.SignedVariant) { ProtoWriter.SetSignedVariant(dest); }
             Tail.Write(value, dest);
         }
         public override object Read(object value, ProtoReader source)
@@ -37,14 +38,16 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            using (Compiler.Local loc = ctx.GetLocalWithValue(Tail.ExpectedType, valueFrom))
+            if (wireType == WireType.SignedVariant)
             {
                 ctx.LoadReaderWriter();
-                ctx.LoadValue((int)fieldNumber);
-                ctx.LoadValue((int)wireType);
-                ctx.EmitWrite("WriteFieldHeader");
-                Tail.EmitWrite(ctx, loc);
-            }            
+                ctx.EmitCall(typeof(ProtoWriter).GetMethod("SetSignedVariant"));
+            }
+            ctx.LoadValue((int)fieldNumber);
+            ctx.LoadValue((int)wireType);
+            ctx.LoadReaderWriter();
+            ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
+            Tail.EmitWrite(ctx, valueFrom);    
         }
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {

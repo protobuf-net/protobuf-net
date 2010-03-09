@@ -13,7 +13,7 @@ namespace ProtoBuf.Serializers
         public Type ExpectedType { get { return typeof(byte[]); } }
         public void Write(object value, ProtoWriter dest)
         {
-            dest.WriteBytes((byte[])value);
+            ProtoWriter.WriteBytes((byte[])value, dest);
         }
         public object Read(object value, ProtoReader source)
         {
@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite("WriteBytes", typeof(byte[]), valueFrom);
+            ctx.EmitBasicWrite("WriteBytes", valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
