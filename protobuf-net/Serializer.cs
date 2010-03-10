@@ -143,21 +143,31 @@ namespace ProtoBuf
 
         public static System.Runtime.Serialization.IFormatter CreateFormatter<T>()
         { throw new NotImplementedException(); }
-        public static IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int tag)
+        public static IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int fieldNumber)
         { throw new NotImplementedException(); }
 
         public static T DeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style)
-        { throw new NotImplementedException(); }
-        public static T DeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style, int tag)
-        { throw new NotImplementedException(); }
+        {
+            return DeserializeWithLengthPrefix<T>(source, style, 0);
+        }
+        public static T DeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style, int fieldNumber)
+        {
+            return (T)RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, null, typeof(T), style, fieldNumber);
+        }
         
         public static T MergeWithLengthPrefix<T>(Stream source, T instance, PrefixStyle style)
-        { throw new NotImplementedException(); }
+        {
+            return (T)RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, instance, typeof(T), style, 0);
+        }
 
         public static void SerializeWithLengthPrefix<T>(Stream destination, T instance, PrefixStyle style)
-        { throw new NotImplementedException(); }
-        public static void SerializeWithLengthPrefix<T>(Stream destination, T instance, PrefixStyle style, int tag)
-        { throw new NotImplementedException(); }
+        {
+            SerializeWithLengthPrefix<T>(destination, instance, style, 0);
+        }
+        public static void SerializeWithLengthPrefix<T>(Stream destination, T instance, PrefixStyle style, int fieldNumber)
+        {
+            RuntimeTypeModel.Default.SerializeWithLengthPrefix(destination, instance, typeof(T), style, fieldNumber);
+        }
         /// <summary>Indicates the number of bytes expected for the next message.</summary>
         /// <param name="source">The stream containing the data to investigate for a length.</param>
         /// <param name="style">The algorithm used to encode the length.</param>

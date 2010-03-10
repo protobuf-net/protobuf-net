@@ -28,6 +28,32 @@ namespace ProtoBuf
             writer.model.Serialize(key, value, writer);
             EndSubItem(token, writer);
         }
+        internal static void WriteObject(object value, int key, ProtoWriter writer, PrefixStyle style, int fieldNumber)
+        {
+            if (writer.model == null)
+            {
+                throw new InvalidOperationException("Cannot serialize sub-objects unless a model is provided");
+            }
+            if (writer.wireType != WireType.None) throw ProtoWriter.CreateException(writer);
+
+            switch (style)
+            {
+                case PrefixStyle.Base128:
+                    writer.wireType = WireType.Variant;
+                    if (fieldNumber > 0) WriteHeaderCore(fieldNumber, WireType.Variant, writer);
+                    break;
+                case PrefixStyle.Fixed32:
+                case PrefixStyle.Fixed32BigEndian:
+                    writer.wireType = WireType.Fixed32;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("style");
+            }
+            SubItemToken token = StartSubItem(value, writer, true);
+            writer.model.Serialize(key, value, writer);
+            EndSubItem(token, writer, style);
+            
+        }
         private int fieldNumber, flushLock;
         WireType wireType;
 
@@ -113,6 +139,10 @@ namespace ProtoBuf
         const int RecursionCheckDepth = 25;
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
         {
+            return StartSubItem(instance, writer, false);
+        }
+        private static SubItemToken StartSubItem(object instance, ProtoWriter writer, bool allowFixed)
+        {
             //Helpers.DebugWriteLine(writer.depth.ToString());
             //Helpers.DebugWriteLine("StartSubItem", instance);
             if (++writer.depth > RecursionCheckDepth)
@@ -131,23 +161,59 @@ namespace ProtoBuf
                     writer.flushLock++;
                     writer.position++;
                     return new SubItemToken(writer.ioIndex++); // leave 1 space (optimistic) for length
+                case WireType.Fixed32:
+                    if (!allowFixed) throw CreateException(writer);
+                    DemandSpace(32, writer); // make some space in anticipation...
+                    writer.flushLock++;
+                    SubItemToken token = new SubItemToken(writer.ioIndex);
+                    ProtoWriter.IncrementedAndReset(4, writer); // leave 4 space (rigid) for length
+                    return token;
                 default:
                     throw CreateException(writer);
             }
         }
         public static void EndSubItem(SubItemToken token, ProtoWriter writer)
         {
+            EndSubItem(token, writer, PrefixStyle.Base128);
+        }
+        private static void EndSubItem(SubItemToken token, ProtoWriter writer, PrefixStyle style)
+        {
             if (writer.wireType != WireType.None) { throw CreateException(writer); }
             int value = token.value;
-            if (writer.depth-- > 0)
+            if (writer.depth <= 0) throw CreateException(writer);
+            writer.depth--;
+            if (value < 0)
+            {   // group - very simple append
+                WriteHeaderCore(-value, WireType.EndGroup, writer);
+                writer.wireType = WireType.None;
+                return;
+            }
+
+            // so we're backfilling the length into an existing sequence
+            int len;
+            switch(style)
             {
-                if (value < 0)
-                { // group
-                    WriteHeaderCore(-value, WireType.EndGroup, writer);
-                }
-                else
-                { // string
-                    int len = (int)((writer.position - value) - 1);
+                case PrefixStyle.Fixed32:
+                    len = (int)((writer.position - value) - 4);
+                    ProtoWriter.WriteInt32ToBuffer(len, writer.ioBuffer, value);
+                    break;
+                case PrefixStyle.Fixed32BigEndian:
+                    len = (int)((writer.position - value) - 4);
+                    byte[] buffer = writer.ioBuffer;
+                    ProtoWriter.WriteInt32ToBuffer(len, buffer, value);
+                    // and swap the byte order
+                    byte b = buffer[value];
+                    buffer[value] = buffer[value + 3];
+                    buffer[value + 3] = b;
+                    b = buffer[value + 1];
+                    buffer[value + 1] = buffer[value + 2];
+                    buffer[value + 2] = b;
+                    break;
+                case PrefixStyle.Base128:
+                    // string - complicated because we only reserved one byte;
+                    // if the prefix turns out to need more than this then
+                    // we need to shuffle the existing data
+                    len = (int)((writer.position - value) - 1);
                     int offset = 0;
                     uint tmp = (uint)len;
                     while ((tmp >>= 7) != 0) offset++;
@@ -168,14 +234,12 @@ namespace ProtoBuf
                         writer.position += offset;
                         writer.ioIndex += offset;
                     }
-                    writer.flushLock--;
-                }                
-                writer.wireType = WireType.None;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("style");
             }
-            else
-            {
-                throw CreateException(writer);
-            }
+            // and this object is no longer a blockage
+            writer.flushLock--;
         }
         public ProtoWriter(Stream dest, TypeModel model)
         {
@@ -189,18 +253,14 @@ namespace ProtoBuf
         }
         
         void IDisposable.Dispose()
-        { // importantly, this does **not** own the stream, and does not dispose it
+        {
+            Dispose();
+        }
+        private void Dispose()
+        {   // importantly, this does **not** own the stream, and does not dispose it
             if (dest != null)
             {
-                try { Flush(this); }
-#if CF
-                catch {}
-#else
-                catch (Exception ex)
-                {
-                    Helpers.TraceWriteLine(ex.ToString()); // but swallow and keey runningf
-                }
-#endif
+                Flush(this);
                 dest = null;
             }
             model = null;
@@ -242,21 +302,20 @@ namespace ProtoBuf
         public void Close()
         {
             if (depth != 0 || flushLock != 0) throw new InvalidOperationException("Unable to close stream in an incomplete state");
-            Flush(this);
+            Dispose();
         }
+        /// <summary>
+        /// Writes any buffered data (if possible) to the underlying stream.
+        /// </summary>
+        /// <param name="writer">The writer to flush</param>
+        /// <remarks>It is not always possible to fully flush, since some sequences
+        /// may require values to be back-filled into the byte-stream.</remarks>
         private static void Flush(ProtoWriter writer)
         {
-            if (writer.flushLock == 0)
+            if (writer.flushLock == 0 && writer.ioIndex != 0)
             {
-                if (writer.ioIndex != 0)
-                {
-                    writer.dest.Write(writer.ioBuffer, 0, writer.ioIndex);
-                    writer.ioIndex = 0;
-                }
-            }
-            else
-            {
-                throw CreateException(writer);
+                writer.dest.Write(writer.ioBuffer, 0, writer.ioIndex);
+                writer.ioIndex = 0;
             }
         }
         private static void WriteUInt32Variant(uint value, ProtoWriter writer)
@@ -422,6 +481,13 @@ namespace ProtoBuf
         {
             ProtoWriter.WriteUInt32(value, writer);
         }
+        private static void WriteInt32ToBuffer(int value, byte[] buffer, int index)
+        {
+            buffer[index] = (byte)value;
+            buffer[index + 1] = (byte)(value >> 8);
+            buffer[index + 2] = (byte)(value >> 16);
+            buffer[index + 3] = (byte)(value >> 24);
+        }
         public static void WriteInt32(int value, ProtoWriter writer)
         {
             byte[] buffer;
@@ -430,12 +496,7 @@ namespace ProtoBuf
             {
                 case WireType.Fixed32:
                     DemandSpace(4, writer);
-                    buffer = writer.ioBuffer;
-                    index = writer.ioIndex;
-                    buffer[index] = (byte)value;
-                    buffer[index + 1] = (byte)(value >> 8);
-                    buffer[index + 2] = (byte)(value >> 16);
-                    buffer[index + 3] = (byte)(value >> 24);
+                    WriteInt32ToBuffer(value, writer.ioBuffer, writer.ioIndex);                    
                     IncrementedAndReset(4, writer);
                     return;
                 case WireType.Fixed64:

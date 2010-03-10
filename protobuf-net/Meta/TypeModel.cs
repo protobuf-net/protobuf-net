@@ -15,6 +15,54 @@ namespace ProtoBuf.Meta
                 writer.Close();
             }
         }
+        public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int fieldNumber)
+        {
+            if (type == null)
+            {
+                if (value == null) throw new ArgumentNullException("value");
+                type = value.GetType();
+            }
+            int key = GetKey(type);
+    readnext:
+            int foundFieldNumber;
+            int len = ProtoReader.ReadLengthPrefix(source, style, out foundFieldNumber);
+            if (len < 0) return value;
+            if (fieldNumber > 0 && foundFieldNumber > 0 && foundFieldNumber != fieldNumber)
+            {
+                goto readnext;
+            }
+            using (ProtoReader reader = new ProtoReader(source, this, len))
+            {
+                return Deserialize(key, value, reader);
+            }
+
+        }
+        public void SerializeWithLengthPrefix(Stream dest, object value, Type type, PrefixStyle style, int fieldNumber)
+        {
+            if (type == null)
+            {
+                if(value == null) throw new ArgumentNullException("value");
+                type = value.GetType();
+            }
+            int key = GetKey(type);
+            using (ProtoWriter writer = new ProtoWriter(dest, this))
+            {
+                switch (style)
+                {
+                    case PrefixStyle.None:
+                        Serialize(key, value, writer);
+                        break;
+                    case PrefixStyle.Base128:
+                    case PrefixStyle.Fixed32:
+                    case PrefixStyle.Fixed32BigEndian:
+                        ProtoWriter.WriteObject(value, key, writer, style, fieldNumber);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("style");
+                }
+                writer.Close();
+            }
+        }
         public object Deserialize(Stream source, object value, Type type)
         {
             if (type == null)

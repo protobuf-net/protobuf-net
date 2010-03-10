@@ -20,14 +20,21 @@ namespace ProtoBuf
         private int fieldNumber;
         WireType wireType = WireType.None;
         internal int FieldNumber { get { return fieldNumber; } }
-
-        internal ProtoReader(Stream source, TypeModel model)
+        
+        internal ProtoReader(Stream source, TypeModel model) :
+            this(source, model, -1)
+        {}
+        private int dataRemaining;
+        private readonly bool isFixedLength;
+        internal ProtoReader(Stream source, TypeModel model, int length)
         {
             if (source == null) throw new ArgumentNullException("dest");
             if (!source.CanRead) throw new ArgumentException("Cannot read from stream", "dest");
             this.source = source;
             this.ioBuffer = BufferPool.GetBuffer();
             this.model = model;
+            isFixedLength = length > 0;
+            dataRemaining = isFixedLength ? length : 0;
         }
         public void Dispose()
         {
@@ -36,9 +43,9 @@ namespace ProtoBuf
             model = null;
             BufferPool.ReleaseBufferToPool(ref ioBuffer);
         }
-        private int TryReadUInt32VariantWithoutMoving(out uint value)
+        private int TryReadUInt32VariantWithoutMoving(bool trimNegative, out uint value)
         {
-            if(available < 5) Ensure(5, false);
+            if(available < 10) Ensure(10, false);
             if (available == 0)
             {
                 value = 0;
@@ -69,12 +76,23 @@ namespace ProtoBuf
             value |= chunk << 28; // can only use 4 bits from this chunk
             if ((chunk & 0xF0) == 0) return 5;
 
+            if (trimNegative // allow for -ve values
+                && (chunk & 0xF0) == 0xF0
+                && available >= 10
+                    && ioBuffer[++readPos] == 0xFF
+                    && ioBuffer[++readPos] == 0xFF
+                    && ioBuffer[++readPos] == 0xFF
+                    && ioBuffer[++readPos] == 0xFF
+                    && ioBuffer[++readPos] == 0x01)
+            {
+                return 10;
+            }
             throw new OverflowException();
         }
-        private uint ReadUInt32Variant()
+        private uint ReadUInt32Variant(bool trimNegative)
         {
             uint value;
-            int read = TryReadUInt32VariantWithoutMoving(out value);
+            int read = TryReadUInt32VariantWithoutMoving(trimNegative, out value);
             if (read > 0)
             {
                 ioIndex += read;
@@ -86,7 +104,7 @@ namespace ProtoBuf
         }
         private bool TryReadUInt32Variant(out uint value)
         {
-            int read = TryReadUInt32VariantWithoutMoving(out value);
+            int read = TryReadUInt32VariantWithoutMoving(false, out value);
             if (read > 0)
             {
                 ioIndex += read;
@@ -101,7 +119,7 @@ namespace ProtoBuf
             switch (wireType)
             {
                 case WireType.Variant:
-                    return ReadUInt32Variant();
+                    return ReadUInt32Variant(false);
                 case WireType.Fixed32:
                     if (available < 4) Ensure(4, true);
                     position += 4;
@@ -132,11 +150,18 @@ namespace ProtoBuf
             }
             count -= available;
             int writePos = ioIndex + available, bytesRead;
-            while (count > 0 && (bytesRead = source.Read(ioBuffer, writePos, count)) > 0)
+            int canRead = ioBuffer.Length - writePos;
+            if (isFixedLength)
+            {   // throttle it if needed
+                if (dataRemaining < canRead) canRead = dataRemaining;
+            }
+            while (count > 0 && (bytesRead = source.Read(ioBuffer, writePos, canRead)) > 0)
             {
                 available += bytesRead;
                 count -= bytesRead;
+                canRead -= bytesRead;
                 writePos += bytesRead;
+                if(isFixedLength) { dataRemaining -= bytesRead;}
             }
             if (strict && count > 0)
             {
@@ -158,7 +183,7 @@ namespace ProtoBuf
             switch (wireType)
             {
                 case WireType.Variant:
-                    return (int)ReadUInt32Variant();
+                    return (int)ReadUInt32Variant(true);
                 case WireType.Fixed32:
                     if(available < 4) Ensure(4, true);
                     position += 4;
@@ -171,7 +196,7 @@ namespace ProtoBuf
                     long l = ReadInt64();
                     checked { return (int)l; }
                 case WireType.SignedVariant:
-                    return Zag(ReadUInt32Variant());
+                    return Zag(ReadUInt32Variant(true));
                 default:
                     throw BorkedIt();
             }
@@ -298,7 +323,7 @@ namespace ProtoBuf
         {
             if (wireType == WireType.String)
             {
-                int bytes = (int)ReadUInt32Variant();
+                int bytes = (int)ReadUInt32Variant(false);
                 if (bytes == 0) return "";
                 if (available < bytes) Ensure(bytes, true);
 #if MF
@@ -381,7 +406,7 @@ namespace ProtoBuf
                     reader.wireType = WireType.None; // to prevent glitches from double-calling
                     return new SubItemToken(-reader.fieldNumber);
                 case WireType.String:
-                    int len = (int)reader.ReadUInt32Variant();
+                    int len = (int)reader.ReadUInt32Variant(false);
                     if (len < 0) throw new InvalidOperationException();
                     int lastEnd = reader.blockEnd;
                     reader.blockEnd = reader.position + len;
@@ -420,7 +445,7 @@ namespace ProtoBuf
             // check for virtual end of stream
             if (blockEnd <= position || wireType == WireType.EndGroup) { return false; }
             uint tag;
-            int read = TryReadUInt32VariantWithoutMoving(out tag);
+            int read = TryReadUInt32VariantWithoutMoving(false, out tag);
             WireType tmpWireType; // need to catch this to exclude (early) any "end group" tokens
             if (read > 0 && ((int)tag >> 3) == field
                 && (tmpWireType = (WireType)(tag & 7)) != WireType.EndGroup)
@@ -473,7 +498,7 @@ namespace ProtoBuf
                     position += 8;
                     return;
                 case WireType.String:
-                    int len = (int)ReadUInt32Variant();
+                    int len = (int)ReadUInt32Variant(false);
                     if (len <= available)
                     { // just jump it!
                         available -= len;
@@ -485,6 +510,12 @@ namespace ProtoBuf
                     position += len; // assumes success, but if it fails we're screwed anyway
                     len -= available; // discount anything we've got to-hand
                     ioIndex = available = 0; // note that we have no data in the buffer
+                    if (isFixedLength)
+                    {
+                        if (len > dataRemaining) throw new EndOfStreamException();
+                        // else assume we're going to be OK
+                        dataRemaining -= len;
+                    }
                     if (source.CanSeek)
                     {   // ask the underlying stream to do the seeking
                         source.Seek(len, SeekOrigin.Current);
@@ -591,7 +622,7 @@ namespace ProtoBuf
             switch (wireType)
             {
                 case WireType.String:
-                    int len = (int)ReadUInt32Variant();
+                    int len = (int)ReadUInt32Variant(false);
                     wireType = WireType.None;
                     if (len == 0) return value;
                     int offset;
@@ -631,6 +662,49 @@ namespace ProtoBuf
                     return value;
                 default:
                     throw BorkedIt();
+            }
+        }
+
+        static byte[] ReadBytes(Stream stream, int length)
+        {
+            if (stream == null) throw new ArgumentNullException("stream");
+            if (length < 0) throw new ArgumentOutOfRangeException("length");
+            byte[] buffer = new byte[length];
+            int offset = 0, read;
+            while (length > 0 && (read = stream.Read(buffer, offset, length)) > 0)
+            {
+                length -= read;
+            }
+            if (length > 0) throw new EndOfStreamException();
+            return buffer;
+        }
+        private static int ReadByteOrThrow(Stream source)
+        {
+            int val = source.ReadByte();
+            if (val < 0) throw new EndOfStreamException();
+            return val;
+        }
+        public static int ReadLengthPrefix(Stream source, PrefixStyle style, out int fieldNumber)
+        {
+            fieldNumber = 0;
+            switch (style)
+            {
+                case PrefixStyle.None:                    
+                    return int.MaxValue;
+                case PrefixStyle.Base128:
+                    throw new NotImplementedException();
+                case PrefixStyle.Fixed32:
+                    return ReadByteOrThrow(source)
+                         | (ReadByteOrThrow(source) << 8)
+                         | (ReadByteOrThrow(source) << 16)
+                         | (ReadByteOrThrow(source) << 24);
+                case PrefixStyle.Fixed32BigEndian:
+                    return (ReadByteOrThrow(source) << 24)
+                         | (ReadByteOrThrow(source) << 16)
+                         | (ReadByteOrThrow(source) << 8)
+                         | ReadByteOrThrow(source);
+                default:
+                    throw new ArgumentOutOfRangeException("style");
             }
         }
     }
