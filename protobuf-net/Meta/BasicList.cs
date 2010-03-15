@@ -29,6 +29,10 @@ namespace ProtoBuf.Meta
          *     be mutable (i.e. array is fine as long as we don't screw it up)
          */
         private static readonly Node nil = new Node(null, 0);
+        public void CopyTo(Array array, int offset)
+        {
+            head.CopyTo(array, offset);
+        }
         protected Node head = nil;
         public int Add(object value)
         {
@@ -130,6 +134,23 @@ namespace ProtoBuf.Meta
                 }
                 return -1;
             }
+
+            internal void CopyTo(Array array, int offset)
+            {
+                if (Length > 0)
+                {
+                    Array.Copy(data, 0, array, offset, Length);
+                }
+            }
+
+            internal Array Combine(Array array, Type itemType)
+            {
+                int oldLen = array == null ? 0 : array.Length;
+                Array result = Array.CreateInstance(itemType, oldLen + Length);
+                if(oldLen > 0) Array.Copy(array, 0, result, 0, oldLen);
+                if(Length > 0) Array.Copy(data, 0, result, oldLen, Length);
+                return result;            
+            }
         }
 
         internal int IndexOf(IPredicate predicate)
@@ -149,6 +170,11 @@ namespace ProtoBuf.Meta
                 if (object.Equals(obj, value)) return true;
             }
             return false;
+        }
+
+        public Array Combine(Array array, Type itemType)
+        {
+            return head.Combine(array, itemType);
         }
     }
 }

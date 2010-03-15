@@ -266,8 +266,7 @@ namespace ProtoBuf.Serializers
                 IList list = (IList)value;
                 do
                 {
-                    object obj = Tail.Read(null, source);
-                    list.Add(obj);
+                    list.Add(Tail.Read(null, source));
                 } while (source.TryReadFieldHeader(field));
             }
             else

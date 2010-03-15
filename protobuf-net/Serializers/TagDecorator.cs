@@ -17,6 +17,7 @@ namespace ProtoBuf.Serializers
         {
             this.fieldNumber = fieldNumber;
             this.wireType = wireType;
+            this.strict = strict;
         }
         public override bool RequiresOldValue { get { return Tail.RequiresOldValue; } }
         public override bool ReturnsValue { get { return Tail.ReturnsValue; } }
@@ -28,11 +29,15 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest);
             Tail.Write(value, dest);
         }
+        private bool NeedsHint
+        {
+            get { return ((int)wireType & ~7) != 0; }
+        }
         public override object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(fieldNumber == source.FieldNumber);
-            if (strict) { source.ExpectField(wireType); }
-            else if (wireType == WireType.SignedVariant) { source.SetSignedVariant(); }
+            if (strict) { source.Assert(wireType); }
+            else if (NeedsHint) { source.Hint(wireType); }
             return Tail.Read(value, source);
         }
 #if FEAT_COMPILER
@@ -46,17 +51,12 @@ namespace ProtoBuf.Serializers
         }
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
-            if (strict)
+            if (strict || NeedsHint)
             {
                 ctx.LoadReaderWriter();
                 ctx.LoadValue((int)wireType);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("ExpectField"));
+                ctx.EmitCall(typeof(ProtoReader).GetMethod(strict ? "Assert" : "Hint"));
             }
-            else if (wireType == WireType.SignedVariant)
-            {
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("SetSignedVariant"));
-            }   
             Tail.EmitRead(ctx, valueFrom);
         }
 #endif

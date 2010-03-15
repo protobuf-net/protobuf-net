@@ -17,20 +17,36 @@ namespace ProtoBuf.Meta
         }
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int fieldNumber)
         {
-            if (type == null)
+            return DeserializeWithLengthPrefix(source, value, type, style, fieldNumber, null);
+        }
+        public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
+        {
+
+            bool skip;
+            int len;
+            do
             {
-                if (value == null) throw new ArgumentNullException("value");
-                type = value.GetType();
-            }
+                int actualField;
+                bool expectPrefix = expectedField > 0 || resolver != null;
+                len = ProtoReader.ReadLengthPrefix(source, expectPrefix, style, out actualField);
+                if (len < 0) return value;
+
+                if (expectedField == 0 && type == null && resolver != null)
+                {
+                    type = resolver(actualField);
+                    skip = type == null;
+                }
+                else { skip = expectedField != actualField; }
+
+                if (skip)
+                {
+                    if (len == int.MaxValue) throw new InvalidOperationException();
+                    ProtoReader.Seek(source, len, null);
+                }
+            } while (skip);
+
             int key = GetKey(type);
-    readnext:
-            int foundFieldNumber;
-            int len = ProtoReader.ReadLengthPrefix(source, style, out foundFieldNumber);
-            if (len < 0) return value;
-            if (fieldNumber > 0 && foundFieldNumber > 0 && foundFieldNumber != fieldNumber)
-            {
-                goto readnext;
-            }
+            if (key < 0) throw new InvalidOperationException();
             using (ProtoReader reader = new ProtoReader(source, this, len))
             {
                 return Deserialize(key, value, reader);

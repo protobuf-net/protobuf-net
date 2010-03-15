@@ -34,7 +34,7 @@
 
         /// <summary>
         /// Fixed-length 4-byte encoding
-        /// </summary>
+        /// </summary>10
         Fixed32 = 5,
 
         /// <summary>
@@ -42,6 +42,6 @@
         /// denotes a variant integer that should be interpreted using
         /// zig-zag semantics (so -ve numbers aren't a significant overhead)
         /// </summary>
-        SignedVariant = 8
+        SignedVariant = WireType.Variant | (1 << 3),
     }
 }

@@ -20,11 +20,12 @@ namespace ProtoBuf
         /// </summary>
         internal static IEnumerable<TValue> GetExtendedValues<TValue>(IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
         {
-            if (instance == null) throw new ArgumentNullException("instance");
+            throw new NotImplementedException();
+            /*if (instance == null) throw new ArgumentNullException("instance");
             return (IEnumerable<TValue>)typeof(ExtensibleUtil)
                 .GetMethod("GetExtendedValuesTyped", BindingFlags.Public | BindingFlags.Static)
                 .MakeGenericMethod(instance.GetType(), typeof(TValue))
-                .Invoke(null, new object[] { instance, tag, format, singleton, allowDefinedTag });
+                .Invoke(null, new object[] { instance, tag, format, singleton, allowDefinedTag });*/
         }
 
         /// <summary>
@@ -135,11 +136,12 @@ namespace ProtoBuf
         /// </summary>
         internal static void AppendExtendValue<TValue>(IExtensible instance, int tag, DataFormat format, object value)
         {
-            if (instance == null) throw new ArgumentNullException("instance");
+            throw new NotImplementedException();
+            /*if (instance == null) throw new ArgumentNullException("instance");
             typeof(ExtensibleUtil)
                 .GetMethod("AppendExtendValueTyped", BindingFlags.Public | BindingFlags.Static)
                 .MakeGenericMethod(instance.GetType(), typeof(TValue))
-                .Invoke(null, new object[] { instance, tag, format, value });
+                .Invoke(null, new object[] { instance, tag, format, value });*/
         }
 
         /// <summary>

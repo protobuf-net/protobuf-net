@@ -62,7 +62,18 @@ namespace ProtoBuf.Meta
             // apply tags
             ser = new TagDecorator(fieldNumber, wireType, isStrict, ser);
             // apply lists if appropriate
-            if (itemType != null) { ser = new ListDecorator(memberType, defaultType, ser); }
+            if(itemType != null)
+            {
+                Helpers.DebugAssert(itemType == ser.ExpectedType, "Wrong type in the tail");
+                if (memberType.IsArray)
+                {
+                    ser = new ArrayDecorator(ser);
+                }
+                else
+                {
+                    ser = new ListDecorator(memberType, defaultType, ser);
+                }
+            }
             
             switch (member.MemberType)
             {
@@ -150,6 +161,11 @@ namespace ProtoBuf.Meta
             {
                 defaultWireType = WireType.String;
                 return new GuidSerializer();
+            }
+            if (type == typeof(byte[]))
+            {
+                defaultWireType = WireType.Variant;
+                return new BlobSerializer();
             }
             int key = model.FindOrAddAuto(type, false);
             if (key >= 0)

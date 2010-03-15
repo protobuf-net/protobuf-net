@@ -329,5 +329,107 @@ namespace ProtoBuf.unittest.Meta
             Assert.IsNotNull(clone.IListInt32Untyped);
             Assert.IsTrue(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
         }
+
+        public class NastyType
+        {
+            
+            public List<List<int>> JaggedList { get; set; }
+
+            public List<int[]> ListOfArray{ get; set; }
+
+            public int[,] MultiDimArray { get; set; }
+
+            public int[][] JaggedArray { get; set; }
+
+            public List<int>[] ArrayOfList{ get; set; }
+
+            public List<int> BasicList { get; set; }
+
+            public int[] BasicArray{ get; set; }
+
+            public byte[] Blob { get; set; }
+
+            public List<byte[]> Blobs{ get; set; }
+        }
+        [Test, ExpectedException(typeof(NotSupportedException))]
+        public void JaggedListShouldThrow()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true).Add(1, "JaggedList");
+            model.CompileInPlace();
+        }
+        [Test, ExpectedException(typeof(NotSupportedException))]
+        public void ListOfArrayShouldThrow()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true).Add(1, "ListOfArray");
+            model.CompileInPlace();
+        }
+        [Test, ExpectedException(typeof(NotSupportedException))]
+        public void MultiDimArrayShouldThrow()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true).Add(1, "MultiDimArray");
+            model.CompileInPlace();
+        }
+        [Test, ExpectedException(typeof(NotSupportedException))]
+        public void JaggedArrayShouldThrow()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true).Add(1, "JaggedArray");
+            model.CompileInPlace();
+        }
+        [Test, ExpectedException(typeof(NotSupportedException))]
+        public void ArrayOfListShouldThrow()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true).Add(1, "ArrayOfList");
+            model.CompileInPlace();
+        }
+        [Test]
+        public void BasicListIsFine()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true).Add(1, "BasicList");
+            model.CompileInPlace();
+        }
+        [Test]
+        public void BasicArrayIsFine()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true).Add(1, "BasicArray");
+            model.CompileInPlace();
+        }
+        [Test]
+        public void BlobIsFine()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true).Add(1, "Blob");
+            model.CompileInPlace();
+        }
+        [Test]
+        public void BlobsAreFine()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true).Add(1, "Blobs");
+            model.CompileInPlace();
+        }
+        [Test]
+        public void PEVerifyArraysAndLists()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(NastyType), true)
+                //.Add(1, "Blobs")
+                //.Add(2, "Blob")
+                .Add(3, "BasicArray")
+                //.Add(4, "BasicList")
+                ;
+            model.CompileInPlace();
+
+            model.Compile("PEVerifyArraysAndLists","PEVerifyArraysAndLists.dll");
+            VerifyPE("PEVerifyArraysAndLists.dll");
+        }
+
+
     }
 }

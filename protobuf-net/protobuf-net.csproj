@@ -84,6 +84,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Runtime.Serialization">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
@@ -131,6 +132,7 @@
     <Compile Include="Serializers\CharSerializer.cs" />
     <Compile Include="Serializers\CompiledSerializer.cs" />
     <Compile Include="Serializers\BooleanSerializer.cs" />
+    <Compile Include="Serializers\ArrayDecorator.cs" />
     <Compile Include="Serializers\GuidSerializer.cs" />
     <Compile Include="Serializers\ListDecorator.cs" />
     <Compile Include="Serializers\UInt16Serializer.cs" />

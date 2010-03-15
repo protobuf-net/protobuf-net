@@ -375,18 +375,21 @@ namespace ProtoBuf.Compiler
         }
         internal void EmitBasicWrite(string methodName, Compiler.Local fromValue)
         {
+            if (Helpers.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
             LoadValue(fromValue);
             LoadReaderWriter();
-            EmitWrite(methodName);
+            EmitCall(GetWriterMethod(methodName));
         }
-
-        internal void EmitWrite(string methodName)
+        private static MethodInfo GetWriterMethod(string methodName)
         {
-            if (Helpers.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
-            MethodInfo method = typeof(ProtoWriter).GetMethod(
-                methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (method == null || method.ReturnType != typeof(void)) throw new ArgumentException("methodName");
-            EmitCall(method);
+            MethodInfo[] methods = typeof(ProtoWriter).GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            foreach (MethodInfo method in methods)
+            {
+                if(method.Name != methodName) continue;
+                ParameterInfo[] pis = method.GetParameters();
+                if (pis.Length == 2 && pis[1].ParameterType == typeof(ProtoWriter)) return method;
+            }
+            throw new ArgumentException("No suitable method found for: " + methodName, "methodName");
         }
         internal void EmitWrite(Type helperType, string methodName, Compiler.Local valueFrom)
         {
@@ -510,7 +513,7 @@ namespace ProtoBuf.Compiler
                 ConstructorInfo ctor = type.GetConstructor(
                     BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                     null, parameterTypes, null);
-                if (ctor == null) throw new InvalidOperationException("No suitable constructor found");
+                if (ctor == null) throw new InvalidOperationException("No suitable constructor found for " + type.FullName);
                 il.Emit(OpCodes.Newobj, ctor);
 #if DEBUG_COMPILE
                 Helpers.DebugWriteLine(OpCodes.Newobj + ": " + type);
@@ -651,6 +654,15 @@ namespace ProtoBuf.Compiler
         internal void BranchIfGreater(CodeLabel label, bool @short)
         {
             OpCode code = @short ? OpCodes.Bgt_S : OpCodes.Bgt;
+            il.Emit(code, label.Value);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(code + ": " + label.Index);
+#endif
+        }
+
+        internal void BranchIfLess(CodeLabel label, bool @short)
+        {
+            OpCode code = @short ? OpCodes.Blt_S : OpCodes.Blt;
             il.Emit(code, label.Value);
 #if DEBUG_COMPILE
             Helpers.DebugWriteLine(code + ": " + label.Index);
@@ -828,6 +840,58 @@ namespace ProtoBuf.Compiler
                 this.ctx = null;
                 label = default(CodeLabel);
             }
+        }
+
+        internal void Add()
+        {
+            Emit(OpCodes.Add);
+        }
+
+        internal void LoadLength(Local arr)
+        {
+            Helpers.DebugAssert(arr.Type.IsArray && arr.Type.GetArrayRank() == 1);
+            LoadValue(arr);
+            Emit(OpCodes.Ldlen);
+            Emit(OpCodes.Conv_I4);
+        }
+
+        internal void LoadArrayValue(Local arr, Local i)
+        {
+            Type type = arr.Type;
+            Helpers.DebugAssert(type.IsArray && arr.Type.GetArrayRank() == 1);
+            type = type.GetElementType();
+            LoadValue(arr);
+            LoadValue(i);
+            switch(Type.GetTypeCode(type)) {
+                case TypeCode.SByte: Emit(OpCodes.Ldelem_I1); break;
+                case TypeCode.Int16: Emit(OpCodes.Ldelem_I2); break;
+                case TypeCode.Int32: Emit(OpCodes.Ldelem_I4); break;
+                case TypeCode.Int64: Emit(OpCodes.Ldelem_I8); break;
+
+                case TypeCode.Byte: Emit(OpCodes.Ldelem_U1); break;
+                case TypeCode.UInt16: Emit(OpCodes.Ldelem_U2); break;
+                case TypeCode.UInt32: Emit(OpCodes.Ldelem_U4); break;
+                case TypeCode.UInt64: Emit(OpCodes.Ldelem_I8); break; // odd, but this is what C# does...
+
+                case TypeCode.Single: Emit(OpCodes.Ldelem_R4); break;
+                case TypeCode.Double: Emit(OpCodes.Ldelem_R8); break;
+                default:
+                    if (type.IsValueType)
+                    {
+                        il.Emit(OpCodes.Ldelema, type);
+                        il.Emit(OpCodes.Ldobj, type);
+#if DEBUG_COMPILE
+                        Helpers.DebugWriteLine(OpCodes.Ldelema + ": " + type);
+                        Helpers.DebugWriteLine(OpCodes.Ldobj + ": " + type);
+#endif
+                    }
+                    else
+                    {
+                        Emit(OpCodes.Ldelem_Ref);
+                    }
+                    break;
+            }
+            
         }
     }
 }

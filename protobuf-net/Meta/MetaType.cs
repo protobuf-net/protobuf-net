@@ -200,7 +200,33 @@ namespace ProtoBuf.Meta
 
         private static void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType) {
             if (type == null) return;
+            // handle arrays
+            if (type.IsArray)
+            {
+                if (type.GetArrayRank() != 1)
+                {
+                    throw new NotSupportedException("Multi-dimension arrays are supported");
+                }
+                itemType = type.GetElementType();
+                if (itemType == typeof(byte)) {
+                    defaultType = itemType = null;
+                } else {
+                    defaultType = type.MakeArrayType();
+                }
+            }
+            // handle lists
             if (itemType == null) { itemType = ListDecorator.GetItemType(type); }
+
+            // check for nested data (not allowed)
+            if (itemType != null)
+            {
+                Type nestedItemType = null, nestedDefaultType = null;
+                ResolveListTypes(itemType, ref nestedItemType, ref nestedDefaultType);
+                if (nestedItemType != null)
+                {
+                    throw new NotSupportedException("Nested or jagged lists and arrays are not supported");
+                }
+            }
 
             if (itemType != null && defaultType == null)
             {
@@ -234,6 +260,7 @@ namespace ProtoBuf.Meta
                 default:
                     throw new NotSupportedException();
             }
+
             ResolveListTypes(miType, ref itemType, ref defaultType);
             Add(new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType));
             return this;

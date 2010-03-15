@@ -17,7 +17,7 @@ namespace ProtoBuf.Serializers
         }
         public object Read(object value, ProtoReader source)
         {
-            return source.AppendBytes((byte[])value);
+            return ProtoReader.AppendBytes((byte[])value, source);
         }
         bool IProtoSerializer.RequiresOldValue { get { return true; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
@@ -28,8 +28,8 @@ namespace ProtoBuf.Serializers
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.LoadReaderWriter();
             ctx.LoadValue(valueFrom);
+            ctx.LoadReaderWriter();
             ctx.EmitCall(typeof(ProtoReader).GetMethod("AppendBytes"));
         }
 #endif

@@ -118,7 +118,7 @@ namespace ProtoBuf
                         scale = (TimeSpanScale)source.ReadInt32();
                         break;
                     case FieldTimeSpanValue:
-                        source.SetSignedVariant();
+                        source.Assert(WireType.SignedVariant);
                         value = source.ReadInt64();
                         break;
                     default:

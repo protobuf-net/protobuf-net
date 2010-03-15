@@ -460,27 +460,28 @@ namespace ProtoBuf
             return false;
         }
 
-
-        public void ExpectField(WireType wireType)
+        public void Hint(WireType wireType)
         {
-            if (this.wireType == wireType) { } // fine; everything as we expect
-            else  if (wireType == WireType.SignedVariant && this.wireType == WireType.Variant)
-            {   // allow implicit substitution to signed (to avoid need to call SetSignedVariant)
-                this.wireType = WireType.SignedVariant;
-            } else {
+            if (this.wireType == wireType) { }  // fine; everything as we expect
+            else if (((int)wireType & 7) == (int)this.wireType)
+            {   // the underling type is a match; we're customising it with an extension
+                this.wireType = wireType;
+            }
+            // note no error here; we're OK about using alternative data
+        }
+        public void Assert(WireType wireType)
+        {
+            if (this.wireType == wireType) {}  // fine; everything as we expect
+            else if (((int)wireType & 7) == (int)this.wireType)
+            {   // the underling type is a match; we're customising it with an extension
+                this.wireType = wireType;
+            }
+            else
+            {   // nope; that is *not* what we were expecting!
                 throw BorkedIt();
             }
         }
-        public void SetSignedVariant()
-        {
-            switch (wireType)
-            {
-                case WireType.Variant: wireType = WireType.SignedVariant; break;
-                case WireType.SignedVariant: break; // nothing to do
-                default: throw BorkedIt();
-            }
-        }
-
+        
         public void SkipField()
         {
             switch (wireType)
@@ -516,27 +517,7 @@ namespace ProtoBuf
                         // else assume we're going to be OK
                         dataRemaining -= len;
                     }
-                    if (source.CanSeek)
-                    {   // ask the underlying stream to do the seeking
-                        source.Seek(len, SeekOrigin.Current);
-                    }
-                    else
-                    {   // do it the hard way
-                        int bytesRead;
-                        // use full buffers while we can
-                        while (len > ioBuffer.Length && 
-                            (bytesRead = source.Read(ioBuffer, 0, ioBuffer.Length)) > 0)
-                        {
-                            len -= bytesRead;
-                        }
-                        // then switch to partial buffers (hopefully only one of these!)
-                        while (len > 0 &&
-                             (bytesRead = source.Read(ioBuffer, 0, len)) > 0)
-                        {
-                            len -= bytesRead;    
-                        }
-                        if (len > 0) throw new EndOfStreamException();
-                    }
+                    ProtoReader.Seek(source, len, ioBuffer);
                     return;
                 case WireType.Variant:
                 case WireType.SignedVariant:
@@ -617,13 +598,13 @@ namespace ProtoBuf
             }
         }
 
-        public byte[] AppendBytes(byte[] value)
+        public static byte[] AppendBytes(byte[] value, ProtoReader reader)
         {
-            switch (wireType)
+            switch (reader.wireType)
             {
                 case WireType.String:
-                    int len = (int)ReadUInt32Variant(false);
-                    wireType = WireType.None;
+                    int len = (int)reader.ReadUInt32Variant(false);
+                    reader.wireType = WireType.None;
                     if (len == 0) return value;
                     int offset;
                     if(value == null || value.Length == 0) {
@@ -637,31 +618,31 @@ namespace ProtoBuf
                     }
                     // value is now sized with the final length, and (if necessary)
                     // contains the old data up to "offset"
-                    position += len; // assume success
-                    while(len > available)
+                    reader.position += len; // assume success
+                    while (len > reader.available)
                     {
-                        if (available > 0)
+                        if (reader.available > 0)
                         {
                             // copy what we *do* have
-                            Helpers.BlockCopy(ioBuffer, ioIndex, value, offset, available);
-                            len -= available;
-                            offset += available;
-                            ioIndex = available = 0; // we've drained the buffer
+                            Helpers.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, reader.available);
+                            len -= reader.available;
+                            offset += reader.available;
+                            reader.ioIndex = reader.available = 0; // we've drained the buffer
                         }
                         //  now refill the buffer (without overflowing it)
-                        int count = len > ioBuffer.Length ? ioBuffer.Length : len;
-                        if (count > 0) Ensure(count, true);
+                        int count = len > reader.ioBuffer.Length ? reader.ioBuffer.Length : len;
+                        if (count > 0) reader.Ensure(count, true);
                     }
                     // at this point, we know that len <= available
                     if (len > 0)
                     {   // still need data, but we have enough buffered
-                        Helpers.BlockCopy(ioBuffer, ioIndex, value, offset, len);
-                        ioIndex += len;
-                        available -= len;
+                        Helpers.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, len);
+                        reader.ioIndex += len;
+                        reader.available -= len;
                     }
                     return value;
                 default:
-                    throw BorkedIt();
+                    throw reader.BorkedIt();
             }
         }
 
@@ -684,7 +665,7 @@ namespace ProtoBuf
             if (val < 0) throw new EndOfStreamException();
             return val;
         }
-        public static int ReadLengthPrefix(Stream source, PrefixStyle style, out int fieldNumber)
+        public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber)
         {
             fieldNumber = 0;
             switch (style)
@@ -692,20 +673,123 @@ namespace ProtoBuf
                 case PrefixStyle.None:                    
                     return int.MaxValue;
                 case PrefixStyle.Base128:
-                    throw new NotImplementedException();
+                    uint val;
+                    if (expectHeader)
+                    {                        
+                        if (ProtoReader.TryReadUInt32Variant(source, out val))
+                        {
+                            if ((val & 7) != (uint)WireType.String)
+                            { // got a header, but it isn't a string
+                                throw new InvalidOperationException();
+                            }
+                            fieldNumber = (int)(val >> 3);
+                            if (!ProtoReader.TryReadUInt32Variant(source, out val))
+                            { // got a header, but no length
+                                throw new EndOfStreamException();
+                            }
+                            return (int)val;
+                        }
+                        else
+                        { // no header
+                            return -1;
+                        }
+                    }
+                    // check for a length
+                    return ProtoReader.TryReadUInt32Variant(source, out val)
+                        ? (int)val : -1;
+
                 case PrefixStyle.Fixed32:
-                    return ReadByteOrThrow(source)
-                         | (ReadByteOrThrow(source) << 8)
-                         | (ReadByteOrThrow(source) << 16)
-                         | (ReadByteOrThrow(source) << 24);
+                    {
+                        int b = source.ReadByte();
+                        return b < 0 ? -1 :
+                            b
+                             | (ReadByteOrThrow(source) << 8)
+                             | (ReadByteOrThrow(source) << 16)
+                             | (ReadByteOrThrow(source) << 24);
+                    }
                 case PrefixStyle.Fixed32BigEndian:
-                    return (ReadByteOrThrow(source) << 24)
-                         | (ReadByteOrThrow(source) << 16)
-                         | (ReadByteOrThrow(source) << 8)
-                         | ReadByteOrThrow(source);
+                    {
+                        int b = source.ReadByte();
+                        return b < 0 ? -1 :
+                            (b << 24)
+                            | (ReadByteOrThrow(source) << 16)
+                            | (ReadByteOrThrow(source) << 8)
+                            | ReadByteOrThrow(source);
+                    }
                 default:
                     throw new ArgumentOutOfRangeException("style");
             }
+        }
+
+        private static bool TryReadUInt32Variant(Stream source, out uint value)
+        {
+            value = 0;
+            int b = source.ReadByte();
+            if (b < 0) { return false; }
+            value = (uint)b;
+            if ((value & 0x80) == 0) return true;
+            value &= 0x7F;
+
+            b = source.ReadByte();
+            if (b < 0) throw new EndOfStreamException();
+            value |= ((uint)b & 0x7F) << 7;
+            if ((b & 0x80) == 0) return true;
+
+            b = source.ReadByte();
+            if (b < 0) throw new EndOfStreamException();
+            value |= ((uint)b & 0x7F) << 14;
+            if ((b & 0x80) == 0) return true;
+
+            b = source.ReadByte();
+            if (b < 0) throw new EndOfStreamException();
+            value |= ((uint)b & 0x7F) << 21;
+            if ((b & 0x80) == 0) return true;
+
+            b = source.ReadByte();
+            if (b < 0) throw new EndOfStreamException();
+            value |= (uint)b << 28; // can only use 4 bits from this chunk
+            if ((b & 0xF0) == 0) return true;
+
+            throw new OverflowException();
+        }
+
+        internal static void Seek(Stream source, int count, byte[] buffer)
+        {
+            if (source.CanSeek)
+            {
+                source.Seek(count, SeekOrigin.Current);
+                count = 0;
+            }
+            else if (buffer != null)
+            {
+                int bytesRead;
+                while(count > buffer.Length && (bytesRead = source.Read(buffer, 0, buffer.Length)) > 0) {
+                    count -= bytesRead;
+                }
+                while (count > 0 && (bytesRead = source.Read(buffer, 0, count)) > 0) {
+                    count -= bytesRead;
+                }
+            }
+            else // borrow a buffer
+            {
+                buffer = BufferPool.GetBuffer();
+                try
+                {
+                    int bytesRead;
+                    while (count > buffer.Length && (bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        count -= bytesRead;
+                    }
+                    while (count > 0 && (bytesRead = source.Read(buffer, 0, count)) > 0)
+                    {
+                        count -= bytesRead;
+                    }   
+                }
+                finally {
+                    BufferPool.ReleaseBufferToPool(ref buffer);
+                }
+            }
+            if (count > 0) throw new EndOfStreamException();
         }
     }
 }
