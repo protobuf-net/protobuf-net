@@ -5,17 +5,38 @@ using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Meta
 {
+    /// <summary>
+    /// Represents a member (property/field) that is mapped to a protobuf field
+    /// </summary>
     public class ValueMember
     {
         private readonly int fieldNumber;
+        /// <summary>
+        /// The number that identifies this member in a protobuf stream
+        /// </summary>
         public int FieldNumber { get { return fieldNumber; } }
         private MemberInfo member;
         private readonly Type parentType, itemType, defaultType, memberType;
+        /// <summary>
+        /// Within a list / array / etc, the type of object for each item in the list (especially useful with ArrayList)
+        /// </summary>
         public Type ItemType { get { return itemType; } }
+        /// <summary>
+        /// The underlying type of the member
+        /// </summary>
         public Type MemberType { get { return memberType; } }
+        /// <summary>
+        /// For abstract types (IList etc), the type of concrete object to create (if required)
+        /// </summary>
         public Type DefaultType { get { return defaultType; } }
+        /// <summary>
+        /// The type the defines the member
+        /// </summary>
         public Type ParentType { get { return parentType; } }
         private readonly RuntimeTypeModel model;
+        /// <summary>
+        /// Creates a new ValueMember instance
+        /// </summary>
         public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType)
             
         {
@@ -44,12 +65,21 @@ namespace ProtoBuf.Meta
         }
 
         private DataFormat dataFormat;
+        /// <summary>
+        /// Specifies the rules used to process the field; this is used to determine the most appropriate
+        /// wite-type, but also to describe subtypes <i>within</i> that wire-type (such as SignedVariant)
+        /// </summary>
         public DataFormat DataFormat
         {
             get { return dataFormat; }
             set { dataFormat = value; }
         }
         private bool isStrict;
+        /// <summary>
+        /// Indicates whether this field should follow strict encoding rules; this means (for example) that if a "fixed32"
+        /// is encountered when "variant" is defined, then it will fail (throw an exception) when parsing. Note that
+        /// when serializing the defined type is always used.
+        /// </summary>
         public bool IsStrict
         {
             get { return isStrict; }
@@ -164,7 +194,7 @@ namespace ProtoBuf.Meta
             }
             if (type == typeof(byte[]))
             {
-                defaultWireType = WireType.Variant;
+                defaultWireType = WireType.String;
                 return new BlobSerializer();
             }
             int key = model.FindOrAddAuto(type, false);

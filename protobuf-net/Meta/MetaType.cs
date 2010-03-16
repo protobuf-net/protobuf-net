@@ -7,6 +7,9 @@ using System.Text.RegularExpressions;
 
 namespace ProtoBuf.Meta
 {
+    /// <summary>
+    /// Represents a type at runtime for use with protobuf, allowing the field mappings (etc) to be defined
+    /// </summary>
     public class MetaType
     {
         private readonly RuntimeTypeModel model;
@@ -18,11 +21,17 @@ namespace ProtoBuf.Meta
             this.type = type;
             this.model = model;
         }
+        /// <summary>
+        /// Throws an exception if the type has been made immutable
+        /// </summary>
         protected void ThrowIfFrozen()
         {
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
         private readonly Type type;
+        /// <summary>
+        /// The runtime type that the meta-type represents
+        /// </summary>
         public Type Type { get { return type; } }
         private IProtoSerializer serializer;
         internal IProtoSerializer Serializer {
@@ -192,7 +201,9 @@ namespace ProtoBuf.Meta
             }
             return null;
         }
-
+        /// <summary>
+        /// Adds a member (by name) to the MetaType
+        /// </summary>        
         public MetaType Add(int fieldNumber, string memberName)
         {
             return Add(fieldNumber, memberName, null, null);
@@ -245,6 +256,9 @@ namespace ProtoBuf.Meta
                 if (defaultType != null && !type.IsAssignableFrom(defaultType)) defaultType = null;
             }
         }
+        /// <summary>
+        /// Adds a member (by name) to the MetaType, including an itemType and defaultType for representing lists
+        /// </summary>
         public MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType)
         {
             MemberInfo[] members = type.GetMember(memberName);
@@ -272,6 +286,9 @@ namespace ProtoBuf.Meta
                 fields.Add(member);
             }
         }
+        /// <summary>
+        /// Returns the ValueMember that matchs a given field number, or null if not found
+        /// </summary>
         public ValueMember this[int fieldNumber]
         {
             get

@@ -11,6 +11,9 @@ using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Meta
 {
+    /// <summary>
+    /// Provides protobuf serialization support for a number of types that can be defined at runtime
+    /// </summary>
     public class RuntimeTypeModel : TypeModel
     {
         private class Singleton

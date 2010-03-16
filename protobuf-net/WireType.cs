@@ -1,5 +1,8 @@
 ﻿namespace ProtoBuf
 {
+    /// <summary>
+    /// Indicates the encoding used to represent an individual value in a protobuf stream
+    /// </summary>
     public enum WireType
     {
         /// <summary>

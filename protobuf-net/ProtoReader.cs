@@ -11,6 +11,10 @@ using OverflowException = System.ApplicationException;
 
 namespace ProtoBuf
 {
+    /// <summary>
+    /// A stateful reader, used to read a protobuf stream. Typical usage would be (sequentially) to call
+    /// ReadFieldHeader and (after matching the field) an appropriate Read* method.
+    /// </summary>
     public sealed class ProtoReader : IDisposable
     {
         Stream source;
@@ -36,6 +40,11 @@ namespace ProtoBuf
             isFixedLength = length > 0;
             dataRemaining = isFixedLength ? length : 0;
         }
+        /// <summary>
+        /// Releases resources used by the reader, but importantly <b>does not</b> Dispose the 
+        /// underlying stream; in many typical use-cases the stream is used for different
+        /// processes, so it is assumed that the consumer will Dispose their stream separately.
+        /// </summary>
         public void Dispose()
         {
             // importantly, this does **not** own the stream, and does not dispose it
@@ -114,6 +123,9 @@ namespace ProtoBuf
             }
             return false;
         }
+        /// <summary>
+        /// Reads an unsigned 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
         public uint ReadUInt32()
         {
             switch (wireType)
@@ -136,6 +148,10 @@ namespace ProtoBuf
             }
         }
         int ioIndex, position, available; // maxPosition
+        /// <summary>
+        /// Returns the position of the current reader (note that this is not necessarily the same as the position
+        /// in the underlying stream, if multiple readers are used on the same stream)
+        /// </summary>
         public int Position { get { return position; } }
         internal void Ensure(int count, bool strict)
         {
@@ -169,15 +185,23 @@ namespace ProtoBuf
             }
 
         }
-
+        /// <summary>
+        /// Reads a signed 16-bit integer from the stream: Variant, Fixed32, Fixed64, SignedVariant
+        /// </summary>
         public short ReadInt16()
         {
             checked { return (short)ReadInt32(); }
         }
+        /// <summary>
+        /// Reads an unsigned 16-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
         public ushort ReadUInt16()
         {
             checked { return (ushort)ReadUInt32(); }
         }
+        /// <summary>
+        /// Reads a signed 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+        /// </summary>
         public int ReadInt32()
         {
             switch (wireType)
@@ -214,6 +238,9 @@ namespace ProtoBuf
             long value = (long)ziggedValue;
             return (-(value & 0x01L)) ^ ((value >> 1) & ~ProtoReader.Int64Msb);
         }
+        /// <summary>
+        /// Reads a signed 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+        /// </summary>
         public long ReadInt64()
         {
             switch (wireType)
@@ -304,6 +331,7 @@ namespace ProtoBuf
             if ((chunk & ~(ulong)0x01) != 0) throw new OverflowException();
             return 10;            
         }
+        
         private ulong ReadUInt64Variant()
         {
             ulong value;
@@ -319,6 +347,9 @@ namespace ProtoBuf
         }
 
         static readonly UTF8Encoding encoding = new UTF8Encoding();
+        /// <summary>
+        /// Reads a string from the stream (using UTF8); supported wire-types: String
+        /// </summary>
         public string ReadString()
         {
             if (wireType == WireType.String)
@@ -350,6 +381,9 @@ namespace ProtoBuf
         {
             throw new ProtoException();
         }
+        /// <summary>
+        /// Reads a double-precision number from the stream; supported wire-types: Fixed32, Fixed64
+        /// </summary>
         public unsafe double ReadDouble()
         {
             switch (wireType)
@@ -364,6 +398,10 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Reads (merges) a sub-message from the stream, internally calling StartSubItem and EndSubItem, and (in between)
+        /// parsing the message in accordance with the model associated with the reader
+        /// </summary>
         public static object ReadObject(object value, int key, ProtoReader reader)
         {
             if (reader.model == null)
@@ -376,6 +414,11 @@ namespace ProtoBuf
             return value;
         }
 
+        /// <summary>
+        /// Makes the end of consuming a nested message in the stream; the stream must be either at the correct EndGroup
+        /// marker, or all fields of the sub-message must have been consumed (in either case, this means ReadFieldHeader
+        /// should return zero)
+        /// </summary>
         public static void EndSubItem(SubItemToken token, ProtoReader reader)
         {
             int value = token.value;
@@ -398,6 +441,10 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Begins consuming a nested message in the stream; supported wire-types: StartGroup, String
+        /// </summary>
+        /// <remarks>The token returned must be help and used when callining EndSubItem</remarks>
         public static SubItemToken StartSubItem(ProtoReader reader)
         {
             switch (reader.wireType)
@@ -418,6 +465,10 @@ namespace ProtoBuf
         }
 
         int blockEnd = int.MaxValue;
+        /// <summary>
+        /// Reads a field header from the stream, setting the wire-type and retuning the field number. If no
+        /// more fields are available, then 0 is returned. This methods respects sub-messages.
+        /// </summary>
         public int ReadFieldHeader()
         {
             // at the end of a group the caller must call EndSubItem to release the
@@ -460,6 +511,10 @@ namespace ProtoBuf
             return false;
         }
 
+        /// <summary>
+        /// Compares the streams current wire-type to the hinted wire-type, updating the reader if necessary; for example,
+        /// a Variant may be updated to SignedVariant. If the hinted wire-type is unrelated then no change is made.
+        /// </summary>
         public void Hint(WireType wireType)
         {
             if (this.wireType == wireType) { }  // fine; everything as we expect
@@ -469,6 +524,11 @@ namespace ProtoBuf
             }
             // note no error here; we're OK about using alternative data
         }
+
+        /// <summary>
+        /// Verifies that the stream's current wire-type is as expected, or a specialized sub-type (for example,
+        /// SignedVariant) - in which case the current wire-type is updated. Otherwise an exception is thrown.
+        /// </summary>
         public void Assert(WireType wireType)
         {
             if (this.wireType == wireType) {}  // fine; everything as we expect
@@ -482,6 +542,9 @@ namespace ProtoBuf
             }
         }
         
+        /// <summary>
+        /// Discards the data for the current field.
+        /// </summary>
         public void SkipField()
         {
             switch (wireType)
@@ -538,6 +601,9 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Reads an unsigned 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
         public ulong ReadUInt64()
         {
             switch (wireType)
@@ -563,6 +629,9 @@ namespace ProtoBuf
                     throw BorkedIt();
             }
         }
+        /// <summary>
+        /// Reads a single-precision number from the stream; supported wire-types: Fixed32, Fixed64
+        /// </summary>
         public unsafe float ReadSingle()
         {
             switch (wireType)
@@ -588,6 +657,10 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Reads a boolean value from the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
+        /// <returns></returns>
         public bool ReadBoolean()
         {
             switch (ReadUInt32())
@@ -598,6 +671,9 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
+        /// </summary>
         public static byte[] AppendBytes(byte[] value, ProtoReader reader)
         {
             switch (reader.wireType)
@@ -665,6 +741,10 @@ namespace ProtoBuf
             if (val < 0) throw new EndOfStreamException();
             return val;
         }
+        /// <summary>
+        /// Reads the length-prefix of a message from a stream without buffering additional data, allowing a fixed-length
+        /// reader to be created.
+        /// </summary>
         public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber)
         {
             fieldNumber = 0;

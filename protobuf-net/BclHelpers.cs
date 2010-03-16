@@ -15,6 +15,10 @@ namespace ProtoBuf
         MinMax = 15
     }
 
+    /// <summary>
+    /// Provides support for common .NET types that do not have a direct representation
+    /// in protobuf, using the definitions from bcl.proto
+    /// </summary>
     public class BclHelpers
     {
 
@@ -23,6 +27,9 @@ namespace ProtoBuf
         
         internal static readonly DateTime EpochOrigin = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 
+        /// <summary>
+        /// Writes a TimeSpan to a protobuf stream
+        /// </summary>
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
             TimeSpanScale scale;
@@ -79,6 +86,9 @@ namespace ProtoBuf
             }
             ProtoWriter.EndSubItem(token, dest);
         }
+        /// <summary>
+        /// Parses a TimeSpan from a protobuf stream
+        /// </summary>        
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
             long ticks = ReadTimeSpanTicks(source);
@@ -86,6 +96,9 @@ namespace ProtoBuf
             if (ticks == long.MaxValue) { return TimeSpan.MaxValue; }
             return TimeSpan.FromTicks(ticks);
         }
+        /// <summary>
+        /// Parses a DateTime from a protobuf stream
+        /// </summary>
         public static DateTime ReadDateTime(ProtoReader source)
         {
             long ticks = ReadTimeSpanTicks(source);
@@ -93,7 +106,9 @@ namespace ProtoBuf
             if (ticks == long.MaxValue) { return DateTime.MaxValue; }
             return EpochOrigin.AddTicks(ticks);
         }
-
+        /// <summary>
+        /// Writes a DateTime to a protobuf stream
+        /// </summary>
         public static void WriteDateTime(DateTime value, ProtoWriter dest)
         {
             TimeSpan delta;
@@ -155,6 +170,9 @@ namespace ProtoBuf
 
         const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
 
+        /// <summary>
+        /// Parses a decimal from a protobuf stream
+        /// </summary>
         public static decimal ReadDecimal(ProtoReader reader)
         {
             ulong low = 0;
@@ -185,7 +203,9 @@ namespace ProtoBuf
             byte scale = (byte)((signScale & 0x01FE) >> 1);
             return new decimal(lo, mid, hi, isNeg, scale);
         }
-
+        /// <summary>
+        /// Writes a decimal to a protobuf stream
+        /// </summary>
         public static void WriteDecimal(decimal value, ProtoWriter writer)
         {
             int[] bits = decimal.GetBits(value);
@@ -213,6 +233,9 @@ namespace ProtoBuf
         }
 
         const int FieldGuidLow = 1, FieldGuidHigh = 2;
+        /// <summary>
+        /// Writes a Guid to a protobuf stream
+        /// </summary>        
         public static void WriteGuid(Guid value, ProtoWriter dest)
         {
             byte[] blob = value.ToByteArray();
@@ -227,6 +250,9 @@ namespace ProtoBuf
             }
             ProtoWriter.EndSubItem(token, dest);
         }
+        /// <summary>
+        /// Parses a Guid from a protobuf stream
+        /// </summary>
         public static Guid ReadGuid(ProtoReader source)
         {
             ulong low = 0, high = 0;
