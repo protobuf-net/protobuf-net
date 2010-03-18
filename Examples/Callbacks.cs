@@ -4,7 +4,7 @@ using ProtoBuf;
 using System.Runtime.Serialization;
 namespace Examples
 {
-    [ProtoContract]
+    [ProtoContract, Ignore("callbacks not implemented")]
     public class CallbackSimple : ICallbackTest
     {
         [ProtoMember(1)]

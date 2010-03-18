@@ -32,7 +32,7 @@ namespace ProtoBuf.Meta
             AutoAddMissingTypes = true;
             this.isDefault = isDefault;
         }
-        public MetaType this[Type type] { get { return Find(type); } }
+        public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true)]; } }
         MetaType Find(Type type)
         {
             // this list is thread-safe for reading

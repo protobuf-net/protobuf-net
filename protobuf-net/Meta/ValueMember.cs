@@ -37,8 +37,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Creates a new ValueMember instance
         /// </summary>
-        public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType)
-            
+        public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType, DataFormat dataFormat)            
         {
             if (fieldNumber < 1) throw new ArgumentOutOfRangeException("fieldNumber");
             if (member == null) throw new ArgumentNullException("member");
@@ -52,6 +51,7 @@ namespace ProtoBuf.Meta
             this.defaultType = defaultType;
             this.parentType = parentType;
             this.model = model;
+            this.dataFormat = dataFormat;
         }
 
         private IProtoSerializer serializer;
@@ -64,16 +64,12 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private DataFormat dataFormat;
+        private readonly DataFormat dataFormat;
         /// <summary>
         /// Specifies the rules used to process the field; this is used to determine the most appropriate
         /// wite-type, but also to describe subtypes <i>within</i> that wire-type (such as SignedVariant)
         /// </summary>
-        public DataFormat DataFormat
-        {
-            get { return dataFormat; }
-            set { dataFormat = value; }
-        }
+        public DataFormat DataFormat { get { return dataFormat; } }
         private bool isStrict;
         /// <summary>
         /// Indicates whether this field should follow strict encoding rules; this means (for example) that if a "fixed32"
@@ -88,7 +84,7 @@ namespace ProtoBuf.Meta
         private IProtoSerializer BuildSerializer()
         {
             WireType wireType;
-            IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, DataFormat, out wireType);
+            IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, out wireType);
             // apply tags
             ser = new TagDecorator(fieldNumber, wireType, isStrict, ser);
             // apply lists if appropriate
@@ -128,7 +124,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private IProtoSerializer GetCoreSerializer(Type type, DataFormat dataFormat, out WireType defaultWireType)
+        private IProtoSerializer GetCoreSerializer(Type type, out WireType defaultWireType)
         {
 #if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;

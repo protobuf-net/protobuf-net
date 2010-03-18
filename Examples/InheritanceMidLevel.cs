@@ -9,7 +9,7 @@ namespace Examples
     /// Tests the scenario where a class exposes a property that isn't the root - i.e. Child : Parent, and has
     /// a Child property
     /// </summary>
-    [TestFixture]
+    [TestFixture, Ignore("inheritance not implemented")]
     public class InheritanceMidLevel
     {
         internal static IMLChild CreateChild(int rootProperty, int parentProperty, int childProperty)

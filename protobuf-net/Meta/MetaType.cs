@@ -108,6 +108,7 @@ namespace ProtoBuf.Meta
             ResolveListTypes(effectiveType, ref itemType, ref defaultType);
             object[] attribs = member.GetCustomAttributes(true);
             Attribute attrib;
+            DataFormat dataFormat = DataFormat.Default;
             bool ignore = false;
             if (!ignore && HasFamily(family, AttributeFamily.ProtoBuf))
             {
@@ -118,6 +119,7 @@ namespace ProtoBuf.Meta
                     GetFieldNumber(ref fieldNumber, attrib, "Tag");
                     GetFieldName(ref name, attrib, "Name");
                     GetFieldRequired(ref isRequired, attrib, "IsRequired");
+                    GetDataFormat(ref dataFormat, attrib, "DataFormat");
                 }
                 
             }
@@ -145,8 +147,15 @@ namespace ProtoBuf.Meta
                     GetFieldName(ref name, attrib, "ElementName");
                 }
             }
-            return (fieldNumber > 0 && !ignore) ? new ValueMember(model, type, fieldNumber, member, effectiveType, itemType, defaultType)
+            return (fieldNumber > 0 && !ignore) ? new ValueMember(model, type, fieldNumber, member, effectiveType, itemType, defaultType, dataFormat)
                     : null;
+        }
+
+        private static void GetDataFormat(ref DataFormat value, Attribute attrib, string memberName)
+        {
+            if ((attrib == null) || (value != DataFormat.Default)) return;
+            object obj = GetMemberValue(attrib, memberName);
+            if (obj != null) value = (DataFormat)obj;
         }
 
         private static void GetIgnore(ref bool ignore, Attribute attrib, object[] attribs, string fullName)
@@ -276,7 +285,7 @@ namespace ProtoBuf.Meta
             }
 
             ResolveListTypes(miType, ref itemType, ref defaultType);
-            Add(new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType));
+            Add(new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType, DataFormat.Default));
             return this;
         } 
         private void Add(ValueMember member) {

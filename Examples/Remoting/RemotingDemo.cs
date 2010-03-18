@@ -7,6 +7,9 @@ using DAL;
 using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.IO;
+using System.Xml.Serialization;
 
 namespace Examples.Remoting
 {
@@ -76,18 +79,20 @@ namespace Examples.Remoting
         }
     }
 
-    [Serializable]
+    [Serializable, DataContract]
     public sealed class RegularFragment
     {
+        [DataMember]
         public int Foo { get; set; }
+        [DataMember]
         public float Bar { get; set; }
     }
-    [Serializable, ProtoContract]
+    [Serializable, ProtoContract, XmlType]
     public sealed class ProtoFragment : ISerializable
     {
-        [ProtoMember(1, DataFormat=DataFormat.TwosComplement)]
+        [ProtoMember(1, DataFormat=DataFormat.TwosComplement), XmlAttribute("foo")]
         public int Foo { get; set; }
-        [ProtoMember(2)]
+        [ProtoMember(2), XmlAttribute("bar")]
         public float Bar { get; set; }
 
         public ProtoFragment() { }
@@ -137,6 +142,7 @@ namespace Examples.Remoting
                 Server local = new Server(),
                     remote = (Server)app.CreateInstanceAndUnwrap(typeof(Server).Assembly.FullName, typeof(Server).FullName);
                 RegularFragment frag1 = new RegularFragment { Foo = 27, Bar = 123.45F };
+                Serializer.PrepareSerializer<ProtoFragment>();
                 ProtoFragment frag2 = new ProtoFragment { Foo = frag1.Foo, Bar = frag1.Bar };
                 // verify basic transport
                 RegularFragment localFrag1 = local.SomeMethod1(frag1),
@@ -144,6 +150,8 @@ namespace Examples.Remoting
                 ProtoFragment localFrag2 = local.SomeMethod2(frag2),
                     remoteFrag2 = remote.SomeMethod2(frag2);
 
+                Assert.AreNotSame(localFrag1, remoteFrag1);
+                Assert.AreNotSame(localFrag2, remoteFrag2);
                 Assert.AreEqual(localFrag1.Foo, remoteFrag1.Foo);
                 Assert.AreEqual(localFrag1.Bar, remoteFrag1.Bar);
                 Assert.AreEqual(localFrag2.Foo, remoteFrag2.Foo);
@@ -168,15 +176,89 @@ namespace Examples.Remoting
 
                 Assert.LessOrEqual(3, 5, "just checking...");
 
-                Assert.LessOrEqual(protoWatch.ElapsedTicks,
-                    (long)(regWatch.ElapsedTicks * 1.00M));
+                Assert.LessOrEqual(protoWatch.ElapsedMilliseconds, regWatch.ElapsedMilliseconds);
             }
             finally
             {                
                 AppDomain.Unload(app);
             }
         }
+        [Test]
+        public void TestRawSerializerPerformance()
+        {
+            RegularFragment frag1 = new RegularFragment { Foo = 27, Bar = 123.45F };
+            
+            ProtoFragment frag2 = new ProtoFragment { Foo = frag1.Foo, Bar = frag1.Bar };
+            Type regular = typeof(RegularFragment), proto = typeof(ProtoFragment);
+            var model = TypeModel.Create();
+            model.AutoAddMissingTypes = false;
+            model.Add(typeof(ProtoFragment), true);
+            
+            const int LOOP = 10000;
+            Roundtrip(() => new BinaryFormatter(), LOOP,
+                (ser, dest) => ser.Serialize(dest, frag1), (ser, src) => ser.Deserialize(src));
 
+            Roundtrip("BinaryFormatter via pb-net", () => new BinaryFormatter(), LOOP,
+                (ser, dest) => ser.Serialize(dest, frag2), (ser, src) => ser.Deserialize(src));
+
+            Roundtrip(() => model, LOOP,
+                (ser, dest) => ser.Serialize(dest, frag2), (ser, src) => ser.Deserialize(src, null, proto));
+
+            Roundtrip(() => new XmlSerializer(proto), LOOP,
+                (ser, dest) => ser.Serialize(dest, frag2), (ser, src) => ser.Deserialize(src));
+
+            Roundtrip(() => new DataContractSerializer(regular), LOOP,
+                (ser, dest) => ser.WriteObject(dest, frag1), (ser, src) => ser.ReadObject(src));
+
+            Roundtrip(() => new NetDataContractSerializer(), LOOP,
+                (ser, dest) => ser.Serialize(dest, frag1), (ser, src) => ser.Deserialize(src));
+
+            model.CompileInPlace();
+            Roundtrip("CompileInPlace", () => model, LOOP * 50,
+                (ser, dest) => ser.Serialize(dest, frag2), (ser, src) => ser.Deserialize(src, null, proto));
+
+            Roundtrip("Compile", () => model.Compile(), LOOP * 50,
+                (ser, dest) => ser.Serialize(dest, frag2), (ser, src) => ser.Deserialize(src, null, proto));
+        }
+        static void Roundtrip<T>(Func<T> ctor, int loop, Action<T, Stream> write, Func<T, Stream, object> read)
+            where T : class
+        {
+            Roundtrip(typeof(T).Name, ctor, loop, write, read);
+        }
+        static void Roundtrip<T>(string caption, Func<T> ctor, int loop, Action<T, Stream> write, Func<T, Stream, object> read)
+            where T : class
+        {
+            T ser = ctor();
+
+            using (MemoryStream ms = new MemoryStream())
+            {
+                write(ser, ms);
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                GC.WaitForPendingFinalizers();
+                Stopwatch writeWatch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    ms.SetLength(0);
+                    write(ser, ms);
+                }
+                writeWatch.Stop();
+
+                ms.Position = 0;
+                read(ser, ms);
+                GC.Collect(GC.MaxGeneration, GCCollectionMode.Forced);
+                GC.WaitForPendingFinalizers();
+                Stopwatch readWatch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    ms.Position = 0;
+                    read(ser, ms);
+                }
+                readWatch.Stop();
+
+                Console.WriteLine("{0}:\t{1}μs/item (read)", caption, (readWatch.ElapsedMilliseconds * 1000.0) / loop);
+                Console.WriteLine("{0}:\t{1}μs/item (write)", caption, (writeWatch.ElapsedMilliseconds * 1000.0) / loop);
+            }
+        }
     }
 }
 #endif
