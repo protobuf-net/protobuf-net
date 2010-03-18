@@ -23,7 +23,7 @@ namespace ProtoBuf
 
         private int fieldNumber;
         WireType wireType = WireType.None;
-        internal int FieldNumber { get { return fieldNumber; } }
+        public int FieldNumber { get { return fieldNumber; } }
         
         internal ProtoReader(Stream source, TypeModel model) :
             this(source, model, -1)

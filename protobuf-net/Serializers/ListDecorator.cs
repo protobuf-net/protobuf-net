@@ -91,8 +91,7 @@ namespace ProtoBuf.Serializers
              *  - initialization if we need to pass in a value to the tail
              *  - handling whether or not the tail *returns* the value vs updates the input
              */ 
-            using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            using (Compiler.Local position = new Compiler.Local(ctx, typeof(int)))
+            using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))            
             {
                 if (concreteType != null)
                 {
@@ -104,18 +103,27 @@ namespace ProtoBuf.Serializers
                     ctx.MarkLabel(notNull);
                 }
 
+                EmitReadList(ctx, list, Tail, add);
+                ctx.LoadValue(list);
+            }
+        }
+
+        internal static void EmitReadList(ProtoBuf.Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add)
+        {
+            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
+            {
                 ctx.LoadReaderWriter();
-                ctx.LoadValue(typeof(ProtoReader).GetProperty("Position"));
-                ctx.StoreValue(position);
+                ctx.LoadValue(typeof(ProtoReader).GetProperty("FieldNumber"));
+                ctx.StoreValue(fieldNumber);
 
                 Compiler.CodeLabel @continue = ctx.DefineLabel();
                 ctx.MarkLabel(@continue);
 
                 ctx.LoadValue(list);
-                Type itemType = Tail.ExpectedType;
-                if (Tail.RequiresOldValue)
+                Type itemType = tail.ExpectedType;
+                if (tail.RequiresOldValue)
                 {
-                    if (itemType.IsValueType || !Tail.ReturnsValue)
+                    if (itemType.IsValueType || !tail.ReturnsValue)
                     {
                         // going to need a variable
                         using (Compiler.Local item = new Compiler.Local(ctx, itemType))
@@ -130,21 +138,21 @@ namespace ProtoBuf.Serializers
                                 ctx.LoadNullRef();
                                 ctx.StoreValue(item);
                             }
-                            Tail.EmitRead(ctx, item);
+                            tail.EmitRead(ctx, item);
                             ctx.LoadValue(item);
                         }
                     }
                     else
                     {    // no variable; pass the null on the stack and take the value *off* the stack
                         ctx.LoadNullRef();
-                        Tail.EmitRead(ctx, null);
+                        tail.EmitRead(ctx, null);
                     }
                 }
                 else
                 {
-                    if (Tail.ReturnsValue)
+                    if (tail.ReturnsValue)
                     {   // out only (on the stack); just emit it
-                        Tail.EmitRead(ctx, null);
+                        tail.EmitRead(ctx, null);
                     }
                     else
                     {   // doesn't take anything in nor return anything! WTF?
@@ -163,10 +171,9 @@ namespace ProtoBuf.Serializers
                     ctx.DiscardValue();
                 }
                 ctx.LoadReaderWriter();
-                ctx.LoadValue(position);
+                ctx.LoadValue(fieldNumber);
                 ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader"));
                 ctx.BranchIfTrue(@continue, false);
-                ctx.LoadValue(list);
             }
         }
 

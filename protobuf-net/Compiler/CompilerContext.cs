@@ -847,12 +847,40 @@ namespace ProtoBuf.Compiler
             Emit(OpCodes.Add);
         }
 
-        internal void LoadLength(Local arr)
+        internal void LoadLength(Local arr, bool zeroIfNull)
         {
             Helpers.DebugAssert(arr.Type.IsArray && arr.Type.GetArrayRank() == 1);
-            LoadValue(arr);
-            Emit(OpCodes.Ldlen);
-            Emit(OpCodes.Conv_I4);
+
+            if (zeroIfNull)
+            {
+                Compiler.CodeLabel notNull = DefineLabel(), done = DefineLabel();
+                LoadValue(arr);
+                CopyValue(); // optimised for non-null case
+                BranchIfTrue(notNull, true);
+                DiscardValue();
+                LoadValue(0);
+                Branch(done, true);
+                MarkLabel(notNull);
+                Emit(OpCodes.Ldlen);
+                Emit(OpCodes.Conv_I4);
+                MarkLabel(done);
+            }
+            else
+            {
+                LoadValue(arr);
+                Emit(OpCodes.Ldlen);
+                Emit(OpCodes.Conv_I4);
+            }
+        }
+
+        internal void CreateArray(Type elementType, Local length)
+        {
+            LoadValue(length);
+            il.Emit(OpCodes.Newarr, elementType);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(OpCodes.Newarr + ": " + elementType);
+#endif
+
         }
 
         internal void LoadArrayValue(Local arr, Local i)

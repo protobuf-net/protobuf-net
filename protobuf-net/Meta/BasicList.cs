@@ -142,15 +142,6 @@ namespace ProtoBuf.Meta
                     Array.Copy(data, 0, array, offset, Length);
                 }
             }
-
-            internal Array Combine(Array array, Type itemType)
-            {
-                int oldLen = array == null ? 0 : array.Length;
-                Array result = Array.CreateInstance(itemType, oldLen + Length);
-                if(oldLen > 0) Array.Copy(array, 0, result, 0, oldLen);
-                if(Length > 0) Array.Copy(data, 0, result, oldLen, Length);
-                return result;            
-            }
         }
 
         internal int IndexOf(IPredicate predicate)
@@ -170,11 +161,6 @@ namespace ProtoBuf.Meta
                 if (object.Equals(obj, value)) return true;
             }
             return false;
-        }
-
-        public Array Combine(Array array, Type itemType)
-        {
-            return head.Combine(array, itemType);
         }
     }
 }
