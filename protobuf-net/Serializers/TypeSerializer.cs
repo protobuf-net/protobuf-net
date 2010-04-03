@@ -1,6 +1,7 @@
 ﻿#if !NO_RUNTIME
 using System;
 using ProtoBuf.Meta;
+using System.Reflection.Emit;
 
 
 namespace ProtoBuf.Serializers
@@ -17,6 +18,7 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(fieldNumbers != null);
             Helpers.DebugAssert(serializers != null);
             Helpers.DebugAssert(fieldNumbers.Length == serializers.Length);
+
             Helpers.Sort(fieldNumbers, serializers);
             this.forType = forType;
             this.serializers = serializers;
@@ -31,10 +33,26 @@ namespace ProtoBuf.Serializers
         
         public void Write(object value, ProtoWriter dest)
         {
-            // write all suitable fields
+            // write inheritance first
+            Type actualType = value.GetType();
+            if (actualType != forType)
+            {
+                for (int i = 0; i < serializers.Length; i++)
+                {
+                    IProtoSerializer ser = serializers[i];
+                    if (ser.ExpectedType != forType && actualType.IsAssignableFrom(ser.ExpectedType))
+                    {
+                        ser.Write(value, dest);
+                        break;
+                    }
+                }
+            }
+
+            // write all actual fields
             for (int i = 0; i < serializers.Length; i++)
             {
-                serializers[i].Write(value, dest);
+                IProtoSerializer ser = serializers[i];
+                if(ser.ExpectedType == forType) ser.Write(value, dest);
             }
         }
 
@@ -53,11 +71,12 @@ namespace ProtoBuf.Serializers
                 {
                     if (fieldNumbers[i] == fieldNumber)
                     {
-                        if (value == null) value = Activator.CreateInstance(forType);
-                        if (serializers[i].ReturnsValue) {
-                            value = serializers[i].Read(value, source);
+                        IProtoSerializer ser = serializers[i];
+                        if (value == null && ser.ExpectedType == forType) value = CreateInstance();
+                        if (ser.ReturnsValue) {
+                            value = ser.Read(value, source);
                         } else { // pop
-                            serializers[i].Read(value, source);
+                            ser.Read(value, source);
                         }
                         
                         lastFieldIndex = i;
@@ -68,11 +87,16 @@ namespace ProtoBuf.Serializers
                 }
                 if (!fieldHandled)
                 {
-                    if (value == null) value = Activator.CreateInstance(forType);
+                    if (value == null) value = CreateInstance();
                     source.SkipField();
                 }
             }
-            return value;
+            return value ?? CreateInstance();
+        }
+
+        object CreateInstance()
+        {
+            return Activator.CreateInstance(forType);
         }
 
         bool IProtoSerializer.RequiresOldValue { get { return true; } }
@@ -83,9 +107,30 @@ namespace ProtoBuf.Serializers
             Type expected = ExpectedType;
             using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
             {
+                Compiler.CodeLabel startFields = ctx.DefineLabel();
                 for (int i = 0; i < serializers.Length; i++)
                 {
-                    serializers[i].EmitWrite(ctx, loc);
+                    IProtoSerializer ser = serializers[i];
+                    if (ser.ExpectedType != forType)
+                    {
+                        Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
+                        ctx.LoadValue(loc);
+                        ctx.TryCast(ser.ExpectedType);
+                        ctx.CopyValue();
+                        ctx.BranchIfTrue(ifMatch, true);
+                        ctx.DiscardValue();
+                        ctx.Branch(nextTest, true);
+                        ctx.MarkLabel(ifMatch);
+                        ser.EmitWrite(ctx, null);
+                        ctx.Branch(startFields, false);
+                        ctx.MarkLabel(nextTest);
+                    }
+                }
+                ctx.MarkLabel(startFields);                
+                for (int i = 0; i < serializers.Length; i++)
+                {
+                    IProtoSerializer ser = serializers[i];
+                    if(ser.ExpectedType == forType) ser.EmitWrite(ctx, loc);
                 }
             }
         }
@@ -121,7 +166,7 @@ namespace ProtoBuf.Serializers
         {
             Type expected = ExpectedType;
             Helpers.DebugAssert(valueFrom != null);
-            
+
             using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
             using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
@@ -161,7 +206,6 @@ namespace ProtoBuf.Serializers
                         }
                     }
                     ctx.MarkLabel(tryNextField);
-                    
                 }
 
                 CreateIfNull(ctx, expected, loc);
@@ -175,17 +219,25 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(0);
                 ctx.BranchIfGreater(processField, false);
 
-                //ctx.LoadValue(loc);
+                CreateIfNull(ctx, expected, loc);
             }
         }
 
-        private static void WriteFieldHandler(
+        private void WriteFieldHandler(
             Compiler.CompilerContext ctx, Type expected, Compiler.Local loc,
             Compiler.CodeLabel handler, Compiler.CodeLabel @continue, IProtoSerializer serializer)
         {
             ctx.MarkLabel(handler);
-            CreateIfNull(ctx, expected, loc);
-            serializer.EmitRead(ctx, loc);
+            if (serializer.ExpectedType == forType) {
+                CreateIfNull(ctx, expected, loc);
+                serializer.EmitRead(ctx, loc);
+            }
+            else {
+                ctx.LoadValue(loc);
+                ctx.Cast(serializer.ExpectedType);
+                serializer.EmitRead(ctx, null);                
+            }
+            
             if (serializer.ReturnsValue)
             {   // update the variable
                 ctx.StoreValue(loc);

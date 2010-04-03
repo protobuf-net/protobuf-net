@@ -12,6 +12,85 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class MetaType
     {
+        
+        private MetaType baseType;
+        /// <summary>
+        /// Gets the base-type for this type
+        /// </summary>
+        public MetaType BaseType {
+            get { return baseType; }
+        }
+
+        private BasicList subTypes;
+        /// <summary>
+        /// Adds a known sub-type to the inheritance model
+        /// </summary>
+        public MetaType AddSubType(int fieldNumber, Type derivedType)
+        {
+            MetaType derivedMeta = model[derivedType];
+            SubType subType = new SubType(fieldNumber, derivedMeta);
+            ThrowIfFrozen();
+
+            derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
+            if (subTypes == null) subTypes = new BasicList();
+            subTypes.Add(subType);
+            return this;
+        }
+
+        private void SetBaseType(MetaType baseType)
+        {
+            ThrowIfFrozen();
+            if (baseType == null) throw new ArgumentNullException("baseType");
+            if (this.baseType != null) throw new InvalidOperationException("A type can only participate in one inheritance hierarchy");
+            
+            MetaType type = baseType;
+            while (type != null)
+            {
+                if (ReferenceEquals(type, this)) throw new InvalidOperationException("Cyclic inheritance is not allowed");
+                type = type.baseType;
+            }
+            this.baseType = baseType;
+        }
+
+        private CallbackSet callbacks;
+        /// <summary>
+        /// Indicates whether the current type has defined callbacks 
+        /// </summary>
+        public bool HasCallbacks
+        {
+            get { return callbacks != null && callbacks.NonTrivial; }
+        }
+
+        /// <summary>
+        /// Indicates whether the current type has defined subtypes
+        /// </summary>
+        public bool HasSubtypes
+        {
+            get { return subTypes != null && subTypes.Count != 0; }
+        }
+        
+        /// <summary>
+        /// Obtains the subtypes that are defined for the current type
+        /// </summary>
+        public SubType[] GetSubtypes()
+        {
+            if (!HasSubtypes) return null;
+            SubType[] arr = new SubType[subTypes.Count];
+            subTypes.CopyTo(arr, 0);
+            return arr;
+        }
+
+        /// <summary>
+        /// Returns the set of callbacks defined for this type
+        /// </summary>
+        public CallbackSet Callbacks
+        {
+            get
+            {
+                if (callbacks == null) callbacks = new CallbackSet(this);
+                return callbacks;
+            }
+        }
         private readonly RuntimeTypeModel model;
         internal MetaType(RuntimeTypeModel model, Type type)
         {
@@ -24,7 +103,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Throws an exception if the type has been made immutable
         /// </summary>
-        protected void ThrowIfFrozen()
+        protected internal void ThrowIfFrozen()
         {
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
@@ -43,13 +122,26 @@ namespace ProtoBuf.Meta
         private IProtoSerializer BuildSerializer()
         {
             fields.Trim();
-            int count = fields.Count;
-            int[] fieldNumbers = new int[count];
-            IProtoSerializer[] serializers = new IProtoSerializer[count];
+            int fieldCount = fields.Count;
+            int subTypeCount = subTypes == null ? 0 : subTypes.Count;
+            int[] fieldNumbers = new int[fieldCount + subTypeCount];
+            IProtoSerializer[] serializers = new IProtoSerializer[fieldCount + subTypeCount];
             int i = 0;
-            foreach(ValueMember member in fields) {
-                fieldNumbers[i] = member.FieldNumber;
-                serializers[i++] = member.Serializer;
+            if (subTypeCount != 0)
+            {
+                foreach (SubType subType in subTypes)
+                {
+                    fieldNumbers[i] = subType.FieldNumber;
+                    serializers[i++] = subType.Serializer;
+                }
+            }
+            if (fieldCount != 0)
+            {
+                foreach (ValueMember member in fields)
+                {
+                    fieldNumbers[i] = member.FieldNumber;
+                    serializers[i++] = member.Serializer;
+                }
             }
             return new TypeSerializer(type, fieldNumbers, serializers);
         }
@@ -110,6 +202,27 @@ namespace ProtoBuf.Meta
             Attribute attrib;
             DataFormat dataFormat = DataFormat.Default;
             bool ignore = false;
+            object defaultValue = null;
+            // implicit zero default
+            switch (Type.GetTypeCode(effectiveType))
+            {
+                case TypeCode.Boolean: defaultValue = false; break;
+                case TypeCode.Decimal: defaultValue = (decimal)0; break;
+                case TypeCode.Single: defaultValue = (float)0; break;
+                case TypeCode.Double: defaultValue = (double)0; break;
+                case TypeCode.Byte: defaultValue = (byte)0;  break;
+                case TypeCode.Char: defaultValue = (char)0; break;
+                case TypeCode.Int16: defaultValue = (short)0; break;
+                case TypeCode.Int32: defaultValue = (int)0; break;
+                case TypeCode.Int64: defaultValue = (long)0; break;
+                case TypeCode.SByte: defaultValue = (sbyte)0; break;
+                case TypeCode.UInt16: defaultValue = (ushort)0; break;
+                case TypeCode.UInt32: defaultValue = (uint)0; break;
+                case TypeCode.UInt64: defaultValue = (ulong)0; break;
+                default:
+                    if (effectiveType == typeof(TimeSpan)) defaultValue = TimeSpan.Zero;
+                    break;
+            }
             if (!ignore && HasFamily(family, AttributeFamily.ProtoBuf))
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
@@ -147,7 +260,11 @@ namespace ProtoBuf.Meta
                     GetFieldName(ref name, attrib, "ElementName");
                 }
             }
-            return (fieldNumber > 0 && !ignore) ? new ValueMember(model, type, fieldNumber, member, effectiveType, itemType, defaultType, dataFormat)
+            if (!ignore && (attrib = GetAttribute(attribs, "System.ComponentModel.DefaultValueAttribute")) != null)
+            {
+                defaultValue = GetMemberValue(attrib, "Value");
+            }
+            return (fieldNumber > 0 && !ignore) ? new ValueMember(model, type, fieldNumber, member, effectiveType, itemType, defaultType, dataFormat, defaultValue)
                     : null;
         }
 
@@ -215,7 +332,14 @@ namespace ProtoBuf.Meta
         /// </summary>        
         public MetaType Add(int fieldNumber, string memberName)
         {
-            return Add(fieldNumber, memberName, null, null);
+            return Add(fieldNumber, memberName, null, null, null);
+        }
+        /// <summary>
+        /// Adds a member (by name) to the MetaType
+        /// </summary>        
+        public MetaType Add(int fieldNumber, string memberName, object defaultValue)
+        {
+            return Add(fieldNumber, memberName, null, null, defaultValue);
         }
 
         private static void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType) {
@@ -270,6 +394,10 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType)
         {
+            return Add(fieldNumber, memberName, itemType, defaultType, null);
+        }
+        private MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
+        {
             MemberInfo[] members = type.GetMember(memberName);
             if(members == null || members.Length != 1) throw new ArgumentException("Unable to determine member: " + memberName, "memberName");
             MemberInfo mi = members[0];
@@ -285,7 +413,7 @@ namespace ProtoBuf.Meta
             }
 
             ResolveListTypes(miType, ref itemType, ref defaultType);
-            Add(new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType, DataFormat.Default));
+            Add(new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType, DataFormat.Default, defaultValue));
             return this;
         } 
         private void Add(ValueMember member) {
@@ -327,6 +455,11 @@ namespace ProtoBuf.Meta
                 if (field.FieldNumber == fieldNumber) return true;
             }
             return false;
+        }
+
+        internal int GetKey(bool demand, bool getBaseKey)
+        {
+            return model.GetKey(type, demand, getBaseKey);
         }
     }
 }

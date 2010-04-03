@@ -2,6 +2,7 @@
 using System;
 using System.Reflection;
 using ProtoBuf.Serializers;
+using System.Globalization;
 
 namespace ProtoBuf.Meta
 {
@@ -17,6 +18,7 @@ namespace ProtoBuf.Meta
         public int FieldNumber { get { return fieldNumber; } }
         private MemberInfo member;
         private readonly Type parentType, itemType, defaultType, memberType;
+        private readonly object defaultValue;
         /// <summary>
         /// Within a list / array / etc, the type of object for each item in the list (especially useful with ArrayList)
         /// </summary>
@@ -33,11 +35,17 @@ namespace ProtoBuf.Meta
         /// The type the defines the member
         /// </summary>
         public Type ParentType { get { return parentType; } }
+
+        /// <summary>
+        /// The default value of the item (members with this value will not be serialized)
+        /// </summary>
+        public object DefaultValue { get { return defaultValue; } }
+
         private readonly RuntimeTypeModel model;
         /// <summary>
         /// Creates a new ValueMember instance
         /// </summary>
-        public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType, DataFormat dataFormat)            
+        public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType, DataFormat dataFormat, object defaultValue) 
         {
             if (fieldNumber < 1) throw new ArgumentOutOfRangeException("fieldNumber");
             if (member == null) throw new ArgumentNullException("member");
@@ -52,6 +60,40 @@ namespace ProtoBuf.Meta
             this.parentType = parentType;
             this.model = model;
             this.dataFormat = dataFormat;
+            if (defaultValue != null && !memberType.IsInstanceOfType(defaultValue))
+            {
+                defaultValue = ParseDefaultValue(memberType, defaultValue);
+            }
+            this.defaultValue = defaultValue;
+        }
+
+        private static object ParseDefaultValue(Type type, object value)
+        {
+            if (value is string)
+            {
+                string s = (string)value;
+                switch (Type.GetTypeCode(type))
+                {
+                    case TypeCode.Boolean: return bool.Parse(s);
+                    case TypeCode.Byte: return byte.Parse(s, CultureInfo.InvariantCulture);
+                    case TypeCode.Char: return char.Parse(s);
+                    case TypeCode.DateTime: return DateTime.Parse(s, CultureInfo.InvariantCulture);
+                    case TypeCode.Decimal: return decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case TypeCode.Double: return double.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case TypeCode.Int16: return short.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case TypeCode.Int32: return int.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case TypeCode.Int64: return long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case TypeCode.SByte: return sbyte.Parse(s, CultureInfo.InvariantCulture);
+                    case TypeCode.Single: return float.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case TypeCode.String: return s;
+                    case TypeCode.UInt16: return ushort.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case TypeCode.UInt32: return uint.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case TypeCode.UInt64: return ulong.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                }
+                if (type == typeof(TimeSpan)) return TimeSpan.Parse(s);
+                if (type.IsEnum) return Enum.Parse(type, s, true);
+            }
+            return Convert.ChangeType(value, type);
         }
 
         private IProtoSerializer serializer;
@@ -100,6 +142,11 @@ namespace ProtoBuf.Meta
                     ser = new ListDecorator(memberType, defaultType, ser);
                 }
             }
+            else if (defaultValue != null)
+            {
+                ser = new DefaultValueDecorator(defaultValue, ser);
+            }
+
             
             switch (member.MemberType)
             {
@@ -193,7 +240,7 @@ namespace ProtoBuf.Meta
                 defaultWireType = WireType.String;
                 return new BlobSerializer();
             }
-            int key = model.FindOrAddAuto(type, false);
+            int key = model.GetKey(type, false, true);
             if (key >= 0)
             {
                 defaultWireType = WireType.String;

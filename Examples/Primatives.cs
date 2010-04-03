@@ -110,6 +110,14 @@ namespace Examples
             clone = Serializer.DeepClone(def);
             Assert.AreEqual(def.HowLong, clone.HowLong);
 
+            Serializer.PrepareSerializer<TimeSpanDefaulted>();
+            def = new TimeSpanDefaulted();
+            clone = Serializer.DeepClone(def);
+            Assert.AreEqual(def.HowLong, clone.HowLong);
+
+            def.HowLong = new TimeSpan(0, 0, 0);
+            clone = Serializer.DeepClone(def);
+            Assert.AreEqual(def.HowLong, clone.HowLong);
         }
 
         [Test]

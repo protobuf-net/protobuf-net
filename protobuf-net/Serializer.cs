@@ -21,7 +21,7 @@ namespace ProtoBuf
         }
         public static T Deserialize<T>(Stream source)
         {
-            return (T)RuntimeTypeModel.Default.Deserialize(source, null, typeof(T));
+            return (T) RuntimeTypeModel.Default.Deserialize(source, null, typeof(T));
         }
         public static void Serialize<T>(Stream destination, T instance)
         {

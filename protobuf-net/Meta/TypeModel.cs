@@ -108,7 +108,7 @@ namespace ProtoBuf.Meta
             return new RuntimeTypeModel(false);
         }
 #endif
-        protected abstract int GetKey(Type type);
+        protected internal abstract int GetKey(Type type);
         protected internal abstract void Serialize(int key, object value, ProtoWriter dest);
         protected internal abstract object Deserialize(int key, object value, ProtoReader source);
 

@@ -126,24 +126,36 @@ namespace ProtoBuf.Meta
 
         private readonly BasicList types = new BasicList();
 
-        protected override int GetKey(Type type)
+        protected internal override int GetKey(Type type)
         {
-            return FindOrAddAuto(type, true);
+            return GetKey(type, true, true);
+        }
+        internal int GetKey(Type type, bool demand, bool getBaseKey)
+        {
+            int typeIndex = FindOrAddAuto(type, demand);
+            if (typeIndex >= 0)
+            {
+                MetaType mt = (MetaType)types[typeIndex], baseType;
+                if (getBaseKey && (baseType = mt.BaseType) != null)
+                {   // part of an inheritance tree; pick the base-key
+                    while (baseType != null) { mt = baseType; baseType = baseType.BaseType;}
+                    typeIndex = FindOrAddAuto(mt.Type, true);
+                }
+            }
+            return typeIndex;
         }
         protected internal override void Serialize(int key, object value, ProtoWriter dest)
         {
             //Helpers.DebugWriteLine("Serialize", value);
             ((MetaType)types[key]).Serializer.Write(value, dest);
         }
-    
+
         protected internal override object Deserialize(int key, object value, ProtoReader source)
         {
             //Helpers.DebugWriteLine("Deserialize", value);
             IProtoSerializer ser = ((MetaType)types[key]).Serializer;
             if (value == null && ser.ExpectedType.IsValueType) {
-                int pos = source.Position;
-                value = ser.Read(Activator.CreateInstance(ser.ExpectedType), source);
-                return pos == source.Position ? null : value; // but null if nothing was read
+                return ser.Read(Activator.CreateInstance(ser.ExpectedType), source);
             } else {
                 return ser.Read(value, source);
             }
@@ -186,15 +198,54 @@ namespace ProtoBuf.Meta
         //}
 
 #if FEAT_COMPILER
-        internal class SerializerPair
+        internal class SerializerPair : IComparable
         {
-            public readonly int MetaKey;
+            int IComparable.CompareTo(object obj)
+            {
+                if (obj == null) throw new ArgumentException("obj");
+                SerializerPair other = (SerializerPair)obj;
+
+                // we want to bunch all the items with the same base-type together, but we need the items with a
+                // different base **first**.
+                if (this.BaseKey == this.MetaKey)
+                {
+                    if (other.BaseKey == other.MetaKey)
+                    { // neither is a subclass
+                        return this.MetaKey.CompareTo(other.MetaKey);
+                    }
+                    else
+                    { // "other" (only) is involved in inheritance; "other" should be first
+                        return 1;
+                    }
+                }
+                else
+                {
+                    if (other.BaseKey == other.MetaKey)
+                    { // "this" (only) is involved in inheritance; "this" should be first
+                        return -1;
+                    }
+                    else
+                    { // both are involved in inheritance
+                        int result = this.BaseKey.CompareTo(other.BaseKey);
+                        if (result == 0) result = this.MetaKey.CompareTo(other.MetaKey);
+                        return result;
+                    }
+                }
+            }
+            public readonly int MetaKey, BaseKey;
+            public readonly MetaType Type;
             public readonly MethodBuilder Serialize, Deserialize;
-            public SerializerPair(int metaKey, MethodBuilder serialize, MethodBuilder deserialize)
+            public readonly ILGenerator SerializeBody, DeserializeBody;
+            public SerializerPair(int metaKey, int baseKey, MetaType type, MethodBuilder serialize, MethodBuilder deserialize,
+                ILGenerator serializeBody, ILGenerator deserializeBody)
             {
                 this.MetaKey = metaKey;
+                this.BaseKey = baseKey;
                 this.Serialize = serialize;
                 this.Deserialize = deserialize;
+                this.SerializeBody = serializeBody;
+                this.DeserializeBody = deserializeBody;
+                this.Type = type;
             }
         }
 
@@ -239,41 +290,42 @@ namespace ProtoBuf.Meta
                 (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed,
                 baseType);
             Compiler.CompilerContext ctx;
-            // the keys in the model are guaranteed to be unique, but may not
-            // be contiguous (threading etc); we'll normalize the keys
-            ILGenerator[] serBodies = new ILGenerator[types.Count],
-                deserBodies = new ILGenerator[types.Count];
-            BasicList methodPairs = new BasicList();
-
+            
             int index = 0;
+            bool hasInheritance = false;
+            SerializerPair[] methodPairs = new SerializerPair[types.Count];
             foreach (MetaType metaType in types)
             {
                 MethodBuilder writeMethod = type.DefineMethod("Write",
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     typeof(void), new Type[] { metaType.Type, typeof(ProtoWriter) });
-                serBodies[index] = writeMethod.GetILGenerator();
 
                 MethodBuilder readMethod = type.DefineMethod("Read",
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     metaType.Type, new Type[] { metaType.Type, typeof(ProtoReader) });
-                deserBodies[index] = readMethod.GetILGenerator();
 
-                methodPairs.Add(new SerializerPair(GetKey(metaType.Type), writeMethod, readMethod));                
-                index++;
+                SerializerPair pair = new SerializerPair(
+                    GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
+                    writeMethod, readMethod, writeMethod.GetILGenerator(), readMethod.GetILGenerator());
+                methodPairs[index++] = pair;
+                if (pair.MetaKey != pair.BaseKey) hasInheritance = true;
             }
-            index = 0;
-            foreach (MetaType metaType in types)
+            if (hasInheritance)
             {
-                ctx = new Compiler.CompilerContext(serBodies[index], true, methodPairs);
-                metaType.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
+                Array.Sort(methodPairs);
+            }
+            
+            for(index = 0; index < methodPairs.Length ; index++)
+            {
+                SerializerPair pair = methodPairs[index];
+                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, methodPairs);
+                pair.Type.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
                 ctx.Return();
 
-                ctx = new Compiler.CompilerContext(deserBodies[index], true, methodPairs);
-                metaType.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
+                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, methodPairs);
+                pair.Type.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
                 ctx.LoadValue(Compiler.Local.InputValue);
                 ctx.Return();
-
-                index++;
             }
 
             FieldBuilder knownTypes = type.DefineField("knownTypes", typeof(Type[]), FieldAttributes.Private | FieldAttributes.InitOnly);
@@ -285,7 +337,62 @@ namespace ProtoBuf.Meta
             // note that Array.IndexOf is not supported under CF
             il.EmitCall(OpCodes.Callvirt,typeof(IList).GetMethod(
                 "IndexOf", new Type[] { typeof(object) }), null);
-            il.Emit(OpCodes.Ret);
+            if (hasInheritance)
+            {
+                LocalBuilder keyVar = il.DeclareLocal(typeof(int));
+                il.Emit(OpCodes.Dup);
+                il.Emit(OpCodes.Stloc_0);
+
+                BasicList getKeyLabels = new BasicList();
+                int lastKey = -1;
+                for (int i = 0; i < methodPairs.Length; i++)
+                {
+                    if (methodPairs[i].MetaKey == methodPairs[i].BaseKey) break;
+                    if (lastKey == methodPairs[i].BaseKey)
+                    {   // add the last label again
+                        getKeyLabels.Add(getKeyLabels[getKeyLabels.Count - 1]);
+                    }
+                    else
+                    {   // add a new unique label
+                        getKeyLabels.Add(il.DefineLabel());
+                        lastKey = methodPairs[i].BaseKey;
+                    }                    
+                }
+                Label[] subtypeLabels = new Label[getKeyLabels.Count];
+                getKeyLabels.CopyTo(subtypeLabels, 0);
+
+                il.Emit(OpCodes.Switch, subtypeLabels);
+                il.Emit(OpCodes.Ldloc_0); // not a sub-type; use the original value
+                il.Emit(OpCodes.Ret);
+
+                lastKey = -1;
+                // now output the different branches per sub-type (not derived type)
+                for (int i = subtypeLabels.Length - 1; i >= 0; i--)
+                {
+                    if (lastKey != methodPairs[i].BaseKey)
+                    {
+                        lastKey = methodPairs[i].BaseKey;
+                        // find the actual base-index for this base-key (i.e. the index of
+                        // the base-type)
+                        int keyIndex = -1;
+                        for (int j = subtypeLabels.Length; j < methodPairs.Length; j++)
+                        {
+                            if (methodPairs[j].BaseKey == lastKey && methodPairs[j].MetaKey == lastKey)
+                            {
+                                keyIndex = j;
+                                break;
+                            }
+                        }
+                        il.MarkLabel(subtypeLabels[i]);
+                        Compiler.CompilerContext.LoadValue(il, keyIndex);
+                        il.Emit(OpCodes.Ret);
+                    }
+                }
+            }
+            else
+            {
+                il.Emit(OpCodes.Ret);
+            }
             
             il = Override(type, "Serialize");
             ctx = new Compiler.CompilerContext(il, false, methodPairs);
@@ -299,11 +406,12 @@ namespace ProtoBuf.Meta
             ctx.Return();
             for (int i = 0; i < jumpTable.Length; i++)
             {
+                SerializerPair pair = methodPairs[i];
                 il.MarkLabel(jumpTable[i]);
                 il.Emit(OpCodes.Ldarg_2);
-                ctx.CastFromObject(((MetaType)types[i]).Type);
+                ctx.CastFromObject(pair.Type.Type);
                 il.Emit(OpCodes.Ldarg_3);
-                il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Serialize, null);
+                il.EmitCall(OpCodes.Call, pair.Serialize, null);
                 ctx.Return();
             }
 
@@ -320,8 +428,9 @@ namespace ProtoBuf.Meta
             ctx.Return();
             for (int i = 0; i < jumpTable.Length; i++)
             {
+                SerializerPair pair = methodPairs[i];
                 il.MarkLabel(jumpTable[i]);
-                Type keyType = ((MetaType)types[i]).Type;
+                Type keyType = pair.Type.Type;
                 if (keyType.IsValueType)
                 {
                     il.Emit(OpCodes.Ldarg_2);
@@ -334,7 +443,7 @@ namespace ProtoBuf.Meta
                     il.Emit(OpCodes.Ldarg_2);
                     ctx.CastFromObject(keyType);
                     il.Emit(OpCodes.Ldarg_3);
-                    il.EmitCall(OpCodes.Call, ((SerializerPair)methodPairs[i]).Deserialize, null);
+                    il.EmitCall(OpCodes.Call, pair.Deserialize, null);
                     ctx.Return();
                 }
             }
@@ -351,11 +460,11 @@ namespace ProtoBuf.Meta
             il.Emit(OpCodes.Newarr, typeof(Type));
             
             index = 0;
-            foreach(MetaType metaType in types)
+            foreach(SerializerPair pair in methodPairs)
             {
                 il.Emit(OpCodes.Dup);
                 Compiler.CompilerContext.LoadValue(il, index);
-                il.Emit(OpCodes.Ldtoken, metaType.Type);
+                il.Emit(OpCodes.Ldtoken, pair.Type.Type);
                 il.EmitCall(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle"), null);
                 il.Emit(OpCodes.Stelem_Ref);
                 index++;
@@ -374,9 +483,9 @@ namespace ProtoBuf.Meta
             return (TypeModel)Activator.CreateInstance(finalType);
         }
 
-        private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, BasicList methodPairs)
+        private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs)
         {
-            MethodInfo dedicated = ((SerializerPair)methodPairs[i]).Deserialize;
+            MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i, MethodAttributes.Static, CallingConventions.Standard,
                 typeof(object), new Type[] { typeof(object), typeof(ProtoReader) });
             Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, methodPairs);
@@ -393,33 +502,14 @@ namespace ProtoBuf.Meta
 
             ctx.MarkLabel(@null);
             using(Compiler.Local typedVal = new Compiler.Local(ctx, valueType))
-            using(Compiler.Local position = new Compiler.Local(ctx, typeof(int)))
             {
-                MethodInfo getPos = typeof(ProtoReader).GetProperty("Position").GetGetMethod(ctx.NonPublic);
-
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(getPos);
-                
-
                 // create a new valueType
                 ctx.LoadAddress(typedVal, valueType);
                 ctx.EmitCtor(valueType);
                 ctx.LoadValue(typedVal);
                 ctx.LoadReaderWriter();
                 ctx.EmitCall(dedicated);
-                ctx.StoreValue(typedVal);
-
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(getPos);
-                Compiler.CodeLabel noData = ctx.DefineLabel();
-                ctx.BranchIfEqual(noData, true);
-
-                ctx.LoadValue(typedVal);
                 ctx.CastToObject(valueType);
-                ctx.Return();
-
-                ctx.MarkLabel(noData);
-                ctx.LoadNullRef();
                 ctx.Return();
             }
             return boxedSerializer;

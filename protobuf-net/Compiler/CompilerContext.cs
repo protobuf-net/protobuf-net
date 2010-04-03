@@ -59,30 +59,24 @@ namespace ProtoBuf.Compiler
             CompilerContext ctx = new CompilerContext(type, false, true);
             
             using (Local typedVal = new Local(ctx, type))
-            using (Local position = type.IsValueType ? new Local(ctx, typeof(int)) : null)
             {
-                if (position == null)
+                if (!type.IsValueType)
                 {
                     ctx.LoadValue(Local.InputValue);
                     ctx.CastFromObject(type);
                     ctx.StoreValue(typedVal);
                 }
                 else
-                {   // check if the input obj is null; if so capture the position (otherwise use -1)
+                {   
                     ctx.LoadValue(Local.InputValue);
                     CodeLabel notNull = ctx.DefineLabel(), endNull = ctx.DefineLabel();
                     ctx.BranchIfTrue(notNull, true);
 
-                    ctx.LoadReaderWriter();
-                    ctx.LoadValue(typeof(ProtoReader).GetProperty("Position"));
-                    ctx.StoreValue(position);
                     ctx.LoadAddress(typedVal, type);
                     ctx.EmitCtor(type);
                     ctx.Branch(endNull, true);
 
                     ctx.MarkLabel(notNull);
-                    ctx.LoadValue(-1);
-                    ctx.StoreValue(position);
                     ctx.LoadValue(Local.InputValue);
                     ctx.CastFromObject(type);
                     ctx.StoreValue(typedVal);
@@ -91,31 +85,12 @@ namespace ProtoBuf.Compiler
                 }
                 head.EmitRead(ctx, typedVal);
 
-                if (head.ReturnsValue)
-                {
+                if (head.ReturnsValue) {
                     ctx.StoreValue(typedVal);
                 }
 
-                if (position == null)
-                {
-                    ctx.LoadValue(typedVal);
-                    ctx.CastToObject(type);
-                }
-                else {
-                    ctx.LoadValue(position);
-                    ctx.LoadReaderWriter();
-                    ctx.LoadValue(typeof(ProtoReader).GetProperty("Position"));
-                    CodeLabel noData = ctx.DefineLabel(), endData = ctx.DefineLabel();
-                    ctx.BranchIfEqual(noData, true);
-
-                    ctx.LoadValue(typedVal);
-                    ctx.CastToObject(type);
-                    ctx.Branch(endData, true);
-
-                    ctx.MarkLabel(noData);
-                    ctx.LoadNullRef();
-                    ctx.MarkLabel(endData);
-                }
+                ctx.LoadValue(typedVal);
+                ctx.CastToObject(type);
             }
             ctx.Emit(OpCodes.Ret);
             return (ProtoDeserializer)ctx.method.CreateDelegate(
@@ -172,20 +147,20 @@ namespace ProtoBuf.Compiler
             }
         }
         private readonly bool isStatic;
-        private readonly BasicList methodPairs;
+        private readonly RuntimeTypeModel.SerializerPair[] methodPairs;
         internal MethodBuilder GetDedicatedMethod(int metaKey, bool read)
         {
             if (methodPairs == null) return null;
             // but if we *do* have pairs, we demand that we find a match...
-            foreach (RuntimeTypeModel.SerializerPair pair in methodPairs)
+            for (int i = 0; i < methodPairs.Length; i++ )
             {
-                if(pair.MetaKey == metaKey) { return read ? pair.Deserialize : pair.Serialize; }
+                if (methodPairs[i].MetaKey == metaKey) { return read ? methodPairs[i].Deserialize : methodPairs[i].Serialize; }
             }
             throw new ArgumentException("Meta-key not found", "metaKey");
         }
         private readonly bool nonPublic;
         internal bool NonPublic { get { return nonPublic; } }
-        internal CompilerContext(ILGenerator il, bool isStatic, BasicList methodPairs)
+        internal CompilerContext(ILGenerator il, bool isStatic, RuntimeTypeModel.SerializerPair[] methodPairs)
         {
             if (il == null) throw new ArgumentNullException("il");
             if (methodPairs == null) throw new ArgumentNullException("methodPairs");
@@ -225,6 +200,41 @@ namespace ProtoBuf.Compiler
             Helpers.DebugWriteLine(opcode.ToString());
 #endif
         }
+        public void LoadValue(string value)
+        {
+            if (value == null)
+            {
+                LoadNullRef();
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldstr, value);
+#if DEBUG_COMPILE
+                Helpers.DebugWriteLine(OpCodes.Ldstr + ": " + value);
+#endif
+            }
+        }
+        public void LoadValue(float value)
+        {
+            il.Emit(OpCodes.Ldc_R4, value);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(OpCodes.Ldc_R4 + ": " + value);
+#endif
+        }
+        public void LoadValue(double value)
+        {
+            il.Emit(OpCodes.Ldc_R8, value);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(OpCodes.Ldc_R8 + ": " + value);
+#endif
+        }
+        public void LoadValue(long value)
+        {
+            il.Emit(OpCodes.Ldc_I8, value);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(OpCodes.Ldc_I8 + ": " + value);
+#endif
+        }
         public void LoadValue(int value)
         {
             switch (value)
@@ -240,10 +250,20 @@ namespace ProtoBuf.Compiler
                 case 8: Emit(OpCodes.Ldc_I4_8); break;
                 case -1: Emit(OpCodes.Ldc_I4_M1); break;
                 default:
-                    il.Emit(OpCodes.Ldc_I4, value);
+                    if ((value & 0xFF) == value) // single-byte
+                    {
+                        il.Emit(OpCodes.Ldc_I4_S, (byte)value);
 #if DEBUG_COMPILE
-                    Helpers.DebugWriteLine(OpCodes.Ldc_I4 + ": " + value);
+                        Helpers.DebugWriteLine(OpCodes.Ldc_I4_S + ": " + value);
 #endif
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldc_I4, value);
+#if DEBUG_COMPILE
+                        Helpers.DebugWriteLine(OpCodes.Ldc_I4 + ": " + value);
+#endif
+                    }
                     break;
 
 
@@ -921,6 +941,8 @@ namespace ProtoBuf.Compiler
             }
             
         }
+
+        
     }
 }
 #endif

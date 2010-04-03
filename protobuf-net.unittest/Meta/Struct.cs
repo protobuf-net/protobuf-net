@@ -31,7 +31,7 @@ namespace ProtoBuf.unittest.Meta
 
             using (var reader = new ProtoReader(Stream.Null, null))
             {
-                Assert.IsNull(deser(null, reader));
+                Assert.IsInstanceOfType(typeof(CustomerStruct), deser(null, reader));
             }
             using (var reader = new ProtoReader(Stream.Null, null))
             {

@@ -43,23 +43,23 @@ namespace ProtoBuf.unittest.Meta
         public void TestCanDeserialierAllFromEmptyStream()
         {
             var model = CreateModel();
-            Assert.IsNull(model.Deserialize(Stream.Null, null, typeof(OuterRef)));
-            Assert.IsNull(model.Deserialize(Stream.Null, null, typeof(InnerVal)));
-            Assert.IsNull(model.Deserialize(Stream.Null, null, typeof(InnerRef)));
-            Assert.IsNull(model.Deserialize(Stream.Null, null, typeof(InnerVal)));
+            Assert.IsInstanceOfType(typeof(OuterRef), model.Deserialize(Stream.Null, null, typeof(OuterRef)));
+            Assert.IsInstanceOfType(typeof(OuterVal), model.Deserialize(Stream.Null, null, typeof(OuterVal)));
+            Assert.IsInstanceOfType(typeof(InnerRef), model.Deserialize(Stream.Null, null, typeof(InnerRef)));
+            Assert.IsInstanceOfType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
 
             model.CompileInPlace();
-            Assert.IsNull(model.Deserialize(Stream.Null, null, typeof(OuterRef)));
-            Assert.IsNull(model.Deserialize(Stream.Null, null, typeof(InnerVal)));
-            Assert.IsNull(model.Deserialize(Stream.Null, null, typeof(InnerRef)));
-            Assert.IsNull(model.Deserialize(Stream.Null, null, typeof(InnerVal)));
+            Assert.IsInstanceOfType(typeof(OuterRef), model.Deserialize(Stream.Null, null, typeof(OuterRef)));
+            Assert.IsInstanceOfType(typeof(OuterVal), model.Deserialize(Stream.Null, null, typeof(OuterVal)));
+            Assert.IsInstanceOfType(typeof(InnerRef), model.Deserialize(Stream.Null, null, typeof(InnerRef)));
+            Assert.IsInstanceOfType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
 
             var compiled = model.Compile("SubItems","SubItems.dll");
             PocoListTests.VerifyPE("SubItems.dll");
-            Assert.IsNull(compiled.Deserialize(Stream.Null, null, typeof(OuterRef)));
-            Assert.IsNull(compiled.Deserialize(Stream.Null, null, typeof(InnerVal)));
-            Assert.IsNull(compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
-            Assert.IsNull(compiled.Deserialize(Stream.Null, null, typeof(InnerVal)));
+            Assert.IsInstanceOfType(typeof(OuterRef), compiled.Deserialize(Stream.Null, null, typeof(OuterRef)));
+            Assert.IsInstanceOfType(typeof(OuterVal), compiled.Deserialize(Stream.Null, null, typeof(OuterVal)));
+            Assert.IsInstanceOfType(typeof(InnerRef), compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
+            Assert.IsInstanceOfType(typeof(InnerVal), compiled.Deserialize(Stream.Null, null, typeof(InnerVal)));
 
         }
 
