@@ -111,12 +111,17 @@ namespace ProtoBuf.Meta
         protected internal abstract int GetKey(Type type);
         protected internal abstract void Serialize(int key, object value, ProtoWriter dest);
         protected internal abstract object Deserialize(int key, object value, ProtoReader source);
-
+        
         //internal ProtoSerializer Create(IProtoSerializer head)
         //{
         //    return new RuntimeSerializer(head, this);
         //}
         //internal ProtoSerializer Compile
+
+        protected internal enum CallbackType
+        {
+            BeforeSerialize, AfterSerialize, BeforeDeserialize, AfterDeserialize
+        }
 
         public object DeepClone(object value)
         {

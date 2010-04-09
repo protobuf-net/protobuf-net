@@ -6,5 +6,5 @@
     cause the file to be unrecognizable by the program.
 -->
 <GenericObjectDataSource DisplayName="Order" Version="1.0" xmlns="urn:schemas-microsoft-com:xml-msdatasource">
-   <TypeInfo>demo_rpc_client_silverlight.Northwind.Order, Service References.Northwind.Reference.cs, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null</TypeInfo>
+   <TypeInfo>demo_rpc_client_silverlight.Northwind.Order</TypeInfo>
 </GenericObjectDataSource>

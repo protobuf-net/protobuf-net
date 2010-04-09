@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using ProtoBuf.Meta;
 using System.IO;
+using ProtoBuf.unittest.Meta;
 
 namespace ProtoBuf.unittest.Serializers
 {
@@ -37,6 +38,12 @@ namespace ProtoBuf.unittest.Serializers
         }
 
 
+        [Test]
+        public void TestDateTimeCanCompileFully()
+        {
+            var model = CreateModel().Compile("TestDateTimeCanCompileFully", "TestDateTimeCanCompileFully.dll");
+            PocoListTests.VerifyPE("TestDateTimeCanCompileFully.dll");
+        }
         [Test]
         public void TestDateTimeCompiled()
         {

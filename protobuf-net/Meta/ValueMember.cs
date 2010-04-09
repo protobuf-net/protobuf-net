@@ -244,7 +244,7 @@ namespace ProtoBuf.Meta
             if (key >= 0)
             {
                 defaultWireType = WireType.String;
-                return new SubItemSerializer(type, key);
+                return new SubItemSerializer(type, key, model[type]);
             }
             throw new NotSupportedException("No serializer defined for type: " + type.FullName);
         }

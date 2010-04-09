@@ -1,16 +1,35 @@
 ﻿#if !NO_RUNTIME
 using System;
+using ProtoBuf.Meta;
 
 
 namespace ProtoBuf.Serializers
 {
-    sealed class SubItemSerializer : IProtoSerializer
+    sealed class SubItemSerializer : IProtoTypeSerializer
     {
-        private readonly Type type;
-        private readonly int key;
-        public SubItemSerializer(Type type, int key)
+        bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
         {
+            return ((IProtoTypeSerializer)proxy.Serializer).HasCallbacks(callbackType);
+        }
+        void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
+        {
+            ((IProtoTypeSerializer)proxy.Serializer).EmitCallback(ctx, valueFrom, callbackType);
+        }
+        void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType)
+        {
+            ((IProtoTypeSerializer)proxy.Serializer).Callback(value, callbackType);
+        }
+
+        private readonly int key;
+        private readonly Type type;
+        private readonly ISerializerProxy proxy;
+
+        public SubItemSerializer(Type type, int key, ISerializerProxy proxy )
+        {
+            if (type == null) throw new ArgumentNullException("type");
+            if (proxy == null) throw new ArgumentNullException("proxy");
             this.type = type;
+            this.proxy= proxy;
             this.key = key;
         }
         Type IProtoSerializer.ExpectedType

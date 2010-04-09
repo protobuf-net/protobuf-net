@@ -4,6 +4,7 @@ using System;
 using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
+using System.Runtime.Serialization;
 #if MF
 using EndOfStreamException = System.ApplicationException;
 using OverflowException = System.ApplicationException;

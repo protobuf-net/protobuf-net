@@ -47,6 +47,9 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
+    <Reference Include="System.Runtime.Serialization">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -63,9 +66,11 @@
     <Compile Include="Attribs\Basic.cs" />
     <Compile Include="FX11.cs" />
     <Compile Include="Meta\Basic.cs" />
+    <Compile Include="Meta\Callbacks.cs" />
     <Compile Include="Meta\Guids.cs" />
     <Compile Include="Meta\Inheritance.cs" />
     <Compile Include="Meta\Lists.cs" />
+    <Compile Include="Meta\PocoStruct.cs" />
     <Compile Include="Meta\Struct.cs" />
     <Compile Include="Meta\SubItems.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

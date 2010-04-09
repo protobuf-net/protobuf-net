@@ -160,6 +160,7 @@ namespace ProtoBuf.Meta
                 return ser.Read(value, source);
             }
         }
+
 #if FEAT_COMPILER
         internal static Compiler.ProtoSerializer GetSerializer(IProtoSerializer serializer, bool compiled)
         {

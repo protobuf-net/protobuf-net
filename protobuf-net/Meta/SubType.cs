@@ -31,7 +31,7 @@ namespace ProtoBuf.Meta
 
         private IProtoSerializer BuildSerializer()
         {
-            IProtoSerializer ser = new SubItemSerializer(derivedType.Type, derivedType.GetKey(true, false));
+            IProtoSerializer ser = new SubItemSerializer(derivedType.Type, derivedType.GetKey(false, false), derivedType);
             return new TagDecorator(fieldNumber, WireType.String, false, ser);
         }
     }

@@ -10,9 +10,9 @@ namespace ProtoBuf.Meta
     /// <summary>
     /// Represents a type at runtime for use with protobuf, allowing the field mappings (etc) to be defined
     /// </summary>
-    public class MetaType
+    public class MetaType : ISerializerProxy
     {
-        
+        IProtoSerializer ISerializerProxy.Serializer { get { return Serializer; } }
         private MetaType baseType;
         /// <summary>
         /// Gets the base-type for this type
@@ -87,9 +87,34 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                if (callbacks == null) callbacks = new CallbackSet(this);
+                if (callbacks == null && !type.IsValueType) callbacks = new CallbackSet(this);
                 return callbacks;
             }
+        }
+
+        public MetaType SetCallbacks(MethodInfo beforeSerialize, MethodInfo afterSerialize, MethodInfo beforeDeserialize, MethodInfo afterDeserialize)
+        {
+            if (type.IsValueType) throw new InvalidOperationException();
+            CallbackSet callbacks = Callbacks;
+            callbacks.BeforeSerialize = beforeSerialize;
+            callbacks.AfterSerialize = afterSerialize;
+            callbacks.BeforeDeserialize = beforeDeserialize;
+            callbacks.AfterDeserialize = afterDeserialize;
+            return this;
+        }
+        public MetaType SetCallbacks(string beforeSerialize, string afterSerialize, string beforeDeserialize, string afterDeserialize)
+        {
+            if (type.IsValueType) throw new InvalidOperationException();
+            CallbackSet callbacks = Callbacks;
+            callbacks.BeforeSerialize = ResolveCallback(beforeSerialize);
+            callbacks.AfterSerialize = ResolveCallback(afterSerialize);
+            callbacks.BeforeDeserialize = ResolveCallback(beforeDeserialize);
+            callbacks.AfterDeserialize = ResolveCallback(afterDeserialize);
+            return this;
+        }
+        private MethodInfo ResolveCallback(string name)
+        {
+            return string.IsNullOrEmpty(name) ? null : type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         }
         private readonly RuntimeTypeModel model;
         internal MetaType(RuntimeTypeModel model, Type type)
@@ -112,14 +137,14 @@ namespace ProtoBuf.Meta
         /// The runtime type that the meta-type represents
         /// </summary>
         public Type Type { get { return type; } }
-        private IProtoSerializer serializer;
-        internal IProtoSerializer Serializer {
+        private IProtoTypeSerializer serializer;
+        internal IProtoTypeSerializer Serializer {
             get {
                 if (serializer == null) serializer = BuildSerializer();
                 return serializer;
             }
         }
-        private IProtoSerializer BuildSerializer()
+        private IProtoTypeSerializer BuildSerializer()
         {
             fields.Trim();
             int fieldCount = fields.Count;
@@ -143,7 +168,27 @@ namespace ProtoBuf.Meta
                     serializers[i++] = member.Serializer;
                 }
             }
-            return new TypeSerializer(type, fieldNumbers, serializers);
+
+            BasicList baseCtorCallbacks = null;
+            MetaType tmp = BaseType;
+            while (tmp != null)
+            {
+                MethodInfo method = tmp.HasCallbacks ? tmp.Callbacks.BeforeDeserialize : null;
+                if (method != null)
+                {
+                    if (baseCtorCallbacks == null) baseCtorCallbacks = new BasicList();
+                    baseCtorCallbacks.Add(method);
+                }
+                tmp = tmp.BaseType;
+            }
+            MethodInfo[] arr = null;
+            if (baseCtorCallbacks != null)
+            {
+                arr = new MethodInfo[baseCtorCallbacks.Count];
+                baseCtorCallbacks.CopyTo(arr, 0);
+                Array.Reverse(arr);
+            }
+            return new TypeSerializer(type, fieldNumbers, serializers, arr, baseType == null, callbacks);
         }
 
         [Flags]
@@ -336,6 +381,37 @@ namespace ProtoBuf.Meta
         }
         /// <summary>
         /// Adds a member (by name) to the MetaType
+        /// </summary>     
+        public MetaType Add(string memberName)
+        {
+            Add(GetNextFieldNumber(), memberName);
+            return this;
+        }
+        private int GetNextFieldNumber()
+        {
+            int maxField = 0;
+            foreach (ValueMember member in fields)
+            {
+                if (member.FieldNumber > maxField) maxField = member.FieldNumber;
+            }
+            return maxField + 1;
+        }
+        /// <summary>
+        /// Adds a set of members (by name) to the MetaType
+        /// </summary>     
+        public MetaType Add(params string[] memberNames)
+        {
+            int next = GetNextFieldNumber();
+            for (int i = 0; i < memberNames.Length; i++)
+            {
+                Add(next++, memberNames[i]);
+            }
+            return this;
+        }
+
+
+        /// <summary>
+        /// Adds a member (by name) to the MetaType
         /// </summary>        
         public MetaType Add(int fieldNumber, string memberName, object defaultValue)
         {
@@ -398,7 +474,7 @@ namespace ProtoBuf.Meta
         }
         private MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
         {
-            MemberInfo[] members = type.GetMember(memberName);
+            MemberInfo[] members = type.GetMember(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if(members == null || members.Length != 1) throw new ArgumentException("Unable to determine member: " + memberName, "memberName");
             MemberInfo mi = members[0];
             Type miType;

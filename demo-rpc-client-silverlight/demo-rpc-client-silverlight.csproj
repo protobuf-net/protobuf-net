@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(MSBuildToolsVersion)' == '3.5'">
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
   </PropertyGroup>
@@ -60,6 +60,7 @@
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -70,6 +71,7 @@
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System.Runtime.Serialization" />
@@ -101,14 +103,24 @@
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Page Include="Page.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\AppManifest.xml" />
+    <None Include="Service References\Northwind\demo_rpc_client_silverlight.Northwind.Customer.datasource">
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </None>
+    <None Include="Service References\Northwind\demo_rpc_client_silverlight.Northwind.Order.datasource">
+      <DependentUpon>Reference.svcmap</DependentUpon>
+    </None>
     <None Include="Service References\Northwind\demo_rpc_server_mvc.Models.xsd" />
     <None Include="Service References\Northwind\service.wsdl" />
     <None Include="Service References\Northwind\service.xsd" />

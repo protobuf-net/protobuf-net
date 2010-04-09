@@ -1,26 +1,35 @@
 ﻿#if FEAT_COMPILER && !FX11
 using System;
+using ProtoBuf.Meta;
 
 
 
 namespace ProtoBuf.Serializers
 {
-    sealed class CompiledSerializer : IProtoSerializer
+    sealed class CompiledSerializer : IProtoTypeSerializer
     {
-        public static CompiledSerializer Wrap(IProtoSerializer head)
+        bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
+        {
+            return head.HasCallbacks(callbackType); // these routes only used when bits of the model not compiled
+        }
+        public void Callback(object value, TypeModel.CallbackType callbackType)
+        {
+            head.Callback(value, callbackType); // these routes only used when bits of the model not compiled
+        }
+        public static CompiledSerializer Wrap(IProtoTypeSerializer head)
         {
             CompiledSerializer result = head as CompiledSerializer;
             if (result == null)
             {
                 result = new CompiledSerializer(head);
-                Helpers.DebugAssert(((IProtoSerializer)result).ExpectedType == head.ExpectedType);
+                Helpers.DebugAssert(((IProtoTypeSerializer)result).ExpectedType == head.ExpectedType);
             }
             return result;
         }
-        private readonly IProtoSerializer head;
+        private readonly IProtoTypeSerializer head;
         private readonly Compiler.ProtoSerializer serializer;
         private readonly Compiler.ProtoDeserializer deserializer;
-        private CompiledSerializer(IProtoSerializer head)
+        private CompiledSerializer(IProtoTypeSerializer head)
         {
             this.head = head;
             serializer = Compiler.CompilerContext.BuildSerializer(head);
@@ -47,6 +56,10 @@ namespace ProtoBuf.Serializers
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             head.EmitRead(ctx, valueFrom);
+        }
+        void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
+        {
+            head.EmitCallback(ctx, valueFrom, callbackType);
         }
     }
 }

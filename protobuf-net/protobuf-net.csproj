@@ -161,6 +161,8 @@
     <Compile Include="Serializers\ArrayDecorator.cs" />
     <Compile Include="Serializers\DefaultValueDecorator.cs" />
     <Compile Include="Serializers\GuidSerializer.cs" />
+    <Compile Include="Serializers\IProtoTypeSerializer.cs" />
+    <Compile Include="Serializers\ISerializerProxy.cs" />
     <Compile Include="Serializers\ListDecorator.cs" />
     <Compile Include="Serializers\UInt16Serializer.cs" />
     <Compile Include="Serializers\Int16Serializer.cs" />

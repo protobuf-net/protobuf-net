@@ -53,6 +53,36 @@ namespace ProtoBuf.Compiler
             return (ProtoSerializer)ctx.method.CreateDelegate(
                 typeof(ProtoSerializer));
         }
+        /*public static ProtoCallback BuildCallback(IProtoTypeSerializer head)
+        {
+            Type type = head.ExpectedType;
+            CompilerContext ctx = new CompilerContext(type, true, true);
+            using (Local typedVal = new Local(ctx, type))
+            {
+                ctx.LoadValue(Local.InputValue);
+                ctx.CastFromObject(type);
+                ctx.StoreValue(typedVal);
+                CodeLabel[] jumpTable = new CodeLabel[4];
+                for(int i = 0 ; i < jumpTable.Length ; i++) {
+                    jumpTable[i] = ctx.DefineLabel();
+                }
+                ctx.LoadReaderWriter();
+                ctx.Switch(jumpTable);
+                ctx.Return();
+                for(int i = 0 ; i < jumpTable.Length ; i++) {
+                    ctx.MarkLabel(jumpTable[i]);
+                    if (head.HasCallbacks((TypeModel.CallbackType)i))
+                    {
+                        head.EmitCallback(ctx, typedVal, (TypeModel.CallbackType)i);
+                    }
+                    ctx.Return();
+                }                
+            }
+            
+            ctx.Emit(OpCodes.Ret);
+            return (ProtoCallback)ctx.method.CreateDelegate(
+                typeof(ProtoCallback));
+        }*/
         public static ProtoDeserializer BuildDeserializer(IProtoSerializer head)
         {
             Type type = head.ExpectedType;
