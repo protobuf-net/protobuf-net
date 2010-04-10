@@ -972,7 +972,16 @@ namespace ProtoBuf.Compiler
             
         }
 
-        
+
+
+        internal void LoadValue(Type type)
+        {
+            il.Emit(OpCodes.Ldtoken, type);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(OpCodes.Ldtoken + ": " + type);
+#endif
+            EmitCall(typeof(Type).GetMethod("GetTypeFromHandle"));
+        }
     }
 }
 #endif

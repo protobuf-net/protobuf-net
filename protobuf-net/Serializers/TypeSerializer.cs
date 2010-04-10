@@ -22,10 +22,10 @@ namespace ProtoBuf.Serializers
         public Type ExpectedType { get { return forType; } }
         private readonly IProtoSerializer[] serializers;
         private readonly int[] fieldNumbers;
-        private readonly bool applyCallbacks;
+        private readonly bool applyCallbacks, useConstructor;
         private readonly CallbackSet callbacks;
         private readonly MethodInfo[] baseCtorCallbacks;
-        public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool applyCallbacks, CallbackSet callbacks)
+        public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool applyCallbacks, bool useConstructor, CallbackSet callbacks)
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(fieldNumbers != null);
@@ -38,6 +38,8 @@ namespace ProtoBuf.Serializers
             this.fieldNumbers = fieldNumbers;
             this.callbacks = callbacks;
             this.applyCallbacks = applyCallbacks;
+            this.useConstructor = useConstructor;
+            
             if (baseCtorCallbacks != null && baseCtorCallbacks.Length == 0) baseCtorCallbacks = null;
             this.baseCtorCallbacks = baseCtorCallbacks;
 #if !NO_GENERICS
@@ -137,7 +139,7 @@ namespace ProtoBuf.Serializers
         }
         object CreateInstance(ProtoReader source)
         {
-            object obj = Activator.CreateInstance(forType);
+            object obj = useConstructor ? Activator.CreateInstance(forType) : FormatterServices.GetUninitializedObject(forType);
             if (baseCtorCallbacks != null) {
                 for (int i = 0; i < baseCtorCallbacks.Length; i++) {
                     InvokeCallback(baseCtorCallbacks[i], obj);
@@ -369,28 +371,36 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(storage != null);
             if (!type.IsValueType)
             {
+
                 Compiler.CodeLabel afterNullCheck = ctx.DefineLabel();
                 ctx.LoadValue(storage);
                 ctx.BranchIfTrue(afterNullCheck, true);
+
                 ConstructorInfo defaultCtor;
-                if (type.IsClass && !type.IsAbstract && (
+                // different ways of creating a new instance
+                if (!useConstructor)
+                {   // DataContractSerializer style
+                    ctx.LoadValue(forType);
+                    ctx.EmitCall(typeof(FormatterServices).GetMethod("GetUninitializedObject"));
+                    ctx.Cast(forType);
+                } else if (type.IsClass && !type.IsAbstract && (
                     (defaultCtor = type.GetConstructor(
                     BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                     null, Helpers.EmptyTypes, null)) != null))
-                {
+                {   // XmlSerializer style
                     ctx.EmitCtor(type);
-                    if (baseCtorCallbacks != null) {
-                        for (int i = 0; i < baseCtorCallbacks.Length; i++) {
-                            EmitInvokeCallback(ctx, baseCtorCallbacks[i]);
-                        }
-                    }
-                    if (callbacks != null) EmitInvokeCallback(ctx, callbacks.BeforeDeserialize);
-                    ctx.StoreValue(storage);
                 }
                 else
                 {
                     //TODO: raise an appropriate message; unable to create new instance, and 'tis null
                 }
+                if (baseCtorCallbacks != null) {
+                    for (int i = 0; i < baseCtorCallbacks.Length; i++) {
+                        EmitInvokeCallback(ctx, baseCtorCallbacks[i]);
+                    }
+                }
+                if (callbacks != null) EmitInvokeCallback(ctx, callbacks.BeforeDeserialize);
+                ctx.StoreValue(storage);
                 ctx.MarkLabel(afterNullCheck);
             }
         }

@@ -11,10 +11,14 @@ namespace ProtoBuf.unittest.Meta
     {
         [DataContract, KnownType(typeof(B))]
         public abstract class A {
+            protected A() { TraceData += "ctor;"; }
             public void ResetTraceData() { TraceData = null; }
             public string TraceData {get;protected set;}
-            [DataMember(Order=1)]public int AValue { get; set; }
-
+            private int aValue;
+            [DataMember(Order=1)]public int AValue {
+                get { TraceData += "get;"; return aValue; }
+                set { TraceData += "set;"; aValue = value; }
+            }
             [OnSerializing] public void OnSerializing(StreamingContext ctx) { TraceData += "A.OnSerializing;";}
             [OnSerialized] public void OnSerialized(StreamingContext ctx) { TraceData += "A.OnSerialized;";}
             [OnDeserializing] public void OnDeserializing(StreamingContext ctx) { TraceData += "A.OnDeserializing;";}
@@ -22,7 +26,12 @@ namespace ProtoBuf.unittest.Meta
         }
         [DataContract, KnownType(typeof(C))]
         public class B : A {
-            [DataMember(Order = 1)]public int BValue { get; set; }
+            private int bValue;
+            [DataMember(Order = 1)]
+            public int BValue {
+                get { TraceData += "get;"; return bValue; }
+                set { TraceData += "set;"; bValue = value; }
+            }
             [OnSerializing] public new void OnSerializing(StreamingContext ctx) { TraceData += "B.OnSerializing;";}
             [OnSerialized] public new void OnSerialized(StreamingContext ctx) { TraceData += "B.OnSerialized;";}
             [OnDeserializing] public new void OnDeserializing(StreamingContext ctx) { TraceData += "B.OnDeserializing;";}
@@ -30,7 +39,11 @@ namespace ProtoBuf.unittest.Meta
         }
         [DataContract]
         public sealed class C : B {
-            [DataMember(Order = 1)]public int CValue { get; set; }
+            private int cValue;
+            [DataMember(Order = 1)]public int CValue {
+                get { TraceData += "get;"; return cValue; }
+                set { TraceData += "set;"; cValue = value; }
+            }
             [OnSerializing] public new void OnSerializing(StreamingContext ctx) { TraceData += "C.OnSerializing;";}
             [OnSerialized] public new void OnSerialized(StreamingContext ctx) { TraceData += "C.OnSerialized;";}
             [OnDeserializing] public new void OnDeserializing(StreamingContext ctx) { TraceData += "C.OnDeserializing;";}
@@ -47,6 +60,7 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void TestCallbacksAtMultipleInheritanceLevels()
         {
+            System.Runtime.Serialization.IDeserializationCallback s;
             C dcsOrig, dcsClone, pbClone, pbOrig;
             DataContractSerializer ser = new DataContractSerializer(typeof(B));
             using (MemoryStream ms = new MemoryStream()) {
@@ -81,6 +95,7 @@ namespace ProtoBuf.unittest.Meta
             Assert.AreEqual(dcsOrig.TraceData, pbOrig.TraceData, "CompileFully");
             Assert.AreEqual(dcsClone.TraceData, pbClone.TraceData, "CompileFully");
         }
+
         static C CreateC() {
             C c = new C { AValue = 123, BValue = 456, CValue = 789 };
 
@@ -89,9 +104,9 @@ namespace ProtoBuf.unittest.Meta
         private static RuntimeTypeModel BuildModel()
         {
             var model = TypeModel.Create();
-            model.Add(typeof(A), false).Add(2, "AValue").SetCallbacks("OnSerializing", "OnSerialized", "OnDeserializing", "OnDeserialized");
-            model.Add(typeof(B), false).Add(2, "BValue").SetCallbacks("OnSerializing", "OnSerialized", "OnDeserializing", "OnDeserialized");
-            model.Add(typeof(C), false).Add(2, "CValue").SetCallbacks("OnSerializing", "OnSerialized", "OnDeserializing", "OnDeserialized");
+            model.Add(typeof(A), false).Add(2, "AValue").SetCallbacks("OnSerializing", "OnSerialized", "OnDeserializing", "OnDeserialized").UseConstructor = false;
+            model.Add(typeof(B), false).Add(2, "BValue").SetCallbacks("OnSerializing", "OnSerialized", "OnDeserializing", "OnDeserialized").UseConstructor = false;
+            model.Add(typeof(C), false).Add(2, "CValue").SetCallbacks("OnSerializing", "OnSerialized", "OnDeserializing", "OnDeserialized").UseConstructor = false;
             model[typeof(A)].AddSubType(1, typeof(B));
             model[typeof(B)].AddSubType(1, typeof(C));
             return model;

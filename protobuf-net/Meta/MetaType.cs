@@ -144,6 +144,7 @@ namespace ProtoBuf.Meta
                 return serializer;
             }
         }
+
         private IProtoTypeSerializer BuildSerializer()
         {
             fields.Trim();
@@ -188,7 +189,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return new TypeSerializer(type, fieldNumbers, serializers, arr, baseType == null, callbacks);
+            return new TypeSerializer(type, fieldNumbers, serializers, arr, baseType == null, useConstructor, callbacks);
         }
 
         [Flags]
@@ -378,6 +379,16 @@ namespace ProtoBuf.Meta
         public MetaType Add(int fieldNumber, string memberName)
         {
             return Add(fieldNumber, memberName, null, null, null);
+        }
+        private bool useConstructor = true;
+        public bool UseConstructor
+        {
+            get { return useConstructor; }
+            set
+            {
+                ThrowIfFrozen();
+            	useConstructor = value;
+            }
         }
         /// <summary>
         /// Adds a member (by name) to the MetaType
