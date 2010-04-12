@@ -196,11 +196,11 @@ namespace ProtoBuf
             switch(style)
             {
                 case PrefixStyle.Fixed32:
-                    len = (int)((writer.position - value) - 4);
+                    len = (int)((writer.ioIndex - value) - 4);
                     ProtoWriter.WriteInt32ToBuffer(len, writer.ioBuffer, value);
                     break;
                 case PrefixStyle.Fixed32BigEndian:
-                    len = (int)((writer.position - value) - 4);
+                    len = (int)((writer.ioIndex - value) - 4);
                     byte[] buffer = writer.ioBuffer;
                     ProtoWriter.WriteInt32ToBuffer(len, buffer, value);
                     // and swap the byte order
@@ -215,7 +215,7 @@ namespace ProtoBuf
                     // string - complicated because we only reserved one byte;
                     // if the prefix turns out to need more than this then
                     // we need to shuffle the existing data
-                    len = (int)((writer.position - value) - 1);
+                    len = (int)((writer.ioIndex - value) - 1);
                     int offset = 0;
                     uint tmp = (uint)len;
                     while ((tmp >>= 7) != 0) offset++;

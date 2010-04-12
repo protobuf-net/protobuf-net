@@ -1,0 +1,16 @@
+package ProtoBuf.unittest.Perf.Issue103Types;
+    message TypeA { 
+       repeated string param1 = 1;
+       repeated int64 param2 = 2;
+       repeated bool param3 = 3;
+       repeated bool param4 = 4;
+    }
+    message ContainedType {
+       required string param1 = 1;
+       optional int64 param2 = 2;
+       optional bool param3 = 3;
+       optional bool param4 = 4;
+    }
+    message TypeB {
+       repeated ContainedType containedType = 1;
+    }

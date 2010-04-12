@@ -73,6 +73,13 @@
     <Compile Include="Meta\PocoStruct.cs" />
     <Compile Include="Meta\Struct.cs" />
     <Compile Include="Meta\SubItems.cs" />
+    <Compile Include="Perf\Issue103.cs" />
+    <Compile Include="Perf\Types103.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Types103.proto</DependentUpon>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serializers\DateTimeTests.cs" />
     <Compile Include="Serializers\NilSerializer.cs" />
@@ -97,6 +104,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Perf\Types103.proto">
+      <Generator>ProtoBufTool</Generator>
+      <LastGenOutput>Types103.cs</LastGenOutput>
+    </None>
     <None Include="PEVerify.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
