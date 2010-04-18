@@ -72,6 +72,7 @@ namespace ProtoBuf.Meta
             if (value is string)
             {
                 string s = (string)value;
+                if (type.IsEnum) return Enum.Parse(type, s, true);
                 switch (Type.GetTypeCode(type))
                 {
                     case TypeCode.Boolean: return bool.Parse(s);
@@ -91,7 +92,6 @@ namespace ProtoBuf.Meta
                     case TypeCode.UInt64: return ulong.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                 }
                 if (type == typeof(TimeSpan)) return TimeSpan.Parse(s);
-                if (type.IsEnum) return Enum.Parse(type, s, true);
             }
             if (type.IsEnum) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type);

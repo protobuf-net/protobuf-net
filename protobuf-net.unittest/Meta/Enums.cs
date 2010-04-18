@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using NUnit.Framework;
 using ProtoBuf.Meta;
+using System.ComponentModel;
 
 namespace ProtoBuf.unittest.Meta
 {
@@ -23,9 +24,9 @@ namespace ProtoBuf.unittest.Meta
         public class AllTheEnums {
             [ProtoMember(1)] public I8 I8 { get; set; }
             [ProtoMember(2)] public U8 U8 { get; set; }
-            [ProtoMember(3)] public I16 I16 { get; set; }
-            [ProtoMember(4)] public U16 U16 { get; set; }
-            [ProtoMember(5)] public I32 I32 { get; set; }
+            [ProtoMember(3), DefaultValue(I16.C)] public I16 I16 { get; set; }
+            [ProtoMember(4), DefaultValue("C")] public U16 U16 { get; set; }
+            [ProtoMember(5), DefaultValue(3)] public I32 I32 { get; set; }
             [ProtoMember(6)] public U32 U32 { get; set; }
             [ProtoMember(7)] public I64 I64 { get; set; }
             [ProtoMember(8)] public U64 U64 { get; set; }
