@@ -7,12 +7,19 @@ using SampleDto;
 using NETCFClient;
 using System.Diagnostics;
 using System.Reflection;
+using NUnit.Framework;
 namespace FX11
 {
     
+    [TestFixture]
     public class FX11_Program
     {
-        
+        [Test]
+        public void CheckThisTestRunIsForCLR2()
+        {   // because TestDriven.NET on VS2010 gets uppity
+            Assert.AreEqual(2, Environment.Version.Major);
+        }
+
         private static void DumpObject(string header, PropertyInfo[] props, object obj) {
             Console.WriteLine();
             Console.WriteLine(header);

@@ -4,7 +4,7 @@ using ProtoBuf;
 
 namespace Examples
 {
-    [TestFixture, Ignore("inheritance not implemented")]
+    [TestFixture]
     public class Inheritance
     {
         [Test]

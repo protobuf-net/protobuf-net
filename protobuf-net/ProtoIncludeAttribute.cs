@@ -11,7 +11,6 @@ namespace ProtoBuf
     /// other protocol-buffer implementations.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
-    [System.Obsolete("v2 support not yet implemented", false)]
     public sealed class ProtoIncludeAttribute : Attribute
     {
         /// <summary>

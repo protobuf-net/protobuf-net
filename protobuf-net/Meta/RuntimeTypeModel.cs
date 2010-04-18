@@ -33,7 +33,7 @@ namespace ProtoBuf.Meta
             this.isDefault = isDefault;
         }
         public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true)]; } }
-        MetaType Find(Type type)
+        MetaType FindWithoutAdd(Type type)
         {
             // this list is thread-safe for reading
             foreach (MetaType metaType in types)
@@ -88,15 +88,20 @@ namespace ProtoBuf.Meta
         public MetaType Add(Type type, bool applyDefaultBehaviour)
         {
             if (type == null) throw new ArgumentNullException("type");
-            if (Find(type) != null) throw new ArgumentException("Duplicate type", "type");
+            if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
             MetaType newType = Create(type);
             if (applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
             lock (types)
             {
                 // double checked
-                if (Find(type) != null) throw new ArgumentException("Duplicate type", "type");
+                if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
                 ThrowIfFrozen();
                 types.Add(newType);
+            }
+            if (applyDefaultBehaviour && FindWithoutAdd(type.BaseType) == null
+                && MetaType.GetContractFamily(type.BaseType, null) != MetaType.AttributeFamily.None)
+            {
+                FindOrAddAuto(type, true);
             }
             return newType;
         }        
@@ -520,7 +525,7 @@ namespace ProtoBuf.Meta
 
         internal bool IsDefined(Type type, int fieldNumber)
         {
-            return Find(type).IsDefined(fieldNumber);
+            return FindWithoutAdd(type).IsDefined(fieldNumber);
         }
     }
     

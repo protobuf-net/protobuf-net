@@ -159,6 +159,7 @@
     <Compile Include="Serializers\CompiledSerializer.cs" />
     <Compile Include="Serializers\BooleanSerializer.cs" />
     <Compile Include="Serializers\ArrayDecorator.cs" />
+    <Compile Include="Serializers\EnumSerializer.cs" />
     <Compile Include="Serializers\DefaultValueDecorator.cs" />
     <Compile Include="Serializers\GuidSerializer.cs" />
     <Compile Include="Serializers\IProtoTypeSerializer.cs" />

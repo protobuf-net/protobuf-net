@@ -193,30 +193,88 @@ namespace ProtoBuf.Meta
         }
 
         [Flags]
-        enum AttributeFamily
+        internal enum AttributeFamily
         {
             None = 0, ProtoBuf = 1, DataContractSerialier = 2, XmlSerializer = 4
         }
         internal void ApplyDefaultBehaviour()
         {
-            AttributeFamily family = AttributeFamily.None;
-            foreach (Attribute attrib in type.GetCustomAttributes(true))
+            object[] attribs = type.GetCustomAttributes(true);
+            for(int i = 0 ; i < attribs.Length ; i++)
             {
-                switch (attrib.GetType().FullName)
+                if(attribs[i] is ProtoIncludeAttribute)
+                {
+                    ProtoIncludeAttribute pia = (ProtoIncludeAttribute)attribs[i];
+                    AddSubType(pia.Tag, pia.KnownType);
+                }
+            }
+            AttributeFamily family = GetContractFamily(type, attribs);
+            if(family ==  AttributeFamily.None) return; // and you'd like me to do what, exactly?
+            MethodInfo[] callbacks = null;
+            foreach (MemberInfo member in type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                if (member.IsDefined(typeof(ProtoIgnoreAttribute), true)) continue;                
+                switch (member.MemberType)
+                {
+                    case MemberTypes.Property:
+                    case MemberTypes.Field:
+                        ValueMember vm = ApplyDefaultBehaviour(family, member);
+                        if (vm != null)
+                        {
+                            Add(vm);
+                        }
+                        break;
+                    case MemberTypes.Method:
+                        MethodInfo method = (MethodInfo)member;
+                        attribs = Attribute.GetCustomAttributes(method);
+                        if (attribs != null && attribs.Length > 0)
+                        {
+                            CheckForCallback(method, attribs, "ProtoBuf.ProtoBeforeSerializationAttribute", ref callbacks, 0);
+                            CheckForCallback(method, attribs, "ProtoBuf.ProtoAfterSerializationAttribute", ref callbacks, 1);
+                            CheckForCallback(method, attribs, "ProtoBuf.ProtoBeforeDeserializationAttribute", ref callbacks, 2);
+                            CheckForCallback(method, attribs, "ProtoBuf.ProtoAfterDeserializationAttribute", ref callbacks, 3);
+                            CheckForCallback(method, attribs, "System.Runtime.Serialization.OnSerializingAttribute", ref callbacks, 4);
+                            CheckForCallback(method, attribs, "System.Runtime.Serialization.OnSerializedAttribute", ref callbacks, 5);
+                            CheckForCallback(method, attribs, "System.Runtime.Serialization.OnDeserializingAttribute", ref callbacks, 6);
+                            CheckForCallback(method, attribs, "System.Runtime.Serialization.OnDeserializedAttribute", ref callbacks, 7);
+                        }
+                        break;
+                }
+            }
+            if (callbacks != null)
+            {
+                SetCallbacks(callbacks[0] ?? callbacks[4], callbacks[1] ?? callbacks[5],
+                    callbacks[2] ?? callbacks[6], callbacks[3] ?? callbacks[7]);
+            }
+        }
+
+        internal static AttributeFamily GetContractFamily(Type type, object[] attributes)
+        {
+            AttributeFamily family = AttributeFamily.None;
+            if (attributes == null) attributes = type.GetCustomAttributes(true);
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                switch (attributes[i].GetType().FullName)
                 {
                     case "ProtoBuf.ProtoContractAttribute": family |= AttributeFamily.ProtoBuf; break;
                     case "System.Xml.Serialization.XmlTypeAttribute": family |= AttributeFamily.XmlSerializer; break;
                     case "System.Runtime.Serialization.DataContractAttribute": family |= AttributeFamily.DataContractSerialier; break;
                 }
             }
-            if(family ==  AttributeFamily.None) return; // and you'd like me to do what, exactly?
-            
-            foreach (MemberInfo member in type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            return family;
+        }
+        private static void CheckForCallback(MethodInfo method, object[] attributes, string callbackTypeName, ref MethodInfo[] callbacks, int index)
+        {
+            for(int i = 0 ; i < attributes.Length ; i++)
             {
-                ValueMember vm = ApplyDefaultBehaviour(family, member);
-                if (vm != null)
+                if(attributes[i].GetType().FullName == callbackTypeName)
                 {
-                    Add(vm);
+                    if (callbacks == null) { callbacks = new MethodInfo[8]; }
+                    else if (callbacks[index] != null)
+                    {
+                        throw new InvalidOperationException("Duplicate " + callbackTypeName + " callbacks on " + method.ReflectedType.FullName);
+                    }
+                    callbacks[index] = method;
                 }
             }
         }

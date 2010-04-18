@@ -982,6 +982,47 @@ namespace ProtoBuf.Compiler
 #endif
             EmitCall(typeof(Type).GetMethod("GetTypeFromHandle"));
         }
+
+        internal void ConvertToInt32(TypeCode typeCode)
+        {
+            switch (typeCode)
+            {
+                case TypeCode.Byte:
+                case TypeCode.SByte:
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                    Emit(OpCodes.Conv_I4);
+                    break;
+                case TypeCode.Int32:
+                    break;                
+                case TypeCode.Int64:
+                    Emit(OpCodes.Conv_Ovf_I4);
+                    break;
+                case TypeCode.UInt32:
+                case TypeCode.UInt64:
+                    Emit(OpCodes.Conv_Ovf_I4_Un);
+                    break;
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        internal void ConvertFromInt32(TypeCode typeCode)
+        {
+            switch (typeCode)
+            {
+                case TypeCode.SByte: Emit(OpCodes.Conv_Ovf_U1); break;
+                case TypeCode.Byte: Emit(OpCodes.Conv_Ovf_I1); break;
+                case TypeCode.Int16: Emit(OpCodes.Conv_Ovf_I2); break;
+                case TypeCode.UInt16: Emit(OpCodes.Conv_Ovf_U2); break;
+                case TypeCode.Int32: break;
+                case TypeCode.UInt32: Emit(OpCodes.Conv_Ovf_U4); break;
+                case TypeCode.Int64: Emit(OpCodes.Conv_I8); break;
+                case TypeCode.UInt64: Emit(OpCodes.Conv_U8); break;
+                default: throw new InvalidOperationException();
+            }
+
+        }
     }
 }
 #endif

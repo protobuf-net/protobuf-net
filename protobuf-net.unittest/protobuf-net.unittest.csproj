@@ -67,6 +67,7 @@
     <Compile Include="FX11.cs" />
     <Compile Include="Meta\Basic.cs" />
     <Compile Include="Meta\Callbacks.cs" />
+    <Compile Include="Meta\Enums.cs" />
     <Compile Include="Meta\Guids.cs" />
     <Compile Include="Meta\Inheritance.cs" />
     <Compile Include="Meta\Lists.cs" />

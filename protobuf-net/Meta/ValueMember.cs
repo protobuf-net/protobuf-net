@@ -93,6 +93,7 @@ namespace ProtoBuf.Meta
                 if (type == typeof(TimeSpan)) return TimeSpan.Parse(s);
                 if (type.IsEnum) return Enum.Parse(type, s, true);
             }
+            if (type.IsEnum) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type);
         }
 
@@ -176,6 +177,11 @@ namespace ProtoBuf.Meta
 #if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;
 #endif
+            if (type.IsEnum)
+            { // need to do this before checking the typecode; an int enum will report Int32 etc
+                defaultWireType = WireType.Variant;
+                return new EnumSerializer(type, null);
+            }
             TypeCode code = Type.GetTypeCode(type);
             switch (code)
             {
