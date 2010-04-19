@@ -108,7 +108,37 @@ namespace ProtoBuf.Meta
             return new RuntimeTypeModel(false);
         }
 #endif
-        protected internal abstract int GetKey(Type type);
+
+        /// <summary>
+        /// Applies common proxy scenarios, resolving the actual type to consider
+        /// </summary>
+        protected static Type ResolveProxies(Type type)
+        {
+            if (type == null) return null;
+            
+            // NHibernate
+            if (type.GetInterface("NHibernate.Proxy.INHibernateProxy", false) != null) return type.BaseType;
+
+            return null;
+        }
+
+        protected static void CannotCreateInstance(Type type)
+        {
+            throw new InvalidOperationException("Cannot create an instance of type; no suitable constructor found: " + type.FullName);
+        }
+
+        protected internal int GetKey(Type type)
+        {
+            int key = GetKeyImpl(type);
+            if (key < 0)
+            {
+                type = ResolveProxies(type);
+                if (type != null) key = GetKeyImpl(type);
+            }
+            return key;
+        }
+
+        protected abstract int GetKeyImpl(Type type);
         protected internal abstract void Serialize(int key, object value, ProtoWriter dest);
         protected internal abstract object Deserialize(int key, object value, ProtoReader source);
         

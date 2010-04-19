@@ -39,6 +39,9 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NHibernate">
+      <HintPath>..\Tools\NHibernate.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework, Version=2.4.7.0, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Tools\nunit.framework.dll</HintPath>
@@ -88,6 +91,7 @@
     <Compile Include="Serializers\Tag.cs" />
     <Compile Include="Serializers\Util.cs" />
     <Compile Include="Serializers\Writer.cs" />
+    <Compile Include="ThirdParty\NHibernateProxies.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">

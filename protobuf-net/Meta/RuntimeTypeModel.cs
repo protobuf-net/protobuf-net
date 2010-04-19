@@ -40,7 +40,9 @@ namespace ProtoBuf.Meta
             {
                 if (metaType.Type == type) return metaType;
             }
-            return null;
+            // if that failed, check for a proxy
+            Type underlyingType = ResolveProxies(type);
+            return underlyingType == null ? null : FindWithoutAdd(underlyingType);
         }
         sealed class TypeFinder : BasicList.IPredicate
         {
@@ -55,6 +57,18 @@ namespace ProtoBuf.Meta
         {
             TypeFinder predicate = new TypeFinder(type);
             int key = types.IndexOf(predicate);
+
+            if (key < 0)
+            {
+                // check for proxy types
+                Type underlyingType = ResolveProxies(type);
+                if (underlyingType != null)
+                {
+                    predicate = new TypeFinder(underlyingType);
+                    key = types.IndexOf(predicate);
+                }
+            }
+
             if (key < 0)
             {
                 if (!autoAddMissingTypes)
@@ -131,7 +145,7 @@ namespace ProtoBuf.Meta
 
         private readonly BasicList types = new BasicList();
 
-        protected internal override int GetKey(Type type)
+        protected override int GetKeyImpl(Type type)
         {
             return GetKey(type, true, true);
         }
@@ -335,8 +349,8 @@ namespace ProtoBuf.Meta
             }
 
             FieldBuilder knownTypes = type.DefineField("knownTypes", typeof(Type[]), FieldAttributes.Private | FieldAttributes.InitOnly);
-            
-            ILGenerator il = Override(type, "GetKey");
+
+            ILGenerator il = Override(type, "GetKeyImpl");
             il.Emit(OpCodes.Ldarg_0);
             il.Emit(OpCodes.Ldfld, knownTypes);
             il.Emit(OpCodes.Ldarg_1);

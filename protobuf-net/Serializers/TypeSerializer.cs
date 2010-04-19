@@ -392,7 +392,9 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
-                    //TODO: raise an appropriate message; unable to create new instance, and 'tis null
+                    ctx.LoadValue(type);
+                    ctx.EmitCall(typeof(TypeModel).GetMethod("CannotCreateInstance"));
+                    ctx.LoadNullRef();
                 }
                 if (baseCtorCallbacks != null) {
                     for (int i = 0; i < baseCtorCallbacks.Length; i++) {

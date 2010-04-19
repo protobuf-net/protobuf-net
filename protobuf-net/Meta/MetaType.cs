@@ -27,6 +27,9 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType AddSubType(int fieldNumber, Type derivedType)
         {
+            if (!type.IsClass || type.IsSealed) {
+                throw new InvalidOperationException("Sub-types can only be adedd to non-sealed classes");
+            }
             MetaType derivedMeta = model[derivedType];
             SubType subType = new SubType(fieldNumber, derivedMeta);
             ThrowIfFrozen();

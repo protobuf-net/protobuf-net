@@ -69,6 +69,9 @@ namespace ProtoBuf.unittest.Meta
         }
         static void CompareAgainstClone(AllTheEnums original, AllTheEnums clone, string caption)
         {
+            Assert.IsNotNull(original, caption + " (original)");
+            Assert.IsNotNull(clone, caption + " (clone)");
+            Assert.AreNotSame(original, clone, caption);
             Assert.AreEqual(original.I8, clone.I8, caption);
             Assert.AreEqual(original.U8, clone.U8, caption);
             Assert.AreEqual(original.I16, clone.I16, caption);
