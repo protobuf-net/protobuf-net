@@ -5,6 +5,7 @@ using System.Text;
 using NUnit.Framework;
 using NHibernate.Proxy;
 using ProtoBuf.Meta;
+using System.IO;
 
 namespace ProtoBuf.unittest.ThirdParty
 {
@@ -107,11 +108,49 @@ namespace ProtoBuf.unittest.ThirdParty
             #endregion
         }
 
-        [Test]
-        public void CanRoundTripProxyToRegular()
+        static RuntimeTypeModel BuildModel()
         {
             var model = TypeModel.Create();
             model.Add(typeof(Foo), false).Add("Id", "Name");
+            return model;
+        }
+
+        class Bar : Foo { }
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void AttemptToSerializeUnknownSubtypeShouldFail_Runtime()
+        {
+            var model = BuildModel();
+            model.Serialize(Stream.Null, new Bar());
+        }
+
+/* Investigating: Issue in TestDriven.NET?
+ * 
+ * [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void Anticipate_Typed_Failure() { }
+
+        [Test, ExpectedException]
+        public void Anticipate_Any_Failure() { }
+ */
+
+
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void AttemptToSerializeUnknownSubtypeShouldFail_CompileInPlace()
+        {
+            var model = BuildModel();
+            model.CompileInPlace();
+            model.Serialize(Stream.Null, new Bar());
+        }
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void AttemptToSerializeUnknownSubtypeShouldFail_Compile()
+        {
+            var model = BuildModel().Compile();
+            model.Serialize(Stream.Null, new Bar());
+        }
+
+        [Test]
+        public void CanRoundTripProxyToRegular()
+        {
+            var model = BuildModel();
 
             Foo foo = new Foo { Id = 1234, Name = "abcd" }, proxy = new FooProxy(foo), clone;
             Assert.IsNotNull(foo);

@@ -8,13 +8,17 @@ namespace ProtoBuf.Serializers
 {
     sealed class PropertyDecorator : ProtoDecoratorBase
     {
-        public override Type ExpectedType { get { return property.DeclaringType; } }
+        public override Type ExpectedType { get { return forType; } }
         private readonly PropertyInfo property;
+        private readonly Type forType;
         public override bool RequiresOldValue { get { return true; } }
         public override bool ReturnsValue { get { return false; } }
         private readonly bool readOptionsWriteValue, readOptionsRefCheck;
-        public PropertyDecorator(PropertyInfo property, IProtoSerializer tail) : base(tail)
+        public PropertyDecorator(Type forType, PropertyInfo property, IProtoSerializer tail) : base(tail)
         {
+            Helpers.DebugAssert(forType != null);
+            Helpers.DebugAssert(property != null);
+            this.forType = forType;
             this.property = property;
             SanityCheck(property, tail, out readOptionsWriteValue, out readOptionsRefCheck, true);
         }

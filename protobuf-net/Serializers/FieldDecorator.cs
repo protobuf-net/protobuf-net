@@ -9,13 +9,16 @@ namespace ProtoBuf.Serializers
     sealed class FieldDecorator : ProtoDecoratorBase
     {
 
-        public override Type ExpectedType { get { return field.DeclaringType; } }
+        public override Type ExpectedType { get { return forType; } }
         private readonly FieldInfo field;
+        private readonly Type forType;
         public override bool RequiresOldValue { get { return true; } }
         public override bool ReturnsValue { get { return false; } }
-        public FieldDecorator(FieldInfo field, IProtoSerializer tail) : base(tail)
+        public FieldDecorator(Type forType, FieldInfo field, IProtoSerializer tail) : base(tail)
         {
+            Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(field != null);
+            this.forType = forType;
             this.field = field;
         }
         public override void Write(object value, ProtoWriter dest)

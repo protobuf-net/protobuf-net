@@ -1023,6 +1023,25 @@ namespace ProtoBuf.Compiler
             }
 
         }
+
+        internal void LoadValue(decimal value)
+        {
+            if (value == 0M)
+            {
+                LoadValue(typeof(decimal).GetField("Zero"));
+            }
+            else
+            {
+                int[] bits = decimal.GetBits(value);
+                LoadValue(bits[0]); // lo
+                LoadValue(bits[1]); // mid
+                LoadValue(bits[2]); // hi
+                LoadValue((int)(((uint)bits[3]) >> 31)); // isNegative (bool, but int for CLI purposes)
+                LoadValue((bits[3] >> 16) & 0xFF); // scale (byte, but int for CLI purposes)
+
+                EmitCtor(typeof(decimal), new Type[] { typeof(int), typeof(int), typeof(int), typeof(bool), typeof(byte) });
+            }
+        }
     }
 }
 #endif

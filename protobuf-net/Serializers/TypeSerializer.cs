@@ -60,19 +60,21 @@ namespace ProtoBuf.Serializers
         private IProtoSerializer GetMoreSpecificSerializer(object value)
         {
             Type actualType = value.GetType();
-            if (actualType != forType)
+            if (actualType == forType) return null;
+           
+            for (int i = 0; i < serializers.Length; i++)
             {
-                for (int i = 0; i < serializers.Length; i++)
+                IProtoSerializer ser = serializers[i];
+                if (ser.ExpectedType != forType && ser.ExpectedType.IsAssignableFrom(actualType))
                 {
-                    IProtoSerializer ser = serializers[i];
-                    if (ser.ExpectedType != forType && ser.ExpectedType.IsAssignableFrom(actualType))
-                    {
-                        return ser;
-                    }
+                    return ser;
                 }
             }
+            MetaType.ThrowUnexpectedSubtype(forType, actualType); // might throw (if not a proxy)
             return null;
         }
+
+
         public void Write(object value, ProtoWriter dest)
         {
             if (applyCallbacks) Callback(value, TypeModel.CallbackType.BeforeSerialize);
@@ -371,7 +373,6 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(storage != null);
             if (!type.IsValueType)
             {
-
                 Compiler.CodeLabel afterNullCheck = ctx.DefineLabel();
                 ctx.LoadValue(storage);
                 ctx.BranchIfTrue(afterNullCheck, true);

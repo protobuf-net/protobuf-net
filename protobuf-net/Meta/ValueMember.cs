@@ -152,9 +152,9 @@ namespace ProtoBuf.Meta
             switch (member.MemberType)
             {
                 case MemberTypes.Property:
-                    ser = new PropertyDecorator((PropertyInfo)member, ser); break;
+                    ser = new PropertyDecorator(parentType, (PropertyInfo)member, ser); break;
                 case MemberTypes.Field:
-                    ser = new FieldDecorator((FieldInfo)member, ser); break;
+                    ser = new FieldDecorator(parentType, (FieldInfo)member, ser); break;
                 default:
                     throw new InvalidOperationException();
             }

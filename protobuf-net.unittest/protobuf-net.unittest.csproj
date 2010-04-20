@@ -67,6 +67,7 @@
       <Link>Program.cs</Link>
     </Compile>
     <Compile Include="Attribs\Basic.cs" />
+    <Compile Include="Attribs\ComplexMultiTypes.cs" />
     <Compile Include="FX11.cs" />
     <Compile Include="Meta\Basic.cs" />
     <Compile Include="Meta\Callbacks.cs" />
@@ -77,6 +78,7 @@
     <Compile Include="Meta\PocoStruct.cs" />
     <Compile Include="Meta\Struct.cs" />
     <Compile Include="Meta\SubItems.cs" />
+    <Compile Include="Attribs\MultiTypes.cs" />
     <Compile Include="Perf\Issue103.cs" />
     <Compile Include="Perf\Types103.cs">
       <AutoGen>True</AutoGen>

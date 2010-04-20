@@ -589,5 +589,6 @@ namespace ProtoBuf
         {
             ProtoWriter.WriteUInt32(value ? (uint)1 : (uint)0, writer);
         }
+
     }
 }

@@ -24,8 +24,8 @@ namespace ProtoBuf.unittest.Meta
             var head = new TypeSerializer(typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IProtoSerializer[] {
-                    new PropertyDecorator(typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant, false, new Int32Serializer())),
-                    new FieldDecorator(typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String, false, new StringSerializer()))
+                    new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant, false, new Int32Serializer())),
+                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String, false, new StringSerializer()))
                 }, null, false, true, null);
             var deser = CompilerContext.BuildDeserializer(head);
 
@@ -47,8 +47,8 @@ namespace ProtoBuf.unittest.Meta
             var head = new TypeSerializer(typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IProtoSerializer[] {
-                    new PropertyDecorator(typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant,false,  new Int32Serializer())),
-                    new FieldDecorator(typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String,false,  new StringSerializer()))
+                    new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant,false,  new Int32Serializer())),
+                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String,false,  new StringSerializer()))
                 }, null, false, true, null);
             var ser = CompilerContext.BuildSerializer(head);
             var deser = CompilerContext.BuildDeserializer(head);

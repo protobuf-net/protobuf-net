@@ -196,7 +196,12 @@ namespace ProtoBuf.Serializers
                     EmitBeq(ctx, label, ExpectedType);
                     break;
                 case TypeCode.Decimal:
-                    throw new NotImplementedException("todo"); //TODO
+                    {
+                        decimal d = (decimal)defaultValue;
+                        ctx.LoadValue(d);
+                        EmitBeq(ctx, label, ExpectedType);
+                    }
+                    break;
                 default:
                     if (ExpectedType == typeof(TimeSpan))
                     {

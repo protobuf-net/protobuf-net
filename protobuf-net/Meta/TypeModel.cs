@@ -112,7 +112,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Applies common proxy scenarios, resolving the actual type to consider
         /// </summary>
-        protected static Type ResolveProxies(Type type)
+        protected internal static Type ResolveProxies(Type type)
         {
             if (type == null) return null;
             
