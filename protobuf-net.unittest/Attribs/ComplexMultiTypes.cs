@@ -123,7 +123,7 @@ namespace ProtoBuf.unittest.Attribs
         public void CanCompileModel()
         {
             BuildModel().Compile("ComplexMultiTypes", "ComplexMultiTypes.dll");
-            PocoListTests.VerifyPE("ComplexMultiTypes.dll");
+            PEVerify.Verify("ComplexMultiTypes.dll");
         }
 
         [Test]

@@ -55,7 +55,7 @@ namespace ProtoBuf.unittest.Meta
             var model = BuildModel();
             model.CompileInPlace();
             model.Compile("Callbacks", "Callbacks.dll");
-            PocoListTests.VerifyPE("Callbacks.dll");
+            PEVerify.Verify("Callbacks.dll");
         }
         [Test]
         public void TestCallbacksAtMultipleInheritanceLevels()

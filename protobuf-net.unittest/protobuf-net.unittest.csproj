@@ -87,6 +87,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Types103.proto</DependentUpon>
     </Compile>
+    <Compile Include="PEVerify.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serializers\DateTimeTests.cs" />
     <Compile Include="Serializers\NilSerializer.cs" />

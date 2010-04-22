@@ -55,7 +55,7 @@ namespace ProtoBuf.unittest.Meta
             Assert.IsInstanceOfType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
 
             var compiled = model.Compile("SubItems","SubItems.dll");
-            PocoListTests.VerifyPE("SubItems.dll");
+            PEVerify.Verify("SubItems.dll");
             Assert.IsInstanceOfType(typeof(OuterRef), compiled.Deserialize(Stream.Null, null, typeof(OuterRef)));
             Assert.IsInstanceOfType(typeof(OuterVal), compiled.Deserialize(Stream.Null, null, typeof(OuterVal)));
             Assert.IsInstanceOfType(typeof(InnerRef), compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
@@ -171,7 +171,7 @@ namespace ProtoBuf.unittest.Meta
 
             
             TypeModel compiled = model.Compile("TestTypeWithNullableProps", "TestTypeWithNullableProps.dll");
-            PocoListTests.VerifyPE("TestTypeWithNullableProps.dll");
+            PEVerify.Verify("TestTypeWithNullableProps.dll");
             var clone3 = (TypeWithNulls)compiled.DeepClone(obj);
             Assert.AreEqual(123, clone1.First);
             Assert.AreEqual(456.789, clone1.Second);

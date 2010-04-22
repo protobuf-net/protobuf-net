@@ -71,6 +71,7 @@ namespace ProtoBuf.unittest.Serializers
             Assert.AreEqual(hex, GetHex(raw));
 
             TypeModel compiled = model.Compile("compiled", "compiled.dll");
+            PEVerify.Verify("compiled.dll");
             using (MemoryStream ms = new MemoryStream())
             {
                 compiled.Serialize(ms, value);

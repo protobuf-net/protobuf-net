@@ -44,7 +44,7 @@ namespace ProtoBuf.unittest.Meta
         public void CanCompileModelFully()
         {
             CreateModel().Compile("InheritanceTests", "InheritanceTests.dll");
-            PocoListTests.VerifyPE("InheritanceTests.dll");
+            PEVerify.Verify("InheritanceTests.dll");
         }
         [Test]
         public void CheckKeys()

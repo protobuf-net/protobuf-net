@@ -41,7 +41,7 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = BuildModel();
             model.Compile("AllTheEnums","AllTheEnums.dll");
-            PocoListTests.VerifyPE("AllTheEnums.dll");
+            PEVerify.Verify("AllTheEnums.dll");
         }
 
         [Test]

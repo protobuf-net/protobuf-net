@@ -28,23 +28,7 @@ namespace ProtoBuf.unittest.Meta
 
         }
 
-        public static void VerifyPE(string path)
-        {
-            // note; PEVerify can be found %ProgramFiles%\Microsoft SDKs\Windows\v6.0A\bin
-            const string exePath = "PEVerify.exe";
-            using (Process proc = Process.Start(exePath, path))
-            {
-                if (proc.WaitForExit(10000))
-                {
-                    Assert.AreEqual(0, proc.ExitCode, path);
-                }
-                else
-                {
-                    proc.Kill();
-                    throw new TimeoutException();
-                }
-            }
-        }
+        
 
         [Test]
         public void EmitModelWithEverything()
@@ -64,7 +48,7 @@ namespace ProtoBuf.unittest.Meta
             model.CompileInPlace();
             model.Compile("EmitModelWithEverything", "EmitModelWithEverything.dll");
 
-            VerifyPE("EmitModelWithEverything.dll");
+            PEVerify.Verify("EmitModelWithEverything.dll");
             
         }
 
@@ -427,7 +411,7 @@ namespace ProtoBuf.unittest.Meta
             model.CompileInPlace();
 
             model.Compile("PEVerifyArraysAndLists","PEVerifyArraysAndLists.dll");
-            VerifyPE("PEVerifyArraysAndLists.dll");
+            PEVerify.Verify("PEVerifyArraysAndLists.dll");
         }
 
 

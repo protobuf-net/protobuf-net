@@ -8,6 +8,7 @@ using NETCFClient;
 using System.Diagnostics;
 using System.Reflection;
 using NUnit.Framework;
+using ProtoBuf.unittest;
 namespace FX11
 {
     
@@ -303,7 +304,8 @@ namespace FX11
 #endif
 #if FEAT_COMPILER
 
-            TypeModel compiled = model.Compile("CustomerModel", "CustomerModel.dll");
+           TypeModel compiled = model.Compile("CustomerModel", "CustomerModel.dll");
+           PEVerify.Verify("CustomerModel.dll");
            WriteCustomer(compiled, "Compiled - class", cust2);
            WriteCustomer(compiled, "Compiled - struct", cust2);
             /*

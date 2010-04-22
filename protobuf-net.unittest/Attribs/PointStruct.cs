@@ -5,6 +5,7 @@ using System.Text;
 using NUnit.Framework;
 using ProtoBuf.Meta;
 using System.Threading;
+using ProtoBuf.unittest.Meta;
 
 namespace ProtoBuf.unittest.Attribs
 {
@@ -101,6 +102,21 @@ namespace ProtoBuf.unittest.Attribs
             Assert.AreEqual(fromPoint, newFrom - oldFrom, message + ": Point to Surrogate");
         }
 
+        [Test]
+        public void VerifyPointWithSurrogate()
+        {
+            var model = BuildModelWithSurrogate();
+            model.Compile("PointWithSurrogate", "PointWithSurrogate.dll");
+            PEVerify.Verify("PointWithSurrogate.dll");
+        }
+
+        [Test]
+        public void VerifyPointDirect()
+        {
+            var model = BuildModel();
+            model.Compile("PointDirect", "PointDirect.dll");
+            PEVerify.Verify("PointDirect.dll", 1); // expect failure due to field access
+        }
 
         [Test]
         public void RoundTripPointWithSurrogate()

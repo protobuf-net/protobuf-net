@@ -42,7 +42,7 @@ namespace ProtoBuf.unittest.Serializers
         public void TestDateTimeCanCompileFully()
         {
             var model = CreateModel().Compile("TestDateTimeCanCompileFully", "TestDateTimeCanCompileFully.dll");
-            PocoListTests.VerifyPE("TestDateTimeCanCompileFully.dll");
+            PEVerify.Verify("TestDateTimeCanCompileFully.dll");
         }
         [Test]
         public void TestDateTimeCompiled()
