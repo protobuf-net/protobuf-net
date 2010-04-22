@@ -32,7 +32,7 @@ namespace ProtoBuf.Meta
             AutoAddMissingTypes = true;
             this.isDefault = isDefault;
         }
-        public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true)]; } }
+        public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false)]; } }
         MetaType FindWithoutAdd(Type type)
         {
             // this list is thread-safe for reading
@@ -53,7 +53,7 @@ namespace ProtoBuf.Meta
                 return ((MetaType)obj).Type == type;
             }
         }
-        internal int FindOrAddAuto(Type type, bool demand)
+        internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly)
         {
             TypeFinder predicate = new TypeFinder(type);
             int key = types.IndexOf(predicate);
@@ -66,16 +66,20 @@ namespace ProtoBuf.Meta
                 {
                     predicate = new TypeFinder(underlyingType);
                     key = types.IndexOf(predicate);
+                    type = underlyingType; // if new added, make it reflect the underlying type
                 }
             }
 
             if (key < 0)
             {
-                if (!autoAddMissingTypes)
+                if (!autoAddMissingTypes || (
+                    addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
+                    )
                 {
-                    if(demand)throw new ArgumentException("type");
+                    if (demand) ThrowUnexpectedType(type);
                     return key;
                 }
+                
                 MetaType metaType = Create(type);
                 metaType.ApplyDefaultBehaviour();
                 lock (types)
@@ -115,7 +119,7 @@ namespace ProtoBuf.Meta
             if (applyDefaultBehaviour && FindWithoutAdd(type.BaseType) == null
                 && MetaType.GetContractFamily(type.BaseType, null) != MetaType.AttributeFamily.None)
             {
-                FindOrAddAuto(type, true);
+                FindOrAddAuto(type, true, false);
             }
             return newType;
         }        
@@ -151,14 +155,14 @@ namespace ProtoBuf.Meta
         }
         internal int GetKey(Type type, bool demand, bool getBaseKey)
         {
-            int typeIndex = FindOrAddAuto(type, demand);
+            int typeIndex = FindOrAddAuto(type, demand, true);
             if (typeIndex >= 0)
             {
                 MetaType mt = (MetaType)types[typeIndex], baseType;
                 if (getBaseKey && (baseType = mt.BaseType) != null)
                 {   // part of an inheritance tree; pick the base-key
                     while (baseType != null) { mt = baseType; baseType = baseType.BaseType;}
-                    typeIndex = FindOrAddAuto(mt.Type, true);
+                    typeIndex = FindOrAddAuto(mt.Type, true, true);
                 }
             }
             return typeIndex;

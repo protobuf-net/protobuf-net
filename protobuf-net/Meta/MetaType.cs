@@ -12,6 +12,7 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class MetaType : ISerializerProxy
     {
+        
         IProtoSerializer ISerializerProxy.Serializer { get { return Serializer; } }
         private MetaType baseType;
         /// <summary>
@@ -150,6 +151,8 @@ namespace ProtoBuf.Meta
 
         private IProtoTypeSerializer BuildSerializer()
         {
+            if (surrogate != null) return new SurrogateSerializer(type, model[surrogate].Serializer);
+
             fields.Trim();
             int fieldCount = fields.Count;
             int subTypeCount = subTypes == null ? 0 : subTypes.Count;
@@ -203,16 +206,16 @@ namespace ProtoBuf.Meta
         internal void ApplyDefaultBehaviour()
         {
             object[] attribs = type.GetCustomAttributes(true);
-            for(int i = 0 ; i < attribs.Length ; i++)
+            AttributeFamily family = GetContractFamily(type, attribs);
+            if(family ==  AttributeFamily.None) return; // and you'd like me to do what, exactly?
+            for (int i = 0; i < attribs.Length; i++)
             {
-                if(attribs[i] is ProtoIncludeAttribute)
+                if (attribs[i] is ProtoIncludeAttribute)
                 {
                     ProtoIncludeAttribute pia = (ProtoIncludeAttribute)attribs[i];
                     AddSubType(pia.Tag, pia.KnownType);
                 }
             }
-            AttributeFamily family = GetContractFamily(type, attribs);
-            if(family ==  AttributeFamily.None) return; // and you'd like me to do what, exactly?
             MethodInfo[] callbacks = null;
             foreach (MemberInfo member in type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
@@ -459,6 +462,19 @@ namespace ProtoBuf.Meta
             Add(GetNextFieldNumber(), memberName);
             return this;
         }
+        Type surrogate;
+        /// <summary>
+        /// Performs serialization of this type via a surrogate; all
+        /// other serialization options are ignored and handled
+        /// by the surrogate's configuration.
+        /// </summary>
+        public void SetSurrogate(Type type)
+        {
+            ThrowIfFrozen();
+            this.surrogate = type;
+            // no point in offering chaining; no options are respected
+        }
+
         private int GetNextFieldNumber()
         {
             int maxField = 0;
@@ -544,6 +560,7 @@ namespace ProtoBuf.Meta
         {
             return Add(fieldNumber, memberName, itemType, defaultType, null);
         }
+        
         private MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
         {
             MemberInfo[] members = type.GetMember(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
@@ -610,13 +627,7 @@ namespace ProtoBuf.Meta
             return model.GetKey(type, demand, getBaseKey);
         }
 
-        protected internal static void ThrowUnexpectedSubtype(Type expected, Type actual)
-        {
-            if (expected != TypeModel.ResolveProxies(actual))
-            {
-                throw new InvalidOperationException("Unexpected sub-type: " + actual.FullName);
-            }
-        }
+
     }
 }
 #endif

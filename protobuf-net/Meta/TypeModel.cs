@@ -11,7 +11,12 @@ namespace ProtoBuf.Meta
         public void Serialize(Stream dest, object value)
         {
             if (value == null) throw new ArgumentNullException("value");
-            int key = GetKey(value.GetType());
+            Type type = value.GetType();
+            int key = GetKey(type);
+            if (key < 0)
+            {   // TODO: add special cases here, IEnumerable<T> etc
+                ThrowUnexpectedType(type);
+            }
             using (ProtoWriter writer = new ProtoWriter(dest, this))
             {
                 Serialize(key, value, writer);
@@ -171,6 +176,17 @@ namespace ProtoBuf.Meta
                     return Deserialize(key, null, reader);
                 }
             }
+        }
+        protected internal static void ThrowUnexpectedSubtype(Type expected, Type actual)
+        {
+            if (expected != TypeModel.ResolveProxies(actual))
+            {
+                throw new InvalidOperationException("Unexpected sub-type: " + actual.FullName);
+            }
+        }
+        protected static void ThrowUnexpectedType(Type type)
+        {
+            throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + type.FullName);
         }
     }
 

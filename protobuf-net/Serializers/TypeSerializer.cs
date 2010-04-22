@@ -57,8 +57,13 @@ namespace ProtoBuf.Serializers
             if (ser != null) ser.Callback(value, callbackType);
 
         }
+        private bool CanHaveInheritance
+        {
+            get { return forType.IsClass && !forType.IsSealed; }
+        }
         private IProtoSerializer GetMoreSpecificSerializer(object value)
         {
+            if (!CanHaveInheritance) return null;
             Type actualType = value.GetType();
             if (actualType == forType) return null;
            
@@ -70,7 +75,7 @@ namespace ProtoBuf.Serializers
                     return ser;
                 }
             }
-            MetaType.ThrowUnexpectedSubtype(forType, actualType); // might throw (if not a proxy)
+            TypeModel.ThrowUnexpectedSubtype(forType, actualType); // might throw (if not a proxy)
             return null;
         }
 
@@ -162,25 +167,42 @@ namespace ProtoBuf.Serializers
                 // pre-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeSerialize);
 
-                // inheritance
                 Compiler.CodeLabel startFields = ctx.DefineLabel();
-                for (int i = 0; i < serializers.Length; i++)
+                // inheritance
+                if (CanHaveInheritance)
                 {
-                    IProtoSerializer ser = serializers[i];
-                    if (ser.ExpectedType != forType)
+                    for (int i = 0; i < serializers.Length; i++)
                     {
-                        Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
-                        ctx.LoadValue(loc);
-                        ctx.TryCast(ser.ExpectedType);
-                        ctx.CopyValue();
-                        ctx.BranchIfTrue(ifMatch, true);
-                        ctx.DiscardValue();
-                        ctx.Branch(nextTest, true);
-                        ctx.MarkLabel(ifMatch);
-                        ser.EmitWrite(ctx, null);
-                        ctx.Branch(startFields, false);
-                        ctx.MarkLabel(nextTest);
+                        IProtoSerializer ser = serializers[i];
+                        if (ser.ExpectedType != forType)
+                        {
+                            Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
+                            ctx.LoadValue(loc);
+                            ctx.TryCast(ser.ExpectedType);
+                            ctx.CopyValue();
+                            ctx.BranchIfTrue(ifMatch, true);
+                            ctx.DiscardValue();
+                            ctx.Branch(nextTest, true);
+                            ctx.MarkLabel(ifMatch);
+                            ser.EmitWrite(ctx, null);
+                            ctx.Branch(startFields, false);
+                            ctx.MarkLabel(nextTest);
+                        }
                     }
+                    // would have jumped to "fields" if an expected sub-type, so two options:
+                    // a: *exactly* that type, b: an *unexpected* type
+                    ctx.LoadValue(loc);
+                    ctx.EmitCall(typeof(object).GetMethod("GetType"));
+                    ctx.LoadValue(forType);
+                    ctx.BranchIfEqual(startFields, true);
+                    // unexpected, then... note that this *might* be a proxy, which
+                    // is handled by ThrowUnexpectedSubtype
+                    ctx.LoadValue(forType);
+                    ctx.LoadValue(loc);
+                    ctx.EmitCall(typeof(object).GetMethod("GetType"));
+                    ctx.EmitCall(typeof(TypeModel).GetMethod("ThrowUnexpectedSubtype",
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+
                 }
                 // fields
                 ctx.MarkLabel(startFields);                
@@ -249,23 +271,26 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue(valueFrom);
             EmitInvokeCallback(ctx, method);
             Compiler.CodeLabel @break = ctx.DefineLabel();
-            for (int i = 0; i < serializers.Length; i++)
+            if (CanHaveInheritance)
             {
-                IProtoSerializer ser = serializers[i];
-                IProtoTypeSerializer typeser;
-                if (ser.ExpectedType != forType && (typeser = (IProtoTypeSerializer)ser).HasCallbacks(callbackType))
+                for (int i = 0; i < serializers.Length; i++)
                 {
-                    Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
-                    ctx.CopyValue();
-                    ctx.TryCast(ser.ExpectedType);
-                    ctx.CopyValue();
-                    ctx.BranchIfTrue(ifMatch, true);
-                    ctx.DiscardValue();
-                    ctx.Branch(nextTest, false);
-                    ctx.MarkLabel(ifMatch);
-                    typeser.EmitCallback(ctx, null, callbackType);
-                    ctx.Branch(@break, false);
-                    ctx.MarkLabel(nextTest);
+                    IProtoSerializer ser = serializers[i];
+                    IProtoTypeSerializer typeser;
+                    if (ser.ExpectedType != forType && (typeser = (IProtoTypeSerializer)ser).HasCallbacks(callbackType))
+                    {
+                        Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
+                        ctx.CopyValue();
+                        ctx.TryCast(ser.ExpectedType);
+                        ctx.CopyValue();
+                        ctx.BranchIfTrue(ifMatch, true);
+                        ctx.DiscardValue();
+                        ctx.Branch(nextTest, false);
+                        ctx.MarkLabel(ifMatch);
+                        typeser.EmitCallback(ctx, null, callbackType);
+                        ctx.Branch(@break, false);
+                        ctx.MarkLabel(nextTest);
+                    }
                 }
             }
             ctx.MarkLabel(@break);                

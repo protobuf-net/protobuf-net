@@ -60,7 +60,6 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void TestCallbacksAtMultipleInheritanceLevels()
         {
-            System.Runtime.Serialization.IDeserializationCallback s;
             C dcsOrig, dcsClone, pbClone, pbOrig;
             DataContractSerializer ser = new DataContractSerializer(typeof(B));
             using (MemoryStream ms = new MemoryStream()) {

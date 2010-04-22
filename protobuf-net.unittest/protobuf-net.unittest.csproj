@@ -68,6 +68,7 @@
     </Compile>
     <Compile Include="Attribs\Basic.cs" />
     <Compile Include="Attribs\ComplexMultiTypes.cs" />
+    <Compile Include="Attribs\PointStruct.cs" />
     <Compile Include="FX11.cs" />
     <Compile Include="Meta\Basic.cs" />
     <Compile Include="Meta\Callbacks.cs" />

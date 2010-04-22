@@ -12,6 +12,10 @@ namespace ProtoBuf.unittest.ThirdParty
     [TestFixture]
     public class NHibernateProxies
     {
+        public class FooWrapper
+        {
+            public Foo Foo { get; set; }
+        }
         public class Foo {
             public virtual int Id { get; set; }
             public virtual string Name { get; set; }
@@ -111,6 +115,7 @@ namespace ProtoBuf.unittest.ThirdParty
         static RuntimeTypeModel BuildModel()
         {
             var model = TypeModel.Create();
+            model.Add(typeof(FooWrapper), false).Add("Foo");
             model.Add(typeof(Foo), false).Add("Id", "Name");
             return model;
         }
@@ -122,16 +127,6 @@ namespace ProtoBuf.unittest.ThirdParty
             var model = BuildModel();
             model.Serialize(Stream.Null, new Bar());
         }
-
-/* Investigating: Issue in TestDriven.NET?
- * 
- * [Test, ExpectedException(typeof(InvalidOperationException))]
-        public void Anticipate_Typed_Failure() { }
-
-        [Test, ExpectedException]
-        public void Anticipate_Any_Failure() { }
- */
-
 
         [Test, ExpectedException(typeof(InvalidOperationException))]
         public void AttemptToSerializeUnknownSubtypeShouldFail_CompileInPlace()
@@ -145,6 +140,28 @@ namespace ProtoBuf.unittest.ThirdParty
         {
             var model = BuildModel().Compile();
             model.Serialize(Stream.Null, new Bar());
+        }
+
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void AttemptToSerializeWrapperUnknownSubtypeShouldFail_Runtime()
+        {
+            var model = BuildModel();
+            model.Serialize(Stream.Null, new FooWrapper { Foo = new Bar() });
+        }
+
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void AttemptToSerializeWrapperUnknownSubtypeShouldFail_CompileInPlace()
+        {
+            var model = BuildModel();
+            model.CompileInPlace();
+            model.Serialize(Stream.Null, new FooWrapper { Foo = new Bar() });
+        }
+
+        [Test, ExpectedException(typeof(InvalidOperationException))]
+        public void AttemptToSerializeWrapperUnknownSubtypeShouldFail_Compile()
+        {
+            var model = BuildModel().Compile();
+            model.Serialize(Stream.Null, new FooWrapper { Foo = new Bar() });
         }
 
         [Test]
