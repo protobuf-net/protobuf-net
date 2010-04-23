@@ -21,6 +21,10 @@ namespace ProtoBuf.Serializers
             this.forType = forType;
             this.field = field;
         }
+        public override string ToString()
+        {
+            return field.Name;
+        }
         public override void Write(object value, ProtoWriter dest)
         {
             Helpers.DebugAssert(value != null);

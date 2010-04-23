@@ -44,6 +44,10 @@ namespace ProtoBuf.Serializers
             value = property.GetValue(value, null);
             if(value != null) Tail.Write(value, dest);
         }
+        public override string ToString()
+        {
+            return property.Name;
+        }
         public override object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(value != null);

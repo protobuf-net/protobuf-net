@@ -46,6 +46,10 @@ namespace ProtoBuf.Serializers
         {
             tail.Write(toTail.Invoke(null, new object[] { value }), writer);
         }
+        public override string ToString()
+        {
+            return "surrogate : " + tail.ExpectedType.FullName;
+        }
         public object Read(object value, ProtoReader source)
         {
             // convert the incoming value

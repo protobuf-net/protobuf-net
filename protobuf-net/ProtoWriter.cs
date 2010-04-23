@@ -40,10 +40,12 @@ namespace ProtoBuf
             {
                 case PrefixStyle.Base128:
                     writer.wireType = WireType.String;
+                    writer.fieldNumber = fieldNumber;
                     if (fieldNumber > 0) WriteHeaderCore(fieldNumber, WireType.String, writer);
                     break;
                 case PrefixStyle.Fixed32:
                 case PrefixStyle.Fixed32BigEndian:
+                    writer.fieldNumber = 0;
                     writer.wireType = WireType.Fixed32;
                     break;
                 default:
@@ -84,8 +86,8 @@ namespace ProtoBuf
         }
         static void WriteHeaderCore(int fieldNumber, WireType wireType, ProtoWriter writer)
         {
-            uint header = (((uint)writer.fieldNumber) << 3)
-                | (((uint)writer.wireType) & 7);
+            uint header = (((uint)fieldNumber) << 3)
+                | (((uint)wireType) & 7);
             WriteUInt32Variant(header, writer);
         }
 

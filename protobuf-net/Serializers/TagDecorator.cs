@@ -67,6 +67,10 @@ namespace ProtoBuf.Serializers
             ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
             Tail.EmitWrite(ctx, valueFrom);    
         }
+        public override string ToString()
+        {
+            return "[" + fieldNumber.ToString() + "] " + Tail.ToString();
+        }
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             if (strict || NeedsHint)

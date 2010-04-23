@@ -47,12 +47,15 @@ namespace ProtoBuf.Serializers
         {
             return ProtoReader.ReadObject(value, key, source);
         }
+        public override string ToString()
+        {
+            return "sub-type : " + type.FullName;
+        }
 #if FEAT_COMPILER
         bool EmitDedicatedMethod(Compiler.CompilerContext ctx, Compiler.Local valueFrom, bool read)
         {
             System.Reflection.Emit.MethodBuilder method = ctx.GetDedicatedMethod(key, read);
             if (method == null) return false;
-
             using (Compiler.Local token = new ProtoBuf.Compiler.Local(ctx, typeof(SubItemToken)))
             {
                 Type rwType = read ? typeof(ProtoReader) : typeof(ProtoWriter);
@@ -67,11 +70,14 @@ namespace ProtoBuf.Serializers
                 ctx.StoreValue(token);
 
                 // note: value already on the stack
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(method);
-
-                ctx.LoadValue(token);
                 ctx.LoadReaderWriter();                
+                ctx.EmitCall(method);
+                // handle inheritance (we will be calling the *base* version of things,
+                // but we expect Read to return the "type" type)
+                if (read && type != method.ReturnType) ctx.Cast(this.type);
+                ctx.LoadValue(token);
+                
+                ctx.LoadReaderWriter();
                 ctx.EmitCall(rwType.GetMethod("EndSubItem"));
             }            
             return true;

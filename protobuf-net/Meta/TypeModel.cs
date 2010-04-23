@@ -29,7 +29,6 @@ namespace ProtoBuf.Meta
         }
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
         {
-
             bool skip;
             int len;
             do
@@ -127,10 +126,6 @@ namespace ProtoBuf.Meta
             return null;
         }
 
-        protected static void CannotCreateInstance(Type type)
-        {
-            throw new InvalidOperationException("Cannot create an instance of type; no suitable constructor found: " + type.FullName);
-        }
 
         protected internal int GetKey(Type type)
         {
@@ -187,6 +182,10 @@ namespace ProtoBuf.Meta
         protected static void ThrowUnexpectedType(Type type)
         {
             throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + type.FullName);
+        }
+        protected internal static void ThrowCannotCreateInstance(Type type)
+        {
+            throw new InvalidOperationException("Cannot create an instance of type; no suitable constructor found: " + type.FullName);
         }
     }
 

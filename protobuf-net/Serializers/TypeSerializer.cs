@@ -88,19 +88,29 @@ namespace ProtoBuf.Serializers
             if (next != null) next.Write(value, dest);
 
             // write all actual fields
+            //Helpers.DebugWriteLine(">> Writing fields for " + forType.FullName);
             for (int i = 0; i < serializers.Length; i++)
             {
                 IProtoSerializer ser = serializers[i];
-                if(ser.ExpectedType == forType) ser.Write(value, dest);
+                if (ser.ExpectedType == forType)
+                {
+                    //Helpers.DebugWriteLine(": " + ser.ToString());
+                    ser.Write(value, dest);
+                }
             }
+            //Helpers.DebugWriteLine("<< Writing fields for " + forType.FullName);
             if (applyCallbacks) Callback(value, TypeModel.CallbackType.AfterSerialize);
         }
-
+        public override string ToString()
+        {
+            return "type : " + forType.FullName;
+        }
         public object Read(object value, ProtoReader source)
         {
             if (applyCallbacks && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize); } 
             int fieldNumber, lastFieldNumber = 0, lastFieldIndex = 0;
             bool fieldHandled;
+            //Helpers.DebugWriteLine(">> Reading fields for " + forType.FullName);
             while ((fieldNumber = source.ReadFieldHeader()) > 0)
             {
                 fieldHandled = false;
@@ -113,6 +123,7 @@ namespace ProtoBuf.Serializers
                     if (fieldNumbers[i] == fieldNumber)
                     {
                         IProtoSerializer ser = serializers[i];
+                        //Helpers.DebugWriteLine(": " + ser.ToString());
                         if (value == null && ser.ExpectedType == forType) value = CreateInstance(source);
                         if (ser.ReturnsValue) {
                             value = ser.Read(value, source);
@@ -128,10 +139,12 @@ namespace ProtoBuf.Serializers
                 }
                 if (!fieldHandled)
                 {
+                    //Helpers.DebugWriteLine(": [" + fieldNumber + "] (unknown)");
                     if (value == null) value = CreateInstance(source);
                     source.SkipField();
                 }
             }
+            //Helpers.DebugWriteLine("<< Reading fields for " + forType.FullName);
             if(value == null) value = CreateInstance(source);
             if (applyCallbacks) { Callback(value, TypeModel.CallbackType.AfterDeserialize); } 
             return value;
@@ -146,7 +159,17 @@ namespace ProtoBuf.Serializers
         }
         object CreateInstance(ProtoReader source)
         {
-            object obj = useConstructor ? Activator.CreateInstance(forType) : FormatterServices.GetUninitializedObject(forType);
+            //Helpers.DebugWriteLine("* creating : " + forType.FullName);
+            object obj;
+            if (useConstructor)
+            {
+                if (forType.IsAbstract) TypeModel.ThrowCannotCreateInstance(forType);
+                obj = Activator.CreateInstance(forType);                
+            }
+            else
+            {
+                obj = FormatterServices.GetUninitializedObject(forType);
+            }
             if (baseCtorCallbacks != null) {
                 for (int i = 0; i < baseCtorCallbacks.Length; i++) {
                     InvokeCallback(baseCtorCallbacks[i], obj);
@@ -419,7 +442,8 @@ namespace ProtoBuf.Serializers
                 else
                 {
                     ctx.LoadValue(type);
-                    ctx.EmitCall(typeof(TypeModel).GetMethod("CannotCreateInstance"));
+                    ctx.EmitCall(typeof(TypeModel).GetMethod("ThrowCannotCreateInstance",
+                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic));
                     ctx.LoadNullRef();
                 }
                 if (baseCtorCallbacks != null) {

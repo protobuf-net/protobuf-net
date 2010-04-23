@@ -161,9 +161,17 @@ namespace ProtoBuf.Serializers
                 }
                 // our "Add" is chosen either to take the correct type, or to take "object";
                 // we may need to box the value
-                if (itemType.IsValueType && add.GetParameters()[0].ParameterType == typeof(object))
-                {
-                    ctx.CastToObject(itemType);
+                
+                Type addParamType = add.GetParameters()[0].ParameterType;
+                if(addParamType != itemType) {
+                    if (addParamType == typeof(object))
+                    {
+                        ctx.CastToObject(itemType);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Conflicting item/add type");
+                    }
                 }
                 ctx.EmitCall(add);
                 if (add.ReturnType != typeof(void))
