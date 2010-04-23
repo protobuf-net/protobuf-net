@@ -115,6 +115,7 @@ namespace ProtoBuf.unittest.Meta
             Assert.IsNull(wrapper.CList, message + " CList");
             Assert.IsNull(wrapper.AList, message + " AList");
             Assert.IsNotNull(wrapper.AbstractAList, message + " AbstractAList");
+            Assert.AreEqual(typeof(AList), wrapper.AbstractAList.GetType(), message + " AbstractAList");
             Assert.AreEqual(2, wrapper.AbstractAList.Count);
             Assert.AreEqual(typeof(ConcreteA), wrapper.AbstractAList[0].GetType());
             Assert.AreEqual(12, wrapper.AbstractAList[0].A);

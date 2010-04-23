@@ -43,8 +43,8 @@ namespace ProtoBuf.Meta
 
         private void SetBaseType(MetaType baseType)
         {
-            ThrowIfFrozen();
             if (baseType == null) throw new ArgumentNullException("baseType");
+            if (this.baseType == baseType) return;
             if (this.baseType != null) throw new InvalidOperationException("A type can only participate in one inheritance hierarchy");
             
             MetaType type = baseType;

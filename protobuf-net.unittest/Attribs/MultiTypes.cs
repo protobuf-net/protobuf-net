@@ -21,7 +21,7 @@ namespace ProtoBuf.unittest
         public void TestStringRoundTrip()
         {
             var stringClone = Serializer.DeepClone(
-    PropertyValue.Create("abc", "def"));
+                PropertyValue.Create("abc", "def"));
             Assert.AreEqual("abc", stringClone.Name);
             Assert.AreEqual("def", stringClone.Value);
         }
