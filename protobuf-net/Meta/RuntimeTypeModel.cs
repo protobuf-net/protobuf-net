@@ -33,7 +33,7 @@ namespace ProtoBuf.Meta
             this.isDefault = isDefault;
         }
         public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false)]; } }
-        MetaType FindWithoutAdd(Type type)
+        internal MetaType FindWithoutAdd(Type type)
         {
             // this list is thread-safe for reading
             foreach (MetaType metaType in types)
@@ -80,8 +80,9 @@ namespace ProtoBuf.Meta
                     return key;
                 }
                 
+
                 MetaType metaType = Create(type);
-                metaType.ApplyDefaultBehaviour();
+                bool weAdded = false;
                 lock (types)
                 {   // double-checked
                     int winner = types.IndexOf(predicate);
@@ -89,12 +90,14 @@ namespace ProtoBuf.Meta
                     {
                         ThrowIfFrozen();
                         key = types.Add(metaType);
+                        weAdded = true;
                     }
                     else
                     {
                         key = winner;
                     }
                 }
+                if (weAdded) metaType.ApplyDefaultBehaviour();
             }
             return key;
         }
@@ -108,19 +111,16 @@ namespace ProtoBuf.Meta
             if (type == null) throw new ArgumentNullException("type");
             if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
             MetaType newType = Create(type);
-            if (applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
+            bool weAdded = false;
             lock (types)
             {
                 // double checked
                 if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
                 ThrowIfFrozen();
                 types.Add(newType);
+                weAdded = true;
             }
-            if (applyDefaultBehaviour && FindWithoutAdd(type.BaseType) == null
-                && MetaType.GetContractFamily(type.BaseType, null) != MetaType.AttributeFamily.None)
-            {
-                FindOrAddAuto(type, true, false);
-            }
+            if (weAdded && applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
             return newType;
         }        
 

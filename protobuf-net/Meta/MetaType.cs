@@ -12,7 +12,10 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class MetaType : ISerializerProxy
     {
-        
+        public override string ToString()
+        {
+            return "MetaType: " + type.FullName;
+        }
         IProtoSerializer ISerializerProxy.Serializer { get { return Serializer; } }
         private MetaType baseType;
         /// <summary>
@@ -46,7 +49,7 @@ namespace ProtoBuf.Meta
             if (baseType == null) throw new ArgumentNullException("baseType");
             if (this.baseType == baseType) return;
             if (this.baseType != null) throw new InvalidOperationException("A type can only participate in one inheritance hierarchy");
-            
+
             MetaType type = baseType;
             while (type != null)
             {
@@ -205,6 +208,12 @@ namespace ProtoBuf.Meta
         }
         internal void ApplyDefaultBehaviour()
         {
+            if (model.FindWithoutAdd(type.BaseType) == null
+                && GetContractFamily(type.BaseType, null) != MetaType.AttributeFamily.None)
+            {
+                model.FindOrAddAuto(type.BaseType, true, false);
+            }
+
             object[] attribs = type.GetCustomAttributes(true);
             AttributeFamily family = GetContractFamily(type, attribs);
             if(family ==  AttributeFamily.None) return; // and you'd like me to do what, exactly?
@@ -219,7 +228,9 @@ namespace ProtoBuf.Meta
             MethodInfo[] callbacks = null;
             foreach (MemberInfo member in type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
-                if (member.IsDefined(typeof(ProtoIgnoreAttribute), true)) continue;                
+                if (member.DeclaringType != type) continue;
+                if (member.IsDefined(typeof(ProtoIgnoreAttribute), true)) continue;
+                
                 switch (member.MemberType)
                 {
                     case MemberTypes.Property:

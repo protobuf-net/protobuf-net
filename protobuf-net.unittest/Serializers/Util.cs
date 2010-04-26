@@ -85,7 +85,7 @@ namespace ProtoBuf.unittest.Serializers
         {
             Test(value, typeof(T), ctor, expectedHex);
         }
-        static string GetHex(byte[] bytes)
+        internal static string GetHex(byte[] bytes)
         {
             int len = bytes.Length;
             StringBuilder sb = new StringBuilder(len * 2);
