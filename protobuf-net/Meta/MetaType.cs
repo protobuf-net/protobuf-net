@@ -214,15 +214,26 @@ namespace ProtoBuf.Meta
                 model.FindOrAddAuto(type.BaseType, true, false);
             }
 
-            object[] attribs = type.GetCustomAttributes(true);
-            AttributeFamily family = GetContractFamily(type, attribs);
+            object[] typeAttribs = type.GetCustomAttributes(true);
+            AttributeFamily family = GetContractFamily(type, typeAttribs);
             if(family ==  AttributeFamily.None) return; // and you'd like me to do what, exactly?
-            for (int i = 0; i < attribs.Length; i++)
+            BasicList partialIgnores = null, partialMembers = null;
+            for (int i = 0; i < typeAttribs.Length; i++)
             {
-                if (attribs[i] is ProtoIncludeAttribute)
+                if (typeAttribs[i] is ProtoIncludeAttribute)
                 {
-                    ProtoIncludeAttribute pia = (ProtoIncludeAttribute)attribs[i];
+                    ProtoIncludeAttribute pia = (ProtoIncludeAttribute)typeAttribs[i];
                     AddSubType(pia.Tag, pia.KnownType);
+                }
+                if(typeAttribs[i] is ProtoPartialIgnoreAttribute)
+                {
+                    if(partialIgnores == null) partialIgnores = new BasicList();
+                    partialIgnores.Add(((ProtoPartialIgnoreAttribute)typeAttribs[i]).MemberName);
+                }
+                if (typeAttribs[i] is ProtoPartialMemberAttribute)
+                {
+                    if (partialMembers == null) partialMembers = new BasicList();
+                    partialMembers.Add(typeAttribs[i]);
                 }
             }
             MethodInfo[] callbacks = null;
@@ -230,12 +241,13 @@ namespace ProtoBuf.Meta
             {
                 if (member.DeclaringType != type) continue;
                 if (member.IsDefined(typeof(ProtoIgnoreAttribute), true)) continue;
-                
+                if (partialIgnores != null && partialIgnores.Contains(member.Name)) continue;
+
                 switch (member.MemberType)
                 {
                     case MemberTypes.Property:
                     case MemberTypes.Field:
-                        ValueMember vm = ApplyDefaultBehaviour(family, member);
+                        ValueMember vm = ApplyDefaultBehaviour(family, member, partialMembers);
                         if (vm != null)
                         {
                             Add(vm);
@@ -243,17 +255,17 @@ namespace ProtoBuf.Meta
                         break;
                     case MemberTypes.Method:
                         MethodInfo method = (MethodInfo)member;
-                        attribs = Attribute.GetCustomAttributes(method);
-                        if (attribs != null && attribs.Length > 0)
+                        object[] memberAttribs = Attribute.GetCustomAttributes(method);
+                        if (memberAttribs != null && memberAttribs.Length > 0)
                         {
-                            CheckForCallback(method, attribs, "ProtoBuf.ProtoBeforeSerializationAttribute", ref callbacks, 0);
-                            CheckForCallback(method, attribs, "ProtoBuf.ProtoAfterSerializationAttribute", ref callbacks, 1);
-                            CheckForCallback(method, attribs, "ProtoBuf.ProtoBeforeDeserializationAttribute", ref callbacks, 2);
-                            CheckForCallback(method, attribs, "ProtoBuf.ProtoAfterDeserializationAttribute", ref callbacks, 3);
-                            CheckForCallback(method, attribs, "System.Runtime.Serialization.OnSerializingAttribute", ref callbacks, 4);
-                            CheckForCallback(method, attribs, "System.Runtime.Serialization.OnSerializedAttribute", ref callbacks, 5);
-                            CheckForCallback(method, attribs, "System.Runtime.Serialization.OnDeserializingAttribute", ref callbacks, 6);
-                            CheckForCallback(method, attribs, "System.Runtime.Serialization.OnDeserializedAttribute", ref callbacks, 7);
+                            CheckForCallback(method, memberAttribs, "ProtoBuf.ProtoBeforeSerializationAttribute", ref callbacks, 0);
+                            CheckForCallback(method, memberAttribs, "ProtoBuf.ProtoAfterSerializationAttribute", ref callbacks, 1);
+                            CheckForCallback(method, memberAttribs, "ProtoBuf.ProtoBeforeDeserializationAttribute", ref callbacks, 2);
+                            CheckForCallback(method, memberAttribs, "ProtoBuf.ProtoAfterDeserializationAttribute", ref callbacks, 3);
+                            CheckForCallback(method, memberAttribs, "System.Runtime.Serialization.OnSerializingAttribute", ref callbacks, 4);
+                            CheckForCallback(method, memberAttribs, "System.Runtime.Serialization.OnSerializedAttribute", ref callbacks, 5);
+                            CheckForCallback(method, memberAttribs, "System.Runtime.Serialization.OnDeserializingAttribute", ref callbacks, 6);
+                            CheckForCallback(method, memberAttribs, "System.Runtime.Serialization.OnDeserializedAttribute", ref callbacks, 7);
                         }
                         break;
                 }
@@ -299,7 +311,7 @@ namespace ProtoBuf.Meta
         {
             return (value & required) == required;
         }
-        private ValueMember ApplyDefaultBehaviour(AttributeFamily family, MemberInfo member)
+        private ValueMember ApplyDefaultBehaviour(AttributeFamily family, MemberInfo member, BasicList partialMembers)
         {
             if (member == null || family == AttributeFamily.None) return null; // nix
             Type effectiveType;
@@ -344,7 +356,8 @@ namespace ProtoBuf.Meta
                     if (effectiveType == typeof(TimeSpan)) defaultValue = TimeSpan.Zero;
                     break;
             }
-            if (!ignore && HasFamily(family, AttributeFamily.ProtoBuf))
+            bool done = false;
+            if (!ignore && !done && HasFamily(family, AttributeFamily.ProtoBuf))
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
                 GetIgnore(ref ignore, attrib, attribs, "ProtoBuf.ProtoIgnoreAttribute");
@@ -354,20 +367,36 @@ namespace ProtoBuf.Meta
                     GetFieldName(ref name, attrib, "Name");
                     GetFieldRequired(ref isRequired, attrib, "IsRequired");
                     GetDataFormat(ref dataFormat, attrib, "DataFormat");
+                    done = fieldNumber > 0;
                 }
-                
+
+                if (!done && partialMembers != null)
+                {
+                    foreach (ProtoPartialMemberAttribute ppma in partialMembers)
+                    {
+                        if (ppma.MemberName == member.Name)
+                        {
+                            GetFieldNumber(ref fieldNumber, ppma, "Tag");
+                            GetFieldName(ref name, ppma, "Name");
+                            GetFieldRequired(ref isRequired, ppma, "IsRequired");
+                            GetDataFormat(ref dataFormat, ppma, "DataFormat");
+                            if (done = fieldNumber > 0) break;                            
+                        }
+                    }
+                }
             }
-            if (!ignore && HasFamily(family, AttributeFamily.DataContractSerialier))
+            if (!ignore && !done && HasFamily(family, AttributeFamily.DataContractSerialier))
             {
                 attrib = GetAttribute(attribs, "System.Runtime.Serialization.DataMemberAttribute");
                 GetFieldNumber(ref fieldNumber, attrib, "Order");
                 GetFieldName(ref name, attrib, "Name");
                 GetFieldRequired(ref isRequired, attrib, "IsRequired");
+                done = fieldNumber > 0;
             }
-            if (!ignore && HasFamily(family, AttributeFamily.XmlSerializer))
+            if (!ignore && !done && HasFamily(family, AttributeFamily.XmlSerializer))
             {
                 attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlElementAttribute");
-                GetIgnore(ref ignore, attrib, attribs, "ProtoBuf.XmlIgnoreAttribute");
+                GetIgnore(ref ignore, attrib, attribs, "System.Xml.Serialization.XmlIgnoreAttribute");
                 if (!ignore)
                 {
                     GetFieldNumber(ref fieldNumber, attrib, "Order");
@@ -380,6 +409,7 @@ namespace ProtoBuf.Meta
                     GetFieldNumber(ref fieldNumber, attrib, "Order");
                     GetFieldName(ref name, attrib, "ElementName");
                 }
+                done = fieldNumber > 0;
             }
             if (!ignore && (attrib = GetAttribute(attribs, "System.ComponentModel.DefaultValueAttribute")) != null)
             {
