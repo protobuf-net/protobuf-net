@@ -16,7 +16,10 @@ namespace ProtoBuf.Serializers
         public DefaultValueDecorator(object defaultValue, IProtoSerializer tail) : base(tail)
         {
             if (defaultValue == null) throw new ArgumentNullException("defaultValue");
-            if (defaultValue.GetType() != tail.ExpectedType) throw new ArgumentException("Default value is of incorrect type", "defaultValue");
+            if (defaultValue.GetType() != tail.ExpectedType)
+            {
+                throw new ArgumentException("Default value is of incorrect type", "defaultValue");
+            }
             this.defaultValue = defaultValue;
         }
         public override void Write(object value, ProtoWriter dest)

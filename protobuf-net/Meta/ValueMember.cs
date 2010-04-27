@@ -92,6 +92,7 @@ namespace ProtoBuf.Meta
                     case TypeCode.UInt64: return ulong.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                 }
                 if (type == typeof(TimeSpan)) return TimeSpan.Parse(s);
+                if (type == typeof(Uri)) return s; // Uri is decorated as string
             }
             if (type.IsEnum) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type);
@@ -128,6 +129,7 @@ namespace ProtoBuf.Meta
         {
             WireType wireType;
             IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, out wireType);
+
             // apply tags
             ser = new TagDecorator(fieldNumber, wireType, isStrict, ser);
             // apply lists if appropriate
@@ -147,8 +149,10 @@ namespace ProtoBuf.Meta
             {
                 ser = new DefaultValueDecorator(defaultValue, ser);
             }
-
-            
+            if (memberType == typeof(Uri))
+            {
+                ser = new UriDecorator(ser);
+            }
             switch (member.MemberType)
             {
                 case MemberTypes.Property:
@@ -196,7 +200,7 @@ namespace ProtoBuf.Meta
                     return new Int64Serializer();
                 case TypeCode.UInt64:
                     defaultWireType = GetIntWireType(dataFormat, 64);
-                    return new Int64Serializer();
+                    return new UInt64Serializer();
                 case TypeCode.String:
                     defaultWireType = WireType.String;
                     return new StringSerializer();
@@ -241,6 +245,11 @@ namespace ProtoBuf.Meta
                 defaultWireType = WireType.String;
                 return new GuidSerializer();
             }
+            if (type == typeof(Uri))
+            {
+                defaultWireType = WireType.String;
+                return new StringSerializer(); // treat as string; wrapped in decorator later
+            }
             if (type == typeof(byte[]))
             {
                 defaultWireType = WireType.String;
@@ -252,7 +261,7 @@ namespace ProtoBuf.Meta
                 defaultWireType = WireType.String;
                 return new SubItemSerializer(type, key, model[type]);
             }
-            throw new NotSupportedException("No serializer defined for type: " + type.FullName);
+            throw new InvalidOperationException("No serializer defined for type: " + type.FullName);
         }
 
     }

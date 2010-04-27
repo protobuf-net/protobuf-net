@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using NUnit.Framework;
 using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace Examples
 {
@@ -459,6 +460,54 @@ namespace Examples
             Uri uri = new Uri("http://test.example.com/demo");
             Assert.AreEqual(uri, TestUri(uri), "not null");
         }
+
+        [Test]
+        public void TestNonEmptyUriAllCompilationModes()
+        {
+            var model = TypeModel.Create();
+            model.Add(typeof(UriData), true);
+            UriData test = new UriData { Foo = new Uri("http://test.example.com/demo") };
+
+            UriData clone = (UriData) model.DeepClone(test);
+            Assert.AreEqual(test.Foo, clone.Foo, "Runtime");
+
+            var compiled = model.Compile("TestNonEmptyUriAllCompilationModes", "TestNonEmptyUriAllCompilationModes.dll");
+            PEVerify.AssertValid("TestNonEmptyUriAllCompilationModes.dll");
+            model.CompileInPlace();
+            clone = (UriData)model.DeepClone(test);
+            Assert.AreEqual(test.Foo, clone.Foo, "CompileInPlace");
+
+            clone = (UriData)compiled.DeepClone(test);
+            Assert.AreEqual(test.Foo, clone.Foo, "CompileIn");
+        }
+
+        [Test]
+        public void TestNonEmptyUriWithDefaultAllCompilationModes()
+        {
+            var model = TypeModel.Create();
+            model.Add(typeof(UriDataWithDefault), true);
+            UriDataWithDefault test = new UriDataWithDefault { Foo = new Uri("http://test.example.com/demo") },
+                defaulted = new UriDataWithDefault { Foo = new Uri("http://abc") };
+
+            UriDataWithDefault clone = (UriDataWithDefault)model.DeepClone(test);
+            Assert.AreEqual(test.Foo, clone.Foo, "Runtime");
+            clone = (UriDataWithDefault)model.DeepClone(defaulted);
+            Assert.AreEqual(defaulted.Foo, clone.Foo, "Runtime");
+
+            var compiled = model.Compile("TestNonEmptyUriWithDefaultAllCompilationModes", "TestNonEmptyUriWithDefaultAllCompilationModes.dll");
+            PEVerify.AssertValid("TestNonEmptyUriWithDefaultAllCompilationModes.dll");
+            model.CompileInPlace();
+            clone = (UriDataWithDefault)model.DeepClone(test);
+            Assert.AreEqual(test.Foo, clone.Foo, "CompileInPlace");
+            clone = (UriDataWithDefault)model.DeepClone(defaulted);
+            Assert.AreEqual(defaulted.Foo, clone.Foo, "CompileInPlace");
+
+            clone = (UriDataWithDefault)compiled.DeepClone(test);
+            Assert.AreEqual(test.Foo, clone.Foo, "Compile");
+            clone = (UriDataWithDefault)compiled.DeepClone(defaulted);
+            Assert.AreEqual(defaulted.Foo, clone.Foo, "Compile");
+        }
+
         [Test]
         public void TestEncodedUri()
         {
@@ -581,9 +630,20 @@ namespace Examples
     }
 
     [ProtoContract]
-    class UriData
+    public class UriData
     {
         [ProtoMember(1)]
+        public Uri Foo { get; set; }
+    }
+
+    [ProtoContract]
+    public class UriDataWithDefault
+    {
+        public UriDataWithDefault()
+        {
+            Foo = new Uri("http://abc");
+        }
+        [ProtoMember(1), DefaultValue("http://abc")]
         public Uri Foo { get; set; }
     }
 }

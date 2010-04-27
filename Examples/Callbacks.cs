@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using ProtoBuf;
 using System.Runtime.Serialization;
+using System;
 namespace Examples
 {
     [ProtoContract]
@@ -245,13 +246,13 @@ namespace Examples
             Test<TestInheritedImplementedAtRoot, TestInheritedImplementedAtRootDerived>();
         }
 
-        [Test, ExpectedException(typeof(ProtoException), ExpectedMessage = "Callbacks are only supported on the root contract type in an inheritance tree; consider implementing callbacks as virtual methods on Examples.TestInheritedImplementedAtChild")]
+        [Test] /* now supported */
         public void TestInheritedImplementedAtChild()
         {
             Test<TestInheritedImplementedAtChild, TestInheritedImplementedAtChildDerived>();
         }
 
-        [Test, ExpectedException(typeof(ProtoException), ExpectedMessage = "Conflicting callback methods (decorated with ProtoBeforeSerializationAttribute) found for DuplicateCallbacks: Foo and Bar")]
+        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Duplicate ProtoBuf.ProtoBeforeSerializationAttribute callbacks on Examples.Callbacks+DuplicateCallbacks")]
         public void TestDuplicateCallbacks()
         {
             Serializer.Serialize(Stream.Null, new DuplicateCallbacks());

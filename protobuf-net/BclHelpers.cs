@@ -275,5 +275,6 @@ namespace ProtoBuf
                 (byte)c, (byte)(c >> 8), (byte)(c >> 16), (byte)(c >> 24));
             
         }
+
     }
 }
