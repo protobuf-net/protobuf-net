@@ -12,35 +12,6 @@ namespace ProtoBuf.Serializers
         private readonly Type declaredType, concreteType;
         private readonly bool isList;
         private readonly MethodInfo add;
-        const BindingFlags StandardFlags = BindingFlags.Public | BindingFlags.Instance;
-        internal static Type GetItemType(Type listType)
-        {
-            Helpers.DebugAssert(listType != null);
-            if (listType == typeof(string) || listType.IsArray
-                || !typeof(IEnumerable).IsAssignableFrom(listType)) return null;
-
-            BasicList candidates = new BasicList();
-            foreach (MethodInfo method in listType.GetMethods(StandardFlags))
-            {
-                if (method.Name != "Add") continue;
-                ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length == 1 && parameters[0].ParameterType == typeof(object)
-                    && !candidates.Contains(parameters[0].ParameterType))
-                {
-                    candidates.Add(parameters[0].ParameterType);
-                }
-            }
-            foreach(Type iType in listType.GetInterfaces()) {
-                if(iType.IsGenericType && iType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ICollection<>)) {
-                    Type[] iTypeArgs = iType.GetGenericArguments();
-                    if (!candidates.Contains(iTypeArgs[0]))
-                    {
-                        candidates.Add(iTypeArgs[0]);
-                    }
-                }
-            }
-            return candidates.Count == 1 ? (Type)candidates[0] : null;
-        }
         
         public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail) : base(tail)
         {
@@ -194,7 +165,7 @@ namespace ProtoBuf.Serializers
             {
                 iteratorType = getEnumerator.ReturnType;
                 moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext", null);
-                PropertyInfo prop = iteratorType.GetProperty("Current", StandardFlags);
+                PropertyInfo prop = iteratorType.GetProperty("Current", BindingFlags.Public | BindingFlags.Instance);
                 current = prop == null ? null : prop.GetGetMethod(false);
                 if (moveNext == null && typeof(IEnumerator).IsAssignableFrom(iteratorType))
                 {

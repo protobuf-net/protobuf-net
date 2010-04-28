@@ -564,7 +564,7 @@ namespace ProtoBuf.Meta
                 }
             }
             // handle lists
-            if (itemType == null) { itemType = ListDecorator.GetItemType(type); }
+            if (itemType == null) { itemType = TypeModel.GetListItemType(type); }
 
             // check for nested data (not allowed)
             if (itemType != null)

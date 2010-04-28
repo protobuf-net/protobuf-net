@@ -65,22 +65,22 @@ namespace ProtoBuf
             value = ioBuffer[readPos++];
             if ((value & 0x80) == 0) return 1;
             value &= 0x7F;
-            if (available == 1) throw new EndOfStreamException();
+            if (available == 1) throw EoF(this);
 
             uint chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 7;
             if ((chunk & 0x80) == 0) return 2;
-            if (available == 2) throw new EndOfStreamException();
+            if (available == 2) throw EoF(this);
 
             chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 14;
             if ((chunk & 0x80) == 0) return 3;
-            if (available == 3) throw new EndOfStreamException();
+            if (available == 3) throw EoF(this);
 
             chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 21;
             if ((chunk & 0x80) == 0) return 4;
-            if (available == 4) throw new EndOfStreamException();
+            if (available == 4) throw EoF(this);
 
             chunk = ioBuffer[readPos];
             value |= chunk << 28; // can only use 4 bits from this chunk
@@ -97,7 +97,7 @@ namespace ProtoBuf
             {
                 return 10;
             }
-            throw new OverflowException();
+            throw AddErrorData(new OverflowException(), this);
         }
         private uint ReadUInt32Variant(bool trimNegative)
         {
@@ -110,7 +110,7 @@ namespace ProtoBuf
                 position += read;
                 return value;
             }
-            throw new EndOfStreamException();
+            throw EoF(this);
         }
         private bool TryReadUInt32Variant(out uint value)
         {
@@ -182,7 +182,7 @@ namespace ProtoBuf
             }
             if (strict && count > 0)
             {
-                throw new EndOfStreamException();
+                throw EoF(this);
             }
 
         }
@@ -283,53 +283,53 @@ namespace ProtoBuf
             value = ioBuffer[readPos++];
             if ((value & 0x80) == 0) return 1;
             value &= 0x7F;
-            if (available == 1) throw new EndOfStreamException();
+            if (available == 1) throw EoF(this);
 
             ulong chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 7;
             if ((chunk & 0x80) == 0) return 2;
-            if (available == 2) throw new EndOfStreamException();
+            if (available == 2) throw EoF(this);
 
             chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 14;
             if ((chunk & 0x80) == 0) return 3;
-            if (available == 3) throw new EndOfStreamException();
+            if (available == 3) throw EoF(this);
 
             chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 21;
             if ((chunk & 0x80) == 0) return 4;
-            if (available == 4) throw new EndOfStreamException();
+            if (available == 4) throw EoF(this);
 
             chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 28;
             if ((chunk & 0x80) == 0) return 5;
-            if (available == 5) throw new EndOfStreamException();
+            if (available == 5) throw EoF(this);
 
             chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 35;
             if ((chunk & 0x80) == 0) return 6;
-            if (available == 6) throw new EndOfStreamException();
+            if (available == 6) throw EoF(this);
 
             chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 42;
             if ((chunk & 0x80) == 0) return 7;
-            if (available == 7) throw new EndOfStreamException();
+            if (available == 7) throw EoF(this);
 
 
             chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 49;
             if ((chunk & 0x80) == 0) return 8;
-            if (available == 8) throw new EndOfStreamException();
+            if (available == 8) throw EoF(this);
 
             chunk = ioBuffer[readPos++];
             value |= (chunk & 0x7F) << 56;
             if ((chunk & 0x80) == 0) return 9;
-            if (available == 9) throw new EndOfStreamException();
+            if (available == 9) throw EoF(this);
 
             chunk = ioBuffer[readPos];
             value |= chunk << 63; // can only use 1 bit from this chunk
 
-            if ((chunk & ~(ulong)0x01) != 0) throw new OverflowException();
+            if ((chunk & ~(ulong)0x01) != 0) throw AddErrorData(new OverflowException(), this);
             return 10;            
         }
         
@@ -344,7 +344,7 @@ namespace ProtoBuf
                 position += read;
                 return value;
             }
-            throw new EndOfStreamException();
+            throw EoF(this);
         }
 
         static readonly UTF8Encoding encoding = new UTF8Encoding();
@@ -380,7 +380,7 @@ namespace ProtoBuf
         }
         private Exception BorkedIt()
         {
-            throw new ProtoException();
+            return AddErrorData(new ProtoException(), this);
         }
         /// <summary>
         /// Reads a double-precision number from the stream; supported wire-types: Fixed32, Fixed64
@@ -407,7 +407,7 @@ namespace ProtoBuf
         {
             if (reader.model == null)
             {
-                throw new InvalidOperationException("Cannot deserialize sub-objects unless a model is provided");
+                throw AddErrorData(new InvalidOperationException("Cannot deserialize sub-objects unless a model is provided"), reader);
             }
             SubItemToken token = ProtoReader.StartSubItem(reader);
             value = reader.model.Deserialize(key, value, reader);
@@ -426,19 +426,20 @@ namespace ProtoBuf
             switch (reader.wireType)
             {
                 case WireType.EndGroup:
-                    if (value >= 0) throw new ArgumentException("token");
+                    if (value >= 0) throw AddErrorData(new ArgumentException("token"), reader);
                     if (-value != reader.fieldNumber) throw reader.BorkedIt(); // wrong group ended!
                     reader.wireType = WireType.None; // this releases ReadFieldHeader
+                    reader.depth--;
                     break;
-                //case WireType.None: // TODO reinstate once reads reset the wire-type
+                // case WireType.None: // TODO reinstate once reads reset the wire-type
                 default:
-                    if (value < reader.position) throw new ArgumentException("token");
+                    if (value < reader.position) throw AddErrorData(new ArgumentException("token"), reader);
                     if (reader.blockEnd != reader.position && reader.blockEnd != int.MaxValue) throw reader.BorkedIt();
                     reader.blockEnd = value;
+                    reader.depth--;
                     break;
                 /*default:
-                    reader.BorkedIt(); // throws
-                    break;*/
+                    throw reader.BorkedIt(); */
             }
         }
 
@@ -452,20 +453,21 @@ namespace ProtoBuf
             {
                 case WireType.StartGroup:
                     reader.wireType = WireType.None; // to prevent glitches from double-calling
+                    reader.depth++;
                     return new SubItemToken(-reader.fieldNumber);
                 case WireType.String:
                     int len = (int)reader.ReadUInt32Variant(false);
-                    if (len < 0) throw new InvalidOperationException();
+                    if (len < 0) throw AddErrorData(new InvalidOperationException(), reader);
                     int lastEnd = reader.blockEnd;
                     reader.blockEnd = reader.position + len;
+                    reader.depth++;
                     return new SubItemToken(lastEnd);
                 default:
-                    reader.BorkedIt(); // throws
-                    return new SubItemToken(0);
+                    throw reader.BorkedIt(); // throws
             }
         }
 
-        int blockEnd = int.MaxValue;
+        int depth = 0, blockEnd = int.MaxValue;
         /// <summary>
         /// Reads a field header from the stream, setting the wire-type and retuning the field number. If no
         /// more fields are available, then 0 is returned. This methods respects sub-messages.
@@ -577,7 +579,7 @@ namespace ProtoBuf
                     ioIndex = available = 0; // note that we have no data in the buffer
                     if (isFixedLength)
                     {
-                        if (len > dataRemaining) throw new EndOfStreamException();
+                        if (len > dataRemaining) throw EoF(this);
                         // else assume we're going to be OK
                         dataRemaining -= len;
                     }
@@ -649,7 +651,7 @@ namespace ProtoBuf
                         if (Helpers.IsInfinity(f)
                             && !Helpers.IsInfinity(value))
                         {
-                            throw new OverflowException();
+                            throw AddErrorData(new OverflowException(), this);
                         }
                         return f;
                     }
@@ -733,13 +735,13 @@ namespace ProtoBuf
             {
                 length -= read;
             }
-            if (length > 0) throw new EndOfStreamException();
+            if (length > 0) throw EoF(null);
             return buffer;
         }
         private static int ReadByteOrThrow(Stream source)
         {
             int val = source.ReadByte();
-            if (val < 0) throw new EndOfStreamException();
+            if (val < 0) throw EoF(null);
             return val;
         }
         /// <summary>
@@ -766,7 +768,7 @@ namespace ProtoBuf
                             fieldNumber = (int)(val >> 3);
                             if (!ProtoReader.TryReadUInt32Variant(source, out val))
                             { // got a header, but no length
-                                throw new EndOfStreamException();
+                                throw EoF(null);
                             }
                             return (int)val;
                         }
@@ -812,22 +814,22 @@ namespace ProtoBuf
             value &= 0x7F;
 
             b = source.ReadByte();
-            if (b < 0) throw new EndOfStreamException();
+            if (b < 0) throw EoF(null);
             value |= ((uint)b & 0x7F) << 7;
             if ((b & 0x80) == 0) return true;
 
             b = source.ReadByte();
-            if (b < 0) throw new EndOfStreamException();
+            if (b < 0) throw EoF(null);
             value |= ((uint)b & 0x7F) << 14;
             if ((b & 0x80) == 0) return true;
 
             b = source.ReadByte();
-            if (b < 0) throw new EndOfStreamException();
+            if (b < 0) throw EoF(null);
             value |= ((uint)b & 0x7F) << 21;
             if ((b & 0x80) == 0) return true;
 
             b = source.ReadByte();
-            if (b < 0) throw new EndOfStreamException();
+            if (b < 0) throw EoF(null);
             value |= (uint)b << 28; // can only use 4 bits from this chunk
             if ((b & 0xF0) == 0) return true;
 
@@ -870,7 +872,20 @@ namespace ProtoBuf
                     BufferPool.ReleaseBufferToPool(ref buffer);
                 }
             }
-            if (count > 0) throw new EndOfStreamException();
+            if (count > 0) throw EoF(null);
+        }
+        private static Exception AddErrorData(Exception exception, ProtoReader source)
+        {
+            if (exception != null && source != null && !exception.Data.Contains("protoSource"))
+            {
+                exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
+                    source.fieldNumber, source.wireType, source.position, source.depth));
+            }
+            return exception;
+            
+        }
+        private static Exception EoF(ProtoReader source) {
+            return AddErrorData(new EndOfStreamException(), source);
         }
     }
 }

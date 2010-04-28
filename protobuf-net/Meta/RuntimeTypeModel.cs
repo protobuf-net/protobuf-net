@@ -151,7 +151,7 @@ namespace ProtoBuf.Meta
 
         protected override int GetKeyImpl(Type type)
         {
-            return GetKey(type, true, true);
+            return GetKey(type, false, true);
         }
         internal int GetKey(Type type, bool demand, bool getBaseKey)
         {
@@ -280,6 +280,7 @@ namespace ProtoBuf.Meta
         static ILGenerator Override(TypeBuilder type, string name)
         {
             MethodInfo baseMethod = type.BaseType.GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
+
             ParameterInfo[] parameters = baseMethod.GetParameters();
             Type[] paramTypes = new Type[parameters.Length];
             for(int i = 0 ; i < paramTypes.Length ; i++) {

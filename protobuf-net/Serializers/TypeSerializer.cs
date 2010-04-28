@@ -33,6 +33,11 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(fieldNumbers.Length == serializers.Length);
 
             Helpers.Sort(fieldNumbers, serializers);
+            for (int i = 1; i < fieldNumbers.Length; i++)
+            {
+                if (fieldNumbers[i] == fieldNumbers[i - 1]) throw new InvalidOperationException("Duplicate field-number detected; " +
+                           fieldNumbers[i].ToString() + " on: " + forType.FullName);
+            }
             this.forType = forType;
             this.serializers = serializers;
             this.fieldNumbers = fieldNumbers;

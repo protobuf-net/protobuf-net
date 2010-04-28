@@ -13,6 +13,10 @@ namespace ProtoBuf.Meta
             get { return head[index]; }
             set { head[index] = value; }
         }
+        public void RemoveLast()
+        {
+            head.RemoveLastWithMutate();
+        }
     }
     internal class BasicList : IEnumerable
     {
@@ -59,7 +63,8 @@ namespace ProtoBuf.Meta
             public object Current { get { return node[position]; } }
             public bool MoveNext()
             {
-                return (position <= node.Length) && (++position < node.Length);
+                int len = node.Length;
+                return (position <= len) && (++position < len);
             }
         }
         protected sealed class Node
@@ -67,7 +72,7 @@ namespace ProtoBuf.Meta
             public object this[int index]
             {
                 get {
-                    if (index >= 0 && index < Length)
+                    if (index >= 0 && index < length)
                     {
                         return data[index];
                     }
@@ -75,7 +80,7 @@ namespace ProtoBuf.Meta
                 }
                 set
                 {
-                    if (index >= 0 && index < Length)
+                    if (index >= 0 && index < length)
                     {
                         data[index] = value;
                     }
@@ -87,48 +92,63 @@ namespace ProtoBuf.Meta
             }
             public object TryGet(int index)
             {
-                return (index >= 0 && index < Length) ? data[index] : null;
+                return (index >= 0 && index < length) ? data[index] : null;
             }
             private readonly object[] data;
-            public readonly int Length;
+            
+            private int length;
+            public int Length { get { return length; } }
             internal Node(object[] data, int length)
             {
                 Helpers.DebugAssert((data == null && length == 0) ||
                     (data != null && length > 0 && length <= data.Length));
                 this.data = data;
 
-                this.Length = length;
+                this.length = length;
+            }
+            public void RemoveLastWithMutate()
+            {
+                if (length == 0) throw new InvalidOperationException();
+                length -= 1;
             }
             public Node Append(object value)
             {
                 object[] newData;
-                int newLength = Length + 1;
-                if (Length == 0)
+                int newLength = length + 1;
+                if (data == null)
                 {
                     newData = new object[10];
                 }
-                else if (Length == data.Length)
+                else if (length == data.Length)
                 {
                     newData = new object[data.Length * 2];
-                    Array.Copy(data, newData, Length);
+                    Array.Copy(data, newData, length);
                 } else
                 {
                     newData = data;
                 }
-                newData[Length] = value;
+                newData[length] = value;
                 return new Node(newData, newLength);
             }
             public Node Trim()
             {
-                if (Length == 0 || Length == data.Length) return this;
-                object[] newData = new object[Length];
-                Array.Copy(data, newData, Length);
-                return new Node(newData, Length);
+                if (length == 0 || length == data.Length) return this;
+                object[] newData = new object[length];
+                Array.Copy(data, newData, length);
+                return new Node(newData, length);
             }
 
+            internal int IndexOfReference(object instance)
+            {
+                for (int i = 0; i < length; i++)
+                {
+                    if (ReferenceEquals(instance, data[i])) return i;
+                }
+                return -1;
+            }
             internal int IndexOf(IPredicate predicate)
             {
-                for (int i = 0; i < Length; i++)
+                for (int i = 0; i < length; i++)
                 {
                     if (predicate.IsMatch(data[i])) return i;
                 }
@@ -137,9 +157,9 @@ namespace ProtoBuf.Meta
 
             internal void CopyTo(Array array, int offset)
             {
-                if (Length > 0)
+                if (length > 0)
                 {
-                    Array.Copy(data, 0, array, offset, Length);
+                    Array.Copy(data, 0, array, offset, length);
                 }
             }
         }
@@ -147,6 +167,10 @@ namespace ProtoBuf.Meta
         internal int IndexOf(IPredicate predicate)
         {
             return head.IndexOf(predicate);
+        }
+        internal int IndexOfReference(object instance)
+        {
+            return head.IndexOfReference(instance);
         }
 
         internal interface IPredicate

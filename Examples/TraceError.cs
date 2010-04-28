@@ -39,8 +39,8 @@ namespace Examples
                 Assert.Fail("Should have errored");
             } catch(EndOfStreamException ex)
             {
-                Assert.IsTrue(ex.Data.Contains("protoSource"));
-                Assert.AreEqual("tag=2; wire-type=String; offset=25; depth=1; type=Examples.TraceErrorData", ex.Data["protoSource"]);
+                Assert.IsTrue(ex.Data.Contains("protoSource"), "Missing protoSource");
+                Assert.AreEqual("tag=2; wire-type=String; offset=4; depth=0", ex.Data["protoSource"]);
             } catch(Exception ex)
             {
                 Assert.Fail("Unexpected exception: " + ex);

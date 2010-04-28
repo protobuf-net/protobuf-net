@@ -48,13 +48,24 @@ namespace ProtoBuf.unittest.Meta
             TestGuid(model.Compile(), data);
         }
         [Test]
-        public void TestRoundTripRandom()
+        public void TestRoundTripRandomRuntime()
         {
             var model = BuildModel();
             TestGuids(model, 1000);
+        }
+        [Test]
+        public void TestRoundTripRandomCompileInPlace()
+        {
+            var model = BuildModel();
             model.CompileInPlace();
             TestGuids(model, 1000);
-            TestGuids(model.Compile(), 1000);
+        }
+        [Test]
+        public void TestRoundTripRandomCompile()
+        {
+            var model = BuildModel().Compile("TestRoundTripRandomCompile", "TestRoundTripRandomCompile.dll");
+            PEVerify.Verify("TestRoundTripRandomCompile.dll");
+            TestGuids(model, 1000);
         }
         static void TestGuids(TypeModel model, int count)
         {

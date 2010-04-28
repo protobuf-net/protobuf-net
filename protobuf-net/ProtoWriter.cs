@@ -143,14 +143,24 @@ namespace ProtoBuf
         {
             return StartSubItem(instance, writer, false);
         }
+
+        MutableList recursionStack;
+        private void CheckRecursionStackAndPush(object instance)
+        {
+            if (recursionStack == null) { recursionStack = new MutableList(); }
+            else if (recursionStack.IndexOfReference(instance) >= 0)
+            {
+                throw new ProtoException("Possible recursion detected; " + instance.ToString());
+            }
+            recursionStack.Add(instance);
+        }
+        private void PopRecursionStack() { recursionStack.RemoveLast(); }
+
         private static SubItemToken StartSubItem(object instance, ProtoWriter writer, bool allowFixed)
         {
-            //Helpers.DebugWriteLine(writer.depth.ToString());
-            //Helpers.DebugWriteLine("StartSubItem", instance);
             if (++writer.depth > RecursionCheckDepth)
             {
-                Helpers.DebugWriteLine(writer.depth.ToString());
-                throw new NotImplementedException();
+                writer.CheckRecursionStackAndPush(instance);
             }
             switch (writer.wireType)
             {
@@ -185,7 +195,10 @@ namespace ProtoBuf
             if (writer.wireType != WireType.None) { throw CreateException(writer); }
             int value = token.value;
             if (writer.depth <= 0) throw CreateException(writer);
-            writer.depth--;
+            if (writer.depth-- > RecursionCheckDepth)
+            {
+                writer.PopRecursionStack();
+            }
             if (value < 0)
             {   // group - very simple append
                 WriteHeaderCore(-value, WireType.EndGroup, writer);
