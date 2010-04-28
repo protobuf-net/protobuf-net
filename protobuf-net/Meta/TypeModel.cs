@@ -236,12 +236,12 @@ namespace ProtoBuf.Meta
                 || !typeof(IEnumerable).IsAssignableFrom(listType)) return null;
 
             BasicList candidates = new BasicList();
+            candidates.Add(typeof(object));
             foreach (MethodInfo method in listType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (method.Name != "Add") continue;
                 ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length == 1 && parameters[0].ParameterType == typeof(object)
-                    && !candidates.Contains(parameters[0].ParameterType))
+                if (parameters.Length == 1 && !candidates.Contains(parameters[0].ParameterType))
                 {
                     candidates.Add(parameters[0].ParameterType);
                 }
@@ -257,7 +257,13 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-            return candidates.Count == 1 ? (Type)candidates[0] : null;
+            PropertyInfo indexer = listType.GetProperty("Item", new Type[] { typeof(int) });
+            if (indexer != null && !candidates.Contains(indexer.PropertyType))
+            {
+                candidates.Add(indexer.PropertyType);
+            }
+
+            return candidates.Count == 2 ? (Type)candidates[1] : null;
         }
         private bool TryDeserializeAuxiliaryType(ProtoReader reader, Type type, ref object value)
         {
@@ -272,7 +278,7 @@ namespace ProtoBuf.Meta
             {
                 itemType = GetListItemType(type);
                 if (itemType == null ||
-                    GetDefaultWireType((itemTypeCode = Type.GetTypeCode(itemType)), type, out isSubObject) == WireType.None)
+                    GetDefaultWireType((itemTypeCode = Type.GetTypeCode(itemType)), itemType, out isSubObject) == WireType.None)
                 {
                     ThrowUnexpectedType(type);
                 }
