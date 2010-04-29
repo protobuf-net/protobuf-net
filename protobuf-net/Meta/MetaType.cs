@@ -415,8 +415,28 @@ namespace ProtoBuf.Meta
             {
                 defaultValue = GetMemberValue(attrib, "Value");
             }
-            return (fieldNumber > 0 && !ignore) ? new ValueMember(model, type, fieldNumber, member, effectiveType, itemType, defaultType, dataFormat, defaultValue)
+            ValueMember vm = (fieldNumber > 0 && !ignore)
+                ? new ValueMember(model, type, fieldNumber, member, effectiveType, itemType, defaultType, dataFormat, defaultValue)
                     : null;
+            if (vm != null)
+            {
+                PropertyInfo prop = type.GetProperty(member.Name + "Specified", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+                    null, typeof(bool), Helpers.EmptyTypes, null);
+                if (prop != null)
+                {
+                    vm.SetSpecified(prop.GetGetMethod(true), prop.GetSetMethod(true));
+                }
+                else
+                {
+                    MethodInfo method = type.GetMethod("ShouldSerialize" + member.Name, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+                        null, Helpers.EmptyTypes, null);
+                    if (method != null && method.ReturnType == typeof(bool))
+                    {
+                        vm.SetSpecified(method, null);
+                    }
+                }
+            }
+            return vm;
         }
 
         private static void GetDataFormat(ref DataFormat value, Attribute attrib, string memberName)

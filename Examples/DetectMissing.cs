@@ -4,6 +4,7 @@ using System.Xml.Serialization;
 using NUnit.Framework;
 using ProtoBuf;
 using System.Runtime.Serialization;
+using ProtoBuf.Meta;
 
 namespace Examples
 {
@@ -139,17 +140,44 @@ namespace Examples
         [Test]
         public void TestViaXmlProtoNotSet()
         {
-            DetectMissing dm = Serializer.DeepClone(new DetectMissing());
-            Assert.IsFalse(dm.FooSpecified, "FooSpecified");
-            Assert.IsFalse(dm.BarSpecified, "BarSpecified");
+            var model = TypeModel.Create();
+            model.Add(typeof(DetectMissing), true);
+            DetectMissing dm1 = (DetectMissing)model.DeepClone(new DetectMissing());
+            Assert.IsFalse(dm1.FooSpecified, "FooSpecified:Runtime");
+            Assert.IsFalse(dm1.BarSpecified, "BarSpecified:Runtime");
+
+            model.CompileInPlace();
+            DetectMissing dm2 = (DetectMissing)model.DeepClone(new DetectMissing());
+            Assert.IsFalse(dm2.FooSpecified, "FooSpecified:CompileInPlace");
+            Assert.IsFalse(dm2.BarSpecified, "BarSpecified:CompileInPlace");
+
+            DetectMissing dm3 = (DetectMissing)model.Compile().DeepClone(new DetectMissing());
+            Assert.IsFalse(dm3.FooSpecified, "FooSpecified:Compile");
+            Assert.IsFalse(dm3.BarSpecified, "BarSpecified:Compile");
+
+            model.Compile("TestViaXmlProtoNotSet", "TestViaXmlProtoNotSet.dll");
+            PEVerify.AssertValid("TestViaXmlProtoNotSet.dll");
         }
         [Test]
         public void TestViaXmlProtoSet()
         {
-            DetectMissing dm = Serializer.DeepClone(new DetectMissing
-                {FooSpecified = true, BarSpecified = true});
-            Assert.IsTrue(dm.FooSpecified, "FooSpecified");
-            Assert.IsTrue(dm.BarSpecified, "BarSpecified");
+            var model = TypeModel.Create();
+            model.Add(typeof(DetectMissing), true);
+            DetectMissing dm1 = (DetectMissing)model.DeepClone(new DetectMissing { FooSpecified = true, BarSpecified = true });
+            Assert.IsTrue(dm1.FooSpecified, "FooSpecified:Runtime");
+            Assert.IsTrue(dm1.BarSpecified, "BarSpecified:Runtime");
+
+            model.CompileInPlace();
+            DetectMissing dm2 = (DetectMissing)model.DeepClone(new DetectMissing { FooSpecified = true, BarSpecified = true });
+            Assert.IsTrue(dm2.FooSpecified, "FooSpecified:CompileInPlace");
+            Assert.IsTrue(dm2.BarSpecified, "BarSpecified:CompileInPlace");
+
+            DetectMissing dm3 = (DetectMissing)model.Compile().DeepClone(new DetectMissing { FooSpecified = true, BarSpecified = true });
+            Assert.IsTrue(dm3.FooSpecified, "FooSpecified:Compile");
+            Assert.IsTrue(dm3.BarSpecified, "BarSpecified:Compile");
+
+            model.Compile("TestViaXmlProtoSet", "TestViaXmlProtoSet.dll");
+            PEVerify.AssertValid("TestViaXmlProtoSet.dll");
         }
 
         [Test]

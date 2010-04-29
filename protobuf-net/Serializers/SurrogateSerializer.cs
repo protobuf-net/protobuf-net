@@ -62,18 +62,18 @@ namespace ProtoBuf.Serializers
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            Helpers.DebugAssert(valueFrom != null);
-            using (Compiler.Local converted = new Compiler.Local(ctx, tail.ExpectedType))
+            Helpers.DebugAssert(valueFrom != null); // don't support stack-head for this
+            using (Compiler.Local converted = new Compiler.Local(ctx, tail.ExpectedType)) // declare/re-use local
             {
-                ctx.LoadValue(valueFrom);
-                ctx.EmitCall(toTail);
-                ctx.StoreValue(converted);
+                ctx.LoadValue(valueFrom); // load primary onto stack
+                ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
+                ctx.StoreValue(converted); // store into surrogate local
 
-                tail.EmitRead(ctx, converted);
+                tail.EmitRead(ctx, converted); // downstream processing against surrogate local
 
-                ctx.LoadValue(converted);
-                ctx.EmitCall(fromTail);
-                ctx.StoreValue(valueFrom);
+                ctx.LoadValue(converted); // load from surrogate local
+                ctx.EmitCall(fromTail);  // static convert op, surrogate-to-primary
+                ctx.StoreValue(valueFrom); // store back into primary
             }
         }
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

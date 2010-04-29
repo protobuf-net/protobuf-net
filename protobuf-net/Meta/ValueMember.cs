@@ -16,7 +16,7 @@ namespace ProtoBuf.Meta
         /// The number that identifies this member in a protobuf stream
         /// </summary>
         public int FieldNumber { get { return fieldNumber; } }
-        private MemberInfo member;
+        private readonly MemberInfo member;
         private readonly Type parentType, itemType, defaultType, memberType;
         private readonly object defaultValue;
         /// <summary>
@@ -123,7 +123,39 @@ namespace ProtoBuf.Meta
         public bool IsStrict
         {
             get { return isStrict; }
-            set { isStrict = value; }
+            set { ThrowIfFrozen(); isStrict = value; }
+        }
+        private MethodInfo getSpecified, setSpecified;
+        public void SetSpecified(MethodInfo getSpecified, MethodInfo setSpecified)
+        {
+            if (getSpecified != null)
+            {
+                if (getSpecified.ReturnType != typeof(bool)
+                    || getSpecified.IsStatic
+                    || getSpecified.GetParameters().Length != 0)
+                {
+                    throw new ArgumentException("Invalid pattern for checking member-specified", "getSpecified");
+                }
+            }
+            if (setSpecified != null)
+            {
+                ParameterInfo[] args;
+                if (setSpecified.ReturnType != typeof(void)
+                    || setSpecified.IsStatic
+                    || (args = setSpecified.GetParameters()).Length != 1
+                    || args[0].ParameterType != typeof(bool))
+                {
+                    throw new ArgumentException("Invalid pattern for setting member-specified", "setSpecified");
+                }
+            }
+            ThrowIfFrozen();
+            this.getSpecified = getSpecified;
+            this.setSpecified = setSpecified;
+            
+        }
+        private void ThrowIfFrozen()
+        {
+            if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
         private IProtoSerializer BuildSerializer()
         {
@@ -162,7 +194,10 @@ namespace ProtoBuf.Meta
                 default:
                     throw new InvalidOperationException();
             }
-
+            if (getSpecified != null || setSpecified != null)
+            {
+                ser = new MemberSpecifiedDecorator(getSpecified, setSpecified, ser);
+            }
             return ser;
         }
 
