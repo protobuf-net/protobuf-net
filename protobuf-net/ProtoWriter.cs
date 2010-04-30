@@ -298,22 +298,8 @@ namespace ProtoBuf
                     Flush(writer); // try emptying the buffer
                     if ((writer.ioBuffer.Length - writer.ioIndex) >= required) return;
                 }
-                // either can't empty the buffer, or
-                // that didn't help; try doubling it
-                int newLen = writer.ioBuffer.Length * 2;
-                if (newLen < (required + writer.ioIndex))
-                {
-                    // or just make it big enough!
-                    newLen = required + writer.ioIndex;
-                }
-
-                byte[] newBuffer = new byte[newLen];
-                Helpers.BlockCopy(writer.ioBuffer, 0, newBuffer, 0, writer.ioIndex);
-                if (writer.ioBuffer.Length == BufferPool.BufferLength)
-                {
-                    BufferPool.ReleaseBufferToPool(ref writer.ioBuffer);
-                }
-                writer.ioBuffer = newBuffer;
+                // either can't empty the buffer, or that didn't help; need more space
+                BufferPool.ResizeAndFlushLeft(ref writer.ioBuffer, required + writer.ioIndex, 0, writer.ioIndex);
             }
         }
         public void Close()

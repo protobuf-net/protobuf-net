@@ -157,9 +157,12 @@ namespace ProtoBuf
         internal void Ensure(int count, bool strict)
         {
             Helpers.DebugAssert(available <= count, "Asking for data without checking first");
-            Helpers.DebugAssert(count <= ioBuffer.Length, "Asking for too much data");
-
-            if (ioIndex + count >= ioBuffer.Length)
+            if (count > ioBuffer.Length)
+            {
+                BufferPool.ResizeAndFlushLeft(ref ioBuffer, count, ioIndex, available);
+                ioIndex = 0;
+            }
+            else if (ioIndex + count >= ioBuffer.Length)
             {
                 // need to shift the buffer data to the left to make space
                 Helpers.BlockCopy(ioBuffer, ioIndex, ioBuffer, 0, available);
