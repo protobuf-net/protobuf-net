@@ -357,7 +357,7 @@ namespace ProtoBuf.Meta
                     break;
             }
             bool done = false;
-            if (!ignore && !done && HasFamily(family, AttributeFamily.ProtoBuf))
+            if (!ignore && !done) // always consider ProtoMember 
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
                 GetIgnore(ref ignore, attrib, attribs, "ProtoBuf.ProtoIgnoreAttribute");
