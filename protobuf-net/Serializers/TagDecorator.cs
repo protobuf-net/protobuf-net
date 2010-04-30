@@ -20,12 +20,14 @@ namespace ProtoBuf.Serializers
             IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
             if (pts != null) pts.Callback(value, callbackType);
         }
+#if FEAT_COMPILER
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             // we only expect this to be invoked if HasCallbacks returned true, so implicitly Tail
             // **must** be of the correct type
             ((IProtoTypeSerializer)Tail).EmitCallback(ctx, valueFrom, callbackType);
         }
+#endif
         public override Type ExpectedType
         {
             get { return Tail.ExpectedType; }

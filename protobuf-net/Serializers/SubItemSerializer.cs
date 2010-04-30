@@ -11,10 +11,12 @@ namespace ProtoBuf.Serializers
         {
             return ((IProtoTypeSerializer)proxy.Serializer).HasCallbacks(callbackType);
         }
+#if FEAT_COMPILER
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             ((IProtoTypeSerializer)proxy.Serializer).EmitCallback(ctx, valueFrom, callbackType);
         }
+#endif
         void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType)
         {
             ((IProtoTypeSerializer)proxy.Serializer).Callback(value, callbackType);

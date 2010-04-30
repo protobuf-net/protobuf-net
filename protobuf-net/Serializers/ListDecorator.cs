@@ -48,7 +48,7 @@ namespace ProtoBuf.Serializers
         public override Type ExpectedType { get { return declaredType;  } }
         public override bool RequiresOldValue { get { return true; } }
         public override bool ReturnsValue { get { return true; } }
-
+#if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             /* This looks more complex than it is. Look at the non-compiled Read to
@@ -155,7 +155,7 @@ namespace ProtoBuf.Serializers
                 ctx.BranchIfTrue(@continue, false);
             }
         }
-
+#endif
         MethodInfo GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current)
         {
             MethodInfo getEnumerator = Helpers.GetInstanceMethod(ExpectedType,"GetEnumerator",null);
@@ -197,6 +197,7 @@ namespace ProtoBuf.Serializers
             current = iteratorType.GetProperty("Current").GetGetMethod(false);
             return getEnumerator;
         }
+#if FEAT_COMPILER
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
@@ -235,6 +236,7 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
+#endif
         public override void Write(object value, ProtoWriter dest)
         {
             foreach (object subItem in (IEnumerable)value)

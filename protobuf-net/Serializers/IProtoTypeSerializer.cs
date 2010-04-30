@@ -6,6 +6,8 @@ namespace ProtoBuf.Serializers
     {
         bool HasCallbacks(TypeModel.CallbackType callbackType);
         void Callback(object value, TypeModel.CallbackType callbackType);
+#if FEAT_COMPILER
         void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType);
+#endif
     }
 }

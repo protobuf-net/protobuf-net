@@ -546,7 +546,11 @@ namespace ProtoBuf
             
         }
 
-        public unsafe static void WriteDouble(double value, ProtoWriter writer)
+        public
+#if !FEAT_SAFE
+            unsafe
+#endif
+            static void WriteDouble(double value, ProtoWriter writer)
         {
             switch (writer.wireType)
             {
@@ -560,18 +564,30 @@ namespace ProtoBuf
                     ProtoWriter.WriteSingle(f, writer);
                     return;
                 case WireType.Fixed64:
+#if FEAT_SAFE
+                    ProtoWriter.WriteInt64(BitConverter.ToInt64(BitConverter.GetBytes(value), 0), writer);
+#else
                     ProtoWriter.WriteInt64(*(long*)&value, writer);
+#endif
                     return;
                 default:
                     throw CreateException(writer);
             }
         }
-        public unsafe static void WriteSingle(float value, ProtoWriter writer)
+        public 
+#if !FEAT_SAFE
+            unsafe
+#endif
+            static void WriteSingle(float value, ProtoWriter writer)
         {
             switch (writer.wireType)
             {
                 case WireType.Fixed32:
+#if FEAT_SAFE
+                    ProtoWriter.WriteInt32(BitConverter.ToInt32(BitConverter.GetBytes(value), 0), writer);
+#else
                     ProtoWriter.WriteInt32(*(int*)&value, writer);
+#endif
                     return;
                 case WireType.Fixed64:
                     ProtoWriter.WriteDouble((double)value, writer);

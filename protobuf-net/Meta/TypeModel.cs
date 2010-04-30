@@ -257,9 +257,12 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-            PropertyInfo indexer = listType.GetProperty("Item", new Type[] { typeof(int) });
-            if (indexer != null && !candidates.Contains(indexer.PropertyType))
+            // more convenient GetProperty overload not supported on all platforms
+            foreach (PropertyInfo indexer in listType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
+                if (indexer.Name != "Item" || candidates.Contains(indexer.PropertyType)) continue;
+                ParameterInfo[] args = indexer.GetIndexParameters();
+                if (args.Length != 1 || args[0].ParameterType != typeof(int)) continue;
                 candidates.Add(indexer.PropertyType);
             }
 

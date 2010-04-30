@@ -18,7 +18,7 @@ namespace ProtoBuf.Serializers
         public override Type ExpectedType { get { return arrayType; } }
         public override bool RequiresOldValue { get { return true; } }
         public override bool ReturnsValue { get { return true; } }
-
+#if FEAT_COMPILER
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             // int i and T[] arr
@@ -52,6 +52,7 @@ namespace ProtoBuf.Serializers
             }
 
         }
+#endif
         public override void Write(object value, ProtoWriter dest)
         {
             IList arr = (IList)value;
@@ -77,7 +78,7 @@ namespace ProtoBuf.Serializers
             list.CopyTo(result, oldLen);
             return result;
         }
-
+#if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             Type listType;
@@ -130,6 +131,7 @@ namespace ProtoBuf.Serializers
 
 
         }
+#endif
     }
 }
 #endif

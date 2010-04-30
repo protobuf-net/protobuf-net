@@ -77,7 +77,10 @@ namespace ProtoBuf.Meta
                 {
                     case TypeCode.Boolean: return bool.Parse(s);
                     case TypeCode.Byte: return byte.Parse(s, CultureInfo.InvariantCulture);
-                    case TypeCode.Char: return char.Parse(s);
+                    case TypeCode.Char: // char.Parse missing on CF/phone7
+                        char c;
+                        if (!char.TryParse(s, out c)) throw new FormatException();
+                        return c;
                     case TypeCode.DateTime: return DateTime.Parse(s, CultureInfo.InvariantCulture);
                     case TypeCode.Decimal: return decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case TypeCode.Double: return double.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
@@ -95,7 +98,7 @@ namespace ProtoBuf.Meta
                 if (type == typeof(Uri)) return s; // Uri is decorated as string
             }
             if (type.IsEnum) return Enum.ToObject(type, value);
-            return Convert.ChangeType(value, type);
+            return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
         private IProtoSerializer serializer;

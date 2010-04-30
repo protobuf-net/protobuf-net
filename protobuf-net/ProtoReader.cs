@@ -388,7 +388,11 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a double-precision number from the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
-        public unsafe double ReadDouble()
+        public
+#if !FEAT_SAFE
+            unsafe
+#endif
+            double ReadDouble()
         {
             switch (wireType)
             {
@@ -396,7 +400,11 @@ namespace ProtoBuf
                     return ReadSingle();
                 case WireType.Fixed64:
                     long value = ReadInt64();
+#if FEAT_SAFE
+                    return BitConverter.ToDouble(BitConverter.GetBytes(value), 0);
+#else
                     return *(double*)&value;
+#endif
                 default:
                     throw BorkedIt();
             }
@@ -638,14 +646,22 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a single-precision number from the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
-        public unsafe float ReadSingle()
+        public 
+#if !FEAT_SAFE
+            unsafe
+#endif
+            float ReadSingle()
         {
             switch (wireType)
             {
                 case WireType.Fixed32:
                     {
                         int value = ReadInt32();
+#if FEAT_SAFE
+                        return BitConverter.ToSingle(BitConverter.GetBytes(value), 0);
+#else
                         return *(float*)&value;
+#endif
                     }
                 case WireType.Fixed64:
                     {

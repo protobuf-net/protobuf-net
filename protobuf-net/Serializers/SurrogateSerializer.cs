@@ -8,7 +8,9 @@ namespace ProtoBuf.Serializers
     sealed class SurrogateSerializer : IProtoTypeSerializer
     {
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
+#if FEAT_COMPILER
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
+#endif
         void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
         public bool ReturnsValue { get { return false; } }
         public bool RequiresOldValue { get { return true; } }
@@ -60,6 +62,7 @@ namespace ProtoBuf.Serializers
             args[0] = tail.Read(value, source);
             return fromTail.Invoke(null, args);
         }
+#if FEAT_COMPILER
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Helpers.DebugAssert(valueFrom != null); // don't support stack-head for this
@@ -76,11 +79,13 @@ namespace ProtoBuf.Serializers
                 ctx.StoreValue(valueFrom); // store back into primary
             }
         }
+
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue(valueFrom);
             ctx.EmitCall(toTail);
             tail.EmitWrite(ctx, null);
         }
+#endif
     }
 }

@@ -1,7 +1,9 @@
 ﻿#if !NO_RUNTIME
 using System;
 using ProtoBuf.Meta;
+#if FEAT_COMPILER
 using System.Reflection.Emit;
+#endif
 using System.Reflection;
 using System.Runtime.Serialization;
 
@@ -158,8 +160,14 @@ namespace ProtoBuf.Serializers
         {
             if (method != null)
             {   // pass in a streaming context if one is needed, else null
-                method.Invoke(obj, method.GetParameters().Length == 0 ? null :
-                    new object[] { new StreamingContext(StreamingContextState) });
+                switch (method.GetParameters().Length)
+                {
+                    case 0: method.Invoke(obj, null); break;
+#if PLAT_BINARYFORMATTER
+                    case 1: method.Invoke(obj, new object[] { new StreamingContext(StreamingContextState) }); break;
+#endif
+                    default: throw new NotSupportedException("Invalid callback signature for this platform");
+                }
             }
         }
         object CreateInstance(ProtoReader source)
@@ -173,7 +181,11 @@ namespace ProtoBuf.Serializers
             }
             else
             {
+#if PLAT_BINARYFORMATTER
                 obj = FormatterServices.GetUninitializedObject(forType);
+#else
+                throw new NotSupportedException("Constructor-skipping is not supported on this platform");
+#endif
             }
             if (baseCtorCallbacks != null) {
                 for (int i = 0; i < baseCtorCallbacks.Length; i++) {

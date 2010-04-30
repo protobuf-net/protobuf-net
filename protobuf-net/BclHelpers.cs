@@ -270,7 +270,7 @@ namespace ProtoBuf
             ProtoReader.EndSubItem(token, source);
             if(low == 0 && high == 0) return Guid.Empty;
             uint a = (uint)(low >> 32), b = (uint)low, c = (uint)(high >> 32), d= (uint)high;
-            return new Guid(b, (ushort)a, (ushort)(a >> 16), 
+            return new Guid((int)b, (short)a, (short)(a >> 16), 
                 (byte)d, (byte)(d >> 8), (byte)(d >> 16), (byte)(d >> 24),
                 (byte)c, (byte)(c >> 8), (byte)(c >> 16), (byte)(c >> 24));
             

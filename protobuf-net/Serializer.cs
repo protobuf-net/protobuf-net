@@ -38,6 +38,7 @@ namespace ProtoBuf
                 return Deserialize<TTo>(ms);
             }
         }
+#if PLAT_BINARYFORMATTER
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.
         /// </summary>
@@ -56,7 +57,7 @@ namespace ProtoBuf
                 info.AddValue(ProtoBinaryField, ms.ToArray());
             }
         }
-
+#endif
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied XmlWriter.
         /// </summary>
@@ -101,7 +102,7 @@ namespace ProtoBuf
 
 
         private const string ProtoBinaryField = "proto";
-
+#if PLAT_BINARYFORMATTER
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
         /// </summary>
@@ -127,6 +128,7 @@ namespace ProtoBuf
                 }
             }
         }
+#endif
         /*
         internal static void CheckTagNotInUse(Type type, int tag)
         {
@@ -137,12 +139,17 @@ namespace ProtoBuf
         }*/
 
         public static void PrepareSerializer<T>() where T : class
-        { RuntimeTypeModel.Default[typeof(T)].CompileInPlace(); }
+        { 
+#if FEAT_COMPILER
+            RuntimeTypeModel.Default[typeof(T)].CompileInPlace();
+#endif
+        }
 
         public const int ListItemTag = 1;
-
+#if PLAT_BINARYFORMATTER
         public static System.Runtime.Serialization.IFormatter CreateFormatter<T>()
         { throw new NotImplementedException(); }
+#endif
         public static IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int fieldNumber)
         { throw new NotImplementedException(); }
 
