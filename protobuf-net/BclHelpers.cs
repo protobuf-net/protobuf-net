@@ -21,7 +21,20 @@ namespace ProtoBuf
     /// </summary>
     public class BclHelpers
     {
-
+        /// <summary>
+        /// Creates a new instance of the specified type, bypassing the constructor.
+        /// </summary>
+        /// <param name="type">The type to create</param>
+        /// <returns>The new instance</returns>
+        /// <exception cref="NotSupportedException">If the platform does not support constructor-skipping</exception>
+        public static object GetUninitializedObject(Type type)
+        {
+#if PLAT_BINARYFORMATTER
+            return System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
+#else
+            throw new NotSupportedException("Constructor-skipping is not supported on this platform");
+#endif
+        }
         private BclHelpers() { } // not a static class for C# 1.2 reasons
         const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02;
         

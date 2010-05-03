@@ -177,15 +177,11 @@ namespace ProtoBuf.Serializers
             if (useConstructor)
             {
                 if (forType.IsAbstract) TypeModel.ThrowCannotCreateInstance(forType);
-                obj = Activator.CreateInstance(forType);                
+                obj = Activator.CreateInstance(forType, true);                
             }
             else
             {
-#if PLAT_BINARYFORMATTER
-                obj = FormatterServices.GetUninitializedObject(forType);
-#else
-                throw new NotSupportedException("Constructor-skipping is not supported on this platform");
-#endif
+                obj = BclHelpers.GetUninitializedObject(forType);
             }
             if (baseCtorCallbacks != null) {
                 for (int i = 0; i < baseCtorCallbacks.Length; i++) {
@@ -447,7 +443,7 @@ namespace ProtoBuf.Serializers
                 if (!useConstructor)
                 {   // DataContractSerializer style
                     ctx.LoadValue(forType);
-                    ctx.EmitCall(typeof(FormatterServices).GetMethod("GetUninitializedObject"));
+                    ctx.EmitCall(typeof(BclHelpers).GetMethod("GetUninitializedObject"));
                     ctx.Cast(forType);
                 } else if (type.IsClass && !type.IsAbstract && (
                     (defaultCtor = type.GetConstructor(

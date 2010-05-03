@@ -66,8 +66,8 @@ namespace ProtoBuf.Meta
                 case TypeCode.UInt32: ProtoWriter.WriteUInt32((uint)value, writer); return true;
                 case TypeCode.UInt64: ProtoWriter.WriteUInt64((ulong)value, writer); return true;
                 case TypeCode.Boolean: ProtoWriter.WriteBoolean((bool)value, writer); return true;
-                case TypeCode.SByte: throw new NotImplementedException(); 
-                case TypeCode.Byte: throw new NotImplementedException(); 
+                case TypeCode.SByte: ProtoWriter.WriteSByte((sbyte)value, writer); return true;
+                case TypeCode.Byte: ProtoWriter.WriteByte((byte)value, writer); return true;
                 case TypeCode.Char: ProtoWriter.WriteUInt16((ushort)(char)value, writer); return true;
                 case TypeCode.Double: ProtoWriter.WriteDouble((double)value, writer); return true;
                 case TypeCode.Single: ProtoWriter.WriteSingle((float)value, writer); return true;
@@ -304,8 +304,8 @@ namespace ProtoBuf.Meta
                         case TypeCode.UInt32: value = reader.ReadUInt32(); continue;
                         case TypeCode.UInt64: value = reader.ReadUInt64(); continue;
                         case TypeCode.Boolean: value = reader.ReadBoolean(); continue;
-                        case TypeCode.SByte: throw new NotImplementedException();
-                        case TypeCode.Byte: throw new NotImplementedException();
+                        case TypeCode.SByte: value = reader.ReadSByte(); continue;
+                        case TypeCode.Byte: value = reader.ReadByte(); continue;
                         case TypeCode.Char: value = (char)reader.ReadUInt16(); continue;
                         case TypeCode.Double: value = reader.ReadDouble(); continue;
                         case TypeCode.Single: value = reader.ReadSingle(); continue;

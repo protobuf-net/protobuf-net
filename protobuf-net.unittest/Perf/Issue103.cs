@@ -50,10 +50,10 @@ using ProtoBuf.Meta;
                 typeB.containedType.Add(inner);
             }
             var model = CreateModel();
-            RunTestIssue103(100, typeA, typeB, model, "Runtime");
+            RunTestIssue103(5000, typeA, typeB, model, "Runtime");
             model.CompileInPlace();
-            RunTestIssue103(1000, typeA, typeB, model, "CompileInPlace");
-            RunTestIssue103(1000, typeA, typeB, model.Compile(), "Compile");
+            RunTestIssue103(50000, typeA, typeB, model, "CompileInPlace");
+            RunTestIssue103(50000, typeA, typeB, model.Compile(), "Compile");
             
 
         }

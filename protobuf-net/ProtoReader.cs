@@ -203,6 +203,23 @@ namespace ProtoBuf
         {
             checked { return (ushort)ReadUInt32(); }
         }
+
+        /// <summary>
+        /// Reads an unsigned 8-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
+        public byte ReadByte()
+        {
+            checked { return (byte)ReadUInt32(); }
+        }
+
+        /// <summary>
+        /// Reads a signed 8-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+        /// </summary>
+        public sbyte ReadSByte()
+        {
+            checked { return (sbyte)ReadInt32(); }
+        }
+
         /// <summary>
         /// Reads a signed 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
@@ -444,7 +461,7 @@ namespace ProtoBuf
                     break;
                 // case WireType.None: // TODO reinstate once reads reset the wire-type
                 default:
-                    if (value < reader.position) throw AddErrorData(new ArgumentException("token"), reader);
+                    if (value < reader.position) throw reader.BorkedIt();
                     if (reader.blockEnd != reader.position && reader.blockEnd != int.MaxValue) throw reader.BorkedIt();
                     reader.blockEnd = value;
                     reader.depth--;

@@ -259,10 +259,10 @@ namespace ProtoBuf.Meta
                     return new DecimalSerializer();
                 case TypeCode.Byte:
                     defaultWireType = WireType.Variant;
-                    throw new NotImplementedException();
+                    return new ByteSerializer();
                 case TypeCode.SByte:
                     defaultWireType = WireType.Variant;
-                    throw new NotImplementedException();
+                    return new SByteSerializer();
                 case TypeCode.Char:
                     defaultWireType = WireType.Variant;
                     return new CharSerializer();

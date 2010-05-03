@@ -484,6 +484,14 @@ namespace ProtoBuf
         {
             ProtoWriter.WriteUInt32(value, writer);
         }
+        public static void WriteByte(byte value, ProtoWriter writer)
+        {
+            ProtoWriter.WriteUInt32(value, writer);
+        }
+        public static void WriteSByte(sbyte value, ProtoWriter writer)
+        {
+            ProtoWriter.WriteInt32(value, writer);
+        }
         private static void WriteInt32ToBuffer(int value, byte[] buffer, int index)
         {
             buffer[index] = (byte)value;

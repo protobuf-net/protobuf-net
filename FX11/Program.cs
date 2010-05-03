@@ -284,7 +284,12 @@ namespace FX11
             
             WriteHeading(".NET version");
             Console.WriteLine(Environment.Version);
-            
+
+            RuntimeTypeModel orderModel = TypeModel.Create();
+            orderModel.Add(typeof(OrderHeader), true);
+            orderModel.Add(typeof(OrderDetail), true);
+            orderModel.Compile("OrderSerializer", "OrderSerializer.dll");
+
             RuntimeTypeModel model = BuildMeta();
             Customer cust1 = new Customer();
             CustomerStruct cust2 = new CustomerStruct();
@@ -306,6 +311,7 @@ namespace FX11
 
            TypeModel compiled = model.Compile("CustomerModel", "CustomerModel.dll");
            PEVerify.Verify("CustomerModel.dll");
+           compiled = model.Compile("CustomerModel", "CustomerModel.dll");
            WriteCustomer(compiled, "Compiled - class", cust2);
            WriteCustomer(compiled, "Compiled - struct", cust2);
             /*
