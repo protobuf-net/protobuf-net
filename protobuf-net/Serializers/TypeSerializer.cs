@@ -108,10 +108,6 @@ namespace ProtoBuf.Serializers
             //Helpers.DebugWriteLine("<< Writing fields for " + forType.FullName);
             if (applyCallbacks) Callback(value, TypeModel.CallbackType.AfterSerialize);
         }
-        public override string ToString()
-        {
-            return "type : " + forType.FullName;
-        }
         public object Read(object value, ProtoReader source)
         {
             if (applyCallbacks && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize); } 

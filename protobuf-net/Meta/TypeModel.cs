@@ -128,6 +128,11 @@ namespace ProtoBuf.Meta
                 ThrowUnexpectedType(type);
             }
         }
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied stream.
+        /// </summary>
+        /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="dest">The destination stream to write to.</param>
         public void Serialize(Stream dest, object value)
         {
             using (ProtoWriter writer = new ProtoWriter(dest, this))
@@ -380,8 +385,13 @@ namespace ProtoBuf.Meta
 
             return null;
         }
-
-
+        /// <summary>
+        /// Indicates whether the supplied type is explicitly modelled by the model
+        /// </summary>
+        public bool IsDefined(Type type)
+        {
+            return GetKey(type) >= 0;
+        }
         protected internal int GetKey(Type type)
         {
             int key = GetKeyImpl(type);
@@ -403,11 +413,31 @@ namespace ProtoBuf.Meta
         //}
         //internal ProtoSerializer Compile
 
+        /// <summary>
+        /// Indicates the type of callback to be used
+        /// </summary>
         protected internal enum CallbackType
         {
-            BeforeSerialize, AfterSerialize, BeforeDeserialize, AfterDeserialize
+            /// <summary>
+            /// Invoked before an object is serialized
+            /// </summary>
+            BeforeSerialize,
+            /// <summary>
+            /// Invoked after an object is serialized
+            /// </summary>
+            AfterSerialize,
+            /// <summary>
+            /// Invoked before an object is deserialized (or when a new instance is created)
+            /// </summary>            
+            BeforeDeserialize,
+            /// <summary>
+            /// Invoked after an object is deserialized
+            /// </summary>
+            AfterDeserialize
         }
-
+        /// <summary>
+        /// Create a deep clone of the supplied instance; any sub-items are also cloned.
+        /// </summary>
         public object DeepClone(object value)
         {
             if (value == null) return null;
@@ -457,6 +487,11 @@ namespace ProtoBuf.Meta
             
 
         }
+
+        /// <summary>
+        /// Indicates that while an inheritance tree exists, the exact type encountered was not
+        /// specified in that hierarchy and cannot be processed.
+        /// </summary>
         protected internal static void ThrowUnexpectedSubtype(Type expected, Type actual)
         {
             if (expected != TypeModel.ResolveProxies(actual))
@@ -464,10 +499,17 @@ namespace ProtoBuf.Meta
                 throw new InvalidOperationException("Unexpected sub-type: " + actual.FullName);
             }
         }
+        /// <summary>
+        /// Indicates that the given type was not expected, and cannot be processed.
+        /// </summary>
         protected static void ThrowUnexpectedType(Type type)
         {
             throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + type.FullName);
         }
+        /// <summary>
+        /// Indicates that the given type cannot be constructed; it may still be possible to 
+        /// deserialize into existing instances.
+        /// </summary>
         protected internal static void ThrowCannotCreateInstance(Type type)
         {
             throw new InvalidOperationException("Cannot create an instance of type; no suitable constructor found: " + type.FullName);

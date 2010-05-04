@@ -49,10 +49,6 @@ namespace ProtoBuf.Serializers
         {
             return ProtoReader.ReadObject(value, key, source);
         }
-        public override string ToString()
-        {
-            return "sub-type : " + type.FullName;
-        }
 #if FEAT_COMPILER
         bool EmitDedicatedMethod(Compiler.CompilerContext ctx, Compiler.Local valueFrom, bool read)
         {

@@ -6,6 +6,9 @@ using System.Runtime.Serialization;
 
 namespace ProtoBuf.Meta
 {
+    /// <summary>
+    /// Represents the set of serialization callbacks to be used when serializing/deserializing a type.
+    /// </summary>
     public class CallbackSet
     {
         private readonly MetaType metaType;

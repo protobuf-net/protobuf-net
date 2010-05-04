@@ -5,12 +5,29 @@ using ProtoBuf.Serializers;
 
 namespace ProtoBuf.Meta
 {
-    public class SubType
+    /// <summary>
+    /// Represents an inherited type in a type hierarchy.
+    /// </summary>
+    public sealed class SubType
     {
         private readonly int fieldNumber;
+        /// <summary>
+        /// The field-number that is used to encapsulate the data (as a nested
+        /// message) for the derived dype.
+        /// </summary>
         public int FieldNumber { get { return fieldNumber; } }
+        /// <summary>
+        /// The sub-type to be considered.
+        /// </summary>
         public MetaType DerivedType { get { return derivedType; } }
         private readonly MetaType derivedType;
+
+        /// <summary>
+        /// Creates a new SubType instance.
+        /// </summary>
+        /// <param name="fieldNumber">The field-number that is used to encapsulate the data (as a nested
+        /// message) for the derived dype.</param>
+        /// <param name="derivedType">The sub-type to be considered.</param>
         public SubType(int fieldNumber, MetaType derivedType)
         {
             if (derivedType == null) throw new ArgumentNullException("derivedType");

@@ -12,10 +12,6 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class MetaType : ISerializerProxy
     {
-        public override string ToString()
-        {
-            return "MetaType: " + type.FullName;
-        }
         IProtoSerializer ISerializerProxy.Serializer { get { return Serializer; } }
         private MetaType baseType;
         /// <summary>
@@ -99,6 +95,14 @@ namespace ProtoBuf.Meta
             }
         }
 
+        /// <summary>
+        /// Assigns the callbacks to use during serialiation/deserialization.
+        /// </summary>
+        /// <param name="beforeSerialize">The method (or null) called before serialization begins.</param>
+        /// <param name="afterSerialize">The method (or null) called when serialization is complete.</param>
+        /// <param name="beforeDeserialize">The method (or null) called before deserialization begins (or when a new instance is created during deserialization).</param>
+        /// <param name="afterDeserialize">The method (or null) called when deserialization is complete.</param>
+        /// <returns>The set of callbacks.</returns>
         public MetaType SetCallbacks(MethodInfo beforeSerialize, MethodInfo afterSerialize, MethodInfo beforeDeserialize, MethodInfo afterDeserialize)
         {
             if (type.IsValueType) throw new InvalidOperationException();
@@ -109,6 +113,14 @@ namespace ProtoBuf.Meta
             callbacks.AfterDeserialize = afterDeserialize;
             return this;
         }
+        /// <summary>
+        /// Assigns the callbacks to use during serialiation/deserialization.
+        /// </summary>
+        /// <param name="beforeSerialize">The name of the method (or null) called before serialization begins.</param>
+        /// <param name="afterSerialize">The name of the method (or null) called when serialization is complete.</param>
+        /// <param name="beforeDeserialize">The name of the method (or null) called before deserialization begins (or when a new instance is created during deserialization).</param>
+        /// <param name="afterDeserialize">The name of the method (or null) called when deserialization is complete.</param>
+        /// <returns>The set of callbacks.</returns>
         public MetaType SetCallbacks(string beforeSerialize, string afterSerialize, string beforeDeserialize, string afterDeserialize)
         {
             if (type.IsValueType) throw new InvalidOperationException();
@@ -506,6 +518,11 @@ namespace ProtoBuf.Meta
             return Add(fieldNumber, memberName, null, null, null);
         }
         private bool useConstructor = true;
+        /// <summary>
+        /// Gets or sets whether the type should use a parameterless constructor (the default),
+        /// or whether the type should skip the constructor completely. This option is not supported
+        /// on compact-framework.
+        /// </summary>
         public bool UseConstructor
         {
             get { return useConstructor; }

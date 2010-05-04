@@ -14,13 +14,16 @@ namespace ProtoBuf.Meta
     /// <summary>
     /// Provides protobuf serialization support for a number of types that can be defined at runtime
     /// </summary>
-    public class RuntimeTypeModel : TypeModel
+    public sealed class RuntimeTypeModel : TypeModel
     {
         private class Singleton
         {
             private Singleton() { }
             internal static readonly RuntimeTypeModel Value = new RuntimeTypeModel(true);
         }
+        /// <summary>
+        /// The default model, used to support ProtoBuf.Serializer
+        /// </summary>
         public static RuntimeTypeModel Default
         {
             get { return Singleton.Value; }
@@ -137,10 +140,16 @@ namespace ProtoBuf.Meta
                 autoAddMissingTypes = value;
             }
         }
+        /// <summary>
+        /// Verifies that the model is still open to changes; if not, an exception is thrown
+        /// </summary>
         protected void ThrowIfFrozen()
         {
             if (frozen) throw new InvalidOperationException("The model cannot be changed once frozen");
         }
+        /// <summary>
+        /// Prevents further changes to this model
+        /// </summary>
         public void Freeze()
         {
             if (isDefault) throw new InvalidOperationException("The default model cannot be frozen");
@@ -200,6 +209,7 @@ namespace ProtoBuf.Meta
         /// standalone compile, but can significantly boost performance
         /// while allowing additional types to be added.
         /// </summary>
+        /// <remarks>An in-place compile can access non-public types / members</remarks>
         public void CompileInPlace()
         {
             foreach (MetaType type in types)
@@ -273,6 +283,11 @@ namespace ProtoBuf.Meta
             }
         }
 
+        /// <summary>
+        /// Fully compiles the current model into a static-compiled model instance
+        /// </summary>
+        /// <remarks>A full compilation is restricted to accessing public types / members</remarks>
+        /// <returns>An instance of the newly created compiled type-model</returns>
         public TypeModel Compile()
         {
             return Compile(null, null);
@@ -292,6 +307,14 @@ namespace ProtoBuf.Meta
             type.DefineMethodOverride(newMethod, baseMethod);
             return il;
         }
+        /// <summary>
+        /// Fully compiles the current model into a static-compiled serialization dll
+        /// (the serialization dll still requires protobuf-net for support services).
+        /// </summary>
+        /// <remarks>A full compilation is restricted to accessing public types / members</remarks>
+        /// <param name="name">The name of the TypeModel class to create</param>
+        /// <param name="path">The path for the new dll</param>
+        /// <returns>An instance of the newly created compiled type-model</returns>
         public TypeModel Compile(string name, string path)
         {
             Freeze();

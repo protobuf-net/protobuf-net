@@ -5,7 +5,6 @@ namespace ProtoBuf
 {
     /// <summary>Specifies a method on the root-contract in an hierarchy to be invoked before serialization.</summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    [System.Obsolete("v2 support not yet implemented", false)]
 #if !CF && !SILVERLIGHT
     [ImmutableObject(true)]
 #endif
@@ -13,7 +12,6 @@ namespace ProtoBuf
 
     /// <summary>Specifies a method on the root-contract in an hierarchy to be invoked after serialization.</summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    [System.Obsolete("v2 support not yet implemented", false)]
 #if !CF && !SILVERLIGHT
     [ImmutableObject(true)]
 #endif
@@ -21,7 +19,6 @@ namespace ProtoBuf
 
     /// <summary>Specifies a method on the root-contract in an hierarchy to be invoked before deserialization.</summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    [System.Obsolete("v2 support not yet implemented", false)]
 #if !CF && !SILVERLIGHT
     [ImmutableObject(true)]
 #endif
@@ -29,7 +26,6 @@ namespace ProtoBuf
 
     /// <summary>Specifies a method on the root-contract in an hierarchy to be invoked after deserialization.</summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
-    [System.Obsolete("v2 support not yet implemented", false)]
 #if !CF && !SILVERLIGHT
     [ImmutableObject(true)]
 #endif

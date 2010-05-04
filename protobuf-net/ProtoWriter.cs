@@ -18,6 +18,12 @@ namespace ProtoBuf
     {
         private Stream dest;
         TypeModel model;
+        /// <summary>
+        /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type).
+        /// </summary>
+        /// <param name="value">The object to write.</param>
+        /// <param name="key">The key that uniquely identifies the type within the model.</param>
+        /// <param name="writer">The destination.</param>
         public static void WriteObject(object value, int key, ProtoWriter writer)
         {
             if (writer.model == null)
@@ -59,6 +65,9 @@ namespace ProtoBuf
         private int fieldNumber, flushLock;
         WireType wireType;
 
+        /// <summary>
+        /// Writes a field-header, indicating the format of the next data we plan to write.
+        /// </summary>
         public static void WriteFieldHeader(int fieldNumber, WireType wireType, ProtoWriter writer) {
             if (writer.wireType != WireType.None) throw new InvalidOperationException("Cannot write a " + wireType
                 + " header until the " + writer.wireType + " data has been written");
@@ -91,10 +100,16 @@ namespace ProtoBuf
             WriteUInt32Variant(header, writer);
         }
 
+        /// <summary>
+        /// Writes a byte-array to the stream; supported wire-types: String
+        /// </summary>
         public static void WriteBytes(byte[] data, ProtoWriter writer)
         {
             ProtoWriter.WriteBytes(data, 0, data.Length, writer);
         }
+        /// <summary>
+        /// Writes a byte-array to the stream; supported wire-types: String
+        /// </summary>
         public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer)
         {
             if (data == null) throw new ArgumentNullException("blob");
@@ -139,6 +154,12 @@ namespace ProtoBuf
         }
         int depth = 0;
         const int RecursionCheckDepth = 25;
+        /// <summary>
+        /// Indicates the start of a nested record.
+        /// </summary>
+        /// <param name="instance">The instance to write.</param>
+        /// <param name="writer">The destination.</param>
+        /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
         {
             return StartSubItem(instance, writer, false);
@@ -186,6 +207,12 @@ namespace ProtoBuf
                     throw CreateException(writer);
             }
         }
+
+        /// <summary>
+        /// Indicates the end of a nested record.
+        /// </summary>
+        /// <param name="token">The token obtained from StartubItem.</param>
+        /// <param name="writer">The destination.</param>
         public static void EndSubItem(SubItemToken token, ProtoWriter writer)
         {
             EndSubItem(token, writer, PrefixStyle.Base128);
@@ -258,6 +285,11 @@ namespace ProtoBuf
             // and this object is no longer a blockage
             writer.flushLock--;
         }
+        /// <summary>
+        /// Creates a new writer against a stream
+        /// </summary>
+        /// <param name="dest">The destination stream</param>
+        /// <param name="model">The model to use for serialization</param>
         public ProtoWriter(Stream dest, TypeModel model)
         {
             if (dest == null) throw new ArgumentNullException("dest");
@@ -278,6 +310,7 @@ namespace ProtoBuf
             if (dest != null)
             {
                 Flush(this);
+                dest.Flush(); // down and down it goes...
                 dest = null;
             }
             model = null;
@@ -302,6 +335,10 @@ namespace ProtoBuf
                 BufferPool.ResizeAndFlushLeft(ref writer.ioBuffer, required + writer.ioIndex, 0, writer.ioIndex);
             }
         }
+        /// <summary>
+        /// Flushes data to the underlying stream, and releases any resources. The underlying stream is *not* disposed
+        /// by this operation.
+        /// </summary>
         public void Close()
         {
             if (depth != 0 || flushLock != 0) throw new InvalidOperationException("Unable to close stream in an incomplete state");
@@ -318,9 +355,12 @@ namespace ProtoBuf
             if (writer.flushLock == 0 && writer.ioIndex != 0)
             {
                 writer.dest.Write(writer.ioBuffer, 0, writer.ioIndex);
-                writer.ioIndex = 0;
+                writer.ioIndex = 0;                
             }
         }
+        /// <summary>
+        /// Writes an unsigned 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
         private static void WriteUInt32Variant(uint value, ProtoWriter writer)
         {
             DemandSpace(5, writer);
@@ -355,6 +395,9 @@ namespace ProtoBuf
             writer.ioBuffer[writer.ioIndex - 1] &= 0x7F;
             writer.position += count;
         }
+        /// <summary>
+        /// Writes a string to the stream; supported wire-types: String
+        /// </summary>
         public static void WriteString(string value, ProtoWriter writer)
         {
             if (writer.wireType != WireType.String) throw CreateException(writer);
@@ -381,6 +424,9 @@ namespace ProtoBuf
 #endif
             IncrementedAndReset(actual, writer);
         }
+        /// <summary>
+        /// Writes an unsigned 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
         public static void WriteUInt64(ulong value, ProtoWriter writer)
         {
             switch (writer.wireType)
@@ -400,6 +446,9 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Writes a signed 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+        /// </summary>
         public static void WriteInt64(long value, ProtoWriter writer)
         {
             byte[] buffer;
@@ -456,6 +505,9 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
         public static void WriteUInt32(uint value, ProtoWriter writer)
         {
             switch (writer.wireType)
@@ -476,18 +528,30 @@ namespace ProtoBuf
         }
 
 
+        /// <summary>
+        /// Writes a signed 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+        /// </summary>
         public static void WriteInt16(short value, ProtoWriter writer)
         {
             ProtoWriter.WriteInt32(value, writer);
         }
+        /// <summary>
+        /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
         public static void WriteUInt16(ushort value, ProtoWriter writer)
         {
             ProtoWriter.WriteUInt32(value, writer);
         }
+        /// <summary>
+        /// Writes an unsigned 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
         public static void WriteByte(byte value, ProtoWriter writer)
         {
             ProtoWriter.WriteUInt32(value, writer);
         }
+        /// <summary>
+        /// Writes a signed 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+        /// </summary>
         public static void WriteSByte(sbyte value, ProtoWriter writer)
         {
             ProtoWriter.WriteInt32(value, writer);
@@ -499,6 +563,10 @@ namespace ProtoBuf
             buffer[index + 2] = (byte)(value >> 16);
             buffer[index + 3] = (byte)(value >> 24);
         }
+
+        /// <summary>
+        /// Writes a signed 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
+        /// </summary>
         public static void WriteInt32(int value, ProtoWriter writer)
         {
             byte[] buffer;
@@ -553,12 +621,15 @@ namespace ProtoBuf
             }
             
         }
-
+        /// <summary>
+        /// Writes a double-precision number to the stream; supported wire-types: Fixed32, Fixed64
+        /// </summary>
         public
 #if !FEAT_SAFE
             unsafe
 #endif
-            static void WriteDouble(double value, ProtoWriter writer)
+
+                static void WriteDouble(double value, ProtoWriter writer)
         {
             switch (writer.wireType)
             {
@@ -582,6 +653,9 @@ namespace ProtoBuf
                     throw CreateException(writer);
             }
         }
+        /// <summary>
+        /// Writes a single-precision number to the stream; supported wire-types: Fixed32, Fixed64
+        /// </summary>
         public 
 #if !FEAT_SAFE
             unsafe

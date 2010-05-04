@@ -129,6 +129,15 @@ namespace ProtoBuf.Meta
             set { ThrowIfFrozen(); isStrict = value; }
         }
         private MethodInfo getSpecified, setSpecified;
+        /// <summary>
+        /// Specifies methods for working with optional data members.
+        /// </summary>
+        /// <param name="getSpecified">Provides a method (null for none) to query whether this member should
+        /// be serialized; it must be of the form "bool {Method}()". The member is only serialized if the
+        /// method returns true.</param>
+        /// <param name="setSpecified">Provides a method (null for none) to indicate that a member was
+        /// deserialized; it must be of the form "void {Method}(bool)", and will be called with "true"
+        /// when data is found.</param>
         public void SetSpecified(MethodInfo getSpecified, MethodInfo setSpecified)
         {
             if (getSpecified != null)

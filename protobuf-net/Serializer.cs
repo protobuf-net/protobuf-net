@@ -5,12 +5,25 @@ using System.IO;
 using System.Collections.Generic;
 namespace ProtoBuf
 {
+    /// <summary>
+    /// Provides protocol-buffer serialization capability for concrete, attributed types. This
+    /// is a *default* model, but custom serializer models are also supported.
+    /// </summary>
+    /// <remarks>
+    /// Protocol-buffer serialization is a compact binary format, designed to take
+    /// advantage of sparse data and knowledge of specific data types; it is also
+    /// extensible, allowing a type to be deserialized / merged even if some data is
+    /// not recognised.
+    /// </remarks>
     public static partial class Serializer
     {
         public static string GetProto<T>()
         {
             throw new NotImplementedException();
         }
+        /// <summary>
+        /// Create a deep clone of the supplied instance; any sub-items are also cloned.
+        /// </summary>
         public static T DeepClone<T>(T instance)
         {
             return instance == null ? instance : (T)RuntimeTypeModel.Default.DeepClone(instance);
@@ -19,10 +32,21 @@ namespace ProtoBuf
         {
             return (T)RuntimeTypeModel.Default.Deserialize(source, instance, typeof(T));
         }
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream
+        /// </summary>
+        /// <typeparam name="T">The type to be created.</typeparam>
+        /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
+        /// <returns>A new, initialized instance.</returns>
         public static T Deserialize<T>(Stream source)
         {
             return (T) RuntimeTypeModel.Default.Deserialize(source, null, typeof(T));
         }
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied stream.
+        /// </summary>
+        /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="destination">The destination stream to write to.</param>
         public static void Serialize<T>(Stream destination, T instance)
         {
             if(instance != null) {
@@ -129,14 +153,6 @@ namespace ProtoBuf
             }
         }
 #endif
-        /*
-        internal static void CheckTagNotInUse(Type type, int tag)
-        {
-            if (RuntimeTypeModel.Default.IsDefined(type, tag))
-            {
-                throw new InvalidOperationException();
-            }
-        }*/
 
         public static void PrepareSerializer<T>() where T : class
         { 
@@ -145,6 +161,10 @@ namespace ProtoBuf
 #endif
         }
 
+        /// <summary>
+        /// The field number that is used as a default when serializing/deserializing a list of objects.
+        /// The data is treated as repeated message with field number 1.
+        /// </summary>
         public const int ListItemTag = 1;
 #if PLAT_BINARYFORMATTER
         public static System.Runtime.Serialization.IFormatter CreateFormatter<T>()

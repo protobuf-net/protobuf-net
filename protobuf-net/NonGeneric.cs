@@ -6,13 +6,24 @@ namespace ProtoBuf
 {
     public static partial class Serializer
     {
+        /// <summary>
+        /// Provides non-generic access to the default serializer.
+        /// </summary>
         public static class NonGeneric
         {
+            /// <summary>
+            /// Create a deep clone of the supplied instance; any sub-items are also cloned.
+            /// </summary>
             public static object DeepClone(object instance)
             {
                 return instance == null ? null : RuntimeTypeModel.Default.DeepClone(instance);
             }
 
+            /// <summary>
+            /// Writes a protocol-buffer representation of the given instance to the supplied stream.
+            /// </summary>
+            /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+            /// <param name="dest">The destination stream to write to.</param>
             public static void Serialize(Stream dest, object instance)
             {
                 if (instance != null)
@@ -21,6 +32,12 @@ namespace ProtoBuf
                 }
             }
 
+            /// <summary>
+            /// Creates a new instance from a protocol-buffer stream
+            /// </summary>
+            /// <param name="type">The type to be created.</param>
+            /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
+            /// <returns>A new, initialized instance.</returns>
             public static object Deserialize(Type type, Stream source)
             {
                 return RuntimeTypeModel.Default.Deserialize(source, null, type);
@@ -33,9 +50,12 @@ namespace ProtoBuf
             {
                 throw new NotImplementedException();
             }
+            /// <summary>
+            /// Indicates whether the supplied type is explicitly modelled by the model
+            /// </summary>
             public static bool CanSerialize(Type type)
             {
-                throw new NotImplementedException();
+                return RuntimeTypeModel.Default.IsDefined(type);
             }
             
         }

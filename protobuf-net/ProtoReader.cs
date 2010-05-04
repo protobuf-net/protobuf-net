@@ -24,6 +24,9 @@ namespace ProtoBuf
 
         private int fieldNumber;
         WireType wireType = WireType.None;
+        /// <summary>
+        /// Gets the number of the field being processed.
+        /// </summary>
         public int FieldNumber { get { return fieldNumber; } }
         
         internal ProtoReader(Stream source, TypeModel model) :
