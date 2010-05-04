@@ -13,6 +13,7 @@ namespace ProtoBuf.Meta
         private WireType GetDefaultWireType(TypeCode code, Type type, out bool isSubObject)
         {
             isSubObject = false;
+            if (type.IsEnum) return WireType.None;
             switch (code)
             {
                 case TypeCode.Int16:
@@ -30,6 +31,7 @@ namespace ProtoBuf.Meta
                     return WireType.Fixed64;
                 case TypeCode.Single:
                     return WireType.Fixed32;
+                case TypeCode.String:
                 case TypeCode.DateTime:
                 case TypeCode.Decimal:
                     return WireType.String;
@@ -73,6 +75,7 @@ namespace ProtoBuf.Meta
                 case TypeCode.Single: ProtoWriter.WriteSingle((float)value, writer); return true;
                 case TypeCode.DateTime: BclHelpers.WriteDateTime((DateTime)value, writer); return true;
                 case TypeCode.Decimal: BclHelpers.WriteDecimal((decimal)value, writer); return true;
+                case TypeCode.String: ProtoWriter.WriteString((string)value, writer); return true;
             }
             if (type == typeof(byte[]))  {ProtoWriter.WriteBytes((byte[])value, writer); return true;}
             if (type == typeof(TimeSpan)) { BclHelpers.WriteTimeSpan((TimeSpan)value, writer); return true;}
@@ -311,6 +314,7 @@ namespace ProtoBuf.Meta
                         case TypeCode.Single: value = reader.ReadSingle(); continue;
                         case TypeCode.DateTime: value = BclHelpers.ReadDateTime(reader); continue;
                         case TypeCode.Decimal: BclHelpers.ReadDecimal(reader); continue;
+                        case TypeCode.String: value = reader.ReadString(); continue;
                     }
                     if (type == typeof(byte[])) { value = ProtoReader.AppendBytes((byte[])value,reader); continue; }
                     if (type == typeof(TimeSpan)) { value = BclHelpers.ReadTimeSpan(reader); continue; }
@@ -344,6 +348,7 @@ namespace ProtoBuf.Meta
                             list = (IList)(value = Activator.CreateInstance(concreteListType));
                         }
                         list.Add(newItem);
+                        continue;
                     }
                 }
                 reader.SkipField();
@@ -444,6 +449,7 @@ namespace ProtoBuf.Meta
                 ms.Position = 0;
                 using (ProtoReader reader = new ProtoReader(ms, this))
                 {
+                    value = null; // start from scratch!
                     if (!TryDeserializeAuxiliaryType(reader, type, ref value)) ThrowUnexpectedType(type);
                     return value;
                 }

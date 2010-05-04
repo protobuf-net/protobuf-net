@@ -2,6 +2,8 @@
 using NUnit.Framework;
 using ProtoBuf;
 using System;
+using System.IO;
+using System.Text;
 
 namespace Examples
 {
@@ -115,9 +117,31 @@ namespace Examples
         public void TestCloneAsParentList()
         {
             var parents = new List<IMLParent> { CreateChild() };
+            Assert.AreEqual(1, parents.Count, "Original list (before)");
+            using (var ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, parents);
+                StringBuilder sb = new StringBuilder();
+                foreach (byte b in ms.ToArray())
+                {
+                    sb.Append(b.ToString("x2"));
+                }
+                string s = sb.ToString();
+                Assert.AreEqual("0a071202087b08c803", s);
+                /* expected:
+                 * field 1, WT string (instance in list)    0A
+                 * length [x]                               07
+                 * field 2, WT string (subclass, child)     12
+                 * length [x]                               02
+                 * field 1, WT variant (ChildProperty)      08
+                 * value 123                                7B
+                 * field 1, WT variant (ParentProperty)     08
+                 * value 456                                C8 03
+                */
+            }
             var clone = Serializer.DeepClone(parents);
-            Assert.AreEqual(1, parents.Count);
-            Assert.AreEqual(1, clone.Count);
+            Assert.AreEqual(1, parents.Count, "Original list (after)");
+            Assert.AreEqual(1, clone.Count, "Cloned list");
             CheckParent(parents[0], clone[0]);
         }
         [Test]
