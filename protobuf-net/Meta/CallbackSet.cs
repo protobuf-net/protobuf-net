@@ -44,7 +44,11 @@ namespace ProtoBuf.Meta
             if (callback == null) return callback; // fine
             if (callback.IsStatic) throw new ArgumentException("Callbacks cannot be static", "callback");
             ParameterInfo[] args = callback.GetParameters();
-            if (callback.ReturnType == typeof(void) && (args.Length == 0 || (args.Length == 1 && args[0].ParameterType == typeof(StreamingContext)))) { }
+            if (callback.ReturnType == typeof(void) && (args.Length == 0
+#if PLAT_BINARYFORMATTER
+                || (args.Length == 1 && args[0].ParameterType == typeof(StreamingContext))
+#endif
+                )) { }
             else throw new ArgumentException("Invalid callback signature", "callback");
             return callback;
         }

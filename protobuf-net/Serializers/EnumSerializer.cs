@@ -108,7 +108,7 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException();//TODO: NotImplementedException
                 //ctx.EmitBasicWrite("WriteInt32", valueFrom);
             }
             
@@ -122,7 +122,7 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException();//TODO: NotImplementedException
                 //ctx.EmitBasicRead("ReadInt32", ExpectedType);
             }
         }

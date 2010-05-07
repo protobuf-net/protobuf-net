@@ -28,13 +28,24 @@ namespace ProtoBuf.Meta
         {
             get { return Singleton.Value; }
         }
+        /// <summary>
+        /// Returns a sequence of the Type instances that can be
+        /// processed by this model.
+        /// </summary>
         public IEnumerable GetTypes() { return types; }
         private readonly bool isDefault;
         internal RuntimeTypeModel(bool isDefault)
         {
             AutoAddMissingTypes = true;
             this.isDefault = isDefault;
+#if !DEBUG
+            autoCompile = true; 
+#endif
         }
+        /// <summary>
+        /// Obtains the MetaType associated with a given Type for the current model,
+        /// allowing additional configuration.
+        /// </summary>
         public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false)]; } }
         internal MetaType FindWithoutAdd(Type type)
         {
@@ -109,6 +120,22 @@ namespace ProtoBuf.Meta
             ThrowIfFrozen();
             return new MetaType(this, type);
         }
+        /// <summary>
+        /// Adds support for an additional type in this model, optionally
+        /// appplying inbuilt patterns.
+        /// </summary>
+        /// <remarks>Inbuild patterns include:
+        /// [ProtoContract]/[ProtoMember(n)]
+        /// [DataContract]/[DataMember(Order=n)]
+        /// [XmlType]/[XmlElement(Order=n)]
+        /// [On{Des|S}erializ{ing|ed}]
+        /// ShouldSerialize*/*Specified
+        /// </remarks>
+        /// <param name="type">The type to be supported</param>
+        /// <param name="applyDefaultBehaviour">Whether to apply the inbuilt patterns, or
+        /// jut add the type with no additional configuration.</param>
+        /// <returns>The MetaType representing this type, allowing
+        /// further configuration.</returns>
         public MetaType Add(Type type, bool applyDefaultBehaviour)
         {
             if (type == null) throw new ArgumentNullException("type");
@@ -125,9 +152,25 @@ namespace ProtoBuf.Meta
             }
             if (weAdded && applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
             return newType;
-        }        
+        }
 
-        bool frozen, autoAddMissingTypes;
+        bool frozen, autoAddMissingTypes, autoCompile;
+
+        /// <summary>
+        /// Should serializers be compiled on demand? It may be useful
+        /// to disable this for debugging purposes.
+        /// </summary>
+        public bool AutoCompile
+        {
+            get { return autoCompile; }
+            set { autoCompile = value; }
+        }
+
+        /// <summary>
+        /// Should support for unexpected types be added automatically?
+        /// If false, an exception is thrown when unexpected types
+        /// are encountered.
+        /// </summary>
         public bool AutoAddMissingTypes
         {
             get { return autoAddMissingTypes; }
@@ -143,7 +186,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Verifies that the model is still open to changes; if not, an exception is thrown
         /// </summary>
-        protected void ThrowIfFrozen()
+        private void ThrowIfFrozen()
         {
             if (frozen) throw new InvalidOperationException("The model cannot be changed once frozen");
         }
@@ -158,6 +201,9 @@ namespace ProtoBuf.Meta
 
         private readonly BasicList types = new BasicList();
 
+        /// <summary>
+        /// Provides the key that represents a given type in the current model.
+        /// </summary>
         protected override int GetKeyImpl(Type type)
         {
             return GetKey(type, false, true);
@@ -176,12 +222,26 @@ namespace ProtoBuf.Meta
             }
             return typeIndex;
         }
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied stream.
+        /// </summary>
+        /// <param name="key">Represents the type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="dest">The destination stream to write to.</param>
         protected internal override void Serialize(int key, object value, ProtoWriter dest)
         {
             //Helpers.DebugWriteLine("Serialize", value);
             ((MetaType)types[key]).Serializer.Write(value, dest);
         }
-
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <param name="key">Represents the type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
         protected internal override object Deserialize(int key, object value, ProtoReader source)
         {
             //Helpers.DebugWriteLine("Deserialize", value);

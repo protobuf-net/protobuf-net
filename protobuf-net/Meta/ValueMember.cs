@@ -76,18 +76,17 @@ namespace ProtoBuf.Meta
                 switch (Type.GetTypeCode(type))
                 {
                     case TypeCode.Boolean: return bool.Parse(s);
-                    case TypeCode.Byte: return byte.Parse(s, CultureInfo.InvariantCulture);
+                    case TypeCode.Byte: return byte.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
                     case TypeCode.Char: // char.Parse missing on CF/phone7
-                        char c;
-                        if (!char.TryParse(s, out c)) throw new FormatException();
-                        return c;
+                        if (s.Length == 1) return s[0];
+                        throw new FormatException("Single character expected: \"" + s + "\"");
                     case TypeCode.DateTime: return DateTime.Parse(s, CultureInfo.InvariantCulture);
                     case TypeCode.Decimal: return decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case TypeCode.Double: return double.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case TypeCode.Int16: return short.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case TypeCode.Int32: return int.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case TypeCode.Int64: return long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    case TypeCode.SByte: return sbyte.Parse(s, CultureInfo.InvariantCulture);
+                    case TypeCode.SByte: return sbyte.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
                     case TypeCode.Single: return float.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case TypeCode.String: return s;
                     case TypeCode.UInt16: return ushort.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);

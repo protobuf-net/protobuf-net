@@ -42,13 +42,34 @@ namespace ProtoBuf
             {
                 return RuntimeTypeModel.Default.Deserialize(source, null, type);
             }
-            public static void SerializeWithLengthPrefix(Stream destination, object instance, PrefixStyle style, int tag)
+            /// <summary>
+            /// Writes a protocol-buffer representation of the given instance to the supplied stream,
+            /// with a length-prefix. This is useful for socket programming,
+            /// as DeserializeWithLengthPrefix/MergeWithLengthPrefix can be used to read the single object back
+            /// from an ongoing stream.
+            /// </summary>
+            /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+            /// <param name="style">How to encode the length prefix.</param>
+            /// <param name="destination">The destination stream to write to.</param>
+            /// <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
+            public static void SerializeWithLengthPrefix(Stream destination, object instance, PrefixStyle style, int fieldNumber)
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException();//TODO: NotImplementedException
             }
-            public static bool TryDeserializeWithLengthPrefix(Stream source, PrefixStyle style, TypeResolver typeReader, out object item)
+            /// <summary>
+            /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
+            /// data - useful with network IO.
+            /// </summary>
+            /// <param name="value">The existing instance to be modified (can be null).</param>
+            /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+            /// <param name="style">How to encode the length prefix.</param>
+            /// <param name="resolver">Used to resolve types on a per-field basis.</param>
+            /// <returns>The updated instance; this may be different to the instance argument if
+            /// either the original instance was null, or the stream defines a known sub-type of the
+            /// original instance.</returns>
+            public static bool TryDeserializeWithLengthPrefix(Stream source, PrefixStyle style, TypeResolver resolver, out object value)
             {
-                throw new NotImplementedException();
+                throw new NotImplementedException();//TODO: NotImplementedException
             }
             /// <summary>
             /// Indicates whether the supplied type is explicitly modelled by the model

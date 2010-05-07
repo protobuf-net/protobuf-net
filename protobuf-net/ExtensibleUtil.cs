@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using ProtoBuf.Meta;
 
 namespace ProtoBuf
 {
@@ -20,7 +21,7 @@ namespace ProtoBuf
         /// </summary>
         internal static IEnumerable<TValue> GetExtendedValues<TValue>(IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException();//TODO: NotImplementedException
             /*if (instance == null) throw new ArgumentNullException("instance");
             return (IEnumerable<TValue>)typeof(ExtensibleUtil)
                 .GetMethod("GetExtendedValuesTyped", BindingFlags.Public | BindingFlags.Static)
@@ -40,8 +41,8 @@ namespace ProtoBuf
             TSource instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
             where TSource : class, IExtensible
         {
-            throw new NotImplementedException();
-#warning excised
+            throw new NotImplementedException();//TODO: NotImplementedException
+
             //if (instance == null) throw new ArgumentNullException("instance");
 
             //if (!allowDefinedTag) { Serializer.CheckTagNotInUse(typeof(TSource),tag); }
@@ -129,19 +130,29 @@ namespace ProtoBuf
             //}
         }
         
-        /// <summary>
-        /// All this does is call AppendExtendValueTyped with the correct type for "instance";
-        /// this ensures that we don't get issues with subclasses declaring conflicting types -
-        /// the caller must respect the fields defined for the type they pass in.
-        /// </summary>
-        internal static void AppendExtendValue<TValue>(IExtensible instance, int tag, DataFormat format, object value)
+        internal static void AppendExtendValue<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
         {
-            throw new NotImplementedException();
-            /*if (instance == null) throw new ArgumentNullException("instance");
-            typeof(ExtensibleUtil)
-                .GetMethod("AppendExtendValueTyped", BindingFlags.Public | BindingFlags.Static)
-                .MakeGenericMethod(instance.GetType(), typeof(TValue))
-                .Invoke(null, new object[] { instance, tag, format, value });*/
+            if(instance == null) throw new ArgumentNullException("instance");
+            if(value == null) throw new ArgumentNullException("value");
+
+            //TODO: CheckTagNotInUse
+            //model.CheckTagNotInUse(tag);
+
+            // obtain the extension object and prepare to write
+            IExtension extn = instance.GetExtensionObject(true);
+            if (extn == null) throw new InvalidOperationException("No extension object available; appended data would be lost.");
+            bool commit = false;
+            Stream stream = extn.BeginAppend();
+            try {
+                using(ProtoWriter writer = new ProtoWriter(stream, model)) {
+                    model.TrySerializeAuxiliaryType(writer, null, format, tag, value);
+                    writer.Close();
+                }
+                commit = true;
+            }
+            finally {
+                extn.EndAppend(stream, commit);
+            }
         }
 
         /// <summary>
@@ -150,32 +161,10 @@ namespace ProtoBuf
         /// </summary>
         /// <remarks>Needs to be public to be callable thru reflection in Silverlight</remarks>
         public static void AppendExtendValueTyped<TSource, TValue>(
-            TSource instance, int tag, DataFormat format, TValue value)
+            TypeModel model, TSource instance, int tag, DataFormat format, TValue value)
             where TSource : class, IExtensible
         {
-#warning excised
-            throw new NotImplementedException();
-            //Serializer<TSource>.CheckTagNotInUse(tag);
-            //Property<TValue, TValue> prop = PropertyFactory.CreatePassThru<TValue>(tag, ref format);
-
-            //IExtension extn = instance.GetExtensionObject(true);
-            //if (extn == null) throw new InvalidOperationException("No extension object available; appended data would be lost.");
-
-            //Stream stream = extn.BeginAppend();
-            //try
-            //{
-            //    SerializationContext ctx = new SerializationContext(stream, null);
-            //    ctx.Push(instance); // for recursion detection
-            //    prop.Serialize(value, ctx);
-            //    ctx.Pop(instance);
-            //    ctx.Flush();
-            //    extn.EndAppend(stream, true);
-            //}
-            //catch
-            //{
-            //    extn.EndAppend(stream, false);
-            //    throw;
-            //}
+            AppendExtendValue<TValue>(model, instance, tag, format, value);
         }
     }
 }

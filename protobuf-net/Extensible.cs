@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using ProtoBuf.Meta;
 
 namespace ProtoBuf
 {
@@ -12,7 +13,6 @@ namespace ProtoBuf
     /// only the paths [such an object would ideally be IDisposable and use
     /// a finalizer to ensure that the files are removed].</remarks>
     /// <seealso cref="IExtensible"/>
-    [System.Obsolete("v2 support not yet implemented", false)]
     public abstract class Extensible : IExtensible
     {
         // note: not marked ProtoContract - no local state, and can't 
@@ -93,7 +93,26 @@ namespace ProtoBuf
         /// <param name="value">The value to append.</param>
         public static void AppendValue<TValue>(IExtensible instance, int tag, DataFormat format, TValue value)
         {
-            ExtensibleUtil.AppendExtendValue<TValue>(instance, tag, format, value);
+            ExtensibleUtil.AppendExtendValue<TValue>(RuntimeTypeModel.Default, instance, tag, format, value);
+        }
+
+        /// <summary>
+        /// Appends the value as an additional (unexpected) data-field for the instance.
+        /// Note that for non-repeated sub-objects, this equates to a merge operation;
+        /// for repeated sub-objects this adds a new instance to the set; for simple
+        /// values the new value supercedes the old value.
+        /// </summary>
+        /// <remarks>Note that appending a value does not remove the old value from
+        /// the stream; avoid repeatedly appending values for the same field.</remarks>
+        /// <typeparam name="TValue">The data-type of the field.</typeparam>
+        /// <param name="model">The model that represents the data.</param>
+        /// <param name="format">The data-format to use when encoding the value.</param>
+        /// <param name="instance">The extensible object to append the value to.</param>
+        /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
+        /// <param name="value">The value to append.</param>
+        public static void AppendValue<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format, TValue value)
+        {
+            ExtensibleUtil.AppendExtendValue<TValue>(model, instance, tag, format, value);
         }
         
         /// <summary>

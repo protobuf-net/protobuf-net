@@ -93,7 +93,7 @@ namespace ProtoBuf
 
             WriteHeaderCore(fieldNumber, wireType, writer);
         }
-        static void WriteHeaderCore(int fieldNumber, WireType wireType, ProtoWriter writer)
+        internal static void WriteHeaderCore(int fieldNumber, WireType wireType, ProtoWriter writer)
         {
             uint header = (((uint)fieldNumber) << 3)
                 | (((uint)wireType) & 7);
@@ -145,6 +145,48 @@ namespace ProtoBuf
             Helpers.BlockCopy(data, offset, writer.ioBuffer, writer.ioIndex, length);
             IncrementedAndReset(length, writer);
         }
+        private static void CopyRawFromStream(Stream source, ProtoWriter writer)
+        {
+            byte[] buffer = writer.ioBuffer;
+            int space = buffer.Length - writer.ioIndex, bytesRead = 1; // 1 here to spoof case where already full
+            
+            // try filling the buffer first   
+            while (space > 0 && (bytesRead = source.Read(buffer, writer.ioIndex, space)) > 0)
+            {
+                writer.ioIndex += bytesRead;
+                writer.position += bytesRead;
+                space -= bytesRead;                
+            }
+            if (bytesRead <= 0) return; // all done using just the buffer; stream exhausted
+
+            // at this point the stream still has data, but buffer is full; 
+            if (writer.flushLock == 0)
+            {
+                // flush the buffer and write to the underlying stream instead
+                Flush(writer);
+                while ((bytesRead = source.Read(buffer, 0, buffer.Length)) > 0)
+                {
+                    writer.dest.Write(buffer, 0, bytesRead);
+                    writer.position += bytesRead;
+                }
+            }
+            else
+            {
+                do
+                {
+                    // need more space; resize (double) as necessary,
+                    // requesting a reasonable minimum chunk each time
+                    // (128 is the minimum; there may actually be much
+                    // more space than this in the buffer)
+                    DemandSpace(128, writer);
+                    if((bytesRead = source.Read(writer.ioBuffer, writer.ioIndex,
+                        writer.ioBuffer.Length - writer.ioIndex)) <= 0) break;
+                    writer.position += bytesRead;
+                    writer.ioIndex += bytesRead;
+                } while (true);
+            }
+
+        }
         private static void IncrementedAndReset(int length, ProtoWriter writer)
         {
             Helpers.DebugAssert(length >= 0);
@@ -169,7 +211,7 @@ namespace ProtoBuf
         private void CheckRecursionStackAndPush(object instance)
         {
             if (recursionStack == null) { recursionStack = new MutableList(); }
-            else if (recursionStack.IndexOfReference(instance) >= 0)
+            else if (instance != null && recursionStack.IndexOfReference(instance) >= 0)
             {
                 throw new ProtoException("Possible recursion detected; " + instance.ToString());
             }
@@ -679,15 +721,41 @@ namespace ProtoBuf
             }
         }
         // general purpose serialization exception message
-        private static Exception CreateException(ProtoWriter writer)
+        internal static Exception CreateException(ProtoWriter writer)
         {
             return new ProtoException("Invalid serialization operation with wire-type " + writer.wireType + " at position " + writer.position);
         }
 
+        /// <summary>
+        /// Writes a boolean to the stream; supported wire-types: Variant, Fixed32, Fixed64
+        /// </summary>
         public static void WriteBoolean(bool value, ProtoWriter writer)
         {
             ProtoWriter.WriteUInt32(value ? (uint)1 : (uint)0, writer);
         }
 
+        /// <summary>
+        /// Copies any extension data stored for the instance to the underlying stream
+        /// </summary>
+        public static void AppendExtensionData(IExtensible instance, ProtoWriter writer)
+        {
+            if (instance == null) throw new ArgumentNullException("instance");
+            // we expect the writer to be raw here; the extension data will have the
+            // header detail, so we'll copy it implicitly
+            if(writer.wireType != WireType.None) throw CreateException(writer);
+
+            IExtension extn = instance.GetExtensionObject(false);
+            if (extn != null)
+            {
+                // unusually we *don't* want "using" here; the "finally" does that, with
+                // the extension object being responsible for disposal etc
+                Stream source = extn.BeginQuery();
+                try
+                {
+                    CopyRawFromStream(source, writer);
+                }
+                finally { extn.EndQuery(source); }
+            }
+        }
     }
 }

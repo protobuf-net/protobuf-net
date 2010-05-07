@@ -597,7 +597,7 @@ namespace ProtoBuf.Meta
                 if (itemType == typeof(byte)) {
                     defaultType = itemType = null;
                 } else {
-                    defaultType = type.MakeArrayType();
+                    defaultType = Helpers.MakeArrayType(type);
                 }
             }
             // handle lists
@@ -652,7 +652,7 @@ namespace ProtoBuf.Meta
                 case MemberTypes.Property:
                     miType = ((PropertyInfo)mi).PropertyType; break;
                 default:
-                    throw new NotSupportedException();
+                    throw new NotSupportedException(mi.MemberType.ToString());
             }
 
             ResolveListTypes(miType, ref itemType, ref defaultType);

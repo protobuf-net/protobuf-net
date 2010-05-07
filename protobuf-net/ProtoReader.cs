@@ -913,18 +913,74 @@ namespace ProtoBuf
             }
             if (count > 0) throw EoF(null);
         }
-        private static Exception AddErrorData(Exception exception, ProtoReader source)
+        internal static Exception AddErrorData(Exception exception, ProtoReader source)
         {
+#if !CF
             if (exception != null && source != null && !exception.Data.Contains("protoSource"))
             {
                 exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
                     source.fieldNumber, source.wireType, source.position, source.depth));
             }
+#endif
             return exception;
             
         }
         private static Exception EoF(ProtoReader source) {
             return AddErrorData(new EndOfStreamException(), source);
+        }
+
+        /// <summary>
+        /// Copies the current field into the instance as extension data
+        /// </summary>
+        public void AppendExtensionData(IExtensible instance)
+        {
+            if (instance == null) throw new ArgumentNullException("instance");
+            IExtension extn = instance.GetExtensionObject(true);
+            bool commit = false;
+            // unusually we *don't* want "using" here; the "finally" does that, with
+            // the extension object being responsible for disposal etc
+            Stream dest = extn.BeginAppend();
+            try
+            {
+                //TODO: replace this with stream-based, buffered raw copying
+                using (ProtoWriter writer = new ProtoWriter(dest, model))
+                {
+                    AppendExtensionField(writer);
+                    writer.Close();
+                }
+                commit = true;
+            }
+            finally { extn.EndAppend(dest, commit); }
+        }
+        private void AppendExtensionField(ProtoWriter writer)
+        {
+            //TODO: replace this with stream-based, buffered raw copying
+            ProtoWriter.WriteFieldHeader(fieldNumber, wireType, writer);
+            switch (wireType)
+            {
+                case WireType.Fixed32:
+                    ProtoWriter.WriteInt32(ReadInt32(), writer);
+                    return;
+                case WireType.Variant:
+                case WireType.SignedVariant:
+                case WireType.Fixed64:
+                    ProtoWriter.WriteInt64(ReadInt64(), writer);
+                    return;
+                case WireType.String:
+                    ProtoWriter.WriteBytes(AppendBytes(null, this), writer);
+                    return;
+                case WireType.StartGroup:
+                    SubItemToken readerToken = StartSubItem(this),
+                        writerToken = ProtoWriter.StartSubItem(null, writer);
+                    while (ReadFieldHeader() > 0) { AppendExtensionField(writer); }
+                    EndSubItem(readerToken, this);
+                    ProtoWriter.EndSubItem(writerToken, writer);
+                    return;
+                case WireType.None: // treat as explicit errorr
+                case WireType.EndGroup: // treat as explicit error
+                default: // treat as implicit error
+                    throw BorkedIt();
+            }
         }
     }
 }

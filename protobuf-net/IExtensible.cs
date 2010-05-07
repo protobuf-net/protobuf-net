@@ -6,7 +6,6 @@ namespace ProtoBuf
     /// <see cref="IExtension">extensions</see>.
     /// </summary>
     /// <remarks>Can be implemented by deriving from <see cref="Extensible"/>.</remarks>
-    [System.Obsolete("v2 support not yet implemented", false)]
     public interface IExtensible
     {
         /// <summary>

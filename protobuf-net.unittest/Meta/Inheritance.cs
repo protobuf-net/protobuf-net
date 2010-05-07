@@ -50,10 +50,11 @@ namespace ProtoBuf.unittest.Meta
         public void CheckKeys()
         {
             var model = CreateModel();
-            Assert.AreEqual(model.GetKey(typeof(SomeBase)), model.GetKey(typeof(SomeDerived)), "Runtime");
+            Type someBase = typeof(SomeBase), someDerived = typeof(SomeDerived);
+            Assert.AreEqual(model.GetKey(ref someBase), model.GetKey(ref someDerived), "Runtime");
 
             TypeModel compiled = model.Compile();
-            Assert.AreEqual(compiled.GetKey(typeof(SomeBase)), compiled.GetKey(typeof(SomeDerived)), "Compiled");
+            Assert.AreEqual(compiled.GetKey(ref someBase), compiled.GetKey(ref someDerived), "Compiled");
         }
         [Test]
         public void GetBackTheRightType_SomeBase()

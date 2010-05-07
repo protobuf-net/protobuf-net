@@ -24,10 +24,10 @@ namespace ProtoBuf.Serializers
         public Type ExpectedType { get { return forType; } }
         private readonly IProtoSerializer[] serializers;
         private readonly int[] fieldNumbers;
-        private readonly bool applyCallbacks, useConstructor;
+        private readonly bool isRootType, useConstructor, isExtensible;
         private readonly CallbackSet callbacks;
         private readonly MethodInfo[] baseCtorCallbacks;
-        public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool applyCallbacks, bool useConstructor, CallbackSet callbacks)
+        public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks)
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(fieldNumbers != null);
@@ -35,16 +35,21 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(fieldNumbers.Length == serializers.Length);
 
             Helpers.Sort(fieldNumbers, serializers);
+            bool hasSubTypes = false;
             for (int i = 1; i < fieldNumbers.Length; i++)
             {
                 if (fieldNumbers[i] == fieldNumbers[i - 1]) throw new InvalidOperationException("Duplicate field-number detected; " +
                            fieldNumbers[i].ToString() + " on: " + forType.FullName);
+                if(!hasSubTypes && serializers[i].ExpectedType != forType)
+                {
+                    hasSubTypes = true;
+                }
             }
             this.forType = forType;
             this.serializers = serializers;
             this.fieldNumbers = fieldNumbers;
             this.callbacks = callbacks;
-            this.applyCallbacks = applyCallbacks;
+            this.isRootType = isRootType;
             this.useConstructor = useConstructor;
             
             if (baseCtorCallbacks != null && baseCtorCallbacks.Length == 0) baseCtorCallbacks = null;
@@ -55,6 +60,15 @@ namespace ProtoBuf.Serializers
                 throw new ArgumentException("Cannot create a TypeSerializer for nullable types", "forType");
             }
 #endif
+            
+            if (typeof(IExtensible).IsAssignableFrom(forType))
+            {
+                if (forType.IsValueType || !isRootType || hasSubTypes)
+                {
+                    throw new NotSupportedException("IExtensible is not supported in structs or classes with inheritance");
+                }
+                isExtensible = true;
+            }
         }
 
         public void Callback(object value, TypeModel.CallbackType callbackType)
@@ -86,10 +100,9 @@ namespace ProtoBuf.Serializers
             return null;
         }
 
-
         public void Write(object value, ProtoWriter dest)
         {
-            if (applyCallbacks) Callback(value, TypeModel.CallbackType.BeforeSerialize);
+            if (isRootType) Callback(value, TypeModel.CallbackType.BeforeSerialize);
             // write inheritance first
             IProtoSerializer next = GetMoreSpecificSerializer(value);
             if (next != null) next.Write(value, dest);
@@ -106,13 +119,15 @@ namespace ProtoBuf.Serializers
                 }
             }
             //Helpers.DebugWriteLine("<< Writing fields for " + forType.FullName);
-            if (applyCallbacks) Callback(value, TypeModel.CallbackType.AfterSerialize);
+            if (isExtensible) ProtoWriter.AppendExtensionData((IExtensible)value, dest);
+            if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize);
         }
         public object Read(object value, ProtoReader source)
         {
-            if (applyCallbacks && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize); } 
+            if (isRootType && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize); } 
             int fieldNumber, lastFieldNumber = 0, lastFieldIndex = 0;
             bool fieldHandled;
+
             //Helpers.DebugWriteLine(">> Reading fields for " + forType.FullName);
             while ((fieldNumber = source.ReadFieldHeader()) > 0)
             {
@@ -144,12 +159,16 @@ namespace ProtoBuf.Serializers
                 {
                     //Helpers.DebugWriteLine(": [" + fieldNumber + "] (unknown)");
                     if (value == null) value = CreateInstance(source);
-                    source.SkipField();
+                    if (isExtensible) {
+                        source.AppendExtensionData((IExtensible)value); 
+                    } else {
+                        source.SkipField();
+                    }
                 }
             }
             //Helpers.DebugWriteLine("<< Reading fields for " + forType.FullName);
             if(value == null) value = CreateInstance(source);
-            if (applyCallbacks) { Callback(value, TypeModel.CallbackType.AfterDeserialize); } 
+            if (isRootType) { Callback(value, TypeModel.CallbackType.AfterDeserialize); } 
             return value;
         }
         private void InvokeCallback(MethodInfo method, object obj)
@@ -173,7 +192,11 @@ namespace ProtoBuf.Serializers
             if (useConstructor)
             {
                 if (forType.IsAbstract) TypeModel.ThrowCannotCreateInstance(forType);
-                obj = Activator.CreateInstance(forType, true);                
+                obj = Activator.CreateInstance(forType
+#if !CF
+                    , true
+#endif
+                    );
             }
             else
             {
@@ -244,6 +267,13 @@ namespace ProtoBuf.Serializers
                     if(ser.ExpectedType == forType) ser.EmitWrite(ctx, loc);
                 }
 
+                // extension data
+                if (isExtensible)
+                {
+                    ctx.LoadValue(loc);
+                    ctx.LoadReaderWriter();
+                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("AppendExtensionData"));
+                }
                 // post-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
             }
@@ -291,7 +321,7 @@ namespace ProtoBuf.Serializers
         }
         private void EmitCallbackIfNeeded(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType) {
             Helpers.DebugAssert(valueFrom != null);
-            if (applyCallbacks && ((IProtoTypeSerializer)this).HasCallbacks(callbackType))
+            if (isRootType && ((IProtoTypeSerializer)this).HasCallbacks(callbackType))
             {
                 ((IProtoTypeSerializer)this).EmitCallback(ctx, valueFrom, callbackType);
             }
@@ -387,7 +417,15 @@ namespace ProtoBuf.Serializers
 
                 EmitCreateIfNull(ctx, expected, loc);
                 ctx.LoadReaderWriter();
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField"));
+                if (isExtensible)
+                {
+                    ctx.LoadValue(loc);
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("AppendExtensionData"));
+                }
+                else
+                {
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField"));
+                }
                 
                 ctx.MarkLabel(@continue);
                 ctx.EmitBasicRead("ReadFieldHeader", typeof(int));

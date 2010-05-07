@@ -11,8 +11,7 @@ namespace ProtoBuf.Serializers
         public ArrayDecorator(IProtoSerializer tail) : base(tail) {
             Helpers.DebugAssert(Tail.ExpectedType != typeof(byte), "Should have used BlobSerializer");
             this.itemType = Tail.ExpectedType;
-            this.arrayType = itemType.MakeArrayType();
-            
+            this.arrayType = Helpers.MakeArrayType(itemType);
         }
         readonly Type arrayType, itemType; // this is, for example, typeof(int[])
         public override Type ExpectedType { get { return arrayType; } }
