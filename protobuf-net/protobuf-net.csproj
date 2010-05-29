@@ -135,6 +135,7 @@
     <Compile Include="IExtensible.cs" />
     <Compile Include="IExtension.cs" />
     <Compile Include="ImplicitFields.cs" />
+    <Compile Include="KeyValuePairProxy.cs" />
     <Compile Include="Meta\BasicList.cs" />
     <Compile Include="Meta\CallbackSet.cs" />
     <Compile Include="Meta\MetaType.cs" />
@@ -160,6 +161,8 @@
     <Compile Include="Serializers\BooleanSerializer.cs" />
     <Compile Include="Serializers\ArrayDecorator.cs" />
     <Compile Include="Serializers\ByteSerializer.cs" />
+    <Compile Include="Serializers\KeyValuePairDecorator.cs" />
+    <Compile Include="Serializers\ListDecorator.cs" />
     <Compile Include="Serializers\SByteSerializer.cs" />
     <Compile Include="Serializers\MemberSpecifiedDecorator.cs" />
     <Compile Include="Serializers\UriDecorator.cs" />
@@ -168,7 +171,6 @@
     <Compile Include="Serializers\GuidSerializer.cs" />
     <Compile Include="Serializers\IProtoTypeSerializer.cs" />
     <Compile Include="Serializers\ISerializerProxy.cs" />
-    <Compile Include="Serializers\ListDecorator.cs" />
     <Compile Include="Serializers\SurrogateSerializer.cs" />
     <Compile Include="Serializers\UInt16Serializer.cs" />
     <Compile Include="Serializers\Int16Serializer.cs" />

@@ -91,6 +91,7 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(@continue);
 
                 ctx.LoadValue(list);
+                ctx.Nop();
                 Type itemType = tail.ExpectedType;
                 if (tail.RequiresOldValue)
                 {
@@ -110,7 +111,7 @@ namespace ProtoBuf.Serializers
                                 ctx.StoreValue(item);
                             }
                             tail.EmitRead(ctx, item);
-                            ctx.LoadValue(item);
+                            if (!tail.ReturnsValue) { ctx.LoadValue(item); }
                         }
                     }
                     else

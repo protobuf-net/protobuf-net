@@ -624,11 +624,20 @@ namespace ProtoBuf.Meta
                 {
                     if (type.IsInterface)
                     {
-                        defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
+                        Type[] genArgs;
+                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
+                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
+                        {
+                            defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
+                        }
+                        else
+                        {
+                            defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
+                        }
                     }
                 }
                 // verify that the default type is appropriate
-                if (defaultType != null && !type.IsAssignableFrom(defaultType)) defaultType = null;
+                if (defaultType != null && !type.IsAssignableFrom(defaultType)) { defaultType = null; }
             }
         }
         /// <summary>

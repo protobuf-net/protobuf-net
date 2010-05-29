@@ -369,6 +369,10 @@ namespace ProtoBuf.Compiler
 #endif
             }
         }
+        public void Nop()
+        {
+            Emit(OpCodes.Nop);
+        }
         public void LoadValue(Local local)
         {
             if (local == null) { /* nothing to do; top of stack */}

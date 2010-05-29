@@ -330,7 +330,25 @@ namespace ProtoBuf.Meta
                 candidates.Add(indexer.PropertyType);
             }
 
-            return candidates.Count == 2 ? (Type)candidates[1] : null;
+            switch (candidates.Count)
+            {
+                case 1:
+                    return null;
+                case 2:
+                    return (Type)candidates[1];
+                case 3:
+                    if (CheckDictionaryAccessors((Type)candidates[1], (Type)candidates[2])) return (Type)candidates[1];
+                    if (CheckDictionaryAccessors((Type)candidates[2], (Type)candidates[1])) return (Type)candidates[2];
+                    break;
+            }
+
+            return null;
+        }
+
+        private static bool CheckDictionaryAccessors(Type pair, Type value)
+        {
+            return pair.IsGenericType && pair.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
+                && pair.GetGenericArguments()[1] == value;
         }
 
         private bool TryDeserializeList(ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref IList list)
@@ -406,10 +424,16 @@ namespace ProtoBuf.Meta
 
                 if (itemType != null)
                 {
-                    IList list = (IList)value;
-                    found = TryDeserializeList(reader, format, tag, type, itemType, ref list);
-                    value = list;
-                    return found;
+                    IList list = value as IList;
+                    if (list != null || (list == null && typeof(IList).IsAssignableFrom(type)))
+                    {
+                        found = TryDeserializeList(reader, format, tag, type, itemType, ref list);
+                        value = list;
+                        return found;
+                    }
+
+                    throw new NotSupportedException("Unknown list variant: " + type.FullName);
+                    
                 }
                 // otherwise, not a happy bunny...
                 ThrowUnexpectedType(type);

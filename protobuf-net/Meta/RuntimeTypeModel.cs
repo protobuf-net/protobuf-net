@@ -86,16 +86,20 @@ namespace ProtoBuf.Meta
 
             if (key < 0)
             {
-                if (!autoAddMissingTypes || (
-                    addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
-                    )
-                {
-                    if (demand) ThrowUnexpectedType(type);
-                    return key;
+                MetaType metaType;
+                // try to recognise a few familiar patterns...
+                if ((metaType = RecogniseCommonTypes(type)) == null)
+                { // otherwise, check if it is a contract
+                    if (!autoAddMissingTypes || (
+                        addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
+                        )
+                    {
+                        if (demand) ThrowUnexpectedType(type);
+                        return key;
+                    }
+                    metaType = Create(type);
                 }
                 
-
-                MetaType metaType = Create(type);
                 bool weAdded = false;
                 lock (types)
                 {   // double-checked
@@ -114,6 +118,17 @@ namespace ProtoBuf.Meta
                 if (weAdded) metaType.ApplyDefaultBehaviour();
             }
             return key;
+        }
+
+        private MetaType RecogniseCommonTypes(Type type)
+        {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+            {
+                MetaType mt = new MetaType(this, type);
+                mt.SetSurrogate(typeof(KeyValuePairSurrogate<,>).MakeGenericType(type.GetGenericArguments()));
+                return mt;
+            }
+            return null;
         }
         private MetaType Create(Type type)
         {
