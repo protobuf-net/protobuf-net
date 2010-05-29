@@ -317,6 +317,7 @@ namespace ProtoBuf
                         {
                             blob[value++] = (byte)((tmp & 0x7F) | 0x80);
                         } while ((tmp >>= 7) != 0);
+                        blob[value - 1] = (byte)(blob[value - 1] & ~0x80);
                         writer.position += offset;
                         writer.ioIndex += offset;
                     }
