@@ -19,31 +19,13 @@ namespace ProtoBuf.Serializers
             if (declaredType.IsArray) throw new ArgumentException("Cannot treat arrays as lists", "declaredType");
             this.declaredType = declaredType;
             this.concreteType = concreteType;
-            isList = typeof(IList).IsAssignableFrom(declaredType);
-
-            Type[] types = { tail.ExpectedType };
+            
             // look for a public list.Add(typedObject) method
-            add = declaredType.GetMethod("Add", types);
-            if (add == null)
-            {   // fallback: look for ICollection<T>'s Add(typedObject) method
-                Type listType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types);
-                if (listType.IsAssignableFrom(declaredType))
-                {
-                    add = listType.GetMethod("Add", types);
-                }
-            }
-
-            if(add == null)
-            {   // fallback: look for a public list.Add(object) method
-                types[0] = typeof(object);
-                add = declaredType.GetMethod("Add", types);
-            }
-            if (add == null && isList)
-            {   // fallback: look for IList's Add(object) method
-                add = typeof(IList).GetMethod("Add", types);
-            }
+            add = TypeModel.ResolveListAdd(declaredType, tail.ExpectedType, out isList);
             if (add == null) throw new InvalidOperationException();
         }
+
+
 
         public override Type ExpectedType { get { return declaredType;  } }
         public override bool RequiresOldValue { get { return true; } }
@@ -91,7 +73,6 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(@continue);
 
                 ctx.LoadValue(list);
-                ctx.Nop();
                 Type itemType = tail.ExpectedType;
                 if (tail.RequiresOldValue)
                 {

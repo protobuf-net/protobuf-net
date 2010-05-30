@@ -293,6 +293,31 @@ namespace ProtoBuf.Meta
             TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false);
             return value;
         }
+        internal static MethodInfo ResolveListAdd(Type listType, Type itemType, out bool isList)
+        {
+            isList = typeof(IList).IsAssignableFrom(listType);
+            Type[] types = { itemType };
+            MethodInfo add = listType.GetMethod("Add", types);
+            if (add == null)
+            {   // fallback: look for ICollection<T>'s Add(typedObject) method
+                Type constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types);
+                if (constuctedListType.IsAssignableFrom(listType))
+                {
+                    add = constuctedListType.GetMethod("Add", types);
+                }
+            }
+
+            if (add == null)
+            {   // fallback: look for a public list.Add(object) method
+                types[0] = typeof(object);
+                add = listType.GetMethod("Add", types);
+            }
+            if (add == null && isList)
+            {   // fallback: look for IList's Add(object) method
+                add = typeof(IList).GetMethod("Add", types);
+            }
+            return add;
+        }
         internal static Type GetListItemType(Type listType)
         {
             Helpers.DebugAssert(listType != null);
@@ -351,14 +376,19 @@ namespace ProtoBuf.Meta
                 && pair.GetGenericArguments()[1] == value;
         }
 
-        private bool TryDeserializeList(ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref IList list)
+        private bool TryDeserializeList(ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
         {
+            bool isList;
+            MethodInfo addMethod = TypeModel.ResolveListAdd(listType, itemType, out isList);
+            if (addMethod == null) throw new NotSupportedException("Unknown list variant: " + listType.FullName);
             bool found = false;
             object nextItem = null;
+            IList list = value as IList;
+            object[] args = isList ? null : new object[1];
             while (TryDeserializeAuxiliaryType(reader, format, tag, itemType, ref nextItem, true, true))
             {
                 found = true;
-                if (list == null)
+                if (value == null)
                 {
                     Type concreteListType = listType;
                     if (!listType.IsClass || listType.IsAbstract || listType.GetConstructor(
@@ -367,37 +397,21 @@ namespace ProtoBuf.Meta
                     {
                         concreteListType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
                     }
-                    list = (IList)(Activator.CreateInstance(concreteListType));
+                    value = (Activator.CreateInstance(concreteListType));
+                    list = value as IList;
                 }
-                list.Add(nextItem);
-
+                if (list == null)
+                {
+                    args[0] = nextItem;
+                    addMethod.Invoke(value, args);
+                }
+                else
+                {
+                    list.Add(nextItem);
+                }
                 nextItem = null;
             }
             return found;
-            /*
-            if (itemType != null)
-                {
-                    object newItem;
-                    IList list = (IList)value;
-                    if (modelKey >= 0)
-                    {
-                        SubItemToken token = ProtoReader.StartSubItem(reader);
-                        newItem = DeserializeCore(reader, itemType, null);
-                        ProtoReader.EndSubItem(token, reader);
-                    }
-                    else
-                    {
-                        newItem = DeserializeCore(reader, itemType, null);
-                    }
-                    //todo: null lists
-                    if (list == null)
-                    {
-                       
-                    }
-                    list.Add(newItem);
-                    continue;
-                }
-            }*/
         }
 
         /// <summary>
@@ -424,16 +438,7 @@ namespace ProtoBuf.Meta
 
                 if (itemType != null)
                 {
-                    IList list = value as IList;
-                    if (list != null || (list == null && typeof(IList).IsAssignableFrom(type)))
-                    {
-                        found = TryDeserializeList(reader, format, tag, type, itemType, ref list);
-                        value = list;
-                        return found;
-                    }
-
-                    throw new NotSupportedException("Unknown list variant: " + type.FullName);
-                    
+                    return TryDeserializeList(reader, format, tag, type, itemType, ref value);                    
                 }
                 // otherwise, not a happy bunny...
                 ThrowUnexpectedType(type);
