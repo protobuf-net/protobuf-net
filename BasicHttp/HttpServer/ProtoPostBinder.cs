@@ -7,11 +7,16 @@ using ProtoBuf;
 
 namespace HttpServer
 {
-    public class ProtoPostBinder : IModelBinder {
-        object IModelBinder.BindModel(ControllerContext controllerContext, ModelBindingContext bindingContext) {
+    public class ProtoPostBinder : IModelBinder
+    {
+        object IModelBinder.BindModel(ControllerContext controllerContext,
+            ModelBindingContext bindingContext)
+        {
             var req = controllerContext.HttpContext.Request;
-            if(req.HttpMethod == "POST") {
-                return Serializer.NonGeneric.Deserialize(bindingContext.ModelType, req.InputStream);
+            if(req.HttpMethod == "POST")
+            {
+                return Serializer.NonGeneric.Deserialize(
+                    bindingContext.ModelType, req.InputStream);
             }
             return null;
         }

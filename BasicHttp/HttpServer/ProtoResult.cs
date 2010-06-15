@@ -7,12 +7,15 @@ using ProtoBuf;
 
 namespace HttpServer
 {
-    public class ProtoResult : ActionResult {
+    public class ProtoResult : ActionResult
+    {
+        // somewhere to store the value the controller gives us
         private readonly object result;
-        public ProtoResult(object result) {
-            this.result = result;
-        }
-        public override void ExecuteResult(ControllerContext context) {
+        public ProtoResult(object result) { this.result = result; }
+
+        // write the response
+        public override void ExecuteResult(ControllerContext context)
+        {
             var resp = context.HttpContext.Response;
             if (result != null)
             {
