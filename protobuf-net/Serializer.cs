@@ -140,9 +140,17 @@ namespace ProtoBuf
             int read;
             using (MemoryStream ms = new MemoryStream())
             {
-                while ((read = reader.ReadElementContentAsBase64(buffer, 0, LEN)) > 0)
+                int depth = reader.Depth;
+                while(reader.Read() && reader.Depth > depth)
                 {
-                    ms.Write(buffer, 0, read);
+                    if (reader.NodeType == System.Xml.XmlNodeType.Text)
+                    {
+                        while ((read = reader.ReadContentAsBase64(buffer, 0, LEN)) > 0)
+                        {
+                            ms.Write(buffer, 0, read);
+                        }
+                        if (reader.Depth <= depth) break;
+                    }
                 }
                 ms.Position = 0;
                 Serializer.Merge(ms, instance);
