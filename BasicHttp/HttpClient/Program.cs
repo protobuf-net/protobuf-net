@@ -9,9 +9,17 @@ namespace HttpClient {
             var req = new GetCustomerRequest { id = 1 };
             GetCustomerResponse resp;
 
-            // ask the server
+            // ask the server (IHttpHandler)
             using (var client = new WebClient { BaseAddress = "http://localhost:22174" }) {
                 resp = client.UploadProto<GetCustomerResponse>("/MyHandler.ashx", req);
+            }
+
+            // write the answer
+            WriteCustomer(resp.cust);
+
+            // ask the server (ASP.NET MVC)
+            using (var client = new WebClient { BaseAddress = "http://localhost:22174" }) {
+                resp = client.UploadProto<GetCustomerResponse>("/Customer/GetCustomer", req);
             }
 
             // write the answer
