@@ -10,8 +10,16 @@ this way if planning to use C++, Java, etc at either end at some point.
 Contents:
 
 - DTO: defines the schema; in cross-platform scenarios there would be separate (but compatible) generated DTO types at each end
+
+  note: MySchema.proto (schema in proto format); MySchema.cs (generated DTO types)
+
 - Client: very basic http consumer, using WebClient. For high througput scenarios it would be better to look at HttpWebRequest etc
+
+  note: ProtoWebClient.cs (utility methods); Program.cs (demo)
+
 - Server: very basic http handler, using ashx. With MVC, a controller/route approach would be preferable, allowing very convenient
 separation via a model-binder and action-result. Proto versions of these may be added later (for illustration).
+
+  note: ProtoHandler.cs (base handler); MyHandler.ashx/MyHandler.ashx.cs (implementation)
 
 Note you may need to change the address/port etc in the client to match your server
