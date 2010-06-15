@@ -1,0 +1,17 @@
+This example is intended to show the basic operations of using protocol-buffers over http.
+
+In this case it uses protobuf-net at both client and server, but the protocol is basic: http with a binary body, that should
+be treated as .proto; as such, any client / server implementation should work.
+
+To help illustrate this, the DTO layer has been generated from a .proto file; it should be possible to use any tooling to
+create the appropriate DTO types. For protobuf-net, a .proto file is not strictly necessary, but it is useful to start
+this way if planning to use C++, Java, etc at either end at some point.
+
+Contents:
+
+- DTO: defines the schema; in cross-platform scenarios there would be separate (but compatible) generated DTO types at each end
+- Client: very basic http consumer, using WebClient. For high througput scenarios it would be better to look at HttpWebRequest etc
+- Server: very basic http handler, using ashx. With MVC, a controller/route approach would be preferable, allowing very convenient
+separation via a model-binder and action-result. Proto versions of these may be added later (for illustration).
+
+Note you may need to change the address/port etc in the client to match your server
