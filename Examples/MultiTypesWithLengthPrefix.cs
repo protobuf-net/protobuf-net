@@ -8,8 +8,10 @@ using ProtoBuf;
 
 namespace Examples
 {
-    class MultiTypesWithLengthPrefix
+    [TestFixture]
+    public class MultiTypesWithLengthPrefix
     {
+        [Test]
         public void TestRoundTripMultiTypes()
         {
             using (MemoryStream ms = new MemoryStream())
