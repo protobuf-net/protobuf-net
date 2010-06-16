@@ -164,6 +164,7 @@
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListTests.cs" />
     <Compile Include="memcached.cs" />
+    <Compile Include="MultiTypesWithLengthPrefix.cs" />
     <Compile Include="NonGeneric.cs" />
     <Compile Include="NWind\CompatDb.cs" />
     <Compile Include="NWind\DataContext.cs" />
