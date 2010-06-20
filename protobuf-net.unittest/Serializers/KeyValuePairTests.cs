@@ -115,6 +115,54 @@ namespace ProtoBuf.unittest.Serializers
         }
 
         [Test]
+        public void ShouldWorkWithAutoLoadDisabledRuntime()
+        {
+            var orig = new TypeWithDictionary {Data = new Dictionary<string, decimal> {{"abc", 123.45M}}};
+            var model = TypeModel.Create();
+            model.AutoAddMissingTypes = false;
+            model.Add(typeof (TypeWithDictionary), true);
+            var clone = (TypeWithDictionary) model.DeepClone(orig);
+            Assert.AreEqual(1, clone.Data.Count);
+            Assert.AreEqual(123.45M, clone.Data["abc"]);
+        }
+
+        [Test]
+        public void ShouldWorkWithAutoLoadDisabledAndAddedExplicitlyRuntime()
+        {
+            var orig = new TypeWithDictionary { Data = new Dictionary<string, decimal> { { "abc", 123.45M } } };
+            var model = TypeModel.Create();
+            model.AutoAddMissingTypes = false;
+            model.Add(typeof(TypeWithDictionary), true);
+            model.Add(typeof(KeyValuePair<string,decimal>), true);
+            var clone = (TypeWithDictionary)model.DeepClone(orig);
+            Assert.AreEqual(1, clone.Data.Count);
+            Assert.AreEqual(123.45M, clone.Data["abc"]);
+        }
+        [Test]
+        public void ShouldWorkWithAutoLoadDisabledCompileInPlace()
+        {
+            var orig = new TypeWithDictionary {Data = new Dictionary<string, decimal> {{"abc", 123.45M}}};
+            var model = TypeModel.Create();
+            model.AutoAddMissingTypes = false;
+            model.Add(typeof (TypeWithDictionary), true);
+            model.CompileInPlace();
+            var clone = (TypeWithDictionary) model.DeepClone(orig);
+            Assert.AreEqual(1, clone.Data.Count);
+            Assert.AreEqual(123.45M, clone.Data["abc"]);
+        }
+        [Test]
+        public void ShouldWorkWithAutoLoadDisabledCompile()
+        {
+            var orig = new TypeWithDictionary { Data = new Dictionary<string, decimal> { { "abc", 123.45M } } };
+            var model = TypeModel.Create();
+            model.AutoAddMissingTypes = false;
+            model.Add(typeof(TypeWithDictionary), true);
+            var clone = (TypeWithDictionary)model.Compile().DeepClone(orig);
+            Assert.AreEqual(1, clone.Data.Count);
+            Assert.AreEqual(123.45M, clone.Data["abc"]);
+        }
+
+        [Test]
         public void TypeWithIDictionaryTest()
         {
             var orig = new TypeWithIDictionary { Data = new Dictionary<string, decimal> { { "abc", 123.45M } } };

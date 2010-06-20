@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using MyDtoLayer;
+using System.Collections.Generic;
 
 namespace HttpClient {
     class Program {
@@ -35,5 +36,4 @@ namespace HttpClient {
             Console.WriteLine(addr.zip);  
         }
     }
-
 }

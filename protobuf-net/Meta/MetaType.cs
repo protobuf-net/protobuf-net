@@ -14,11 +14,26 @@ namespace ProtoBuf.Meta
     {
         IProtoSerializer ISerializerProxy.Serializer { get { return Serializer; } }
         private MetaType baseType;
+        private bool frozen, isPrivateOnApi;
         /// <summary>
         /// Gets the base-type for this type
         /// </summary>
         public MetaType BaseType {
             get { return baseType; }
+        }
+
+        /// <summary>
+        /// When used to compile a model, should public serialization/deserialzation methods
+        /// be included for this type?
+        /// </summary>
+        public bool IncludeSerializerMethod
+        {   // negated to minimize common-case / initializer
+            get { return !isPrivateOnApi; }
+            set
+            {
+                ThrowIfFrozen();
+                isPrivateOnApi = !value;
+            }
         }
 
         private BasicList subTypes;
@@ -149,8 +164,10 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal void ThrowIfFrozen()
         {
-            if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
+            if (frozen) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
+        internal void Freeze() { frozen = true;}
+
         private readonly Type type;
         /// <summary>
         /// The runtime type that the meta-type represents
@@ -159,7 +176,11 @@ namespace ProtoBuf.Meta
         private IProtoTypeSerializer serializer;
         internal IProtoTypeSerializer Serializer {
             get {
-                if (serializer == null) serializer = BuildSerializer();
+                if (serializer == null)
+                {
+                    frozen = true;
+                    serializer = BuildSerializer();
+                }
                 return serializer;
             }
         }
@@ -223,7 +244,7 @@ namespace ProtoBuf.Meta
             if (model.FindWithoutAdd(type.BaseType) == null
                 && GetContractFamily(type.BaseType, null) != MetaType.AttributeFamily.None)
             {
-                model.FindOrAddAuto(type.BaseType, true, false);
+                model.FindOrAddAuto(type.BaseType, true, false, false);
             }
 
             object[] typeAttribs = type.GetCustomAttributes(true);

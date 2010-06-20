@@ -8,6 +8,7 @@ namespace ProtoBuf
     /// Mutable version of the common key/value pair struct; used during serialization
     /// </summary>
     [ProtoContract]
+    [Obsolete("This type is an implementation detail that may change, and should not be used in user code", false)]
     public struct KeyValuePairSurrogate<TKey,TValue>
     {
         private TKey key;

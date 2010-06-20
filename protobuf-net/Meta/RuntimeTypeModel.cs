@@ -46,7 +46,7 @@ namespace ProtoBuf.Meta
         /// Obtains the MetaType associated with a given Type for the current model,
         /// allowing additional configuration.
         /// </summary>
-        public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false)]; } }
+        public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false,false)]; } }
         internal MetaType FindWithoutAdd(Type type)
         {
             // this list is thread-safe for reading
@@ -67,7 +67,7 @@ namespace ProtoBuf.Meta
                 return ((MetaType)obj).Type == type;
             }
         }
-        internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly)
+        internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled)
         {
             TypeFinder predicate = new TypeFinder(type);
             int key = types.IndexOf(predicate);
@@ -90,7 +90,8 @@ namespace ProtoBuf.Meta
                 // try to recognise a few familiar patterns...
                 if ((metaType = RecogniseCommonTypes(type)) == null)
                 { // otherwise, check if it is a contract
-                    if (!autoAddMissingTypes || (
+                    bool shouldAdd = autoAddMissingTypes || addEvenIfAutoDisabled;
+                    if (!shouldAdd || (
                         addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
                         )
                     {
@@ -125,7 +126,19 @@ namespace ProtoBuf.Meta
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
                 MetaType mt = new MetaType(this, type);
-                mt.SetSurrogate(typeof(KeyValuePairSurrogate<,>).MakeGenericType(type.GetGenericArguments()));
+#pragma warning disable 618 // we're *allowed* to do this; user code isn't (we might roll this as a bespoke serializer rather than a surrogate at some point)
+                Type surrogate = typeof (KeyValuePairSurrogate<,>).MakeGenericType(type.GetGenericArguments());
+#pragma warning restore 618
+                mt.SetSurrogate(surrogate);
+                mt.IncludeSerializerMethod = false;
+                mt.Freeze();
+
+                MetaType surrogateMeta = (MetaType)types[FindOrAddAuto(surrogate, true, true, true)]; // this forcibly adds it if needed
+                if(surrogateMeta.IncludeSerializerMethod)
+                { // don't blindly set - it might be frozen
+                    surrogateMeta.IncludeSerializerMethod = false;
+                }
+                surrogateMeta.Freeze();
                 return mt;
             }
             return null;
@@ -155,7 +168,18 @@ namespace ProtoBuf.Meta
         {
             if (type == null) throw new ArgumentNullException("type");
             if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
-            MetaType newType = Create(type);
+            MetaType newType = RecogniseCommonTypes(type);
+            if(newType != null)
+            {
+                if(!applyDefaultBehaviour) {
+                    throw new ArgumentException(
+                        "Default behaviour must be observed for certain types with special handling; " + type.Name,
+                        "applyDefaultBehaviour");
+                }
+                // we should assume that type is fully configured, though; no need to re-run:
+                applyDefaultBehaviour = false;
+            }
+            if(newType == null) newType = Create(type);
             bool weAdded = false;
             lock (types)
             {
@@ -225,14 +249,14 @@ namespace ProtoBuf.Meta
         }
         internal int GetKey(Type type, bool demand, bool getBaseKey)
         {
-            int typeIndex = FindOrAddAuto(type, demand, true);
+            int typeIndex = FindOrAddAuto(type, demand, true, false);
             if (typeIndex >= 0)
             {
                 MetaType mt = (MetaType)types[typeIndex], baseType;
                 if (getBaseKey && (baseType = mt.BaseType) != null)
                 {   // part of an inheritance tree; pick the base-key
                     while (baseType != null) { mt = baseType; baseType = baseType.BaseType;}
-                    typeIndex = FindOrAddAuto(mt.Type, true, true);
+                    typeIndex = FindOrAddAuto(mt.Type, true, true, false);
                 }
             }
             return typeIndex;
@@ -382,6 +406,18 @@ namespace ProtoBuf.Meta
             type.DefineMethodOverride(newMethod, baseMethod);
             return il;
         }
+        private void BuildAllSerializers()
+        {
+            // note that types.Count may increase during this operation, as some serializers
+            // bring other types into play
+            for (int i = 0; i < types.Count; i++)
+            {
+                // the primary purpose of this is to force the creation of the Serializer
+                MetaType mt = (MetaType) types[i];
+                if (mt.Serializer == null)
+                    throw new InvalidOperationException("No serializer available for " + mt.Type.Name);
+            }
+        }
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
         /// (the serialization dll still requires protobuf-net for support services).
@@ -392,6 +428,7 @@ namespace ProtoBuf.Meta
         /// <returns>An instance of the newly created compiled type-model</returns>
         public TypeModel Compile(string name, string path)
         {
+            BuildAllSerializers();
             Freeze();
             bool save = !Helpers.IsNullOrEmpty(path);
             if (Helpers.IsNullOrEmpty(name))
