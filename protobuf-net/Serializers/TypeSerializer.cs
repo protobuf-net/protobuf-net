@@ -219,6 +219,7 @@ namespace ProtoBuf.Serializers
             Type expected = ExpectedType;
             using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
             {
+                if (forType.IsEnum) return;
                 // pre-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeSerialize);
 
@@ -260,11 +261,12 @@ namespace ProtoBuf.Serializers
 
                 }
                 // fields
-                ctx.MarkLabel(startFields);                
+                
+                ctx.MarkLabel(startFields);
                 for (int i = 0; i < serializers.Length; i++)
                 {
                     IProtoSerializer ser = serializers[i];
-                    if(ser.ExpectedType == forType) ser.EmitWrite(ctx, loc);
+                    if (ser.ExpectedType == forType) ser.EmitWrite(ctx, loc);
                 }
 
                 // extension data
@@ -277,34 +279,6 @@ namespace ProtoBuf.Serializers
                 // post-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
             }
-        }
-        class Group
-        {
-            public readonly int First;
-            public readonly BasicList Items;
-            public Group(int first)
-            {
-                this.First = first;
-                this.Items = new BasicList();
-            }
-        }
-        BasicList GetContiguousGroups()
-        {
-            BasicList outer = new BasicList();
-            Group group = null;
-            int lastIndex = 0;
-            for (int i = 0; i < fieldNumbers.Length; i++)
-            {
-                if (fieldNumbers[i] != lastIndex + 1) { group = null; }
-                if (group == null)
-                {
-                    group = new Group(fieldNumbers[i]);
-                    outer.Add(group);
-                }
-                lastIndex = fieldNumbers[i];
-                group.Items.Add(serializers[i]);
-            }
-            return outer;
         }
         static void EmitInvokeCallback(Compiler.CompilerContext ctx, MethodInfo method)
         {
@@ -367,6 +341,7 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
             using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
+                if (forType.IsEnum) return;
                 // pre-callbacks
                 if (HasCallbacks(TypeModel.CallbackType.BeforeDeserialize))
                 {
@@ -381,7 +356,7 @@ namespace ProtoBuf.Serializers
                 ctx.Branch(@continue, false);
 
                 ctx.MarkLabel(processField);
-                foreach (Group group in GetContiguousGroups())
+                foreach (BasicList.Group group in BasicList.GetContiguousGroups(fieldNumbers, serializers))
                 {
                     Compiler.CodeLabel tryNextField = ctx.DefineLabel();
                     int groupItemCount = group.Items.Count;

@@ -47,7 +47,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType, DataFormat dataFormat, object defaultValue) 
         {
-            if (fieldNumber < 1) throw new ArgumentOutOfRangeException("fieldNumber");
+            if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException("fieldNumber");
             if (member == null) throw new ArgumentNullException("member");
             if (parentType == null) throw new ArgumentNullException("parentType");
             if (memberType == null) throw new ArgumentNullException("memberType");
@@ -66,7 +66,10 @@ namespace ProtoBuf.Meta
             }
             this.defaultValue = defaultValue;
         }
-
+        internal Enum GetEnumValue()
+        {
+            return (Enum)((FieldInfo)member).GetValue(null);
+        }
         private static object ParseDefaultValue(Type type, object value)
         {
             if (value is string)
@@ -230,7 +233,7 @@ namespace ProtoBuf.Meta
             if (type.IsEnum)
             { // need to do this before checking the typecode; an int enum will report Int32 etc
                 defaultWireType = WireType.Variant;
-                return new EnumSerializer(type, null);
+                return new EnumSerializer(type, model.GetEnumMap(type));
             }
             TypeCode code = Type.GetTypeCode(type);
             switch (code)
@@ -310,6 +313,17 @@ namespace ProtoBuf.Meta
             throw new InvalidOperationException("No serializer defined for type: " + type.FullName);
         }
 
+
+        private string name;
+        internal void SetName(string name)
+        {
+            ThrowIfFrozen();
+            this.name = name;
+        }
+        public string Name
+        {
+            get { return Helpers.IsNullOrEmpty(name) ? member.Name : name; }
+        }
     }
 }
 #endif

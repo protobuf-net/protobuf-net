@@ -71,6 +71,8 @@ namespace MonoDroid_DevRig
                 button.Text += "; id=" + clone.Id + "; ref=" + clone.CustomerRef + "; ordered=" + clone.OrderDate +
                                "; lines=" + clone.Lines.Count
                                + "; value=" + sum + " (vs " + oldSum + ")";
+
+                //new OrderSerializer();
             };
         }
     }

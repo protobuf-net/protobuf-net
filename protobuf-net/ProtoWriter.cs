@@ -721,6 +721,11 @@ namespace ProtoBuf
                     throw CreateException(writer);
             }
         }
+        public static void ThrowEnumException(ProtoWriter writer, object enumValue)
+        {
+            string rhs = enumValue == null ? "<null>" : (enumValue.GetType().FullName + "." + enumValue.ToString());
+            throw new ProtoException("No wire-value is mapped to the enum " + rhs);
+        }
         // general purpose serialization exception message
         internal static Exception CreateException(ProtoWriter writer)
         {

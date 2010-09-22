@@ -249,11 +249,12 @@ namespace ProtoBuf.Meta
 
             object[] typeAttribs = type.GetCustomAttributes(true);
             AttributeFamily family = GetContractFamily(type, typeAttribs);
-            if(family ==  AttributeFamily.None) return; // and you'd like me to do what, exactly?
+            bool isEnum = type.IsEnum;
+            if(family ==  AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
             BasicList partialIgnores = null, partialMembers = null;
             for (int i = 0; i < typeAttribs.Length; i++)
             {
-                if (typeAttribs[i] is ProtoIncludeAttribute)
+                if (!isEnum && typeAttribs[i] is ProtoIncludeAttribute)
                 {
                     ProtoIncludeAttribute pia = (ProtoIncludeAttribute)typeAttribs[i];
                     AddSubType(pia.Tag, pia.KnownType);
@@ -263,14 +264,15 @@ namespace ProtoBuf.Meta
                     if(partialIgnores == null) partialIgnores = new BasicList();
                     partialIgnores.Add(((ProtoPartialIgnoreAttribute)typeAttribs[i]).MemberName);
                 }
-                if (typeAttribs[i] is ProtoPartialMemberAttribute)
+                if (!isEnum && typeAttribs[i] is ProtoPartialMemberAttribute)
                 {
                     if (partialMembers == null) partialMembers = new BasicList();
                     partialMembers.Add(typeAttribs[i]);
                 }
             }
             MethodInfo[] callbacks = null;
-            foreach (MemberInfo member in type.GetMembers(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            foreach (MemberInfo member in type.GetMembers(isEnum ? BindingFlags.Public | BindingFlags.Static
+                : BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
                 if (member.DeclaringType != type) continue;
                 if (member.IsDefined(typeof(ProtoIgnoreAttribute), true)) continue;
@@ -280,13 +282,14 @@ namespace ProtoBuf.Meta
                 {
                     case MemberTypes.Property:
                     case MemberTypes.Field:
-                        ValueMember vm = ApplyDefaultBehaviour(family, member, partialMembers);
+                        ValueMember vm = ApplyDefaultBehaviour(isEnum, family, member, partialMembers);
                         if (vm != null)
                         {
                             Add(vm);
                         }
                         break;
                     case MemberTypes.Method:
+                        if (isEnum) continue;
                         MethodInfo method = (MethodInfo)member;
                         object[] memberAttribs = Attribute.GetCustomAttributes(method);
                         if (memberAttribs != null && memberAttribs.Length > 0)
@@ -344,9 +347,9 @@ namespace ProtoBuf.Meta
         {
             return (value & required) == required;
         }
-        private ValueMember ApplyDefaultBehaviour(AttributeFamily family, MemberInfo member, BasicList partialMembers)
+        private ValueMember ApplyDefaultBehaviour(bool isEnum, AttributeFamily family, MemberInfo member, BasicList partialMembers)
         {
-            if (member == null || family == AttributeFamily.None) return null; // nix
+            if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
             Type effectiveType;
             switch (member.MemberType)
             {
@@ -390,6 +393,29 @@ namespace ProtoBuf.Meta
                     break;
             }
             bool done = false;
+            if (isEnum)
+            {
+                attrib = GetAttribute(attribs, "ProtoBuf.ProtoIgnoreAttribute");
+                if (attrib != null)
+                {
+                    ignore = true;
+                }
+                else
+                {
+                    attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
+                    fieldNumber = Convert.ToInt32(((FieldInfo)member).GetValue(null));
+                    if (attrib != null)
+                    {
+                        GetFieldName(ref name, attrib, "Name");
+                        if ((bool)attrib.GetType().GetMethod("HasValue").Invoke(attrib, null))
+                        {
+                            fieldNumber = (int) GetMemberValue(attrib, "Value");
+                        }
+                    }
+                        
+                }
+                done = true;
+            }
             if (!ignore && !done) // always consider ProtoMember 
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
@@ -448,7 +474,7 @@ namespace ProtoBuf.Meta
             {
                 defaultValue = GetMemberValue(attrib, "Value");
             }
-            ValueMember vm = (fieldNumber > 0 && !ignore)
+            ValueMember vm = ((isEnum || fieldNumber > 0) && !ignore)
                 ? new ValueMember(model, type, fieldNumber, member, effectiveType, itemType, defaultType, dataFormat, defaultValue)
                     : null;
             if (vm != null)
@@ -468,6 +494,7 @@ namespace ProtoBuf.Meta
                         vm.SetSpecified(method, null);
                     }
                 }
+                if(!Helpers.IsNullOrEmpty(name)) vm.SetName(name);
             }
             return vm;
         }
@@ -736,6 +763,28 @@ namespace ProtoBuf.Meta
         }
 
 
+
+        internal EnumSerializer.EnumPair[] GetEnumMap()
+        {
+            if (enumPassthru) return null;
+            EnumSerializer.EnumPair[] result = new EnumSerializer.EnumPair[fields.Count];
+            for (int i = 0; i < result.Length; i++)
+            {
+                ValueMember member = (ValueMember) fields[i];
+                int wireValue = member.FieldNumber;
+                Enum value = member.GetEnumValue();
+                result[i] = new EnumSerializer.EnumPair(wireValue, value);
+            }
+            return result;
+        }
+
+        private bool enumPassthru;
+
+        public bool EnumPassthru
+        {
+            get { return enumPassthru; }
+            set { enumPassthru = value; }
+        }
     }
 }
 #endif

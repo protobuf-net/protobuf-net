@@ -186,6 +186,37 @@ namespace ProtoBuf.Meta
             }
             return false;
         }
+        internal class Group
+        {
+            public readonly int First;
+            public readonly BasicList Items;
+            public Group(int first)
+            {
+                this.First = first;
+                this.Items = new BasicList();
+            }
+        }
+        internal static BasicList GetContiguousGroups(int[] keys, object[] values)
+        {
+            if (keys == null) throw new ArgumentNullException("keys");
+            if (values == null) throw new ArgumentNullException("values");
+            if (values.Length < keys.Length) throw new ArgumentException("Not all keys are covered by values", "values");
+            BasicList outer = new BasicList();
+            Group group = null;
+            for (int i = 0; i < keys.Length; i++)
+            {
+                if (i == 0 || keys[i] != keys[i - 1]) { group = null; }
+                if (group == null)
+                {
+                    group = new Group(keys[i]);
+                    outer.Add(group);
+                }
+                group.Items.Add(values[i]);
+            }
+            return outer;
+        }
     }
+
+
 }
 #endif

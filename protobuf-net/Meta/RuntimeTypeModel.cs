@@ -47,6 +47,7 @@ namespace ProtoBuf.Meta
         /// allowing additional configuration.
         /// </summary>
         public MetaType this[Type type] { get { return (MetaType)types[FindOrAddAuto(type, true, false,false)]; } }
+        
         internal MetaType FindWithoutAdd(Type type)
         {
             // this list is thread-safe for reading
@@ -680,6 +681,12 @@ namespace ProtoBuf.Meta
         internal bool IsDefined(Type type, int fieldNumber)
         {
             return FindWithoutAdd(type).IsDefined(fieldNumber);
+        }
+
+        internal EnumSerializer.EnumPair[] GetEnumMap(Type type)
+        {
+            int index = FindOrAddAuto(type, false, false, false);
+            return index < 0 ? null : ((MetaType)types[index]).GetEnumMap();
         }
     }
     
