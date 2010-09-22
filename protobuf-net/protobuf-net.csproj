@@ -122,7 +122,7 @@
     <Compile Include="BufferExtension.cs" />
     <Compile Include="BufferPool.cs" />
     <Compile Include="CallbackAttributes.cs" />
-    <Compile Include="Compiler\CompiledSerializer.cs" />
+    <Compile Include="Compiler\CompilerDelegates.cs" />
     <Compile Include="Compiler\CompilerContext.cs" />
     <Compile Include="Compiler\Local.cs" />
     <Compile Include="DataFormat.cs">

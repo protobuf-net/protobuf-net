@@ -109,7 +109,7 @@ namespace Examples.Issues
             }
 
             protected abstract object ValueImpl { get; set; }
-
+            
             protected ProtoObject()
             {
 
