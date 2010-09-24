@@ -3,9 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace MonoDto
 {
+    public static class MyModel
+    {
+        public static TypeModel CreateSerializer()
+        {
+
+            var model = TypeModel.Create();
+            model.AutoCompile = false;
+            var type = Type.GetType("MonoDto.OrderHeader, MonoDto");
+            model.Add(type, true);
+            type = Type.GetType("MonoDto.OrderDetail, MonoDto");
+            model.Add(type, true);
+            return model; //.Compile();
+        }
+    }
     [ProtoContract]
     public class OrderHeader
     {

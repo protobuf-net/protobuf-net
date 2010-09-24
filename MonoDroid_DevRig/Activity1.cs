@@ -9,6 +9,7 @@ using Android.OS;
 using MonoDto;
 using System.IO;
 using ProtoBuf.Meta;
+using System.Diagnostics;
 
 namespace MonoDroid_DevRig
 {
@@ -19,7 +20,7 @@ namespace MonoDroid_DevRig
             : base(handle)
         {
         }
-
+        TypeModel serializer;
         protected override void OnCreate(Bundle bundle)
         {
             
@@ -35,8 +36,16 @@ namespace MonoDroid_DevRig
             button.Click += delegate
             {
 
-                var serializer = TypeModel.Create();
+                string notes = "";
+                if(serializer == null)
+                {
+                    var serWatch = Stopwatch.StartNew();
+                    serializer = MyModel.CreateSerializer();
+                    serWatch.Stop();
+                    notes += serWatch.ElapsedMilliseconds + "ms building the serializer\n";
+                }
 
+                
                 var order = new OrderHeader
                 {
                     Id = 1234,
@@ -55,24 +64,27 @@ namespace MonoDroid_DevRig
                 };
                 
                 byte[] raw;
+                int len;
+                var watch = Stopwatch.StartNew();
                 using (var ms = new MemoryStream()) {
                     serializer.Serialize(ms, order);
                     raw = ms.ToArray();
                 }
-                button.Text = raw.Length + " bytes";
+                len = raw.Length;
                 OrderHeader clone;
                 using (var ms = new MemoryStream(raw))
                 {
                     clone = (OrderHeader) serializer.Deserialize(ms, null, typeof (OrderHeader));
                 }
+                watch.Stop();
+                notes += watch.ElapsedMilliseconds + "ms ser/deser\n";
+                button.Text = notes + len + " bytes";
                 decimal sum = 0M, oldSum = 0M;
                 foreach (var line in clone.Lines) sum += line.UnitPrice*line.Quantity;
                 foreach (var line in order.Lines) oldSum += line.UnitPrice * line.Quantity;
                 button.Text += "; id=" + clone.Id + "; ref=" + clone.CustomerRef + "; ordered=" + clone.OrderDate +
                                "; lines=" + clone.Lines.Count
                                + "; value=" + sum + " (vs " + oldSum + ")";
-
-                //new OrderSerializer();
             };
         }
     }
