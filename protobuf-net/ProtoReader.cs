@@ -28,6 +28,7 @@ namespace ProtoBuf
         /// Gets the number of the field being processed.
         /// </summary>
         public int FieldNumber { get { return fieldNumber; } }
+        public WireType WireType { get { return wireType; } }
         
         internal ProtoReader(Stream source, TypeModel model) :
             this(source, model, -1)
@@ -986,6 +987,18 @@ namespace ProtoBuf
                 default: // treat as implicit error
                     throw CreateException();
             }
+        }
+        /// <summary>
+        /// Indicates whether the reader still has data remaining in the current sub-item,
+        /// additionally setting the wire-type for the next field if there is more data.
+        /// This is used when decoding packed data.
+        /// </summary>
+        public static bool HasSubValue(ProtoBuf.WireType wireType, ProtoReader source)
+        {
+            // check for virtual end of stream
+            if (source.blockEnd <= source.position || wireType == WireType.EndGroup) { return false; } 
+            source.wireType = wireType;
+            return true;
         }
     }
 }

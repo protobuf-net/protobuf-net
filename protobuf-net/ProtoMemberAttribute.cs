@@ -52,6 +52,18 @@ namespace ProtoBuf
             }
         }
 
+         /// <summary>
+        /// Gets a value indicating whether this member is packed.
+        /// </summary>
+        public bool IsPacked
+        {
+            get { return (options & MemberSerializationOptions.Packed) == MemberSerializationOptions.Packed;}
+            set {
+                if (value) options |= MemberSerializationOptions.Packed;
+                else options &= ~MemberSerializationOptions.Packed;
+            }
+        }
+
         /// <summary>
         /// Gets or sets a value indicating whether this member is packed (lists/arrays).
         /// </summary>

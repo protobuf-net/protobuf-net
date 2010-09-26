@@ -416,4 +416,264 @@ namespace ProtoBuf.unittest.Meta
 
 
     }
+
+    [TestFixture]
+    public class PackedLists
+    {
+        [Test]
+        public void CanCompile()
+        {
+            var model = CreateModel();
+            model.Compile("PEVerifyPackedLists", "PEVerifyPackedLists.dll");
+            PEVerify.Verify("PEVerifyPackedLists.dll");
+        }
+        [Test]
+        public void TestNullRoundTrip()
+        {
+            var model = CreateModel();
+
+            var orig = new PackedData {ListInt32 = null, ListSingle = null, ListDouble = null};
+            int len;
+
+            var clone = RoundTrip(model, orig, "Runtime", out len);
+            Assert.AreEqual(0, len, "Runtime");
+            Assert.IsNotNull(clone);
+
+            model.CompileInPlace();
+            clone = RoundTrip(model, orig, "CompileInPlace", out len);
+            Assert.AreEqual(0, len, "CompileInPlace");
+            Assert.IsNotNull(clone);
+
+            clone = RoundTrip(model.Compile(), orig, "Compile", out len);
+            Assert.AreEqual(0, len, "Compile");
+            Assert.IsNotNull(clone);
+        }
+
+        [Test]
+        public void TestEmptyRoundTrip()
+        {
+            var model = CreateModel();
+
+            var orig = new PackedData { ListInt32 = new List<int>(), ListSingle = new List<float>(), ListDouble = new List<double>()};
+            int len;
+
+            var clone = RoundTrip(model, orig, "Runtime", out len);
+            Assert.AreEqual(0, len, "Runtime");
+            Assert.IsNotNull(clone);
+
+            model.CompileInPlace();
+            clone = RoundTrip(model, orig, "CompileInPlace", out len);
+            Assert.AreEqual(0, len, "CompileInPlace");
+            Assert.IsNotNull(clone);
+
+            clone = RoundTrip(model.Compile(), orig, "Compile", out len);
+            Assert.AreEqual(0, len, "Compile");
+            Assert.IsNotNull(clone);
+        }
+        static void CheckExpectedListContents(PackedData data, string text)
+        {
+            Assert.IsNotNull(data, text);
+            Assert.AreEqual(3, data.ListInt32.Count, text);
+            Assert.AreEqual(3, data.ListInt32[0], text);
+            Assert.AreEqual(5, data.ListInt32[1], text);
+            Assert.AreEqual(7, data.ListInt32[2], text);
+            Assert.AreEqual(3, data.ListSingle.Count, text);
+            Assert.AreEqual(3F, data.ListSingle[0], text);
+            Assert.AreEqual(5F, data.ListSingle[1], text);
+            Assert.AreEqual(7F, data.ListSingle[2], text);
+            Assert.AreEqual(3, data.ListDouble.Count, text);
+            Assert.AreEqual(3D, data.ListDouble[0], text);
+            Assert.AreEqual(5D, data.ListDouble[1], text);
+            Assert.AreEqual(7D, data.ListDouble[2], text);
+        }
+        [Test]
+        public void TestThreeItemsRoundTrip()
+        {
+            var model = CreateModel();
+
+            var orig = new PackedData { ListInt32 = new List<int> {3,5,7}, ListSingle = new List<float> {3F,5F,7F}, ListDouble = new List<double> {3D,5D,7F} };
+            CheckExpectedListContents(orig, "Original");
+            int len;
+
+            var clone = RoundTrip(model, orig, "Runtime", out len);
+            const int expectedLen = (1 + 1 + 1 + 1 + 1) + (1 + 1 + 4 + 4 + 4) + (1 + 1 + 8 + 8 + 8);
+            Assert.AreEqual(expectedLen, len, "Runtime");
+            Assert.IsNotNull(clone);
+            CheckExpectedListContents(clone, "Runtime");
+
+            model.CompileInPlace();
+            clone = RoundTrip(model, orig, "CompileInPlace", out len);
+            Assert.AreEqual(expectedLen, len, "CompileInPlace");
+            Assert.IsNotNull(clone);
+            CheckExpectedListContents(clone, "CompileInPlace");
+
+            clone = RoundTrip(model.Compile(), orig, "Compile", out len);
+            Assert.AreEqual(expectedLen, len, "Compile");
+            Assert.IsNotNull(clone);
+            CheckExpectedListContents(clone, "Compile");
+        }
+        static PackedData RoundTrip(TypeModel model, PackedData orig, string scenario, out int length)
+        {
+            try
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    model.Serialize(ms, orig);
+                    length = (int)ms.Length;
+                    ms.Position = 0;
+                    return (PackedData)model.Deserialize(ms, null, typeof(PackedData));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(scenario + ": " + ex.Message, ex);
+            }
+        }
+        static RuntimeTypeModel CreateModel()
+        {
+            var model = TypeModel.Create();
+            model.Add(typeof (PackedData), true);
+            return model;
+        }
+        [ProtoContract]
+        public class PackedData
+        {
+            [ProtoMember(1, IsPacked = true)]
+            public List<int> ListInt32 { get; set; }
+            [ProtoMember(2, IsPacked = true)]
+            public List<float> ListSingle { get; set; }
+            [ProtoMember(3, IsPacked = true)]
+            public List<double> ListDouble{ get; set; }
+        }
+    }
+
+    [TestFixture]
+    public class PackedArrays
+    {
+        [Test]
+        public void CanCompile()
+        {
+            var model = CreateModel();
+            model.Compile("PEVerifyPackedArrays", "PEVerifyPackedArrays.dll");
+            PEVerify.Verify("PEVerifyPackedArrays.dll");
+        }
+        [Test]
+        public void TestNullRoundTrip()
+        {
+            var model = CreateModel();
+
+            var orig = new PackedData { ArrayInt32 = null, ArraySingle = null, ArrayDouble = null };
+            int len;
+
+            var clone = RoundTrip(model, orig, "Runtime", out len);
+            Assert.AreEqual(0, len, "Runtime");
+            Assert.IsNotNull(clone);
+
+            model.CompileInPlace();
+            clone = RoundTrip(model, orig, "CompileInPlace", out len);
+            Assert.AreEqual(0, len, "CompileInPlace");
+            Assert.IsNotNull(clone);
+
+            clone = RoundTrip(model.Compile(), orig, "Compile", out len);
+            Assert.AreEqual(0, len, "Compile");
+            Assert.IsNotNull(clone);
+        }
+
+        [Test]
+        public void TestEmptyRoundTrip()
+        {
+            var model = CreateModel();
+
+            var orig = new PackedData { ArrayInt32 = new int[0], ArraySingle = new float[0], ArrayDouble = new double[0] };
+            int len;
+
+            var clone = RoundTrip(model, orig, "Runtime", out len);
+            Assert.AreEqual(0, len, "Runtime");
+            Assert.IsNotNull(clone);
+
+            model.CompileInPlace();
+            clone = RoundTrip(model, orig, "CompileInPlace", out len);
+            Assert.AreEqual(0, len, "CompileInPlace");
+            Assert.IsNotNull(clone);
+
+            clone = RoundTrip(model.Compile(), orig, "Compile", out len);
+            Assert.AreEqual(0, len, "Compile");
+            Assert.IsNotNull(clone);
+        }
+        static void CheckExpectedListContents(PackedData data, string text)
+        {
+            Assert.IsNotNull(data, text);
+            Assert.AreEqual(3, data.ArrayInt32.Length, text);
+            Assert.AreEqual(3, data.ArrayInt32[0], text);
+            Assert.AreEqual(5, data.ArrayInt32[1], text);
+            Assert.AreEqual(7, data.ArrayInt32[2], text);
+            Assert.AreEqual(3, data.ArraySingle.Length, text);
+            Assert.AreEqual(3F, data.ArraySingle[0], text);
+            Assert.AreEqual(5F, data.ArraySingle[1], text);
+            Assert.AreEqual(7F, data.ArraySingle[2], text);
+            Assert.AreEqual(3, data.ArrayDouble.Length, text);
+            Assert.AreEqual(3D, data.ArrayDouble[0], text);
+            Assert.AreEqual(5D, data.ArrayDouble[1], text);
+            Assert.AreEqual(7D, data.ArrayDouble[2], text);
+        }
+        [Test]
+        public void TestThreeItemsRoundTrip()
+        {
+            var model = CreateModel();
+
+            var orig = new PackedData { ArrayInt32 = new int[] { 3, 5, 7 }, ArraySingle = new float[] { 3F, 5F, 7F }, ArrayDouble = new double[] { 3D, 5D, 7F } };
+            CheckExpectedListContents(orig, "Original");
+            int len;
+
+            var clone = RoundTrip(model, orig, "Runtime", out len);
+            const int expectedLen = (1 + 1 + 1 + 1 + 1) + (1 + 1 + 4 + 4 + 4) + (1 + 1 + 8 + 8 + 8);
+            Assert.AreEqual(expectedLen, len, "Runtime");
+            Assert.IsNotNull(clone);
+            CheckExpectedListContents(clone, "Runtime");
+
+            model.CompileInPlace();
+            clone = RoundTrip(model, orig, "CompileInPlace", out len);
+            Assert.AreEqual(expectedLen, len, "CompileInPlace");
+            Assert.IsNotNull(clone);
+            CheckExpectedListContents(clone, "CompileInPlace");
+
+            clone = RoundTrip(model.Compile(), orig, "Compile", out len);
+            Assert.AreEqual(expectedLen, len, "Compile");
+            Assert.IsNotNull(clone);
+            CheckExpectedListContents(clone, "Compile");
+        }
+        static PackedData RoundTrip(TypeModel model, PackedData orig, string scenario, out int length)
+        {
+            try
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    model.Serialize(ms, orig);
+                    length = (int)ms.Length;
+                    ms.Position = 0;
+                    return (PackedData)model.Deserialize(ms, null, typeof(PackedData));
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(scenario + ": " + ex.Message, ex);
+            }
+        }
+        static RuntimeTypeModel CreateModel()
+        {
+            var model = TypeModel.Create();
+            model.Add(typeof(PackedData), true);
+            return model;
+        }
+        [ProtoContract]
+        public class PackedData
+        {
+            [ProtoMember(1, IsPacked = true)]
+            public int[] ArrayInt32 { get; set; }
+            [ProtoMember(2, IsPacked = true)]
+            public float[] ArraySingle { get; set; }
+            [ProtoMember(3, IsPacked = true)]
+            public double[] ArrayDouble { get; set; }
+        }
+    }
 }

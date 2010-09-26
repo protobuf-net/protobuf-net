@@ -1,6 +1,7 @@
 ﻿using System;
 
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using ProtoBuf.Meta;
 #if MF
@@ -88,10 +89,30 @@ namespace ProtoBuf
                     throw new ArgumentException("Invalid wire-type: " + wireType, "wireType");                
             }
 #endif
-            writer.fieldNumber = fieldNumber;
-            writer.wireType = wireType;
-
-            WriteHeaderCore(fieldNumber, wireType, writer);
+            if (writer.packedFieldNumber == 0) {
+                writer.fieldNumber = fieldNumber;
+                writer.wireType = wireType;
+                WriteHeaderCore(fieldNumber, wireType, writer);
+            }
+            else if (writer.packedFieldNumber == fieldNumber)
+            { // we'll set things up, but note we *don't* actually write the header here
+                switch (wireType)
+                {
+                    case WireType.Fixed32:
+                    case WireType.Fixed64:
+                    case WireType.Variant:
+                    case WireType.SignedVariant:
+                        break; // fine
+                    default:
+                        throw new InvalidOperationException("Wire-type cannot be encoded as packed: " + wireType);
+                }
+                writer.fieldNumber = fieldNumber;
+                writer.wireType = wireType;
+            }
+            else
+            {
+                throw new InvalidOperationException("Field mismatch during packed encoding; expected " + writer.packedFieldNumber + " but received " + fieldNumber);
+            }
         }
         internal static void WriteHeaderCore(int fieldNumber, WireType wireType, ProtoWriter writer)
         {
@@ -225,6 +246,7 @@ namespace ProtoBuf
             {
                 writer.CheckRecursionStackAndPush(instance);
             }
+            if(writer.packedFieldNumber != 0) throw new InvalidOperationException("Cannot begin a sub-item while performing packed encoding");
             switch (writer.wireType)
             {
                 case WireType.StartGroup:
@@ -268,6 +290,7 @@ namespace ProtoBuf
             {
                 writer.PopRecursionStack();
             }
+            writer.packedFieldNumber = 0; // ending the sub-item always wipes packed encoding
             if (value < 0)
             {   // group - very simple append
                 WriteHeaderCore(-value, WireType.EndGroup, writer);
@@ -762,6 +785,20 @@ namespace ProtoBuf
                 }
                 finally { extn.EndQuery(source); }
             }
+        }
+
+
+        private int packedFieldNumber;
+        /// <summary>
+        /// Used for packed encoding; indicates that the next field should be skipped rather than
+        /// a field header written. Note that the field number must match, else an exception is thrown
+        /// when the attempt is made to write the (incorrect) field. The wire-type is taken from the
+        /// subsequent call to WriteFieldHeader. Only primitive types can be packed.
+        /// </summary>
+        public static void SetPackedField(int fieldNumber, ProtoWriter writer)
+        {
+            if (fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
+            writer.packedFieldNumber = fieldNumber;
         }
     }
 }

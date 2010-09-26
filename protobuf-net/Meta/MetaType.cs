@@ -362,6 +362,7 @@ namespace ProtoBuf.Meta
             }
 
             int fieldNumber = 0;
+            bool isPacked = false;
             string name = null;
             bool isRequired = false;
             Type itemType = null;
@@ -424,7 +425,8 @@ namespace ProtoBuf.Meta
                 {
                     GetFieldNumber(ref fieldNumber, attrib, "Tag");
                     GetFieldName(ref name, attrib, "Name");
-                    GetFieldRequired(ref isRequired, attrib, "IsRequired");
+                    GetFieldBoolean(ref isRequired, attrib, "IsRequired");
+                    GetFieldBoolean(ref isPacked, attrib, "IsPacked");
                     GetDataFormat(ref dataFormat, attrib, "DataFormat");
                     done = fieldNumber > 0;
                 }
@@ -437,7 +439,8 @@ namespace ProtoBuf.Meta
                         {
                             GetFieldNumber(ref fieldNumber, ppma, "Tag");
                             GetFieldName(ref name, ppma, "Name");
-                            GetFieldRequired(ref isRequired, ppma, "IsRequired");
+                            GetFieldBoolean(ref isRequired, ppma, "IsRequired");
+                            GetFieldBoolean(ref isPacked, ppma, "IsPacked");
                             GetDataFormat(ref dataFormat, ppma, "DataFormat");
                             if (done = fieldNumber > 0) break;                            
                         }
@@ -449,7 +452,7 @@ namespace ProtoBuf.Meta
                 attrib = GetAttribute(attribs, "System.Runtime.Serialization.DataMemberAttribute");
                 GetFieldNumber(ref fieldNumber, attrib, "Order");
                 GetFieldName(ref name, attrib, "Name");
-                GetFieldRequired(ref isRequired, attrib, "IsRequired");
+                GetFieldBoolean(ref isRequired, attrib, "IsRequired");
                 done = fieldNumber > 0;
             }
             if (!ignore && !done && HasFamily(family, AttributeFamily.XmlSerializer))
@@ -495,6 +498,8 @@ namespace ProtoBuf.Meta
                     }
                 }
                 if(!Helpers.IsNullOrEmpty(name)) vm.SetName(name);
+                vm.IsPacked = isPacked;
+                vm.IsRequired = isRequired;
             }
             return vm;
         }
@@ -513,7 +518,7 @@ namespace ProtoBuf.Meta
             return;
         }
 
-        private static void GetFieldRequired(ref bool value, Attribute attrib, string memberName)
+        private static void GetFieldBoolean(ref bool value, Attribute attrib, string memberName)
         {
             if (attrib == null || value) return;
             object obj = GetMemberValue(attrib, memberName);

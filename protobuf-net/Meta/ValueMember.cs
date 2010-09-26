@@ -119,7 +119,7 @@ namespace ProtoBuf.Meta
         /// wite-type, but also to describe subtypes <i>within</i> that wire-type (such as SignedVariant)
         /// </summary>
         public DataFormat DataFormat { get { return dataFormat; } }
-        private bool isStrict;
+        private bool isStrict, isPacked, isRequired;
         /// <summary>
         /// Indicates whether this field should follow strict encoding rules; this means (for example) that if a "fixed32"
         /// is encountered when "variant" is defined, then it will fail (throw an exception) when parsing. Note that
@@ -130,6 +130,25 @@ namespace ProtoBuf.Meta
             get { return isStrict; }
             set { ThrowIfFrozen(); isStrict = value; }
         }
+
+        /// <summary>
+        /// Indicates whether this field should use packed encoding (which can save lots of space for repeated primitive values).
+        /// </summary>
+        public bool IsPacked
+        {
+            get { return isPacked; }
+            set { ThrowIfFrozen(); isPacked = value; }
+        }
+
+        /// <summary>
+        /// Indicates whether this field is mandatory.
+        /// </summary>
+        public bool IsRequired
+        {
+            get { return isRequired; }
+            set { ThrowIfFrozen(); isRequired = value; }
+        }
+
         private MethodInfo getSpecified, setSpecified;
         /// <summary>
         /// Specifies methods for working with optional data members.
@@ -184,14 +203,14 @@ namespace ProtoBuf.Meta
                 Helpers.DebugAssert(itemType == ser.ExpectedType, "Wrong type in the tail");
                 if (memberType.IsArray)
                 {
-                    ser = new ArrayDecorator(ser);
+                    ser = new ArrayDecorator(ser, isPacked ? fieldNumber : 0, isPacked ? wireType : WireType.None);
                 }
                 else
                 {
-                    ser = new ListDecorator(memberType, defaultType, ser);
+                    ser = new ListDecorator(memberType, defaultType, ser, isPacked ? fieldNumber : 0, isPacked ? wireType : WireType.None);
                 }
             }
-            else if (defaultValue != null)
+            else if (defaultValue != null && !isRequired)
             {
                 ser = new DefaultValueDecorator(defaultValue, ser);
             }
