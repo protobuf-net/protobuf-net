@@ -2,7 +2,7 @@
 using System;
 using ProtoBuf.Meta;
 #if FEAT_COMPILER
-using System.Reflection.Emit;
+
 #endif
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -447,7 +447,6 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(storage);
                 ctx.BranchIfTrue(afterNullCheck, true);
 
-                ConstructorInfo defaultCtor;
                 // different ways of creating a new instance
                 if (!useConstructor)
                 {   // DataContractSerializer style
@@ -455,7 +454,7 @@ namespace ProtoBuf.Serializers
                     ctx.EmitCall(typeof(BclHelpers).GetMethod("GetUninitializedObject"));
                     ctx.Cast(forType);
                 } else if (type.IsClass && !type.IsAbstract && (
-                    (defaultCtor = type.GetConstructor(
+                    (type.GetConstructor(
                     BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                     null, Helpers.EmptyTypes, null)) != null))
                 {   // XmlSerializer style

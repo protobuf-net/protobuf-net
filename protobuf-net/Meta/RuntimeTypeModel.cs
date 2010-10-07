@@ -124,12 +124,13 @@ namespace ProtoBuf.Meta
 
         private MetaType RecogniseCommonTypes(Type type)
         {
+#if !NO_GENERICS
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
                 MetaType mt = new MetaType(this, type);
-#pragma warning disable 618 // we're *allowed* to do this; user code isn't (we might roll this as a bespoke serializer rather than a surrogate at some point)
+//#pragma warning disable 618 // we're *allowed* to do this; user code isn't (we might roll this as a bespoke serializer rather than a surrogate at some point)
                 Type surrogate = typeof (KeyValuePairSurrogate<,>).MakeGenericType(type.GetGenericArguments());
-#pragma warning restore 618
+//#pragma warning restore 618
                 mt.SetSurrogate(surrogate);
                 mt.IncludeSerializerMethod = false;
                 mt.Freeze();
@@ -142,6 +143,7 @@ namespace ProtoBuf.Meta
                 surrogateMeta.Freeze();
                 return mt;
             }
+#endif
             return null;
         }
         private MetaType Create(Type type)
@@ -500,7 +502,7 @@ namespace ProtoBuf.Meta
                 "IndexOf", new Type[] { typeof(object) }), null);
             if (hasInheritance)
             {
-                LocalBuilder keyVar = il.DeclareLocal(typeof(int));
+                il.DeclareLocal(typeof(int)); // loc-0
                 il.Emit(OpCodes.Dup);
                 il.Emit(OpCodes.Stloc_0);
 

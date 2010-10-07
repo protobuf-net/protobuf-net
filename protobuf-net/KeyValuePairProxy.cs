@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_GENERICS
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -44,3 +45,4 @@ namespace ProtoBuf
         }
     }
 }
+#endif

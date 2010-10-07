@@ -1,7 +1,6 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Collections;
-using ProtoBuf.Compiler;
 using ProtoBuf.Meta;
 using System.Reflection;
 
@@ -82,7 +81,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        private void EmitWriteArrayLoop(CompilerContext ctx, Local i, Local arr)
+        private void EmitWriteArrayLoop(Compiler.CompilerContext ctx, Compiler.Local i, Compiler.Local arr)
         {
             // i = 0
             ctx.LoadValue(0);

@@ -2,9 +2,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
-using ProtoBuf.Compiler;
 using ProtoBuf.Meta;
-using System.Diagnostics;
 
 namespace ProtoBuf.Serializers
 {
@@ -83,7 +81,7 @@ namespace ProtoBuf.Serializers
         {
             using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
-                Compiler.CodeLabel readPacked = packedWireType == WireType.None ? new CodeLabel() : ctx.DefineLabel();                                   
+                Compiler.CodeLabel readPacked = packedWireType == WireType.None ? new Compiler.CodeLabel() : ctx.DefineLabel();                                   
                 if (packedWireType != WireType.None)
                 {
                     ctx.LoadReaderWriter();
@@ -135,7 +133,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        private static void EmitReadAndAddItem(CompilerContext ctx, Local list, IProtoSerializer tail, MethodInfo add)
+        private static void EmitReadAndAddItem(Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add)
         {
             ctx.LoadValue(list);
             Type itemType = tail.ExpectedType;

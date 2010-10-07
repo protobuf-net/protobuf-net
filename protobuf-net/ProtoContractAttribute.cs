@@ -37,9 +37,15 @@ namespace ProtoBuf
         public ImplicitFields ImplicitFields { get { return implicitFields; } set { implicitFields = value; } }
         private ImplicitFields implicitFields;
 
-  
 
-        private bool? inferTagFromName;
+        private enum TriBool : byte
+        {
+            Null = 0,
+            True,
+            False
+        }
+
+        private TriBool inferTagFromName;
         /// <summary>
         /// Enables/disables automatic tag generation based on the existing name / order
         /// of the defined members. This option is not used for members marked
@@ -51,8 +57,19 @@ namespace ProtoBuf
         /// <remarks>If not specified, the default is assumed from <see cref="Serializer.GlobalOptions.InferTagFromName"/>.</remarks>
         public bool InferTagFromName
         {
-            get { return inferTagFromName ?? Serializer.GlobalOptions.InferTagFromName; }
-            set { inferTagFromName = value; }
+            get
+            {
+                switch (inferTagFromName)
+                {
+                    case TriBool.True:
+                        return true;
+                    case TriBool.False:
+                        return false;
+                    default:
+                        return Serializer.GlobalOptions.InferTagFromName;
+                }
+            }
+            set { inferTagFromName = value ? TriBool.True : TriBool.False; }
         }
 
         private int dataMemberOffset;

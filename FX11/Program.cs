@@ -1,25 +1,22 @@
 ﻿
-using ProtoBuf.Meta;
-using System.IO;
 using System;
-using ProtoBuf;
-using SampleDto;
-using NETCFClient;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
-using NUnit.Framework;
-using ProtoBuf.unittest;
+using NETCFClient;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using SampleDto;
 namespace FX11
 {
     
-    [TestFixture]
     public class FX11_Program
     {
-        [Test]
+        /*
         public void CheckThisTestRunIsForCLR2()
         {   // because TestDriven.NET on VS2010 gets uppity
             Assert.AreEqual(2, Environment.Version.Major);
-        }
+        }*/
 
         private static void DumpObject(string header, PropertyInfo[] props, object obj) {
             Console.WriteLine();
@@ -310,7 +307,7 @@ namespace FX11
 #if FEAT_COMPILER
 
            TypeModel compiled = model.Compile("CustomerModel", "CustomerModel.dll");
-           PEVerify.Verify("CustomerModel.dll");
+           //PEVerify.Verify("CustomerModel.dll");
            compiled = model.Compile("CustomerModel", "CustomerModel.dll");
            WriteCustomer(compiled, "Compiled - class", cust2);
            WriteCustomer(compiled, "Compiled - struct", cust2);

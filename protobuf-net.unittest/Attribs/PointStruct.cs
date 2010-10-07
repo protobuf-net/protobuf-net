@@ -46,10 +46,8 @@ namespace ProtoBuf.unittest.Attribs
         [ProtoContract]
         public struct Point
         {
-            [ProtoMember(1)]
-            private int x;
-            [ProtoMember(2)]
-            private int y;
+            [ProtoMember(1)] private readonly int x;
+            [ProtoMember(2)] private readonly int y;
             public int X { get { return x; } }
             public int Y { get { return y; } }
             public Point(int x, int y)

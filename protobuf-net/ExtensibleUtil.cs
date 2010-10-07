@@ -1,7 +1,8 @@
-﻿using System;
+﻿#if !NO_GENERICS
+
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf
@@ -168,3 +169,4 @@ namespace ProtoBuf
         }
     }
 }
+#endif
