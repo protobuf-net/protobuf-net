@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
-using System.Runtime.Serialization;
+
 #if MF
 using EndOfStreamException = System.ApplicationException;
 using OverflowException = System.ApplicationException;
@@ -28,6 +28,9 @@ namespace ProtoBuf
         /// Gets the number of the field being processed.
         /// </summary>
         public int FieldNumber { get { return fieldNumber; } }
+        /// <summary>
+        /// Indicates the underlying proto serialization format on the wire.
+        /// </summary>
         public WireType WireType { get { return wireType; } }
         
         internal ProtoReader(Stream source, TypeModel model) :
@@ -402,6 +405,9 @@ namespace ProtoBuf
             }
             throw CreateException();
         }
+        /// <summary>
+        /// Throws an exception indication that the given value cannot be mapped to an enum.
+        /// </summary>
         public void ThrowEnumException(Type type, int value)
         {
             string desc = type == null ? "<null>" : type.FullName;

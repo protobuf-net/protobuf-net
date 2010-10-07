@@ -744,6 +744,9 @@ namespace ProtoBuf
                     throw CreateException(writer);
             }
         }
+        /// <summary>
+        /// Throws an exception indicating that the given enum cannot be mapped to a serialized value.
+        /// </summary>
         public static void ThrowEnumException(ProtoWriter writer, object enumValue)
         {
             string rhs = enumValue == null ? "<null>" : (enumValue.GetType().FullName + "." + enumValue.ToString());

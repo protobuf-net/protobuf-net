@@ -339,6 +339,10 @@ namespace ProtoBuf.Meta
             ThrowIfFrozen();
             this.name = name;
         }
+        /// <summary>
+        /// Gets the logical name for this member in the schema (this is not critical for binary serialization, but may be used
+        /// when inferring a schema).
+        /// </summary>
         public string Name
         {
             get { return Helpers.IsNullOrEmpty(name) ? member.Name : name; }

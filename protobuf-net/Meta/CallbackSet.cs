@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Reflection;
-using System.Runtime.Serialization;
+
 
 namespace ProtoBuf.Meta
 {
@@ -46,7 +46,7 @@ namespace ProtoBuf.Meta
             ParameterInfo[] args = callback.GetParameters();
             if (callback.ReturnType == typeof(void) && (args.Length == 0
 #if PLAT_BINARYFORMATTER
-                || (args.Length == 1 && args[0].ParameterType == typeof(StreamingContext))
+                || (args.Length == 1 && args[0].ParameterType == typeof(System.Runtime.Serialization.StreamingContext))
 #endif
                 )) { }
             else throw new ArgumentException("Invalid callback signature", "callback");

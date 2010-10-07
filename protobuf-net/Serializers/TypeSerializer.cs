@@ -5,7 +5,7 @@ using ProtoBuf.Meta;
 
 #endif
 using System.Reflection;
-using System.Runtime.Serialization;
+
 
 
 namespace ProtoBuf.Serializers
@@ -179,7 +179,7 @@ namespace ProtoBuf.Serializers
                 {
                     case 0: method.Invoke(obj, null); break;
 #if PLAT_BINARYFORMATTER
-                    case 1: method.Invoke(obj, new object[] { new StreamingContext(StreamingContextState) }); break;
+                    case 1: method.Invoke(obj, new object[] { new System.Runtime.Serialization.StreamingContext(StreamingContextState) }); break;
 #endif
                     default: throw new NotSupportedException("Invalid callback signature for this platform");
                 }
@@ -285,11 +285,13 @@ namespace ProtoBuf.Serializers
             if (method != null)
             {
                 ctx.CopyValue(); // assumes the target is on the stack, and that we want to *retain* it on the stack
+#if PLAT_BINARYFORMATTER
                 if (method.GetParameters().Length == 1)
                 {
                     ctx.LoadValue((int)StreamingContextState);
-                    ctx.EmitCtor(typeof(StreamingContext), new Type[] { typeof(StreamingContextStates) });
+                    ctx.EmitCtor(typeof(System.Runtime.Serialization.StreamingContext), new Type[] { typeof(System.Runtime.Serialization.StreamingContextStates) });
                 }
+#endif
                 ctx.EmitCall(method);
             }
         }
@@ -332,7 +334,10 @@ namespace ProtoBuf.Serializers
             ctx.MarkLabel(@break);                
             ctx.DiscardValue();
         }
-        const StreamingContextStates StreamingContextState = StreamingContextStates.Persistence;
+#if PLAT_BINARYFORMATTER
+        const System.Runtime.Serialization.StreamingContextStates StreamingContextState
+            = System.Runtime.Serialization.StreamingContextStates.Persistence;
+#endif
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type expected = ExpectedType;

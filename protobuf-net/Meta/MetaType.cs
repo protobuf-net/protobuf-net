@@ -785,10 +785,14 @@ namespace ProtoBuf.Meta
 
         private bool enumPassthru;
 
+        /// <summary>
+        /// Gets or sets a value indicating that an enum should be treated directly as an int/short/etc, rather
+        /// than enforcing .proto enum rules. This is useful *in particul* for [Flags] enums.
+        /// </summary>
         public bool EnumPassthru
         {
             get { return enumPassthru; }
-            set { enumPassthru = value; }
+            set { ThrowIfFrozen(); enumPassthru = value; }
         }
     }
 }

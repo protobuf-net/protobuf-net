@@ -54,7 +54,7 @@ namespace ProtoBuf
         {
 #if MF
             Microsoft.SPOT.Trace.Print(message);
-#elif SILVERLIGHT || MONODROID
+#elif SILVERLIGHT || MONODROID || CF2
             System.Diagnostics.Debug.WriteLine(message);
 #else
             System.Diagnostics.Trace.WriteLine(message);
