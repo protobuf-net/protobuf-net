@@ -32,16 +32,20 @@ namespace ProtoBuf
         /// Indicates the underlying proto serialization format on the wire.
         /// </summary>
         public WireType WireType { get { return wireType; } }
-        
-        internal ProtoReader(Stream source, TypeModel model) :
+        /// <summary>
+        /// Creates a new reader against a stream
+        /// </summary>
+        /// <param name="source">The source stream</param>
+        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+        public ProtoReader(Stream source, TypeModel model) :
             this(source, model, -1)
         {}
         private int dataRemaining;
         private readonly bool isFixedLength;
         internal ProtoReader(Stream source, TypeModel model, int length)
         {
-            if (source == null) throw new ArgumentNullException("dest");
-            if (!source.CanRead) throw new ArgumentException("Cannot read from stream", "dest");
+            if (source == null) throw new ArgumentNullException("source");
+            if (!source.CanRead) throw new ArgumentException("Cannot read from stream", "source");
             this.source = source;
             this.ioBuffer = BufferPool.GetBuffer();
             this.model = model;

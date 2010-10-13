@@ -355,7 +355,7 @@ namespace ProtoBuf
         /// Creates a new writer against a stream
         /// </summary>
         /// <param name="dest">The destination stream</param>
-        /// <param name="model">The model to use for serialization</param>
+        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         public ProtoWriter(Stream dest, TypeModel model)
         {
             if (dest == null) throw new ArgumentNullException("dest");

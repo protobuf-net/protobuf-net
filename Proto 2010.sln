@@ -24,7 +24,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Examples", "Examples\Exampl
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net", "protobuf-net\protobuf-net.csproj", "{8374E4D7-2A91-48F1-9360-09B09CF27C3F}"
 EndProject
-Project("{00000000-0000-0000-0000-000000000000}") = "protobuf-net_Silverlight", "protobuf-net_Silverlight\protobuf-net_Silverlight.csproj", "{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net_Silverlight", "protobuf-net_Silverlight\protobuf-net_Silverlight.csproj", "{35032FC5-65E0-4FE4-8DBC-A31F0694EC14}"
 EndProject
 Project("{00000000-0000-0000-0000-000000000000}") = "SilverlightExtended", "SilverlightExtended\SilverlightExtended.csproj", "{05A18144-D234-46D7-A36C-CD45BA884746}"
 EndProject
@@ -68,6 +68,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoSerBuilder", "MonoSerBuilder\MonoSerBuilder.csproj", "{023153EE-457C-42AE-AB01-A37A1AB2AFC1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net_Phone7", "protobuf-net_Phone7\protobuf-net_Phone7.csproj", "{9308A24C-0A5C-40AE-9767-EBBE54605CA2}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Experimental", "Experimental", "{E09E61AC-1C52-43EE-8C36-4BA33498EFE0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataTableSerializer", "DataTableSerializer\DataTableSerializer.csproj", "{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -576,6 +580,31 @@ Global
 		{9308A24C-0A5C-40AE-9767-EBBE54605CA2}.Silverlight2|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{9308A24C-0A5C-40AE-9767-EBBE54605CA2}.Silverlight2|Mixed Platforms.Build.0 = Release|Any CPU
 		{9308A24C-0A5C-40AE-9767-EBBE54605CA2}.Silverlight2|x86.ActiveCfg = Release|Any CPU
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Debug|x86.ActiveCfg = Debug|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Debug|x86.Build.0 = Debug|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Net20|Any CPU.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Net20|Mixed Platforms.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Net20|Mixed Platforms.Build.0 = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Net20|x86.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Net20|x86.Build.0 = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Profile|Any CPU.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Profile|Mixed Platforms.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Profile|Mixed Platforms.Build.0 = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Profile|x86.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Profile|x86.Build.0 = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Release|Any CPU.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Release|Mixed Platforms.Build.0 = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Release|x86.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Release|x86.Build.0 = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Silverlight2|Any CPU.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Silverlight2|Mixed Platforms.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Silverlight2|Mixed Platforms.Build.0 = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Silverlight2|x86.ActiveCfg = Release|x86
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6}.Silverlight2|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -603,5 +632,6 @@ Global
 		{BF5D8195-98C1-48E0-B10C-7133B1E61FF4} = {F6EBB789-F278-4AAC-90F0-BA0B4C2CBA18}
 		{2B054760-E46B-430B-885D-38E73DBAD3AC} = {F6EBB789-F278-4AAC-90F0-BA0B4C2CBA18}
 		{023153EE-457C-42AE-AB01-A37A1AB2AFC1} = {F6EBB789-F278-4AAC-90F0-BA0B4C2CBA18}
+		{78DC3F04-B2DA-47E6-98BE-84A6223D8FF6} = {E09E61AC-1C52-43EE-8C36-4BA33498EFE0}
 	EndGlobalSection
 EndGlobal
