@@ -56,8 +56,10 @@ namespace ExperimentalDataTableSerialization
                 dt.ReadXml(stream);
                 CheckTables(table, dt);
             });
-
-            WriteWithTiming("BinaryFormatter", stream => bf.Serialize(stream, table), stream => CheckTables(table, bf.Deserialize(stream)));
+            table.RemotingFormat = SerializationFormat.Xml;
+            WriteWithTiming("BinaryFormatter (rf:xml)", stream => bf.Serialize(stream, table), stream => CheckTables(table, bf.Deserialize(stream)));
+            table.RemotingFormat = SerializationFormat.Binary;
+            WriteWithTiming("BinaryFormatter (rf:binary)", stream => bf.Serialize(stream, table), stream => CheckTables(table, bf.Deserialize(stream)));
 
             WriteWithTiming("protobuf-net v2", stream => ProtoWrite(table, stream), stream => CheckTables(table, ProtoRead(stream)));
         }
