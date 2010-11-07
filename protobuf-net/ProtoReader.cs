@@ -805,23 +805,40 @@ namespace ProtoBuf
         /// </summary>
         public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber)
         {
+            int bytesRead;
+            return ReadLengthPrefix(source, expectHeader, style, out fieldNumber, out bytesRead);
+        }
+
+        /// <summary>
+        /// Reads the length-prefix of a message from a stream without buffering additional data, allowing a fixed-length
+        /// reader to be created.
+        /// </summary>
+        public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber, out int bytesRead)
+        {
             fieldNumber = 0;
             switch (style)
             {
-                case PrefixStyle.None:                    
+                case PrefixStyle.None:
+                    bytesRead = 0;
                     return int.MaxValue;
                 case PrefixStyle.Base128:
                     uint val;
+                    int tmpBytesRead;
+                    bytesRead = 0;
                     if (expectHeader)
                     {                        
-                        if (ProtoReader.TryReadUInt32Variant(source, out val))
+                        tmpBytesRead = ProtoReader.TryReadUInt32Variant(source, out val);
+                        bytesRead += tmpBytesRead;
+                        if (tmpBytesRead > 0)
                         {
                             if ((val & 7) != (uint)WireType.String)
                             { // got a header, but it isn't a string
                                 throw new InvalidOperationException();
                             }
                             fieldNumber = (int)(val >> 3);
-                            if (!ProtoReader.TryReadUInt32Variant(source, out val))
+                            tmpBytesRead = ProtoReader.TryReadUInt32Variant(source, out val);
+                            bytesRead += tmpBytesRead;
+                            if (bytesRead == 0)
                             { // got a header, but no length
                                 throw EoF(null);
                             }
@@ -829,18 +846,25 @@ namespace ProtoBuf
                         }
                         else
                         { // no header
+                            bytesRead = 0;
                             return -1;
                         }
                     }
                     // check for a length
-                    return ProtoReader.TryReadUInt32Variant(source, out val)
-                        ? (int)val : -1;
+                    tmpBytesRead = ProtoReader.TryReadUInt32Variant(source, out val);
+                    bytesRead += tmpBytesRead;
+                    return bytesRead < 0 ? -1 : (int)val;
 
                 case PrefixStyle.Fixed32:
                     {
                         int b = source.ReadByte();
-                        return b < 0 ? -1 :
-                            b
+                        if (b < 0)
+                        {
+                            bytesRead = 0;
+                            return -1;
+                        }
+                        bytesRead = 4;
+                        return b 
                              | (ReadByteOrThrow(source) << 8)
                              | (ReadByteOrThrow(source) << 16)
                              | (ReadByteOrThrow(source) << 24);
@@ -848,8 +872,13 @@ namespace ProtoBuf
                 case PrefixStyle.Fixed32BigEndian:
                     {
                         int b = source.ReadByte();
-                        return b < 0 ? -1 :
-                            (b << 24)
+                        if (b < 0)
+                        {
+                            bytesRead = 0;
+                            return -1;
+                        }
+                        bytesRead = 4;
+                        return (b << 24)
                             | (ReadByteOrThrow(source) << 16)
                             | (ReadByteOrThrow(source) << 8)
                             | ReadByteOrThrow(source);
@@ -858,35 +887,35 @@ namespace ProtoBuf
                     throw new ArgumentOutOfRangeException("style");
             }
         }
-
-        private static bool TryReadUInt32Variant(Stream source, out uint value)
+        /// <returns>The number of bytes consumed; 0 if no data available</returns>
+        private static int TryReadUInt32Variant(Stream source, out uint value)
         {
             value = 0;
             int b = source.ReadByte();
-            if (b < 0) { return false; }
+            if (b < 0) { return 0; }
             value = (uint)b;
-            if ((value & 0x80) == 0) return true;
+            if ((value & 0x80) == 0) { return 1; }
             value &= 0x7F;
 
             b = source.ReadByte();
             if (b < 0) throw EoF(null);
             value |= ((uint)b & 0x7F) << 7;
-            if ((b & 0x80) == 0) return true;
+            if ((b & 0x80) == 0) return 2;
 
             b = source.ReadByte();
             if (b < 0) throw EoF(null);
             value |= ((uint)b & 0x7F) << 14;
-            if ((b & 0x80) == 0) return true;
+            if ((b & 0x80) == 0) return 3;
 
             b = source.ReadByte();
             if (b < 0) throw EoF(null);
             value |= ((uint)b & 0x7F) << 21;
-            if ((b & 0x80) == 0) return true;
+            if ((b & 0x80) == 0) return 4;
 
             b = source.ReadByte();
             if (b < 0) throw EoF(null);
             value |= (uint)b << 28; // can only use 4 bits from this chunk
-            if ((b & 0xF0) == 0) return true;
+            if ((b & 0xF0) == 0) return 5;
 
             throw new OverflowException();
         }

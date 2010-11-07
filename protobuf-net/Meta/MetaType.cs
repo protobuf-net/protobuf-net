@@ -391,6 +391,7 @@ namespace ProtoBuf.Meta
                 case TypeCode.UInt64: defaultValue = (ulong)0; break;
                 default:
                     if (effectiveType == typeof(TimeSpan)) defaultValue = TimeSpan.Zero;
+                    if (effectiveType == typeof(Guid)) defaultValue = Guid.Empty;
                     break;
             }
             bool done = false;

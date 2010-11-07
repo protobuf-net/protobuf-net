@@ -30,9 +30,11 @@ namespace Examples.Issues
         public void TestWrapped()
         {
             Foo foo = new Foo { Pair = new KeyPair<int, string>(1, "abc") };
+            Assert.AreEqual(1, foo.Pair.Key1, "Key1 - orig");
+            Assert.AreEqual("abc", foo.Pair.Key2, "Key2 - orig");
             var clone = Serializer.DeepClone(foo);
-            Assert.AreEqual(foo.Pair.Key1, clone.Pair.Key1);
-            Assert.AreEqual(foo.Pair.Key2, clone.Pair.Key2);
+            Assert.AreEqual(1, clone.Pair.Key1, "Key1 - clone");
+            Assert.AreEqual("abc", clone.Pair.Key2, "Key2 - clone");
         }
     }
     [DataContract]

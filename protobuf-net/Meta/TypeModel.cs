@@ -169,8 +169,11 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int fieldNumber)
         {
-            return DeserializeWithLengthPrefix(source, value, type, style, fieldNumber, null);
+            int bytesRead;
+            return DeserializeWithLengthPrefix(source, value, type, style, fieldNumber, null, out bytesRead);
         }
+
+
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
         /// data - useful with network IO.
@@ -186,13 +189,36 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
         {
+            int bytesRead;
+            return DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out bytesRead);
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
+        /// data - useful with network IO.
+        /// </summary>
+        /// <param name="type">The type being merged.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="style">How to encode the length prefix.</param>
+        /// <param name="expectedField">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
+        /// <param name="resolver">Used to resolve types on a per-field basis.</param>
+        /// <param name="bytesRead">Returns the number of bytes consumed by this operation (includes length-prefix overheads and any skipped data).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out int bytesRead)
+        {
             bool skip;
             int len;
+            int tmpBytesRead;
+            bytesRead = 0;
             do
             {
                 int actualField;
                 bool expectPrefix = expectedField > 0 || resolver != null;
-                len = ProtoReader.ReadLengthPrefix(source, expectPrefix, style, out actualField);
+                len = ProtoReader.ReadLengthPrefix(source, expectPrefix, style, out actualField, out tmpBytesRead);
+                bytesRead += tmpBytesRead;
                 if (len < 0) return value;
 
                 if (expectedField == 0 && type == null && resolver != null)
@@ -206,6 +232,7 @@ namespace ProtoBuf.Meta
                 {
                     if (len == int.MaxValue) throw new InvalidOperationException();
                     ProtoReader.Seek(source, len, null);
+                    bytesRead += len;
                 }
             } while (skip);
 
@@ -213,7 +240,9 @@ namespace ProtoBuf.Meta
             if (key < 0) throw new InvalidOperationException();
             using (ProtoReader reader = new ProtoReader(source, this, len))
             {
-                return Deserialize(key, value, reader);
+                object result = Deserialize(key, value, reader);
+                bytesRead += reader.Position;
+                return result;
             }
 
         }

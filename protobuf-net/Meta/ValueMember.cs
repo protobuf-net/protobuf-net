@@ -98,6 +98,7 @@ namespace ProtoBuf.Meta
                 }
                 if (type == typeof(TimeSpan)) return TimeSpan.Parse(s);
                 if (type == typeof(Uri)) return s; // Uri is decorated as string
+                if (type == typeof(Guid)) return new Guid(s);
             }
             if (type.IsEnum) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);

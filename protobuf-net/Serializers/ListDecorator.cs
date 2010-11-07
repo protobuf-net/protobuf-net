@@ -28,7 +28,7 @@ namespace ProtoBuf.Serializers
                     case WireType.Variant:
                         break;
                     default:
-                        throw new ArgumentException("Packed buffers are not supported for wire-type: " + packedWireType, "packedFieldNumber");
+                        throw new InvalidOperationException("Only simple data-types can use packed encoding");
                 }
                 this.packedFieldNumber = packedFieldNumber;
                 this.packedWireType = packedWireType;
