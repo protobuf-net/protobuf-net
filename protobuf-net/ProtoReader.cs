@@ -186,7 +186,7 @@ namespace ProtoBuf
             {   // throttle it if needed
                 if (dataRemaining < canRead) canRead = dataRemaining;
             }
-            while (count > 0 && (bytesRead = source.Read(ioBuffer, writePos, canRead)) > 0)
+            while (count > 0 && canRead > 0 && (bytesRead = source.Read(ioBuffer, writePos, canRead)) > 0)
             {
                 available += bytesRead;
                 count -= bytesRead;
