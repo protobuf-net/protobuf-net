@@ -226,7 +226,12 @@ namespace ProtoBuf
         /// expected and all records are returned).</param>
         /// <returns>The sequence of deserialized objects.</returns>
         public static IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int fieldNumber)
-        { throw new NotImplementedException(); }//TODO: NotImplementedException
+        {
+            foreach(object obj in RuntimeTypeModel.Default.DeserializeItems(source, typeof(T), style, fieldNumber, null))
+            {
+                yield return (T)obj;
+            }
+        }
 
         /// <summary>
         /// Creates a new instance from a protocol-buffer stream that has a length-prefix

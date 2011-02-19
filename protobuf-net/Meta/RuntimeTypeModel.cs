@@ -690,6 +690,8 @@ namespace ProtoBuf.Meta
             int index = FindOrAddAuto(type, false, false, false);
             return index < 0 ? null : ((MetaType)types[index]).GetEnumMap();
         }
+
+
     }
     
 }

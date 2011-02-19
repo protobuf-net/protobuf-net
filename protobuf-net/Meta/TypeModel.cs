@@ -209,10 +209,21 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out int bytesRead)
         {
+            bool haveObject;
+            return DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out bytesRead, out haveObject);
+        }
+
+        private object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out int bytesRead, out bool haveObject)
+        {
+            haveObject = false;
             bool skip;
             int len;
             int tmpBytesRead;
             bytesRead = 0;
+            if (type == null && (style != PrefixStyle.Base128 || resolver == null))
+            {
+                throw new InvalidOperationException("A type must be provided unless base-128 prefixing is being used in combination with a resolver");
+            }
             do
             {
                 int actualField;
@@ -221,12 +232,20 @@ namespace ProtoBuf.Meta
                 bytesRead += tmpBytesRead;
                 if (len < 0) return value;
 
-                if (expectedField == 0 && type == null && resolver != null)
+                switch (style)
                 {
-                    type = resolver(actualField);
-                    skip = type == null;
+                    case PrefixStyle.Base128:
+                        if (expectedField == 0 && type == null && resolver != null)
+                        {
+                            type = resolver(actualField);
+                            skip = type == null;
+                        }
+                        else { skip = expectedField != actualField; }
+                        break;
+                    default:
+                        skip = false;
+                        break;
                 }
-                else { skip = expectedField != actualField; }
 
                 if (skip)
                 {
@@ -242,10 +261,24 @@ namespace ProtoBuf.Meta
             {
                 object result = Deserialize(key, value, reader);
                 bytesRead += reader.Position;
+                haveObject = true;
                 return result;
             }
+            
 
         }
+
+        public System.Collections.IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
+        {
+            bool haveObject;
+            do
+            {
+                int bytesRead;
+                object next = DeserializeWithLengthPrefix(source, null, type, style, expectedField, resolver, out bytesRead, out haveObject);
+                if (haveObject) yield return next;
+            } while (haveObject);
+        }
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream,
         /// with a length-prefix. This is useful for socket programming,
