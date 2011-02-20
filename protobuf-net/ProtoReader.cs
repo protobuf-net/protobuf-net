@@ -49,7 +49,7 @@ namespace ProtoBuf
             this.source = source;
             this.ioBuffer = BufferPool.GetBuffer();
             this.model = model;
-            isFixedLength = length > 0;
+            isFixedLength = length >= 0;
             dataRemaining = isFixedLength ? length : 0;
         }
         /// <summary>

@@ -227,10 +227,7 @@ namespace ProtoBuf
         /// <returns>The sequence of deserialized objects.</returns>
         public static IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int fieldNumber)
         {
-            foreach(object obj in RuntimeTypeModel.Default.DeserializeItems(source, typeof(T), style, fieldNumber, null))
-            {
-                yield return (T)obj;
-            }
+            return RuntimeTypeModel.Default.DeserializeItems<T>(source, style, fieldNumber);
         }
 
         /// <summary>

@@ -255,28 +255,81 @@ namespace ProtoBuf.Meta
                 }
             } while (skip);
 
-            int key = GetKey(ref type);
-            if (key < 0) throw new InvalidOperationException();
+            
             using (ProtoReader reader = new ProtoReader(source, this, len))
             {
-                object result = Deserialize(key, value, reader);
+                int key = GetKey(ref type);
+                if (key >= 0)
+                {
+                    value = Deserialize(key, value, reader);
+                }
+                else
+                {
+                    if (!TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false))
+                    {
+                        throw new InvalidOperationException();
+                    }
+                }
                 bytesRead += reader.Position;
                 haveObject = true;
-                return result;
+                return value;
             }
-            
-
         }
 
         public System.Collections.IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
         {
-            bool haveObject;
-            do
+            return new DeserializeItemsIterator(this, source, type, style , expectedField, resolver);
+        }
+
+#if !NO_GENERICS
+        public System.Collections.Generic.IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField)
+        {
+            return new DeserializeItemsIterator<T>(this, source, style, expectedField);
+        }
+
+        private class DeserializeItemsIterator<T> : DeserializeItemsIterator,
+            System.Collections.Generic.IEnumerator<T>,
+            System.Collections.Generic.IEnumerable<T>
+        {
+            System.Collections.Generic.IEnumerator<T> System.Collections.Generic.IEnumerable<T>.GetEnumerator() { return this; }
+            public new T Current { get { return (T)base.Current; } }
+            void IDisposable.Dispose() { }
+            public DeserializeItemsIterator(TypeModel model, Stream source, PrefixStyle style, int expectedField)
+                : base(model, source, typeof(T), style, expectedField, null) { }
+        }
+#endif
+        private class DeserializeItemsIterator : IEnumerator, IEnumerable
+        {
+            IEnumerator IEnumerable.GetEnumerator() { return this; }
+            private bool haveObject;
+            private object current;
+            public bool MoveNext()
             {
-                int bytesRead;
-                object next = DeserializeWithLengthPrefix(source, null, type, style, expectedField, resolver, out bytesRead, out haveObject);
-                if (haveObject) yield return next;
-            } while (haveObject);
+                if (haveObject)
+                {
+                    int bytesRead;
+                    current = model.DeserializeWithLengthPrefix(source, null, type, style, expectedField, resolver, out bytesRead, out haveObject);
+                }
+                return haveObject;
+            }
+            void IEnumerator.Reset() { throw new NotSupportedException(); }
+            public object Current { get { return current; } }
+            private readonly Stream source;
+            private readonly Type type;
+            private readonly PrefixStyle style;
+            private readonly int expectedField;
+            private readonly Serializer.TypeResolver resolver;
+            private readonly TypeModel model;
+            public DeserializeItemsIterator(TypeModel model, Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
+            {
+                haveObject = true;
+                this.source = source;
+                this.type = type;
+                this.style = style;
+                this.expectedField = expectedField;
+                this.resolver = resolver;
+                this.model = model;
+            }
         }
 
         /// <summary>
