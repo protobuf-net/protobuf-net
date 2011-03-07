@@ -364,7 +364,7 @@ namespace ProtoBuf.Meta
             int fieldNumber = 0;
             bool isPacked = false;
             string name = null;
-            bool isRequired = false;
+            bool isRequired = false, asReference = false, dynamicType = false;
             Type itemType = null;
             Type defaultType = null;
             ResolveListTypes(effectiveType, ref itemType, ref defaultType);
@@ -429,6 +429,8 @@ namespace ProtoBuf.Meta
                     GetFieldBoolean(ref isRequired, attrib, "IsRequired");
                     GetFieldBoolean(ref isPacked, attrib, "IsPacked");
                     GetDataFormat(ref dataFormat, attrib, "DataFormat");
+                    GetFieldBoolean(ref asReference, attrib, "AsReference");
+                    GetFieldBoolean(ref dynamicType, attrib, "DynamicType");
                     done = fieldNumber > 0;
                 }
 
@@ -443,6 +445,8 @@ namespace ProtoBuf.Meta
                             GetFieldBoolean(ref isRequired, ppma, "IsRequired");
                             GetFieldBoolean(ref isPacked, ppma, "IsPacked");
                             GetDataFormat(ref dataFormat, ppma, "DataFormat");
+                            GetFieldBoolean(ref asReference, ppma, "AsReference");
+                            GetFieldBoolean(ref dynamicType, ppma, "DynamicType");
                             if (done = fieldNumber > 0) break;                            
                         }
                     }
@@ -501,6 +505,8 @@ namespace ProtoBuf.Meta
                 if(!Helpers.IsNullOrEmpty(name)) vm.SetName(name);
                 vm.IsPacked = isPacked;
                 vm.IsRequired = isRequired;
+                vm.AsReference = asReference;
+                vm.DynamicType = dynamicType;
             }
             return vm;
         }

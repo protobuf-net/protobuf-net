@@ -52,7 +52,7 @@ namespace ProtoBuf
             }
         }
 
-         /// <summary>
+        /// <summary>
         /// Gets a value indicating whether this member is packed.
         /// </summary>
         public bool IsPacked
@@ -61,6 +61,32 @@ namespace ProtoBuf
             set {
                 if (value) options |= MemberSerializationOptions.Packed;
                 else options &= ~MemberSerializationOptions.Packed;
+            }
+        }
+
+        /// <summary>
+        /// Enables full object-tracking/full-graph support.
+        /// </summary>
+        public bool AsReference
+        {
+            get { return (options & MemberSerializationOptions.AsReference) == MemberSerializationOptions.AsReference; }
+            set
+            {
+                if (value) options |= MemberSerializationOptions.AsReference;
+                else options &= ~MemberSerializationOptions.AsReference;
+            }
+        }
+
+        /// <summary>
+        /// Embeds the type information into the stream, allowing usage with types not known in advance.
+        /// </summary>
+        public bool DynamicType
+        {
+            get { return (options & MemberSerializationOptions.DynamicType) == MemberSerializationOptions.DynamicType; }
+            set
+            {
+                if (value) options |= MemberSerializationOptions.DynamicType;
+                else options &= ~MemberSerializationOptions.DynamicType;
             }
         }
 
@@ -90,7 +116,15 @@ namespace ProtoBuf
         /// <summary>
         /// Indicates that the given item is required
         /// </summary>
-        Required = 2
+        Required = 2,
+        /// <summary>
+        /// Enables full object-tracking/full-graph support
+        /// </summary>
+        AsReference = 4,
+        /// <summary>
+        /// Embeds the type information into the stream, allowing usage with types not known in advance
+        /// </summary>
+        DynamicType = 8
     }
 
     /// <summary>

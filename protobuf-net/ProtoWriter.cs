@@ -63,9 +63,21 @@ namespace ProtoBuf
             EndSubItem(token, writer, style);
             
         }
+
+        internal int GetTypeKey(ref Type type)
+        {
+            return model.GetKey(ref type);
+        }
+
+        private NetObjectCache netCache;
+        internal NetObjectCache NetCache
+        {
+            get { return netCache ?? (netCache = new NetObjectCache());}
+        }
+
         private int fieldNumber, flushLock;
         WireType wireType;
-
+        internal WireType WireType { get { return wireType; } }
         /// <summary>
         /// Writes a field-header, indicating the format of the next data we plan to write.
         /// </summary>
@@ -802,6 +814,11 @@ namespace ProtoBuf
         {
             if (fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
             writer.packedFieldNumber = fieldNumber;
+        }
+
+        internal string SerializeType(Type type)
+        {
+            return model.SerializeType(type);
         }
     }
 }

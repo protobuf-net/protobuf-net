@@ -133,7 +133,9 @@ namespace ProtoBuf.Compiler
         }
         internal void CastToObject(Type type)
         {
-            if (type.IsValueType)
+            if (type == typeof(object))
+            { }
+            else if (type.IsValueType)
             {
                 il.Emit(OpCodes.Box, type);
 #if DEBUG_COMPILE
@@ -151,7 +153,9 @@ namespace ProtoBuf.Compiler
 
         internal void CastFromObject(Type type)
         {
-            if (type.IsValueType)
+            if (type == typeof(object))
+            { }
+            else if (type.IsValueType)
             {
 #if FX11
                 il.Emit(OpCodes.Unbox, type);
@@ -1041,6 +1045,11 @@ namespace ProtoBuf.Compiler
 
                 EmitCtor(typeof(decimal), new Type[] { typeof(int), typeof(int), typeof(int), typeof(bool), typeof(byte) });
             }
+        }
+
+        internal void LoadValue(bool value)
+        {
+            Emit(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
         }
     }
 }

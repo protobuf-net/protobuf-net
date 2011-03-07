@@ -814,6 +814,16 @@ namespace ProtoBuf.Meta
         {
             throw new InvalidOperationException("Cannot create an instance of type; no suitable constructor found: " + type.FullName);
         }
+
+        internal string SerializeType(Type type)
+        {
+            return type.AssemblyQualifiedName;
+        }
+
+        internal Type DeserializeType(string value)
+        {
+            return Type.GetType(value);
+        }
     }
 
 }

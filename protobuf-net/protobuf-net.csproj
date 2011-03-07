@@ -144,6 +144,7 @@
     <Compile Include="Meta\SubType.cs" />
     <Compile Include="Meta\TypeModel.cs" />
     <Compile Include="Meta\ValueMember.cs" />
+    <Compile Include="NetObjectCache.cs" />
     <Compile Include="NonGeneric.cs" />
     <Compile Include="PrefixStyle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -164,6 +165,7 @@
     <Compile Include="Serializers\ByteSerializer.cs" />
     <Compile Include="Serializers\KeyValuePairDecorator.cs" />
     <Compile Include="Serializers\ListDecorator.cs" />
+    <Compile Include="Serializers\NetObjectSerializer.cs" />
     <Compile Include="Serializers\SByteSerializer.cs" />
     <Compile Include="Serializers\MemberSpecifiedDecorator.cs" />
     <Compile Include="Serializers\UriDecorator.cs" />

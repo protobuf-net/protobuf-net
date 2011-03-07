@@ -149,6 +149,24 @@ namespace ProtoBuf.Meta
             get { return isRequired; }
             set { ThrowIfFrozen(); isRequired = value; }
         }
+        /// <summary>
+        /// Enables full object-tracking/full-graph support.
+        /// </summary>
+        private bool asReference;
+        public bool AsReference
+        {
+            get { return asReference; }
+            set { ThrowIfFrozen(); asReference = value; }
+        }
+        /// <summary>
+        /// Embeds the type information into the stream, allowing usage with types not known in advance.
+        /// </summary>
+        private bool dynamicType;
+        public bool DynamicType
+        {
+            get { return dynamicType; }
+            set { ThrowIfFrozen(); dynamicType = value; }
+        }
 
         private MethodInfo getSpecified, setSpecified;
         /// <summary>
@@ -194,7 +212,7 @@ namespace ProtoBuf.Meta
         private IProtoSerializer BuildSerializer()
         {
             WireType wireType;
-            IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, out wireType);
+            IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, out wireType, asReference, dynamicType);
 
             // apply tags
             ser = new TagDecorator(fieldNumber, wireType, isStrict, ser);
@@ -245,7 +263,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private IProtoSerializer GetCoreSerializer(Type type, out WireType defaultWireType)
+        private IProtoSerializer GetCoreSerializer(Type type, out WireType defaultWireType, bool asReference, bool dynamicType)
         {
 #if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;
@@ -325,6 +343,11 @@ namespace ProtoBuf.Meta
                 return new BlobSerializer();
             }
             int key = model.GetKey(type, false, true);
+            if(asReference || dynamicType)
+            {
+                defaultWireType = WireType.String;
+                return new NetObjectSerializer(type, key, asReference, dynamicType);
+            }
             if (key >= 0)
             {
                 defaultWireType = WireType.String;

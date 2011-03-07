@@ -289,5 +289,91 @@ namespace ProtoBuf
             
         }
 
+
+        private const int
+            FieldExistingObjectKey = 1,
+            FieldNewObjectKey = 2,
+            FieldExistingTypeKey = 3,
+            FieldNewTypeKey = 4,
+            FieldTypeName = 8,
+            FieldObject = 10;
+
+        public static object ReadNetObject(object value, ProtoReader source, int key)
+        {
+            SubItemToken token = ProtoReader.StartSubItem(source);
+            int fieldNumber;
+            int newObjectKey = -1, newTypeKey = -1;
+            Type type = null;
+            while ((fieldNumber = source.ReadFieldHeader()) > 0)
+            {
+                switch (fieldNumber)
+                {
+                    case FieldExistingObjectKey:
+                        value = source.NetCache.GetKeyedObject(source.ReadInt32());
+                        break;
+                    case FieldNewObjectKey:
+                        newObjectKey = source.ReadInt32();
+                        break;
+                    case FieldExistingTypeKey:
+                        type = (Type)source.NetCache.GetKeyedObject(source.ReadInt32());
+                        key = source.GetTypeKey(ref type);
+                        break;
+                    case FieldNewTypeKey:
+                        newTypeKey = source.ReadInt32();
+                        break;
+                    case FieldTypeName:
+                        type = source.DeserializeType(source.ReadString());
+                        key = source.GetTypeKey(ref type);
+                        break;
+                    case FieldObject:
+                        value = ProtoReader.ReadObject(value, key, source);
+                        break;
+                    default:
+                        source.SkipField();
+                        break;
+                }
+            }
+            if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
+            if (newObjectKey >= 0) source.NetCache.SetKeyedObject(newObjectKey, value);
+            ProtoReader.EndSubItem(token, source);
+            return value;
+        }
+
+        public static void WriteNetObject(object value, ProtoWriter dest, int key, bool dynamicType, bool asReference)
+        {
+            WireType wireType = dest.WireType;
+            SubItemToken token = ProtoWriter.StartSubItem(value, dest);
+            bool writeObject = true;
+            if (asReference)
+            {
+                bool existing;
+                int objectKey = dest.NetCache.AddObjectKey(value, out existing);
+                ProtoWriter.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Variant, dest);
+                ProtoWriter.WriteInt32(objectKey, dest);
+                if (existing) writeObject = false;
+            }
+
+            if (writeObject)
+            {
+                if (dynamicType)
+                {
+                    bool existing;
+                    Type type = value.GetType();
+                    key = dest.GetTypeKey(ref type);
+                    int objectKey = dest.NetCache.AddObjectKey(value, out existing);
+                    ProtoWriter.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Variant, dest);
+                    ProtoWriter.WriteInt32(objectKey, dest);
+                    if (!existing)
+                    {
+                        ProtoWriter.WriteFieldHeader(FieldTypeName, WireType.String, dest);
+                        ProtoWriter.WriteString(dest.SerializeType(type), dest);
+                    }
+                    
+                }
+                ProtoWriter.WriteFieldHeader(FieldObject, wireType, dest);
+                ProtoWriter.WriteObject(value, key, dest);
+            }
+            ProtoWriter.EndSubItem(token, dest);
+        }
     }
 }
