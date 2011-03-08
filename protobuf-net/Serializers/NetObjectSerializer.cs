@@ -33,7 +33,7 @@ namespace ProtoBuf.Serializers
         
         public object Read(object value, ProtoReader source)
         {
-            return BclHelpers.ReadNetObject(value, source, key);
+            return BclHelpers.ReadNetObject(value, source, key, type == typeof(object) ? null : type);
         }
         public void Write(object value, ProtoWriter dest)
         {
@@ -47,6 +47,8 @@ namespace ProtoBuf.Serializers
             ctx.CastToObject(type);
             ctx.LoadReaderWriter();
             ctx.LoadValue(key);
+            if (type == typeof(object)) ctx.LoadNullRef();
+            else ctx.LoadValue(type);
             ctx.EmitCall(typeof(BclHelpers).GetMethod("ReadNetObject"));
             ctx.CastFromObject(type);
         }

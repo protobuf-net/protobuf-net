@@ -298,12 +298,11 @@ namespace ProtoBuf
             FieldTypeName = 8,
             FieldObject = 10;
 
-        public static object ReadNetObject(object value, ProtoReader source, int key)
+        public static object ReadNetObject(object value, ProtoReader source, int key, Type type)
         {
             SubItemToken token = ProtoReader.StartSubItem(source);
             int fieldNumber;
             int newObjectKey = -1, newTypeKey = -1;
-            Type type = null;
             while ((fieldNumber = source.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
@@ -324,17 +323,23 @@ namespace ProtoBuf
                     case FieldTypeName:
                         type = source.DeserializeType(source.ReadString());
                         key = source.GetTypeKey(ref type);
+                        if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
                         break;
                     case FieldObject:
-                        value = ProtoReader.ReadObject(value, key, source);
+                        if (value == null) value = Activator.CreateInstance(type); // TODO wcf-style inits
+                        if (newObjectKey >= 0) source.NetCache.SetKeyedObject(newObjectKey, value);
+                        object oldValue = value;
+                        value = ProtoReader.ReadObject(oldValue, key, source);
+                        if (!ReferenceEquals(oldValue, value))
+                        {
+                            throw new ProtoException("A reference-tracked object changed reference during deserialization");
+                        }                        
                         break;
                     default:
                         source.SkipField();
                         break;
                 }
             }
-            if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
-            if (newObjectKey >= 0) source.NetCache.SetKeyedObject(newObjectKey, value);
             ProtoReader.EndSubItem(token, source);
             return value;
         }

@@ -12,12 +12,17 @@ namespace ProtoBuf
 
         internal object GetKeyedObject(int key)
         {
+            if (key < 0 || key >= list.Count) throw new ProtoException("Internal error; a missing key occurred");
             return list[key];
         }
 
         internal void SetKeyedObject(int key, object value)
         {
-            if (key != list.Add(value))
+            if (key < list.Count)
+            {
+                if (!ReferenceEquals(list[key], value)) throw new ProtoException("Reference-tracked objects cannot change reference");
+            }
+            else if (key != list.Add(value))
             {
                 throw new ProtoException("Internal error; a key mismatch occurred");
             }
