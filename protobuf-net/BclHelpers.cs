@@ -298,6 +298,9 @@ namespace ProtoBuf
             FieldTypeName = 8,
             FieldObject = 10;
 
+        /// <summary>
+        /// Reads an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
+        /// </summary>
         public static object ReadNetObject(object value, ProtoReader source, int key, Type type)
         {
             SubItemToken token = ProtoReader.StartSubItem(source);
@@ -343,7 +346,9 @@ namespace ProtoBuf
             ProtoReader.EndSubItem(token, source);
             return value;
         }
-
+        /// <summary>
+        /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
+        /// </summary>
         public static void WriteNetObject(object value, ProtoWriter dest, int key, bool dynamicType, bool asReference)
         {
             WireType wireType = dest.WireType;

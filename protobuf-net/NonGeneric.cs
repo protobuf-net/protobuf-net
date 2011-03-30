@@ -6,6 +6,7 @@ namespace ProtoBuf
 {
     public static partial class Serializer
     {
+        #if !NO_RUNTIME
         /// <summary>
         /// Provides non-generic access to the default serializer.
         /// </summary>
@@ -80,6 +81,7 @@ namespace ProtoBuf
             }
             
         }
+#endif
         /// <summary>
         /// Maps a field-number to a type
         /// </summary>

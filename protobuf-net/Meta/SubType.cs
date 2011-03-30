@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_RUNTIME
+using System;
 using System.Collections.Generic;
 using System.Text;
 using ProtoBuf.Serializers;
@@ -53,3 +54,4 @@ namespace ProtoBuf.Meta
         }
     }
 }
+#endif

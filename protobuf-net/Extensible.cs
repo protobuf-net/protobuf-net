@@ -1,4 +1,4 @@
-﻿#if !NO_GENERICS
+﻿#if !NO_GENERICS && !NO_RUNTIME
 using System.Collections.Generic;
 using ProtoBuf.Meta;
 

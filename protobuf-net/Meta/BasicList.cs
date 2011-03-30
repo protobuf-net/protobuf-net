@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Collections;
 
 namespace ProtoBuf.Meta
@@ -219,4 +218,3 @@ namespace ProtoBuf.Meta
 
 
 }
-#endif

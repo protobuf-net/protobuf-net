@@ -275,13 +275,43 @@ namespace ProtoBuf.Meta
                 return value;
             }
         }
-
+        /// <summary>
+        /// Reads a sequence of consecutive length-prefixed items from a stream, using
+        /// either base-128 or fixed-length prefixes. Base-128 prefixes with a tag
+        /// are directly comparable to serializing multiple items in succession
+        /// (use the <see cref="Serializer.ListItemTag"/> tag to emulate the implicit behavior
+        /// when serializing a list/array). When a tag is
+        /// specified, any records with different tags are silently omitted. The
+        /// tag is ignored. The tag is ignores for fixed-length prefixes.
+        /// </summary>
+        /// <param name="source">The binary stream containing the serialized records.</param>
+        /// <param name="style">The prefix style used in the data.</param>
+        /// <param name="expectedField">The tag of records to return (if non-positive, then no tag is
+        /// expected and all records are returned).</param>
+        /// <param name="resolver">On a field-by-field basis, the type of object to deserialize (can be null if "type" is specified). </param>
+        /// <param name="type">The type of object to deserialize (can be null if "resolver" is specified).</param>
+        /// <returns>The sequence of deserialized objects.</returns>
         public System.Collections.IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
         {
             return new DeserializeItemsIterator(this, source, type, style , expectedField, resolver);
         }
 
 #if !NO_GENERICS
+        /// <summary>
+        /// Reads a sequence of consecutive length-prefixed items from a stream, using
+        /// either base-128 or fixed-length prefixes. Base-128 prefixes with a tag
+        /// are directly comparable to serializing multiple items in succession
+        /// (use the <see cref="Serializer.ListItemTag"/> tag to emulate the implicit behavior
+        /// when serializing a list/array). When a tag is
+        /// specified, any records with different tags are silently omitted. The
+        /// tag is ignored. The tag is ignores for fixed-length prefixes.
+        /// </summary>
+        /// <typeparam name="T">The type of object to deserialize.</typeparam>
+        /// <param name="source">The binary stream containing the serialized records.</param>
+        /// <param name="style">The prefix style used in the data.</param>
+        /// <param name="expectedField">The tag of records to return (if non-positive, then no tag is
+        /// expected and all records are returned).</param>
+        /// <returns>The sequence of deserialized objects.</returns>
         public System.Collections.Generic.IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField)
         {
             return new DeserializeItemsIterator<T>(this, source, style, expectedField);

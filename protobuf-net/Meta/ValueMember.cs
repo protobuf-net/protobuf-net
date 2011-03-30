@@ -149,19 +149,21 @@ namespace ProtoBuf.Meta
             get { return isRequired; }
             set { ThrowIfFrozen(); isRequired = value; }
         }
+
+        private bool asReference;
         /// <summary>
         /// Enables full object-tracking/full-graph support.
         /// </summary>
-        private bool asReference;
         public bool AsReference
         {
             get { return asReference; }
             set { ThrowIfFrozen(); asReference = value; }
         }
+
+        private bool dynamicType;
         /// <summary>
         /// Embeds the type information into the stream, allowing usage with types not known in advance.
         /// </summary>
-        private bool dynamicType;
         public bool DynamicType
         {
             get { return dynamicType; }

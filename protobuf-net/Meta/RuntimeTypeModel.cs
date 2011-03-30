@@ -128,9 +128,9 @@ namespace ProtoBuf.Meta
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
                 MetaType mt = new MetaType(this, type);
-//#pragma warning disable 618 // we're *allowed* to do this; user code isn't (we might roll this as a bespoke serializer rather than a surrogate at some point)
+#pragma warning disable 618 // we're *allowed* to do this; user code isn't (we might roll this as a bespoke serializer rather than a surrogate at some point)
                 Type surrogate = typeof (KeyValuePairSurrogate<,>).MakeGenericType(type.GetGenericArguments());
-//#pragma warning restore 618
+#pragma warning restore 618
                 mt.SetSurrogate(surrogate);
                 mt.IncludeSerializerMethod = false;
                 mt.Freeze();

@@ -17,6 +17,7 @@ namespace ProtoBuf
     /// </remarks>
     public static partial class Serializer
     {
+#if !NO_RUNTIME
         /// <summary>
         /// Suggest a .proto definition for the given type
         /// </summary>
@@ -196,11 +197,6 @@ namespace ProtoBuf
 #endif
         }
 
-        /// <summary>
-        /// The field number that is used as a default when serializing/deserializing a list of objects.
-        /// The data is treated as repeated message with field number 1.
-        /// </summary>
-        public const int ListItemTag = 1;
 #if PLAT_BINARYFORMATTER
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
@@ -342,6 +338,11 @@ namespace ProtoBuf
                 return TryReadLengthPrefix(source, style, out length);
             }
         }
-
+#endif
+        /// <summary>
+        /// The field number that is used as a default when serializing/deserializing a list of objects.
+        /// The data is treated as repeated message with field number 1.
+        /// </summary>
+        public const int ListItemTag = 1;
     }
 }
