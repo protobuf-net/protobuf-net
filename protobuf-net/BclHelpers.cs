@@ -45,79 +45,97 @@ namespace ProtoBuf
         /// </summary>
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
-            TimeSpanScale scale;
-            long value = timeSpan.Ticks;
-            if (timeSpan == TimeSpan.MaxValue)
+            long value;
+            switch(dest.WireType)
             {
-                value = 1;
-                scale = TimeSpanScale.MinMax;
-            }
-            else if (timeSpan == TimeSpan.MinValue)
-            {
-                value = -1;
-                scale = TimeSpanScale.MinMax;
-            }
-            else if (value % TimeSpan.TicksPerDay == 0)
-            {
-                scale = TimeSpanScale.Days;
-                value /= TimeSpan.TicksPerDay;
-            }
-            else if (value % TimeSpan.TicksPerHour == 0)
-            {
-                scale = TimeSpanScale.Hours;
-                value /= TimeSpan.TicksPerHour;
-            }
-            else if (value % TimeSpan.TicksPerMinute == 0)
-            {
-                scale = TimeSpanScale.Minutes;
-                value /= TimeSpan.TicksPerMinute;
-            }
-            else if (value % TimeSpan.TicksPerSecond == 0)
-            {
-                scale = TimeSpanScale.Seconds;
-                value /= TimeSpan.TicksPerSecond;
-            }
-            else if (value % TimeSpan.TicksPerMillisecond == 0)
-            {
-                scale = TimeSpanScale.Milliseconds;
-                value /= TimeSpan.TicksPerMillisecond;
-            }
-            else
-            {
-                scale = TimeSpanScale.Ticks;
-            }
+                case WireType.String:
+                case WireType.StartGroup:
+                    TimeSpanScale scale;
+                    value = timeSpan.Ticks;
+                    if (timeSpan == TimeSpan.MaxValue)
+                    {
+                        value = 1;
+                        scale = TimeSpanScale.MinMax;
+                    }
+                    else if (timeSpan == TimeSpan.MinValue)
+                    {
+                        value = -1;
+                        scale = TimeSpanScale.MinMax;
+                    }
+                    else if (value % TimeSpan.TicksPerDay == 0)
+                    {
+                        scale = TimeSpanScale.Days;
+                        value /= TimeSpan.TicksPerDay;
+                    }
+                    else if (value % TimeSpan.TicksPerHour == 0)
+                    {
+                        scale = TimeSpanScale.Hours;
+                        value /= TimeSpan.TicksPerHour;
+                    }
+                    else if (value % TimeSpan.TicksPerMinute == 0)
+                    {
+                        scale = TimeSpanScale.Minutes;
+                        value /= TimeSpan.TicksPerMinute;
+                    }
+                    else if (value % TimeSpan.TicksPerSecond == 0)
+                    {
+                        scale = TimeSpanScale.Seconds;
+                        value /= TimeSpan.TicksPerSecond;
+                    }
+                    else if (value % TimeSpan.TicksPerMillisecond == 0)
+                    {
+                        scale = TimeSpanScale.Milliseconds;
+                        value /= TimeSpan.TicksPerMillisecond;
+                    }
+                    else
+                    {
+                        scale = TimeSpanScale.Ticks;
+                    }
 
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
+                    SubItemToken token = ProtoWriter.StartSubItem(null, dest);
             
-            if(value != 0) {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant, dest);
-                ProtoWriter.WriteInt64(value, dest);
+                    if(value != 0) {
+                        ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant, dest);
+                        ProtoWriter.WriteInt64(value, dest);
+                    }
+                    if(scale != TimeSpanScale.Days) {
+                        ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant, dest);
+                        ProtoWriter.WriteInt32((int)scale, dest);
+                    }
+                    ProtoWriter.EndSubItem(token, dest);
+                    break;
+                case WireType.Fixed64:
+                    ProtoWriter.WriteInt64(timeSpan.Ticks, dest);
+                    break;
+                default:
+                    throw new ProtoException("Unexpected wire-type: " + dest.WireType.ToString());
             }
-            if(scale != TimeSpanScale.Days) {
-                ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant, dest);
-                ProtoWriter.WriteInt32((int)scale, dest);
-            }
-            ProtoWriter.EndSubItem(token, dest);
         }
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream
         /// </summary>        
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
-            long ticks = ReadTimeSpanTicks(source);
-            if (ticks == long.MinValue) { return TimeSpan.MinValue; }
-            if (ticks == long.MaxValue) { return TimeSpan.MaxValue; }
-            return TimeSpan.FromTicks(ticks);
+            long ticks;
+            switch(ticks = ReadTimeSpanTicks(source))
+            {
+                case long.MinValue:return TimeSpan.MinValue;
+                case long.MaxValue: return TimeSpan.MaxValue;
+                default:return TimeSpan.FromTicks(ticks);
+            }
         }
         /// <summary>
         /// Parses a DateTime from a protobuf stream
         /// </summary>
         public static DateTime ReadDateTime(ProtoReader source)
         {
-            long ticks = ReadTimeSpanTicks(source);
-            if (ticks == long.MinValue) { return DateTime.MinValue; }
-            if (ticks == long.MaxValue) { return DateTime.MaxValue; }
-            return EpochOrigin.AddTicks(ticks);
+            long ticks;
+            switch(ticks = ReadTimeSpanTicks(source))
+            {
+                case long.MinValue:return DateTime.MinValue;
+                case long.MaxValue: return DateTime.MaxValue;
+                default:return EpochOrigin.AddTicks(ticks);
+            }
         }
         /// <summary>
         /// Writes a DateTime to a protobuf stream
@@ -125,59 +143,84 @@ namespace ProtoBuf
         public static void WriteDateTime(DateTime value, ProtoWriter dest)
         {
             TimeSpan delta;
-            if (value == DateTime.MaxValue) {
-                delta = TimeSpan.MaxValue;
-            } else if (value == DateTime.MinValue) {
-                delta = TimeSpan.MinValue;
-            } else {
-                delta = value - EpochOrigin;
+            switch (dest.WireType)
+            {
+                case WireType.StartGroup:
+                case WireType.String:
+                    if (value == DateTime.MaxValue)
+                    {
+                        delta = TimeSpan.MaxValue;
+                    }
+                    else if (value == DateTime.MinValue)
+                    {
+                        delta = TimeSpan.MinValue;
+                    }
+                    else
+                    {
+                        delta = value - EpochOrigin;
+                    }
+                    break;
+                default:
+                    delta = value - EpochOrigin;
+                    break;
             }
             WriteTimeSpan(delta, dest);
         }
 
         private static long ReadTimeSpanTicks(ProtoReader source) {
-            SubItemToken token = ProtoReader.StartSubItem(source);
-            int fieldNumber;
-            TimeSpanScale scale = TimeSpanScale.Days;
-            long value = 0;
-            while((fieldNumber = source.ReadFieldHeader()) > 0) {
-                switch(fieldNumber) {
-                    case FieldTimeSpanScale:
-                        scale = (TimeSpanScale)source.ReadInt32();
-                        break;
-                    case FieldTimeSpanValue:
-                        source.Assert(WireType.SignedVariant);
-                        value = source.ReadInt64();
-                        break;
-                    default:
-                        source.SkipField();
-                        break;
-                }
-            }
-            ProtoReader.EndSubItem(token,source);
-            switch (scale)
+            switch (source.WireType)
             {
-                case TimeSpanScale.Days:
-                    return value * TimeSpan.TicksPerDay;
-                case TimeSpanScale.Hours:
-                    return value * TimeSpan.TicksPerHour;
-                case TimeSpanScale.Minutes:
-                    return value * TimeSpan.TicksPerMinute;
-                case TimeSpanScale.Seconds:
-                    return value * TimeSpan.TicksPerSecond;
-                case TimeSpanScale.Milliseconds:
-                    return value * TimeSpan.TicksPerMillisecond;
-                case TimeSpanScale.Ticks:
-                    return value;
-                case TimeSpanScale.MinMax:
-                    switch (value)
+                case WireType.String:
+                case WireType.StartGroup:
+                    SubItemToken token = ProtoReader.StartSubItem(source);
+                    int fieldNumber;
+                    TimeSpanScale scale = TimeSpanScale.Days;
+                    long value = 0;
+                    while ((fieldNumber = source.ReadFieldHeader()) > 0)
                     {
-                        case 1: return long.MaxValue;
-                        case -1: return long.MinValue;
-                        default: throw new ProtoException("Unknown min/max value: " + value.ToString());
+                        switch (fieldNumber)
+                        {
+                            case FieldTimeSpanScale:
+                                scale = (TimeSpanScale)source.ReadInt32();
+                                break;
+                            case FieldTimeSpanValue:
+                                source.Assert(WireType.SignedVariant);
+                                value = source.ReadInt64();
+                                break;
+                            default:
+                                source.SkipField();
+                                break;
+                        }
                     }
+                    ProtoReader.EndSubItem(token, source);
+                    switch (scale)
+                    {
+                        case TimeSpanScale.Days:
+                            return value * TimeSpan.TicksPerDay;
+                        case TimeSpanScale.Hours:
+                            return value * TimeSpan.TicksPerHour;
+                        case TimeSpanScale.Minutes:
+                            return value * TimeSpan.TicksPerMinute;
+                        case TimeSpanScale.Seconds:
+                            return value * TimeSpan.TicksPerSecond;
+                        case TimeSpanScale.Milliseconds:
+                            return value * TimeSpan.TicksPerMillisecond;
+                        case TimeSpanScale.Ticks:
+                            return value;
+                        case TimeSpanScale.MinMax:
+                            switch (value)
+                            {
+                                case 1: return long.MaxValue;
+                                case -1: return long.MinValue;
+                                default: throw new ProtoException("Unknown min/max value: " + value.ToString());
+                            }
+                        default:
+                            throw new ProtoException("Unknown timescale: " + scale.ToString());
+                    }
+                case WireType.Fixed64:
+                    return source.ReadInt64();
                 default:
-                    throw new ProtoException("Unknown timescale: " + scale.ToString());
+                    throw new ProtoException("Unexpected wire-type: " + source.WireType.ToString());
             }
         }
 

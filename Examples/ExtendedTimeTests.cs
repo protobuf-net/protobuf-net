@@ -93,8 +93,21 @@ namespace Examples
             }
         }
 
+        [Test]
+        public void TestFixedOnly()
+        {
+            var when = new DateTime(2010, 05, 17, 8, 30, 0);
+
+            DateTimeFixed val = new DateTimeFixed { When = when };
+            var i64 = Serializer.ChangeType<DateTimeFixed, Int64Fixed>(val);
+            long ticks = (when - origin).Ticks;
+            Assert.AreEqual(ticks, i64.Value, "Wire value:" + when.ToString());
+        }
+
+
         static void TestDate(DateTime when)
         {
+
             long ticks = (when - origin).Ticks;
 
             byte[] bits = BitConverter.GetBytes(ticks);

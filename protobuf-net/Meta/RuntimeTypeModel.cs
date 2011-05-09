@@ -198,6 +198,7 @@ namespace ProtoBuf.Meta
 
         bool frozen, autoAddMissingTypes, autoCompile;
 
+#if FEAT_COMPILER && !FX11
         /// <summary>
         /// Should serializers be compiled on demand? It may be useful
         /// to disable this for debugging purposes.
@@ -207,7 +208,7 @@ namespace ProtoBuf.Meta
             get { return autoCompile; }
             set { autoCompile = value; }
         }
-
+#endif
         /// <summary>
         /// Should support for unexpected types be added automatically?
         /// If false, an exception is thrown when unexpected types

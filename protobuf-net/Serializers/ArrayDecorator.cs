@@ -8,6 +8,7 @@ namespace ProtoBuf.Serializers
 {
     sealed class ArrayDecorator : ProtoDecoratorBase
     {
+
         private readonly int packedFieldNumber;
         private readonly WireType packedWireType;
         public ArrayDecorator(IProtoSerializer tail, int packedFieldNumber, WireType packedWireType)

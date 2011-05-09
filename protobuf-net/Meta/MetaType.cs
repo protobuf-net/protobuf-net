@@ -180,6 +180,9 @@ namespace ProtoBuf.Meta
                 {
                     frozen = true;
                     serializer = BuildSerializer();
+#if FEAT_COMPILER && !FX11
+                    if(model.AutoCompile) CompileInPlace();
+#endif
                 }
                 return serializer;
             }
@@ -188,6 +191,13 @@ namespace ProtoBuf.Meta
         private IProtoTypeSerializer BuildSerializer()
         {
             if (surrogate != null) return new SurrogateSerializer(type, model[surrogate].Serializer);
+
+            Type itemType = TypeModel.GetListItemType(type);
+            if (itemType != null)
+            {
+                ValueMember fakeMember = new ValueMember(model, 1, type, itemType, type, DataFormat.Default);
+                return new TypeSerializer(type, new int[]{1}, new IProtoSerializer[]{fakeMember.Serializer},null, true, true, null);
+            }
 
             fields.Trim();
             int fieldCount = fields.Count;

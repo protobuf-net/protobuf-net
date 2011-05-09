@@ -46,25 +46,36 @@ namespace ProtoBuf.Meta
         /// Creates a new ValueMember instance
         /// </summary>
         public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType, DataFormat dataFormat, object defaultValue) 
+            : this(model, fieldNumber,memberType, itemType, defaultType, dataFormat)
         {
-            if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException("fieldNumber");
             if (member == null) throw new ArgumentNullException("member");
             if (parentType == null) throw new ArgumentNullException("parentType");
-            if (memberType == null) throw new ArgumentNullException("memberType");
-            if (model == null) throw new ArgumentNullException("model");
-            this.fieldNumber = fieldNumber;
-            this.memberType = memberType;
+            if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException("fieldNumber");
+
             this.member = member;
-            this.itemType = itemType;
-            this.defaultType = defaultType;
             this.parentType = parentType;
-            this.model = model;
-            this.dataFormat = dataFormat;
+                        if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException("fieldNumber");
             if (defaultValue != null && !memberType.IsInstanceOfType(defaultValue))
             {
                 defaultValue = ParseDefaultValue(memberType, defaultValue);
             }
             this.defaultValue = defaultValue;
+        }
+        /// <summary>
+        /// Creates a new ValueMember instance
+        /// </summary>
+        internal ValueMember(RuntimeTypeModel model, int fieldNumber, Type memberType, Type itemType, Type defaultType, DataFormat dataFormat) 
+        {
+
+            if (memberType == null) throw new ArgumentNullException("memberType");
+            if (model == null) throw new ArgumentNullException("model");
+            this.fieldNumber = fieldNumber;
+            this.memberType = memberType;
+            this.itemType = itemType;
+            this.defaultType = defaultType;
+
+            this.model = model;
+            this.dataFormat = dataFormat;
         }
         internal Enum GetEnumValue()
         {
@@ -239,18 +250,21 @@ namespace ProtoBuf.Meta
             {
                 ser = new UriDecorator(ser);
             }
-            switch (member.MemberType)
+            if (member != null)
             {
-                case MemberTypes.Property:
-                    ser = new PropertyDecorator(parentType, (PropertyInfo)member, ser); break;
-                case MemberTypes.Field:
-                    ser = new FieldDecorator(parentType, (FieldInfo)member, ser); break;
-                default:
-                    throw new InvalidOperationException();
-            }
-            if (getSpecified != null || setSpecified != null)
-            {
-                ser = new MemberSpecifiedDecorator(getSpecified, setSpecified, ser);
+                switch (member.MemberType)
+                {
+                    case MemberTypes.Property:
+                        ser = new PropertyDecorator(parentType, (PropertyInfo)member, ser); break;
+                    case MemberTypes.Field:
+                        ser = new FieldDecorator(parentType, (FieldInfo)member, ser); break;
+                    default:
+                        throw new InvalidOperationException();
+                }
+                if (getSpecified != null || setSpecified != null)
+                {
+                    ser = new MemberSpecifiedDecorator(getSpecified, setSpecified, ser);
+                }
             }
             return ser;
         }
@@ -261,6 +275,16 @@ namespace ProtoBuf.Meta
                 case DataFormat.FixedSize: return width == 32 ? WireType.Fixed32 : WireType.Fixed64;
                 case DataFormat.TwosComplement:
                 case DataFormat.Default: return WireType.Variant;
+                default: throw new InvalidOperationException();
+            }
+        }
+        private static WireType GetDateTimeWireType(DataFormat format)
+        {
+            switch (format)
+            {
+                case DataFormat.Group: return WireType.StartGroup;
+                case DataFormat.FixedSize: return WireType.Fixed64;
+                case DataFormat.Default: return WireType.String;
                 default: throw new InvalidOperationException();
             }
         }
@@ -303,7 +327,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.Variant;
                     return new BooleanSerializer();
                 case TypeCode.DateTime:
-                    defaultWireType = WireType.String;
+                    defaultWireType = GetDateTimeWireType(dataFormat);
                     return new DateTimeSerializer();
                 case TypeCode.Decimal:
                     defaultWireType = WireType.String;
@@ -326,7 +350,7 @@ namespace ProtoBuf.Meta
             }
             if (type == typeof(TimeSpan))
             {
-                defaultWireType = WireType.String;
+                defaultWireType = GetDateTimeWireType(dataFormat);
                 return new TimeSpanSerializer();
             }
             if (type == typeof(Guid))
