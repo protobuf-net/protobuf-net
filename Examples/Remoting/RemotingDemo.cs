@@ -255,8 +255,9 @@ namespace Examples.Remoting
                 }
                 readWatch.Stop();
 
-                Console.WriteLine("{0}:\t{1}μs/item (read)", caption, (readWatch.ElapsedMilliseconds * 1000.0) / loop);
-                Console.WriteLine("{0}:\t{1}μs/item (write)", caption, (writeWatch.ElapsedMilliseconds * 1000.0) / loop);
+                Console.WriteLine("{0}:\tread: {1}μs/item; write: {2}μs/item; bytes: {3})", caption,
+                    (readWatch.ElapsedMilliseconds * 1000.0) / loop,
+                    (writeWatch.ElapsedMilliseconds * 1000.0) / loop, ms.Length);
             }
         }
     }
