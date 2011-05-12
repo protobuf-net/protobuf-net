@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
         public Type ExpectedType { get { return forType; } }
         private readonly IProtoSerializer[] serializers;
         private readonly int[] fieldNumbers;
-        private readonly bool isRootType, useConstructor, isExtensible;
+        private readonly bool isRootType, useConstructor, isExtensible, hasConstructor;
         private readonly CallbackSet callbacks;
         private readonly MethodInfo[] baseCtorCallbacks;
         public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks)
@@ -69,6 +69,9 @@ namespace ProtoBuf.Serializers
                 }
                 isExtensible = true;
             }
+            hasConstructor = !forType.IsAbstract && forType.GetConstructor(
+                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
+                    null, Helpers.EmptyTypes, null) != null;
         }
 
         public void Callback(object value, TypeModel.CallbackType callbackType)
@@ -191,7 +194,7 @@ namespace ProtoBuf.Serializers
             object obj;
             if (useConstructor)
             {
-                if (forType.IsAbstract) TypeModel.ThrowCannotCreateInstance(forType);
+                if (!hasConstructor) TypeModel.ThrowCannotCreateInstance(forType);
                 obj = Activator.CreateInstance(forType
 #if !CF
                     , true
@@ -458,10 +461,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadValue(forType);
                     ctx.EmitCall(typeof(BclHelpers).GetMethod("GetUninitializedObject"));
                     ctx.Cast(forType);
-                } else if (type.IsClass && !type.IsAbstract && (
-                    (type.GetConstructor(
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
-                    null, Helpers.EmptyTypes, null)) != null))
+                } else if (type.IsClass && hasConstructor)
                 {   // XmlSerializer style
                     ctx.EmitCtor(type);
                 }

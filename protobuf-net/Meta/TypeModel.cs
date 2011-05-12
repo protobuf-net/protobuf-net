@@ -840,9 +840,9 @@ namespace ProtoBuf.Meta
         /// Indicates that the given type cannot be constructed; it may still be possible to 
         /// deserialize into existing instances.
         /// </summary>
-        protected internal static void ThrowCannotCreateInstance(Type type)
+        public static void ThrowCannotCreateInstance(Type type)
         {
-            throw new InvalidOperationException("Cannot create an instance of type; no suitable constructor found: " + type.FullName);
+            throw new ProtoException("No parameterless constructor found for " + type.Name);
         }
 
         internal string SerializeType(Type type)
