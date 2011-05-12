@@ -38,7 +38,7 @@ namespace ProtoBuf.Meta
         {
             AutoAddMissingTypes = true;
             this.isDefault = isDefault;
-#if !DEBUG
+#if FEAT_COMPILER && !FX11 && !DEBUG
             autoCompile = true; 
 #endif
         }
@@ -196,9 +196,10 @@ namespace ProtoBuf.Meta
             return newType;
         }
 
-        bool frozen, autoAddMissingTypes, autoCompile;
+        bool frozen, autoAddMissingTypes;
 
 #if FEAT_COMPILER && !FX11
+        bool autoCompile;
         /// <summary>
         /// Should serializers be compiled on demand? It may be useful
         /// to disable this for debugging purposes.
