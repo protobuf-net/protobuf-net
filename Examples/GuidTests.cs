@@ -2,6 +2,7 @@
 using System.IO;
 using NUnit.Framework;
 using ProtoBuf;
+using System.Data.Linq.Mapping;
 
 namespace Examples
 {
@@ -11,9 +12,37 @@ namespace Examples
         [ProtoMember(1)]
         public Guid Bar { get; set; }
     }
+
+    [ProtoContract(UseProtoMembersOnly = true)]
+    [ProtoPartialMember(25, "GUID")]
+    public partial class User { }
+
+    public partial class User
+    {
+        [global::System.Data.Linq.Mapping.ColumnAttribute(Storage = "_GUID", DbType = "UniqueIdentifier", UpdateCheck = UpdateCheck.Never)]
+        [global::System.Runtime.Serialization.DataMemberAttribute(Order = 26)]
+        public System.Guid GUID
+        {
+            get;
+            set;
+        }
+    }
+
     [TestFixture]
     public class GuidTests
     {
+        [Test]
+        public void TestPartialWithGuid()
+        {
+            User user = new User();
+            var clone = Serializer.DeepClone(user);
+            Assert.AreEqual(user.GUID, clone.GUID);
+
+            user = new User { GUID = Guid.NewGuid() };
+            clone = Serializer.DeepClone(user);
+            Assert.AreEqual(user.GUID, clone.GUID);
+        }
+
         [Test]
         public void TestDeserializeEmptyWide()
         {

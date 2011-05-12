@@ -220,6 +220,29 @@ namespace ProtoBuf.Serializers
                         }
                         EmitBeq(ctx, label, ExpectedType);
                     }
+                    else if (ExpectedType == typeof(Guid))
+                    {
+                        Guid g = (Guid)defaultValue;
+                        if (g == Guid.Empty)
+                        {
+                            ctx.LoadValue(typeof(Guid).GetField("Empty"));
+                        }
+                        else
+                        {
+                            byte[] bytes = g.ToByteArray();
+                            int i = (bytes[0] << 24) | (bytes[1] << 16) | (bytes[2] << 8) | (bytes[3]);
+                            ctx.LoadValue(i);
+                            short s = (short)((bytes[4] << 8) | bytes[5]);
+                            ctx.LoadValue(s);
+                            s = (short)((bytes[6] << 8) | bytes[7]);
+                            ctx.LoadValue(s);
+                            for (i = 8; i <= 15; i++)
+                                ctx.LoadValue(bytes[i]);
+                            ctx.EmitCtor(typeof(Guid), new Type[] { typeof(int), typeof(short), typeof(short),
+                            typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte) });
+                        }
+                        EmitBeq(ctx, label, ExpectedType);
+                    }
                     else
                     {
                         throw new NotSupportedException("Type cannot be represented as a default value: " + ExpectedType.FullName);
