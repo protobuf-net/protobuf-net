@@ -641,6 +641,13 @@ namespace ProtoBuf.Meta
             {
                 if (member.FieldNumber > maxField) maxField = member.FieldNumber;
             }
+            if (subTypes != null)
+            {
+                foreach (SubType subType in subTypes)
+                {
+                    if (subType.FieldNumber > maxField) maxField = subType.FieldNumber;
+                }
+            }
             return maxField + 1;
         }
         /// <summary>
