@@ -731,6 +731,7 @@ namespace ProtoBuf
             }
         }
 
+        private static readonly byte[] EmptyBlob = new byte[0];
         /// <summary>
         /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
         /// </summary>
@@ -741,7 +742,7 @@ namespace ProtoBuf
                 case WireType.String:
                     int len = (int)reader.ReadUInt32Variant(false);
                     reader.wireType = WireType.None;
-                    if (len == 0) return value;
+                    if (len == 0) return value ?? EmptyBlob;
                     int offset;
                     if (value == null || value.Length == 0)
                     {

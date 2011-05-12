@@ -73,15 +73,17 @@ namespace Examples
             var data = new List<byte[]> {
                 new byte[] {0,1,2,3,4},
                 new byte[] {5,6,7},
-                new byte[] {8,9,10}
+                new byte[] {8,9,10},
+                new byte[] {}
             };
             var clone = Serializer.DeepClone(data);
 
             Assert.AreNotSame(data, clone);
-            Assert.AreEqual(3, clone.Count);
+            Assert.AreEqual(4, clone.Count);
             Assert.IsTrue(data[0].SequenceEqual(clone[0]));
             Assert.IsTrue(data[1].SequenceEqual(clone[1]));
             Assert.IsTrue(data[2].SequenceEqual(clone[2]));
+            Assert.IsTrue(data[3].SequenceEqual(clone[3]));
         }
 
         [Test]
