@@ -300,7 +300,6 @@ namespace ProtoBuf.Compiler
                     }
                     break;
 
-
             }
         }
 
@@ -1025,7 +1024,6 @@ namespace ProtoBuf.Compiler
                 case TypeCode.UInt64: Emit(OpCodes.Conv_U8); break;
                 default: throw new InvalidOperationException();
             }
-
         }
 
         internal void LoadValue(decimal value)
@@ -1044,6 +1042,30 @@ namespace ProtoBuf.Compiler
                 LoadValue((bits[3] >> 16) & 0xFF); // scale (byte, but int for CLI purposes)
 
                 EmitCtor(typeof(decimal), new Type[] { typeof(int), typeof(int), typeof(int), typeof(bool), typeof(byte) });
+            }
+        }
+
+        internal void LoadValue(Guid value)
+        {
+            if (value == Guid.Empty)
+            {
+                LoadValue(typeof(Guid).GetField("Empty"));
+            }
+            else
+            { // note we're adding lots of shorts/bytes here - but at the IL level they are I4, not I1/I2 (which barely exist)
+                byte[] bytes = value.ToByteArray();
+                int i = (bytes[0]) | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
+                LoadValue(i);
+                short s = (short)((bytes[4]) | (bytes[5] << 8));
+                LoadValue(s);
+                s = (short)((bytes[6]) | (bytes[7] << 8));
+                LoadValue(s);
+                for (i = 8; i <= 15; i++)
+                {
+                    LoadValue(bytes[i]);
+                }
+                EmitCtor(typeof(Guid), new Type[] { typeof(int), typeof(short), typeof(short),
+                            typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte) });
             }
         }
 
