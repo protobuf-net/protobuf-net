@@ -368,6 +368,13 @@ namespace ProtoBuf.Meta
                 defaultWireType = WireType.String;
                 return new BlobSerializer();
             }
+            IProtoSerializer parseable = ParseableSerializer.TryCreate(type);
+            if (parseable != null)
+            {
+                defaultWireType = WireType.String;
+                return parseable;
+            }
+
             int key = model.GetKey(type, false, true);
             if(asReference || dynamicType)
             {

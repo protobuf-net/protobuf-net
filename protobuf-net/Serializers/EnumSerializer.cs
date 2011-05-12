@@ -29,6 +29,22 @@ namespace ProtoBuf.Serializers
             if (enumType == null) throw new ArgumentNullException("enumType");
             this.enumType = enumType;
             this.map = map;
+            if (map != null)
+            {
+                for (int i = 1; i < map.Length; i++)
+                for (int j = 0 ; j < i ; j++)
+                {
+                    if (map[i].WireValue == map[j].WireValue && !Equals(map[i].Value,map[j].Value))
+                    {
+                        throw new ProtoException("Multiple enums with wire-value " + map[i].WireValue);
+                    }
+                    if (Equals(map[i].Value, map[j].Value) && map[i].WireValue != map[j].WireValue)
+                    {
+                        throw new ProtoException("Multiple enums with deserialized-value " + map[i].WireValue);
+                    }
+                }
+
+            }
         }
         private TypeCode GetTypeCode() {
             return Type.GetTypeCode(Enum.GetUnderlyingType(enumType));

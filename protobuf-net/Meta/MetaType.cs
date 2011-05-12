@@ -158,6 +158,11 @@ namespace ProtoBuf.Meta
             if (type.IsPrimitive) throw new ArgumentException("Not valid for primitive types", "type");
             this.type = type;
             this.model = model;
+
+            if (type.IsEnum)
+            {
+                this.enumPassthru = type.IsDefined(typeof(FlagsAttribute), false);
+            }
         }
         /// <summary>
         /// Throws an exception if the type has been made immutable
@@ -331,7 +336,12 @@ namespace ProtoBuf.Meta
             {
                 switch (attributes[i].GetType().FullName)
                 {
-                    case "ProtoBuf.ProtoContractAttribute": family |= AttributeFamily.ProtoBuf; break;
+                    case "ProtoBuf.ProtoContractAttribute":
+                        bool tmp = false;
+                        GetFieldBoolean(ref tmp, (Attribute)attributes[i], "UseProtoMembersOnly");
+                        if (tmp) return AttributeFamily.ProtoBuf;
+                        family |= AttributeFamily.ProtoBuf;
+                        break;
                     case "System.Xml.Serialization.XmlTypeAttribute": family |= AttributeFamily.XmlSerializer; break;
                     case "System.Runtime.Serialization.DataContractAttribute": family |= AttributeFamily.DataContractSerialier; break;
                 }
@@ -428,6 +438,7 @@ namespace ProtoBuf.Meta
                 }
                 done = true;
             }
+
             if (!ignore && !done) // always consider ProtoMember 
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");

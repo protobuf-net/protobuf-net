@@ -256,7 +256,9 @@ namespace Examples.SimpleStream
         }
         [Test]
         public void TestDeserializeUndefinedEnum()
-        {
+        { // this looks insane but is correct; it drops data on the floor to match the expected
+            //
+
             var see = Program.Build<SomeEnumEntity>(0x10, 0x09);
             Assert.AreEqual(SomeEnum.Bar, see.Enum);
         }

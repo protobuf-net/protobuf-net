@@ -25,9 +25,21 @@ namespace ProtoBuf
             set
             {
                 if (value < 1) throw new ArgumentOutOfRangeException("ImplicitFirstTag");
-                implicitFirstTag = value; }
+                implicitFirstTag = value;
+            }
         }
         private int implicitFirstTag;
+
+        /// <summary>
+        /// If specified, alternative contract markers (such as markers for XmlSerailizer or DataContractSerializer) are ignored.
+        /// </summary>
+        public bool UseProtoMembersOnly
+        {
+            get { return useProtoMembersOnly; }
+            set { useProtoMembersOnly = value; }
+        }
+        private bool useProtoMembersOnly;
+
 
         /// <summary>
         /// Gets or sets the mechanism used to automatically infer field tags

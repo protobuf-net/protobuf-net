@@ -183,6 +183,7 @@
     <Compile Include="Serializers\BooleanSerializer.cs" />
     <Compile Include="Serializers\ArrayDecorator.cs" />
     <Compile Include="Serializers\ByteSerializer.cs" />
+    <Compile Include="Serializers\ParseableSerializer.cs" />
     <Compile Include="Serializers\KeyValuePairDecorator.cs" />
     <Compile Include="Serializers\ListDecorator.cs" />
     <Compile Include="Serializers\NetObjectSerializer.cs" />
