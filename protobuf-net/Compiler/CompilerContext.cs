@@ -284,9 +284,9 @@ namespace ProtoBuf.Compiler
                 case 8: Emit(OpCodes.Ldc_I4_8); break;
                 case -1: Emit(OpCodes.Ldc_I4_M1); break;
                 default:
-                    if ((value & 0xFF) == value) // single-byte
+                    if (value >= -128 && value <= 127) // single-byte
                     {
-                        il.Emit(OpCodes.Ldc_I4_S, (byte)value);
+                        il.Emit(OpCodes.Ldc_I4_S, value);
 #if DEBUG_COMPILE
                         Helpers.DebugWriteLine(OpCodes.Ldc_I4_S + ": " + value);
 #endif

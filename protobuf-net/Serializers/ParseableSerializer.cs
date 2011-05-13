@@ -63,7 +63,7 @@ namespace ProtoBuf.Serializers
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicRead("ReadString", ExpectedType);
+            ctx.EmitBasicRead("ReadString", typeof(string));
             ctx.EmitCall(parse);
         }
 #endif

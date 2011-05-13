@@ -539,10 +539,12 @@ namespace ProtoBuf.Meta
             object nextItem = null;
             IList list = value as IList;
             object[] args = isList ? null : new object[1];
+            BasicList arraySurrogate = listType.IsArray ? new BasicList() : null;
+
             while (TryDeserializeAuxiliaryType(reader, format, tag, itemType, ref nextItem, true, true, true))
             {
                 found = true;
-                if (value == null)
+                if (value == null && arraySurrogate == null)
                 {
                     Type concreteListType = listType;
                     if (!listType.IsClass || listType.IsAbstract || listType.GetConstructor(
@@ -554,16 +556,44 @@ namespace ProtoBuf.Meta
                     value = (Activator.CreateInstance(concreteListType));
                     list = value as IList;
                 }
-                if (list == null)
+                if (list != null)
+                {
+                    list.Add(nextItem);
+                }
+                else if (arraySurrogate != null)
+                {
+                    arraySurrogate.Add(nextItem);
+                }
+                else
                 {
                     args[0] = nextItem;
                     addMethod.Invoke(value, args);
                 }
+                nextItem = null;
+            }
+            if (arraySurrogate != null)
+            {
+                Array newArray;
+                if (value != null)
+                {
+                    if (arraySurrogate.Count == 0)
+                    {   // we'll stay with what we had, thanks
+                    }
+                    else
+                    { 
+                        Array existing = (Array)value;
+                        newArray = Array.CreateInstance(itemType, existing.Length + arraySurrogate.Count);
+                        Array.Copy(existing, newArray, existing.Length);
+                        arraySurrogate.CopyTo(newArray, existing.Length);
+                        value = newArray;
+                    }
+                }
                 else
                 {
-                    list.Add(nextItem);
+                    newArray = Array.CreateInstance(itemType, arraySurrogate.Count);
+                    arraySurrogate.CopyTo(newArray, 0);
+                    value = newArray;
                 }
-                nextItem = null;
             }
             return found;
         }
@@ -589,11 +619,15 @@ namespace ProtoBuf.Meta
             if (wiretype == WireType.None)
             {
                 itemType = GetListItemType(type);
-
+                if (itemType == null && type.IsArray && type.GetArrayRank() == 1 && type != typeof(byte[]))
+                {
+                    itemType = type.GetElementType();
+                }
                 if (itemType != null)
                 {
                     return TryDeserializeList(reader, format, tag, type, itemType, ref value);                    
                 }
+
                 // otherwise, not a happy bunny...
                 ThrowUnexpectedType(type);
             }
