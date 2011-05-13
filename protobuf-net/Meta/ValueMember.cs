@@ -224,49 +224,58 @@ namespace ProtoBuf.Meta
         }
         private IProtoSerializer BuildSerializer()
         {
-            WireType wireType;
-            IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, out wireType, asReference, dynamicType);
+            bool lockTaken = false;
+            try
+            {
+                model.TakeLock(ref lockTaken);// check nobody is still adding this type
+                WireType wireType;
+                IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, out wireType, asReference, dynamicType);
 
-            // apply tags
-            ser = new TagDecorator(fieldNumber, wireType, isStrict, ser);
-            // apply lists if appropriate
-            if(itemType != null)
-            {
-                Helpers.DebugAssert(itemType == ser.ExpectedType, "Wrong type in the tail");
-                if (memberType.IsArray)
+                // apply tags
+                ser = new TagDecorator(fieldNumber, wireType, isStrict, ser);
+                // apply lists if appropriate
+                if (itemType != null)
                 {
-                    ser = new ArrayDecorator(ser, isPacked ? fieldNumber : 0, isPacked ? wireType : WireType.None);
+                    Helpers.DebugAssert(itemType == ser.ExpectedType, "Wrong type in the tail");
+                    if (memberType.IsArray)
+                    {
+                        ser = new ArrayDecorator(ser, isPacked ? fieldNumber : 0, isPacked ? wireType : WireType.None);
+                    }
+                    else
+                    {
+                        ser = new ListDecorator(memberType, defaultType, ser, isPacked ? fieldNumber : 0, isPacked ? wireType : WireType.None);
+                    }
                 }
-                else
+                else if (defaultValue != null && !isRequired)
                 {
-                    ser = new ListDecorator(memberType, defaultType, ser, isPacked ? fieldNumber : 0, isPacked ? wireType : WireType.None);
+                    ser = new DefaultValueDecorator(defaultValue, ser);
                 }
-            }
-            else if (defaultValue != null && !isRequired)
-            {
-                ser = new DefaultValueDecorator(defaultValue, ser);
-            }
-            if (memberType == typeof(Uri))
-            {
-                ser = new UriDecorator(ser);
-            }
-            if (member != null)
-            {
-                switch (member.MemberType)
+                if (memberType == typeof(Uri))
                 {
-                    case MemberTypes.Property:
-                        ser = new PropertyDecorator(parentType, (PropertyInfo)member, ser); break;
-                    case MemberTypes.Field:
-                        ser = new FieldDecorator(parentType, (FieldInfo)member, ser); break;
-                    default:
-                        throw new InvalidOperationException();
+                    ser = new UriDecorator(ser);
                 }
-                if (getSpecified != null || setSpecified != null)
+                if (member != null)
                 {
-                    ser = new MemberSpecifiedDecorator(getSpecified, setSpecified, ser);
+                    switch (member.MemberType)
+                    {
+                        case MemberTypes.Property:
+                            ser = new PropertyDecorator(parentType, (PropertyInfo)member, ser); break;
+                        case MemberTypes.Field:
+                            ser = new FieldDecorator(parentType, (FieldInfo)member, ser); break;
+                        default:
+                            throw new InvalidOperationException();
+                    }
+                    if (getSpecified != null || setSpecified != null)
+                    {
+                        ser = new MemberSpecifiedDecorator(getSpecified, setSpecified, ser);
+                    }
                 }
+                return ser;
             }
-            return ser;
+            finally
+            {
+                model.ReleaseLock(lockTaken);
+            }
         }
 
         private static WireType GetIntWireType(DataFormat format, int width) {

@@ -7,6 +7,7 @@ using System.Reflection.Emit;
 #endif
 
 using ProtoBuf.Serializers;
+using System.Threading;
 
 
 namespace ProtoBuf.Meta
@@ -16,6 +17,8 @@ namespace ProtoBuf.Meta
     /// </summary>
     public sealed class RuntimeTypeModel : TypeModel
     {
+
+
         private class Singleton
         {
             private Singleton() { }
@@ -101,10 +104,12 @@ namespace ProtoBuf.Meta
                     }
                     metaType = Create(type);
                 }
-                
-                bool weAdded = false;
-                lock (types)
-                {   // double-checked
+
+                bool weAdded = false, lockTaken = false;
+                try
+                {
+                    TakeLock(ref lockTaken);
+                    // double-checked
                     int winner = types.IndexOf(predicate);
                     if (winner < 0)
                     {
@@ -116,8 +121,12 @@ namespace ProtoBuf.Meta
                     {
                         key = winner;
                     }
+                    if (weAdded) metaType.ApplyDefaultBehaviour();
                 }
-                if (weAdded) metaType.ApplyDefaultBehaviour();
+                finally
+                {
+                    ReleaseLock(lockTaken);
+                }
             }
             return key;
         }
@@ -151,6 +160,8 @@ namespace ProtoBuf.Meta
             ThrowIfFrozen();
             return new MetaType(this, type);
         }
+
+
         /// <summary>
         /// Adds support for an additional type in this model, optionally
         /// appplying inbuilt patterns.
@@ -183,14 +194,19 @@ namespace ProtoBuf.Meta
                 applyDefaultBehaviour = false;
             }
             if(newType == null) newType = Create(type);
-            bool weAdded = false;
-            lock (types)
+            bool weAdded = false, lockTaken = false;
+            try
             {
+                TakeLock(ref lockTaken);
                 // double checked
                 if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
                 ThrowIfFrozen();
                 types.Add(newType);
                 weAdded = true;
+            }
+            finally
+            {
+                ReleaseLock(lockTaken);
             }
             if (weAdded && applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
             return newType;
@@ -693,7 +709,40 @@ namespace ProtoBuf.Meta
             return index < 0 ? null : ((MetaType)types[index]).GetEnumMap();
         }
 
+        private int metadataTimeoutMilliseconds = 5000;
+        /// <summary>
+        /// The amount of time to wait if there are concurrent metadata access operations
+        /// </summary>
+        public int MetadataTimeoutMilliseconds
+        {
+            get { return metadataTimeoutMilliseconds; }
+            set
+            {
+                if (value <= 0) throw new ArgumentOutOfRangeException("MetadataTimeoutMilliseconds");
+                metadataTimeoutMilliseconds = value;
+            }
+        }
 
+        internal void TakeLock(ref bool lockTaken)
+        {
+            lockTaken = false;
+            if (Monitor.TryEnter(types, metadataTimeoutMilliseconds))
+            {
+                lockTaken = true;
+            }
+            else
+            {
+                throw new TimeoutException("Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection");
+            }
+        }
+
+        internal void ReleaseLock(bool lockTaken)
+        {
+            if (lockTaken)
+            {
+                Monitor.Exit(types);
+            }
+        }
     }
     
 }

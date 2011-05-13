@@ -98,6 +98,7 @@
     <Compile Include="Meta\Struct.cs" />
     <Compile Include="Meta\SubItems.cs" />
     <Compile Include="Attribs\MultiTypes.cs" />
+    <Compile Include="Meta\ThreadRace.cs" />
     <Compile Include="Perf\Issue103.cs" />
     <Compile Include="Perf\Types103.cs">
       <AutoGen>True</AutoGen>

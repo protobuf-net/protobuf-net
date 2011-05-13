@@ -182,6 +182,15 @@ namespace Examples
             VerifyNodeTree(node);
         }
 
+        [Test]
+        public void TestStringArray()
+        {
+            var foo = new List<string> { "abc", "def", "ghi" };
+
+            var clone = Serializer.DeepClone(foo);
+                
+        }
+
         static void VerifyNodeTree(Node node) {
             Node clone = Serializer.DeepClone(node);
             string msg;

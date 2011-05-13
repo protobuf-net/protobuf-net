@@ -4,6 +4,7 @@ using System.Collections;
 using System.Reflection;
 using ProtoBuf.Serializers;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace ProtoBuf.Meta
 {
@@ -12,6 +13,13 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class MetaType : ISerializerProxy
     {
+        /// <summary>
+        /// Get the name of the type being represented
+        /// </summary>
+        public override string ToString()
+        {
+            return type.ToString();
+        }
         IProtoSerializer ISerializerProxy.Serializer { get { return Serializer; } }
         private MetaType baseType;
         private bool frozen, isPrivateOnApi;
@@ -183,11 +191,24 @@ namespace ProtoBuf.Meta
             get {
                 if (serializer == null)
                 {
-                    frozen = true;
-                    serializer = BuildSerializer();
+                    bool lockTaken = false;
+                    try
+                    {
+                        model.TakeLock(ref lockTaken);
+                        if (serializer == null)
+                        { // double-check, but our main purpse with this lock is to ensure thread-safety with
+                            // serializers needing to wait until another thread has finished adding the properties
+                            frozen = true;
+                            serializer = BuildSerializer();
 #if FEAT_COMPILER && !FX11
-                    if(model.AutoCompile) CompileInPlace();
+                            if (model.AutoCompile) CompileInPlace();
 #endif
+                        }
+                    }
+                    finally
+                    {
+                        model.ReleaseLock(lockTaken);
+                    }
                 }
                 return serializer;
             }
@@ -201,7 +222,7 @@ namespace ProtoBuf.Meta
             if (itemType != null)
             {
                 ValueMember fakeMember = new ValueMember(model, 1, type, itemType, type, DataFormat.Default);
-                return new TypeSerializer(type, new int[]{1}, new IProtoSerializer[]{fakeMember.Serializer},null, true, true, null);
+                return new TypeSerializer(type, new int[] { 1 }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null);
             }
 
             fields.Trim();
@@ -782,7 +803,7 @@ namespace ProtoBuf.Meta
         //IEnumerable GetFields() { return fields; }
 
 #if FEAT_COMPILER && !FX11
-        internal void CompileInPlace()
+        public void CompileInPlace()
         {
             serializer = CompiledSerializer.Wrap(Serializer);
         }

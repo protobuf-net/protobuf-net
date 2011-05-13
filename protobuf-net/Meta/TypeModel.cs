@@ -265,7 +265,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    if (!TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false))
+                    if (!TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true))
                     {
                         throw new InvalidOperationException();
                     }
@@ -419,15 +419,24 @@ namespace ProtoBuf.Meta
                     type = value.GetType();
                 }
             }
+            bool autoCreate = true;
 #if !NO_GENERICS
-            type = Nullable.GetUnderlyingType(type) ?? type;
+            if(type.IsValueType)
+            {
+                Type underlyingType = Nullable.GetUnderlyingType(type);
+                if (underlyingType != null)
+                {
+                    type = underlyingType;
+                    autoCreate = false;
+                }
+            }
 #endif
             using (ProtoReader reader = new ProtoReader(source, this))
             {
-                return DeserializeCore(reader, type, value);
+                return DeserializeCore(reader, type, value, autoCreate);
             }
         }
-        private object DeserializeCore(ProtoReader reader, Type type, object value)
+        private object DeserializeCore(ProtoReader reader, Type type, object value, bool noAutoCreate)
         {
             int key = GetKey(ref type);
             if (key >= 0)
@@ -435,7 +444,7 @@ namespace ProtoBuf.Meta
                 return Deserialize(key, value, reader);
             }
             // this returns true to say we actively found something, but a value is assigned either way (or throws)
-            TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false);
+            TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, noAutoCreate);
             return value;
         }
         internal static MethodInfo ResolveListAdd(Type listType, Type itemType, out bool isList)
@@ -530,7 +539,7 @@ namespace ProtoBuf.Meta
             object nextItem = null;
             IList list = value as IList;
             object[] args = isList ? null : new object[1];
-            while (TryDeserializeAuxiliaryType(reader, format, tag, itemType, ref nextItem, true, true))
+            while (TryDeserializeAuxiliaryType(reader, format, tag, itemType, ref nextItem, true, true, true))
             {
                 found = true;
                 if (value == null)
@@ -568,7 +577,7 @@ namespace ProtoBuf.Meta
         ///  - basic values; individual int / string / Guid / etc
         ///  - IList sets of any type handled by TryDeserializeAuxiliaryType
         /// </summary>
-        private bool TryDeserializeAuxiliaryType(ProtoReader reader, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem)
+        private bool TryDeserializeAuxiliaryType(ProtoReader reader, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate)
         {
             if (type == null) throw new ArgumentNullException("type");
             Type itemType = null;
@@ -652,7 +661,13 @@ namespace ProtoBuf.Meta
                 if (type == typeof(Uri)) { value = new Uri(reader.ReadString()); continue; }
 
             }
-            if (!found && !asListItem) { value = Activator.CreateInstance(type); }
+            if (!found && !asListItem && autoCreate)
+            {
+                if (type != typeof(string))
+                {
+                    value = Activator.CreateInstance(type);
+                }
+            }
             return found;
         }
 
@@ -810,7 +825,7 @@ namespace ProtoBuf.Meta
                 using (ProtoReader reader = new ProtoReader(ms, this))
                 {
                     value = null; // start from scratch!
-                    TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false);
+                    TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true);
                     return value;
                 }
             }
