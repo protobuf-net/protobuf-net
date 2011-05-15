@@ -1,4 +1,6 @@
+#if !NO_RUNTIME
 using System;
+using ProtoBuf.Meta;
 
 namespace ProtoBuf
 {
@@ -9,25 +11,16 @@ namespace ProtoBuf
         /// </summary>
         public static class GlobalOptions
         {
-            private static bool inferTagFromName;
             /// <summary>
-            /// Global default for that
-            /// enables/disables automatic tag generation based on the existing name / order
-            /// of the defined members. See <seealso cref="ProtoContractAttribute.InferTagFromName"/>
-            /// for usage and <b>important warning</b> / explanation.
-            /// You must set the global default before attempting to serialize/deserialize any
-            /// impacted type.
+            /// <see cref="RuntimeTypeModel.InferTagFromNameDefault"/>
             /// </summary>
+            [Obsolete("Please use RuntimeTypeModel.Default.InferTagFromNameDefault instead (or on a per-model basis)", false)]
             public static bool InferTagFromName
             {
-                get { return inferTagFromName; }
-                set { inferTagFromName = value; }
+                get { return RuntimeTypeModel.Default.InferTagFromNameDefault; }
+                set { RuntimeTypeModel.Default.InferTagFromNameDefault = value; }
             }
-        }
-        
-        internal static bool HasAddMethod(Type list, Type item)
-        {
-            return list.GetMethod("Add", new Type[] { item }) != null;
         }
     }
 }
+#endif

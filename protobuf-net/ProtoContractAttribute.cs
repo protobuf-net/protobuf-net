@@ -71,17 +71,17 @@ namespace ProtoBuf
         {
             get
             {
-                switch (inferTagFromName)
-                {
-                    case TriBool.True:
-                        return true;
-                    case TriBool.False:
-                        return false;
-                    default:
-                        return Serializer.GlobalOptions.InferTagFromName;
-                }
+                return inferTagFromName == TriBool.True;
             }
             set { inferTagFromName = value ? TriBool.True : TriBool.False; }
+        }
+
+        /// <summary>
+        /// Has a InferTagFromName value been explicitly set? if not, the default from the type-model is assumed.
+        /// </summary>
+        internal bool InferTagFromNameHasValue
+        {
+            get { return inferTagFromName != TriBool.Null; }
         }
 
         private int dataMemberOffset;

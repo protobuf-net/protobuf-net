@@ -11,17 +11,45 @@ namespace ProtoBuf
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field,
         AllowMultiple = false, Inherited = true)]
     public class ProtoMemberAttribute : Attribute
+        , IComparable
+#if !NO_GENERICS
+        , IComparable<ProtoMemberAttribute>
+#endif
+
     {
+        /// <summary>
+        /// Compare with another ProtoMemberAttribute for sorting purposes
+        /// </summary>
+        public int CompareTo(object other) { return CompareTo(other as ProtoMemberAttribute); }
+        /// <summary>
+        /// Compare with another ProtoMemberAttribute for sorting purposes
+        /// </summary>
+        public int CompareTo(ProtoMemberAttribute other)
+        {
+            if (other == null) return -1;
+            if ((object)this == (object)other) return 0;
+            int result = this.tag.CompareTo(other.tag);
+            if (result == 0) result = string.CompareOrdinal(this.name, other.name);
+            return result;
+        }
+
         /// <summary>
         /// Creates a new ProtoMemberAttribute instance.
         /// </summary>
         /// <param name="tag">Specifies the unique tag used to identify this member within the type.</param>
-        public ProtoMemberAttribute(int tag)
+        public ProtoMemberAttribute(int tag) : this(tag, false)
+        { }
+
+        internal ProtoMemberAttribute(int tag, bool forced)
         {
-            if (tag <= 0) throw new ArgumentOutOfRangeException("tag");
+            if (tag <= 0 && !forced) throw new ArgumentOutOfRangeException("tag");
             this.tag = tag;
         }
-        
+
+#if !NO_RUNTIME
+        internal System.Reflection.MemberInfo Member;
+        internal bool TagIsPinned;
+#endif
         /// <summary>
         /// Gets or sets the original name defined in the .proto; not used
         /// during serialization.
@@ -39,7 +67,8 @@ namespace ProtoBuf
         /// Gets the unique tag used to identify this member within the type.
         /// </summary>
         public int Tag { get { return tag; } }
-        private readonly int tag;
+        private int tag;
+        internal void Rebase(int tag) { this.tag = tag; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this member is mandatory.

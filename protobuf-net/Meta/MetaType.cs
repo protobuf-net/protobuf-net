@@ -275,6 +275,7 @@ namespace ProtoBuf.Meta
         {
             None = 0, ProtoBuf = 1, DataContractSerialier = 2, XmlSerializer = 4
         }
+        
         internal void ApplyDefaultBehaviour()
         {
             if (model.FindWithoutAdd(type.BaseType) == null
@@ -288,25 +289,44 @@ namespace ProtoBuf.Meta
             bool isEnum = type.IsEnum;
             if(family ==  AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
             BasicList partialIgnores = null, partialMembers = null;
+            int dataMemberOffset = 0, implicitFirstTag = 1;
+            bool inferTagByName = model.InferTagFromNameDefault;
+            ImplicitFields implicitMode = ImplicitFields.None;
+            if(implicitMode != ImplicitFields.None)
+            {
+                family &= AttributeFamily.ProtoBuf; // with implicit fields, **only** proto attributes are important
+            }
             for (int i = 0; i < typeAttribs.Length; i++)
             {
-                if (!isEnum && typeAttribs[i] is ProtoIncludeAttribute)
+                Attribute item = (Attribute)typeAttribs[i];
+                if (!isEnum && item is ProtoIncludeAttribute)
                 {
-                    ProtoIncludeAttribute pia = (ProtoIncludeAttribute)typeAttribs[i];
+                    ProtoIncludeAttribute pia = (ProtoIncludeAttribute)item;
                     AddSubType(pia.Tag, pia.KnownType);
                 }
-                if(typeAttribs[i] is ProtoPartialIgnoreAttribute)
+                if(item is ProtoPartialIgnoreAttribute)
                 {
                     if(partialIgnores == null) partialIgnores = new BasicList();
-                    partialIgnores.Add(((ProtoPartialIgnoreAttribute)typeAttribs[i]).MemberName);
+                    partialIgnores.Add(((ProtoPartialIgnoreAttribute)item).MemberName);
                 }
-                if (!isEnum && typeAttribs[i] is ProtoPartialMemberAttribute)
+                if (!isEnum && item is ProtoPartialMemberAttribute)
                 {
                     if (partialMembers == null) partialMembers = new BasicList();
-                    partialMembers.Add(typeAttribs[i]);
+                    partialMembers.Add(item);
+                }
+                if (!isEnum && item is ProtoContractAttribute)
+                {
+                    ProtoContractAttribute pca = (ProtoContractAttribute)item;
+                    dataMemberOffset = pca.DataMemberOffset;
+                    if (pca.InferTagFromNameHasValue) inferTagByName = pca.InferTagFromName;
+                    implicitMode = pca.ImplicitFields;
+                    implicitFirstTag = pca.ImplicitFirstTag;
                 }
             }
             MethodInfo[] callbacks = null;
+
+            BasicList members = new BasicList();
+
             foreach (MemberInfo member in type.GetMembers(isEnum ? BindingFlags.Public | BindingFlags.Static
                 : BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
             {
@@ -314,15 +334,34 @@ namespace ProtoBuf.Meta
                 if (member.IsDefined(typeof(ProtoIgnoreAttribute), true)) continue;
                 if (partialIgnores != null && partialIgnores.Contains(member.Name)) continue;
 
+                bool forced = false, isPublic, isField;
+                Type effectiveType;
                 switch (member.MemberType)
                 {
                     case MemberTypes.Property:
+                        PropertyInfo property = (PropertyInfo)member;
+                        effectiveType = property.PropertyType;
+                        isPublic = property.GetGetMethod(false) != null;
+                        isField = false;
+                        goto ProcessMember;
                     case MemberTypes.Field:
-                        ValueMember vm = ApplyDefaultBehaviour(isEnum, family, member, partialMembers);
-                        if (vm != null)
+                        FieldInfo field = (FieldInfo)member;
+                        effectiveType = field.FieldType;
+                        isPublic = field.IsPublic;
+                        isField = true;
+                    ProcessMember:
+                        switch(implicitMode)
                         {
-                            Add(vm);
+                            case ImplicitFields.AllFields:
+                                if (isField) forced = true;
+                                break;
+                            case ImplicitFields.AllPublic:
+                                if (isPublic) forced = true;
+                                break;
                         }
+                        if (effectiveType.IsSubclassOf(typeof(Delegate))) continue; // we just don't like delegate types ;p
+                        ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(member, family, forced, isEnum, partialMembers, dataMemberOffset);
+                        if(normalizedAttribute != null) members.Add(normalizedAttribute);
                         break;
                     case MemberTypes.Method:
                         if (isEnum) continue;
@@ -342,6 +381,31 @@ namespace ProtoBuf.Meta
                         break;
                 }
             }
+            ProtoMemberAttribute[] arr = new ProtoMemberAttribute[members.Count];
+            members.CopyTo(arr, 0);
+            
+            if (inferTagByName || implicitMode != ImplicitFields.None)
+            {
+                Array.Sort(arr);
+                int nextTag = implicitFirstTag;
+                foreach (ProtoMemberAttribute normalizedAttribute in arr)
+                {
+                    if (!normalizedAttribute.TagIsPinned) // if ProtoMember etc sets a tag, we'll trust it
+                    {
+                        normalizedAttribute.Rebase(nextTag++);
+                    }
+                }
+            }
+
+            foreach (ProtoMemberAttribute normalizedAttribute in arr)
+            {
+                ValueMember vm = ApplyDefaultBehaviour(isEnum, normalizedAttribute);
+                if (vm != null)
+                {
+                    Add(vm);
+                }
+            }
+
             if (callbacks != null)
             {
                 SetCallbacks(callbacks[0] ?? callbacks[4], callbacks[1] ?? callbacks[5],
@@ -388,9 +452,125 @@ namespace ProtoBuf.Meta
         {
             return (value & required) == required;
         }
-        private ValueMember ApplyDefaultBehaviour(bool isEnum, AttributeFamily family, MemberInfo member, BasicList partialMembers)
+        
+        private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset)
         {
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
+            int fieldNumber = 0;
+            string name = member.Name;
+            bool isPacked = false, ignore = false, done = false, isRequired = false, asReference = false, dynamicType = false, tagIsPinned = false;
+            DataFormat dataFormat = DataFormat.Default;
+            if (isEnum) forced = true;
+            object[] attribs = member.GetCustomAttributes(true);
+            Attribute attrib;
+
+            if (isEnum)
+            {
+                attrib = GetAttribute(attribs, "ProtoBuf.ProtoIgnoreAttribute");
+                if (attrib != null)
+                {
+                    ignore = true;
+                }
+                else
+                {
+                    attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
+                    fieldNumber = Convert.ToInt32(((FieldInfo)member).GetValue(null));
+                    if (attrib != null)
+                    {
+                        GetFieldName(ref name, attrib, "Name");
+                        if ((bool)attrib.GetType().GetMethod("HasValue").Invoke(attrib, null))
+                        {
+                            fieldNumber = (int)GetMemberValue(attrib, "Value");
+                        }
+                    }
+
+                }
+                done = true;
+            }
+
+            if (!ignore && !done) // always consider ProtoMember 
+            {
+                attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
+                GetIgnore(ref ignore, attrib, attribs, "ProtoBuf.ProtoIgnoreAttribute");
+                if (!ignore)
+                {
+                    GetFieldNumber(ref fieldNumber, attrib, "Tag");
+                    GetFieldName(ref name, attrib, "Name");
+                    GetFieldBoolean(ref isRequired, attrib, "IsRequired");
+                    GetFieldBoolean(ref isPacked, attrib, "IsPacked");
+                    GetDataFormat(ref dataFormat, attrib, "DataFormat");
+                    GetFieldBoolean(ref asReference, attrib, "AsReference");
+                    GetFieldBoolean(ref dynamicType, attrib, "DynamicType");
+                    done = tagIsPinned = fieldNumber > 0;
+                }
+
+                if (!done && partialMembers != null)
+                {
+                    foreach (ProtoPartialMemberAttribute ppma in partialMembers)
+                    {
+                        if (ppma.MemberName == member.Name)
+                        {
+                            GetFieldNumber(ref fieldNumber, ppma, "Tag");
+                            GetFieldName(ref name, ppma, "Name");
+                            GetFieldBoolean(ref isRequired, ppma, "IsRequired");
+                            GetFieldBoolean(ref isPacked, ppma, "IsPacked");
+                            GetDataFormat(ref dataFormat, ppma, "DataFormat");
+                            GetFieldBoolean(ref asReference, ppma, "AsReference");
+                            GetFieldBoolean(ref dynamicType, ppma, "DynamicType");
+                            if (done = tagIsPinned = fieldNumber > 0) break;
+                        }
+                    }
+                }
+            }
+
+            if (!ignore && !done && HasFamily(family, AttributeFamily.DataContractSerialier))
+            {
+                attrib = GetAttribute(attribs, "System.Runtime.Serialization.DataMemberAttribute");
+                GetFieldNumber(ref fieldNumber, attrib, "Order");
+                GetFieldName(ref name, attrib, "Name");
+                GetFieldBoolean(ref isRequired, attrib, "IsRequired");
+                done = fieldNumber > 0;
+                if (done) fieldNumber += dataMemberOffset; // dataMemberOffset only applies to DCS flags, to allow us to "bump" WCF by a notch
+            }
+            if (!ignore && !done && HasFamily(family, AttributeFamily.XmlSerializer))
+            {
+                attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlElementAttribute");
+                GetIgnore(ref ignore, attrib, attribs, "System.Xml.Serialization.XmlIgnoreAttribute");
+                if (!ignore)
+                {
+                    GetFieldNumber(ref fieldNumber, attrib, "Order");
+                    GetFieldName(ref name, attrib, "ElementName");
+                }
+                attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlArrayAttribute");
+                if (!ignore)
+                {
+                    GetFieldNumber(ref fieldNumber, attrib, "Order");
+                    GetFieldName(ref name, attrib, "ElementName");
+                }
+                done = fieldNumber > 0;
+            }
+            if (!ignore && !done)
+            {
+                if (GetAttribute(attribs, "System.NonSerializedAttribute") != null) ignore = true;
+            }
+            if (ignore || (fieldNumber <= 0 && !forced)) return null;
+            ProtoMemberAttribute result = new ProtoMemberAttribute(fieldNumber, forced);
+            result.AsReference = asReference;
+            result.DataFormat = dataFormat;
+            result.DynamicType = dynamicType;
+            result.IsPacked = isPacked;
+            result.IsRequired = isRequired;
+            result.Name = name;
+            result.Member = member;
+            result.TagIsPinned = tagIsPinned;
+            return result;
+        }
+        
+        private ValueMember ApplyDefaultBehaviour(bool isEnum, ProtoMemberAttribute normalizedAttribute)
+        {
+            MemberInfo member;
+            if (normalizedAttribute == null || (member = normalizedAttribute.Member) == null) return null; // nix
+            
             Type effectiveType;
             switch (member.MemberType)
             {
@@ -402,17 +582,13 @@ namespace ProtoBuf.Meta
                     return null; // nothing doing
             }
 
-            int fieldNumber = 0;
-            bool isPacked = false;
-            string name = null;
-            bool isRequired = false, asReference = false, dynamicType = false;
+            
             Type itemType = null;
             Type defaultType = null;
             ResolveListTypes(effectiveType, ref itemType, ref defaultType);
             object[] attribs = member.GetCustomAttributes(true);
             Attribute attrib;
-            DataFormat dataFormat = DataFormat.Default;
-            bool ignore = false;
+
             object defaultValue = null;
             // implicit zero default
             switch (Type.GetTypeCode(effectiveType))
@@ -435,97 +611,13 @@ namespace ProtoBuf.Meta
                     if (effectiveType == typeof(Guid)) defaultValue = Guid.Empty;
                     break;
             }
-            bool done = false;
-            if (isEnum)
-            {
-                attrib = GetAttribute(attribs, "ProtoBuf.ProtoIgnoreAttribute");
-                if (attrib != null)
-                {
-                    ignore = true;
-                }
-                else
-                {
-                    attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
-                    fieldNumber = Convert.ToInt32(((FieldInfo)member).GetValue(null));
-                    if (attrib != null)
-                    {
-                        GetFieldName(ref name, attrib, "Name");
-                        if ((bool)attrib.GetType().GetMethod("HasValue").Invoke(attrib, null))
-                        {
-                            fieldNumber = (int) GetMemberValue(attrib, "Value");
-                        }
-                    }
-                        
-                }
-                done = true;
-            }
-
-            if (!ignore && !done) // always consider ProtoMember 
-            {
-                attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
-                GetIgnore(ref ignore, attrib, attribs, "ProtoBuf.ProtoIgnoreAttribute");
-                if (!ignore)
-                {
-                    GetFieldNumber(ref fieldNumber, attrib, "Tag");
-                    GetFieldName(ref name, attrib, "Name");
-                    GetFieldBoolean(ref isRequired, attrib, "IsRequired");
-                    GetFieldBoolean(ref isPacked, attrib, "IsPacked");
-                    GetDataFormat(ref dataFormat, attrib, "DataFormat");
-                    GetFieldBoolean(ref asReference, attrib, "AsReference");
-                    GetFieldBoolean(ref dynamicType, attrib, "DynamicType");
-                    done = fieldNumber > 0;
-                }
-
-                if (!done && partialMembers != null)
-                {
-                    foreach (ProtoPartialMemberAttribute ppma in partialMembers)
-                    {
-                        if (ppma.MemberName == member.Name)
-                        {
-                            GetFieldNumber(ref fieldNumber, ppma, "Tag");
-                            GetFieldName(ref name, ppma, "Name");
-                            GetFieldBoolean(ref isRequired, ppma, "IsRequired");
-                            GetFieldBoolean(ref isPacked, ppma, "IsPacked");
-                            GetDataFormat(ref dataFormat, ppma, "DataFormat");
-                            GetFieldBoolean(ref asReference, ppma, "AsReference");
-                            GetFieldBoolean(ref dynamicType, ppma, "DynamicType");
-                            if (done = fieldNumber > 0) break;                            
-                        }
-                    }
-                }
-            }
-            if (!ignore && !done && HasFamily(family, AttributeFamily.DataContractSerialier))
-            {
-                attrib = GetAttribute(attribs, "System.Runtime.Serialization.DataMemberAttribute");
-                GetFieldNumber(ref fieldNumber, attrib, "Order");
-                GetFieldName(ref name, attrib, "Name");
-                GetFieldBoolean(ref isRequired, attrib, "IsRequired");
-                done = fieldNumber > 0;
-            }
-            if (!ignore && !done && HasFamily(family, AttributeFamily.XmlSerializer))
-            {
-                attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlElementAttribute");
-                GetIgnore(ref ignore, attrib, attribs, "System.Xml.Serialization.XmlIgnoreAttribute");
-                if (!ignore)
-                {
-                    GetFieldNumber(ref fieldNumber, attrib, "Order");
-                    GetFieldName(ref name, attrib, "ElementName");
-                }
-                attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlArrayAttribute");
-                GetIgnore(ref ignore, attrib, attribs, "ProtoBuf.XmlIgnoreAttribute");
-                if (!ignore)
-                {
-                    GetFieldNumber(ref fieldNumber, attrib, "Order");
-                    GetFieldName(ref name, attrib, "ElementName");
-                }
-                done = fieldNumber > 0;
-            }
-            if (!ignore && (attrib = GetAttribute(attribs, "System.ComponentModel.DefaultValueAttribute")) != null)
+            
+            if ((attrib = GetAttribute(attribs, "System.ComponentModel.DefaultValueAttribute")) != null)
             {
                 defaultValue = GetMemberValue(attrib, "Value");
             }
-            ValueMember vm = ((isEnum || fieldNumber > 0) && !ignore)
-                ? new ValueMember(model, type, fieldNumber, member, effectiveType, itemType, defaultType, dataFormat, defaultValue)
+            ValueMember vm = ((isEnum || normalizedAttribute.Tag > 0))
+                ? new ValueMember(model, type, normalizedAttribute.Tag, member, effectiveType, itemType, defaultType, normalizedAttribute.DataFormat, defaultValue)
                     : null;
             if (vm != null)
             {
@@ -544,11 +636,11 @@ namespace ProtoBuf.Meta
                         vm.SetSpecified(method, null);
                     }
                 }
-                if(!Helpers.IsNullOrEmpty(name)) vm.SetName(name);
-                vm.IsPacked = isPacked;
-                vm.IsRequired = isRequired;
-                vm.AsReference = asReference;
-                vm.DynamicType = dynamicType;
+                if (!Helpers.IsNullOrEmpty(normalizedAttribute.Name)) vm.SetName(normalizedAttribute.Name);
+                vm.IsPacked = normalizedAttribute.IsPacked;
+                vm.IsRequired = normalizedAttribute.IsRequired;
+                vm.AsReference = normalizedAttribute.AsReference;
+                vm.DynamicType = normalizedAttribute.DynamicType;
             }
             return vm;
         }
@@ -803,6 +895,13 @@ namespace ProtoBuf.Meta
         //IEnumerable GetFields() { return fields; }
 
 #if FEAT_COMPILER && !FX11
+
+        /// <summary>
+        /// Compiles the serializer for this type; this is *not* a full
+        /// standalone compile, but can significantly boost performance
+        /// while allowing additional types to be added.
+        /// </summary>
+        /// <remarks>An in-place compile can access non-public types / members</remarks>
         public void CompileInPlace()
         {
             serializer = CompiledSerializer.Wrap(Serializer);

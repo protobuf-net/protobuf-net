@@ -18,6 +18,20 @@ namespace ProtoBuf.Meta
     public sealed class RuntimeTypeModel : TypeModel
     {
 
+        private bool inferTagFromNameDefault;
+        /// <summary>
+        /// Global default for that
+        /// enables/disables automatic tag generation based on the existing name / order
+        /// of the defined members. See <seealso cref="ProtoContractAttribute.InferTagFromName"/>
+        /// for usage and <b>important warning</b> / explanation.
+        /// You must set the global default before attempting to serialize/deserialize any
+        /// impacted type.
+        /// </summary>
+        public bool InferTagFromNameDefault
+        {
+            get { return inferTagFromNameDefault; }
+            set { inferTagFromNameDefault = value; }
+        }
 
         private class Singleton
         {

@@ -284,7 +284,7 @@ namespace ProtoBuf.Compiler
                 case 8: Emit(OpCodes.Ldc_I4_8); break;
                 case -1: Emit(OpCodes.Ldc_I4_M1); break;
                 default:
-                    var op = value >= -128 && value <= 127 ? OpCodes.Ldc_I4_S : OpCodes.Ldc_I4;
+                    OpCode op = value >= -128 && value <= 127 ? OpCodes.Ldc_I4_S : OpCodes.Ldc_I4;
                     il.Emit(op, value);
 #if DEBUG_COMPILE
                     Helpers.DebugWriteLine(op + ": " + value);
