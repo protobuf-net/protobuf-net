@@ -456,8 +456,8 @@ namespace ProtoBuf.Meta
         private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName)
         {
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
-            int fieldNumber = 0, minAcceptFieldNumber = inferByTagName ? -1 : 1;
-            string name = member.Name;
+            int fieldNumber = int.MinValue, minAcceptFieldNumber = inferByTagName ? -1 : 1;
+            string name = null;
             bool isPacked = false, ignore = false, done = false, isRequired = false, asReference = false, dynamicType = false, tagIsPinned = false;
             DataFormat dataFormat = DataFormat.Default;
             if (isEnum) forced = true;
@@ -492,7 +492,7 @@ namespace ProtoBuf.Meta
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
                 GetIgnore(ref ignore, attrib, attribs, "ProtoBuf.ProtoIgnoreAttribute");
-                if (!ignore)
+                if (!ignore && attrib != null)
                 {
                     GetFieldNumber(ref fieldNumber, attrib, "Tag");
                     GetFieldName(ref name, attrib, "Name");
@@ -526,28 +526,26 @@ namespace ProtoBuf.Meta
             if (!ignore && !done && HasFamily(family, AttributeFamily.DataContractSerialier))
             {
                 attrib = GetAttribute(attribs, "System.Runtime.Serialization.DataMemberAttribute");
-                GetFieldNumber(ref fieldNumber, attrib, "Order");
-                GetFieldName(ref name, attrib, "Name");
-                GetFieldBoolean(ref isRequired, attrib, "IsRequired");
-                done = fieldNumber >= minAcceptFieldNumber;
-                if (done) fieldNumber += dataMemberOffset; // dataMemberOffset only applies to DCS flags, to allow us to "bump" WCF by a notch
+                if (attrib != null)
+                {
+                    GetFieldNumber(ref fieldNumber, attrib, "Order");
+                    GetFieldName(ref name, attrib, "Name");
+                    GetFieldBoolean(ref isRequired, attrib, "IsRequired");
+                    done = fieldNumber >= minAcceptFieldNumber;
+                    if (done) fieldNumber += dataMemberOffset; // dataMemberOffset only applies to DCS flags, to allow us to "bump" WCF by a notch
+                }
             }
             if (!ignore && !done && HasFamily(family, AttributeFamily.XmlSerializer))
             {
-                attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlElementAttribute");
+                attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlElementAttribute")
+                    ?? GetAttribute(attribs, "System.Xml.Serialization.XmlArrayAttribute");
                 GetIgnore(ref ignore, attrib, attribs, "System.Xml.Serialization.XmlIgnoreAttribute");
-                if (!ignore)
+                if (attrib != null && !ignore)
                 {
                     GetFieldNumber(ref fieldNumber, attrib, "Order");
                     GetFieldName(ref name, attrib, "ElementName");
-                }
-                attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlArrayAttribute");
-                if (!ignore)
-                {
-                    GetFieldNumber(ref fieldNumber, attrib, "Order");
-                    GetFieldName(ref name, attrib, "ElementName");
-                }
-                done = fieldNumber >= minAcceptFieldNumber;
+                    done = fieldNumber >= minAcceptFieldNumber;
+                }                
             }
             if (!ignore && !done)
             {
@@ -560,7 +558,7 @@ namespace ProtoBuf.Meta
             result.DynamicType = dynamicType;
             result.IsPacked = isPacked;
             result.IsRequired = isRequired;
-            result.Name = name;
+            result.Name = Helpers.IsNullOrEmpty(name) ? member.Name : name;
             result.Member = member;
             result.TagIsPinned = tagIsPinned;
             return result;
