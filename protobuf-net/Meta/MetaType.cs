@@ -320,7 +320,7 @@ namespace ProtoBuf.Meta
                     dataMemberOffset = pca.DataMemberOffset;
                     if (pca.InferTagFromNameHasValue) inferTagByName = pca.InferTagFromName;
                     implicitMode = pca.ImplicitFields;
-                    implicitFirstTag = pca.ImplicitFirstTag;
+                    if(pca.ImplicitFirstTag > 0) implicitFirstTag = pca.ImplicitFirstTag;
                 }
             }
             MethodInfo[] callbacks = null;
@@ -360,7 +360,7 @@ namespace ProtoBuf.Meta
                                 break;
                         }
                         if (effectiveType.IsSubclassOf(typeof(Delegate))) continue; // we just don't like delegate types ;p
-                        ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(member, family, forced, isEnum, partialMembers, dataMemberOffset);
+                        ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName);
                         if(normalizedAttribute != null) members.Add(normalizedAttribute);
                         break;
                     case MemberTypes.Method:
@@ -453,10 +453,10 @@ namespace ProtoBuf.Meta
             return (value & required) == required;
         }
         
-        private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset)
+        private static ProtoMemberAttribute NormalizeProtoMember(MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName)
         {
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
-            int fieldNumber = 0;
+            int fieldNumber = 0, minAcceptFieldNumber = inferByTagName ? -1 : 1;
             string name = member.Name;
             bool isPacked = false, ignore = false, done = false, isRequired = false, asReference = false, dynamicType = false, tagIsPinned = false;
             DataFormat dataFormat = DataFormat.Default;
@@ -501,7 +501,7 @@ namespace ProtoBuf.Meta
                     GetDataFormat(ref dataFormat, attrib, "DataFormat");
                     GetFieldBoolean(ref asReference, attrib, "AsReference");
                     GetFieldBoolean(ref dynamicType, attrib, "DynamicType");
-                    done = tagIsPinned = fieldNumber > 0;
+                    done = tagIsPinned = fieldNumber > 0; // note minAcceptFieldNumber only applies to non-proto
                 }
 
                 if (!done && partialMembers != null)
@@ -517,7 +517,7 @@ namespace ProtoBuf.Meta
                             GetDataFormat(ref dataFormat, ppma, "DataFormat");
                             GetFieldBoolean(ref asReference, ppma, "AsReference");
                             GetFieldBoolean(ref dynamicType, ppma, "DynamicType");
-                            if (done = tagIsPinned = fieldNumber > 0) break;
+                            if (done = tagIsPinned = fieldNumber > 0) break; // note minAcceptFieldNumber only applies to non-proto
                         }
                     }
                 }
@@ -529,7 +529,7 @@ namespace ProtoBuf.Meta
                 GetFieldNumber(ref fieldNumber, attrib, "Order");
                 GetFieldName(ref name, attrib, "Name");
                 GetFieldBoolean(ref isRequired, attrib, "IsRequired");
-                done = fieldNumber > 0;
+                done = fieldNumber >= minAcceptFieldNumber;
                 if (done) fieldNumber += dataMemberOffset; // dataMemberOffset only applies to DCS flags, to allow us to "bump" WCF by a notch
             }
             if (!ignore && !done && HasFamily(family, AttributeFamily.XmlSerializer))
@@ -547,14 +547,14 @@ namespace ProtoBuf.Meta
                     GetFieldNumber(ref fieldNumber, attrib, "Order");
                     GetFieldName(ref name, attrib, "ElementName");
                 }
-                done = fieldNumber > 0;
+                done = fieldNumber >= minAcceptFieldNumber;
             }
             if (!ignore && !done)
             {
                 if (GetAttribute(attribs, "System.NonSerializedAttribute") != null) ignore = true;
             }
-            if (ignore || (fieldNumber <= 0 && !forced)) return null;
-            ProtoMemberAttribute result = new ProtoMemberAttribute(fieldNumber, forced);
+            if (ignore || (fieldNumber < minAcceptFieldNumber && !forced)) return null;
+            ProtoMemberAttribute result = new ProtoMemberAttribute(fieldNumber, forced || inferByTagName);
             result.AsReference = asReference;
             result.DataFormat = dataFormat;
             result.DynamicType = dynamicType;
