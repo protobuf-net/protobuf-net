@@ -208,7 +208,7 @@ namespace ProtoBuf.Meta
                 applyDefaultBehaviour = false;
             }
             if(newType == null) newType = Create(type);
-            bool weAdded = false, lockTaken = false;
+            bool lockTaken = false;
             try
             {
                 TakeLock(ref lockTaken);
@@ -216,13 +216,13 @@ namespace ProtoBuf.Meta
                 if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
                 ThrowIfFrozen();
                 types.Add(newType);
-                weAdded = true;
+                if (applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
             }
             finally
             {
                 ReleaseLock(lockTaken);
             }
-            if (weAdded && applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
+            
             return newType;
         }
 

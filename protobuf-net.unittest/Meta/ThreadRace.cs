@@ -27,6 +27,7 @@ namespace ProtoBuf.unittest.Meta
             [ProtoMember(7)]public List<decimal> G { get; set; }
             [ProtoMember(8)]public Dictionary<int, AnotherType> H { get; set; }
             [ProtoMember(9)]public AnotherType I{ get; set; }
+            [ProtoMember(10)]public Dictionary<string,int> J { get; set; }
         }
         [ProtoContract]
         public class AnotherType
@@ -42,8 +43,15 @@ namespace ProtoBuf.unittest.Meta
             // each time (on a fresh model), we prepare a slew (20) threads - each eager to serialize one of two available types.
             // They all wait on a single gate, and then the fight begins! We track any failures, and Join all the threads
             // back together.
-            var a = new ModelWithNonTrivialProperties();
-            var b = new AnotherType();    
+            var a = new ModelWithNonTrivialProperties()
+            {
+                J = new Dictionary<string, int> { { "abc", 123 } },
+                D = new byte[] { 0, 1, 2, 3, 4 },
+                G = new List<decimal> { 1, 2, 3, 4, 5 },
+                H = new Dictionary<int, AnotherType> { { 1, new AnotherType { A = 456 } } },
+                I = new AnotherType { B = "def" }
+            };
+            var b = new AnotherType() { A = 123 };
             for (int i = 0; i < 100; i++)
             {
                 ManualResetEvent allGo = new ManualResetEvent(false);
