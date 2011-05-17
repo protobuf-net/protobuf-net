@@ -17,7 +17,7 @@ namespace ProtoBuf
         /// <summary>
         /// The key of the pair.
         /// </summary>
-        [ProtoMember(1)]
+        [ProtoMember(1, IsRequired = true)]
         public TKey Key { get { return key; } set { key = value; } }
         /// <summary>
         /// The value of the pair.
