@@ -240,12 +240,12 @@ namespace Examples
             Assert.IsNull(item.ListNoDefault);
             var clone = Serializer.DeepClone(item);
             Assert.IsNull(clone.ListNoDefault);
-
+           
             item.ListNoDefault = new List<int>();
             clone = Serializer.DeepClone(item);
             Assert.IsNotNull(clone.ListNoDefault);
             Assert.AreEqual(0, clone.ListNoDefault.Count);
-
+           
             item.ListNoDefault.Add(123);
             clone = Serializer.DeepClone(item);
             Assert.IsNotNull(clone.ListNoDefault);

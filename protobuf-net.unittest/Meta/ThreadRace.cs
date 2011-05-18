@@ -102,5 +102,63 @@ namespace ProtoBuf.unittest.Meta
 
             }
         }
+
+
+
+        [Test]
+        public void DestructionTestDictionary()
+        {
+            byte[] raw;
+            using (var ms = new MemoryStream())
+            {
+                var orig = new Dictionary<string,string>{{"a","b"},{"c","d"},{"e","f"}};
+                var model = RuntimeTypeModel.Create();
+                model.Serialize(ms, orig);
+                raw = ms.ToArray();
+            }
+
+            for (int i = 0; i < 100; i++)
+            {
+                ManualResetEvent allGo = new ManualResetEvent(false);
+                var model = TypeModel.Create();
+                model.AutoCompile = true;
+                object starter = new object();
+                int waiting = 20;
+                int failures = 0;
+                Exception firstException = null;
+                Thread[] threads = new Thread[20];
+                for (int j = 0; j < 20; j++)
+                {
+                    threads[j] = new Thread(() =>
+                    {
+                        try
+                        {
+                            using (var ms = new MemoryStream(raw))
+                            {
+                                if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                                allGo.WaitOne();
+                                var data = (Dictionary<string,string>)model.Deserialize(ms, null, typeof(Dictionary<string,string>));
+                                if (data == null || data.Count != 3) throw new InvalidDataException();
+                                if (data["a"] != "b") throw new InvalidDataException();
+                                if (data["c"] != "d") throw new InvalidDataException();
+                                if (data["e"] != "f") throw new InvalidDataException();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Interlocked.CompareExchange(ref firstException, ex, null);
+                            Interlocked.Increment(ref failures);
+                        }
+                    });
+                }
+
+                for (int j = 0; j < threads.Length; j++) threads[j].Start();
+                for (int j = 0; j < threads.Length; j++) threads[j].Join();
+
+                Assert.IsNull(firstException);
+                Assert.AreEqual(0, Interlocked.CompareExchange(ref failures, 0, 0));
+
+            }
+        }
     }
 }

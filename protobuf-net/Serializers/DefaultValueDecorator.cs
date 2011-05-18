@@ -225,6 +225,12 @@ namespace ProtoBuf.Serializers
                         ctx.LoadValue((Guid)defaultValue);
                         EmitBeq(ctx, label, ExpectedType);
                     }
+                    else if (ExpectedType == typeof(DateTime))
+                    {
+                        ctx.LoadValue(((DateTime)defaultValue).ToBinary());
+                        ctx.EmitCall(typeof(DateTime).GetMethod("FromBinary"));
+                        EmitBeq(ctx, label, ExpectedType);
+                    }
                     else
                     {
                         throw new NotSupportedException("Type cannot be represented as a default value: " + ExpectedType.FullName);

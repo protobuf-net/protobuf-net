@@ -177,7 +177,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal void ThrowIfFrozen()
         {
-            if (frozen) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
+            if (frozen) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated for " + type.FullName);
         }
         internal void Freeze() { frozen = true;}
 

@@ -104,25 +104,28 @@ namespace ProtoBuf.Meta
 
             if (key < 0)
             {
-                MetaType metaType;
-                // try to recognise a few familiar patterns...
-                if ((metaType = RecogniseCommonTypes(type)) == null)
-                { // otherwise, check if it is a contract
-                    bool shouldAdd = autoAddMissingTypes || addEvenIfAutoDisabled;
-                    if (!shouldAdd || (
-                        addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
-                        )
-                    {
-                        if (demand) ThrowUnexpectedType(type);
-                        return key;
-                    }
-                    metaType = Create(type);
-                }
-
-                bool weAdded = false, lockTaken = false;
+                bool lockTaken = false;
                 try
                 {
                     TakeLock(ref lockTaken);
+                    MetaType metaType;
+                    // try to recognise a few familiar patterns...
+                    if ((metaType = RecogniseCommonTypes(type)) == null)
+                    { // otherwise, check if it is a contract
+                        bool shouldAdd = autoAddMissingTypes || addEvenIfAutoDisabled;
+                        if (!shouldAdd || (
+                            addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
+                            )
+                        {
+                            if (demand) ThrowUnexpectedType(type);
+                            return key;
+                        }
+                        metaType = Create(type);
+                    }
+
+                    
+                    bool weAdded = false;
+
                     // double-checked
                     int winner = types.IndexOf(predicate);
                     if (winner < 0)
@@ -284,17 +287,29 @@ namespace ProtoBuf.Meta
         }
         internal int GetKey(Type type, bool demand, bool getBaseKey)
         {
-            int typeIndex = FindOrAddAuto(type, demand, true, false);
-            if (typeIndex >= 0)
+            Helpers.DebugAssert(type != null);
+            try
             {
-                MetaType mt = (MetaType)types[typeIndex], baseType;
-                if (getBaseKey && (baseType = mt.BaseType) != null)
-                {   // part of an inheritance tree; pick the base-key
-                    while (baseType != null) { mt = baseType; baseType = baseType.BaseType;}
-                    typeIndex = FindOrAddAuto(mt.Type, true, true, false);
+                int typeIndex = FindOrAddAuto(type, demand, true, false);
+                if (typeIndex >= 0)
+                {
+                    MetaType mt = (MetaType)types[typeIndex], baseType;
+                    if (getBaseKey && (baseType = mt.BaseType) != null)
+                    {   // part of an inheritance tree; pick the base-key
+                        while (baseType != null) { mt = baseType; baseType = baseType.BaseType; }
+                        typeIndex = FindOrAddAuto(mt.Type, true, true, false);
+                    }
                 }
+                return typeIndex;
             }
-            return typeIndex;
+            catch (NotSupportedException)
+            {
+                throw; // re-surface "as-is"
+            }
+            catch (Exception ex)
+            {
+                throw new ProtoException(ex.Message + " (" + type.FullName + ")", ex);
+            }
         }
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
