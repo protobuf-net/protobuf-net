@@ -1,4 +1,4 @@
-﻿
+﻿#if !SILVERLIGHT
 using System;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -195,3 +195,4 @@ namespace ProtoBuf.ServiceModel.Client
         }
     }
 }
+#endif
