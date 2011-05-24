@@ -160,5 +160,143 @@ namespace ProtoBuf.unittest.Meta
 
             }
         }
+
+        [ProtoContract,ProtoInclude(1, typeof(B)), ProtoInclude(2, typeof(C))] class A { }
+        [ProtoContract,ProtoInclude(1, typeof(D)), ProtoInclude(2, typeof(E))] class B : A { }
+        [ProtoContract,ProtoInclude(1, typeof(F)), ProtoInclude(2, typeof(G))] class C : A { }
+        [ProtoContract,ProtoInclude(1, typeof(H)), ProtoInclude(2, typeof(I))] class D : B { }
+        [ProtoContract,ProtoInclude(1, typeof(J)), ProtoInclude(2, typeof(K))] class E : B { }
+        [ProtoContract,ProtoInclude(1, typeof(L)), ProtoInclude(2, typeof(M))] class F : C { }
+        [ProtoContract,ProtoInclude(1, typeof(N)), ProtoInclude(2, typeof(O))] class G : C { }
+        [ProtoContract,ProtoInclude(1, typeof(P)), ProtoInclude(2, typeof(Q))] class H : D { }
+        [ProtoContract,ProtoInclude(1, typeof(R)), ProtoInclude(2, typeof(S))] class I : D { }
+        [ProtoContract,ProtoInclude(1, typeof(T)), ProtoInclude(2, typeof(U))] class J : E { }
+        [ProtoContract,ProtoInclude(1, typeof(V)), ProtoInclude(2, typeof(W))] class K : E { }
+        [ProtoContract,ProtoInclude(1, typeof(X)), ProtoInclude(2, typeof(Y))] class L : F { }
+        [ProtoContract]class M : F { }
+        [ProtoContract]class N : G { }
+        [ProtoContract]class O : G { }
+        [ProtoContract]class P : H { }
+        [ProtoContract]class Q : H { }
+        [ProtoContract]class R : I { }
+        [ProtoContract]class S : I { }
+        [ProtoContract]class T : J { }
+        [ProtoContract]class U : J { }
+        [ProtoContract]class V : K { }
+        [ProtoContract]class W : K { }
+        [ProtoContract]class X : L { }
+        [ProtoContract]class Y : L { }
+
+        [Test]
+        public void TestDeserializeModelFromRoot()
+        {
+            byte[] raw;
+            using (var ms = new MemoryStream())
+            {
+                var orig = new Y();
+                var model = RuntimeTypeModel.Create();
+                model.Serialize(ms, orig);
+                raw = ms.ToArray();
+            }
+
+            for (int i = 0; i < 100; i++)
+            {
+                ManualResetEvent allGo = new ManualResetEvent(false);
+                var model = TypeModel.Create();
+                model.AutoCompile = true;
+                object starter = new object();
+                int waiting = 20;
+                int failures = 0;
+                Exception firstException = null;
+                Thread[] threads = new Thread[20];
+                for (int j = 0; j < 20; j++)
+                {
+                    threads[j] = new Thread(() =>
+                    {
+                        try
+                        {
+                            using (var ms = new MemoryStream(raw))
+                            {
+                                if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                                allGo.WaitOne();
+                                object obj = model.Deserialize(ms, null, typeof(A));
+                                if (obj.GetType() != typeof(Y)) throw new InvalidDataException("Should be a Y");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Interlocked.CompareExchange(ref firstException, ex, null);
+                            Interlocked.Increment(ref failures);
+                        }
+                    });
+                }
+
+                for (int j = 0; j < threads.Length; j++) threads[j].Start();
+                for (int j = 0; j < threads.Length; j++) threads[j].Join();
+
+                Assert.IsNull(firstException);
+                Assert.AreEqual(0, Interlocked.CompareExchange(ref failures, 0, 0));
+
+            }
+        }
+
+        [Test]
+        public void TestSerializeModelFromRoot()
+        {
+            byte[] raw;
+            using (var ms = new MemoryStream())
+            {
+                var orig = new Y();
+                var model = RuntimeTypeModel.Create();
+                model.Serialize(ms, orig);
+                raw = ms.ToArray();
+            }
+
+            for (int i = 0; i < 100; i++)
+            {
+                ManualResetEvent allGo = new ManualResetEvent(false);
+                var model = TypeModel.Create();
+                model.AutoCompile = true;
+                object starter = new object();
+                int waiting = 20;
+                int failures = 0;
+                Exception firstException = null;
+                Thread[] threads = new Thread[20];
+                for (int j = 0; j < 20; j++)
+                {
+                    threads[j] = new Thread(() =>
+                    {
+                        try
+                        {
+                            using (var ms = new MemoryStream())
+                            {
+                                if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                                allGo.WaitOne();
+                                model.Serialize(ms, new Y());
+                                if (!ms.ToArray().SequenceEqual(raw)) throw new InvalidDataException("Bad serialization; " + GetHex(raw) + " vs " + GetHex(ms.ToArray()));
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Interlocked.CompareExchange(ref firstException, ex, null);
+                            Interlocked.Increment(ref failures);
+                        }
+                    });
+                }
+
+                for (int j = 0; j < threads.Length; j++) threads[j].Start();
+                for (int j = 0; j < threads.Length; j++) threads[j].Join();
+
+                Assert.IsNull(firstException);
+                Assert.AreEqual(0, Interlocked.CompareExchange(ref failures, 0, 0));
+
+            }
+        }
+        string GetHex(byte[] bytes)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (byte b in bytes) sb.Append(b.ToString("x2"));
+            return sb.ToString();
+        }
     }
 }

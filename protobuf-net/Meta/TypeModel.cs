@@ -267,7 +267,7 @@ namespace ProtoBuf.Meta
                 {
                     if (!TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true))
                     {
-                        throw new InvalidOperationException();
+                        TypeModel.ThrowUnexpectedType(type); // throws
                     }
                 }
                 bytesRead += reader.Position;
@@ -881,7 +881,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Indicates that the given type was not expected, and cannot be processed.
         /// </summary>
-        protected static void ThrowUnexpectedType(Type type)
+        protected internal static void ThrowUnexpectedType(Type type)
         {
             throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + type.FullName);
         }

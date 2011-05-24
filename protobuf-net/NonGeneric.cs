@@ -55,7 +55,7 @@ namespace ProtoBuf
             /// <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
             public static void SerializeWithLengthPrefix(Stream destination, object instance, PrefixStyle style, int fieldNumber)
             {
-                throw new NotImplementedException();//TODO: NotImplementedException
+                RuntimeTypeModel.Default.SerializeWithLengthPrefix(destination, instance, instance.GetType(), style, fieldNumber);
             }
             /// <summary>
             /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
@@ -70,7 +70,8 @@ namespace ProtoBuf
             /// original instance.</returns>
             public static bool TryDeserializeWithLengthPrefix(Stream source, PrefixStyle style, TypeResolver resolver, out object value)
             {
-                throw new NotImplementedException();//TODO: NotImplementedException
+                value = RuntimeTypeModel.Default.DeserializeWithLengthPrefix(source, null, null, style, 0, resolver);
+                return value != null;
             }
             /// <summary>
             /// Indicates whether the supplied type is explicitly modelled by the model

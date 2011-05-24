@@ -961,6 +961,13 @@ namespace ProtoBuf.Meta
             get { return enumPassthru; }
             set { ThrowIfFrozen(); enumPassthru = value; }
         }
+
+        private volatile bool pending;
+        internal bool Pending
+        {
+            get { return pending; }
+            set { pending = value; }
+        }
     }
 }
 #endif

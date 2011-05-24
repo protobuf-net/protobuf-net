@@ -193,6 +193,5 @@ namespace ProtoBuf.unittest.Meta
             [ProtoMember(2)]
             public decimal? Second { get; set; }
         }
-
     }
 }

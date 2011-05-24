@@ -59,7 +59,17 @@ namespace ProtoBuf
                     throw new ArgumentOutOfRangeException("style");
             }
             SubItemToken token = StartSubItem(value, writer, true);
-            writer.model.Serialize(key, value, writer);
+            if (key < 0)
+            {
+                if (!writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, fieldNumber, value))
+                {
+                    TypeModel.ThrowUnexpectedType(value.GetType());
+                }
+            }
+            else
+            {
+                writer.model.Serialize(key, value, writer);
+            }
             EndSubItem(token, writer, style);
             
         }

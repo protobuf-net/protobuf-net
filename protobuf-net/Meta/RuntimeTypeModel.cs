@@ -70,7 +70,11 @@ namespace ProtoBuf.Meta
             // this list is thread-safe for reading
             foreach (MetaType metaType in types)
             {
-                if (metaType.Type == type) return metaType;
+                if (metaType.Type == type)
+                {
+                    if (metaType.Pending) WaitOnLock(metaType);
+                    return metaType;
+                }
             }
             // if that failed, check for a proxy
             Type underlyingType = ResolveProxies(type);
@@ -85,11 +89,27 @@ namespace ProtoBuf.Meta
                 return ((MetaType)obj).Type == type;
             }
         }
+        private void WaitOnLock(MetaType type)
+        {
+            bool lockTaken = false;
+            try
+            {
+                TakeLock(ref lockTaken);
+            }
+            finally
+            {
+                ReleaseLock(lockTaken);
+            }
+        }
         internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled)
         {
             TypeFinder predicate = new TypeFinder(type);
             int key = types.IndexOf(predicate);
-
+            MetaType metaType;
+            if (key >= 0 && (metaType = ((MetaType)types[key])).Pending)
+            {
+                WaitOnLock(metaType);
+            }
             if (key < 0)
             {
                 // check for proxy types
@@ -108,7 +128,6 @@ namespace ProtoBuf.Meta
                 try
                 {
                     TakeLock(ref lockTaken);
-                    MetaType metaType;
                     // try to recognise a few familiar patterns...
                     if ((metaType = RecogniseCommonTypes(type)) == null)
                     { // otherwise, check if it is a contract
@@ -122,8 +141,7 @@ namespace ProtoBuf.Meta
                         }
                         metaType = Create(type);
                     }
-
-                    
+                    metaType.Pending = true;                    
                     bool weAdded = false;
 
                     // double-checked
@@ -138,7 +156,11 @@ namespace ProtoBuf.Meta
                     {
                         key = winner;
                     }
-                    if (weAdded) metaType.ApplyDefaultBehaviour();
+                    if (weAdded)
+                    {
+                        metaType.ApplyDefaultBehaviour();
+                        metaType.Pending = false;
+                    }
                 }
                 finally
                 {
@@ -199,27 +221,30 @@ namespace ProtoBuf.Meta
         {
             if (type == null) throw new ArgumentNullException("type");
             if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
-            MetaType newType = RecogniseCommonTypes(type);
-            if(newType != null)
-            {
-                if(!applyDefaultBehaviour) {
-                    throw new ArgumentException(
-                        "Default behaviour must be observed for certain types with special handling; " + type.Name,
-                        "applyDefaultBehaviour");
-                }
-                // we should assume that type is fully configured, though; no need to re-run:
-                applyDefaultBehaviour = false;
-            }
-            if(newType == null) newType = Create(type);
             bool lockTaken = false;
+            MetaType newType;
             try
             {
+                newType = RecogniseCommonTypes(type);
+                if(newType != null)
+                {
+                    if(!applyDefaultBehaviour) {
+                        throw new ArgumentException(
+                            "Default behaviour must be observed for certain types with special handling; " + type.Name,
+                            "applyDefaultBehaviour");
+                    }
+                    // we should assume that type is fully configured, though; no need to re-run:
+                    applyDefaultBehaviour = false;
+                }
+                if(newType == null) newType = Create(type);
+                newType.Pending = true;
                 TakeLock(ref lockTaken);
                 // double checked
                 if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
                 ThrowIfFrozen();
                 types.Add(newType);
                 if (applyDefaultBehaviour) { newType.ApplyDefaultBehaviour(); }
+                newType.Pending = false;
             }
             finally
             {

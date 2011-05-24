@@ -220,8 +220,8 @@ namespace ProtoBuf.Compiler
                 returnType = typeof(object);
                 paramTypes = new Type[] { typeof(object), typeof(ProtoReader) };
             }
-
-            method = new DynamicMethod("proto_" + Interlocked.Increment(ref next), returnType, paramTypes, associatedType,true);
+            
+            method = new DynamicMethod("proto_" + Interlocked.Increment(ref next), returnType, paramTypes, associatedType.IsInterface ? typeof(object) : associatedType,true);
             this.il = method.GetILGenerator();
         }
 #endif

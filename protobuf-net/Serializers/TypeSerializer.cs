@@ -473,7 +473,8 @@ namespace ProtoBuf.Serializers
                     ctx.LoadValue(constructType);
                     ctx.EmitCall(typeof(BclHelpers).GetMethod("GetUninitializedObject"));
                     ctx.Cast(forType);
-                } else if (type.IsClass && hasConstructor)
+                }
+                else if (constructType.IsClass && hasConstructor)
                 {   // XmlSerializer style
                     ctx.EmitCtor(constructType);
                 }
