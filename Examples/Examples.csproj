@@ -229,6 +229,7 @@
     <Compile Include="ServiceModel\WcfTest.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ShadowSetters.cs" />
     <Compile Include="SimpleStream\Collections.cs" />
     <Compile Include="SimpleStream\GroupedData.cs" />
     <Compile Include="SimpleStream\NullTypes.cs" />

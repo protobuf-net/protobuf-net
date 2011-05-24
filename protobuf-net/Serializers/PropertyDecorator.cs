@@ -25,7 +25,7 @@ namespace ProtoBuf.Serializers
         private static void SanityCheck(PropertyInfo property, IProtoSerializer tail, out bool writeValue, bool nonPublic) {
             if(property == null) throw new ArgumentNullException("property");
             
-            writeValue = tail.ReturnsValue && property.CanWrite && property.GetSetMethod(nonPublic) != null;
+            writeValue = tail.ReturnsValue && (GetShadowSetter(property) != null || (property.CanWrite && property.GetSetMethod(nonPublic) != null));
             if (!property.CanRead || property.GetGetMethod(nonPublic) == null) throw new InvalidOperationException("Cannot serialize property without a get accessor");
             if (!tail.RequiresOldValue && !writeValue)
             { // so we can't save the value, and the tail doesn't use it either... not helpful
@@ -36,6 +36,12 @@ namespace ProtoBuf.Serializers
             { // can't write the value, so the struct value will be lost
                 throw new InvalidOperationException("Cannot apply changes to property");
             }
+        }
+        static MethodInfo GetShadowSetter(PropertyInfo property)
+        {
+            MethodInfo method = property.ReflectedType.GetMethod("Set" + property.Name, BindingFlags.Public | BindingFlags.Instance, null, new Type[] { property.PropertyType }, null);
+            if (method == null || method.ReturnType != typeof(void)) return null;
+            return method;
         }
         public override void Write(object value, ProtoWriter dest)
         {
@@ -51,7 +57,15 @@ namespace ProtoBuf.Serializers
             object newVal = Tail.Read(oldVal, source);
             if (readOptionsWriteValue)
             {
-                property.SetValue(value, newVal, null);
+                MethodInfo shadow = GetShadowSetter(property);
+                if (shadow == null)
+                {
+                    property.SetValue(value, newVal, null);
+                }
+                else
+                {
+                    shadow.Invoke(value, new object[] { newVal });
+                }
             }
             return null;
         }
@@ -86,7 +100,15 @@ namespace ProtoBuf.Serializers
             
             if (writeValue)
             {   // stack is old-addr|new-value
-                ctx.StoreValue(property);
+                MethodInfo shadow = GetShadowSetter(property);
+                if (shadow == null)
+                {
+                    ctx.StoreValue(property);
+                }
+                else
+                {
+                    ctx.EmitCall(shadow);
+                }
             }
             else
             { // don't want return value; drop it if anything there
