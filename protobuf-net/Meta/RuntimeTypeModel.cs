@@ -203,9 +203,11 @@ namespace ProtoBuf.Meta
 
         /// <summary>
         /// Adds support for an additional type in this model, optionally
-        /// appplying inbuilt patterns.
+        /// appplying inbuilt patterns. If the type is already known to the
+        /// model, the existing type is returned **without** applying
+        /// any additional behaviour.
         /// </summary>
-        /// <remarks>Inbuild patterns include:
+        /// <remarks>Inbuilt patterns include:
         /// [ProtoContract]/[ProtoMember(n)]
         /// [DataContract]/[DataMember(Order=n)]
         /// [XmlType]/[XmlElement(Order=n)]
@@ -220,9 +222,10 @@ namespace ProtoBuf.Meta
         public MetaType Add(Type type, bool applyDefaultBehaviour)
         {
             if (type == null) throw new ArgumentNullException("type");
-            if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
+            MetaType newType = FindWithoutAdd(type);
+            if (newType != null) return newType; // return existing
             bool lockTaken = false;
-            MetaType newType;
+            
             try
             {
                 newType = RecogniseCommonTypes(type);

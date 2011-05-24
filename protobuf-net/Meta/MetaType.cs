@@ -50,7 +50,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType AddSubType(int fieldNumber, Type derivedType)
         {
-            if (!type.IsClass || type.IsSealed) {
+            if (!(type.IsClass || type.IsInterface) || type.IsSealed) {
                 throw new InvalidOperationException("Sub-types can only be adedd to non-sealed classes");
             }
             MetaType derivedMeta = model[derivedType];
@@ -278,7 +278,7 @@ namespace ProtoBuf.Meta
         
         internal void ApplyDefaultBehaviour()
         {
-            if (model.FindWithoutAdd(type.BaseType) == null
+            if (type.BaseType != null && model.FindWithoutAdd(type.BaseType) == null
                 && GetContractFamily(type.BaseType, null) != MetaType.AttributeFamily.None)
             {
                 model.FindOrAddAuto(type.BaseType, true, false, false);

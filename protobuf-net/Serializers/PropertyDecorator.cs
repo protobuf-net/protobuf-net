@@ -27,14 +27,10 @@ namespace ProtoBuf.Serializers
             
             writeValue = tail.ReturnsValue && (GetShadowSetter(property) != null || (property.CanWrite && property.GetSetMethod(nonPublic) != null));
             if (!property.CanRead || property.GetGetMethod(nonPublic) == null) throw new InvalidOperationException("Cannot serialize property without a get accessor");
-            if (!tail.RequiresOldValue && !writeValue)
+            if (!writeValue && (!tail.RequiresOldValue || tail.ExpectedType.IsValueType))
             { // so we can't save the value, and the tail doesn't use it either... not helpful
-                throw new InvalidOperationException("Cannot apply changes to property");
-            }
-
-            if (!writeValue && tail.ExpectedType.IsValueType)
-            { // can't write the value, so the struct value will be lost
-                throw new InvalidOperationException("Cannot apply changes to property");
+                // or: can't write the value, so the struct value will be lost
+                throw new InvalidOperationException("Cannot apply changes to property " + property.DeclaringType.FullName + "." + property.Name);
             }
         }
         static MethodInfo GetShadowSetter(PropertyInfo property)

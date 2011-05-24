@@ -95,7 +95,7 @@ namespace ProtoBuf.Serializers
         }
         private bool CanHaveInheritance
         {
-            get { return forType.IsClass && !forType.IsSealed; }
+            get { return (forType.IsClass || forType.IsInterface) && !forType.IsSealed; }
         }
         private IProtoSerializer GetMoreSpecificSerializer(object value)
         {

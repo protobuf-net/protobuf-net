@@ -10,7 +10,7 @@ namespace ProtoBuf
     /// a nested message to retain wire-compatibility with
     /// other protocol-buffer implementations.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
     public sealed class ProtoIncludeAttribute : Attribute
     {
         /// <summary>
