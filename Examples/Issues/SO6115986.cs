@@ -15,11 +15,15 @@ namespace Examples.Issues
         public interface IYObject
         {
             string X { get; }
+            int Z { get; set; }
         }
 
         public class YObject : IYObject
         {
             public string X { get; set; }
+
+            int z;
+            int IYObject.Z { get { return z; } set { z = value; } }
         }
 
         public class D
@@ -31,15 +35,17 @@ namespace Examples.Issues
         {
             var m = TypeModel.Create();
             m.Add(typeof(D), false).Add("Y");
-            m.Add(typeof(IYObject), false).AddSubType(1, typeof(YObject));
+            m.Add(typeof(IYObject), false).AddSubType(1, typeof(YObject)).Add(2, "Z");
             m.Add(typeof(YObject), false).Add("X");
             var d = new D { Y = new YObject { X = "a" } };
+            d.Y.Z = 123;
             using (var ms = new MemoryStream())
             {
                 m.Serialize(ms, d);
                 ms.Position = 0;
                 var d2 = (D)m.Deserialize(ms, null, typeof(D));
-                Assert.AreEqual(d.Y.X,d2.Y.X);
+                Assert.AreEqual("a",d2.Y.X);
+                Assert.AreEqual(123, d2.Y.Z);
             }
         }
     }
@@ -51,12 +57,17 @@ namespace Examples.Issues
         public interface IYObject
         {
             string X { get; }
+            [ProtoMember(2)]
+            int Z { get; set; }
         }
         [ProtoContract]
         public class YObject : IYObject
         {
             [ProtoMember(1)]
             public string X { get; set; }
+
+            int z;
+            int IYObject.Z { get { return z; } set { z = value; } }
         }
         [ProtoContract]
         public class D
@@ -69,12 +80,14 @@ namespace Examples.Issues
         {
             var m = TypeModel.Create();
             var d = new D { Y = new YObject { X = "a" } };
+            d.Y.Z = 123;
             using (var ms = new MemoryStream())
             {
                 m.Serialize(ms, d);
                 ms.Position = 0;
                 var d2 = (D)m.Deserialize(ms, null, typeof(D));
-                Assert.AreEqual(d.Y.X, d2.Y.X);
+                Assert.AreEqual("a", d2.Y.X);
+                Assert.AreEqual(123, d2.Y.Z);
             }
         }
     }
