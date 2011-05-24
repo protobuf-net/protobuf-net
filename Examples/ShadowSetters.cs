@@ -20,10 +20,10 @@ namespace Examples
 
             [ProtoMember(2)]
             public int SetterWeDontWantToInvoke { get { return bar; } set { throw new InvalidOperationException("oops, shadow should have won"); } }
-            public void SetSetterWeDontWantToInvoke(int value) { this.foo = value; }
+            public void SetSetterWeDontWantToInvoke(int value) { this.bar = value; }
 
             [ProtoMember(3)]
-            public int SetterWithUnrelatedSet { get { return foo; } set { blap = value; } }
+            public int SetterWithUnrelatedSet { get { return blap; } set { blap = value; } }
             public void SetSetterWithUnrelatedSet(string value) { throw new InvalidOperationException("shouldn't have called this"); }
         }
         [Test]
@@ -34,9 +34,9 @@ namespace Examples
             orig.SetSetterWeDontWantToInvoke(456);
             orig.SetterWithUnrelatedSet = 789;
             var clone = Serializer.DeepClone(orig);
-            Assert.AreEqual(orig.NoSetter, clone.NoSetter);
-            Assert.AreEqual(orig.SetterWeDontWantToInvoke, clone.SetterWeDontWantToInvoke);
-            Assert.AreEqual(orig.SetterWithUnrelatedSet, clone.SetterWithUnrelatedSet);
+            Assert.AreEqual(123, clone.NoSetter);
+            Assert.AreEqual(456, clone.SetterWeDontWantToInvoke);
+            Assert.AreEqual(789, clone.SetterWithUnrelatedSet);
         }
     }
 }
