@@ -93,6 +93,7 @@
     <Compile Include="Meta\Enums.cs" />
     <Compile Include="Meta\Guids.cs" />
     <Compile Include="Meta\Inheritance.cs" />
+    <Compile Include="Meta\Interfaces.cs" />
     <Compile Include="Meta\Lists.cs" />
     <Compile Include="Meta\PocoStruct.cs" />
     <Compile Include="Meta\Struct.cs" />

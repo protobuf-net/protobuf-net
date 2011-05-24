@@ -222,7 +222,7 @@ namespace ProtoBuf.Meta
             if (itemType != null)
             {
                 ValueMember fakeMember = new ValueMember(model, 1, type, itemType, type, DataFormat.Default);
-                return new TypeSerializer(type, new int[] { 1 }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null);
+                return new TypeSerializer(type, new int[] { 1 }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType);
             }
 
             fields.Trim();
@@ -267,7 +267,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return new TypeSerializer(type, fieldNumbers, serializers, arr, baseType == null, useConstructor, callbacks);
+            return new TypeSerializer(type, fieldNumbers, serializers, arr, baseType == null, useConstructor, callbacks, constructType);
         }
 
         [Flags]
@@ -724,6 +724,20 @@ namespace ProtoBuf.Meta
             	useConstructor = value;
             }
         }
+        /// <summary>
+        /// The concrete type to create when a new instance of this type is needed; this may be useful when dealing
+        /// with dynamic proxies, or with interface-based APIs
+        /// </summary>
+        public Type ConstructType
+        {
+            get { return constructType; }
+            set
+            {
+                ThrowIfFrozen();
+                constructType = value;
+            }
+        }
+        private Type constructType;
         /// <summary>
         /// Adds a member (by name) to the MetaType
         /// </summary>     

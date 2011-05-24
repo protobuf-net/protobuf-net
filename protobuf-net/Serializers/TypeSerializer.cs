@@ -20,14 +20,14 @@ namespace ProtoBuf.Serializers
             }
             return false;
         }
-        private readonly Type forType;
+        private readonly Type forType, constructType;
         public Type ExpectedType { get { return forType; } }
         private readonly IProtoSerializer[] serializers;
         private readonly int[] fieldNumbers;
         private readonly bool isRootType, useConstructor, isExtensible, hasConstructor;
         private readonly CallbackSet callbacks;
         private readonly MethodInfo[] baseCtorCallbacks;
-        public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks)
+        public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType)
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(fieldNumbers != null);
@@ -46,6 +46,18 @@ namespace ProtoBuf.Serializers
                 }
             }
             this.forType = forType;
+            if (constructType == null)
+            {
+                constructType = forType;
+            }
+            else
+            {
+                if (!forType.IsAssignableFrom(constructType))
+                {
+                    throw new InvalidOperationException(forType.FullName + " cannot be assigned from "+ constructType.FullName);
+                }
+            }
+            this.constructType = constructType;
             this.serializers = serializers;
             this.fieldNumbers = fieldNumbers;
             this.callbacks = callbacks;
@@ -69,7 +81,7 @@ namespace ProtoBuf.Serializers
                 }
                 isExtensible = true;
             }
-            hasConstructor = !forType.IsAbstract && forType.GetConstructor(
+            hasConstructor = !constructType.IsAbstract && constructType.GetConstructor(
                     BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                     null, Helpers.EmptyTypes, null) != null;
         }
@@ -194,8 +206,8 @@ namespace ProtoBuf.Serializers
             object obj;
             if (useConstructor)
             {
-                if (!hasConstructor) TypeModel.ThrowCannotCreateInstance(forType);
-                obj = Activator.CreateInstance(forType
+                if (!hasConstructor) TypeModel.ThrowCannotCreateInstance(constructType);
+                obj = Activator.CreateInstance(constructType
 #if !CF
                     , true
 #endif
@@ -203,7 +215,7 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                obj = BclHelpers.GetUninitializedObject(forType);
+                obj = BclHelpers.GetUninitializedObject(constructType);
             }
             if (baseCtorCallbacks != null) {
                 for (int i = 0; i < baseCtorCallbacks.Length; i++) {
@@ -458,12 +470,12 @@ namespace ProtoBuf.Serializers
                 // different ways of creating a new instance
                 if (!useConstructor)
                 {   // DataContractSerializer style
-                    ctx.LoadValue(forType);
+                    ctx.LoadValue(constructType);
                     ctx.EmitCall(typeof(BclHelpers).GetMethod("GetUninitializedObject"));
                     ctx.Cast(forType);
                 } else if (type.IsClass && hasConstructor)
                 {   // XmlSerializer style
-                    ctx.EmitCtor(type);
+                    ctx.EmitCtor(constructType);
                 }
                 else
                 {
