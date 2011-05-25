@@ -215,8 +215,8 @@ namespace ProtoBuf.Meta
         /// ShouldSerialize*/*Specified
         /// </remarks>
         /// <param name="type">The type to be supported</param>
-        /// <param name="applyDefaultBehaviour">Whether to apply the inbuilt patterns, or
-        /// jut add the type with no additional configuration.</param>
+        /// <param name="applyDefaultBehaviour">Whether to apply the inbuilt configuration patterns (via attributes etc), or
+        /// just add the type with no additional configuration (the type must then be manually configured).</param>
         /// <returns>The MetaType representing this type, allowing
         /// further configuration.</returns>
         public MetaType Add(Type type, bool applyDefaultBehaviour)
