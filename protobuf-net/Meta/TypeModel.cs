@@ -896,13 +896,33 @@ namespace ProtoBuf.Meta
 
         internal string SerializeType(Type type)
         {
+            TypeFormatEventHandler handler = DynamicTypeFormatting;
+            if (handler != null)
+            {
+                TypeFormatEventArgs args = new TypeFormatEventArgs(type);
+                handler(this, args);
+                if (!string.IsNullOrEmpty(args.FormattedName)) return args.FormattedName;
+            }
             return type.AssemblyQualifiedName;
         }
 
         internal Type DeserializeType(string value)
         {
+            TypeFormatEventHandler handler = DynamicTypeFormatting;
+            if (handler != null)
+            {
+                TypeFormatEventArgs args = new TypeFormatEventArgs(value);
+                handler(this, args);
+                if (args.Type != null) return args.Type;
+            }
             return Type.GetType(value);
         }
+
+        /// <summary>
+        /// Used to provide custom services for writing and parsing type names when using dynamic types. Both parsing and formatting
+        /// are provided on a single API as it is essential that both are mapped identically at all times.
+        /// </summary>
+        public event TypeFormatEventHandler DynamicTypeFormatting;
     }
 
 }

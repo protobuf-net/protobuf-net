@@ -163,6 +163,7 @@
     <Compile Include="Meta\MetaType.cs" />
     <Compile Include="Meta\RuntimeTypeModel.cs" />
     <Compile Include="Meta\SubType.cs" />
+    <Compile Include="Meta\TypeFormatEventArgs.cs" />
     <Compile Include="Meta\TypeModel.cs" />
     <Compile Include="Meta\ValueMember.cs" />
     <Compile Include="NetObjectCache.cs" />

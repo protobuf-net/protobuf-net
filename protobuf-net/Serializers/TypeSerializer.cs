@@ -111,6 +111,7 @@ namespace ProtoBuf.Serializers
                     return ser;
                 }
             }
+            if (actualType == constructType) return null; // needs to be last in case the default concrete type is also a known sub-type
             TypeModel.ThrowUnexpectedSubtype(forType, actualType); // might throw (if not a proxy)
             return null;
         }
@@ -260,12 +261,35 @@ namespace ProtoBuf.Serializers
                             ctx.MarkLabel(nextTest);
                         }
                     }
-                    // would have jumped to "fields" if an expected sub-type, so two options:
-                    // a: *exactly* that type, b: an *unexpected* type
-                    ctx.LoadValue(loc);
-                    ctx.EmitCall(typeof(object).GetMethod("GetType"));
-                    ctx.LoadValue(forType);
-                    ctx.BranchIfEqual(startFields, true);
+
+
+                    if (constructType != null && constructType != forType)
+                    {
+                        using(Compiler.Local actualType = new Compiler.Local(ctx, typeof(Type)))
+                        {
+                            // would have jumped to "fields" if an expected sub-type, so two options:
+                            // a: *exactly* that type, b: an *unexpected* type
+                            ctx.LoadValue(loc);
+                            ctx.EmitCall(typeof(object).GetMethod("GetType"));
+                            ctx.CopyValue();
+                            ctx.StoreValue(actualType);
+                            ctx.LoadValue(forType);
+                            ctx.BranchIfEqual(startFields, true);
+
+                            ctx.LoadValue(actualType);
+                            ctx.LoadValue(constructType);
+                            ctx.BranchIfEqual(startFields, true);
+                        }
+                    }
+                    else
+                    {
+                        // would have jumped to "fields" if an expected sub-type, so two options:
+                        // a: *exactly* that type, b: an *unexpected* type
+                        ctx.LoadValue(loc);
+                        ctx.EmitCall(typeof(object).GetMethod("GetType"));
+                        ctx.LoadValue(forType);
+                        ctx.BranchIfEqual(startFields, true);
+                    }
                     // unexpected, then... note that this *might* be a proxy, which
                     // is handled by ThrowUnexpectedSubtype
                     ctx.LoadValue(forType);
