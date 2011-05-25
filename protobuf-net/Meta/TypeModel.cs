@@ -151,6 +151,7 @@ namespace ProtoBuf.Meta
         {
             using (ProtoWriter writer = new ProtoWriter(dest, this))
             {
+                writer.SetRootObject(value);
                 SerializeCore(writer, value);
                 writer.Close();
             }
@@ -433,6 +434,7 @@ namespace ProtoBuf.Meta
 #endif
             using (ProtoReader reader = new ProtoReader(source, this))
             {
+                if (value != null) reader.SetRootObject(value);
                 return DeserializeCore(reader, type, value, autoCreate);
             }
         }
@@ -828,6 +830,7 @@ namespace ProtoBuf.Meta
                 {
                     using(ProtoWriter writer = new ProtoWriter(ms, this))
                     {
+                        writer.SetRootObject(value);
                         Serialize(key, value, writer);
                         writer.Close();
                     }

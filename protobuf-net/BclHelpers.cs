@@ -395,7 +395,7 @@ namespace ProtoBuf
         public static void WriteNetObject(object value, ProtoWriter dest, int key, bool dynamicType, bool asReference)
         {
             WireType wireType = dest.WireType;
-            SubItemToken token = ProtoWriter.StartSubItem(value, dest);
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
             bool writeObject = true;
             if (asReference)
             {
@@ -403,7 +403,10 @@ namespace ProtoBuf
                 int objectKey = dest.NetCache.AddObjectKey(value, out existing);
                 ProtoWriter.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Variant, dest);
                 ProtoWriter.WriteInt32(objectKey, dest);
-                if (existing) writeObject = false;
+                if (existing)
+                {
+                    writeObject = false;
+                }
             }
 
             if (writeObject)

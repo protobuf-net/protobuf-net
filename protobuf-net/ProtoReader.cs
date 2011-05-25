@@ -1055,15 +1055,33 @@ namespace ProtoBuf
             return model.GetKey(ref type);
         }
 
-        private NetObjectCache netCache;
+        private readonly NetObjectCache netCache = new NetObjectCache();
         internal NetObjectCache NetCache
         {
-            get { return netCache ?? (netCache = new NetObjectCache()); }
+            get { return netCache; }
         }
 
         internal Type DeserializeType(string value)
         {
             return model.DeserializeType(value);
+        }
+
+        internal void SetRootObject(object value)
+        {
+            netCache.SetKeyedObject(NetObjectCache.Root, value);
+            firstObject = false;
+        }
+        bool firstObject = true; // not guaranteed to be correct, but avoids a call
+        /// <summary>
+        /// Utility method, not intended for public use; this helps maintain the root object is complex scenarios
+        /// </summary>
+        public static void NoteObject(object value, ProtoReader reader)
+        {
+            if(reader.firstObject)
+            {
+                reader.netCache.ProposeRoot(value);
+                reader.firstObject = false;
+            }
         }
     }
 }

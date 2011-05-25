@@ -1,7 +1,6 @@
 ﻿using System;
 
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text;
 using ProtoBuf.Meta;
 #if MF
@@ -78,11 +77,11 @@ namespace ProtoBuf
         {
             return model.GetKey(ref type);
         }
-
-        private NetObjectCache netCache;
+        
+        private readonly NetObjectCache netCache = new NetObjectCache();
         internal NetObjectCache NetCache
         {
-            get { return netCache ?? (netCache = new NetObjectCache());}
+            get { return netCache;}
         }
 
         private int fieldNumber, flushLock;
@@ -256,6 +255,14 @@ namespace ProtoBuf
             if (recursionStack == null) { recursionStack = new MutableList(); }
             else if (instance != null && recursionStack.IndexOfReference(instance) >= 0)
             {
+#if DEBUG
+                Helpers.DebugWriteLine("Stack:");
+                foreach(object obj in recursionStack)
+                {
+                    Helpers.DebugWriteLine(obj == null ? "<null>" : obj.ToString());
+                }
+                Helpers.DebugWriteLine(instance == null ? "<null>" : instance.ToString());
+#endif
                 throw new ProtoException("Possible recursion detected; " + instance.ToString());
             }
             recursionStack.Add(instance);
@@ -829,6 +836,13 @@ namespace ProtoBuf
         internal string SerializeType(Type type)
         {
             return model.SerializeType(type);
+        }
+        /// <summary>
+        /// Specifies a known root object to use during reference-tracked serialization
+        /// </summary>
+        public void SetRootObject(object value)
+        {
+            NetCache.SetKeyedObject(NetObjectCache.Root, value);
         }
     }
 }

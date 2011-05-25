@@ -218,6 +218,7 @@ namespace ProtoBuf.Serializers
             {
                 obj = BclHelpers.GetUninitializedObject(constructType);
             }
+            ProtoReader.NoteObject(obj, source);
             if (baseCtorCallbacks != null) {
                 for (int i = 0; i < baseCtorCallbacks.Length; i++) {
                     InvokeCallback(baseCtorCallbacks[i], obj);
@@ -492,6 +493,7 @@ namespace ProtoBuf.Serializers
                 ctx.BranchIfTrue(afterNullCheck, true);
 
                 // different ways of creating a new instance
+                bool callNoteObject = true;
                 if (!useConstructor)
                 {   // DataContractSerializer style
                     ctx.LoadValue(constructType);
@@ -506,8 +508,17 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.LoadValue(type);
                     ctx.EmitCall(typeof(TypeModel).GetMethod("ThrowCannotCreateInstance",
-                        BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic));
+                        BindingFlags.Static | BindingFlags.Public));
                     ctx.LoadNullRef();
+                    callNoteObject = false;
+                }
+                if (callNoteObject)
+                { 
+                // track root object creation
+                ctx.CopyValue();
+                ctx.LoadReaderWriter();
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("NoteObject",
+                        BindingFlags.Static | BindingFlags.Public));
                 }
                 if (baseCtorCallbacks != null) {
                     for (int i = 0; i < baseCtorCallbacks.Length; i++) {
