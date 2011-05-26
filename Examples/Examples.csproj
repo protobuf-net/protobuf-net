@@ -123,6 +123,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Tools\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
@@ -165,6 +166,7 @@
     <Compile Include="InheritanceMidLevel.cs" />
     <Compile Include="Issues\AssortedGoLiveRegressions.cs" />
     <Compile Include="Issues\ComplexGenerics\ComplexGenericExample.cs" />
+    <Compile Include="Issues\Issue124.cs" />
     <Compile Include="Issues\Issue26.cs" />
     <Compile Include="Issues\Issue27.cs" />
     <Compile Include="Issues\Issue29.cs" />
