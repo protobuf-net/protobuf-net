@@ -34,6 +34,24 @@ namespace ProtoBuf
             writer.model.Serialize(key, value, writer);
             EndSubItem(token, writer);
         }
+        /// <summary>
+        /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
+        /// caller is asserting that this relationship is non-recursive; no recursion check will be
+        /// performed.
+        /// </summary>
+        /// <param name="value">The object to write.</param>
+        /// <param name="key">The key that uniquely identifies the type within the model.</param>
+        /// <param name="writer">The destination.</param>
+        public static void WriteRecursionSafeObject(object value, int key, ProtoWriter writer)
+        {
+            if (writer.model == null)
+            {
+                throw new InvalidOperationException("Cannot serialize sub-objects unless a model is provided");
+            }
+            SubItemToken token = StartSubItem(null, writer);
+            writer.model.Serialize(key, value, writer);
+            EndSubItem(token, writer);
+        }
         internal static void WriteObject(object value, int key, ProtoWriter writer, PrefixStyle style, int fieldNumber)
         {
             if (writer.model == null)
@@ -252,8 +270,9 @@ namespace ProtoBuf
         MutableList recursionStack;
         private void CheckRecursionStackAndPush(object instance)
         {
+            int hitLevel;
             if (recursionStack == null) { recursionStack = new MutableList(); }
-            else if (instance != null && recursionStack.IndexOfReference(instance) >= 0)
+            else if (instance != null && (hitLevel = recursionStack.IndexOfReference(instance)) >= 0)
             {
 #if DEBUG
                 Helpers.DebugWriteLine("Stack:");
@@ -263,7 +282,7 @@ namespace ProtoBuf
                 }
                 Helpers.DebugWriteLine(instance == null ? "<null>" : instance.ToString());
 #endif
-                throw new ProtoException("Possible recursion detected; " + instance.ToString());
+                throw new ProtoException("Possible recursion detected (offset: " + (recursionStack.Count - hitLevel).ToString() + " level(s)): " + instance.ToString());
             }
             recursionStack.Add(instance);
         }

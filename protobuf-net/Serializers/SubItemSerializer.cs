@@ -25,14 +25,15 @@ namespace ProtoBuf.Serializers
         private readonly int key;
         private readonly Type type;
         private readonly ISerializerProxy proxy;
-
-        public SubItemSerializer(Type type, int key, ISerializerProxy proxy )
+        private readonly bool recursionCheck;
+        public SubItemSerializer(Type type, int key, ISerializerProxy proxy, bool recursionCheck)
         {
             if (type == null) throw new ArgumentNullException("type");
             if (proxy == null) throw new ArgumentNullException("proxy");
             this.type = type;
             this.proxy= proxy;
             this.key = key;
+            this.recursionCheck = recursionCheck;
         }
         Type IProtoSerializer.ExpectedType
         {
@@ -43,7 +44,14 @@ namespace ProtoBuf.Serializers
 
         void IProtoSerializer.Write(object value, ProtoWriter dest)
         {
-            ProtoWriter.WriteObject(value, key, dest);
+            if (recursionCheck)
+            {
+                ProtoWriter.WriteObject(value, key, dest);
+            }
+            else
+            {
+                ProtoWriter.WriteRecursionSafeObject(value, key, dest);
+            }
         }
         object IProtoSerializer.Read(object value, ProtoReader source)
         {
@@ -59,8 +67,8 @@ namespace ProtoBuf.Serializers
                 Type rwType = read ? typeof(ProtoReader) : typeof(ProtoWriter);
                 ctx.LoadValue(valueFrom);
                 if (!read) // write requires the object for StartSubItem; read doesn't
-                {
-                    if (type.IsValueType) { ctx.LoadNullRef(); }
+                {  // (if recursion-check is disabled [subtypes] then null is fine too)
+                    if (type.IsValueType || !recursionCheck) { ctx.LoadNullRef(); }
                     else { ctx.CopyValue(); }
                 }
                 ctx.LoadReaderWriter();
@@ -88,7 +96,7 @@ namespace ProtoBuf.Serializers
                 if (type.IsValueType) ctx.CastToObject(type);
                 ctx.LoadValue(key);
                 ctx.LoadReaderWriter();
-                ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteObject"));
+                ctx.EmitCall(typeof(ProtoWriter).GetMethod(recursionCheck ?  "WriteObject" : "WriteRecursionSafeObject"));
             }
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

@@ -186,6 +186,7 @@
     <Compile Include="Issues\SO6109616.cs" />
     <Compile Include="Issues\SO6115986.cs" />
     <Compile Include="Issues\SO6127380.cs" />
+    <Compile Include="Issues\SO6174298.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListTests.cs" />

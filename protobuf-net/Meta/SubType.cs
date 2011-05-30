@@ -50,7 +50,7 @@ namespace ProtoBuf.Meta
         private IProtoSerializer BuildSerializer()
         {
             // note the caller here is MetaType.BuildSerializer, which already has the sync-lock
-            IProtoSerializer ser = new SubItemSerializer(derivedType.Type, derivedType.GetKey(false, false), derivedType);
+            IProtoSerializer ser = new SubItemSerializer(derivedType.Type, derivedType.GetKey(false, false), derivedType, false);
             return new TagDecorator(fieldNumber, WireType.String, false, ser);
         }
     }
