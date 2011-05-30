@@ -30,7 +30,7 @@ namespace Examples
             public int Id { get; set; }
         }
 
-        [Test]
+        [Test, Ignore("Depends on memcached")]
         public void ShouldBeAbleToCacheBasicTypes()
         {
             BasicType original = new BasicType { Id = 123, Name = "abc" }, clone;
@@ -48,7 +48,7 @@ namespace Examples
             Assert.AreEqual(original.Name, clone.Name);
         }
 
-        [Test]
+        [Test, Ignore("Depends on memcached")]
         public void ShouldBeAbleToCacheContractTypes()
         {
             ContractType original = new ContractType { Id = 123, Name = "abc" }, clone;

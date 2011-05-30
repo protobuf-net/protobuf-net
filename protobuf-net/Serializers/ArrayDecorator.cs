@@ -9,29 +9,22 @@ namespace ProtoBuf.Serializers
     sealed class ArrayDecorator : ProtoDecoratorBase
     {
 
-        private readonly int packedFieldNumber;
+        private readonly int fieldNumber;
+        private readonly bool writePacked;
         private readonly WireType packedWireType;
-        public ArrayDecorator(IProtoSerializer tail, int packedFieldNumber, WireType packedWireType)
+        public ArrayDecorator(IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType)
             : base(tail)
         {
             Helpers.DebugAssert(Tail.ExpectedType != typeof(byte), "Should have used BlobSerializer");
-            this.packedWireType = WireType.None;
-            if (packedFieldNumber != 0)
+            if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
+            if (!ListDecorator.CanPack(packedWireType))
             {
-                if (packedFieldNumber < 0) throw new ArgumentOutOfRangeException("packedFieldNumber");
-                switch (packedWireType)
-                {
-                    case WireType.Fixed32:
-                    case WireType.Fixed64:
-                    case WireType.SignedVariant:
-                    case WireType.Variant:
-                        break;
-                    default:
-                        throw new InvalidOperationException("Only simple data-types can use packed encoding");
-                }
-                this.packedFieldNumber = packedFieldNumber;
-                this.packedWireType = packedWireType;
-            }
+                if (writePacked) throw new InvalidOperationException("Only simple data-types can use packed encoding");
+                packedWireType = WireType.None;
+            }       
+            this.fieldNumber = fieldNumber;
+            this.packedWireType = packedWireType;
+            this.writePacked = writePacked;
             this.itemType = Tail.ExpectedType;
             this.arrayType = Helpers.MakeArrayType(itemType);
         }
@@ -46,38 +39,32 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local arr = ctx.GetLocalWithValue(arrayType, valueFrom))
             using (Compiler.Local i = new ProtoBuf.Compiler.Local(ctx, typeof(int)))
             {
-                if (packedFieldNumber > 0)
+                using (Compiler.Local token = writePacked ? new Compiler.Local(ctx, typeof(SubItemToken)) : null)
                 {
-                    Compiler.CodeLabel allDone = ctx.DefineLabel();
-                    ctx.LoadLength(arr, false);
-                    ctx.BranchIfFalse(allDone, false);
+                    if (writePacked)
+                    {
+                        ctx.LoadValue(fieldNumber);
+                        ctx.LoadValue((int)WireType.String);
+                        ctx.LoadReaderWriter();
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
 
-                    ctx.LoadValue(packedFieldNumber);
-                    ctx.LoadValue((int)WireType.String);
-                    ctx.LoadReaderWriter();
-                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
-
-                    ctx.LoadValue(arr);
-                    ctx.LoadReaderWriter();
-                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("StartSubItem"));
-                    using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken))) { 
+                        ctx.LoadValue(arr);
+                        ctx.LoadReaderWriter();
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("StartSubItem"));
                         ctx.StoreValue(token);
 
-                        ctx.LoadValue(packedFieldNumber);
+                        ctx.LoadValue(fieldNumber);
                         ctx.LoadReaderWriter();
                         ctx.EmitCall(typeof(ProtoWriter).GetMethod("SetPackedField"));
+                    }
+                    EmitWriteArrayLoop(ctx, i, arr);
 
-                        EmitWriteArrayLoop(ctx, i, arr);
-
+                    if (writePacked)
+                    {
                         ctx.LoadValue(token);
                         ctx.LoadReaderWriter();
                         ctx.EmitCall(typeof(ProtoWriter).GetMethod("EndSubItem"));
                     }
-                    ctx.MarkLabel(allDone);
-                }
-                else
-                {
-                    EmitWriteArrayLoop(ctx, i, arr);    
                 }
             }
         }
@@ -114,30 +101,27 @@ namespace ProtoBuf.Serializers
         {
             IList arr = (IList)value;
             int len = arr.Count;
-            if (packedFieldNumber > 0)
+            SubItemToken token;
+            if (writePacked)
             {
-                if (len != 0)
-                {
-                    ProtoWriter.WriteFieldHeader(packedFieldNumber, WireType.String, dest);
-                    SubItemToken token = ProtoWriter.StartSubItem(value, dest);
-                    ProtoWriter.SetPackedField(packedFieldNumber, dest);
-                    for (int i = 0; i < len; i++)
-                    {
-                        object obj = arr[i];
-                        if (obj == null) { throw new NullReferenceException(); }
-                        Tail.Write(obj, dest);
-                    }
-                    ProtoWriter.EndSubItem(token, dest);
-                }
+                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
+                token = ProtoWriter.StartSubItem(value, dest);
+                ProtoWriter.SetPackedField(fieldNumber, dest);
             }
-            else { 
-                for (int i = 0; i < len; i++)
-                {
-                    object obj = arr[i];
-                    if (obj == null) { throw new NullReferenceException(); }
-                    Tail.Write(obj, dest);
-                }
+            else
+            {
+                token = default(SubItemToken);
             }
+            for (int i = 0; i < len; i++)
+            {
+                object obj = arr[i];
+                if (obj == null) { throw new NullReferenceException(); }
+                Tail.Write(obj, dest);
+            }
+            if (writePacked)
+            {
+                ProtoWriter.EndSubItem(token, dest);
+            }            
         }
         public override object Read(object value, ProtoReader source)
         {

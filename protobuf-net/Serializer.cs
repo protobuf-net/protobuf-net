@@ -306,22 +306,9 @@ namespace ProtoBuf
         /// <returns>True if a length could be obtained, false otherwise.</returns>
         public static bool TryReadLengthPrefix(Stream source, PrefixStyle style, out int length)
         {
-            throw new NotImplementedException();//TODO: NotImplementedException
-            //uint len;
-            //bool result;
-            //switch (style)
-            //{
-            //    case PrefixStyle.Fixed32:
-            //        result = SerializationContext.TryDecodeUInt32Fixed(source, out len);
-            //        break;
-            //    case PrefixStyle.Base128:
-            //        result = SerializationContext.TryDecodeUInt32(source, out len);
-            //        break;
-            //    default:
-            //        throw new ArgumentOutOfRangeException("style", "Invalid prefix style: " + style);
-            //}
-            //length = (int)len;
-            //return result;
+            int fieldNumber, bytesRead;
+            length = ProtoReader.ReadLengthPrefix(source, false, style, out fieldNumber, out bytesRead);
+            return bytesRead > 0;
         }
 
         /// <summary>Indicates the number of bytes expected for the next message.</summary>

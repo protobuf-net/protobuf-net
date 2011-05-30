@@ -8,31 +8,40 @@ namespace ProtoBuf.Serializers
 {
     sealed class ListDecorator : ProtoDecoratorBase
     {
+        internal static bool CanPack(WireType wireType)
+        {
+            switch (wireType)
+            {
+                case WireType.Fixed32:
+                case WireType.Fixed64:
+                case WireType.SignedVariant:
+                case WireType.Variant:
+                    return true;
+                default:
+                    return false;
+            }
+        }
         private readonly Type declaredType, concreteType;
         private readonly bool isList;
         private readonly MethodInfo add;
 
-        private readonly int packedFieldNumber;
+        private readonly int fieldNumber;
+        private readonly bool writePacked;
         private readonly WireType packedWireType;
-        public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int packedFieldNumber, WireType packedWireType) : base(tail)
+        private bool returnList;
+        public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList) : base(tail)
         {
-            this.packedWireType = WireType.None;
-            if (packedFieldNumber != 0)
+            this.returnList = returnList;
+            if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
+            if (!CanPack(packedWireType))
             {
-                if (packedFieldNumber < 0) throw new ArgumentOutOfRangeException("packedFieldNumber");
-                switch(packedWireType)
-                {
-                    case WireType.Fixed32:
-                    case WireType.Fixed64:
-                    case WireType.SignedVariant:
-                    case WireType.Variant:
-                        break;
-                    default:
-                        throw new InvalidOperationException("Only simple data-types can use packed encoding");
-                }
-                this.packedFieldNumber = packedFieldNumber;
-                this.packedWireType = packedWireType;
-            }
+                if (writePacked) throw new InvalidOperationException("Only simple data-types can use packed encoding");
+                packedWireType = WireType.None;
+            }            
+
+            this.fieldNumber = fieldNumber;
+            this.writePacked = writePacked;
+            this.packedWireType = packedWireType;
             if (declaredType == null) throw new ArgumentNullException("declaredType");
             if (declaredType.IsArray) throw new ArgumentException("Cannot treat arrays as lists", "declaredType");
             this.declaredType = declaredType;
@@ -45,7 +54,7 @@ namespace ProtoBuf.Serializers
 
         public override Type ExpectedType { get { return declaredType;  } }
         public override bool RequiresOldValue { get { return true; } }
-        public override bool ReturnsValue { get { return true; } }
+        public override bool ReturnsValue { get { return returnList; } }
 #if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
@@ -60,8 +69,14 @@ namespace ProtoBuf.Serializers
              *  - initialization if we need to pass in a value to the tail
              *  - handling whether or not the tail *returns* the value vs updates the input
              */ 
-            using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))            
+            using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
+            using (Compiler.Local origlist = returnList ? new Compiler.Local(ctx, ExpectedType) : null)
             {
+                if (returnList)
+                {
+                    ctx.LoadValue(list);
+                    ctx.StoreValue(origlist);
+                }
                 if (concreteType != null)
                 {
                     ctx.LoadValue(list);
@@ -73,7 +88,20 @@ namespace ProtoBuf.Serializers
                 }
 
                 EmitReadList(ctx, list, Tail, add, packedWireType);
-                ctx.LoadValue(list);
+
+                if (returnList)
+                {
+                    // remember ^^^^ we had a spare copy of the list on the stack; now we'll compare
+                    ctx.LoadValue(origlist);
+                    ctx.LoadValue(list); // [orig] [new-value]
+                    Compiler.CodeLabel sameList = ctx.DefineLabel(), allDone = ctx.DefineLabel();
+                    ctx.BranchIfEqual(sameList, true);
+                    ctx.LoadValue(list);
+                    ctx.Branch(allDone, true);
+                    ctx.MarkLabel(sameList);
+                    ctx.LoadNullRef();
+                    ctx.MarkLabel(allDone);
+                }
             }
         }
 
@@ -248,39 +276,36 @@ namespace ProtoBuf.Serializers
                 Helpers.DebugAssert(getEnumerator != null);
                 Type enumeratorType = getEnumerator.ReturnType;
                 using (Compiler.Local iter = new Compiler.Local(ctx, enumeratorType))
-                using (Compiler.Local token = packedFieldNumber > 0 ? new Compiler.Local(ctx, typeof(SubItemToken)) : null)
+                using (Compiler.Local token = writePacked ? new Compiler.Local(ctx, typeof(SubItemToken)) : null)
                 {
+                    if (writePacked)
+                    {
+                        ctx.LoadValue(fieldNumber);
+                        ctx.LoadValue((int)WireType.String);
+                        ctx.LoadReaderWriter();
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
+
+                        ctx.LoadValue(list);
+                        ctx.LoadReaderWriter();
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("StartSubItem"));
+                        ctx.StoreValue(token);
+
+                        ctx.LoadValue(fieldNumber);
+                        ctx.LoadReaderWriter();
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("SetPackedField"));
+                    }
+
                     ctx.LoadAddress(list, ExpectedType);
                     ctx.EmitCall(getEnumerator);
                     ctx.StoreValue(iter);
                     using (ctx.Using(iter))
                     {
                         Compiler.CodeLabel body = ctx.DefineLabel(),
-                                           @next = ctx.DefineLabel(),
-                                           nothingToWrite = packedFieldNumber > 0 ? ctx.DefineLabel() : new Compiler.CodeLabel();
-                        if (packedFieldNumber > 0)
-                        {
-                            ctx.LoadAddress(iter, enumeratorType);
-                            ctx.EmitCall(moveNext);
-                            ctx.BranchIfFalse(nothingToWrite, false);
-
-                            ctx.LoadValue(packedFieldNumber);
-                            ctx.LoadValue((int)WireType.String);
-                            ctx.LoadReaderWriter();
-                            ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
-
-                            ctx.LoadValue(list);
-                            ctx.LoadReaderWriter();
-                            ctx.EmitCall(typeof(ProtoWriter).GetMethod("StartSubItem"));
-                            ctx.StoreValue(token);
-
-                            ctx.LoadValue(packedFieldNumber);
-                            ctx.LoadReaderWriter();
-                            ctx.EmitCall(typeof(ProtoWriter).GetMethod("SetPackedField"));
-                        }
-                        else { 
-                            ctx.Branch(@next, false);
-                        }
+                                           @next = ctx.DefineLabel();
+                        
+                        
+                        ctx.Branch(@next, false);
+                        
                         ctx.MarkLabel(body);
 
                         ctx.LoadAddress(iter, enumeratorType);
@@ -296,56 +321,45 @@ namespace ProtoBuf.Serializers
                         ctx.LoadAddress(iter, enumeratorType);
                         ctx.EmitCall(moveNext);
                         ctx.BranchIfTrue(body, false);
-                        if(packedFieldNumber > 0)
-                        {
-                            ctx.LoadValue(token);
-                            ctx.LoadReaderWriter();
-                            ctx.EmitCall(typeof(ProtoWriter).GetMethod("EndSubItem"));
-                            ctx.MarkLabel(nothingToWrite);
-                        }
                     }
-                    
+
+                    if (writePacked)
+                    {
+                        ctx.LoadValue(token);
+                        ctx.LoadReaderWriter();
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("EndSubItem"));
+                    }                    
                 }
             }
         }
 #endif
         public override void Write(object value, ProtoWriter dest)
         {
-            if (packedFieldNumber > 0)
+            SubItemToken token;
+            if (writePacked)
             {
-                IEnumerator iter = ((IEnumerable) value).GetEnumerator();
-                using(iter as IDisposable)
-                {
-                    if (iter.MoveNext())
-                    {
-                        ProtoWriter.WriteFieldHeader(packedFieldNumber, WireType.String, dest);
-                        SubItemToken token = ProtoWriter.StartSubItem(value, dest);
-                        ProtoWriter.SetPackedField(packedFieldNumber, dest);
-                        do
-                        {
-                            object subItem = iter.Current;
-                            if (subItem == null)
-                            {
-                                throw new NullReferenceException();
-                            }
-                            Tail.Write(subItem, dest);
-                        } while (iter.MoveNext());
-                        ProtoWriter.EndSubItem(token, dest);
-                    }
-                }
+                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
+                token = ProtoWriter.StartSubItem(value, dest);
+                ProtoWriter.SetPackedField(fieldNumber, dest);
             }
             else
             {
-                foreach (object subItem in (IEnumerable)value)
-                {
-                    if (subItem == null) { throw new NullReferenceException(); }
-                    Tail.Write(subItem, dest);
-                } 
+                token = default(SubItemToken);
+            }
+            foreach (object subItem in (IEnumerable)value)
+            {
+                if (subItem == null) { throw new NullReferenceException(); }
+                Tail.Write(subItem, dest);
+            }
+            if (writePacked)
+            {
+                ProtoWriter.EndSubItem(token, dest);
             }
         }
         public override object Read(object value, ProtoReader source)
         {
             int field = source.FieldNumber;
+            object origValue = value;
             if (value == null) value = Activator.CreateInstance(concreteType);
 
             if (packedWireType != WireType.None && source.WireType == WireType.String)
@@ -388,7 +402,7 @@ namespace ProtoBuf.Serializers
                     } while (source.TryReadFieldHeader(field));
                 }
             }
-            return value;
+            return origValue == value ? null : value;
         }
 
     }

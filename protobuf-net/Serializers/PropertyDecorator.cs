@@ -51,7 +51,7 @@ namespace ProtoBuf.Serializers
 
             object oldVal = Tail.RequiresOldValue ? property.GetValue(value, null) : null;
             object newVal = Tail.Read(oldVal, source);
-            if (readOptionsWriteValue)
+            if (readOptionsWriteValue && newVal != null) // if the tail returns a null, intepret that as *no assign*
             {
                 MethodInfo shadow = GetShadowSetter(property);
                 if (shadow == null)
@@ -95,8 +95,19 @@ namespace ProtoBuf.Serializers
             ctx.ReadNullCheckedTail(property.PropertyType, Tail, null); // stack is [old-addr]|[new-value]
             
             if (writeValue)
-            {   // stack is old-addr|new-value
+            {
                 MethodInfo shadow = GetShadowSetter(property);
+                
+                // stack is old-addr|new-value
+                Compiler.CodeLabel @skip = default(Compiler.CodeLabel), allDone = default(Compiler.CodeLabel);
+                if (!property.PropertyType.IsValueType)
+                { // if the tail returns a null, intepret that as *no assign*
+                    ctx.CopyValue(); // old-addr|new-value|new-value
+                    @skip = ctx.DefineLabel();
+                    allDone = ctx.DefineLabel();
+                    ctx.BranchIfFalse(@skip, true); // old-addr|new-value
+                }
+                
                 if (shadow == null)
                 {
                     ctx.StoreValue(property);
@@ -105,6 +116,17 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.EmitCall(shadow);
                 }
+                if (!property.PropertyType.IsValueType)
+                {
+                    ctx.Branch(allDone, true);
+
+                    ctx.MarkLabel(@skip); // old-addr|new-value
+                    ctx.DiscardValue();
+                    ctx.DiscardValue();
+
+                    ctx.MarkLabel(allDone);
+                }
+
             }
             else
             { // don't want return value; drop it if anything there
@@ -113,6 +135,20 @@ namespace ProtoBuf.Serializers
             }
         }
 #endif
+
+        internal static bool CanWrite(MemberInfo member)
+        {
+            if (member == null) throw new ArgumentNullException("member");
+            switch (member.MemberType)
+            {
+                case MemberTypes.Field: return true;
+                case MemberTypes.Property:
+                    PropertyInfo prop = (PropertyInfo)member;
+                    return prop.CanWrite || GetShadowSetter(prop) != null;
+                default:
+                    return false;
+            }
+        }
     }
 }
 #endif

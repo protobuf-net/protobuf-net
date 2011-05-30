@@ -239,11 +239,11 @@ namespace ProtoBuf.Meta
                     Helpers.DebugAssert(itemType == ser.ExpectedType, "Wrong type in the tail");
                     if (memberType.IsArray)
                     {
-                        ser = new ArrayDecorator(ser, isPacked ? fieldNumber : 0, isPacked ? wireType : WireType.None);
+                        ser = new ArrayDecorator(ser, fieldNumber, isPacked, wireType);
                     }
                     else
                     {
-                        ser = new ListDecorator(memberType, defaultType, ser, isPacked ? fieldNumber : 0, isPacked ? wireType : WireType.None);
+                        ser = new ListDecorator(memberType, defaultType, ser, fieldNumber, isPacked, wireType, member == null || PropertyDecorator.CanWrite(member));
                     }
                 }
                 else if (defaultValue != null && !isRequired)
@@ -342,19 +342,19 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.String;
                     return new DecimalSerializer();
                 case TypeCode.Byte:
-                    defaultWireType = WireType.Variant;
+                    defaultWireType = GetIntWireType(dataFormat, 32);
                     return new ByteSerializer();
                 case TypeCode.SByte:
-                    defaultWireType = WireType.Variant;
+                    defaultWireType = GetIntWireType(dataFormat, 32);
                     return new SByteSerializer();
                 case TypeCode.Char:
                     defaultWireType = WireType.Variant;
                     return new CharSerializer();
                 case TypeCode.Int16:
-                    defaultWireType = WireType.Variant;
+                    defaultWireType = GetIntWireType(dataFormat, 32);
                     return new Int16Serializer();
                 case TypeCode.UInt16:
-                    defaultWireType = WireType.Variant;
+                    defaultWireType = GetIntWireType(dataFormat, 32);
                     return new UInt16Serializer();
             }
             if (type == typeof(TimeSpan))

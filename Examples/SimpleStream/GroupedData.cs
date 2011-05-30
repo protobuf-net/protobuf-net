@@ -25,7 +25,7 @@ namespace Examples.SimpleStream
             Assert.AreEqual(150, t3.C.A);
         }
 
-        [Test]
+        [Test, Ignore("depends on extension")]
         public void TestGroupAsExtension()
         {
             NoddyExtends ne = Program.Build<NoddyExtends>(0x1B, 0x08, 0x96, 0x01, 0x1C);// [start group 3] [test1] [end group 3]
@@ -40,6 +40,12 @@ namespace Examples.SimpleStream
         [Test]
         public void TestGroupIgnore()
         {
+            // 0x1B = 11 011 = start group 3
+            // 0x08 = 1000 = varint 1
+            // 0x96 0x01 = 10010110 = 150
+            // 0x1c = 011 100 = end group 3
+            // 0x10 = 10 000 = varint 2
+            // 0x96 0x01 = 10010110 = 150
             Noddy no = Program.Build<Noddy>(0x1B, 0x08, 0x96, 0x01, 0x1C, 0x10, 0x96, 0x01);
             Assert.AreEqual(150, no.Foo);
         }

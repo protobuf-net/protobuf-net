@@ -481,7 +481,10 @@ namespace ProtoBuf
                 // case WireType.None: // TODO reinstate once reads reset the wire-type
                 default:
                     if (value < reader.position) throw reader.CreateException();
-                    if (reader.blockEnd != reader.position && reader.blockEnd != int.MaxValue) throw reader.CreateException();
+                    if (reader.blockEnd != reader.position && reader.blockEnd != int.MaxValue)
+                    {
+                        throw reader.CreateException();
+                    }
                     reader.blockEnd = value;
                     reader.depth--;
                     break;
@@ -643,6 +646,7 @@ namespace ProtoBuf
                     while (ReadFieldHeader() > 0) { SkipField(); }
                     if (wireType == WireType.EndGroup && fieldNumber == originalFieldNumber)
                     { // we expect to exit in a similar state to how we entered
+                        wireType = ProtoBuf.WireType.None;
                         return;
                     }
                     throw CreateException();

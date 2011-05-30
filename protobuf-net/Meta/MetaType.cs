@@ -442,7 +442,7 @@ namespace ProtoBuf.Meta
                     if (callbacks == null) { callbacks = new MethodInfo[8]; }
                     else if (callbacks[index] != null)
                     {
-                        throw new InvalidOperationException("Duplicate " + callbackTypeName + " callbacks on " + method.ReflectedType.FullName);
+                        throw new ProtoException("Duplicate " + callbackTypeName + " callbacks on " + method.ReflectedType.FullName);
                     }
                     callbacks[index] = method;
                 }

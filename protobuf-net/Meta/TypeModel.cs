@@ -225,9 +225,10 @@ namespace ProtoBuf.Meta
             {
                 throw new InvalidOperationException("A type must be provided unless base-128 prefixing is being used in combination with a resolver");
             }
+            int actualField;
             do
             {
-                int actualField;
+                
                 bool expectPrefix = expectedField > 0 || resolver != null;
                 len = ProtoReader.ReadLengthPrefix(source, expectPrefix, style, out actualField, out tmpBytesRead);
                 bytesRead += tmpBytesRead;
@@ -266,7 +267,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    if (!TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true))
+                    if (!TryDeserializeAuxiliaryType(reader, DataFormat.Default, actualField, type, ref value, true, false, true))
                     {
                         TypeModel.ThrowUnexpectedType(type); // throws
                     }

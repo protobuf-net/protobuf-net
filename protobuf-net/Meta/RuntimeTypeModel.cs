@@ -336,6 +336,7 @@ namespace ProtoBuf.Meta
             }
             catch (Exception ex)
             {
+                if (ex.Message.Contains(type.FullName)) throw; // already enough info
                 throw new ProtoException(ex.Message + " (" + type.FullName + ")", ex);
             }
         }

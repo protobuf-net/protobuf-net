@@ -437,16 +437,22 @@ namespace ProtoBuf.unittest.Meta
 
             var clone = RoundTrip(model, orig, "Runtime", out len);
             Assert.AreEqual(0, len, "Runtime");
-            Assert.IsNotNull(clone);
+            Assert.IsNull(clone.ListDouble);
+            Assert.IsNull(clone.ListInt32);
+            Assert.IsNull(clone.ListSingle);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
             Assert.AreEqual(0, len, "CompileInPlace");
-            Assert.IsNotNull(clone);
+            Assert.IsNull(clone.ListDouble);
+            Assert.IsNull(clone.ListInt32);
+            Assert.IsNull(clone.ListSingle);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
             Assert.AreEqual(0, len, "Compile");
-            Assert.IsNotNull(clone);
+            Assert.IsNull(clone.ListDouble);
+            Assert.IsNull(clone.ListInt32);
+            Assert.IsNull(clone.ListSingle);
         }
 
         [Test]
@@ -458,17 +464,23 @@ namespace ProtoBuf.unittest.Meta
             int len;
 
             var clone = RoundTrip(model, orig, "Runtime", out len);
-            Assert.AreEqual(0, len, "Runtime");
-            Assert.IsNotNull(clone);
+            Assert.AreEqual(6, len, "Runtime");
+            Assert.AreEqual(0, clone.ListDouble.Count);
+            Assert.AreEqual(0, clone.ListInt32.Count);
+            Assert.AreEqual(0, clone.ListSingle.Count);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.AreEqual(0, len, "CompileInPlace");
-            Assert.IsNotNull(clone);
+            Assert.AreEqual(6, len, "CompileInPlace");
+            Assert.AreEqual(0, clone.ListDouble.Count);
+            Assert.AreEqual(0, clone.ListInt32.Count);
+            Assert.AreEqual(0, clone.ListSingle.Count);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.AreEqual(0, len, "Compile");
-            Assert.IsNotNull(clone);
+            Assert.AreEqual(6, len, "Compile");
+            Assert.AreEqual(0, clone.ListDouble.Count);
+            Assert.AreEqual(0, clone.ListInt32.Count);
+            Assert.AreEqual(0, clone.ListSingle.Count);
         }
         static void CheckExpectedListContents(PackedData data, string text)
         {
@@ -557,27 +569,7 @@ namespace ProtoBuf.unittest.Meta
             model.Compile("PEVerifyPackedArrays", "PEVerifyPackedArrays.dll");
             PEVerify.Verify("PEVerifyPackedArrays.dll");
         }
-        [Test]
-        public void TestNullRoundTrip()
-        {
-            var model = CreateModel();
 
-            var orig = new PackedData { ArrayInt32 = null, ArraySingle = null, ArrayDouble = null };
-            int len;
-
-            var clone = RoundTrip(model, orig, "Runtime", out len);
-            Assert.AreEqual(0, len, "Runtime");
-            Assert.IsNotNull(clone);
-
-            model.CompileInPlace();
-            clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.AreEqual(0, len, "CompileInPlace");
-            Assert.IsNotNull(clone);
-
-            clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.AreEqual(0, len, "Compile");
-            Assert.IsNotNull(clone);
-        }
 
         [Test]
         public void TestEmptyRoundTrip()
@@ -588,17 +580,50 @@ namespace ProtoBuf.unittest.Meta
             int len;
 
             var clone = RoundTrip(model, orig, "Runtime", out len);
+            Assert.AreEqual(6, len, "Runtime");
+            Assert.AreEqual(0, clone.ArrayDouble.Length);
+            Assert.AreEqual(0, clone.ArrayInt32.Length);
+            Assert.AreEqual(0, clone.ArraySingle.Length);
+
+            model.CompileInPlace();
+            clone = RoundTrip(model, orig, "CompileInPlace", out len);
+            Assert.AreEqual(6, len, "CompileInPlace");
+            Assert.AreEqual(0, clone.ArrayDouble.Length);
+            Assert.AreEqual(0, clone.ArrayInt32.Length);
+            Assert.AreEqual(0, clone.ArraySingle.Length);
+
+            clone = RoundTrip(model.Compile(), orig, "Compile", out len);
+            Assert.AreEqual(6, len, "Compile");
+            Assert.AreEqual(0, clone.ArrayDouble.Length);
+            Assert.AreEqual(0, clone.ArrayInt32.Length);
+            Assert.AreEqual(0, clone.ArraySingle.Length);
+        }
+        [Test]
+        public void TestNullRoundTrip()
+        {
+            var model = CreateModel();
+
+            var orig = new PackedData { ArrayInt32 = null, ArraySingle = null, ArrayDouble = null };
+            int len;
+
+            var clone = RoundTrip(model, orig, "Runtime", out len);
             Assert.AreEqual(0, len, "Runtime");
-            Assert.IsNotNull(clone);
+            Assert.IsNull(clone.ArrayDouble);
+            Assert.IsNull(clone.ArrayInt32);
+            Assert.IsNull(clone.ArraySingle);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
             Assert.AreEqual(0, len, "CompileInPlace");
-            Assert.IsNotNull(clone);
+            Assert.IsNull(clone.ArrayDouble);
+            Assert.IsNull(clone.ArrayInt32);
+            Assert.IsNull(clone.ArraySingle);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
             Assert.AreEqual(0, len, "Compile");
-            Assert.IsNotNull(clone);
+            Assert.IsNull(clone.ArrayDouble);
+            Assert.IsNull(clone.ArrayInt32);
+            Assert.IsNull(clone.ArraySingle);
         }
         static void CheckExpectedListContents(PackedData data, string text)
         {

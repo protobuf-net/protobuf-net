@@ -119,12 +119,13 @@ message EnumWrapper {
             decimal freight = masterDb.Orders.Sum(order => order.Freight).GetValueOrDefault(),
                 value = masterDb.Orders.SelectMany(o => o.Lines).Sum(l => l.Quantity * l.UnitPrice);
 
-            DatabaseReader db = DAL.NWindTests.LoadDatabaseFromFile<DatabaseReader>(RuntimeTypeModel.Default);
-
             Assert.AreEqual(830, orderCount);
             Assert.AreEqual(2155, lineCount);
             Assert.AreEqual(51317, unitCount);
             Assert.AreEqual(1354458.59M, value);
+
+            DatabaseReader db = DAL.NWindTests.LoadDatabaseFromFile<DatabaseReader>(RuntimeTypeModel.Default);
+
 
             Assert.AreEqual(orderCount, db.OrderReader.OrderCount);
             Assert.AreEqual(lineCount, db.OrderReader.LineCount);
