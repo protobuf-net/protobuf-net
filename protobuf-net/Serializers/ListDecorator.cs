@@ -21,17 +21,27 @@ namespace ProtoBuf.Serializers
                     return false;
             }
         }
+        private readonly byte options;
+        private const byte OPTIONS_IsList = 1,
+                           OPTIONS_SuppressIList = 2,
+                           OPTIONS_WritePacked = 4,
+                           OPTIONS_ReturnList = 8;
+
         private readonly Type declaredType, concreteType;
-        private readonly bool isList;
+
         private readonly MethodInfo add;
 
         private readonly int fieldNumber;
-        private readonly bool writePacked;
+
+        private bool IsList { get { return (options & OPTIONS_IsList) != 0; } }
+        private bool SuppressIList { get { return (options & OPTIONS_SuppressIList) != 0; } }
+        private bool WritePacked { get { return (options & OPTIONS_WritePacked) != 0; } }
+        private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
         private readonly WireType packedWireType;
-        private bool returnList;
+
         public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList) : base(tail)
         {
-            this.returnList = returnList;
+            if (returnList) options |= OPTIONS_ReturnList;
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
             if (!CanPack(packedWireType))
             {
@@ -40,7 +50,7 @@ namespace ProtoBuf.Serializers
             }            
 
             this.fieldNumber = fieldNumber;
-            this.writePacked = writePacked;
+            if (writePacked) options |= OPTIONS_WritePacked;
             this.packedWireType = packedWireType;
             if (declaredType == null) throw new ArgumentNullException("declaredType");
             if (declaredType.IsArray) throw new ArgumentException("Cannot treat arrays as lists", "declaredType");
@@ -48,13 +58,22 @@ namespace ProtoBuf.Serializers
             this.concreteType = concreteType;
             
             // look for a public list.Add(typedObject) method
+            bool isList;
             add = TypeModel.ResolveListAdd(declaredType, tail.ExpectedType, out isList);
+            if (isList)
+            {
+                options |= OPTIONS_IsList;
+                if (declaredType.FullName.StartsWith("System.Data.Linq.EntitySet`1[["))
+                { // see http://stackoverflow.com/questions/6194639/entityset-is-there-a-sane-reason-that-ilist-add-doesnt-set-assigned
+                    options |= OPTIONS_SuppressIList;
+                }
+            }
             if (add == null) throw new InvalidOperationException();
         }
 
         public override Type ExpectedType { get { return declaredType;  } }
         public override bool RequiresOldValue { get { return true; } }
-        public override bool ReturnsValue { get { return returnList; } }
+        public override bool ReturnsValue { get { return ReturnList; } }
 #if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
@@ -68,7 +87,8 @@ namespace ProtoBuf.Serializers
              *  - value types vs reference types (boxing etc)
              *  - initialization if we need to pass in a value to the tail
              *  - handling whether or not the tail *returns* the value vs updates the input
-             */ 
+             */
+            bool returnList = ReturnList;
             using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
             using (Compiler.Local origlist = returnList ? new Compiler.Local(ctx, ExpectedType) : null)
             {
@@ -275,6 +295,7 @@ namespace ProtoBuf.Serializers
                 Helpers.DebugAssert(current != null);
                 Helpers.DebugAssert(getEnumerator != null);
                 Type enumeratorType = getEnumerator.ReturnType;
+                bool writePacked = WritePacked;
                 using (Compiler.Local iter = new Compiler.Local(ctx, enumeratorType))
                 using (Compiler.Local token = writePacked ? new Compiler.Local(ctx, typeof(SubItemToken)) : null)
                 {
@@ -336,6 +357,7 @@ namespace ProtoBuf.Serializers
         public override void Write(object value, ProtoWriter dest)
         {
             SubItemToken token;
+            bool writePacked = WritePacked;
             if (writePacked)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
@@ -361,7 +383,7 @@ namespace ProtoBuf.Serializers
             int field = source.FieldNumber;
             object origValue = value;
             if (value == null) value = Activator.CreateInstance(concreteType);
-
+            bool isList = IsList && !SuppressIList;
             if (packedWireType != WireType.None && source.WireType == WireType.String)
             {
                 SubItemToken token = ProtoReader.StartSubItem(source);
