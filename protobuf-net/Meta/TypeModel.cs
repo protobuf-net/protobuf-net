@@ -232,7 +232,7 @@ namespace ProtoBuf.Meta
                 bool expectPrefix = expectedField > 0 || resolver != null;
                 len = ProtoReader.ReadLengthPrefix(source, expectPrefix, style, out actualField, out tmpBytesRead);
                 bytesRead += tmpBytesRead;
-                if (len < 0) return value;
+                if (len <= 0) return value;
 
                 switch (style)
                 {
@@ -412,18 +412,30 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public object Deserialize(Stream source, object value, Type type)
         {
+            bool autoCreate = PrepareDeserialize(value, ref type);
+            using (ProtoReader reader = new ProtoReader(source, this))
+            {
+                if (value != null) reader.SetRootObject(value);
+                return DeserializeCore(reader, type, value, autoCreate);
+            }
+        }
+
+        private static bool PrepareDeserialize(object value, ref Type type)
+        {
             if (type == null)
             {
                 if (value == null)
                 {
                     throw new ArgumentNullException("type");
-                } else {
+                }
+                else
+                {
                     type = value.GetType();
                 }
             }
             bool autoCreate = true;
 #if !NO_GENERICS
-            if(type.IsValueType)
+            if (type.IsValueType)
             {
                 Type underlyingType = Nullable.GetUnderlyingType(type);
                 if (underlyingType != null)
@@ -433,10 +445,31 @@ namespace ProtoBuf.Meta
                 }
             }
 #endif
-            using (ProtoReader reader = new ProtoReader(source, this))
+            return autoCreate;
+        }
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <param name="type">The type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="length">The number of bytes to consume.</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public object Deserialize(Stream source, object value, Type type, int length)
+        {
+            bool autoCreate = PrepareDeserialize(value, ref type);
+            using (ProtoReader reader = new ProtoReader(source, this, length))
             {
                 if (value != null) reader.SetRootObject(value);
-                return DeserializeCore(reader, type, value, autoCreate);
+                object obj = DeserializeCore(reader, type, value, autoCreate);
+                if (reader.Position != length)
+                {
+                    throw new ProtoException("Incorrect number of bytes consumed");
+                }
+                return obj;
             }
         }
         private object DeserializeCore(ProtoReader reader, Type type, object value, bool noAutoCreate)
