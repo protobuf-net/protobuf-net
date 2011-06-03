@@ -336,7 +336,7 @@ namespace ProtoBuf.Meta
             }
             catch (Exception ex)
             {
-                if (ex.Message.Contains(type.FullName)) throw; // already enough info
+                if (ex.Message.IndexOf(type.FullName) >= 0) throw;  // already enough info
                 throw new ProtoException(ex.Message + " (" + type.FullName + ")", ex);
             }
         }
@@ -784,6 +784,18 @@ namespace ProtoBuf.Meta
         internal void TakeLock(ref bool lockTaken)
         {
             lockTaken = false;
+#if CF2 || CF35
+            int remaining = metadataTimeoutMilliseconds;
+            do {
+                lockTaken = Monitor.TryEnter(types);
+                if(!lockTaken)
+                {
+                    if(remaining <= 0) throw new TimeoutException("Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection");
+                    remaining -= 50;
+                    Thread.Sleep(50);
+                }
+            } while(!lockTaken);
+#else
             if (Monitor.TryEnter(types, metadataTimeoutMilliseconds))
             {
                 lockTaken = true;
@@ -792,6 +804,7 @@ namespace ProtoBuf.Meta
             {
                 throw new TimeoutException("Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection");
             }
+#endif
         }
 
         internal void ReleaseLock(bool lockTaken)
