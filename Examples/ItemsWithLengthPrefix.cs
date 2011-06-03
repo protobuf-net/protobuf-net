@@ -3,6 +3,7 @@ using System.IO;
 using ProtoBuf;
 using System.Linq;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Examples
 {
@@ -26,6 +27,10 @@ namespace Examples
             int count = 0;
             foreach(int value in values)
             {
+                if (source.Length == source.Position)
+                {
+                    Debugger.Break();
+                }
                 Foo foo = Serializer.DeserializeWithLengthPrefix<Foo>(source, style, tag);
                 Assert.AreEqual(value, foo.Value);
                 count++;

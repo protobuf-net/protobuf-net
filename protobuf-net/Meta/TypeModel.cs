@@ -231,13 +231,14 @@ namespace ProtoBuf.Meta
                 
                 bool expectPrefix = expectedField > 0 || resolver != null;
                 len = ProtoReader.ReadLengthPrefix(source, expectPrefix, style, out actualField, out tmpBytesRead);
+                if (tmpBytesRead == 0) return value;
                 bytesRead += tmpBytesRead;
-                if (len <= 0) return value;
+                if (len < 0) return value;
 
                 switch (style)
                 {
                     case PrefixStyle.Base128:
-                        if (expectedField == 0 && type == null && resolver != null)
+                        if (expectPrefix && expectedField == 0 && type == null && resolver != null)
                         {
                             type = resolver(actualField);
                             skip = type == null;
@@ -267,7 +268,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    if (!TryDeserializeAuxiliaryType(reader, DataFormat.Default, actualField, type, ref value, true, false, true))
+                    if (!(TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true) || len == 0))
                     {
                         TypeModel.ThrowUnexpectedType(type); // throws
                     }
@@ -675,6 +676,7 @@ namespace ProtoBuf.Meta
                 // for convenience (re complex exit conditions), additional exit test here:
                 // if we've got the value, are only looking for one, and we aren't a list - then exit
                 if (found && asListItem) break;
+
 
                 // read the next item
                 int fieldNumber = reader.ReadFieldHeader();

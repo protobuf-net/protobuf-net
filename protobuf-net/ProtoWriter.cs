@@ -78,7 +78,7 @@ namespace ProtoBuf
             SubItemToken token = StartSubItem(value, writer, true);
             if (key < 0)
             {
-                if (!writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, fieldNumber, value))
+                if (!writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value))
                 {
                     TypeModel.ThrowUnexpectedType(value.GetType());
                 }

@@ -41,7 +41,7 @@ namespace Examples.Issues
 
                     foos.Add((Foo)model.Deserialize(ms, null, typeof(Foo), len));
 
-                    Assert.IsTrue(foos.Count <= 3, "too much data!");
+                    Assert.IsTrue(foos.Count <= 3, "too much data! (manual)");
                 } while (bytesRead > 0);
 
                 Assert.AreEqual(3, foos.Count);
@@ -56,7 +56,7 @@ namespace Examples.Issues
                 foreach (var obj in model.DeserializeItems<Foo>(ms, PrefixStyle.Base128, 0))
                 {
                     foos.Add(obj);
-                    Assert.IsTrue(foos.Count <= 3, "too much data!");
+                    Assert.IsTrue(foos.Count <= 3, "too much data! (foreach)");
                 }
                 Assert.AreEqual(3, foos.Count);
                 Assert.AreEqual(1, foos[0].Bar);
