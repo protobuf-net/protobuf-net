@@ -46,7 +46,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;FEAT_COMPILER FEAT_SERVICEMODEL PLAT_BINARYFORMATTER</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;FEAT_COMPILER FEAT_SERVICEMODEL PLAT_BINARYFORMATTER PLAT_XMLSERIALIZER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -59,7 +59,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;FEAT_COMPILER FEAT_SERVICEMODEL PLAT_BINARYFORMATTER</DefineConstants>
+    <DefineConstants>TRACE;FEAT_COMPILER FEAT_SERVICEMODEL PLAT_BINARYFORMATTER PLAT_XMLSERIALIZER</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <UseVSHostingProcess>false</UseVSHostingProcess>
@@ -70,7 +70,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Net20|AnyCPU' ">
     <OutputPath>bin\Net20\</OutputPath>
-    <DefineConstants>TRACE;REMOTING</DefineConstants>
+    <DefineConstants>TRACE;FEAT_COMPILER PLAT_BINARYFORMATTER PLAT_XMLSERIALIZER</DefineConstants>
     <DocumentationFile>bin\Net20\protobuf-net.xml</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -137,7 +137,7 @@
     <Reference Include="System.ServiceModel">
       <RequiredTargetFramework>3.0</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.XML" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BclHelpers.cs" />

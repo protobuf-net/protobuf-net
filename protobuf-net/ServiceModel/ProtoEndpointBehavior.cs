@@ -1,4 +1,4 @@
-﻿#if FEAT_SERVICEMODEL
+﻿#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
 using System.ServiceModel.Description;
 
 namespace ProtoBuf.ServiceModel
@@ -35,7 +35,7 @@ namespace ProtoBuf.ServiceModel
     /// </summary>
     public class ProtoEndpointBehavior : IEndpointBehavior
     {
-        #region IEndpointBehavior Members
+#region IEndpointBehavior Members
 
         void IEndpointBehavior.AddBindingParameters(ServiceEndpoint endpoint, System.ServiceModel.Channels.BindingParameterCollection bindingParameters)
         {

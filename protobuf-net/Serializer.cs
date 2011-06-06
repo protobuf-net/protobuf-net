@@ -108,6 +108,7 @@ namespace ProtoBuf
             }
         }
 #endif
+#if PLAT_XMLSERIALIZER
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied XmlWriter.
         /// </summary>
@@ -157,7 +158,7 @@ namespace ProtoBuf
                 Serializer.Merge(ms, instance);
             }
         }
-
+#endif
 
         private const string ProtoBinaryField = "proto";
 #if PLAT_BINARYFORMATTER

@@ -10,7 +10,9 @@ using ProtoBuf;
 using System.Runtime.Serialization;
 #if NET_3_0
 using System.ServiceModel;
+#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
 using ProtoBuf.ServiceModel;
+#endif
 #endif
 #if NET_3_5
 using System.Runtime.Serialization.Json;
@@ -626,7 +628,7 @@ namespace Examples.SimpleStream
     public interface IFoo
     {
         [OperationContract]
-#if NET_3_0
+#if NET_3_0 && FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
         [ProtoBehavior]
 #endif
         Test3 Bar(Test1 value);

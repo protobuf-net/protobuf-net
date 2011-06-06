@@ -36,7 +36,10 @@ namespace DAL
     }
 
     [ProtoContract, DataContract, Serializable]
-    public class DatabaseCompatRem : ISerializable, IXmlSerializable
+    public class DatabaseCompatRem : ISerializable
+#if PLAT_XMLSERIALIZER
+        , IXmlSerializable
+#endif
     {
         public const bool MASTER_GROUP = false;
 
@@ -65,6 +68,7 @@ namespace DAL
 
         #region IXmlSerializable Members
 
+#if PLAT_XMLSERIALIZER
         System.Xml.Schema.XmlSchema IXmlSerializable.GetSchema()
         {
             return null;
@@ -79,7 +83,7 @@ namespace DAL
         {
             Serializer.Serialize(writer, this);            
         }
-
+#endif
         #endregion
     }
     
