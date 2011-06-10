@@ -348,19 +348,21 @@ namespace ProtoBuf
         {
             SubItemToken token = ProtoReader.StartSubItem(source);
             int fieldNumber;
-            int newObjectKey = -1, newTypeKey = -1;
+            int newObjectKey = -1, newTypeKey = -1, tmp;
             while ((fieldNumber = source.ReadFieldHeader()) > 0)
             {
                 switch (fieldNumber)
                 {
                     case FieldExistingObjectKey:
-                        value = source.NetCache.GetKeyedObject(source.ReadInt32());
+                        tmp = source.ReadInt32();
+                        value = source.NetCache.GetKeyedObject(tmp);
                         break;
                     case FieldNewObjectKey:
                         newObjectKey = source.ReadInt32();
                         break;
                     case FieldExistingTypeKey:
-                        type = (Type)source.NetCache.GetKeyedObject(source.ReadInt32());
+                        tmp = source.ReadInt32();
+                        type = (Type)source.NetCache.GetKeyedObject(tmp);
                         key = source.GetTypeKey(ref type);
                         break;
                     case FieldNewTypeKey:
@@ -369,14 +371,23 @@ namespace ProtoBuf
                     case FieldTypeName:
                         type = source.DeserializeType(source.ReadString());
                         key = source.GetTypeKey(ref type);
-                        if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
                         break;
                     case FieldObject:
-                        if (value == null) value = Activator.CreateInstance(type); // TODO wcf-style inits
-                        if (newObjectKey >= 0) source.NetCache.SetKeyedObject(newObjectKey, value);
+                        bool lateSet = value == null && type == typeof(string);
+                        if (value == null && !lateSet) value = Activator.CreateInstance(type); // TODO wcf-style inits
+                        if (newObjectKey >= 0 && !lateSet)
+                        {
+                            source.NetCache.SetKeyedObject(newObjectKey, value);
+                            if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
+                        }
                         object oldValue = value;
-                        value = ProtoReader.ReadObject(oldValue, key, source);
-                        if (!ReferenceEquals(oldValue, value))
+                        value = ProtoReader.ReadTypedObject(oldValue, key, source, type);
+                        if (newObjectKey >= 0 && lateSet)
+                        {
+                            source.NetCache.SetKeyedObject(newObjectKey, value);
+                            if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
+                        }
+                        if (!lateSet && !ReferenceEquals(oldValue, value))
                         {
                             throw new ProtoException("A reference-tracked object changed reference during deserialization");
                         }                        
@@ -387,6 +398,7 @@ namespace ProtoBuf
                 }
             }
             ProtoReader.EndSubItem(token, source);
+
             return value;
         }
         /// <summary>
@@ -416,9 +428,9 @@ namespace ProtoBuf
                     bool existing;
                     Type type = value.GetType();
                     key = dest.GetTypeKey(ref type);
-                    int objectKey = dest.NetCache.AddObjectKey(value, out existing);
+                    int typeKey = dest.NetCache.AddObjectKey(type, out existing);
                     ProtoWriter.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Variant, dest);
-                    ProtoWriter.WriteInt32(objectKey, dest);
+                    ProtoWriter.WriteInt32(typeKey, dest);
                     if (!existing)
                     {
                         ProtoWriter.WriteFieldHeader(FieldTypeName, WireType.String, dest);

@@ -30,9 +30,22 @@ namespace ProtoBuf
             {
                 throw new InvalidOperationException("Cannot serialize sub-objects unless a model is provided");
             }
-            SubItemToken token = StartSubItem(value, writer);
-            writer.model.Serialize(key, value, writer);
-            EndSubItem(token, writer);
+
+                SubItemToken token = StartSubItem(value, writer);
+                if (key >= 0)
+                {
+                    writer.model.Serialize(key, value, writer);
+                }
+                else if (writer.model != null && writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value))
+                {
+                    // all ok
+                }
+                else
+                {
+                    TypeModel.ThrowUnexpectedType(value.GetType());
+                }
+                EndSubItem(token, writer);
+ 
         }
         /// <summary>
         /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the

@@ -644,7 +644,7 @@ namespace ProtoBuf.Meta
         ///  - basic values; individual int / string / Guid / etc
         ///  - IList sets of any type handled by TryDeserializeAuxiliaryType
         /// </summary>
-        private bool TryDeserializeAuxiliaryType(ProtoReader reader, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate)
+        internal bool TryDeserializeAuxiliaryType(ProtoReader reader, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate)
         {
             if (type == null) throw new ArgumentNullException("type");
             Type itemType = null;
@@ -922,7 +922,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal static void ThrowUnexpectedType(Type type)
         {
-            throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + type.FullName);
+            string fullName = type == null ? "(unknown)" : type.FullName;
+            throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
         }
         /// <summary>
         /// Indicates that the given type cannot be constructed; it may still be possible to 

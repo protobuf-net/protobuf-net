@@ -21,7 +21,12 @@ namespace ProtoBuf
                 return rootObject;
             }
             BasicList list = List;
-            if (key < 0 || key >= list.Count) throw new ProtoException("Internal error; a missing key occurred");
+
+            if (key < 0 || key >= list.Count)
+            {
+                Helpers.DebugWriteLine("Missing key: " + key);
+                throw new ProtoException("Internal error; a missing key occurred");
+            }
             
             return list[key];
         }

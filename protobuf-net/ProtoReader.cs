@@ -378,6 +378,51 @@ namespace ProtoBuf
             throw EoF(this);
         }
 
+#if NO_GENERICS
+        private System.Collections.Hashtable stringInterner;
+        private string Intern(string value)
+        {
+            if (value == null) return null;
+            if (value.Length == 0) return string.Empty;
+            if (stringInterner == null)
+            {
+                stringInterner = new System.Collections.Hashtable();
+                stringInterner.Add(value, value);      
+            }
+            else if (stringInterner.ContainsKey(value))
+            {
+                value = (string)stringInterner[value];
+            }
+            else
+            {
+                stringInterner.Add(value, value);
+            }
+            return value;
+        }
+#else
+        private System.Collections.Generic.Dictionary<string,string> stringInterner;
+                private string Intern(string value)
+        {
+            if (value == null) return null;
+            if (value.Length == 0) return string.Empty;
+            string found;
+            if (stringInterner == null)
+            {
+                stringInterner = new System.Collections.Generic.Dictionary<string, string>();
+                stringInterner.Add(value, value);        
+            }
+            else if (stringInterner.TryGetValue(value, out found))
+            {
+                value = found;
+            }
+            else
+            {
+                stringInterner.Add(value, value);
+            }
+            return value;
+        }
+#endif
+
         static readonly UTF8Encoding encoding = new UTF8Encoding();
         /// <summary>
         /// Reads a string from the stream (using UTF8); supported wire-types: String
@@ -402,6 +447,7 @@ namespace ProtoBuf
 #else
                 string s = encoding.GetString(ioBuffer, ioIndex, bytes);
 #endif
+                s = Intern(s);
                 available -= bytes;
                 position += bytes;
                 ioIndex += bytes;
@@ -452,12 +498,27 @@ namespace ProtoBuf
         /// </summary>
         public static object ReadObject(object value, int key, ProtoReader reader)
         {
+            return ReadTypedObject(value, key, reader, null);
+        }
+        internal static object ReadTypedObject(object value, int key, ProtoReader reader, Type type)
+        {
             if (reader.model == null)
             {
                 throw AddErrorData(new InvalidOperationException("Cannot deserialize sub-objects unless a model is provided"), reader);
             }
             SubItemToken token = ProtoReader.StartSubItem(reader);
-            value = reader.model.Deserialize(key, value, reader);
+            if (key >= 0)
+            {
+                value = reader.model.Deserialize(key, value, reader);
+            }
+            else if (type != null && reader.model.TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true))
+            {
+                // ok
+            }
+            else
+            {
+                TypeModel.ThrowUnexpectedType(type);
+            }
             ProtoReader.EndSubItem(token, reader);
             return value;
         }

@@ -97,7 +97,66 @@ namespace Examples
             Assert.AreSame(clone.Foo, clone.Foo.Self, "same after (full compile)");
         }
 
+        [ProtoContract]
+        class StringDynamicType
+        {
+	        [ProtoMember(1, DynamicType = true)]
+	        public object Data { get; set; }
+        }
 
+
+        [Test]
+        public void StringAsDynamic()
+        {
+            var obj = new StringDynamicType { Data = GetString() };
+
+            var clone = Serializer.DeepClone(obj);
+            Assert.AreEqual(GetString(), clone.Data);
+        }
+
+        [Test]
+        public void StringInterned()
+        {
+            var obj = new StringInternedType { Foo = GetString(), Bar = GetString() };
+            Assert.IsFalse(ReferenceEquals(obj.Foo, obj.Bar));
+            var clone = Serializer.DeepClone(obj);
+            Assert.AreEqual(obj.Foo, clone.Foo);
+            Assert.AreEqual(obj.Bar, clone.Bar);
+            Assert.IsTrue(ReferenceEquals(clone.Foo, clone.Bar));
+        }
+
+        [Test]
+        public void StringAsReference()
+        {
+            var obj = new StringRefType { Foo = GetString(), Bar = GetString() };
+            Assert.IsFalse(ReferenceEquals(obj.Foo, obj.Bar));
+            var clone = Serializer.DeepClone(obj);
+            Assert.AreEqual(obj.Foo, clone.Foo);
+            Assert.AreEqual(obj.Bar, clone.Bar);
+            Assert.IsTrue(ReferenceEquals(clone.Foo, clone.Bar));
+        }
+        static string GetString()
+        {
+            return new string('a', 5);
+        }
+        [ProtoContract]
+        public class StringRefType
+        {
+            [ProtoMember(1, DynamicType=true, AsReference=true)]
+            public object Foo { get; set; }
+
+            [ProtoMember(2, DynamicType = true, AsReference = true)]
+            public object Bar { get; set; }
+        }
+        [ProtoContract]
+        public class StringInternedType
+        {
+            [ProtoMember(1)]
+            public string Foo { get; set; }
+
+            [ProtoMember(2)]
+            public string Bar { get; set; }
+        }
 
         [ProtoContract]
         public class BasicDynamicTestOuter
