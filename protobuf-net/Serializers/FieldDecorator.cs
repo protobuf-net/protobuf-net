@@ -30,9 +30,8 @@ namespace ProtoBuf.Serializers
         public override object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(value != null);
-            field.SetValue(
-                value,
-                Tail.Read((Tail.RequiresOldValue ? field.GetValue(value) : null), source));
+            object newValue = Tail.Read((Tail.RequiresOldValue ? field.GetValue(value) : null), source);
+            if(newValue != null) field.SetValue(value,newValue);
             return null;
         }
 #if FEAT_COMPILER
@@ -54,8 +53,35 @@ namespace ProtoBuf.Serializers
                 }
                 // value is either now on the stack or not needed
                 ctx.ReadNullCheckedTail(field.FieldType, Tail, null);
-                // stack is now the return value
-                ctx.StoreValue(field);
+
+                if (Tail.ReturnsValue)
+                {
+                    if (field.FieldType.IsValueType)
+                    {
+                        // stack is now the return value
+                        ctx.StoreValue(field);
+                    }
+                    else
+                    {
+                        
+                        Compiler.CodeLabel hasValue = ctx.DefineLabel(), allDone = ctx.DefineLabel();
+                        ctx.CopyValue();
+                        ctx.BranchIfTrue(hasValue, true); // interpret null as "don't assign"
+
+                        // no value, discard
+                        ctx.DiscardValue();
+                        ctx.DiscardValue();
+                        ctx.Branch(allDone, true);
+
+                        ctx.MarkLabel(hasValue);
+                        ctx.StoreValue(field);
+                        ctx.MarkLabel(allDone);
+                    }
+                }
+                else
+                {
+                    ctx.DiscardValue();
+                }
             }
         }
 #endif

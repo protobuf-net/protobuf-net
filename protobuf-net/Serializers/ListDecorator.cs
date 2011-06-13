@@ -25,7 +25,8 @@ namespace ProtoBuf.Serializers
         private const byte OPTIONS_IsList = 1,
                            OPTIONS_SuppressIList = 2,
                            OPTIONS_WritePacked = 4,
-                           OPTIONS_ReturnList = 8;
+                           OPTIONS_ReturnList = 8,
+                           OPTIONS_OverwriteList = 16;
 
         private readonly Type declaredType, concreteType;
 
@@ -39,9 +40,10 @@ namespace ProtoBuf.Serializers
         private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
         private readonly WireType packedWireType;
 
-        public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList) : base(tail)
+        public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList) : base(tail)
         {
             if (returnList) options |= OPTIONS_ReturnList;
+            if (overwriteList) options |= OPTIONS_OverwriteList;
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
             if (!CanPack(packedWireType))
             {

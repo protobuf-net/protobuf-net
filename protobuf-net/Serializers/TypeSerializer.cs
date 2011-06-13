@@ -84,6 +84,11 @@ namespace ProtoBuf.Serializers
             hasConstructor = !constructType.IsAbstract && constructType.GetConstructor(
                     BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
                     null, Helpers.EmptyTypes, null) != null;
+
+            if (constructType != forType && useConstructor && !hasConstructor)
+            {
+                throw new ArgumentException("The supplied default implementation cannot be created: " + constructType.FullName, "constructType");
+            }
         }
 
         public void Callback(object value, TypeModel.CallbackType callbackType)

@@ -22,7 +22,6 @@ namespace ProtoBuf.Meta
         }
         IProtoSerializer ISerializerProxy.Serializer { get { return Serializer; } }
         private MetaType baseType;
-        private bool frozen, isPrivateOnApi;
         /// <summary>
         /// Gets the base-type for this type
         /// </summary>
@@ -36,12 +35,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IncludeSerializerMethod
         {   // negated to minimize common-case / initializer
-            get { return !isPrivateOnApi; }
-            set
-            {
-                ThrowIfFrozen();
-                isPrivateOnApi = !value;
-            }
+            get { return !HasFlag(OPTIONS_PrivateOnApi); }
+            set { SetFlag(OPTIONS_PrivateOnApi, !value, true); }
         }
 
         private BasicList subTypes;
@@ -181,7 +176,7 @@ namespace ProtoBuf.Meta
 
             if (type.IsEnum)
             {
-                this.enumPassthru = type.IsDefined(typeof(FlagsAttribute), false);
+                EnumPassthru = type.IsDefined(typeof(FlagsAttribute), false);
             }
         }
         /// <summary>
@@ -189,9 +184,9 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal void ThrowIfFrozen()
         {
-            if (frozen) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated for " + type.FullName);
+            if ((flags & OPTIONS_Frozen)!=0) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated for " + type.FullName);
         }
-        internal void Freeze() { frozen = true;}
+        internal void Freeze() { flags |= OPTIONS_Frozen; }
 
         private readonly Type type;
         /// <summary>
@@ -210,7 +205,7 @@ namespace ProtoBuf.Meta
                         if (serializer == null)
                         { // double-check, but our main purpse with this lock is to ensure thread-safety with
                             // serializers needing to wait until another thread has finished adding the properties
-                            frozen = true;
+                            SetFlag(OPTIONS_Frozen, true, false);
                             serializer = BuildSerializer();
 #if FEAT_COMPILER && !FX11
                             if (model.AutoCompile) CompileInPlace();
@@ -279,7 +274,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return new TypeSerializer(type, fieldNumbers, serializers, arr, baseType == null, useConstructor, callbacks, constructType);
+            return new TypeSerializer(type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType);
         }
 
         [Flags]
@@ -721,20 +716,15 @@ namespace ProtoBuf.Meta
         {
             return Add(fieldNumber, memberName, null, null, null);
         }
-        private bool useConstructor = true;
         /// <summary>
         /// Gets or sets whether the type should use a parameterless constructor (the default),
         /// or whether the type should skip the constructor completely. This option is not supported
         /// on compact-framework.
         /// </summary>
         public bool UseConstructor
-        {
-            get { return useConstructor; }
-            set
-            {
-                ThrowIfFrozen();
-            	useConstructor = value;
-            }
+        { // negated to have defaults as flat zero
+            get { return !HasFlag(OPTIONS_SkipConstructor); }
+            set { SetFlag(OPTIONS_SkipConstructor, !value, true); }
         }
         /// <summary>
         /// The concrete type to create when a new instance of this type is needed; this may be useful when dealing
@@ -950,7 +940,7 @@ namespace ProtoBuf.Meta
 
         internal EnumSerializer.EnumPair[] GetEnumMap()
         {
-            if (enumPassthru) return null;
+            if (HasFlag(OPTIONS_EnumPassThru)) return null;
             EnumSerializer.EnumPair[] result = new EnumSerializer.EnumPair[fields.Count];
             for (int i = 0; i < result.Length; i++)
             {
@@ -962,7 +952,6 @@ namespace ProtoBuf.Meta
             return result;
         }
 
-        private bool enumPassthru;
 
         /// <summary>
         /// Gets or sets a value indicating that an enum should be treated directly as an int/short/etc, rather
@@ -970,15 +959,35 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool EnumPassthru
         {
-            get { return enumPassthru; }
-            set { ThrowIfFrozen(); enumPassthru = value; }
+            get { return HasFlag(OPTIONS_EnumPassThru); }
+            set { SetFlag(OPTIONS_EnumPassThru, value, true); }
         }
 
-        private volatile bool pending;
         internal bool Pending
         {
-            get { return pending; }
-            set { pending = value; }
+            get { return HasFlag(OPTIONS_Pending); }
+            set { SetFlag(OPTIONS_Pending, value, false); }
+        }
+
+        private const byte
+                   OPTIONS_Pending = 1,
+                   OPTIONS_EnumPassThru = 2,
+                   OPTIONS_Frozen = 4,
+                   OPTIONS_PrivateOnApi = 8,
+                   OPTIONS_SkipConstructor = 16;
+
+        private volatile byte flags;
+        private bool HasFlag(byte flag) { return (flags & flag) == flag; }
+        private void SetFlag(byte flag, bool value, bool throwIfFrozen)
+        {
+            if (throwIfFrozen && HasFlag(flag) != value)
+            {
+                ThrowIfFrozen();
+            }
+            if (value)
+                flags |= flag;
+            else
+                flags = (byte)(flags & ~flag);
         }
     }
 }

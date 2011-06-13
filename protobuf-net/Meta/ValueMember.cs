@@ -131,7 +131,7 @@ namespace ProtoBuf.Meta
         /// wite-type, but also to describe subtypes <i>within</i> that wire-type (such as SignedVariant)
         /// </summary>
         public DataFormat DataFormat { get { return dataFormat; } }
-        private bool isStrict, isPacked, isRequired;
+
         /// <summary>
         /// Indicates whether this field should follow strict encoding rules; this means (for example) that if a "fixed32"
         /// is encountered when "variant" is defined, then it will fail (throw an exception) when parsing. Note that
@@ -139,8 +139,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IsStrict
         {
-            get { return isStrict; }
-            set { ThrowIfFrozen(); isStrict = value; }
+            get { return HasFlag(OPTIONS_IsStrict); }
+            set { SetFlag(OPTIONS_IsStrict, value, true); }
         }
 
         /// <summary>
@@ -148,8 +148,17 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IsPacked
         {
-            get { return isPacked; }
-            set { ThrowIfFrozen(); isPacked = value; }
+            get { return HasFlag(OPTIONS_IsPacked); }
+            set { SetFlag(OPTIONS_IsPacked, value, true); }
+        }
+
+        /// <summary>
+        /// Indicates whether this field should *repace* existing values (the default is false, meaning *append*).
+        /// </summary>
+        public bool OverwriteList
+        {
+            get { return HasFlag(OPTIONS_OverwriteList); }
+            set { SetFlag(OPTIONS_OverwriteList, value, true); }
         }
 
         /// <summary>
@@ -157,8 +166,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IsRequired
         {
-            get { return isRequired; }
-            set { ThrowIfFrozen(); isRequired = value; }
+            get { return HasFlag(OPTIONS_IsRequired); }
+            set { SetFlag(OPTIONS_IsRequired, value, true); }
         }
 
         private bool asReference;
@@ -233,21 +242,21 @@ namespace ProtoBuf.Meta
                 IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType);
                 if (ser == null) throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
                 // apply tags
-                ser = new TagDecorator(fieldNumber, wireType, isStrict, ser);
+                ser = new TagDecorator(fieldNumber, wireType, IsStrict, ser);
                 // apply lists if appropriate
                 if (itemType != null)
                 {
                     Helpers.DebugAssert(itemType == ser.ExpectedType, "Wrong type in the tail");
                     if (memberType.IsArray)
                     {
-                        ser = new ArrayDecorator(ser, fieldNumber, isPacked, wireType);
+                        ser = new ArrayDecorator(ser, fieldNumber, IsPacked, wireType, OverwriteList);
                     }
                     else
                     {
-                        ser = new ListDecorator(memberType, defaultType, ser, fieldNumber, isPacked, wireType, member == null || PropertyDecorator.CanWrite(member));
+                        ser = new ListDecorator(memberType, defaultType, ser, fieldNumber, IsPacked, wireType, member == null || PropertyDecorator.CanWrite(member), OverwriteList);
                     }
                 }
-                else if (defaultValue != null && !isRequired)
+                else if (defaultValue != null && !IsRequired)
                 {
                     ser = new DefaultValueDecorator(defaultValue, ser);
                 }
@@ -425,6 +434,26 @@ namespace ProtoBuf.Meta
         public string Name
         {
             get { return Helpers.IsNullOrEmpty(name) ? member.Name : name; }
+        }
+
+        private const byte
+           OPTIONS_IsStrict = 1,
+           OPTIONS_IsPacked = 2,
+           OPTIONS_IsRequired = 4,
+           OPTIONS_OverwriteList = 8;
+
+        private byte flags;
+        private bool HasFlag(byte flag) { return (flags & flag) == flag; }
+        private void SetFlag(byte flag, bool value, bool throwIfFrozen)
+        {
+            if (throwIfFrozen && HasFlag(flag) != value)
+            {
+                ThrowIfFrozen();
+            }
+            if (value)
+                flags |= flag;
+            else
+                flags = (byte)(flags & ~flag);
         }
     }
 }
