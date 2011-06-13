@@ -29,7 +29,7 @@ namespace ProtoBuf
         public ProtoIncludeAttribute(int tag, string knownTypeName)
         {
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag", "Tags must be positive integers");
-            if (string.IsNullOrEmpty(knownTypeName)) throw new ArgumentNullException("knownTypeName", "Known type cannot be blank");
+            if (Helpers.IsNullOrEmpty(knownTypeName)) throw new ArgumentNullException("knownTypeName", "Known type cannot be blank");
             this.tag = tag;
             this.name = knownTypeName;
         }
@@ -59,7 +59,7 @@ namespace ProtoBuf
 
         internal Type ResolveKnownType(Assembly assembly)
         {
-            if (string.IsNullOrEmpty(KnownTypeName)) return null;
+            if (Helpers.IsNullOrEmpty(KnownTypeName)) return null;
             try
             {
                 Type type = Type.GetType(KnownTypeName);
@@ -70,7 +70,7 @@ namespace ProtoBuf
             {
                 int i = KnownTypeName.IndexOf(',');
                 string fullName = (i > 0 ? KnownTypeName.Substring(0, i) : KnownTypeName).Trim();
-                Type type = (assembly ?? Assembly.GetCallingAssembly()).GetType(fullName);
+                Type type = (assembly == null ? Assembly.GetCallingAssembly() : assembly).GetType(fullName);
                 if (type != null) return type;
             }
             catch { }

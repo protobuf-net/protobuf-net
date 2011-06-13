@@ -19,7 +19,13 @@ namespace ProtoBuf
     /// Provides support for common .NET types that do not have a direct representation
     /// in protobuf, using the definitions from bcl.proto
     /// </summary>
-    public class BclHelpers
+    public
+#if FX11
+    sealed
+#else
+    static
+#endif
+        class BclHelpers
     {
         /// <summary>
         /// Creates a new instance of the specified type, bypassing the constructor.
@@ -35,7 +41,9 @@ namespace ProtoBuf
             throw new NotSupportedException("Constructor-skipping is not supported on this platform");
 #endif
         }
+#if FX11
         private BclHelpers() { } // not a static class for C# 1.2 reasons
+#endif
         const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02;
         
         internal static readonly DateTime EpochOrigin = new DateTime(1970, 1, 1, 0, 0, 0, 0);
@@ -116,26 +124,20 @@ namespace ProtoBuf
         /// </summary>        
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
-            long ticks;
-            switch(ticks = ReadTimeSpanTicks(source))
-            {
-                case long.MinValue:return TimeSpan.MinValue;
-                case long.MaxValue: return TimeSpan.MaxValue;
-                default:return TimeSpan.FromTicks(ticks);
-            }
+            long ticks = ReadTimeSpanTicks(source);
+            if (ticks == long.MinValue) return TimeSpan.MinValue;
+            if (ticks == long.MaxValue) return TimeSpan.MaxValue;
+            return TimeSpan.FromTicks(ticks);
         }
         /// <summary>
         /// Parses a DateTime from a protobuf stream
         /// </summary>
         public static DateTime ReadDateTime(ProtoReader source)
         {
-            long ticks;
-            switch(ticks = ReadTimeSpanTicks(source))
-            {
-                case long.MinValue:return DateTime.MinValue;
-                case long.MaxValue: return DateTime.MaxValue;
-                default:return EpochOrigin.AddTicks(ticks);
-            }
+            long ticks = ReadTimeSpanTicks(source);
+            if (ticks == long.MinValue) return DateTime.MinValue;
+            if (ticks == long.MaxValue) return DateTime.MaxValue;
+            return EpochOrigin.AddTicks(ticks);
         }
         /// <summary>
         /// Writes a DateTime to a protobuf stream

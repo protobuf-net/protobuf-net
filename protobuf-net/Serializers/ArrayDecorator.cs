@@ -1,9 +1,8 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Collections;
-using ProtoBuf.Meta;
 using System.Reflection;
-using System.Collections.Generic;
+using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
@@ -16,9 +15,12 @@ namespace ProtoBuf.Serializers
                    OPTIONS_OverwriteList = 2;
         private readonly byte options;
         private readonly WireType packedWireType;
-        public ArrayDecorator(IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool overwriteList)
+        public ArrayDecorator(IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList)
             : base(tail)
         {
+            Helpers.DebugAssert(arrayType != null, "arrayType should be non-null");
+            Helpers.DebugAssert(arrayType.IsArray && arrayType.GetArrayRank() == 1, "should be single-dimension array");
+            Helpers.DebugAssert(arrayType.GetElementType() == Tail.ExpectedType, "invalid tail");
             Helpers.DebugAssert(Tail.ExpectedType != typeof(byte), "Should have used BlobSerializer");
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
             if (!ListDecorator.CanPack(packedWireType))
@@ -30,8 +32,9 @@ namespace ProtoBuf.Serializers
             this.packedWireType = packedWireType;
             if (writePacked) options |= OPTIONS_WritePacked;
             if (overwriteList) options |= OPTIONS_OverwriteList;
+            this.arrayType = arrayType;
             this.itemType = Tail.ExpectedType;
-            this.arrayType = Helpers.MakeArrayType(itemType);
+            
         }
         readonly Type arrayType, itemType; // this is, for example, typeof(int[])
         public override Type ExpectedType { get { return arrayType; } }
@@ -121,7 +124,7 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                token = default(SubItemToken);
+                token = new SubItemToken(); // default
             }
             for (int i = 0; i < len; i++)
             {

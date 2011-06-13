@@ -177,7 +177,7 @@ namespace ProtoBuf
         public ProtoPartialMemberAttribute(int tag, string memberName)
             : base(tag)
         {
-            if (string.IsNullOrEmpty(memberName)) throw new ArgumentNullException("memberName");
+            if (Helpers.IsNullOrEmpty(memberName)) throw new ArgumentNullException("memberName");
             this.memberName = memberName;
         }
         /// <summary>

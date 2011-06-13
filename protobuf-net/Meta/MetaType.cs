@@ -157,7 +157,7 @@ namespace ProtoBuf.Meta
         }
         private MethodInfo ResolveCallback(string name)
         {
-            return string.IsNullOrEmpty(name) ? null : type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            return Helpers.IsNullOrEmpty(name) ? null : type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         }
         private readonly RuntimeTypeModel model;
         internal MetaType(RuntimeTypeModel model, Type type)
@@ -415,9 +415,15 @@ namespace ProtoBuf.Meta
 
             if (callbacks != null)
             {
-                SetCallbacks(callbacks[0] ?? callbacks[4], callbacks[1] ?? callbacks[5],
-                    callbacks[2] ?? callbacks[6], callbacks[3] ?? callbacks[7]);
+                SetCallbacks(Coalesce(callbacks, 0, 4), Coalesce(callbacks, 1, 5),
+                    Coalesce(callbacks, 2, 6), Coalesce(callbacks, 3, 7));
             }
+        }
+        static MethodInfo Coalesce(MethodInfo[] arr, int x, int y)
+        {
+            MethodInfo mi = arr[x];
+            if (mi == null) mi = arr[y];
+            return mi;
         }
 
         internal static AttributeFamily GetContractFamily(Type type, object[] attributes)
@@ -544,8 +550,8 @@ namespace ProtoBuf.Meta
             }
             if (!ignore && !done && HasFamily(family, AttributeFamily.XmlSerializer))
             {
-                attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlElementAttribute")
-                    ?? GetAttribute(attribs, "System.Xml.Serialization.XmlArrayAttribute");
+                attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlElementAttribute");
+                if(attrib == null) attrib = GetAttribute(attribs, "System.Xml.Serialization.XmlArrayAttribute");
                 GetIgnore(ref ignore, attrib, attribs, "System.Xml.Serialization.XmlIgnoreAttribute");
                 if (attrib != null && !ignore)
                 {
@@ -812,7 +818,7 @@ namespace ProtoBuf.Meta
                 if (itemType == typeof(byte)) {
                     defaultType = itemType = null;
                 } else {
-                    defaultType = Helpers.MakeArrayType(type);
+                    defaultType = type;
                 }
             }
             // handle lists
@@ -838,7 +844,10 @@ namespace ProtoBuf.Meta
                 if (defaultType == null)
                 {
                     if (type.IsInterface)
-                    {
+                    {                       
+#if NO_GENERICS
+                        defaultType = typeof(ArrayList);
+#else
                         Type[] genArgs;
                         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
                             && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
@@ -849,6 +858,7 @@ namespace ProtoBuf.Meta
                         {
                             defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
                         }
+#endif
                     }
                 }
                 // verify that the default type is appropriate

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf
@@ -10,7 +8,10 @@ namespace ProtoBuf
         internal const int Root = 0;
         private BasicList underlyingList;
 
-        private BasicList List { get { return underlyingList ?? (underlyingList = new BasicList()); } }
+        private BasicList List { get {
+            if (underlyingList == null) underlyingList = new BasicList();
+            return underlyingList;
+        } }
 
 
         internal object GetKeyedObject(int key)

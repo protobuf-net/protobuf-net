@@ -269,8 +269,9 @@ namespace ProtoBuf.Serializers
                 }
                 moveNext = current = getEnumerator = null;
             }
-
-            Type enumeratorType = typeof(System.Collections.Generic.IEnumerable<>).MakeGenericType(itemType);
+            Type enumeratorType;
+#if !NO_GENERICS
+            enumeratorType = typeof(System.Collections.Generic.IEnumerable<>).MakeGenericType(itemType);
             if (enumeratorType.IsAssignableFrom(ExpectedType))
             {
                 getEnumerator = enumeratorType.GetMethod("GetEnumerator");
@@ -279,7 +280,7 @@ namespace ProtoBuf.Serializers
                 current = iteratorType.GetProperty("Current").GetGetMethod(false);
                 return getEnumerator;
             }
-
+#endif
             enumeratorType = typeof(IEnumerable);
             getEnumerator = enumeratorType.GetMethod("GetEnumerator");
             iteratorType = getEnumerator.ReturnType;
@@ -368,7 +369,7 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                token = default(SubItemToken);
+                token = new SubItemToken(); // default
             }
             foreach (object subItem in (IEnumerable)value)
             {

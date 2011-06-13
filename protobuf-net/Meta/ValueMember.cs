@@ -238,7 +238,7 @@ namespace ProtoBuf.Meta
             {
                 model.TakeLock(ref lockTaken);// check nobody is still adding this type
                 WireType wireType;
-                Type finalType = itemType ?? memberType;
+                Type finalType = itemType == null ? memberType : itemType;
                 IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType);
                 if (ser == null) throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
                 // apply tags
@@ -249,7 +249,7 @@ namespace ProtoBuf.Meta
                     Helpers.DebugAssert(itemType == ser.ExpectedType, "Wrong type in the tail");
                     if (memberType.IsArray)
                     {
-                        ser = new ArrayDecorator(ser, fieldNumber, IsPacked, wireType, OverwriteList);
+                        ser = new ArrayDecorator(ser, fieldNumber, IsPacked, wireType, memberType, OverwriteList);
                     }
                     else
                     {

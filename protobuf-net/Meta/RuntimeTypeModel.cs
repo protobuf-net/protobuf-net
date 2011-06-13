@@ -176,9 +176,9 @@ namespace ProtoBuf.Meta
             if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             {
                 MetaType mt = new MetaType(this, type);
-#pragma warning disable 618 // we're *allowed* to do this; user code isn't (we might roll this as a bespoke serializer rather than a surrogate at some point)
+
                 Type surrogate = typeof (KeyValuePairSurrogate<,>).MakeGenericType(type.GetGenericArguments());
-#pragma warning restore 618
+
                 mt.SetSurrogate(surrogate);
                 mt.IncludeSerializerMethod = false;
                 mt.Freeze();
@@ -807,7 +807,11 @@ namespace ProtoBuf.Meta
             }
             else
             {
+#if FX11
+                throw new InvalidOperationException("Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection");
+#else
                 throw new TimeoutException("Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection");
+#endif
             }
 #endif
         }

@@ -13,8 +13,17 @@ namespace ProtoBuf
     /// API; can't put into Serializer&lt;T&gt; since we need to invoke
     /// accross classes, which isn't allowed in Silverlight)
     /// </summary>
-    internal static class ExtensibleUtil
+    internal
+#if FX11
+    sealed
+#else
+    static
+#endif
+        class ExtensibleUtil
     {
+#if FX11
+        private ExtensibleUtil() { } // not a static class for C# 1.2 reasons
+#endif
         /// <summary>
         /// All this does is call GetExtendedValuesTyped with the correct type for "instance";
         /// this ensures that we don't get issues with subclasses declaring conflicting types -

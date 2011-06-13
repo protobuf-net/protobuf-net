@@ -99,7 +99,7 @@ namespace ProtoBuf.Serializers
                 MethodInfo shadow = GetShadowSetter(property);
                 
                 // stack is old-addr|new-value
-                Compiler.CodeLabel @skip = default(Compiler.CodeLabel), allDone = default(Compiler.CodeLabel);
+                Compiler.CodeLabel @skip = new Compiler.CodeLabel(), allDone = new Compiler.CodeLabel(); // <=== default structs
                 if (!property.PropertyType.IsValueType)
                 { // if the tail returns a null, intepret that as *no assign*
                     ctx.CopyValue(); // old-addr|new-value|new-value

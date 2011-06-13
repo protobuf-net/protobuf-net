@@ -28,7 +28,7 @@ namespace ProtoBuf
         public ProtoPartialIgnoreAttribute(string memberName)
             : base()
         {
-            if (string.IsNullOrEmpty(memberName)) throw new ArgumentNullException("memberName");
+            if (Helpers.IsNullOrEmpty(memberName)) throw new ArgumentNullException("memberName");
             this.memberName = memberName;
         }
         /// <summary>

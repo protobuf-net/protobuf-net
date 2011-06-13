@@ -227,8 +227,14 @@ namespace ProtoBuf.Serializers
                     }
                     else if (ExpectedType == typeof(DateTime))
                     {
+#if FX11
+                        ctx.LoadValue(((DateTime)defaultValue).ToFileTime());
+                        ctx.EmitCall(typeof(DateTime).GetMethod("FromFileTime"));                      
+#else
                         ctx.LoadValue(((DateTime)defaultValue).ToBinary());
                         ctx.EmitCall(typeof(DateTime).GetMethod("FromBinary"));
+#endif
+                        
                         EmitBeq(ctx, label, ExpectedType);
                     }
                     else

@@ -489,6 +489,7 @@ namespace ProtoBuf.Meta
             isList = typeof(IList).IsAssignableFrom(listType);
             Type[] types = { itemType };
             MethodInfo add = listType.GetMethod("Add", types);
+#if !NO_GENERICS
             if (add == null)
             {   // fallback: look for ICollection<T>'s Add(typedObject) method
                 Type constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types);
@@ -497,7 +498,7 @@ namespace ProtoBuf.Meta
                     add = constuctedListType.GetMethod("Add", types);
                 }
             }
-
+#endif
             if (add == null)
             {   // fallback: look for a public list.Add(object) method
                 types[0] = typeof(object);
@@ -526,6 +527,7 @@ namespace ProtoBuf.Meta
                     candidates.Add(parameters[0].ParameterType);
                 }
             }
+#if !NO_GENERICS
             foreach (Type iType in listType.GetInterfaces())
             {
                 if (iType.IsGenericType && iType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ICollection<>))
@@ -537,6 +539,7 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
+#endif
             // more convenient GetProperty overload not supported on all platforms
             foreach (PropertyInfo indexer in listType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
@@ -563,8 +566,12 @@ namespace ProtoBuf.Meta
 
         private static bool CheckDictionaryAccessors(Type pair, Type value)
         {
+#if NO_GENERICS
+            return false;
+#else
             return pair.IsGenericType && pair.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
                 && pair.GetGenericArguments()[1] == value;
+#endif
         }
 
         private bool TryDeserializeList(ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
@@ -588,7 +595,11 @@ namespace ProtoBuf.Meta
                         BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                             null, Helpers.EmptyTypes, null) == null)
                     {
+#if NO_GENERICS
+                        concreteListType = typeof(ArrayList);
+#else
                         concreteListType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
+#endif
                     }
                     value = (Activator.CreateInstance(concreteListType));
                     list = value as IList;
@@ -762,10 +773,11 @@ namespace ProtoBuf.Meta
         protected internal static Type ResolveProxies(Type type)
         {
             if (type == null) return null;
-            
+#if !NO_GENERICS            
             // Nullable<T>
             Type tmp = Nullable.GetUnderlyingType(type);
             if (tmp != null) return tmp;
+#endif
 
 #if !CF
             // NHibernate
@@ -941,7 +953,7 @@ namespace ProtoBuf.Meta
             {
                 TypeFormatEventArgs args = new TypeFormatEventArgs(type);
                 handler(this, args);
-                if (!string.IsNullOrEmpty(args.FormattedName)) return args.FormattedName;
+                if (!Helpers.IsNullOrEmpty(args.FormattedName)) return args.FormattedName;
             }
             return type.AssemblyQualifiedName;
         }
@@ -963,6 +975,18 @@ namespace ProtoBuf.Meta
         /// are provided on a single API as it is essential that both are mapped identically at all times.
         /// </summary>
         public event TypeFormatEventHandler DynamicTypeFormatting;
+
+#if PLAT_BINARYFORMATTER
+        /// <summary>
+        /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
+        /// </summary>
+        /// <returns>A new IFormatter to be used during [de]serialization.</returns>
+        /// <param name="type">The type of object to be [de]deserialized by the formatter.</param>
+        public System.Runtime.Serialization.IFormatter CreateFormatter(Type type)
+        {
+            throw new NotImplementedException();
+        }
+#endif
     }
 
 }

@@ -13,14 +13,7 @@ namespace ProtoBuf
     internal class Helpers
     {
         private Helpers() { }
-        public static Type MakeArrayType(Type elementType)
-        {
-#if CF
-            return Array.CreateInstance(elementType, 0).GetType(); // ouch
-#else
-            return elementType.MakeArrayType();
-#endif
-        }
+
         public static bool IsNullOrEmpty(string value)
         { // yes, FX11 lacks this!
             return value == null || value.Length == 0;
@@ -124,8 +117,9 @@ namespace ProtoBuf
         }
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
         {
+            if(types == null) types = EmptyTypes;
             return declaringType.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                null, types ?? EmptyTypes, null);
+                null, types, null);
         }
         public static bool IsInfinity(double value)
         {

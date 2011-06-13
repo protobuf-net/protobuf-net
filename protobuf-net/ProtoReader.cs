@@ -807,7 +807,7 @@ namespace ProtoBuf
                 case WireType.String:
                     int len = (int)reader.ReadUInt32Variant(false);
                     reader.wireType = WireType.None;
-                    if (len == 0) return value ?? EmptyBlob;
+                    if (len == 0) return value == null ? EmptyBlob : value;
                     int offset;
                     if (value == null || value.Length == 0)
                     {
@@ -1034,7 +1034,7 @@ namespace ProtoBuf
         }
         internal static Exception AddErrorData(Exception exception, ProtoReader source)
         {
-#if !CF
+#if !CF && !FX11
             if (exception != null && source != null && !exception.Data.Contains("protoSource"))
             {
                 exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",

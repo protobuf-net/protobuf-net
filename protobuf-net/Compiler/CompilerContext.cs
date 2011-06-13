@@ -787,7 +787,7 @@ namespace ProtoBuf.Compiler
 #endif
             return label;
         }
-
+#if !FX11
         internal void Constrain(Type type)
         {
             il.Emit(OpCodes.Constrained, type);
@@ -795,6 +795,7 @@ namespace ProtoBuf.Compiler
             Helpers.DebugWriteLine(OpCodes.Constrained + ": " + type);
 #endif
         }
+#endif
 
         internal void TryCast(Type type)
         {
@@ -861,7 +862,12 @@ namespace ProtoBuf.Compiler
                 if (type.IsValueType)
                 {
                     ctx.LoadAddress(local, type);
+#if FX11
+                    ctx.LoadValue(local);
+                    ctx.CastToObject(type);
+#else
                     ctx.Constrain(type);
+#endif
                     ctx.EmitCall(dispose);                    
                 }
                 else
@@ -891,7 +897,7 @@ namespace ProtoBuf.Compiler
                 ctx.EndFinally();
                 this.local = null;
                 this.ctx = null;
-                label = default(CodeLabel);
+                label = new CodeLabel(); // default
             }
         }
 

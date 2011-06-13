@@ -1,15 +1,13 @@
 ﻿#if !NO_GENERICS
-using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ProtoBuf
 {
     /// <summary>
-    /// Mutable version of the common key/value pair struct; used during serialization
+    /// Mutable version of the common key/value pair struct; used during serialization. This type is intended for internal use only and should not
+    /// be used by calling code; it is required to be public for implementation reasons.
     /// </summary>
     [ProtoContract]
-    [Obsolete("This type is an implementation detail that may change, and should not be used in user code", false)]
     public struct KeyValuePairSurrogate<TKey,TValue>
     {
         private TKey key;
