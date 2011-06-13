@@ -225,7 +225,12 @@ namespace ProtoBuf.Meta
             MetaType newType = FindWithoutAdd(type);
             if (newType != null) return newType; // return existing
             bool lockTaken = false;
-            
+
+            if (type.IsInterface && typeof(IEnumerable).IsAssignableFrom(type)
+                && GetListItemType(type) == null)
+            {
+                throw new ArgumentException("IEnumerable[<T>] data cannot be used as a meta-type unless an Add method can be resolved");
+            }
             try
             {
                 newType = RecogniseCommonTypes(type);

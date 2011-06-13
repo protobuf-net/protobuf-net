@@ -229,8 +229,9 @@ namespace ProtoBuf.Meta
             {
                 model.TakeLock(ref lockTaken);// check nobody is still adding this type
                 WireType wireType;
-                IProtoSerializer ser = GetCoreSerializer(itemType ?? memberType, out wireType, asReference, dynamicType);
-
+                Type finalType = itemType ?? memberType;
+                IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType);
+                if (ser == null) throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
                 // apply tags
                 ser = new TagDecorator(fieldNumber, wireType, isStrict, ser);
                 // apply lists if appropriate
@@ -298,15 +299,24 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private IProtoSerializer GetCoreSerializer(Type type, out WireType defaultWireType, bool asReference, bool dynamicType)
+        internal static IProtoSerializer TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType, bool asReference, bool dynamicType)
         {
 #if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;
 #endif
             if (type.IsEnum)
-            { // need to do this before checking the typecode; an int enum will report Int32 etc
-                defaultWireType = WireType.Variant;
-                return new EnumSerializer(type, model.GetEnumMap(type));
+            {
+                if (model != null)
+                {
+                    // need to do this before checking the typecode; an int enum will report Int32 etc
+                    defaultWireType = WireType.Variant;
+                    return new EnumSerializer(type, model.GetEnumMap(type));
+                }
+                else
+                { // enum is fine for adding as a meta-type
+                    defaultWireType = WireType.None;
+                    return null;
+                }
             }
             TypeCode code = Type.GetTypeCode(type);
             switch (code)
@@ -383,19 +393,22 @@ namespace ProtoBuf.Meta
                 defaultWireType = WireType.String;
                 return parseable;
             }
-
-            int key = model.GetKey(type, false, true);
-            if(asReference || dynamicType)
+            if (model != null)
             {
-                defaultWireType = WireType.String;
-                return new NetObjectSerializer(type, key, asReference, dynamicType);
+                int key = model.GetKey(type, false, true);
+                if (asReference || dynamicType)
+                {
+                    defaultWireType = WireType.String;
+                    return new NetObjectSerializer(type, key, asReference, dynamicType);
+                }
+                if (key >= 0)
+                {
+                    defaultWireType = WireType.String;
+                    return new SubItemSerializer(type, key, model[type], true);
+                }
             }
-            if (key >= 0)
-            {
-                defaultWireType = WireType.String;
-                return new SubItemSerializer(type, key, model[type], true);
-            }
-            throw new InvalidOperationException("No serializer defined for type: " + type.FullName);
+            defaultWireType = WireType.None;
+            return null;
         }
 
 

@@ -51,9 +51,15 @@ namespace ProtoBuf.Meta
         public MetaType AddSubType(int fieldNumber, Type derivedType)
         {
             if (!(type.IsClass || type.IsInterface) || type.IsSealed) {
-                throw new InvalidOperationException("Sub-types can only be adedd to non-sealed classes");
+                throw new InvalidOperationException("Sub-types can only be added to non-sealed classes");
             }
+            if (typeof(IEnumerable).IsAssignableFrom(type))
+            {
+                throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
+            }
+            ThrowIfFrozen();
             MetaType derivedMeta = model[derivedType];
+            derivedMeta.ThrowIfFrozen();
             SubType subType = new SubType(fieldNumber, derivedMeta);
             ThrowIfFrozen();
 
@@ -163,7 +169,13 @@ namespace ProtoBuf.Meta
         {
             if (model == null) throw new ArgumentNullException("model");
             if (type == null) throw new ArgumentNullException("type");
-            if (type.IsPrimitive) throw new ArgumentException("Not valid for primitive types", "type");
+            WireType defaultWireType;
+            IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(null, DataFormat.Default, type, out defaultWireType, false, false);
+            if (coreSerializer != null)
+            {
+                throw new ArgumentException("Data of this type has inbuilt behaviour, and cannot be added to a model in this way: " + type.FullName);
+            }
+            
             this.type = type;
             this.model = model;
 

@@ -66,7 +66,7 @@ namespace Examples.Remoting
                 // want to aim for twice the speed
                 decimal factor = 0.50M;
 #if DEBUG
-                factor = 0.80M; // be realistic in debug...
+                factor = 1.2M; // be realistic in debug...
 #endif
                 long target = (long) (dbTimer.ElapsedTicks * factor);
                 Assert.LessOrEqual(3, 5, "args wrong way around!");

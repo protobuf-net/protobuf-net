@@ -168,6 +168,7 @@
     <Compile Include="Issues\ComplexGenerics\ComplexGenericExample.cs" />
     <Compile Include="Issues\Issue124.cs" />
     <Compile Include="Issues\Issue176.cs" />
+    <Compile Include="Issues\Issue184.cs" />
     <Compile Include="Issues\Issue26.cs" />
     <Compile Include="Issues\Issue27.cs" />
     <Compile Include="Issues\Issue29.cs" />
