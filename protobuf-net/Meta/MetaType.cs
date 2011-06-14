@@ -299,10 +299,7 @@ namespace ProtoBuf.Meta
             int dataMemberOffset = 0, implicitFirstTag = 1;
             bool inferTagByName = model.InferTagFromNameDefault;
             ImplicitFields implicitMode = ImplicitFields.None;
-            if(implicitMode != ImplicitFields.None)
-            {
-                family &= AttributeFamily.ProtoBuf; // with implicit fields, **only** proto attributes are important
-            }
+
             for (int i = 0; i < typeAttribs.Length; i++)
             {
                 Attribute item = (Attribute)typeAttribs[i];
@@ -327,8 +324,13 @@ namespace ProtoBuf.Meta
                     dataMemberOffset = pca.DataMemberOffset;
                     if (pca.InferTagFromNameHasValue) inferTagByName = pca.InferTagFromName;
                     implicitMode = pca.ImplicitFields;
+                    UseConstructor = !pca.SkipConstructor;
                     if(pca.ImplicitFirstTag > 0) implicitFirstTag = pca.ImplicitFirstTag;
                 }
+            }
+            if (implicitMode != ImplicitFields.None)
+            {
+                family &= AttributeFamily.ProtoBuf; // with implicit fields, **only** proto attributes are important
             }
             MethodInfo[] callbacks = null;
 
@@ -471,7 +473,7 @@ namespace ProtoBuf.Meta
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
             int fieldNumber = int.MinValue, minAcceptFieldNumber = inferByTagName ? -1 : 1;
             string name = null;
-            bool isPacked = false, ignore = false, done = false, isRequired = false, asReference = false, dynamicType = false, tagIsPinned = false;
+            bool isPacked = false, ignore = false, done = false, isRequired = false, asReference = false, dynamicType = false, tagIsPinned = false, overwriteList = false;
             DataFormat dataFormat = DataFormat.Default;
             if (isEnum) forced = true;
             object[] attribs = member.GetCustomAttributes(true);
@@ -511,6 +513,7 @@ namespace ProtoBuf.Meta
                     GetFieldName(ref name, attrib, "Name");
                     GetFieldBoolean(ref isRequired, attrib, "IsRequired");
                     GetFieldBoolean(ref isPacked, attrib, "IsPacked");
+                    GetFieldBoolean(ref overwriteList, attrib, "OverwriteList");
                     GetDataFormat(ref dataFormat, attrib, "DataFormat");
                     GetFieldBoolean(ref asReference, attrib, "AsReference");
                     GetFieldBoolean(ref dynamicType, attrib, "DynamicType");
@@ -527,6 +530,7 @@ namespace ProtoBuf.Meta
                             GetFieldName(ref name, ppma, "Name");
                             GetFieldBoolean(ref isRequired, ppma, "IsRequired");
                             GetFieldBoolean(ref isPacked, ppma, "IsPacked");
+                            GetFieldBoolean(ref overwriteList, attrib, "OverwriteList");
                             GetDataFormat(ref dataFormat, ppma, "DataFormat");
                             GetFieldBoolean(ref asReference, ppma, "AsReference");
                             GetFieldBoolean(ref dynamicType, ppma, "DynamicType");
@@ -570,6 +574,7 @@ namespace ProtoBuf.Meta
             result.DataFormat = dataFormat;
             result.DynamicType = dynamicType;
             result.IsPacked = isPacked;
+            result.OverwriteList = overwriteList;
             result.IsRequired = isRequired;
             result.Name = Helpers.IsNullOrEmpty(name) ? member.Name : name;
             result.Member = member;
@@ -650,6 +655,7 @@ namespace ProtoBuf.Meta
                 if (!Helpers.IsNullOrEmpty(normalizedAttribute.Name)) vm.SetName(normalizedAttribute.Name);
                 vm.IsPacked = normalizedAttribute.IsPacked;
                 vm.IsRequired = normalizedAttribute.IsRequired;
+                vm.OverwriteList = normalizedAttribute.OverwriteList;
                 vm.AsReference = normalizedAttribute.AsReference;
                 vm.DynamicType = normalizedAttribute.DynamicType;
             }

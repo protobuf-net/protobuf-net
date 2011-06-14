@@ -35,10 +35,9 @@ namespace ProtoBuf
         /// </summary>
         public bool UseProtoMembersOnly
         {
-            get { return useProtoMembersOnly; }
-            set { useProtoMembersOnly = value; }
+            get { return HasFlag(OPTIONS_UseProtoMembersOnly); }
+            set { SetFlag(OPTIONS_UseProtoMembersOnly, value); }
         }
-        private bool useProtoMembersOnly;
 
 
         /// <summary>
@@ -50,14 +49,6 @@ namespace ProtoBuf
         private ImplicitFields implicitFields;
 
 
-        private enum TriBool : byte
-        {
-            Null = 0,
-            True,
-            False
-        }
-
-        private TriBool inferTagFromName;
         /// <summary>
         /// Enables/disables automatic tag generation based on the existing name / order
         /// of the defined members. This option is not used for members marked
@@ -66,14 +57,14 @@ namespace ProtoBuf
         /// care to increase the Order for new elements, otherwise data corruption
         /// may occur.
         /// </summary>
-        /// <remarks>If not specified, the default is assumed from <see cref="Serializer.GlobalOptions.InferTagFromName"/>.</remarks>
+        /// <remarks>If not explicitly specified, the default is assumed from <see cref="Serializer.GlobalOptions.InferTagFromName"/>.</remarks>
         public bool InferTagFromName
         {
-            get
-            {
-                return inferTagFromName == TriBool.True;
+            get { return HasFlag(OPTIONS_InferTagFromName); }
+            set {
+                SetFlag(OPTIONS_InferTagFromName, value);
+                SetFlag(OPTIONS_InferTagFromNameHasValue, true);
             }
-            set { inferTagFromName = value ? TriBool.True : TriBool.False; }
         }
 
         /// <summary>
@@ -81,7 +72,7 @@ namespace ProtoBuf
         /// </summary>
         internal bool InferTagFromNameHasValue
         {
-            get { return inferTagFromName != TriBool.Null; }
+            get { return HasFlag(OPTIONS_InferTagFromNameHasValue); }
         }
 
         private int dataMemberOffset;
@@ -98,6 +89,32 @@ namespace ProtoBuf
             get { return dataMemberOffset; }
             set { dataMemberOffset = value; }
         }
+
+
+        /// <summary>
+        /// If true, the constructor for the type is bypassed during deserialization, meaning any field initializers
+        /// or other initialization code is skipped.
+        /// </summary>
+        public bool SkipConstructor
+        {
+            get { return HasFlag(OPTIONS_SkipConstructor); }
+            set { SetFlag(OPTIONS_SkipConstructor, value); }
+        }
+
+        private bool HasFlag(byte flag) { return (flags & flag) == flag; }
+        private void SetFlag(byte flag, bool value)
+        {
+            if (value) flags |= flag;
+            else flags = (byte)(flags & ~flag);
+        }
+
+        private byte flags;
+        private const byte
+            OPTIONS_InferTagFromName = 1,
+            OPTIONS_InferTagFromNameHasValue = 2,
+            OPTIONS_UseProtoMembersOnly = 4,
+            OPTIONS_SkipConstructor = 8;
+
 
     }
 }

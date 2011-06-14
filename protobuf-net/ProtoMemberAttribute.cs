@@ -83,6 +83,7 @@ namespace ProtoBuf
 
         /// <summary>
         /// Gets a value indicating whether this member is packed.
+        /// This option only applies to list/array data of primitive types (int, double, etc).
         /// </summary>
         public bool IsPacked
         {
@@ -90,6 +91,20 @@ namespace ProtoBuf
             set {
                 if (value) options |= MemberSerializationOptions.Packed;
                 else options &= ~MemberSerializationOptions.Packed;
+            }
+        }
+
+        /// <summary>
+        /// Indicates whether this field should *repace* existing values (the default is false, meaning *append*).
+        /// This option only applies to list/array data.
+        /// </summary>
+        public bool OverwriteList
+        {
+            get { return (options & MemberSerializationOptions.OverwriteList) == MemberSerializationOptions.OverwriteList; }
+            set
+            {
+                if (value) options |= MemberSerializationOptions.OverwriteList;
+                else options &= ~MemberSerializationOptions.OverwriteList;
             }
         }
 
@@ -153,7 +168,12 @@ namespace ProtoBuf
         /// <summary>
         /// Embeds the type information into the stream, allowing usage with types not known in advance
         /// </summary>
-        DynamicType = 8
+        DynamicType = 8,
+        /// <summary>
+        /// Indicates whether this field should *repace* existing values (the default is false, meaning *append*).
+        /// This option only applies to list/array data.
+        /// </summary>
+        OverwriteList = 16,
     }
 
     /// <summary>

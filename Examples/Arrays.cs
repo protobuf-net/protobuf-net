@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using ProtoBuf;
-
+using ProtoBuf.Meta;
+using System.Linq;
 namespace Examples
 {
     [ProtoContract]
@@ -54,10 +55,67 @@ namespace Examples
         [ProtoMember(1)]
         public int[,] Values { get; set; }
     }
-    
+
+    [ProtoContract(SkipConstructor=false)]
+    public class WithAndWithoutOverwrite
+    {
+        [ProtoMember(1, OverwriteList=false)]
+        public int[] Append = { 1, 2, 3 };
+
+        [ProtoMember(2, OverwriteList=true)]
+        public int[] Overwrite = { 4, 5, 6 };
+    }
+    [ProtoContract(SkipConstructor=true)]
+    public class WithSkipConstructor
+    {
+        [ProtoMember(1)]
+        public int[] Values = { 1, 2, 3 };
+    }
+
     [TestFixture]
     public class ArrayTests
     {
+
+        [Test]
+        public void TestOverwriteVersusAppend()
+        {
+            var orig = new WithAndWithoutOverwrite { Append = new[] {7,8}, Overwrite = new[] { 9,10}};
+            var model = TypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(WithAndWithoutOverwrite), true);
+
+            var clone = (WithAndWithoutOverwrite)model.DeepClone(orig);
+            Assert.IsTrue(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, Runtime");
+            Assert.IsTrue(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, Runtime");
+
+            model.CompileInPlace();
+            clone = (WithAndWithoutOverwrite)model.DeepClone(orig);
+            Assert.IsTrue(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, CompileInPlace");
+            Assert.IsTrue(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, CompileInPlace");
+
+            clone = (WithAndWithoutOverwrite)(model.Compile()).DeepClone(orig);
+            Assert.IsTrue(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, Compile");
+            Assert.IsTrue(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, Compile");
+        }
+
+        [Test]
+        public void TestSkipConstructor()
+        {
+            var orig = new WithSkipConstructor { Values = new[] { 4, 5 } };
+            var model = TypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(WithSkipConstructor), true);
+
+            var clone = (WithSkipConstructor)model.DeepClone(orig);
+            Assert.IsTrue(clone.Values.SequenceEqual(new[] { 4, 5 }), "Runtime");
+
+            model.CompileInPlace();
+            clone = (WithSkipConstructor)model.DeepClone(orig);
+            Assert.IsTrue(clone.Values.SequenceEqual(new[] { 4, 5 }), "CompileInPlace");
+
+            clone = (WithSkipConstructor)(model.Compile()).DeepClone(orig);
+            Assert.IsTrue(clone.Values.SequenceEqual(new[] { 4, 5 }), "Compile");
+        }
 
         [Test]
         public void TestPrimativeArray()

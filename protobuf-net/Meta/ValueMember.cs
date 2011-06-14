@@ -145,6 +145,7 @@ namespace ProtoBuf.Meta
 
         /// <summary>
         /// Indicates whether this field should use packed encoding (which can save lots of space for repeated primitive values).
+        /// This option only applies to list/array data of primitive types (int, double, etc).
         /// </summary>
         public bool IsPacked
         {
@@ -154,6 +155,7 @@ namespace ProtoBuf.Meta
 
         /// <summary>
         /// Indicates whether this field should *repace* existing values (the default is false, meaning *append*).
+        /// This option only applies to list/array data.
         /// </summary>
         public bool OverwriteList
         {
