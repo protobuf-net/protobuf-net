@@ -17,9 +17,9 @@ namespace ProtoBuf.Serializers
             ((IProtoTypeSerializer)proxy.Serializer).EmitCallback(ctx, valueFrom, callbackType);
         }
 #endif
-        void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType)
+        void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
-            ((IProtoTypeSerializer)proxy.Serializer).Callback(value, callbackType);
+            ((IProtoTypeSerializer)proxy.Serializer).Callback(value, callbackType, context);
         }
 
         private readonly int key;

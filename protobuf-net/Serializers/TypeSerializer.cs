@@ -91,11 +91,11 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public void Callback(object value, TypeModel.CallbackType callbackType)
+        public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
-            if (callbacks != null) InvokeCallback(callbacks[callbackType], value);
+            if (callbacks != null) InvokeCallback(callbacks[callbackType], value, context);
             IProtoTypeSerializer ser = (IProtoTypeSerializer)GetMoreSpecificSerializer(value);
-            if (ser != null) ser.Callback(value, callbackType);
+            if (ser != null) ser.Callback(value, callbackType, context);
 
         }
         private bool CanHaveInheritance
@@ -123,7 +123,7 @@ namespace ProtoBuf.Serializers
 
         public void Write(object value, ProtoWriter dest)
         {
-            if (isRootType) Callback(value, TypeModel.CallbackType.BeforeSerialize);
+            if (isRootType) Callback(value, TypeModel.CallbackType.BeforeSerialize, dest.Context);
             // write inheritance first
             IProtoSerializer next = GetMoreSpecificSerializer(value);
             if (next != null) next.Write(value, dest);
@@ -141,11 +141,11 @@ namespace ProtoBuf.Serializers
             }
             //Helpers.DebugWriteLine("<< Writing fields for " + forType.FullName);
             if (isExtensible) ProtoWriter.AppendExtensionData((IExtensible)value, dest);
-            if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize);
+            if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize, dest.Context);
         }
         public object Read(object value, ProtoReader source)
         {
-            if (isRootType && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize); } 
+            if (isRootType && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize, source.Context); } 
             int fieldNumber, lastFieldNumber = 0, lastFieldIndex = 0;
             bool fieldHandled;
 
@@ -189,22 +189,44 @@ namespace ProtoBuf.Serializers
             }
             //Helpers.DebugWriteLine("<< Reading fields for " + forType.FullName);
             if(value == null) value = CreateInstance(source);
-            if (isRootType) { Callback(value, TypeModel.CallbackType.AfterDeserialize); } 
+            if (isRootType) { Callback(value, TypeModel.CallbackType.AfterDeserialize, source.Context); } 
             return value;
         }
-        private void InvokeCallback(MethodInfo method, object obj)
+        private void InvokeCallback(MethodInfo method, object obj, SerializationContext context)
         {
             if (method != null)
             {   // pass in a streaming context if one is needed, else null
-                switch (method.GetParameters().Length)
+                bool handled = false;
+                ParameterInfo[] parameters = method.GetParameters();
+                switch (parameters.Length)
                 {
-                    case 0: method.Invoke(obj, null); break;
+                    case 0: method.Invoke(obj, null); handled = true; break;
+                    case 1:
+                        Type parameterType = parameters[0].ParameterType;
+                        if (parameterType == typeof(SerializationContext))
+                        {
+                            method.Invoke(obj, new object[] { context });
+                            handled = true;
+                        }
 #if PLAT_BINARYFORMATTER
-                    case 1: method.Invoke(obj, new object[] { new System.Runtime.Serialization.StreamingContext(StreamingContextState) }); break;
+                        else if (parameterType == typeof(System.Runtime.Serialization.StreamingContext))
+                        {
+                            System.Runtime.Serialization.StreamingContext tmp = (System.Runtime.Serialization.StreamingContext)context;
+                            method.Invoke(obj, new object[] { tmp });
+                            handled = true;
+                        }
 #endif
-                    default: throw new NotSupportedException("Invalid callback signature for this platform");
+                        break;
+                }
+                if (!handled)
+                {
+                    throw CreateInvalidCallbackSignature(method);
                 }
             }
+        }
+        static Exception CreateInvalidCallbackSignature(MethodInfo method)
+        {
+            return new NotSupportedException("Invalid callback signature in " + method.DeclaringType.Name + "." + method.Name);
         }
         object CreateInstance(ProtoReader source)
         {
@@ -226,10 +248,10 @@ namespace ProtoBuf.Serializers
             ProtoReader.NoteObject(obj, source);
             if (baseCtorCallbacks != null) {
                 for (int i = 0; i < baseCtorCallbacks.Length; i++) {
-                    InvokeCallback(baseCtorCallbacks[i], obj);
+                    InvokeCallback(baseCtorCallbacks[i], obj, source.Context);
                 }
             }
-            if (callbacks != null) InvokeCallback(callbacks.BeforeDeserialize, obj);
+            if (callbacks != null) InvokeCallback(callbacks.BeforeDeserialize, obj, source.Context);
             return obj;
         }
 
@@ -330,13 +352,34 @@ namespace ProtoBuf.Serializers
             if (method != null)
             {
                 ctx.CopyValue(); // assumes the target is on the stack, and that we want to *retain* it on the stack
-#if PLAT_BINARYFORMATTER
-                if (method.GetParameters().Length == 1)
+                ParameterInfo[] parameters = method.GetParameters();
+                bool handled = false;
+                switch (parameters.Length)
                 {
-                    ctx.LoadValue((int)StreamingContextState);
-                    ctx.EmitCtor(typeof(System.Runtime.Serialization.StreamingContext), new Type[] { typeof(System.Runtime.Serialization.StreamingContextStates) });
-                }
+                    case 0: handled = true; break;
+                    case 1:
+                        Type parameterType = parameters[0].ParameterType;
+                        if (parameterType == typeof(SerializationContext))
+                        {
+                            ctx.LoadSerializationContext();
+                            handled = true;
+                        }
+#if PLAT_BINARYFORMATTER
+                        else if (parameterType == typeof(System.Runtime.Serialization.StreamingContext))
+                        {
+                            ctx.LoadSerializationContext();
+                            MethodInfo op = typeof(SerializationContext).GetMethod("op_Implicit", new Type[] { typeof(SerializationContext) });
+                            ctx.EmitCall(op);
+                            handled = true;
+                        }
 #endif
+                        break;
+                }
+                if (!handled)
+                {
+                    throw CreateInvalidCallbackSignature(method);
+                }
+                
                 ctx.EmitCall(method);
             }
         }
@@ -379,10 +422,7 @@ namespace ProtoBuf.Serializers
             ctx.MarkLabel(@break);                
             ctx.DiscardValue();
         }
-#if PLAT_BINARYFORMATTER
-        const System.Runtime.Serialization.StreamingContextStates StreamingContextState
-            = System.Runtime.Serialization.StreamingContextStates.Persistence;
-#endif
+
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type expected = ExpectedType;

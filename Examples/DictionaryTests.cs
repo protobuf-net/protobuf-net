@@ -213,7 +213,7 @@ namespace Examples.Dictionary
             Console.WriteLine("Ser (kv-grouped)\t" + s3);
             Console.WriteLine("Deser (kv-grouped)\t" + d3);
 
-            var pw = new ProtoWriter(Stream.Null, null);
+            var pw = new ProtoWriter(Stream.Null, null, null);
             Stopwatch watch = Stopwatch.StartNew();
             for (int i = 0; i < LOOP; i++ ) {
                 ProtoWriter.WriteFieldHeader(1, WireType.String, pw);

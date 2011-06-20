@@ -15,10 +15,10 @@ namespace ProtoBuf.Serializers
             IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
             return pts != null && pts.HasCallbacks(callbackType);
         }
-        public void Callback(object value, TypeModel.CallbackType callbackType)
+        public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
             IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
-            if (pts != null) pts.Callback(value, callbackType);
+            if (pts != null) pts.Callback(value, callbackType, context);
         }
 #if FEAT_COMPILER
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)

@@ -562,11 +562,11 @@ namespace ProtoBuf.Meta
             for(index = 0; index < methodPairs.Length ; index++)
             {
                 SerializerPair pair = methodPairs[index];
-                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, methodPairs);
+                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs);
                 pair.Type.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
                 ctx.Return();
 
-                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, methodPairs);
+                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs);
                 pair.Type.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
                 ctx.LoadValue(Compiler.Local.InputValue);
                 ctx.Return();
@@ -639,7 +639,7 @@ namespace ProtoBuf.Meta
             }
             
             il = Override(type, "Serialize");
-            ctx = new Compiler.CompilerContext(il, false, methodPairs);
+            ctx = new Compiler.CompilerContext(il, false, true, methodPairs);
             // arg0 = this, arg1 = key, arg2=obj, arg3=dest
             Label[] jumpTable = new Label[types.Count];
             for (int i = 0; i < jumpTable.Length; i++) {
@@ -660,7 +660,7 @@ namespace ProtoBuf.Meta
             }
 
             il = Override(type, "Deserialize");
-            ctx = new Compiler.CompilerContext(il, false, methodPairs);
+            ctx = new Compiler.CompilerContext(il, false, false, methodPairs);
             // arg0 = this, arg1 = key, arg2=obj, arg3=source
             for (int i = 0; i < jumpTable.Length; i++)
             {
@@ -732,7 +732,7 @@ namespace ProtoBuf.Meta
             MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i, MethodAttributes.Static, CallingConventions.Standard,
                 typeof(object), new Type[] { typeof(object), typeof(ProtoReader) });
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, methodPairs);
+            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs);
             ctx.LoadValue(Compiler.Local.InputValue);
             Compiler.CodeLabel @null = ctx.DefineLabel();
             ctx.BranchIfFalse(@null, true);

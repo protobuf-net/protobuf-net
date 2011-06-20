@@ -149,7 +149,17 @@ namespace ProtoBuf.Meta
         /// <param name="dest">The destination stream to write to.</param>
         public void Serialize(Stream dest, object value)
         {
-            using (ProtoWriter writer = new ProtoWriter(dest, this))
+            Serialize(dest, value, null);
+        }
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied stream.
+        /// </summary>
+        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="dest">The destination stream to write to.</param>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        public void Serialize(Stream dest, object value, SerializationContext context)
+        {
+            using (ProtoWriter writer = new ProtoWriter(dest, this, context))
             {
                 writer.SetRootObject(value);
                 SerializeCore(writer, value);
@@ -211,10 +221,10 @@ namespace ProtoBuf.Meta
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out int bytesRead)
         {
             bool haveObject;
-            return DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out bytesRead, out haveObject);
+            return DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out bytesRead, out haveObject, null);
         }
 
-        private object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out int bytesRead, out bool haveObject)
+        private object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out int bytesRead, out bool haveObject, SerializationContext context)
         {
             haveObject = false;
             bool skip;
@@ -259,7 +269,7 @@ namespace ProtoBuf.Meta
             } while (skip);
 
             
-            using (ProtoReader reader = new ProtoReader(source, this, len))
+            using (ProtoReader reader = new ProtoReader(source, this, context, len))
             {
                 int key = GetKey(ref type);
                 if (key >= 0)
@@ -296,7 +306,28 @@ namespace ProtoBuf.Meta
         /// <returns>The sequence of deserialized objects.</returns>
         public System.Collections.IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
         {
-            return new DeserializeItemsIterator(this, source, type, style , expectedField, resolver);
+            return DeserializeItems(source, type, style, expectedField, resolver, null);
+        }
+        /// <summary>
+        /// Reads a sequence of consecutive length-prefixed items from a stream, using
+        /// either base-128 or fixed-length prefixes. Base-128 prefixes with a tag
+        /// are directly comparable to serializing multiple items in succession
+        /// (use the <see cref="Serializer.ListItemTag"/> tag to emulate the implicit behavior
+        /// when serializing a list/array). When a tag is
+        /// specified, any records with different tags are silently omitted. The
+        /// tag is ignored. The tag is ignores for fixed-length prefixes.
+        /// </summary>
+        /// <param name="source">The binary stream containing the serialized records.</param>
+        /// <param name="style">The prefix style used in the data.</param>
+        /// <param name="expectedField">The tag of records to return (if non-positive, then no tag is
+        /// expected and all records are returned).</param>
+        /// <param name="resolver">On a field-by-field basis, the type of object to deserialize (can be null if "type" is specified). </param>
+        /// <param name="type">The type of object to deserialize (can be null if "resolver" is specified).</param>
+        /// <returns>The sequence of deserialized objects.</returns>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        public System.Collections.IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, SerializationContext context)
+        {
+            return new DeserializeItemsIterator(this, source, type, style, expectedField, resolver, context);
         }
 
 #if !NO_GENERICS
@@ -317,7 +348,27 @@ namespace ProtoBuf.Meta
         /// <returns>The sequence of deserialized objects.</returns>
         public System.Collections.Generic.IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField)
         {
-            return new DeserializeItemsIterator<T>(this, source, style, expectedField);
+            return DeserializeItems<T>(source, style, expectedField, null);
+        }
+        /// <summary>
+        /// Reads a sequence of consecutive length-prefixed items from a stream, using
+        /// either base-128 or fixed-length prefixes. Base-128 prefixes with a tag
+        /// are directly comparable to serializing multiple items in succession
+        /// (use the <see cref="Serializer.ListItemTag"/> tag to emulate the implicit behavior
+        /// when serializing a list/array). When a tag is
+        /// specified, any records with different tags are silently omitted. The
+        /// tag is ignored. The tag is ignores for fixed-length prefixes.
+        /// </summary>
+        /// <typeparam name="T">The type of object to deserialize.</typeparam>
+        /// <param name="source">The binary stream containing the serialized records.</param>
+        /// <param name="style">The prefix style used in the data.</param>
+        /// <param name="expectedField">The tag of records to return (if non-positive, then no tag is
+        /// expected and all records are returned).</param>
+        /// <returns>The sequence of deserialized objects.</returns>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        public System.Collections.Generic.IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField, SerializationContext context)
+        {
+            return new DeserializeItemsIterator<T>(this, source, style, expectedField, context);
         }
 
         private class DeserializeItemsIterator<T> : DeserializeItemsIterator,
@@ -327,8 +378,8 @@ namespace ProtoBuf.Meta
             System.Collections.Generic.IEnumerator<T> System.Collections.Generic.IEnumerable<T>.GetEnumerator() { return this; }
             public new T Current { get { return (T)base.Current; } }
             void IDisposable.Dispose() { }
-            public DeserializeItemsIterator(TypeModel model, Stream source, PrefixStyle style, int expectedField)
-                : base(model, source, typeof(T), style, expectedField, null) { }
+            public DeserializeItemsIterator(TypeModel model, Stream source, PrefixStyle style, int expectedField, SerializationContext context)
+                : base(model, source, typeof(T), style, expectedField, null, context) { }
         }
 #endif
         private class DeserializeItemsIterator : IEnumerator, IEnumerable
@@ -341,7 +392,7 @@ namespace ProtoBuf.Meta
                 if (haveObject)
                 {
                     int bytesRead;
-                    current = model.DeserializeWithLengthPrefix(source, null, type, style, expectedField, resolver, out bytesRead, out haveObject);
+                    current = model.DeserializeWithLengthPrefix(source, null, type, style, expectedField, resolver, out bytesRead, out haveObject, context);
                 }
                 return haveObject;
             }
@@ -353,7 +404,8 @@ namespace ProtoBuf.Meta
             private readonly int expectedField;
             private readonly Serializer.TypeResolver resolver;
             private readonly TypeModel model;
-            public DeserializeItemsIterator(TypeModel model, Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
+            private readonly SerializationContext context;
+            public DeserializeItemsIterator(TypeModel model, Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, SerializationContext context)
             {
                 haveObject = true;
                 this.source = source;
@@ -362,6 +414,7 @@ namespace ProtoBuf.Meta
                 this.expectedField = expectedField;
                 this.resolver = resolver;
                 this.model = model;
+                this.context = context;
             }
         }
 
@@ -378,13 +431,29 @@ namespace ProtoBuf.Meta
         /// <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
         public void SerializeWithLengthPrefix(Stream dest, object value, Type type, PrefixStyle style, int fieldNumber)
         {
+            SerializeWithLengthPrefix(dest, value, type, style, fieldNumber, null);
+        }
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied stream,
+        /// with a length-prefix. This is useful for socket programming,
+        /// as DeserializeWithLengthPrefix can be used to read the single object back
+        /// from an ongoing stream.
+        /// </summary>
+        /// <param name="type">The type being serialized.</param>
+        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="style">How to encode the length prefix.</param>
+        /// <param name="dest">The destination stream to write to.</param>
+        /// <param name="fieldNumber">The tag used as a prefix to each record (only used with base-128 style prefixes).</param>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        public void SerializeWithLengthPrefix(Stream dest, object value, Type type, PrefixStyle style, int fieldNumber, SerializationContext context)
+        {
             if (type == null)
             {
                 if(value == null) throw new ArgumentNullException("value");
                 type = value.GetType();
             }
             int key = GetKey(ref type);
-            using (ProtoWriter writer = new ProtoWriter(dest, this))
+            using (ProtoWriter writer = new ProtoWriter(dest, this, context))
             {
                 switch (style)
                 {
@@ -413,8 +482,22 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public object Deserialize(Stream source, object value, Type type)
         {
+            return Deserialize(source, value, type, null);
+        }
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <param name="type">The type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        public object Deserialize(Stream source, object value, Type type, SerializationContext context)
+        {
             bool autoCreate = PrepareDeserialize(value, ref type);
-            using (ProtoReader reader = new ProtoReader(source, this))
+            using (ProtoReader reader = new ProtoReader(source, this, context))
             {
                 if (value != null) reader.SetRootObject(value);
                 return DeserializeCore(reader, type, value, autoCreate);
@@ -461,12 +544,27 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public object Deserialize(Stream source, object value, Type type, int length)
         {
+            return Deserialize(source, value, type, length, null);
+        }
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <param name="type">The type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="length">The number of bytes to consume (or -1 to read to the end of the stream).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        public object Deserialize(Stream source, object value, Type type, int length,SerializationContext context)
+        {
             bool autoCreate = PrepareDeserialize(value, ref type);
-            using (ProtoReader reader = new ProtoReader(source, this, length))
+            using (ProtoReader reader = new ProtoReader(source, this, context, length))
             {
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeCore(reader, type, value, autoCreate);
-                if (reader.Position != length)
+                if (length >= 0 && reader.Position != length)
                 {
                     throw new ProtoException("Incorrect number of bytes consumed");
                 }
@@ -876,14 +974,14 @@ namespace ProtoBuf.Meta
             if (key >= 0) {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    using(ProtoWriter writer = new ProtoWriter(ms, this))
+                    using(ProtoWriter writer = new ProtoWriter(ms, this, null))
                     {
                         writer.SetRootObject(value);
                         Serialize(key, value, writer);
                         writer.Close();
                     }
                     ms.Position = 0;
-                    using (ProtoReader reader = new ProtoReader(ms, this))
+                    using (ProtoReader reader = new ProtoReader(ms, this, null))
                     {
                         return Deserialize(key, null, reader);
                     }
@@ -901,13 +999,13 @@ namespace ProtoBuf.Meta
             }
             using (MemoryStream ms = new MemoryStream())
             {
-                using (ProtoWriter writer = new ProtoWriter(ms, this))
+                using (ProtoWriter writer = new ProtoWriter(ms, this, null))
                 {
                     if (!TrySerializeAuxiliaryType(writer, type, DataFormat.Default, Serializer.ListItemTag, value)) ThrowUnexpectedType(type);
                     writer.Close();
                 }
                 ms.Position = 0;
-                using (ProtoReader reader = new ProtoReader(ms, this))
+                using (ProtoReader reader = new ProtoReader(ms, this, null))
                 {
                     value = null; // start from scratch!
                     TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true);

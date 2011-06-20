@@ -12,9 +12,9 @@ namespace ProtoBuf.Serializers
         {
             return head.HasCallbacks(callbackType); // these routes only used when bits of the model not compiled
         }
-        public void Callback(object value, TypeModel.CallbackType callbackType)
+        public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
-            head.Callback(value, callbackType); // these routes only used when bits of the model not compiled
+            head.Callback(value, callbackType, context); // these routes only used when bits of the model not compiled
         }
         public static CompiledSerializer Wrap(IProtoTypeSerializer head)
         {

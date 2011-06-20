@@ -154,7 +154,7 @@ namespace ProtoBuf
             bool commit = false;
             Stream stream = extn.BeginAppend();
             try {
-                using(ProtoWriter writer = new ProtoWriter(stream, model)) {
+                using(ProtoWriter writer = new ProtoWriter(stream, model, null)) {
                     model.TrySerializeAuxiliaryType(writer, null, format, tag, value);
                     writer.Close();
                 }

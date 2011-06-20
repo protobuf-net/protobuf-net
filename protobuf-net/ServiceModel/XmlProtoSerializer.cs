@@ -58,7 +58,7 @@ namespace ProtoBuf.ServiceModel
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    using (ProtoWriter protoWriter = new ProtoWriter(ms, model))
+                    using (ProtoWriter protoWriter = new ProtoWriter(ms, model, null))
                     {
                         model.Serialize(key, graph, protoWriter);
                     }
@@ -85,7 +85,7 @@ namespace ProtoBuf.ServiceModel
             {
                 using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
                 {
-                    using (ProtoReader protoReader = new ProtoReader(ms, model))
+                    using (ProtoReader protoReader = new ProtoReader(ms, model, null))
                     { 
                         return model.Deserialize(key, null, protoReader);
                     }

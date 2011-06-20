@@ -45,7 +45,8 @@ namespace ProtoBuf.Meta
             ParameterInfo[] args = callback.GetParameters();
             if (callback.ReturnType == typeof(void) && (args.Length == 0
 #if PLAT_BINARYFORMATTER
-                || (args.Length == 1 && args[0].ParameterType == typeof(System.Runtime.Serialization.StreamingContext))
+                || (args.Length == 1 && (args[0].ParameterType == typeof(System.Runtime.Serialization.StreamingContext)
+                   || args[0].ParameterType == typeof(SerializationContext)) )
 #endif
                 )) { }
             else throw new ArgumentException("Invalid callback signature", "callback");

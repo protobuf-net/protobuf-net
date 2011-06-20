@@ -22,12 +22,12 @@ namespace Examples
 
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            Serializer.Serialize(info, this);
+            Serializer.Serialize(info, context, this);
             WasSerialized = true;
         }
         protected RemotingEntity(SerializationInfo info, StreamingContext context)
         {
-            Serializer.Merge(info, this);
+            Serializer.Merge(info, context, this);
             WasDeserialized = true;
         }
     }

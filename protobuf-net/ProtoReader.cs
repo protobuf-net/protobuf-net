@@ -32,17 +32,29 @@ namespace ProtoBuf
         /// Indicates the underlying proto serialization format on the wire.
         /// </summary>
         public WireType WireType { get { return wireType; } }
+        
         /// <summary>
         /// Creates a new reader against a stream
         /// </summary>
         /// <param name="source">The source stream</param>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        public ProtoReader(Stream source, TypeModel model) :
-            this(source, model, -1)
+        /// <param name="context">Additional context about this serialization operation</param>
+        public ProtoReader(Stream source, TypeModel model, SerializationContext context) :
+            this(source, model, context, -1)
         { }
+
+
+
         private int dataRemaining;
         private readonly bool isFixedLength;
-        internal ProtoReader(Stream source, TypeModel model, int length)
+        /// <summary>
+        /// Creates a new reader against a stream
+        /// </summary>
+        /// <param name="source">The source stream</param>
+        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+        /// <param name="context">Additional context about this serialization operation</param>
+        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+        public ProtoReader(Stream source, TypeModel model, SerializationContext context, int length)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (!source.CanRead) throw new ArgumentException("Cannot read from stream", "source");
@@ -51,7 +63,17 @@ namespace ProtoBuf
             this.model = model;
             isFixedLength = length >= 0;
             dataRemaining = isFixedLength ? length : 0;
+
+            if (context == null) { context = SerializationContext.Default; }
+            else { context.Freeze(); }
+            this.context = context;
         }
+        private readonly SerializationContext context;
+
+        /// <summary>
+        /// Addition information about this deserialization operation.
+        /// </summary>
+        public SerializationContext Context { get { return context; } }
         /// <summary>
         /// Releases resources used by the reader, but importantly <b>does not</b> Dispose the 
         /// underlying stream; in many typical use-cases the stream is used for different
@@ -1063,7 +1085,7 @@ namespace ProtoBuf
             try
             {
                 //TODO: replace this with stream-based, buffered raw copying
-                using (ProtoWriter writer = new ProtoWriter(dest, model))
+                using (ProtoWriter writer = new ProtoWriter(dest, model, null))
                 {
                     AppendExtensionField(writer);
                     writer.Close();

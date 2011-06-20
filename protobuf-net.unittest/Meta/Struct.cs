@@ -29,11 +29,11 @@ namespace ProtoBuf.unittest.Meta
                 }, null, false, true, null, null);
             var deser = CompilerContext.BuildDeserializer(head);
 
-            using (var reader = new ProtoReader(Stream.Null, null))
+            using (var reader = new ProtoReader(Stream.Null, null, null))
             {
                 Assert.IsInstanceOfType(typeof(CustomerStruct), deser(null, reader));
             }
-            using (var reader = new ProtoReader(Stream.Null, null))
+            using (var reader = new ProtoReader(Stream.Null, null, null))
             {
                 CustomerStruct before = new CustomerStruct { Id = 123, Name = "abc" };
                 CustomerStruct after = (CustomerStruct)deser(before, reader);
@@ -55,13 +55,13 @@ namespace ProtoBuf.unittest.Meta
             CustomerStruct cs1 = new CustomerStruct { Id = 123, Name = "Fred" };
             using (MemoryStream ms = new MemoryStream())
             {
-                using (ProtoWriter writer = new ProtoWriter(ms, null))
+                using (ProtoWriter writer = new ProtoWriter(ms, null, null))
                 {
                     ser(cs1, writer);
                 }
                 byte[] blob = ms.ToArray();
                 ms.Position = 0;
-                using (ProtoReader reader = new ProtoReader(ms, null))
+                using (ProtoReader reader = new ProtoReader(ms, null, null))
                 {
                     CustomerStruct? cst = (CustomerStruct?)deser(null, reader);
                     Assert.IsTrue(cst.HasValue);

@@ -3,6 +3,7 @@ using NUnit.Framework;
 using ProtoBuf;
 using System.Runtime.Serialization;
 using System;
+using ProtoBuf.Meta;
 namespace Examples
 {
     [ProtoContract]
@@ -258,5 +259,97 @@ namespace Examples
             Serializer.Serialize(Stream.Null, new DuplicateCallbacks());
         }
 
+
+        [Test]
+        public void CallbacksWithContext()
+        {
+            var model = TypeModel.Create();
+            model.AutoCompile = false;
+            Test(model);
+
+            model.CompileInPlace();
+            Test(model);
+
+            Test(model.Compile());
+        }
+        static void Test(TypeModel model)
+        {
+            CallbackWrapper orig = new CallbackWrapper
+            {
+                A = new CallbackWithNoContext(),
+                B = new CallbackWithProtoContext(),
+                C = new CallbackWithRemotingContext()
+            }, clone;
+            Assert.IsNull(orig.B.ReadState);
+            Assert.IsNull(orig.B.WriteState);
+            Assert.IsNull(orig.C.ReadState);
+            Assert.IsNull(orig.C.WriteState);
+            using (var ms = new MemoryStream())
+            {
+                SerializationContext ctx = new SerializationContext { Context = new object()};
+                model.Serialize(ms, orig, ctx);
+                Assert.IsNull(orig.B.ReadState);
+                Assert.AreSame(ctx.Context, orig.B.WriteState);
+                Assert.IsNull(orig.C.ReadState);
+                Assert.AreSame(ctx.Context, orig.C.WriteState);
+
+                ms.Position = 0;
+                ctx = new SerializationContext { Context = new object() };
+                clone = (CallbackWrapper)model.Deserialize(ms, null, typeof(CallbackWrapper), -1, ctx);
+                Assert.AreSame(ctx.Context, clone.B.ReadState);
+                Assert.IsNull(clone.B.WriteState);
+                Assert.AreSame(ctx.Context, clone.C.ReadState);
+                Assert.IsNull(clone.C.WriteState);
+            }
+        }
+        [ProtoContract]
+        public class CallbackWrapper
+        {
+            [ProtoMember(1)]
+            public CallbackWithNoContext A { get; set; }
+            [ProtoMember(2)]
+            public CallbackWithProtoContext B { get; set; }
+            [ProtoMember(3)]
+            public CallbackWithRemotingContext C { get; set; }
+        }
+        [ProtoContract]
+        public class CallbackWithNoContext
+        {
+            [OnDeserialized]
+            public void OnDeserialized()
+            {}
+        }
+        [ProtoContract]
+        public class CallbackWithRemotingContext
+        {
+            [ProtoAfterDeserialization]
+            public void OnDeserialized(SerializationContext context)
+            {
+                ReadState = context.Context;
+            }
+            [OnSerialized]
+            public void OnSerialized(SerializationContext context)
+            {
+                WriteState = context.Context;
+            }
+            public object ReadState { get; set; }
+            public object WriteState { get; set; }
+        }
+        [ProtoContract]
+        public class CallbackWithProtoContext
+        {
+            [OnDeserialized]
+            public void OnDeserialized(StreamingContext context)
+            {
+                ReadState = context.Context;
+            }
+            [ProtoAfterSerialization]
+            public void OnSerialized(StreamingContext context)
+            {
+                WriteState = context.Context;
+            }
+            public object ReadState { get; set; }
+            public object WriteState { get; set; }
+        }
     }
 }

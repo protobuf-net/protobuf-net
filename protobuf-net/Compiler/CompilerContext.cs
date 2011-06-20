@@ -192,9 +192,10 @@ namespace ProtoBuf.Compiler
             }
             throw new ArgumentException("Meta-key not found", "metaKey");
         }
-        private readonly bool nonPublic;
+        private readonly bool nonPublic, isWriter;
         internal bool NonPublic { get { return nonPublic; } }
-        internal CompilerContext(ILGenerator il, bool isStatic, RuntimeTypeModel.SerializerPair[] methodPairs)
+        
+        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs)
         {
             if (il == null) throw new ArgumentNullException("il");
             if (methodPairs == null) throw new ArgumentNullException("methodPairs");
@@ -202,11 +203,13 @@ namespace ProtoBuf.Compiler
             this.methodPairs = methodPairs;
             this.il = il;
             nonPublic = false;
+            this.isWriter = isWriter;
         }
 #if !FX11
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic)
         {
             this.isStatic = isStatic;
+            this.isWriter = isWriter;
             nonPublic = true;
             Type[] paramTypes;
             Type returnType;
@@ -1078,6 +1081,12 @@ namespace ProtoBuf.Compiler
         internal void LoadValue(bool value)
         {
             Emit(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+        }
+
+        internal void LoadSerializationContext()
+        {
+            LoadReaderWriter();
+            LoadValue((isWriter ? typeof(ProtoWriter) : typeof(ProtoReader)).GetProperty("Context"));
         }
     }
 }

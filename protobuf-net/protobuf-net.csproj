@@ -178,6 +178,7 @@
     <Compile Include="ProtoMemberAttribute.cs" />
     <Compile Include="ProtoReader.cs" />
     <Compile Include="ProtoWriter.cs" />
+    <Compile Include="SerializationContext.cs" />
     <Compile Include="Serializer.cs" />
     <Compile Include="Serializers\BlobSerializer.cs" />
     <Compile Include="Serializers\CharSerializer.cs" />

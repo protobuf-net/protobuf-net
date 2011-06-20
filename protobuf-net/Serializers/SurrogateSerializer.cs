@@ -10,7 +10,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
 #endif
-        void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
+        void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
         public bool ReturnsValue { get { return false; } }
         public bool RequiresOldValue { get { return true; } }
         public Type ExpectedType { get { return forType; } }

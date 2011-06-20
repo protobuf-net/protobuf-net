@@ -412,12 +412,14 @@ namespace ProtoBuf
             // and this object is no longer a blockage
             writer.flushLock--;
         }
+
         /// <summary>
         /// Creates a new writer against a stream
         /// </summary>
         /// <param name="dest">The destination stream</param>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
-        public ProtoWriter(Stream dest, TypeModel model)
+        /// <param name="context">Additional context about this serialization operation</param>
+        public ProtoWriter(Stream dest, TypeModel model, SerializationContext context)
         {
             if (dest == null) throw new ArgumentNullException("dest");
             if (!dest.CanWrite) throw new ArgumentException("Cannot write to stream", "dest");
@@ -426,8 +428,17 @@ namespace ProtoBuf
             this.ioBuffer = BufferPool.GetBuffer();
             this.model = model;
             this.wireType = WireType.None;
+            if (context == null) { context = SerializationContext.Default; }
+            else { context.Freeze(); }
+            this.context = context;
+            
         }
-        
+
+        private readonly SerializationContext context;
+        /// <summary>
+        /// Addition information about this serialization operation.
+        /// </summary>
+        public SerializationContext Context { get { return context; } }
         void IDisposable.Dispose()
         {
             Dispose();
