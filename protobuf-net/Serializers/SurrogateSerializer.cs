@@ -14,24 +14,27 @@ namespace ProtoBuf.Serializers
         public bool ReturnsValue { get { return false; } }
         public bool RequiresOldValue { get { return true; } }
         public Type ExpectedType { get { return forType; } }
-        private readonly Type forType;
+        private readonly Type forType, declaredType;
         private readonly MethodInfo toTail, fromTail;
-        IProtoTypeSerializer tail;
+        IProtoTypeSerializer rootTail;
 
-        public SurrogateSerializer(Type forType, IProtoTypeSerializer tail)
+        public SurrogateSerializer(Type forType, Type declaredType, IProtoTypeSerializer rootTail)
         {
             Helpers.DebugAssert(forType != null, "forType");
-            Helpers.DebugAssert(tail != null, "tail");
-            Helpers.DebugAssert(tail.RequiresOldValue, "RequiresOldValue");
-            Helpers.DebugAssert(!tail.ReturnsValue, "ReturnsValue");
+            Helpers.DebugAssert(declaredType != null, "declaredType");
+            Helpers.DebugAssert(rootTail != null, "rootTail");
+            Helpers.DebugAssert(rootTail.RequiresOldValue, "RequiresOldValue");
+            Helpers.DebugAssert(!rootTail.ReturnsValue, "ReturnsValue");
+            Helpers.DebugAssert(declaredType == rootTail.ExpectedType || declaredType.IsSubclassOf(rootTail.ExpectedType));
             this.forType = forType;
-            this.tail = tail;
+            this.declaredType = declaredType;
+            this.rootTail = rootTail;
             toTail = GetConversion(true);
             fromTail = GetConversion(false);
         }
         public MethodInfo GetConversion(bool toTail)
         {
-            Type surrogateType = tail.ExpectedType, to = toTail ? surrogateType : forType;
+            Type surrogateType = declaredType, to = toTail ? surrogateType : forType;
             Type[] from = new Type[] {toTail ? forType : surrogateType};
             const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
             MethodInfo op;
@@ -45,7 +48,7 @@ namespace ProtoBuf.Serializers
 
         public void Write(object value, ProtoWriter writer)
         {
-            tail.Write(toTail.Invoke(null, new object[] { value }), writer);
+            rootTail.Write(toTail.Invoke(null, new object[] { value }), writer);
         }
         public object Read(object value, ProtoReader source)
         {
@@ -54,20 +57,20 @@ namespace ProtoBuf.Serializers
             value = toTail.Invoke(null, args);
             
             // invoke the tail and convert the outgoing value
-            args[0] = tail.Read(value, source);
+            args[0] = rootTail.Read(value, source);
             return fromTail.Invoke(null, args);
         }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Helpers.DebugAssert(valueFrom != null); // don't support stack-head for this
-            using (Compiler.Local converted = new Compiler.Local(ctx, tail.ExpectedType)) // declare/re-use local
+            using (Compiler.Local converted = new Compiler.Local(ctx, declaredType)) // declare/re-use local
             {
                 ctx.LoadValue(valueFrom); // load primary onto stack
                 ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
                 ctx.StoreValue(converted); // store into surrogate local
 
-                tail.EmitRead(ctx, converted); // downstream processing against surrogate local
+                rootTail.EmitRead(ctx, converted); // downstream processing against surrogate local
 
                 ctx.LoadValue(converted); // load from surrogate local
                 ctx.EmitCall(fromTail);  // static convert op, surrogate-to-primary
@@ -79,7 +82,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.LoadValue(valueFrom);
             ctx.EmitCall(toTail);
-            tail.EmitWrite(ctx, null);
+            rootTail.EmitWrite(ctx, null);
         }
 #endif
     }

@@ -223,7 +223,13 @@ namespace ProtoBuf.Meta
 
         private IProtoTypeSerializer BuildSerializer()
         {
-            if (surrogate != null) return new SurrogateSerializer(type, model[surrogate].Serializer);
+
+            if (surrogate != null)
+            {
+                MetaType mt = model[surrogate], mtBase;
+                while ((mtBase = mt.baseType) != null) { mt = mtBase; }
+                return new SurrogateSerializer(type, surrogate, mt.Serializer);
+            }
 
             Type itemType = TypeModel.GetListItemType(type);
             if (itemType != null)
