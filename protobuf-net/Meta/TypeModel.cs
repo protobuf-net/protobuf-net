@@ -1082,9 +1082,53 @@ namespace ProtoBuf.Meta
         /// <param name="type">The type of object to be [de]deserialized by the formatter.</param>
         public System.Runtime.Serialization.IFormatter CreateFormatter(Type type)
         {
-            throw new NotImplementedException();
+            return new Formatter(this, type);
+        }
+
+        internal sealed class Formatter : System.Runtime.Serialization.IFormatter
+        {
+            private readonly TypeModel model;
+            private readonly Type type;
+            internal Formatter(TypeModel model, Type type)
+            {
+                if (model == null) throw new ArgumentNullException("model");
+                if (type == null) throw new ArgumentNullException("type");
+                this.model = model;
+                this.type = type;
+            }
+            private System.Runtime.Serialization.SerializationBinder binder;
+            public System.Runtime.Serialization.SerializationBinder Binder
+            {
+                get { return binder; }
+                set { binder = value; }
+            }
+
+            private System.Runtime.Serialization.StreamingContext context;
+            public System.Runtime.Serialization.StreamingContext Context
+            {
+                get { return context; }
+                set { context = value; }
+            }
+
+            public object Deserialize(Stream source)
+            {
+                return model.Deserialize(source, null, type, -1, Context);
+            }
+
+            public void Serialize(Stream destination, object graph)
+            {
+                model.Serialize(destination, graph, Context);
+            }
+
+            private System.Runtime.Serialization.ISurrogateSelector surrogateSelector;
+            public System.Runtime.Serialization.ISurrogateSelector SurrogateSelector
+            {
+                get { return surrogateSelector; }
+                set { surrogateSelector = value; }
+            }
         }
 #endif
     }
 
 }
+
