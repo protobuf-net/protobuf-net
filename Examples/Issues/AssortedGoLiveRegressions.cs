@@ -84,10 +84,11 @@ namespace Examples.Issues
         public void TestEmptyStringDictionary()
         {
             var orig = new Dictionary<string, string> { };
-            var clone = Serializer.DeepClone(orig);
-
             Assert.AreEqual(0, orig.Count);
-            Assert.IsNull(clone);
+
+            var clone = Serializer.DeepClone(orig);
+            Assert.IsNotNull(clone);
+            Assert.AreEqual(0, clone.Count);
         }
 
         [ProtoContract]

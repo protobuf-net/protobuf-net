@@ -74,8 +74,14 @@ namespace ProtoBuf.Serializers
         }
 
         public override Type ExpectedType { get { return declaredType;  } }
-        public override bool RequiresOldValue { get { return true; } }
+        public override bool RequiresOldValue { get { return AppendToCollection; } }
         public override bool ReturnsValue { get { return ReturnList; } }
+
+        private bool AppendToCollection
+        {
+            get { return (options & OPTIONS_OverwriteList) == 0; }
+        }
+
 #if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
@@ -91,11 +97,16 @@ namespace ProtoBuf.Serializers
              *  - handling whether or not the tail *returns* the value vs updates the input
              */
             bool returnList = ReturnList;
-            using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            using (Compiler.Local origlist = returnList ? new Compiler.Local(ctx, ExpectedType) : null)
+            using (Compiler.Local list = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : new Compiler.Local(ctx, declaredType))
+            using (Compiler.Local origlist = (returnList && AppendToCollection) ? new Compiler.Local(ctx, ExpectedType) : null)
             {
-                if (returnList)
-                {
+                if (!AppendToCollection)
+                { // always new
+                    ctx.LoadNullRef();
+                    ctx.StoreValue(list);
+                }
+                else if (returnList)
+                { // need a copy
                     ctx.LoadValue(list);
                     ctx.StoreValue(origlist);
                 }
@@ -113,16 +124,23 @@ namespace ProtoBuf.Serializers
 
                 if (returnList)
                 {
-                    // remember ^^^^ we had a spare copy of the list on the stack; now we'll compare
-                    ctx.LoadValue(origlist);
-                    ctx.LoadValue(list); // [orig] [new-value]
-                    Compiler.CodeLabel sameList = ctx.DefineLabel(), allDone = ctx.DefineLabel();
-                    ctx.BranchIfEqual(sameList, true);
-                    ctx.LoadValue(list);
-                    ctx.Branch(allDone, true);
-                    ctx.MarkLabel(sameList);
-                    ctx.LoadNullRef();
-                    ctx.MarkLabel(allDone);
+                    if (AppendToCollection)
+                    {
+                        // remember ^^^^ we had a spare copy of the list on the stack; now we'll compare
+                        ctx.LoadValue(origlist);
+                        ctx.LoadValue(list); // [orig] [new-value]
+                        Compiler.CodeLabel sameList = ctx.DefineLabel(), allDone = ctx.DefineLabel();
+                        ctx.BranchIfEqual(sameList, true);
+                        ctx.LoadValue(list);
+                        ctx.Branch(allDone, true);
+                        ctx.MarkLabel(sameList);
+                        ctx.LoadNullRef();
+                        ctx.MarkLabel(allDone);
+                    }
+                    else
+                    {
+                        ctx.LoadValue(list);
+                    }
                 }
             }
         }

@@ -337,7 +337,7 @@ namespace Examples
         {
             var foos = new List<Entity>();
             var clone = Serializer.DeepClone(foos);
-            Assert.IsNull(clone);
+            Assert.IsNotNull(clone);
         }
 
         [Test]
@@ -345,7 +345,7 @@ namespace Examples
         {
             var foos = new MyList();
             var clone = Serializer.DeepClone(foos);
-            Assert.IsNull(clone);
+            Assert.IsNotNull(clone);
         }
 
         [Test]

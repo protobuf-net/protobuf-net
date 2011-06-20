@@ -18,18 +18,18 @@ namespace Examples.Issues
             model.Add(typeof(IntArray), true)[2].OverwriteList = true;
 
             var clone = (IntArray)model.DeepClone(a1);
-            AssertSequence(clone.Arr, "Runtime", 5, 6, 7);
-            AssertSequence(clone.List, "Runtime", 8, 9, 10);
+            AssertSequence(clone.Arr, "Runtime:Arr", 5, 6, 7);
+            AssertSequence(clone.List, "Runtime:List", 8, 9, 10);
 
             model.CompileInPlace();
             clone = (IntArray)model.DeepClone(a1);
-            AssertSequence(clone.Arr, "CompileInPlace", 5, 6, 7);
-            AssertSequence(clone.List, "CompileInPlace", 8, 9, 10);
+            AssertSequence(clone.Arr, "CompileInPlace:Arr", 5, 6, 7);
+            AssertSequence(clone.List, "CompileInPlace:List", 8, 9, 10);
 
             var precomp = model.Compile();
             clone = (IntArray)precomp.DeepClone(a1);
-            AssertSequence(clone.Arr, "Compile", 5, 6, 7);
-            AssertSequence(clone.List, "Compile", 8, 9, 10);
+            AssertSequence(clone.Arr, "Compile:Arr", 5, 6, 7);
+            AssertSequence(clone.List, "Compile:List", 8, 9, 10);
         }
 
         [Test]
@@ -42,24 +42,24 @@ namespace Examples.Issues
             model.Add(typeof(IntArray), true)[2].OverwriteList = false;
 
             var clone = (IntArray)model.DeepClone(a1);
-            AssertSequence(clone.Arr, "Runtime", 1, 2, 5, 6, 7);
-            AssertSequence(clone.List, "Runtime", 3, 4, 8, 9, 10);
+            AssertSequence(clone.Arr, "Runtime:Arr", 1, 2, 5, 6, 7);
+            AssertSequence(clone.List, "Runtime:List", 3, 4, 8, 9, 10);
 
             model.CompileInPlace();
             clone = (IntArray)model.DeepClone(a1);
-            AssertSequence(clone.Arr, "CompileInPlace", 1, 2, 5, 6, 7);
-            AssertSequence(clone.List, "CompileInPlace", 3, 4, 8, 9, 10);
+            AssertSequence(clone.Arr, "CompileInPlace:Arr", 1, 2, 5, 6, 7);
+            AssertSequence(clone.List, "CompileInPlace:List", 3, 4, 8, 9, 10);
 
             var precomp = model.Compile();
             clone = (IntArray)precomp.DeepClone(a1);
-            AssertSequence(clone.Arr, "Compile", 1, 2, 5, 6, 7);
-            AssertSequence(clone.List, "Compile", 3, 4, 8, 9, 10);
+            AssertSequence(clone.Arr, "Compile:Arr", 1, 2, 5, 6, 7);
+            AssertSequence(clone.List, "Compile:List", 3, 4, 8, 9, 10);
         }
 
         static void AssertSequence(IList<int> sequence, string caption, params int[] expected)
         {
             Assert.IsNotNull(sequence, caption + ":null sequence");
-            Assert.AreEqual(sequence.Count, expected.Length, caption + " count");
+            Assert.AreEqual(expected.Length, sequence.Count, caption + " count");
             for(int i = 0 ; i < expected.Length ; i++)
             {
                 Assert.AreEqual(expected[i], sequence[i], caption + ":" + i);

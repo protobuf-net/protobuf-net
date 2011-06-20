@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
-using System.Collections;
 using System.Reflection;
+using System.Collections;
 
 namespace ProtoBuf.Meta
 {
@@ -688,18 +688,7 @@ namespace ProtoBuf.Meta
                 found = true;
                 if (value == null && arraySurrogate == null)
                 {
-                    Type concreteListType = listType;
-                    if (!listType.IsClass || listType.IsAbstract || listType.GetConstructor(
-                        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                            null, Helpers.EmptyTypes, null) == null)
-                    {
-#if NO_GENERICS
-                        concreteListType = typeof(ArrayList);
-#else
-                        concreteListType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
-#endif
-                    }
-                    value = (Activator.CreateInstance(concreteListType));
+                    value = CreateListInstance(listType, itemType);
                     list = value as IList;
                 }
                 if (list != null)
@@ -744,6 +733,51 @@ namespace ProtoBuf.Meta
             return found;
         }
 
+        private static object CreateListInstance(Type listType, Type itemType)
+        {
+            Type concreteListType = listType;
+            if (!listType.IsClass || listType.IsAbstract || listType.GetConstructor(
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                    null, Helpers.EmptyTypes, null) == null)
+            {
+                bool handled = false;
+                if (listType.IsInterface && listType.Name.Contains("Dictionary")) // have to try to be frugal here...
+                {
+#if !NO_GENERICS
+                    if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
+                    {
+                        Type[] genericTypes = listType.GetGenericArguments();
+                        concreteListType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genericTypes);
+                        handled = true;
+                    }
+#endif
+#if !GENERICS_ONLY
+                    if (!handled && listType == typeof(IDictionary))
+                    {
+                        concreteListType = typeof(Hashtable);
+                        handled = true;
+                    }
+#endif
+                }
+#if !NO_GENERICS
+                if (!handled)
+                {
+                    concreteListType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
+                    handled = true;
+                }
+#endif
+
+#if !GENERICS_ONLY
+                if (!handled)
+                {
+                    concreteListType = typeof(ArrayList);
+                    handled = true;
+#endif
+                }
+            }
+            return Activator.CreateInstance(concreteListType);
+        }
+
         /// <summary>
         /// This is the more "complete" version of Deserialize, which handles single instances of mapped types.
         /// The value is read as a complete field, including field-header and (for sub-objects) a
@@ -771,7 +805,12 @@ namespace ProtoBuf.Meta
                 }
                 if (itemType != null)
                 {
-                    return TryDeserializeList(reader, format, tag, type, itemType, ref value);                    
+                    found = TryDeserializeList(reader, format, tag, type, itemType, ref value);
+                    if (!found && autoCreate)
+                    {
+                        value = CreateListInstance(type, itemType);
+                    }
+                    return found;
                 }
 
                 // otherwise, not a happy bunny...

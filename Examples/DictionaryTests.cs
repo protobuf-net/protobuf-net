@@ -100,7 +100,73 @@ namespace Examples.Dictionary
             }
         }
     }
+    [TestFixture]
+    public class EmptyDictionaryTests
+    {
+        [Test]
+        public void EmptyDictionaryShouldDeserializeAsNonNull()
+        {
+            using (var ms = new MemoryStream())
+            {
+                var data = new Dictionary<string, int>();
 
+                Serializer.Serialize(ms, data);
+                ms.Position = 0;
+                var clone = Serializer.Deserialize<Dictionary<string, int>>(ms);
+
+                Assert.IsNotNull(clone);
+                Assert.AreEqual(0, clone.Count);
+            }
+        }
+        [Test]
+        public void NonEmptyDictionaryShouldDeserialize()
+        {
+            using (var ms = new MemoryStream())
+            {
+                var data = new Dictionary<string, int> { { "abc", 123 } };
+
+                Serializer.Serialize(ms, data);
+                ms.Position = 0;
+                var clone = Serializer.Deserialize<Dictionary<string, int>>(ms);
+
+                Assert.IsNotNull(clone);
+                Assert.AreEqual(1, clone.Count);
+                Assert.AreEqual(123, clone["abc"]);
+            }
+        }
+        [Test]
+        public void EmptyDictionaryShouldDeserializeAsNonNullViaInterface()
+        {
+            using (var ms = new MemoryStream())
+            {
+                var data = new Dictionary<string, int>();
+
+                Serializer.Serialize(ms, data);
+                ms.Position = 0;
+                var clone = Serializer.Deserialize<IDictionary<string, int>>(ms);
+
+                Assert.IsNotNull(clone);
+                Assert.AreEqual(0, clone.Count);
+            }
+
+        }
+        [Test]
+        public void NonEmptyDictionaryShouldDeserializeViaInterface()
+        {
+            using (var ms = new MemoryStream())
+            {
+                var data = new Dictionary<string, int> { { "abc", 123 } };
+
+                Serializer.Serialize(ms, data);
+                ms.Position = 0;
+                var clone = Serializer.Deserialize<IDictionary<string, int>>(ms);
+
+                Assert.IsNotNull(clone);
+                Assert.AreEqual(1, clone.Count);
+                Assert.AreEqual(123, clone["abc"]);
+            }
+        }
+    }
     [TestFixture]
     public class NestedDictionaryTests {
 
