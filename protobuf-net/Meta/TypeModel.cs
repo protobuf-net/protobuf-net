@@ -615,7 +615,6 @@ namespace ProtoBuf.Meta
                 || !typeof(IEnumerable).IsAssignableFrom(listType)) return null;
 
             BasicList candidates = new BasicList();
-            candidates.Add(typeof(object));
             foreach (MethodInfo method in listType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
             {
                 if (method.Name != "Add") continue;
@@ -649,13 +648,13 @@ namespace ProtoBuf.Meta
 
             switch (candidates.Count)
             {
-                case 1:
+                case 0:
                     return null;
+                case 1:
+                    return (Type)candidates[0];
                 case 2:
-                    return (Type)candidates[1];
-                case 3:
-                    if (CheckDictionaryAccessors((Type)candidates[1], (Type)candidates[2])) return (Type)candidates[1];
-                    if (CheckDictionaryAccessors((Type)candidates[2], (Type)candidates[1])) return (Type)candidates[2];
+                    if (CheckDictionaryAccessors((Type)candidates[0], (Type)candidates[1])) return (Type)candidates[0];
+                    if (CheckDictionaryAccessors((Type)candidates[1], (Type)candidates[0])) return (Type)candidates[1];
                     break;
             }
 

@@ -84,7 +84,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Silverlight2|AnyCPU' ">
     <OutputPath>bin\Silverlight2\</OutputPath>
-    <DefineConstants>TRACE;NET_3_0 SILVER</DefineConstants>
+    <DefineConstants>TRACE;SILVERLIGHT NET_3_0 FEAT_SAFE</DefineConstants>
     <DocumentationFile>bin\Silverlight2\protobuf-net.xml</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
