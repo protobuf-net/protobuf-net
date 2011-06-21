@@ -751,7 +751,7 @@ namespace ProtoBuf.Meta
                         handled = true;
                     }
 #endif
-#if !GENERICS_ONLY
+#if !SILVERLIGHT
                     if (!handled && listType == typeof(IDictionary))
                     {
                         concreteListType = typeof(Hashtable);
@@ -767,13 +767,13 @@ namespace ProtoBuf.Meta
                 }
 #endif
 
-#if !GENERICS_ONLY
+#if !SILVERLIGHT
                 if (!handled)
                 {
                     concreteListType = typeof(ArrayList);
                     handled = true;
-#endif
                 }
+#endif
             }
             return Activator.CreateInstance(concreteListType);
         }
