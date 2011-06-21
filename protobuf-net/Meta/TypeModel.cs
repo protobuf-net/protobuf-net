@@ -735,6 +735,11 @@ namespace ProtoBuf.Meta
         private static object CreateListInstance(Type listType, Type itemType)
         {
             Type concreteListType = listType;
+
+            if (listType.IsArray)
+            {
+                return Array.CreateInstance(itemType, 0);
+            }
             if (!listType.IsClass || listType.IsAbstract || listType.GetConstructor(
                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                     null, Helpers.EmptyTypes, null) == null)

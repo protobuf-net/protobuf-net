@@ -75,7 +75,24 @@ namespace Examples
     [TestFixture]
     public class ArrayTests
     {
-
+        [ProtoContract]
+        class Foo { }
+        [Test]
+        public void DeserializeNakedArray()
+        {
+            var arr = new Foo[0];
+            var model = TypeModel.Create();
+            Foo[] foo = (Foo[])model.DeepClone(arr);
+            Assert.AreEqual(0, foo.Length);
+        }
+        [Test]
+        public void DeserializeBusyArray()
+        {
+            var arr = new Foo[3] { new Foo(), new Foo(), new Foo() };
+            var model = TypeModel.Create();
+            Foo[] foo = (Foo[])model.DeepClone(arr);
+            Assert.AreEqual(3, foo.Length);
+        }
         [Test]
         public void TestOverwriteVersusAppend()
         {
