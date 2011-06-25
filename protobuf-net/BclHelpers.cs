@@ -375,7 +375,8 @@ namespace ProtoBuf
                         key = source.GetTypeKey(ref type);
                         break;
                     case FieldObject:
-                        bool lateSet = value == null && type == typeof(string);
+                        bool isString = type == typeof(string);
+                        bool lateSet = value == null && isString;
                         if (value == null && !lateSet) value = Activator.CreateInstance(type); // TODO wcf-style inits
                         if (newObjectKey >= 0 && !lateSet)
                         {
@@ -383,7 +384,15 @@ namespace ProtoBuf
                             if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
                         }
                         object oldValue = value;
-                        value = ProtoReader.ReadTypedObject(oldValue, key, source, type);
+                        if (isString)
+                        {
+                            value = source.ReadString();
+                        }
+                        else
+                        {
+                            value = ProtoReader.ReadTypedObject(oldValue, key, source, type);
+                        }
+                        
                         if (newObjectKey >= 0 && lateSet)
                         {
                             source.NetCache.SetKeyedObject(newObjectKey, value);
@@ -408,6 +417,7 @@ namespace ProtoBuf
         /// </summary>
         public static void WriteNetObject(object value, ProtoWriter dest, int key, bool dynamicType, bool asReference)
         {
+            Helpers.DebugAssert(value != null);
             WireType wireType = dest.WireType;
             SubItemToken token = ProtoWriter.StartSubItem(null, dest);
             bool writeObject = true;
@@ -441,7 +451,13 @@ namespace ProtoBuf
                     
                 }
                 ProtoWriter.WriteFieldHeader(FieldObject, wireType, dest);
-                ProtoWriter.WriteObject(value, key, dest);
+                if (value is string)
+                {
+                    ProtoWriter.WriteString((string)value, dest);
+                }
+                else { 
+                    ProtoWriter.WriteObject(value, key, dest);
+                }
             }
             ProtoWriter.EndSubItem(token, dest);
         }

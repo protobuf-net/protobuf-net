@@ -346,6 +346,10 @@ namespace ProtoBuf.Meta
                     return new UInt64Serializer();
                 case TypeCode.String:
                     defaultWireType = WireType.String;
+                    if (asReference)
+                    {
+                        return new NetObjectSerializer(typeof(string), 0, true, false);
+                    }
                     return new StringSerializer();
                 case TypeCode.Single:
                     defaultWireType = WireType.Fixed32;
