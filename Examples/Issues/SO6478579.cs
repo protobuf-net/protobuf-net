@@ -19,11 +19,11 @@ namespace test
                 this.y = y;
                 this.z = z;
             }
-            [ProtoMember(1, DataFormat = DataFormat.FixedSize)]
+            [ProtoMember(1)]
             int x;
-            [ProtoMember(2, DataFormat = DataFormat.FixedSize)]
+            [ProtoMember(2)]
             int y;
-            [ProtoMember(3, DataFormat = DataFormat.FixedSize)]
+            [ProtoMember(3)]
             int z;
         }
         [DataMember(Order = 1)]
@@ -54,8 +54,7 @@ namespace test
             MemoryStream mStream = new MemoryStream();
             Serializer.Serialize(mStream, c);
 
-            Assert.AreEqual(27, mStream.Length); 
-            Console.WriteLine("Length : {0}", mStream.Length);
+            Assert.AreEqual(10960823, mStream.Length); 
         }
     }
 }
