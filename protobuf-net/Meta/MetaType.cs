@@ -843,7 +843,7 @@ namespace ProtoBuf.Meta
                 ResolveListTypes(itemType, ref nestedItemType, ref nestedDefaultType);
                 if (nestedItemType != null)
                 {
-                    throw new NotSupportedException("Nested or jagged lists and arrays are not supported");
+                    throw TypeModel.CreateNestedListsNotSupported();
                 }
             }
 
@@ -922,6 +922,21 @@ namespace ProtoBuf.Meta
                 foreach (ValueMember member in fields)
                 {
                     if (member.FieldNumber == fieldNumber) return member;
+                }
+                return null;
+            }
+        }
+        /// <summary>
+        /// Returns the ValueMember that matchs a given member (property/field), or null if not found
+        /// </summary>
+        public ValueMember this[MemberInfo member]
+        {
+            get
+            {
+                if (member == null) return null;
+                foreach (ValueMember x in fields)
+                {
+                    if (x.Member == member) return x;
                 }
                 return null;
             }

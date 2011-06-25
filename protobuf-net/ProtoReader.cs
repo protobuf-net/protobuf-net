@@ -533,7 +533,7 @@ namespace ProtoBuf
             {
                 value = reader.model.Deserialize(key, value, reader);
             }
-            else if (type != null && reader.model.TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true))
+            else if (type != null && reader.model.TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false))
             {
                 // ok
             }

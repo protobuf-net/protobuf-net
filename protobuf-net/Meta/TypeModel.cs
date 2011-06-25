@@ -54,7 +54,7 @@ namespace ProtoBuf.Meta
         ///  - IEnumerable sequences of any type handled by TrySerializeAuxiliaryType
         ///  
         /// </summary>
-        internal bool TrySerializeAuxiliaryType(ProtoWriter writer,  Type type, DataFormat format, int tag, object value)
+        internal bool TrySerializeAuxiliaryType(ProtoWriter writer,  Type type, DataFormat format, int tag, object value, bool isInsideList)
         {
             if (type == null) { type = value.GetType(); }
 
@@ -117,9 +117,10 @@ namespace ProtoBuf.Meta
             IEnumerable sequence = value as IEnumerable;
             if (sequence != null)
             {
+                if (isInsideList) throw CreateNestedListsNotSupported();
                 foreach (object item in sequence) {
                     if (item == null) { throw new NullReferenceException(); }
-                    if (!TrySerializeAuxiliaryType(writer, null, format, tag, item))
+                    if (!TrySerializeAuxiliaryType(writer, null, format, tag, item, true))
                     {
                         ThrowUnexpectedType(item.GetType());
                     }
@@ -137,7 +138,7 @@ namespace ProtoBuf.Meta
             {
                 Serialize(key, value, writer);
             }
-            else if (!TrySerializeAuxiliaryType(writer, type, DataFormat.Default, Serializer.ListItemTag, value))
+            else if (!TrySerializeAuxiliaryType(writer, type, DataFormat.Default, Serializer.ListItemTag, value, false))
             {
                 ThrowUnexpectedType(type);
             }
@@ -278,7 +279,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    if (!(TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true) || len == 0))
+                    if (!(TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false) || len == 0))
                     {
                         TypeModel.ThrowUnexpectedType(type); // throws
                     }
@@ -579,7 +580,7 @@ namespace ProtoBuf.Meta
                 return Deserialize(key, value, reader);
             }
             // this returns true to say we actively found something, but a value is assigned either way (or throws)
-            TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, noAutoCreate);
+            TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, noAutoCreate, false);
             return value;
         }
         internal static MethodInfo ResolveListAdd(Type listType, Type itemType, out bool isList)
@@ -682,7 +683,7 @@ namespace ProtoBuf.Meta
             object[] args = isList ? null : new object[1];
             BasicList arraySurrogate = listType.IsArray ? new BasicList() : null;
 
-            while (TryDeserializeAuxiliaryType(reader, format, tag, itemType, ref nextItem, true, true, true))
+            while (TryDeserializeAuxiliaryType(reader, format, tag, itemType, ref nextItem, true, true, true, true))
             {
                 found = true;
                 if (value == null && arraySurrogate == null)
@@ -791,7 +792,7 @@ namespace ProtoBuf.Meta
         ///  - basic values; individual int / string / Guid / etc
         ///  - IList sets of any type handled by TryDeserializeAuxiliaryType
         /// </summary>
-        internal bool TryDeserializeAuxiliaryType(ProtoReader reader, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate)
+        internal bool TryDeserializeAuxiliaryType(ProtoReader reader, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList)
         {
             if (type == null) throw new ArgumentNullException("type");
             Type itemType = null;
@@ -809,6 +810,7 @@ namespace ProtoBuf.Meta
                 }
                 if (itemType != null)
                 {
+                    if (insideList) throw TypeModel.CreateNestedListsNotSupported();
                     found = TryDeserializeList(reader, format, tag, type, itemType, ref value);
                     if (!found && autoCreate)
                     {
@@ -1044,14 +1046,14 @@ namespace ProtoBuf.Meta
             {
                 using (ProtoWriter writer = new ProtoWriter(ms, this, null))
                 {
-                    if (!TrySerializeAuxiliaryType(writer, type, DataFormat.Default, Serializer.ListItemTag, value)) ThrowUnexpectedType(type);
+                    if (!TrySerializeAuxiliaryType(writer, type, DataFormat.Default, Serializer.ListItemTag, value, false)) ThrowUnexpectedType(type);
                     writer.Close();
                 }
                 ms.Position = 0;
                 using (ProtoReader reader = new ProtoReader(ms, this, null))
                 {
                     value = null; // start from scratch!
-                    TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true);
+                    TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false);
                     return value;
                 }
             }
@@ -1077,6 +1079,10 @@ namespace ProtoBuf.Meta
         {
             string fullName = type == null ? "(unknown)" : type.FullName;
             throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
+        }
+        internal static Exception CreateNestedListsNotSupported()
+        {
+            return new NotSupportedException("Nested or jagged lists and arrays are not supported");
         }
         /// <summary>
         /// Indicates that the given type cannot be constructed; it may still be possible to 

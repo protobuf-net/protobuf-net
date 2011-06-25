@@ -37,6 +37,10 @@ namespace Examples.Issues
         public class MobileList<T> : List<T>, IMobileObject
         {
             public override bool Equals(object obj) { return this.SequenceEqual((IEnumerable<T>)obj); }
+            public override int GetHashCode()
+            {
+                return 0; // not being used in a dictionary - to heck with it
+            }
         }
         [ProtoContract]
         public class A : IMobileObject
@@ -44,6 +48,10 @@ namespace Examples.Issues
             [ProtoMember(1)]
             public int X { get; set; }
             public override bool Equals(object obj) { return ((A)obj).X == X; }
+            public override int GetHashCode()
+            {
+                return 0; // not being used in a dictionary - to heck with it
+            }
             public override string ToString()
             {
                 return X.ToString();

@@ -17,6 +17,10 @@ namespace ProtoBuf.Meta
         /// </summary>
         public int FieldNumber { get { return fieldNumber; } }
         private readonly MemberInfo member;
+        /// <summary>
+        /// Gets the member (field/property) which this member relates to.
+        /// </summary>
+        public MemberInfo Member { get { return member; } }
         private readonly Type parentType, itemType, defaultType, memberType;
         private readonly object defaultValue;
         /// <summary>
