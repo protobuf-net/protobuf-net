@@ -263,6 +263,7 @@ namespace ProtoBuf.Meta
 
             BasicList baseCtorCallbacks = null;
             MetaType tmp = BaseType;
+            
             while (tmp != null)
             {
                 MethodInfo method = tmp.HasCallbacks ? tmp.Callbacks.BeforeDeserialize : null;
@@ -437,7 +438,7 @@ namespace ProtoBuf.Meta
         internal static AttributeFamily GetContractFamily(Type type, object[] attributes)
         {
             AttributeFamily family = AttributeFamily.None;
-            if (attributes == null) attributes = type.GetCustomAttributes(true);
+            if (attributes == null) attributes = type.GetCustomAttributes(false);
             for (int i = 0; i < attributes.Length; i++)
             {
                 switch (attributes[i].GetType().FullName)
