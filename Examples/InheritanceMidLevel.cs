@@ -179,16 +179,17 @@ namespace Examples
 
 
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestCloneAsRoot()
-        {
+        { // newly supported in v2
             IMLRoot root = CreateChild();
             var orig = (IMLChild)root;
             var clone = (IMLChild)Serializer.DeepClone(root);
 
-            //Assert.AreEqual(orig.ChildProperty, clone.ChildProperty, "ChildProperty");
-            //Assert.AreEqual(orig.ParentProperty, clone.ParentProperty, "ParentProperty");
-            //Assert.AreEqual(orig.RootProperty, clone.RootProperty, "RootProperty"); // <==== this would fail too
+
+            Assert.AreEqual(orig.ChildProperty, clone.ChildProperty, "ChildProperty");
+            Assert.AreEqual(orig.ParentProperty, clone.ParentProperty, "ParentProperty");
+            Assert.AreEqual(0, clone.RootProperty, "RootProperty"); // RootProperty is not part of the contract
         }
 
     }

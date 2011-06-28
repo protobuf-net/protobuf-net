@@ -17,7 +17,7 @@ namespace Examples.Issues
         class Wrapper
         {
             [ProtoMember(1)]
-            public List<SomeType>[] List;
+            public List<SomeType>[] List { get; set; }
         }
         // the important thing is that this error is identical to the one from SerializeWrappedDeepList
         [Test, ExpectedException(typeof(NotSupportedException), ExpectedMessage = "Nested or jagged lists and arrays are not supported")]
