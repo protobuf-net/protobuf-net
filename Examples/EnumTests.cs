@@ -283,5 +283,60 @@ enum blah {
                 clone = Serializer.DeepClone(obj);
             Assert.AreEqual(obj.Value, clone.Value, value.ToString());
         }
+
+
+        [ProtoContract]
+        enum EnumMarkedContract : ushort
+        {
+            None = 0, A, B, C, D
+        }
+        enum EnumNoContract : ushort
+        {
+            None = 0, A, B, C, D
+        }
+
+        [Test]
+        public void RoundTripTopLevelContract()
+        {
+            EnumMarkedContract value = EnumMarkedContract.C;
+            Assert.IsTrue(Program.CheckBytes(value, 8, 3));
+            Assert.AreEqual(value, Serializer.DeepClone(value));
+        }
+
+        [Test]
+        public void RoundTripTopLevelNullableContract()
+        {
+            EnumMarkedContract? value = EnumMarkedContract.C;
+            Assert.IsTrue(Program.CheckBytes(value, 8, 3));
+            Assert.AreEqual(value, Serializer.DeepClone(value));
+        }
+        [Test]
+        public void RoundTripTopLevelNullableContractNull()
+        {
+            EnumMarkedContract? value = null;
+            Assert.AreEqual(value, Serializer.DeepClone(value));
+        }
+        [Test]
+        public void RoundTripTopLevelNoContract()
+        {
+            EnumNoContract value = EnumNoContract.C;
+            Assert.IsTrue(Program.CheckBytes(value, 8, 3));
+            Assert.AreEqual(value, Serializer.DeepClone(value));
+        }
+
+        [Test]
+        public void RoundTripTopLevelNullableNoContract()
+        {
+            EnumNoContract? value = EnumNoContract.C;
+            Assert.IsTrue(Program.CheckBytes(value, 8, 3));
+            Assert.AreEqual(value, Serializer.DeepClone(value));
+        }
+        [Test]
+        public void RoundTripTopLevelNullableNoContractNull()
+        {
+            EnumNoContract? value = null;
+            Assert.AreEqual(value, Serializer.DeepClone(value));
+        }
+
     }
 }

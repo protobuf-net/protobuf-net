@@ -2,6 +2,7 @@
 using ProtoBuf;
 using NUnit.Framework;
 using System;
+using System.Reflection;
 
 namespace Examples.DesignIdeas
 {
@@ -102,7 +103,12 @@ namespace Examples.DesignIdeas
             Assert.AreEqual(((Sub1)sb).Foo, ((Sub1)clone).Foo);
         }
 
-        [Test, ExpectedException(typeof(InvalidCastException))]
+        [Test]
+#if DEBUG
+        [ExpectedException(typeof(TargetException))]
+#else
+        [ExpectedException(typeof(InvalidCastException))]
+#endif
         public void InheritanceCheckBytesWrongOrder()
         {   // breaking change: not supported in v2; frankly, this is moot - the entire
             // inheritance chain is protobuf-net specific, and that always writes data in

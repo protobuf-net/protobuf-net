@@ -223,7 +223,14 @@ namespace ProtoBuf.Meta
 
         private IProtoTypeSerializer BuildSerializer()
         {
-
+            if (type.IsEnum)
+            {
+                //return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(type, GetEnumMap()));
+                return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag },
+                    new IProtoSerializer[] {
+                        new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(type, GetEnumMap()))
+                    }, null, true, true, null, constructType);
+            }
             if (surrogate != null)
             {
                 MetaType mt = model[surrogate], mtBase;
@@ -234,8 +241,8 @@ namespace ProtoBuf.Meta
             Type itemType = TypeModel.GetListItemType(type);
             if (itemType != null)
             {
-                ValueMember fakeMember = new ValueMember(model, 1, type, itemType, type, DataFormat.Default);
-                return new TypeSerializer(type, new int[] { 1 }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType);
+                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, type, DataFormat.Default);
+                return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType);
             }
 
             fields.Trim();

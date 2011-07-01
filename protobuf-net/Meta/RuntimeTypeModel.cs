@@ -133,7 +133,7 @@ namespace ProtoBuf.Meta
                     { // otherwise, check if it is a contract
                         bool shouldAdd = autoAddMissingTypes || addEvenIfAutoDisabled;
                         if (!shouldAdd || (
-                            addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
+                            !type.IsEnum && addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
                             )
                         {
                             if (demand) ThrowUnexpectedType(type);

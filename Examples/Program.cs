@@ -58,7 +58,7 @@ namespace Examples
                 return GetByteString(actual);
             }
         }
-        public static bool CheckBytes<T>(T item, params byte[] expected) where T : class
+        public static bool CheckBytes<T>(T item, params byte[] expected) 
         {
             using (MemoryStream ms = new MemoryStream())
             {
