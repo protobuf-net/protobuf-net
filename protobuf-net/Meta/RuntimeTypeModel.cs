@@ -326,11 +326,11 @@ namespace ProtoBuf.Meta
                 int typeIndex = FindOrAddAuto(type, demand, true, false);
                 if (typeIndex >= 0)
                 {
-                    MetaType mt = (MetaType)types[typeIndex], baseType;
-                    if (getBaseKey && (baseType = mt.BaseType) != null)
-                    {   // part of an inheritance tree; pick the base-key
-                        while (baseType != null) { mt = baseType; baseType = baseType.BaseType; }
-                        typeIndex = FindOrAddAuto(mt.Type, true, true, false);
+                    MetaType mt = (MetaType)types[typeIndex];
+                    if (getBaseKey)
+                    {
+                        mt = MetaType.GetRootType(mt);
+                        typeIndex = FindOrAddAuto(mt.Type, true, true, false);                        
                     }
                 }
                 return typeIndex;

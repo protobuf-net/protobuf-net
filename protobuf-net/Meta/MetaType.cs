@@ -1034,6 +1034,31 @@ namespace ProtoBuf.Meta
             else
                 flags = (byte)(flags & ~flag);
         }
+
+        internal static MetaType GetRootType(MetaType source)
+        {
+           
+            while (source.serializer != null)
+            {
+                MetaType tmp = source.baseType;
+                if (tmp == null) return source;
+                source = tmp; // else loop until we reach something that isn't generated, or is the root
+            }
+
+            // now we get into uncertain territory
+            RuntimeTypeModel model = source.model;
+            bool lockTaken = false;
+            try {
+                model.TakeLock(ref lockTaken);
+
+                MetaType tmp;
+                while ((tmp = source.baseType) != null) source = tmp;
+                return source;
+
+            } finally {
+                model.ReleaseLock(lockTaken);
+            }
+        }
     }
 }
 #endif
