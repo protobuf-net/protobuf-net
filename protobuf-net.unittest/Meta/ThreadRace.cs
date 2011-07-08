@@ -185,7 +185,17 @@ namespace ProtoBuf.unittest.Meta
         [ProtoContract]class V : K { }
         [ProtoContract]class W : K { }
         [ProtoContract]class X : L { }
-        [ProtoContract]class Y : L { }
+        [ProtoContract, ProtoInclude(1, typeof(Y0))]class Y : L { }
+        [ProtoContract, ProtoInclude(1, typeof(Y1))]class Y0 : Y { }
+        [ProtoContract, ProtoInclude(1, typeof(Y2))]class Y1 : Y0 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y3))]class Y2 : Y1 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y4))]class Y3 : Y2 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y5))]class Y4 : Y3 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y6))]class Y5 : Y4 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y7))]class Y6 : Y5 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y8))]class Y7 : Y6 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y9))]class Y8 : Y7 { }
+        [ProtoContract]class Y9 : Y8 { }
 
         [Test]
         public void TestDeserializeModelFromRoot()
@@ -218,7 +228,7 @@ namespace ProtoBuf.unittest.Meta
                             using (var ms = new MemoryStream(raw))
                             {
                                 if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
-                                allGo.WaitOne();
+                                else allGo.WaitOne();
                                 object obj = model.Deserialize(ms, null, typeof(A));
                                 if (obj.GetType() != typeof(Y)) throw new InvalidDataException("Should be a Y");
                             }
@@ -271,7 +281,7 @@ namespace ProtoBuf.unittest.Meta
                             using (var ms = new MemoryStream())
                             {
                                 if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
-                                allGo.WaitOne();
+                                else allGo.WaitOne();
                                 model.Serialize(ms, new Y());
                                 if (!ms.ToArray().SequenceEqual(raw)) throw new InvalidDataException("Bad serialization; " + GetHex(raw) + " vs " + GetHex(ms.ToArray()));
                             }
@@ -298,5 +308,70 @@ namespace ProtoBuf.unittest.Meta
             foreach (byte b in bytes) sb.Append(b.ToString("x2"));
             return sb.ToString();
         }
+
+
+        [Test]
+        public void TestSerializeModelFromLeaf()
+        {
+            var objs = new object[] {
+                    new Y9(), new Y8(), new Y7(), new Y6(), new Y5(),
+                    new Y4(), new Y3(), new Y2(), new Y1(), new Y0(),
+                    new Y(), new L(), new F(), new C(), new A()
+                };
+            var expected = new string[objs.Length];
+            for(int i = 0 ; i < expected.Length ; i++)
+            {
+                var model = RuntimeTypeModel.Create();
+                using (var ms = new MemoryStream())
+                {
+                    model.Serialize(ms, objs[i], null);
+                    expected[i] = GetHex(ms.ToArray());
+                }
+            }
+            for (int i = 0; i < 250; i++)
+            {
+                
+                ManualResetEvent allGo = new ManualResetEvent(false);
+                var model = TypeModel.Create();
+                model.AutoCompile = true;
+                object starter = new object();
+                int waiting = 20;
+                int failures = 0;
+                Exception firstException = null;
+                Thread[] threads = new Thread[objs.Length * 3];
+                for (int j = 0; j < threads.Length; j++)
+                {
+                    threads[j] = new Thread(oIndex =>
+                    {  
+                        try
+                        {
+                            object obj = objs[(int)oIndex];
+                            string exp = expected[(int)oIndex];
+                            using (var ms = new MemoryStream())
+                            {
+                                if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                                else allGo.WaitOne();
+                                model.Serialize(ms, obj, null);
+                                string hex = GetHex(ms.ToArray());
+                                if (hex != exp) throw new InvalidDataException("Bad serialization; " + hex + " vs " + exp);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Interlocked.CompareExchange(ref firstException, ex, null);
+                            Interlocked.Increment(ref failures);
+                        }
+                    });
+                }
+
+                for (int j = 0; j < threads.Length; j++) threads[j].Start(j % objs.Length);
+                for (int j = 0; j < threads.Length; j++) threads[j].Join();
+
+                Assert.IsNull(firstException);
+                Assert.AreEqual(0, Interlocked.CompareExchange(ref failures, 0, 0));
+
+            }
+        }
+
     }
 }
