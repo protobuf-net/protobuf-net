@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if REMOTING
+using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
@@ -136,3 +137,4 @@ namespace Examples
         }
     }
 }
+#endif

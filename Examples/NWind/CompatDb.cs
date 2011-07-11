@@ -36,7 +36,10 @@ namespace DAL
     }
 
     [ProtoContract, DataContract, Serializable]
-    public class DatabaseCompatRem : ISerializable
+    public class DatabaseCompatRem
+#if REMOTING
+        : ISerializable
+#endif
 #if PLAT_XMLSERIALIZER
         , IXmlSerializable
 #endif
@@ -53,7 +56,7 @@ namespace DAL
         }
 
         #region ISerializable Members
-
+#if REMOTING
         protected DatabaseCompatRem(SerializationInfo info, StreamingContext context)
             : this()
         {
@@ -63,7 +66,7 @@ namespace DAL
         {
             Serializer.Serialize <DatabaseCompatRem>(info, this);
         }
-
+#endif
         #endregion
 
         #region IXmlSerializable Members

@@ -259,7 +259,6 @@ namespace Examples
             Serializer.Serialize(Stream.Null, new DuplicateCallbacks());
         }
 
-
         [Test]
         public void CallbacksWithContext()
         {
@@ -277,29 +276,36 @@ namespace Examples
             CallbackWrapper orig = new CallbackWrapper
             {
                 A = new CallbackWithNoContext(),
-                B = new CallbackWithProtoContext(),
-                C = new CallbackWithRemotingContext()
+                B = new CallbackWithProtoContext()
+#if REMOTING
+                ,C = new CallbackWithRemotingContext()
+#endif
             }, clone;
             Assert.IsNull(orig.B.ReadState);
             Assert.IsNull(orig.B.WriteState);
+#if REMOTING
             Assert.IsNull(orig.C.ReadState);
             Assert.IsNull(orig.C.WriteState);
+#endif
             using (var ms = new MemoryStream())
             {
                 SerializationContext ctx = new SerializationContext { Context = new object()};
                 model.Serialize(ms, orig, ctx);
                 Assert.IsNull(orig.B.ReadState);
                 Assert.AreSame(ctx.Context, orig.B.WriteState);
+#if REMOTING
                 Assert.IsNull(orig.C.ReadState);
                 Assert.AreSame(ctx.Context, orig.C.WriteState);
-
+#endif
                 ms.Position = 0;
                 ctx = new SerializationContext { Context = new object() };
                 clone = (CallbackWrapper)model.Deserialize(ms, null, typeof(CallbackWrapper), -1, ctx);
                 Assert.AreSame(ctx.Context, clone.B.ReadState);
                 Assert.IsNull(clone.B.WriteState);
+#if REMOTING
                 Assert.AreSame(ctx.Context, clone.C.ReadState);
                 Assert.IsNull(clone.C.WriteState);
+#endif
             }
         }
         [ProtoContract]
@@ -309,8 +315,10 @@ namespace Examples
             public CallbackWithNoContext A { get; set; }
             [ProtoMember(2)]
             public CallbackWithProtoContext B { get; set; }
+#if REMOTING
             [ProtoMember(3)]
             public CallbackWithRemotingContext C { get; set; }
+#endif
         }
         [ProtoContract]
         public class CallbackWithNoContext
@@ -319,8 +327,9 @@ namespace Examples
             public void OnDeserialized()
             {}
         }
+
         [ProtoContract]
-        public class CallbackWithRemotingContext
+        public class CallbackWithProtoContext
         {
             [ProtoAfterDeserialization]
             public void OnDeserialized(SerializationContext context)
@@ -335,8 +344,10 @@ namespace Examples
             public object ReadState { get; set; }
             public object WriteState { get; set; }
         }
+
+#if REMOTING
         [ProtoContract]
-        public class CallbackWithProtoContext
+        public class CallbackWithRemotingContext
         {
             [OnDeserialized]
             public void OnDeserialized(StreamingContext context)
@@ -351,5 +362,6 @@ namespace Examples
             public object ReadState { get; set; }
             public object WriteState { get; set; }
         }
+#endif
     }
 }

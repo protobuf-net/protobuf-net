@@ -44,13 +44,20 @@ namespace ProtoBuf.Meta
             if (callback.IsStatic) throw new ArgumentException("Callbacks cannot be static", "callback");
             ParameterInfo[] args = callback.GetParameters();
             if (callback.ReturnType == typeof(void) && (args.Length == 0
+                || (args.Length == 1 && (args[0].ParameterType == typeof(SerializationContext)
 #if PLAT_BINARYFORMATTER
-                || (args.Length == 1 && (args[0].ParameterType == typeof(System.Runtime.Serialization.StreamingContext)
-                   || args[0].ParameterType == typeof(SerializationContext)) )
+                || args[0].ParameterType == typeof(System.Runtime.Serialization.StreamingContext)
 #endif
-                )) { }
-            else throw new ArgumentException("Invalid callback signature", "callback");
+            )))) { }
+            else
+            {
+                throw CreateInvalidCallbackSignature(callback);
+            }
             return callback;
+        }
+        internal static Exception CreateInvalidCallbackSignature(MethodInfo method)
+        {
+            return new NotSupportedException("Invalid callback signature in " + method.DeclaringType.Name + "." + method.Name);
         }
         /// <summary>Called before deserializing an instance</summary>
         public MethodInfo BeforeDeserialize

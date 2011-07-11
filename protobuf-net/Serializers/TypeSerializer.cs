@@ -220,13 +220,9 @@ namespace ProtoBuf.Serializers
                 }
                 if (!handled)
                 {
-                    throw CreateInvalidCallbackSignature(method);
+                    throw Meta.CallbackSet.CreateInvalidCallbackSignature(method);
                 }
             }
-        }
-        static Exception CreateInvalidCallbackSignature(MethodInfo method)
-        {
-            return new NotSupportedException("Invalid callback signature in " + method.DeclaringType.Name + "." + method.Name);
         }
         object CreateInstance(ProtoReader source)
         {
@@ -376,7 +372,7 @@ namespace ProtoBuf.Serializers
                 }
                 if (!handled)
                 {
-                    throw CreateInvalidCallbackSignature(method);
+                    throw Meta.CallbackSet.CreateInvalidCallbackSignature(method);
                 }
                 
                 ctx.EmitCall(method);
