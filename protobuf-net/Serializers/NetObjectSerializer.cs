@@ -3,18 +3,20 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
+
     sealed class NetObjectSerializer : IProtoSerializer
     {
         private readonly int key;
         private readonly Type type;
-        private readonly bool asReference;
-        private readonly bool dynamicType;
-        public NetObjectSerializer(Type type, int key, bool asReference, bool dynamicType)
+
+        private readonly BclHelpers.NetObjectOptions options;
+
+        public NetObjectSerializer(Type type, int key, BclHelpers.NetObjectOptions options)
         {
+            bool dynamicType = (options & BclHelpers.NetObjectOptions.DynamicType) != 0;
             this.key = dynamicType ? -1 : key;
             this.type = dynamicType ? typeof(object) : type;
-            this.asReference = asReference;
-            this.dynamicType = dynamicType;
+            this.options = options;
         }
 
         public Type ExpectedType
@@ -32,11 +34,11 @@ namespace ProtoBuf.Serializers
         
         public object Read(object value, ProtoReader source)
         {
-            return BclHelpers.ReadNetObject(value, source, key, type == typeof(object) ? null : type);
+            return BclHelpers.ReadNetObject(value, source, key, type == typeof(object) ? null : type, options);
         }
         public void Write(object value, ProtoWriter dest)
         {
-            BclHelpers.WriteNetObject(value, dest, key, dynamicType, asReference);
+            BclHelpers.WriteNetObject(value, dest, key, options);
         }
 
 #if FEAT_COMPILER
@@ -48,6 +50,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue(key);
             if (type == typeof(object)) ctx.LoadNullRef();
             else ctx.LoadValue(type);
+            ctx.LoadValue((int)options);
             ctx.EmitCall(typeof(BclHelpers).GetMethod("ReadNetObject"));
             ctx.CastFromObject(type);
         }
@@ -57,8 +60,7 @@ namespace ProtoBuf.Serializers
             ctx.CastToObject(type);
             ctx.LoadReaderWriter();
             ctx.LoadValue(key);
-            ctx.LoadValue(dynamicType);
-            ctx.LoadValue(asReference);
+            ctx.LoadValue((int)options);
             ctx.EmitCall(typeof(BclHelpers).GetMethod("WriteNetObject"));
         }
 #endif

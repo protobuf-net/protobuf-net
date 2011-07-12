@@ -342,11 +342,18 @@ namespace ProtoBuf
             FieldNewTypeKey = 4,
             FieldTypeName = 8,
             FieldObject = 10;
-
+        [Flags]
+        public enum NetObjectOptions : byte
+        {
+            None = 0,
+            AsReference = 1,
+            DynamicType = 2,
+            UseConstructor = 4
+        }
         /// <summary>
         /// Reads an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        public static object ReadNetObject(object value, ProtoReader source, int key, Type type)
+        public static object ReadNetObject(object value, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
             SubItemToken token = ProtoReader.StartSubItem(source);
             int fieldNumber;
@@ -377,7 +384,10 @@ namespace ProtoBuf
                     case FieldObject:
                         bool isString = type == typeof(string);
                         bool lateSet = value == null && isString;
-                        if (value == null && !lateSet) value = Activator.CreateInstance(type); // TODO wcf-style inits
+                        if (value == null && !lateSet)
+                        {
+                            value = ((options & NetObjectOptions.UseConstructor) == 0) ? BclHelpers.GetUninitializedObject(type) : Activator.CreateInstance(type);
+                        }
                         if (newObjectKey >= 0 && !lateSet)
                         {
                             source.NetCache.SetKeyedObject(newObjectKey, value);
@@ -415,9 +425,11 @@ namespace ProtoBuf
         /// <summary>
         /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        public static void WriteNetObject(object value, ProtoWriter dest, int key, bool dynamicType, bool asReference)
+        public static void WriteNetObject(object value, ProtoWriter dest, int key, NetObjectOptions options)
         {
             Helpers.DebugAssert(value != null);
+            bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
+                 asReference = (options & NetObjectOptions.AsReference) != 0;
             WireType wireType = dest.WireType;
             SubItemToken token = ProtoWriter.StartSubItem(null, dest);
             bool writeObject = true;
