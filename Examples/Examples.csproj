@@ -175,6 +175,7 @@
     <Compile Include="Issues\Issue185.cs" />
     <Compile Include="Issues\Issue191.cs" />
     <Compile Include="Issues\Issue192.cs" />
+    <Compile Include="Issues\Issue199.cs" />
     <Compile Include="Issues\Issue202.cs" />
     <Compile Include="Issues\Issue203.cs" />
     <Compile Include="Issues\Issue26.cs" />

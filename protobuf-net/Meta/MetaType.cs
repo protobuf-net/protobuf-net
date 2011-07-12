@@ -621,27 +621,29 @@ namespace ProtoBuf.Meta
 
             object defaultValue = null;
             // implicit zero default
-            switch (Type.GetTypeCode(effectiveType))
+            if (model.UseImplicitZeroDefaults)
             {
-                case TypeCode.Boolean: defaultValue = false; break;
-                case TypeCode.Decimal: defaultValue = (decimal)0; break;
-                case TypeCode.Single: defaultValue = (float)0; break;
-                case TypeCode.Double: defaultValue = (double)0; break;
-                case TypeCode.Byte: defaultValue = (byte)0;  break;
-                case TypeCode.Char: defaultValue = (char)0; break;
-                case TypeCode.Int16: defaultValue = (short)0; break;
-                case TypeCode.Int32: defaultValue = (int)0; break;
-                case TypeCode.Int64: defaultValue = (long)0; break;
-                case TypeCode.SByte: defaultValue = (sbyte)0; break;
-                case TypeCode.UInt16: defaultValue = (ushort)0; break;
-                case TypeCode.UInt32: defaultValue = (uint)0; break;
-                case TypeCode.UInt64: defaultValue = (ulong)0; break;
-                default:
-                    if (effectiveType == typeof(TimeSpan)) defaultValue = TimeSpan.Zero;
-                    if (effectiveType == typeof(Guid)) defaultValue = Guid.Empty;
-                    break;
+                switch (Type.GetTypeCode(effectiveType))
+                {
+                    case TypeCode.Boolean: defaultValue = false; break;
+                    case TypeCode.Decimal: defaultValue = (decimal)0; break;
+                    case TypeCode.Single: defaultValue = (float)0; break;
+                    case TypeCode.Double: defaultValue = (double)0; break;
+                    case TypeCode.Byte: defaultValue = (byte)0; break;
+                    case TypeCode.Char: defaultValue = (char)0; break;
+                    case TypeCode.Int16: defaultValue = (short)0; break;
+                    case TypeCode.Int32: defaultValue = (int)0; break;
+                    case TypeCode.Int64: defaultValue = (long)0; break;
+                    case TypeCode.SByte: defaultValue = (sbyte)0; break;
+                    case TypeCode.UInt16: defaultValue = (ushort)0; break;
+                    case TypeCode.UInt32: defaultValue = (uint)0; break;
+                    case TypeCode.UInt64: defaultValue = (ulong)0; break;
+                    default:
+                        if (effectiveType == typeof(TimeSpan)) defaultValue = TimeSpan.Zero;
+                        if (effectiveType == typeof(Guid)) defaultValue = Guid.Empty;
+                        break;
+                }
             }
-            
             if ((attrib = GetAttribute(attribs, "System.ComponentModel.DefaultValueAttribute")) != null)
             {
                 defaultValue = GetMemberValue(attrib, "Value");

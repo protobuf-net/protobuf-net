@@ -17,8 +17,25 @@ namespace ProtoBuf.Meta
     /// </summary>
     public sealed class RuntimeTypeModel : TypeModel
     {
-
-        private bool inferTagFromNameDefault;
+        private byte options;
+        private const byte
+           OPTIONS_InferTagFromNameDefault = 1,
+           OPTIONS_IsDefaultModel = 2,
+           OPTIONS_Frozen = 4,
+           OPTIONS_AutoAddMissingTypes = 8,
+#if FEAT_COMPILER && !FX11
+           OPTIONS_AutoCompile = 16,
+#endif
+           OPTIONS_UseImplicitZeroDefaults = 32;
+        private bool GetOption(byte option)
+        {
+            return (options & option) == option;
+        }
+        private void SetOption(byte option, bool value)
+        {
+            if (value) options |= option;
+            else options &= (byte)~option;
+        }
         /// <summary>
         /// Global default for that
         /// enables/disables automatic tag generation based on the existing name / order
@@ -29,8 +46,28 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool InferTagFromNameDefault
         {
-            get { return inferTagFromNameDefault; }
-            set { inferTagFromNameDefault = value; }
+            get { return GetOption(OPTIONS_InferTagFromNameDefault); }
+            set { SetOption(OPTIONS_InferTagFromNameDefault, value); }
+        }
+        /// <summary>
+        /// Global switch that enables or disables the implicit
+        /// handling of "zero defaults"; meanning: if no other default is specified,
+        /// it assumes bools always default to false, integers to zero, etc.
+        /// 
+        /// If this is disabled, no such assumptions are made and only *explicit*
+        /// default values are processed. This is enabled by default to 
+        /// preserve similar logic to v1.
+        /// </summary>
+        public bool UseImplicitZeroDefaults
+        {
+            get {return GetOption(OPTIONS_UseImplicitZeroDefaults);}
+            set {
+                if (!value && GetOption(OPTIONS_IsDefaultModel))
+                {
+                    throw new InvalidOperationException("UseImplicitZeroDefaults cannot be disabled on the default model");
+                }
+                SetOption(OPTIONS_UseImplicitZeroDefaults, value);
+            }
         }
 
         private class Singleton
@@ -50,13 +87,14 @@ namespace ProtoBuf.Meta
         /// processed by this model.
         /// </summary>
         public IEnumerable GetTypes() { return types; }
-        private readonly bool isDefault;
+
         internal RuntimeTypeModel(bool isDefault)
         {
             AutoAddMissingTypes = true;
-            this.isDefault = isDefault;
+            UseImplicitZeroDefaults = true;
+            SetOption(OPTIONS_IsDefaultModel, isDefault);
 #if FEAT_COMPILER && !FX11 && !DEBUG
-            autoCompile = true; 
+            AutoCompile = true;
 #endif
         }
         /// <summary>
@@ -131,7 +169,7 @@ namespace ProtoBuf.Meta
                     // try to recognise a few familiar patterns...
                     if ((metaType = RecogniseCommonTypes(type)) == null)
                     { // otherwise, check if it is a contract
-                        bool shouldAdd = autoAddMissingTypes || addEvenIfAutoDisabled;
+                        bool shouldAdd = AutoAddMissingTypes || addEvenIfAutoDisabled;
                         if (!shouldAdd || (
                             !type.IsEnum && addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
                             )
@@ -262,18 +300,15 @@ namespace ProtoBuf.Meta
             return newType;
         }
 
-        bool frozen, autoAddMissingTypes;
-
 #if FEAT_COMPILER && !FX11
-        bool autoCompile;
         /// <summary>
         /// Should serializers be compiled on demand? It may be useful
         /// to disable this for debugging purposes.
         /// </summary>
         public bool AutoCompile
         {
-            get { return autoCompile; }
-            set { autoCompile = value; }
+            get { return GetOption(OPTIONS_AutoCompile); }
+            set { SetOption(OPTIONS_AutoCompile, value); }
         }
 #endif
         /// <summary>
@@ -283,14 +318,14 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AutoAddMissingTypes
         {
-            get { return autoAddMissingTypes; }
+            get { return GetOption(OPTIONS_AutoAddMissingTypes); }
             set {
-                if (!value && isDefault)
+                if (!value && GetOption(OPTIONS_IsDefaultModel))
                 {
                     throw new InvalidOperationException("The default model must allow missing types");
                 }
                 ThrowIfFrozen();
-                autoAddMissingTypes = value;
+                SetOption(OPTIONS_AutoAddMissingTypes, value);
             }
         }
         /// <summary>
@@ -298,15 +333,15 @@ namespace ProtoBuf.Meta
         /// </summary>
         private void ThrowIfFrozen()
         {
-            if (frozen) throw new InvalidOperationException("The model cannot be changed once frozen");
+            if (GetOption(OPTIONS_Frozen)) throw new InvalidOperationException("The model cannot be changed once frozen");
         }
         /// <summary>
         /// Prevents further changes to this model
         /// </summary>
         public void Freeze()
         {
-            if (isDefault) throw new InvalidOperationException("The default model cannot be frozen");
-            frozen = true;
+            if (GetOption(OPTIONS_IsDefaultModel)) throw new InvalidOperationException("The default model cannot be frozen");
+            SetOption(OPTIONS_Frozen, true);
         }
 
         private readonly BasicList types = new BasicList();
