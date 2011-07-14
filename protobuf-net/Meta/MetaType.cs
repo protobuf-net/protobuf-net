@@ -44,7 +44,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AsReferenceDefault
         { 
-            get { return !HasFlag(OPTIONS_AsReferenceDefault); }
+            get { return HasFlag(OPTIONS_AsReferenceDefault); }
             set { SetFlag(OPTIONS_AsReferenceDefault, value, true); }
         }
 
@@ -755,7 +755,16 @@ namespace ProtoBuf.Meta
         /// </summary>        
         public MetaType Add(int fieldNumber, string memberName)
         {
-            return Add(fieldNumber, memberName, null, null, null);
+            AddField(fieldNumber, memberName, null, null, null);
+            return this;
+        }
+        /// <summary>
+        /// Adds a member (by name) to the MetaType, returning the ValueMember rather than the fluent API.
+        /// This is otherwise identical to Add.
+        /// </summary>
+        public ValueMember AddField(int fieldNumber, string memberName)
+        {
+            return AddField(fieldNumber, memberName, null, null, null);
         }
         /// <summary>
         /// Gets or sets whether the type should use a parameterless constructor (the default),
@@ -849,7 +858,8 @@ namespace ProtoBuf.Meta
         /// </summary>        
         public MetaType Add(int fieldNumber, string memberName, object defaultValue)
         {
-            return Add(fieldNumber, memberName, null, null, defaultValue);
+            AddField(fieldNumber, memberName, null, null, defaultValue);
+            return this;
         }
 
         private static void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType) {
@@ -917,10 +927,20 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType)
         {
-            return Add(fieldNumber, memberName, itemType, defaultType, null);
+            AddField(fieldNumber, memberName, itemType, defaultType, null);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a member (by name) to the MetaType, including an itemType and defaultType for representing lists, returning the ValueMember rather than the fluent API.
+        /// This is otherwise identical to Add.
+        /// </summary>
+        public ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType)
+        {
+            return AddField(fieldNumber, memberName, itemType, defaultType, null);
         }
         
-        private MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
+        private ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
         {
             MemberInfo[] members = type.GetMember(memberName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if(members == null || members.Length != 1) throw new ArgumentException("Unable to determine member: " + memberName, "memberName");
@@ -937,8 +957,9 @@ namespace ProtoBuf.Meta
             }
 
             ResolveListTypes(miType, ref itemType, ref defaultType);
-            Add(new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType, DataFormat.Default, defaultValue));
-            return this;
+            ValueMember newField = new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType, DataFormat.Default, defaultValue);
+            Add(newField);
+            return newField;
         } 
         private void Add(ValueMember member) {
             lock (fields)
