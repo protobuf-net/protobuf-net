@@ -31,6 +31,24 @@ namespace Examples.Issues
             var model = TypeModel.Create();
             model.Add(typeof(IList<int>), false).AddSubType(5, typeof(List<int>));
         }
+        [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass")]
+        public void ListAsSubclass()
+        {
+            var m = TypeModel.Create();
+            m.Add(typeof(IMobileObject), false).AddSubType(1, typeof(A)).AddSubType(2, typeof(MobileList<int>));
+        }
+        [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate")]
+        public void CantSurrogateLists()
+        {
+            var model = TypeModel.Create();
+            model.Add(typeof(IList<int>), false).SetSurrogate(typeof(MobileList<int>));
+        }
+        [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate")]
+        public void ListAsSurrogate()
+        {
+            var m = TypeModel.Create();
+            m.Add(typeof(IMobileObject), false).SetSurrogate(typeof(MobileList<int>));
+        }
 
 
         public interface IMobileObject { }
@@ -63,37 +81,7 @@ namespace Examples.Issues
             [ProtoMember(1)]
             public List<IMobileObject> Objects { get; set; }
         }
-        //[Test]
-        //public void Execute()
-        //{
-        //    var m = TypeModel.Create();
-        //    m.AutoCompile = false;                 
-        //    m.Add(typeof(IMobileObject), false).AddSubType(1, typeof(A)).AddSubType(2, typeof(MobileList<int>));
 
-        //    TestListAsSubclass(m, "Runtime");
 
-        //    m.CompileInPlace();
-        //    TestListAsSubclass(m, "CompileInPlace");
-
-        //    TestListAsSubclass(m.Compile(), "Compile");
-
-        //    m.Compile("Issue184", "Issue184.dll");
-        //    PEVerify.AssertValid("Issue184.dll");
-        //}
-
-        //private static void TestListAsSubclass(TypeModel m, string caption)
-        //{
-        //    var b = new B { Objects = new List<IMobileObject> { new A { X = 3 }, new A { X = 17 }, new MobileList<int> { 3, 7 } } };
-        //    using (var ms = new MemoryStream())
-        //    {
-        //        m.Serialize(ms, b);
-        //        ms.Position = 0;
-        //        var b2 = (B)m.Deserialize(ms, null, typeof(B));
-        //        Assert.AreEqual(3, b2.Objects.Count, caption);
-        //        Assert.AreEqual(b.Objects[0], b2.Objects[0], caption);
-        //        Assert.AreEqual(b.Objects[1], b2.Objects[1], caption);
-        //        Assert.AreEqual(b.Objects[2], b2.Objects[2], caption);
-        //    }
-        //}
     }
 }

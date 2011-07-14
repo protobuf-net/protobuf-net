@@ -39,6 +39,15 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_PrivateOnApi, !value, true); }
         }
 
+        /// <summary>
+        /// Should this type be treated as a reference by default?
+        /// </summary>
+        public bool AsReferenceDefault
+        { 
+            get { return !HasFlag(OPTIONS_AsReferenceDefault); }
+            set { SetFlag(OPTIONS_AsReferenceDefault, value, true); }
+        }
+
         private BasicList subTypes;
         /// <summary>
         /// Adds a known sub-type to the inheritance model
@@ -51,6 +60,10 @@ namespace ProtoBuf.Meta
             if (typeof(IEnumerable).IsAssignableFrom(type))
             {
                 throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
+            }
+            if (typeof(IEnumerable).IsAssignableFrom(derivedType))
+            {
+                throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
             }
             ThrowIfFrozen();
             MetaType derivedMeta = model[derivedType];
@@ -782,10 +795,22 @@ namespace ProtoBuf.Meta
         /// other serialization options are ignored and handled
         /// by the surrogate's configuration.
         /// </summary>
-        public void SetSurrogate(Type type)
+        public void SetSurrogate(Type surrogateType)
         {
+            if (surrogateType == type) surrogateType = null;
+            if (surrogateType != null)
+            {
+                if (typeof(IEnumerable).IsAssignableFrom(type))
+                {
+                    throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
+                }
+                if (typeof(IEnumerable).IsAssignableFrom(surrogateType))
+                {
+                    throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
+                }
+            }
             ThrowIfFrozen();
-            this.surrogate = type;
+            this.surrogate = surrogateType;
             // no point in offering chaining; no options are respected
         }
 
@@ -1021,7 +1046,8 @@ namespace ProtoBuf.Meta
                    OPTIONS_EnumPassThru = 2,
                    OPTIONS_Frozen = 4,
                    OPTIONS_PrivateOnApi = 8,
-                   OPTIONS_SkipConstructor = 16;
+                   OPTIONS_SkipConstructor = 16,
+                   OPTIONS_AsReferenceDefault = 32;
 
         private volatile byte flags;
         private bool HasFlag(byte flag) { return (flags & flag) == flag; }

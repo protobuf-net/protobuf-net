@@ -256,7 +256,7 @@ namespace Examples.SimpleStream
             SomeEnumEntity dee = new SomeEnumEntity { Enum = 0 };
             Serializer.Serialize(Stream.Null, dee);
         }
-        [Test, Ignore("Depends on extension")]
+        [Test]
         public void TestDeserializeUndefinedEnum()
         { // this looks insane but is correct; it drops data on the floor to match the expected
             //
@@ -272,7 +272,7 @@ namespace Examples.SimpleStream
             Assert.AreEqual(SomeEnum.Foo, see.Enum.Value);
 
         }
-        [Test, Ignore("Depends on extension")]
+        [Test]
         public void TestDeserializeUndefinedEnumWithoutDefault()
         {
             // check we can deserialize with the extra data

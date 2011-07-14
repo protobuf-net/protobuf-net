@@ -145,7 +145,7 @@ namespace ProtoBuf
             if(instance == null) throw new ArgumentNullException("instance");
             if(value == null) throw new ArgumentNullException("value");
 
-            //TODO: CheckTagNotInUse
+            // TODO
             //model.CheckTagNotInUse(tag);
 
             // obtain the extension object and prepare to write

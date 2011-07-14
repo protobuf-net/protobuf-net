@@ -64,6 +64,9 @@ namespace ProtoBuf.Meta
                 defaultValue = ParseDefaultValue(memberType, defaultValue);
             }
             this.defaultValue = defaultValue;
+
+            MetaType type = model.FindWithoutAdd(memberType);
+            if (type != null) this.asReference = type.AsReferenceDefault;
         }
         /// <summary>
         /// Creates a new ValueMember instance

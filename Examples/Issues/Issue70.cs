@@ -17,7 +17,7 @@ namespace Examples.Issues
         }
 
         [Test]
-        public void SerializaeWithLengthPrefixShouldWorkWithBase128()
+        public void SerializeWithLengthPrefixShouldWorkWithBase128()
         {
             var original = new Strange { Foo = "abc", Bar = 123 };
             // serialize and deserialize with base-128
@@ -36,7 +36,7 @@ namespace Examples.Issues
             }
         }
         [Test]
-        public void SerializaeWithLengthPrefixShouldWorkWithFixed32()
+        public void SerializeWithLengthPrefixShouldWorkWithFixed32()
         {
             var original = new Strange { Foo = "abc", Bar = 123 };
             // serialize and deserialize with fixed-32
