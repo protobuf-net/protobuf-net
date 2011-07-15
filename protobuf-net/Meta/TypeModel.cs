@@ -923,6 +923,9 @@ namespace ProtoBuf.Meta
 #endif
 
 #if !CF
+            // EF POCO
+            if (type.FullName.StartsWith("System.Data.Entity.DynamicProxies.")) return type.BaseType;
+
             // NHibernate
             Type[] interfaces = type.GetInterfaces();
             for(int i = 0 ; i < interfaces.Length ; i++)
