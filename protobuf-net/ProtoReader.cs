@@ -32,7 +32,7 @@ namespace ProtoBuf
         /// Indicates the underlying proto serialization format on the wire.
         /// </summary>
         public WireType WireType { get { return wireType; } }
-        
+
         /// <summary>
         /// Creates a new reader against a stream
         /// </summary>
@@ -1170,5 +1170,6 @@ namespace ProtoBuf
                 reader.firstObject = false;
             }
         }
+
     }
 }

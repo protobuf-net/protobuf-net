@@ -13,7 +13,7 @@ namespace ProtoBuf
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = false)]
     public sealed class ProtoIncludeAttribute : Attribute
     {
-        /// <summary>
+        ///<summary>
         /// Creates a new instance of the ProtoIncludeAttribute.
         /// </summary>
         /// <param name="tag">The unique index (within the type) that will identify this data.</param>
@@ -31,7 +31,7 @@ namespace ProtoBuf
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag", "Tags must be positive integers");
             if (Helpers.IsNullOrEmpty(knownTypeName)) throw new ArgumentNullException("knownTypeName", "Known type cannot be blank");
             this.tag = tag;
-            this.name = knownTypeName;
+            this.knownTypeName = knownTypeName;
         }
 
         /// <summary>
@@ -43,8 +43,8 @@ namespace ProtoBuf
         /// <summary>
         /// Gets the additional type to serialize/deserialize.
         /// </summary>
-        public string KnownTypeName { get { return name; } }
-        private readonly string name;
+        public string KnownTypeName { get { return knownTypeName; } }
+        private readonly string knownTypeName;
 
         /// <summary>
         /// Gets the additional type to serialize/deserialize.
@@ -53,7 +53,7 @@ namespace ProtoBuf
         {
             get
             {
-                return Type.GetType(KnownTypeName);
+                return ResolveKnownType(null);
             }
         }
 

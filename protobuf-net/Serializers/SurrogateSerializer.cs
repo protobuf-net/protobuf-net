@@ -1,6 +1,7 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Reflection;
+using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
@@ -32,19 +33,41 @@ namespace ProtoBuf.Serializers
             toTail = GetConversion(true);
             fromTail = GetConversion(false);
         }
+        private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
+        {
+            const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            MethodInfo[] found = type.GetMethods(flags);
+            for(int i = 0 ; i < found.Length ; i++)
+            {
+                MethodInfo m = found[i];
+                if ((m.Name != "op_Implicit" && m.Name != "op_Explicit") || m.ReturnType != to)
+                {
+                    continue;
+                }
+                ParameterInfo[] paramTypes = m.GetParameters();
+                if(paramTypes.Length == 1 && paramTypes[0].ParameterType == from)
+                {
+                    op = m;
+                    return true;
+                }
+            }
+            op = null;
+            return false;
+        }
+
         public MethodInfo GetConversion(bool toTail)
         {
-            Type surrogateType = declaredType, to = toTail ? surrogateType : forType;
-            Type[] from = new Type[] {toTail ? forType : surrogateType};
-            const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            Type to = toTail ? declaredType : forType;
+            Type from = toTail ? forType : declaredType;
             MethodInfo op;
-            if ((op = surrogateType.GetMethod("op_Implicit", flags, null, from, null)) != null && op.ReturnType == to) return op;
-            if ((op = surrogateType.GetMethod("op_Explicit", flags, null, from, null)) != null && op.ReturnType == to) return op;
-            if ((op = forType.GetMethod("op_Implicit", flags, null, from, null)) != null && op.ReturnType == to) return op;
-            if ((op = forType.GetMethod("op_Explicit", flags, null, from, null)) != null && op.ReturnType == to) return op;
-            throw new InvalidOperationException("No suitable conversion operator found fopr surrogate: " +
-                forType.FullName + " / " + surrogateType.FullName);
+            if (HasCast(declaredType, from, to, out op) || HasCast(forType, from, to, out op))
+            {
+                return op;
+            }
+            throw new InvalidOperationException("No suitable conversion operator found for surrogate: " +
+                forType.FullName + " / " + declaredType.FullName);
         }
+
 
         public void Write(object value, ProtoWriter writer)
         {

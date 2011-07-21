@@ -200,5 +200,41 @@ namespace Examples
             Assert.IsNotNull(clone.Foo, "not null after (full compile)");
             Assert.IsInstanceOfType(typeof(BasicDynamicTestInner), outer.Foo, "typed after (full compile)");
         }
+
+
+
+        [ProtoContract]
+        abstract class BaseType
+        {
+            [ProtoMember(1)]
+            public string Foo { get; set; }
+        }
+        [ProtoContract]
+        class Derived : BaseType
+        {
+            [ProtoMember(1)]
+            public int Bar { get; set; }
+        }
+        [ProtoContract]
+        class Wrapper
+        {
+            [ProtoMember(1, DynamicType = true)]
+            public object Value { get; set; }
+        }
+        [Test]
+        public void TestUnknownDerivedType()
+        {
+            var obj = new Wrapper { Value = new Derived { Bar = 123, Foo = "abc" } };
+
+            var clone = Serializer.DeepClone(obj);
+            Assert.IsInstanceOfType(typeof(Derived), clone.Value);
+            Derived d = (Derived)clone.Value;
+            Assert.AreEqual(123, d.Bar);
+            Assert.AreEqual("abc", d.Foo);
+        }
+
     }
+
+
+    
 }

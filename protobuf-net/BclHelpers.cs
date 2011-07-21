@@ -342,12 +342,28 @@ namespace ProtoBuf
             FieldNewTypeKey = 4,
             FieldTypeName = 8,
             FieldObject = 10;
+        /// <summary>
+        /// Optional behaviours that introduce .NET-specific functionality
+        /// </summary>
         [Flags]
         public enum NetObjectOptions : byte
         {
+            /// <summary>
+            /// No special behaviour
+            /// </summary>
             None = 0,
+            /// <summary>
+            /// Enables full object-tracking/full-graph support.
+            /// </summary>
             AsReference = 1,
+            /// <summary>
+            /// Embeds the type information into the stream, allowing usage with types not known in advance.
+            /// </summary>
             DynamicType = 2,
+            /// <summary>
+            /// If false, the constructor for the type is bypassed during deserialization, meaning any field initializers
+            /// or other initialization code is skipped.
+            /// </summary>
             UseConstructor = 4
         }
         /// <summary>

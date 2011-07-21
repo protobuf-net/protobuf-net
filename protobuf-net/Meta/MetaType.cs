@@ -54,6 +54,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType AddSubType(int fieldNumber, Type derivedType)
         {
+            if (derivedType == null) throw new ArgumentNullException("derivedType");
+            if (fieldNumber < 1) throw new ArgumentOutOfRangeException("fieldNumber");
             if (!(type.IsClass || type.IsInterface) || type.IsSealed) {
                 throw new InvalidOperationException("Sub-types can only be added to non-sealed classes");
             }
@@ -333,7 +335,12 @@ namespace ProtoBuf.Meta
                 if (!isEnum && item is ProtoIncludeAttribute)
                 {
                     ProtoIncludeAttribute pia = (ProtoIncludeAttribute)item;
-                    AddSubType(pia.Tag, pia.KnownType);
+                    Type knownType = pia.ResolveKnownType(type.Assembly);
+                    if (knownType == null)
+                    {
+                        throw new InvalidOperationException("Unable to resolve sub-type: " + pia.KnownTypeName);
+                    }                    
+                    AddSubType(pia.Tag, knownType);
                 }
                 if(item is ProtoPartialIgnoreAttribute)
                 {
