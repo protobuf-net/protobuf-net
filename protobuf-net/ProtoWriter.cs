@@ -197,6 +197,7 @@ namespace ProtoBuf
                     goto CopyFixedLength;  // ugly but effective
                 case WireType.String:
                     WriteUInt32Variant((uint)length, writer);
+                    writer.wireType = WireType.None;
                     if (length == 0) return;
                     if (writer.flushLock != 0 || length <= writer.ioBuffer.Length) // write to the buffer
                     {
@@ -209,7 +210,6 @@ namespace ProtoBuf
                     writer.dest.Write(data, offset, length);
                     writer.position += length; // since we've flushed offset etc is 0, and remains
                                         // zero since we're writing directly to the stream
-                    writer.wireType = WireType.None;
                     return;
             }
             throw CreateException(writer);
