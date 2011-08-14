@@ -54,18 +54,18 @@ namespace ProtoBuf
                 }
             }
         }
-        class StringMatch : BasicList.IPredicate
-        {
-            private readonly string value;
-            public StringMatch(string value) {
-                this.value = value;
-            }
-            public bool IsMatch(object obj)
-            {
-                string s;
-                return (s = obj as string) != null && s == value;
-            }
-        }
+        //class StringMatch : BasicList.IPredicate
+        //{
+        //    private readonly string value;
+        //    public StringMatch(string value) {
+        //        this.value = value;
+        //    }
+        //    public bool IsMatch(object obj)
+        //    {
+        //        string s;
+        //        return (s = obj as string) != null && s == value;
+        //    }
+        //}
         private object rootObject;
         internal int AddObjectKey(object value, out bool existing)
         {
