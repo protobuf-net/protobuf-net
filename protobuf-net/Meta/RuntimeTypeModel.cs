@@ -169,9 +169,12 @@ namespace ProtoBuf.Meta
                     // try to recognise a few familiar patterns...
                     if ((metaType = RecogniseCommonTypes(type)) == null)
                     { // otherwise, check if it is a contract
+                        MetaType.AttributeFamily family = MetaType.GetContractFamily(type, null);
+                        if (family == MetaType.AttributeFamily.AutoTuple) addEvenIfAutoDisabled = true; // always add basic tuples, such as KeyValuePair
+
                         bool shouldAdd = AutoAddMissingTypes || addEvenIfAutoDisabled;
                         if (!shouldAdd || (
-                            !type.IsEnum && addWithContractOnly && MetaType.GetContractFamily(type, null) == MetaType.AttributeFamily.None)
+                            !type.IsEnum && addWithContractOnly && family == MetaType.AttributeFamily.None)
                             )
                         {
                             if (demand) ThrowUnexpectedType(type);
@@ -210,26 +213,26 @@ namespace ProtoBuf.Meta
 
         private MetaType RecogniseCommonTypes(Type type)
         {
-#if !NO_GENERICS
-            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
-            {
-                MetaType mt = new MetaType(this, type);
+//#if !NO_GENERICS
+//            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
+//            {
+//                MetaType mt = new MetaType(this, type);
 
-                Type surrogate = typeof (KeyValuePairSurrogate<,>).MakeGenericType(type.GetGenericArguments());
+//                Type surrogate = typeof (KeyValuePairSurrogate<,>).MakeGenericType(type.GetGenericArguments());
 
-                mt.SetSurrogate(surrogate);
-                mt.IncludeSerializerMethod = false;
-                mt.Freeze();
+//                mt.SetSurrogate(surrogate);
+//                mt.IncludeSerializerMethod = false;
+//                mt.Freeze();
 
-                MetaType surrogateMeta = (MetaType)types[FindOrAddAuto(surrogate, true, true, true)]; // this forcibly adds it if needed
-                if(surrogateMeta.IncludeSerializerMethod)
-                { // don't blindly set - it might be frozen
-                    surrogateMeta.IncludeSerializerMethod = false;
-                }
-                surrogateMeta.Freeze();
-                return mt;
-            }
-#endif
+//                MetaType surrogateMeta = (MetaType)types[FindOrAddAuto(surrogate, true, true, true)]; // this forcibly adds it if needed
+//                if(surrogateMeta.IncludeSerializerMethod)
+//                { // don't blindly set - it might be frozen
+//                    surrogateMeta.IncludeSerializerMethod = false;
+//                }
+//                surrogateMeta.Freeze();
+//                return mt;
+//            }
+//#endif
             return null;
         }
         private MetaType Create(Type type)

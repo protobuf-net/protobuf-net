@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Examples</RootNamespace>
     <AssemblyName>Examples</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\ProtoBuf.snk</AssemblyOriginatorKeyFile>
@@ -35,6 +35,7 @@
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -153,6 +154,7 @@
   <ItemGroup>
     <Compile Include="Arrays.cs" />
     <Compile Include="AutoFields.cs" />
+    <Compile Include="AutoTuple.cs" />
     <Compile Include="Callbacks.cs" />
     <Compile Include="DataMemberOffset.cs" />
     <Compile Include="DetectMissing.cs" />

@@ -553,6 +553,15 @@ namespace ProtoBuf.Compiler
         {
             EmitCtor(type, Helpers.EmptyTypes);
         }
+        public void EmitCtor(ConstructorInfo ctor)
+        {
+            if (ctor == null) throw new ArgumentNullException("ctor");
+            il.Emit(OpCodes.Newobj, ctor);
+#if DEBUG_COMPILE
+            Helpers.DebugWriteLine(OpCodes.Newobj + ": " + ctor.DeclaringType);
+#endif
+        }
+
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
             Helpers.DebugAssert(type != null);

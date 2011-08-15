@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using ProtoBuf.Serializers;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -252,6 +253,13 @@ namespace ProtoBuf.Meta
                 while ((mtBase = mt.baseType) != null) { mt = mtBase; }
                 return new SurrogateSerializer(type, surrogate, mt.Serializer);
             }
+            if (HasFlag(OPTIONS_AutoTuple))
+            {
+                MemberInfo[] mapping;
+                ConstructorInfo ctor = ResolveTupleConstructor(type, out mapping);
+                if(ctor == null) throw new InvalidOperationException();
+                return new TupleSerializer(model, ctor, mapping);
+            }
 
             Type itemType = TypeModel.GetListItemType(type);
             if (itemType != null)
@@ -309,7 +317,7 @@ namespace ProtoBuf.Meta
         [Flags]
         internal enum AttributeFamily
         {
-            None = 0, ProtoBuf = 1, DataContractSerialier = 2, XmlSerializer = 4
+            None = 0, ProtoBuf = 1, DataContractSerialier = 2, XmlSerializer = 4, AutoTuple = 8
         }
         
         internal void ApplyDefaultBehaviour()
@@ -322,6 +330,10 @@ namespace ProtoBuf.Meta
 
             object[] typeAttribs = type.GetCustomAttributes(true);
             AttributeFamily family = GetContractFamily(type, typeAttribs);
+            if(family == AttributeFamily.AutoTuple)
+            {
+                SetFlag(OPTIONS_AutoTuple, true, true);
+            }
             bool isEnum = type.IsEnum;
             if(family ==  AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
             BasicList partialIgnores = null, partialMembers = null;
@@ -480,7 +492,105 @@ namespace ProtoBuf.Meta
                     case "System.Runtime.Serialization.DataContractAttribute": family |= AttributeFamily.DataContractSerialier; break;
                 }
             }
+            if(family == AttributeFamily.None)
+            { // check for obvious tuples
+                MemberInfo[] mapping;
+                if(ResolveTupleConstructor(type, out mapping) != null)
+                {
+                    family |= AttributeFamily.AutoTuple;
+                }
+            }
             return family;
+        }
+        private static ConstructorInfo ResolveTupleConstructor(Type type, out MemberInfo[] mappedMembers)
+        {
+            mappedMembers = null;
+            if(type == null) throw new ArgumentNullException("type");
+            if(type.IsAbstract) return null; // as if!
+            ConstructorInfo[] ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+            // need to have an interesting constructor to bother even checking this stuff
+            if(ctors.Length == 0 || (ctors.Length == 1 && ctors[0].GetParameters().Length == 0)) return null;
+
+            MemberInfo[] membersUnfiltered = type.GetMembers(BindingFlags.Public | BindingFlags.Instance);
+            BasicList memberList = new BasicList();
+            for(int i = 0 ; i < membersUnfiltered.Length ; i++)
+            {
+                switch(membersUnfiltered[i].MemberType)
+                {
+                    case MemberTypes.Field:
+                        if (!((FieldInfo)membersUnfiltered[i]).IsInitOnly) return null; // all public fields must be readonly to be counted a tuple
+                        memberList.Add(membersUnfiltered[i]);
+                        break;
+                    case MemberTypes.Property:
+                        PropertyInfo prop = (PropertyInfo) membersUnfiltered[i];
+                        if (!prop.CanRead || prop.CanWrite) return null; // all properties must be read-only to be counted a tuple
+                        memberList.Add(membersUnfiltered[i]);
+                        break;
+                }
+            }
+            if (memberList.Count == 0)
+            {
+                return null;
+            }
+
+            MemberInfo[] members = new MemberInfo[memberList.Count];
+            memberList.CopyTo(members, 0);
+
+            int[] mapping = new int[members.Length];
+            int found = 0;
+            ConstructorInfo result = null;
+            mappedMembers = new MemberInfo[mapping.Length];
+            for(int i = 0 ; i < ctors.Length ; i++)
+            {
+                ParameterInfo[] parameters = ctors[i].GetParameters();
+
+                if (parameters.Length != members.Length) continue;
+
+                // reset the mappings to test
+                for (int j = 0; j < mapping.Length; j++) mapping[j] = -1;
+
+                for(int j = 0 ; j < parameters.Length ; j++)
+                {
+                    string lower = parameters[j].Name;
+                    for(int k = 0 ; k < members.Length ; k++)
+                    {
+                        if (members[k].Name.ToLower() != lower) continue;
+                        Type memberType;
+                        switch(members[k].MemberType)
+                        {
+                            case MemberTypes.Field:
+                                memberType = ((FieldInfo) members[k]).FieldType;
+                                break;
+                            case MemberTypes.Property:
+                                memberType = ((PropertyInfo)members[k]).PropertyType;
+                                break;
+                            default:
+                                memberType = null;
+                                break;
+                        }
+                        if (memberType != parameters[j].ParameterType) continue;
+
+                        mapping[j] = k;
+                    }
+                }
+                // did we map all?
+                bool notMapped = false;
+                for (int j = 0; j < mapping.Length; j++)
+                {
+                    if (mapping[j] < 0)
+                    {
+                        notMapped = true;
+                        break;
+                    }
+                    mappedMembers[j] = members[mapping[j]];
+                }
+
+                if (notMapped) continue;
+                found++;
+                result = ctors[i];
+
+            }
+            return found == 1 ? result : null;
         }
         private static void CheckForCallback(MethodInfo method, object[] attributes, string callbackTypeName, ref MethodInfo[] callbacks, int index)
         {
@@ -869,7 +979,7 @@ namespace ProtoBuf.Meta
             return this;
         }
 
-        private static void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType) {
+        internal static void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType) {
             if (type == null) return;
             // handle arrays
             if (type.IsArray)
@@ -1070,12 +1180,13 @@ namespace ProtoBuf.Meta
         }
 
         private const byte
-                   OPTIONS_Pending = 1,
-                   OPTIONS_EnumPassThru = 2,
-                   OPTIONS_Frozen = 4,
-                   OPTIONS_PrivateOnApi = 8,
-                   OPTIONS_SkipConstructor = 16,
-                   OPTIONS_AsReferenceDefault = 32;
+            OPTIONS_Pending = 1,
+            OPTIONS_EnumPassThru = 2,
+            OPTIONS_Frozen = 4,
+            OPTIONS_PrivateOnApi = 8,
+            OPTIONS_SkipConstructor = 16,
+            OPTIONS_AsReferenceDefault = 32,
+            OPTIONS_AutoTuple = 64;
 
         private volatile byte flags;
         private bool HasFlag(byte flag) { return (flags & flag) == flag; }
