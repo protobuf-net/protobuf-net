@@ -132,6 +132,29 @@ namespace Examples
             Assert.AreEqual("abc", clone.Item2, "Compile");
         }
 
+
+        [Test]
+        public void TestAnonTypeAsTuple()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+
+            var obj = new {Foo = 123, Bar = "abc"};
+
+            CheckBytes(model, obj, "08 7B 12 03 61 62 63", "runtime");
+            dynamic clone = model.DeepClone(obj);
+            Assert.AreEqual(123, clone.Foo, "runtime");
+            Assert.AreEqual("abc", clone.Bar, "runtime");
+
+            model.CompileInPlace();
+            CheckBytes(model, obj, "08 7B 12 03 61 62 63", "CompileInPlace");
+            clone = model.DeepClone(obj);
+            Assert.AreEqual(123, clone.Foo, "CompileInPlace");
+            Assert.AreEqual("abc", clone.Bar, "CompileInPlace");
+
+            // note: Compile() won't work, as anon-types are internal
+        }
+
         [ProtoContract]
         public class HasTuples
         {
