@@ -39,7 +39,7 @@ namespace ProtoBuf.Serializers
                 {
                     if (finalType.IsArray)
                     {
-                        serializer = new ArrayDecorator(tail, i + 1, false, wireType, itemType, false);
+                        serializer = new ArrayDecorator(tail, i + 1, false, wireType, finalType, false);
                     }
                     else
                     {

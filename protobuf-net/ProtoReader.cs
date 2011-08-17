@@ -688,13 +688,13 @@ namespace ProtoBuf
             switch (wireType)
             {
                 case WireType.Fixed32:
-                    Ensure(4, true);
+                    if(available < 4) Ensure(4, true);
                     available -= 4;
                     ioIndex += 4;
                     position += 4;
                     return;
                 case WireType.Fixed64:
-                    Ensure(8, true);
+                    if (available < 8) Ensure(8, true);
                     available -= 8;
                     ioIndex += 8;
                     position += 8;

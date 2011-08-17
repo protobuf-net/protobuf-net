@@ -210,6 +210,8 @@
     <Compile Include="Issues\SO6505590.cs" />
     <Compile Include="Issues\SO6651451.cs" />
     <Compile Include="Issues\SO6671829.cs" />
+    <Compile Include="Issues\SO7064824.cs" />
+    <Compile Include="Issues\SO7078615.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListTests.cs" />
@@ -269,6 +271,7 @@
     <Compile Include="TagInference.cs" />
     <Compile Include="TestNumbers\NumberTests.cs" />
     <Compile Include="TraceError.cs" />
+    <Compile Include="Tuples.cs" />
     <Compile Include="ValueWrapper.cs" />
   </ItemGroup>
   <ItemGroup>

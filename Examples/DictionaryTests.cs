@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿using System.Linq;
+using NUnit.Framework;
 using System.Collections.Generic;
 using ProtoBuf;
 using System;
@@ -348,6 +349,5 @@ namespace Examples.Dictionary
             [ProtoMember(2)] public int Field2 { get; set;}
             [ProtoMember(3)] public int Field3 { get; set;}
         }
-
     }
 }

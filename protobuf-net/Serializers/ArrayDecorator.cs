@@ -19,7 +19,7 @@ namespace ProtoBuf.Serializers
             : base(tail)
         {
             Helpers.DebugAssert(arrayType != null, "arrayType should be non-null");
-            Helpers.DebugAssert(arrayType.IsArray && arrayType.GetArrayRank() == 1, "should be single-dimension array");
+            Helpers.DebugAssert(arrayType.IsArray && arrayType.GetArrayRank() == 1, "should be single-dimension array; " + arrayType.FullName);
             Helpers.DebugAssert(arrayType.GetElementType() == Tail.ExpectedType, "invalid tail");
             Helpers.DebugAssert(Tail.ExpectedType != typeof(byte), "Should have used BlobSerializer");
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");

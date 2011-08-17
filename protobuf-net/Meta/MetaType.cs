@@ -253,6 +253,12 @@ namespace ProtoBuf.Meta
                 while ((mtBase = mt.baseType) != null) { mt = mtBase; }
                 return new SurrogateSerializer(type, surrogate, mt.Serializer);
             }
+            Type itemType = TypeModel.GetListItemType(type);
+            if (itemType != null)
+            {
+                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, type, DataFormat.Default);
+                return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType);
+            }
             if (HasFlag(OPTIONS_AutoTuple))
             {
                 MemberInfo[] mapping;
@@ -260,13 +266,7 @@ namespace ProtoBuf.Meta
                 if(ctor == null) throw new InvalidOperationException();
                 return new TupleSerializer(model, ctor, mapping);
             }
-
-            Type itemType = TypeModel.GetListItemType(type);
-            if (itemType != null)
-            {
-                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, type, DataFormat.Default);
-                return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType);
-            }
+            
 
             fields.Trim();
             int fieldCount = fields.Count;

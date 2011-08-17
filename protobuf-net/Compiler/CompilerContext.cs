@@ -959,6 +959,7 @@ namespace ProtoBuf.Compiler
             Type type = arr.Type;
             Helpers.DebugAssert(type.IsArray && arr.Type.GetArrayRank() == 1);
             type = type.GetElementType();
+            Helpers.DebugAssert(type != null, "Not an array: " + arr.Type.FullName);
             LoadValue(arr);
             LoadValue(i);
             switch(Type.GetTypeCode(type)) {
@@ -988,6 +989,7 @@ namespace ProtoBuf.Compiler
                     {
                         Emit(OpCodes.Ldelem_Ref);
                     }
+             
                     break;
             }
             
