@@ -71,7 +71,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
                 Expect(obj as Base, Is.Not.Null);
             }
             Expect(cloned.BaseArray[1] as Derived, Is.Not.Null);
-            Expect(cloned.BaseArray.GetType(), Is.EqualTo(typeof(Base[])));
+            Expect(cloned.BaseArray.GetType(), Is.EqualTo(typeof(Base[])), "array type");
         }
 
         RuntimeTypeModel CreateModel()

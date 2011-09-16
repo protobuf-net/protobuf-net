@@ -1,4 +1,4 @@
-﻿#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
+﻿#if (FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER) || (SILVERLIGHT && !PHONE7)
 using System.IO;
 using System.Runtime.Serialization;
 using ProtoBuf.Meta;
@@ -19,6 +19,18 @@ namespace ProtoBuf.ServiceModel
             if (key < 0) throw new ArgumentOutOfRangeException("key");
             this.model = model;
             this.key = key;
+        }
+        /// <summary>
+        /// Attempt to create a new serializer for the given model and type
+        /// </summary>
+        /// <returns>A new serializer instance if the type is recognised by the model; null otherwise</returns>
+        public static XmlProtoSerializer TryCreate(TypeModel model, Type type)
+        {
+            if (model == null) throw new ArgumentNullException("model");
+            if (type == null) throw new ArgumentNullException("type");
+            int key = GetKey(model, type);
+            if (key < 0) return null;
+            return new XmlProtoSerializer(model, key);
         }
         /// <summary>
         /// Creates a new serializer for the given model and type

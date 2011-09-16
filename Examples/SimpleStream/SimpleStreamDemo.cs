@@ -6,6 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Formatters.Soap;
 using System.Text;
 using System.Xml.Serialization;
+using NUnit.Framework;
 using ProtoBuf;
 using System.Runtime.Serialization;
 #if NET_3_0
