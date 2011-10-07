@@ -101,5 +101,25 @@ namespace Examples
             Assert.AreEqual(data.Delta, clone.Delta, "Delta");
             Assert.AreEqual(data.Zulu, clone.Zulu, "Zulu");
         }
+
+        [Test]
+        public void RoundTripWithImplicitFields()
+        {
+            var obj = new WithImplicitFields {X = 123, Y = "abc"};
+            var clone = Serializer.DeepClone(obj);
+            Assert.AreEqual(123, clone.X);
+            Assert.AreEqual("abc", clone.Y);
+        }
+
+        [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]
+        public class WithImplicitFields
+        {
+            public int X { get; set; }
+            public string Y { get; set; }
+        }
     }
+
+
+
+
 }

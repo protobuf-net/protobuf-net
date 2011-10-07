@@ -39,6 +39,15 @@ namespace ProtoBuf
             set { SetFlag(OPTIONS_UseProtoMembersOnly, value); }
         }
 
+        /// <summary>
+        /// If specified, do NOT treat this type as a list, even if it looks like one.
+        /// </summary>
+        public bool IgnoreListHandling
+        {
+            get { return HasFlag(OPTIONS_IgnoreListHandling); }
+            set { SetFlag(OPTIONS_IgnoreListHandling, value); }
+        }
+
 
         /// <summary>
         /// Gets or sets the mechanism used to automatically infer field tags
@@ -109,11 +118,13 @@ namespace ProtoBuf
         }
 
         private byte flags;
+
         private const byte
             OPTIONS_InferTagFromName = 1,
             OPTIONS_InferTagFromNameHasValue = 2,
             OPTIONS_UseProtoMembersOnly = 4,
-            OPTIONS_SkipConstructor = 8;
+            OPTIONS_SkipConstructor = 8,
+            OPTIONS_IgnoreListHandling = 16;
 
 
     }

@@ -68,5 +68,31 @@ namespace Examples
             Assert.IsTrue(clone[1].SequenceEqual(new[] { 2, 3 }));
             Assert.IsTrue(clone[4].SequenceEqual(new[] { 5, 6, 7 }));
         }
+
+        [Test]
+        public void TestMonoKeyValuePair()
+        {
+            var original = new WithQuasiMutableTuple {Value = new QuasiMutableTuple(123, "abc")};
+            var clone = Serializer.DeepClone(original);
+            Assert.AreEqual(123, clone.Value.Foo);
+            Assert.AreEqual("abc", clone.Value.Bar);
+        }
+        // the mono version of KeyValuePair<,> has private setters
+        public struct QuasiMutableTuple
+        {
+            public int Foo { get; private set; }
+            public string Bar { get; private set; }
+            public QuasiMutableTuple(int foo, string bar) : this()
+            {
+                Foo = foo;
+                Bar = bar;
+            }
+        }
+        [ProtoContract]
+        public class WithQuasiMutableTuple
+        {
+            [ProtoMember(1)]
+            public QuasiMutableTuple Value { get; set;} 
+        }
     }
 }

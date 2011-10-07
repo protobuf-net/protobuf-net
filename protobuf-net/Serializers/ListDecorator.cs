@@ -70,7 +70,7 @@ namespace ProtoBuf.Serializers
                     options |= OPTIONS_SuppressIList;
                 }
             }
-            if (add == null) throw new InvalidOperationException();
+            if (add == null) throw new InvalidOperationException("Unable to resolve a suitable Add method for " + declaredType.FullName);
         }
 
         public override Type ExpectedType { get { return declaredType;  } }

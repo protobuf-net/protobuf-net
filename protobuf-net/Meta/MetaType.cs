@@ -253,7 +253,7 @@ namespace ProtoBuf.Meta
                 while ((mtBase = mt.baseType) != null) { mt = mtBase; }
                 return new SurrogateSerializer(type, surrogate, mt.Serializer);
             }
-            Type itemType = TypeModel.GetListItemType(type);
+            Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(type);
             if (itemType != null)
             {
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, type, DataFormat.Default);
@@ -371,6 +371,7 @@ namespace ProtoBuf.Meta
                     if (pca.InferTagFromNameHasValue) inferTagByName = pca.InferTagFromName;
                     implicitMode = pca.ImplicitFields;
                     UseConstructor = !pca.SkipConstructor;
+                    IgnoreListHandling = pca.IgnoreListHandling;
                     if(pca.ImplicitFirstTag > 0) implicitFirstTag = pca.ImplicitFirstTag;
                 }
             }
@@ -523,7 +524,8 @@ namespace ProtoBuf.Meta
                         break;
                     case MemberTypes.Property:
                         PropertyInfo prop = (PropertyInfo) membersUnfiltered[i];
-                        if (!prop.CanRead || prop.CanWrite) return null; // all properties must be read-only to be counted a tuple
+                        if (!prop.CanRead) return null; // no use if can't read
+                        if (prop.CanWrite && prop.GetSetMethod(false) != null) return null; // don't allow a public set (need to allow non-public to handle Mono's KeyValuePair<,>)
                         memberList.Add(membersUnfiltered[i]);
                         break;
                 }
@@ -1173,6 +1175,16 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_EnumPassThru, value, true); }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating that this type should NOT be treated as a list, even if it has
+        /// familiar list-like characteristics (enumerable, add, etc)
+        /// </summary>
+        public bool IgnoreListHandling
+        {
+            get { return HasFlag(OPTIONS_IgnoreListHandling); }
+            set { SetFlag(OPTIONS_IgnoreListHandling, value, true); }
+        }
+
         internal bool Pending
         {
             get { return HasFlag(OPTIONS_Pending); }
@@ -1186,7 +1198,8 @@ namespace ProtoBuf.Meta
             OPTIONS_PrivateOnApi = 8,
             OPTIONS_SkipConstructor = 16,
             OPTIONS_AsReferenceDefault = 32,
-            OPTIONS_AutoTuple = 64;
+            OPTIONS_AutoTuple = 64,
+            OPTIONS_IgnoreListHandling = 128;
 
         private volatile byte flags;
         private bool HasFlag(byte flag) { return (flags & flag) == flag; }

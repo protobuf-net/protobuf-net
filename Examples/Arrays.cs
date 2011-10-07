@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
@@ -266,6 +267,42 @@ namespace Examples
                 
         }
 
+        [ProtoContract]
+        internal class Tst
+        {
+            [ProtoMember(1)]
+            public int ValInt
+            {
+                get;
+                set;
+            }
+
+            [ProtoMember(2)]
+            public byte[] ArrayData
+            {
+                get;
+                set;
+            }
+
+            [ProtoMember(3)]
+            public string Str1
+            {
+                get;
+                set;
+            }
+        }
+        [Test]
+        public void TestEmptyArrays()
+        {
+            Tst t = new Tst();
+            t.ValInt = 128;
+            t.Str1 = "SOme string text value ttt";
+            t.ArrayData = new byte[] { };
+
+            MemoryStream stm = new MemoryStream();
+            Serializer.Serialize(stm, t);
+            Console.WriteLine(stm.Length);
+        }
         static void VerifyNodeTree(Node node) {
             Node clone = Serializer.DeepClone(node);
             string msg;

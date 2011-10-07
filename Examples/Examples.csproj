@@ -217,6 +217,8 @@
     <Compile Include="Issues\SO7219959.cs" />
     <Compile Include="Issues\SO7333233.cs" />
     <Compile Include="Issues\SO7347694.cs" />
+    <Compile Include="Issues\SO7654066.cs" />
+    <Compile Include="Issues\SO7686734.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListTests.cs" />
@@ -224,6 +226,7 @@
     <Compile Include="MultiTypesWithLengthPrefix.cs" />
     <Compile Include="NetObjectOptions.cs" />
     <Compile Include="NonGeneric.cs" />
+    <Compile Include="NonSeekableStreams.cs" />
     <Compile Include="NWind\CompatDb.cs" />
     <Compile Include="NWind\DataContext.cs" />
     <Compile Include="NWind\NWind.cs" />
@@ -277,6 +280,7 @@
     <Compile Include="TestNumbers\NumberTests.cs" />
     <Compile Include="TraceError.cs" />
     <Compile Include="Tuples.cs" />
+    <Compile Include="UnwrappedOuters.cs" />
     <Compile Include="ValueWrapper.cs" />
   </ItemGroup>
   <ItemGroup>
