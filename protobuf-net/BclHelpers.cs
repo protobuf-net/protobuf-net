@@ -394,7 +394,12 @@ namespace ProtoBuf
                         newTypeKey = source.ReadInt32();
                         break;
                     case FieldTypeName:
-                        type = source.DeserializeType(source.ReadString());
+                        string typeName = source.ReadString();
+                        type = source.DeserializeType(typeName);
+                        if(type == null)
+                        {
+                            throw new ProtoException("Unable to resolve type: " + typeName + " (you can use the TypeModel.DynamicTypeFormatting event to provide a custom mapping)");
+                        }
                         key = source.GetTypeKey(ref type);
                         break;
                     case FieldObject:
@@ -402,7 +407,15 @@ namespace ProtoBuf
                         bool lateSet = value == null && isString;
                         if (value == null && !lateSet)
                         {
-                            value = ((options & NetObjectOptions.UseConstructor) == 0) ? BclHelpers.GetUninitializedObject(type) : Activator.CreateInstance(type);
+                            try
+                            {
+                                value = ((options & NetObjectOptions.UseConstructor) == 0)
+                                            ? BclHelpers.GetUninitializedObject(type)
+                                            : Activator.CreateInstance(type);
+                            } catch (Exception ex)
+                            {
+                                throw new ProtoException("Unable to create type " + (type == null ? "<null>" : type.FullName) + ": " + ex.Message, ex);
+                            }
                         }
                         if (newObjectKey >= 0 && !lateSet)
                         {

@@ -28,5 +28,19 @@ namespace Examples.Issues
             object value = type.GetProperty("BaseProp").GetValue(clone, null);
             Assert.AreEqual(EXPECTED, value, "Clone value");
         }
+
+        static LateLoadedTests()
+        {   // static-ctor to make sure we only do this once
+            AppDomain.CurrentDomain.AssemblyResolve += new ResolveEventHandler(CurrentDomain_AssemblyResolve);
+        }
+
+        static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+        {   // make sure we don't get confused with different versions of protobuf-net
+            if(args.Name.StartsWith("protobuf-net, Version="))
+            {
+                return typeof (ProtoContractAttribute).Assembly;
+            }
+            return null;
+        }
     }
 }

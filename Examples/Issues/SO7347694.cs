@@ -21,9 +21,8 @@ namespace Examples.Issues
                 get { return _name; }
             }
 
-            private Thing()
-            {
-            }
+            public Thing()
+            {}
 
             public Thing(string name)
             {

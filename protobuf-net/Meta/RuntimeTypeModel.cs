@@ -578,11 +578,19 @@ namespace ProtoBuf.Meta
             SerializerPair[] methodPairs = new SerializerPair[types.Count];
             foreach (MetaType metaType in types)
             {
-                MethodBuilder writeMethod = type.DefineMethod("Write",
+                MethodBuilder writeMethod = type.DefineMethod("Write"
+#if DEBUG
+ + metaType.Type.Name
+#endif
+                    ,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     typeof(void), new Type[] { metaType.Type, typeof(ProtoWriter) });
 
-                MethodBuilder readMethod = type.DefineMethod("Read",
+                MethodBuilder readMethod = type.DefineMethod("Read"
+#if DEBUG
+ + metaType.Type.Name
+#endif              
+                    ,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     metaType.Type, new Type[] { metaType.Type, typeof(ProtoReader) });
 

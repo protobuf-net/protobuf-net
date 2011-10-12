@@ -39,7 +39,7 @@ namespace Examples.Issues
         [Test]
         public void Execute()
         {
-            for(int test = 0 ; test < 100 ; test++)
+            for(int test = 0 ; test < 1000 ; test++)
             {
                 var model = RuntimeTypeModel.Create();
                 Thread[] threads = new Thread[20];

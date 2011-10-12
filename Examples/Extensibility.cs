@@ -77,7 +77,7 @@ namespace Examples
         public string Eof { get; set; }
     }
 
-    [TestFixture]
+    [TestFixture, Ignore("Not fully re-implemented")]
     public class Extensibility
     {
         internal static BiggerObject GetBigObject()

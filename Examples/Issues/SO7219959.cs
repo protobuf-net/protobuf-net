@@ -54,15 +54,22 @@ namespace Examples.Issues
             }
         }
 
-        [ProtoContract()]
+        [ProtoContract(SkipConstructor = true)]
         public class Parent
         {
-            [ProtoMember(1)] protected List<Child> m_Children;
+            [ProtoMember(1)]
+            protected List<Child> m_Children;
 
             /// <summary>
             /// ProtoBuf deserialization constructor (fails here)
             /// </summary>
             private Parent()
+            {
+                Initialize();
+            }
+
+            [ProtoBeforeDeserialization] // could also use OnDeserializing
+            private void Initialize()
             {
                 m_Children = new List<Child>();
             }

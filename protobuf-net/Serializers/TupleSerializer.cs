@@ -171,7 +171,7 @@ namespace ProtoBuf.Serializers
                     for (int i = 0; i < locals.Length; i++)
                     {
                         Type type = GetMemberType(i);
-
+                        bool store = true;
                         locals[i] = new Compiler.Local(ctx, type);
                         if (!ExpectedType.IsValueType)
                         {
@@ -209,7 +209,9 @@ namespace ProtoBuf.Serializers
                                         }
                                         else
                                         {
+                                            ctx.LoadAddress(locals[i], type);
                                             ctx.EmitCtor(type);
+                                            store = false;
                                         }
                                         break;
                                 }
@@ -218,7 +220,10 @@ namespace ProtoBuf.Serializers
                             {
                                 ctx.LoadNullRef();
                             }
-                            ctx.StoreValue(locals[i]);
+                            if (store)
+                            {
+                                ctx.StoreValue(locals[i]);
+                            }
                         }
                     }
 
