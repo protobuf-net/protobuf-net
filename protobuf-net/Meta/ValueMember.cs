@@ -22,7 +22,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MemberInfo Member { get { return member; } }
         private readonly Type parentType, itemType, defaultType, memberType;
-        private readonly object defaultValue;
+        private object defaultValue;
         /// <summary>
         /// Within a list / array / etc, the type of object for each item in the list (especially useful with ArrayList)
         /// </summary>
@@ -43,7 +43,14 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// The default value of the item (members with this value will not be serialized)
         /// </summary>
-        public object DefaultValue { get { return defaultValue; } }
+        public object DefaultValue
+        {
+            get { return defaultValue; }
+            set {
+                ThrowIfFrozen();
+                defaultValue = value;
+            }
+        }
 
         private readonly RuntimeTypeModel model;
         /// <summary>
@@ -132,12 +139,15 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private readonly DataFormat dataFormat;
+        private DataFormat dataFormat;
         /// <summary>
         /// Specifies the rules used to process the field; this is used to determine the most appropriate
         /// wite-type, but also to describe subtypes <i>within</i> that wire-type (such as SignedVariant)
         /// </summary>
-        public DataFormat DataFormat { get { return dataFormat; } }
+        public DataFormat DataFormat {
+            get { return dataFormat; }
+            set { ThrowIfFrozen(); this.dataFormat = value; }
+        }
 
         /// <summary>
         /// Indicates whether this field should follow strict encoding rules; this means (for example) that if a "fixed32"

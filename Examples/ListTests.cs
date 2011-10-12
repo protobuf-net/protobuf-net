@@ -599,5 +599,45 @@ namespace Examples
         {
             Assert.IsTrue(original.SequenceEqual(clone,new Test3Comparer()));
         }
+
+        [Test]
+        public void CheckNakedLinkedListCanRoundtrip()
+        {
+            var list = new LinkedList<BasicItem>();
+            list.AddLast(new BasicItem{Value="abc"});
+            list.AddLast(new BasicItem{Value="def"});
+            var clone = Serializer.DeepClone(list);
+            Assert.AreEqual(2, clone.Count);
+            Assert.AreEqual("abc", clone.First.Value.Value);
+            Assert.AreEqual("def", clone.Last.Value.Value);
+        }
+        [Test]
+        public void CheckWrappedLinkedListCanRoundtrip()
+        {
+            var wrapper = new WithLinkedList();
+            wrapper.Items.AddLast(new BasicItem { Value = "abc" });
+            wrapper.Items.AddLast(new BasicItem { Value = "def" });
+            var clone = Serializer.DeepClone(wrapper);
+            Assert.AreEqual(2, clone.Items.Count);
+            Assert.AreEqual("abc", clone.Items.First.Value.Value);
+            Assert.AreEqual("def", clone.Items.Last.Value.Value);
+        }
+        [ProtoContract]
+        class BasicItem
+        {
+            [ProtoMember(1)]
+            public string Value { get; set; }
+        }
+        [ProtoContract]
+        class WithLinkedList
+        {
+            [ProtoMember(1)]
+            public LinkedList<BasicItem> Items { get; private set; }
+
+            public WithLinkedList()
+            {
+                Items = new LinkedList<BasicItem>();
+            }
+        }
     }
 }
