@@ -930,7 +930,13 @@ namespace ProtoBuf.Meta
             Type[] interfaces = type.GetInterfaces();
             for(int i = 0 ; i < interfaces.Length ; i++)
             {
-                if(interfaces[i].FullName == "NHibernate.Proxy.INHibernateProxy") return type.BaseType;
+                switch(interfaces[i].FullName)
+                {
+                    case "NHibernate.Proxy.INHibernateProxy":
+                    case "NHibernate.Proxy.DynamicProxy.IProxy":
+                    case "NHibernate.Intercept.IFieldInterceptorAccessor":
+                         return type.BaseType;
+                }
             }
 #endif
             return null;
