@@ -161,41 +161,41 @@ namespace ProtoBuf.unittest.Meta
             }
         }
 
-        [ProtoContract,ProtoInclude(1, typeof(B)), ProtoInclude(2, typeof(C))] class A { }
-        [ProtoContract,ProtoInclude(1, typeof(D)), ProtoInclude(2, typeof(E))] class B : A { }
-        [ProtoContract,ProtoInclude(1, typeof(F)), ProtoInclude(2, typeof(G))] class C : A { }
-        [ProtoContract,ProtoInclude(1, typeof(H)), ProtoInclude(2, typeof(I))] class D : B { }
-        [ProtoContract,ProtoInclude(1, typeof(J)), ProtoInclude(2, typeof(K))] class E : B { }
-        [ProtoContract,ProtoInclude(1, typeof(L)), ProtoInclude(2, typeof(M))] class F : C { }
-        [ProtoContract,ProtoInclude(1, typeof(N)), ProtoInclude(2, typeof(O))] class G : C { }
-        [ProtoContract,ProtoInclude(1, typeof(P)), ProtoInclude(2, typeof(Q))] class H : D { }
-        [ProtoContract,ProtoInclude(1, typeof(R)), ProtoInclude(2, typeof(S))] class I : D { }
-        [ProtoContract,ProtoInclude(1, typeof(T)), ProtoInclude(2, typeof(U))] class J : E { }
-        [ProtoContract,ProtoInclude(1, typeof(V)), ProtoInclude(2, typeof(W))] class K : E { }
-        [ProtoContract,ProtoInclude(1, typeof(X)), ProtoInclude(2, typeof(Y))] class L : F { }
-        [ProtoContract]class M : F { }
-        [ProtoContract]class N : G { }
-        [ProtoContract]class O : G { }
-        [ProtoContract]class P : H { }
-        [ProtoContract]class Q : H { }
-        [ProtoContract]class R : I { }
-        [ProtoContract]class S : I { }
-        [ProtoContract]class T : J { }
-        [ProtoContract]class U : J { }
-        [ProtoContract]class V : K { }
-        [ProtoContract]class W : K { }
-        [ProtoContract]class X : L { }
-        [ProtoContract, ProtoInclude(1, typeof(Y0))]class Y : L { }
-        [ProtoContract, ProtoInclude(1, typeof(Y1))]class Y0 : Y { }
-        [ProtoContract, ProtoInclude(1, typeof(Y2))]class Y1 : Y0 { }
-        [ProtoContract, ProtoInclude(1, typeof(Y3))]class Y2 : Y1 { }
-        [ProtoContract, ProtoInclude(1, typeof(Y4))]class Y3 : Y2 { }
-        [ProtoContract, ProtoInclude(1, typeof(Y5))]class Y4 : Y3 { }
-        [ProtoContract, ProtoInclude(1, typeof(Y6))]class Y5 : Y4 { }
-        [ProtoContract, ProtoInclude(1, typeof(Y7))]class Y6 : Y5 { }
-        [ProtoContract, ProtoInclude(1, typeof(Y8))]class Y7 : Y6 { }
-        [ProtoContract, ProtoInclude(1, typeof(Y9))]class Y8 : Y7 { }
-        [ProtoContract]class Y9 : Y8 { }
+        [ProtoContract,ProtoInclude(1, typeof(B)), ProtoInclude(2, typeof(C))] public class A { }
+        [ProtoContract,ProtoInclude(1, typeof(D)), ProtoInclude(2, typeof(E))] public class B : A { }
+        [ProtoContract,ProtoInclude(1, typeof(F)), ProtoInclude(2, typeof(G))] public class C : A { }
+        [ProtoContract,ProtoInclude(1, typeof(H)), ProtoInclude(2, typeof(I))] public class D : B { }
+        [ProtoContract,ProtoInclude(1, typeof(J)), ProtoInclude(2, typeof(K))] public class E : B { }
+        [ProtoContract,ProtoInclude(1, typeof(L)), ProtoInclude(2, typeof(M))] public class F : C { }
+        [ProtoContract,ProtoInclude(1, typeof(N)), ProtoInclude(2, typeof(O))] public class G : C { }
+        [ProtoContract,ProtoInclude(1, typeof(P)), ProtoInclude(2, typeof(Q))] public class H : D { }
+        [ProtoContract,ProtoInclude(1, typeof(R)), ProtoInclude(2, typeof(S))] public class I : D { }
+        [ProtoContract,ProtoInclude(1, typeof(T)), ProtoInclude(2, typeof(U))] public class J : E { }
+        [ProtoContract,ProtoInclude(1, typeof(V)), ProtoInclude(2, typeof(W))] public class K : E { }
+        [ProtoContract,ProtoInclude(1, typeof(X)), ProtoInclude(2, typeof(Y))] public class L : F { }
+        [ProtoContract]public class M : F { }
+        [ProtoContract]public class N : G { }
+        [ProtoContract]public class O : G { }
+        [ProtoContract]public class P : H { }
+        [ProtoContract]public class Q : H { }
+        [ProtoContract]public class R : I { }
+        [ProtoContract]public class S : I { }
+        [ProtoContract]public class T : J { }
+        [ProtoContract]public class U : J { }
+        [ProtoContract]public class V : K { }
+        [ProtoContract]public class W : K { }
+        [ProtoContract]public class X : L { }
+        [ProtoContract, ProtoInclude(1, typeof(Y0))]public class Y : L { }
+        [ProtoContract, ProtoInclude(1, typeof(Y1))]public class Y0 : Y { }
+        [ProtoContract, ProtoInclude(1, typeof(Y2))]public class Y1 : Y0 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y3))]public class Y2 : Y1 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y4))]public class Y3 : Y2 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y5))]public class Y4 : Y3 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y6))]public class Y5 : Y4 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y7))]public class Y6 : Y5 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y8))]public class Y7 : Y6 { }
+        [ProtoContract, ProtoInclude(1, typeof(Y9))]public class Y8 : Y7 { }
+        [ProtoContract]public class Y9 : Y8 { }
 
         [Test]
         public void TestDeserializeModelFromRoot()

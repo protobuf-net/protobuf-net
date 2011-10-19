@@ -252,10 +252,10 @@ namespace ProtoBuf.Meta
         }
         private IProtoSerializer BuildSerializer()
         {
-            bool lockTaken = false;
+            int opaqueToken = 0;
             try
             {
-                model.TakeLock(ref lockTaken);// check nobody is still adding this type
+                model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 WireType wireType;
                 Type finalType = itemType == null ? memberType : itemType;
                 IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType);
@@ -303,7 +303,7 @@ namespace ProtoBuf.Meta
             }
             finally
             {
-                model.ReleaseLock(lockTaken);
+                model.ReleaseLock(opaqueToken);
             }
         }
 

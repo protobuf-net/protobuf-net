@@ -1,4 +1,5 @@
 ﻿
+using System.Threading;
 namespace ProtoBuf
 {
     internal class BufferPool
@@ -6,23 +7,15 @@ namespace ProtoBuf
         private BufferPool() { }
         const int PoolSize = 20;
         internal const int BufferLength = 1024;
-        private static readonly byte[][] pool = new byte[PoolSize][];
+        private static readonly object[] pool = new object[PoolSize];
 
         internal static byte[] GetBuffer()
         {
-            lock (pool)
+            for (int i = 0; i < pool.Length; i++)
             {
-                for (int i = 0; i < pool.Length; i++)
-                {
-                    if (pool[i] != null)
-                    {
-                        byte[] result = pool[i];
-                        pool[i] = null;
-                        return result;
-                    }
-                }
+                object tmp;
+                if ((tmp = Interlocked.Exchange(ref pool[i], null)) != null) return (byte[])tmp;
             }
-
             return new byte[BufferLength];
         }
         internal static void ResizeAndFlushLeft(ref byte[] buffer, int toFitAtLeastBytes, int copyFromIndex, int copyBytes)
@@ -50,28 +43,18 @@ namespace ProtoBuf
         internal static void ReleaseBufferToPool(ref byte[] buffer)
         {
             if (buffer == null) return;
-            try
+            if (buffer.Length == BufferLength)
             {
-                if (buffer.Length == BufferLength)
+                for (int i = 0; i < pool.Length; i++)
                 {
-                    lock (pool)
+                    if (Interlocked.CompareExchange(ref pool[i], buffer, null) == null)
                     {
-                        for (int i = 0; i < pool.Length; i++)
-                        {
-                            if (pool[i] == null)
-                            {
-                                pool[i] = buffer;
-                                break;
-                            }
-                        }
+                        break; // found a null; swapped it in
                     }
                 }
             }
-            finally
-            {
-                // if no space, just drop it on the floor
-                buffer = null;
-            }
+            // if no space, just drop it on the floor
+            buffer = null;
         }
 
     }

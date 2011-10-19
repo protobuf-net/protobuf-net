@@ -214,10 +214,10 @@ namespace ProtoBuf.Meta
             get {
                 if (serializer == null)
                 {
-                    bool lockTaken = false;
+                    int opaqueToken = 0;
                     try
                     {
-                        model.TakeLock(ref lockTaken);
+                        model.TakeLock(ref opaqueToken);
                         if (serializer == null)
                         { // double-check, but our main purpse with this lock is to ensure thread-safety with
                             // serializers needing to wait until another thread has finished adding the properties
@@ -230,7 +230,7 @@ namespace ProtoBuf.Meta
                     }
                     finally
                     {
-                        model.ReleaseLock(lockTaken);
+                        model.ReleaseLock(opaqueToken);
                     }
                 }
                 return serializer;
@@ -1081,10 +1081,14 @@ namespace ProtoBuf.Meta
             return newField;
         } 
         private void Add(ValueMember member) {
-            lock (fields)
-            {
+            int opaqueToken = 0;
+            try {
+                model.TakeLock(ref opaqueToken);
                 ThrowIfFrozen();
                 fields.Add(member);
+            } finally
+            {
+                model.ReleaseLock(opaqueToken);
             }
         }
         /// <summary>
@@ -1227,16 +1231,16 @@ namespace ProtoBuf.Meta
 
             // now we get into uncertain territory
             RuntimeTypeModel model = source.model;
-            bool lockTaken = false;
+            int opaqueToken = 0;
             try {
-                model.TakeLock(ref lockTaken);
+                model.TakeLock(ref opaqueToken);
 
                 MetaType tmp;
                 while ((tmp = source.baseType) != null) source = tmp;
                 return source;
 
             } finally {
-                model.ReleaseLock(lockTaken);
+                model.ReleaseLock(opaqueToken);
             }
         }
     }

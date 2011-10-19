@@ -129,14 +129,14 @@ namespace ProtoBuf.Meta
         }
         private void WaitOnLock(MetaType type)
         {
-            bool lockTaken = false;
+            int opaqueToken = 0;
             try
             {
-                TakeLock(ref lockTaken);
+                TakeLock(ref opaqueToken);
             }
             finally
             {
-                ReleaseLock(lockTaken);
+                ReleaseLock(opaqueToken);
             }
         }
         internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled)
@@ -162,10 +162,10 @@ namespace ProtoBuf.Meta
 
             if (key < 0)
             {
-                bool lockTaken = false;
+                int opaqueToken = 0;
                 try
                 {
-                    TakeLock(ref lockTaken);
+                    TakeLock(ref opaqueToken);
                     // try to recognise a few familiar patterns...
                     if ((metaType = RecogniseCommonTypes(type)) == null)
                     { // otherwise, check if it is a contract
@@ -205,7 +205,7 @@ namespace ProtoBuf.Meta
                 }
                 finally
                 {
-                    ReleaseLock(lockTaken);
+                    ReleaseLock(opaqueToken);
                 }
             }
             return key;
@@ -265,7 +265,7 @@ namespace ProtoBuf.Meta
             if (type == null) throw new ArgumentNullException("type");
             MetaType newType = FindWithoutAdd(type);
             if (newType != null) return newType; // return existing
-            bool lockTaken = false;
+            int opaqueToken = 0;
 
             if (type.IsInterface && typeof(IEnumerable).IsAssignableFrom(type)
                 && GetListItemType(type) == null)
@@ -287,7 +287,7 @@ namespace ProtoBuf.Meta
                 }
                 if(newType == null) newType = Create(type);
                 newType.Pending = true;
-                TakeLock(ref lockTaken);
+                TakeLock(ref opaqueToken);
                 // double checked
                 if (FindWithoutAdd(type) != null) throw new ArgumentException("Duplicate type", "type");
                 ThrowIfFrozen();
@@ -297,7 +297,7 @@ namespace ProtoBuf.Meta
             }
             finally
             {
-                ReleaseLock(lockTaken);
+                ReleaseLock(opaqueToken);
             }
             
             return newType;
@@ -832,16 +832,17 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal void TakeLock(ref bool lockTaken)
+        internal void TakeLock(ref int opaqueToken)
         {
-            lockTaken = false;
+            const string message = "Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection; please also see the LockContended event";
+            opaqueToken = 0;
 #if CF2 || CF35
             int remaining = metadataTimeoutMilliseconds;
             do {
                 lockTaken = Monitor.TryEnter(types);
                 if(!lockTaken)
                 {
-                    if(remaining <= 0) throw new TimeoutException("Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection");
+                    if(remaining <= 0) throw new TimeoutException(message);
                     remaining -= 50;
                     Thread.Sleep(50);
                 }
@@ -849,27 +850,74 @@ namespace ProtoBuf.Meta
 #else
             if (Monitor.TryEnter(types, metadataTimeoutMilliseconds))
             {
-                lockTaken = true;
+                opaqueToken = Interlocked.CompareExchange(ref contentionCounter, 0, 0); // just fetch current value (starts at 1)
             }
             else
             {
+                Interlocked.Increment(ref contentionCounter);
 #if FX11
-                throw new InvalidOperationException("Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection");
+                throw new InvalidOperationException(message);
 #else
-                throw new TimeoutException("Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection");
+                throw new TimeoutException(message);
 #endif
             }
 #endif
         }
 
-        internal void ReleaseLock(bool lockTaken)
+        private int contentionCounter = 1;
+        internal void ReleaseLock(int opaqueToken)
         {
-            if (lockTaken)
+            if (opaqueToken != 0)
             {
                 Monitor.Exit(types);
+                if(opaqueToken != Interlocked.CompareExchange(ref contentionCounter, 0, 0)) // contention-count changes since we looked!
+                {
+                    LockContentedEventHandler handler = LockContended;
+                    if (handler != null)
+                    {
+                        // not hugely elegant, but this is such a far-corner-case that it doesn't need to be slick - I'll settle for cross-platform
+                        string stackTrace;
+                        try
+                        {
+                            throw new Exception();
+                        }
+                        catch(Exception ex)
+                        {
+                            stackTrace = ex.StackTrace;
+                        }
+                        
+                        handler(this, new LockContentedEventArgs(stackTrace));
+                    }
+                }
             }
         }
+        /// <summary>
+        /// If a lock-contention is detected, this event signals the *owner* of the lock responsible for the blockage, indicating
+        /// what caused the problem; this is only raised if the lock-owning code successfully completes.
+        /// </summary>
+        public event LockContentedEventHandler LockContended;
+        
     }
-    
+    /// <summary>
+    /// Contains the stack-trace of the owning code when a lock-contention scenario is detected
+    /// </summary>
+    public sealed class LockContentedEventArgs : EventArgs
+    {
+        private readonly string ownerStackTrace;
+        internal LockContentedEventArgs(string ownerStackTrace)
+        {
+            this.ownerStackTrace = ownerStackTrace;
+        }
+        /// <summary>
+        /// The stack-trace of the code that owned the lock when a lock-contention scenario occurred
+        /// </summary>
+        public string OwnerStackTrace { get { return ownerStackTrace; } }
+    }
+    /// <summary>
+    /// Event-type that is raised when a lock-contention scenario is detected
+    /// </summary>
+    public delegate void LockContentedEventHandler(object sender, LockContentedEventArgs args);
+
+
 }
 #endif

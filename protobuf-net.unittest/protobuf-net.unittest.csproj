@@ -90,6 +90,7 @@
     <Compile Include="Meta\Basic.cs" />
     <Compile Include="Meta\Callbacks.cs" />
     <Compile Include="Meta\AbstractListsWithInheritance.cs" />
+    <Compile Include="Meta\LockContention.cs" />
     <Compile Include="Meta\Enums.cs" />
     <Compile Include="Meta\Guids.cs" />
     <Compile Include="Meta\Inheritance.cs" />
