@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="BuildKit"
+         xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputDirectory>Nuget\lib</OutputDirectory>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectToBuild Include="protobuf-net\protobuf-net.csproj"/>
+    <ProjectToBuild Include="protobuf-net_Phone7\protobuf-net_Phone7.csproj"/>
+    <ProjectToBuild Include="protobuf-net_Silverlight\protobuf-net_Silverlight.csproj"/>
+
+    <!--<Net20Files Include="protobuf-net\bin\Net20\Licence.txt"/>-->
+    <Net20Files Include="protobuf-net\bin\Net20\protobuf-net.*"/>
+
+    <!--<Net30Files Include="protobuf-net\bin\Release\Licence.txt"/>-->
+    <Net30Files Include="protobuf-net\bin\Release\protobuf-net.*"/>
+
+    <!--<SLFiles Include="protobuf-net_Silverlight\bin\Release\Licence.txt"/>-->
+    <SLFiles Include="protobuf-net_Silverlight\bin\Release\protobuf-net.*"/>
+
+    <!--<WP7Files Include="protobuf-net_Phone7\bin\Release\Licence.txt"/>-->
+    <WP7Files Include="protobuf-net_Phone7\bin\Release\protobuf-net.*"/>
+  </ItemGroup>
+  <Target Name="BuildKit">
+    <RemoveDir Directories="$(OutputDirectory)"/>
+    
+    <MakeDir Directories="$(OutputDirectory)"/>
+    <MakeDir Directories="$(OutputDirectory)\net20"/>
+    <MakeDir Directories="$(OutputDirectory)\net30"/>
+    <MakeDir Directories="$(OutputDirectory)\net35"/>
+    <MakeDir Directories="$(OutputDirectory)\net40"/>
+    <MakeDir Directories="$(OutputDirectory)\sl3"/>
+    <MakeDir Directories="$(OutputDirectory)\sl3-wp"/>
+    <MakeDir Directories="$(OutputDirectory)\sl4"/>
+    
+    <MSBuild Projects="@(ProjectToBuild)" Properties="Configuration=Release" BuildInParallel="true"/>
+    <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Net20"/>
+
+    <Copy SourceFiles="@(Net20Files)" DestinationFolder="$(OutputDirectory)\net20"/>
+    
+    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(OutputDirectory)\net30"/>
+    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(OutputDirectory)\net35"/>
+    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(OutputDirectory)\net40"/>
+    
+    <Copy SourceFiles="@(SLFiles)" DestinationFolder="$(OutputDirectory)\sl3"/>
+    <Copy SourceFiles="@(SLFiles)" DestinationFolder="$(OutputDirectory)\sl4"/>
+    
+    <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(OutputDirectory)\sl3-wp"/>
+  </Target>
+</Project>
