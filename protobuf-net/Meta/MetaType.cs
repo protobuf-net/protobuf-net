@@ -192,18 +192,46 @@ namespace ProtoBuf.Meta
         {
             if (IsValueType) throw new InvalidOperationException();
             CallbackSet callbacks = Callbacks;
-            callbacks.BeforeSerialize = ResolveCallback(beforeSerialize);
-            callbacks.AfterSerialize = ResolveCallback(afterSerialize);
-            callbacks.BeforeDeserialize = ResolveCallback(beforeDeserialize);
-            callbacks.AfterDeserialize = ResolveCallback(afterDeserialize);
+            callbacks.BeforeSerialize = ResolveMethod(beforeSerialize, true);
+            callbacks.AfterSerialize = ResolveMethod(afterSerialize, true);
+            callbacks.BeforeDeserialize = ResolveMethod(beforeDeserialize, true);
+            callbacks.AfterDeserialize = ResolveMethod(afterDeserialize, true);
             return this;
         }
-        private MethodInfo ResolveCallback(string name)
+
+        private MethodInfo factory;
+        /// <summary>
+        /// Designate a factory-method to use to create instances of this type
+        /// </summary>
+        public MetaType SetFactory(MethodInfo factory)
         {
+            if(factory != null)
+            {
+                if(IsValueType) throw new InvalidOperationException();
+                if(!factory.IsStatic) throw new ArgumentException("A factory-method must be static", "factory");
+                if (factory.ReturnType != type) throw new ArgumentException("The factory-method must return " + type.FullName, "factory");
+
+                if (!CallbackSet.CheckCallbackParameters(factory)) throw new ArgumentException("Invalid factory signature in " + factory.DeclaringType.FullName + "." + factory.Name, "factory");
+            }
+            ThrowIfFrozen();
+            this.factory = factory;
+            return this;
+        }
+        /// <summary>
+        /// Designate a factory-method to use to create instances of this type
+        /// </summary>
+        public MetaType SetFactory(string factory)
+        {
+            return SetFactory(ResolveMethod(factory, false));
+        }
+
+        private MethodInfo ResolveMethod(string name, bool instance)
+        {
+            if (string.IsNullOrEmpty(name)) return null;
 #if WINRT
-            return Helpers.IsNullOrEmpty(name) ? null : Helpers.GetInstanceMethod(typeInfo, name);
+            return instance ? Helpers.GetInstanceMethod(typeInfo, name) : Helpers.GetStaticMethod(typeInfo, name);
 #else
-            return Helpers.IsNullOrEmpty(name) ? null : Helpers.GetInstanceMethod(type, name);
+            return instance ? Helpers.GetInstanceMethod(type, name) : Helpers.GetStaticMethod(type, name);
 #endif
         }
         private readonly RuntimeTypeModel model;
@@ -286,7 +314,7 @@ namespace ProtoBuf.Meta
                 return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag },
                     new IProtoSerializer[] {
                         new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(type, GetEnumMap()))
-                    }, null, true, true, null, constructType);
+                    }, null, true, true, null, constructType, null);
             }
             if (surrogate != null)
             {
@@ -298,7 +326,7 @@ namespace ProtoBuf.Meta
             if (itemType != null)
             {
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, type, DataFormat.Default);
-                return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType);
+                return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
             }
             if (HasFlag(OPTIONS_AutoTuple))
             {
@@ -352,7 +380,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return new TypeSerializer(type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType);
+            return new TypeSerializer(type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
         }
 
         [Flags]

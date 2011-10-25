@@ -37,19 +37,22 @@ namespace ProtoBuf.Meta
             get { return beforeSerialize; }
             set { beforeSerialize = SanityCheckCallback(value); }
         }
+        internal static bool CheckCallbackParameters(MethodInfo method)
+        {
+            ParameterInfo[] args = method.GetParameters();
+            return args.Length == 0
+                || (args.Length == 1 && (args[0].ParameterType == typeof(SerializationContext)
+#if PLAT_BINARYFORMATTER
+                || args[0].ParameterType == typeof(System.Runtime.Serialization.StreamingContext)
+#endif
+            ));
+        }
         private MethodInfo SanityCheckCallback(MethodInfo callback)
         {
             metaType.ThrowIfFrozen();
             if (callback == null) return callback; // fine
             if (callback.IsStatic) throw new ArgumentException("Callbacks cannot be static", "callback");
-            ParameterInfo[] args = callback.GetParameters();
-            if (callback.ReturnType == typeof(void) && (args.Length == 0
-                || (args.Length == 1 && (args[0].ParameterType == typeof(SerializationContext)
-#if PLAT_BINARYFORMATTER
-                || args[0].ParameterType == typeof(System.Runtime.Serialization.StreamingContext)
-#endif
-            )))) { }
-            else
+            if(callback.ReturnType != typeof(void) || !CheckCallbackParameters(callback))
             {
                 throw CreateInvalidCallbackSignature(callback);
             }

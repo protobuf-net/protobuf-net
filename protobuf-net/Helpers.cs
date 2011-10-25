@@ -127,6 +127,17 @@ namespace ProtoBuf
             }
             return null;
         }
+        internal static MethodInfo GetStaticMethod(TypeInfo declaringType, string name)
+        {
+            foreach (MethodInfo method in declaringType.DeclaredMethods)
+            {
+                if (method.IsStatic && method.Name == name)
+                {
+                    return method;
+                }
+            }
+            return null;
+        }
         internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name, Type[] types)
         {
             if (types == null) types = EmptyTypes;
@@ -143,6 +154,10 @@ namespace ProtoBuf
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name)
         {
             return declaringType.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+        }
+        internal static MethodInfo GetStaticMethod(Type declaringType, string name)
+        {
+            return declaringType.GetMethod(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         }
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
         {

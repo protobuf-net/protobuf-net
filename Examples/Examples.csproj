@@ -282,6 +282,7 @@
     <Compile Include="TestNumbers\NumberTests.cs" />
     <Compile Include="TraceError.cs" />
     <Compile Include="Tuples.cs" />
+    <Compile Include="TypeFactory.cs" />
     <Compile Include="UnwrappedOuters.cs" />
     <Compile Include="ValueWrapper.cs" />
   </ItemGroup>
