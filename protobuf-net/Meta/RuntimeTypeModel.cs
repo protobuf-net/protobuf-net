@@ -266,9 +266,14 @@ namespace ProtoBuf.Meta
             MetaType newType = FindWithoutAdd(type);
             if (newType != null) return newType; // return existing
             int opaqueToken = 0;
-
-            if (type.IsInterface && typeof(IEnumerable).IsAssignableFrom(type)
-                && GetListItemType(type) == null)
+            
+#if WINRT
+            TypeInfo typeInfo = type.GetTypeInfo();
+            if (typeInfo.IsInterface && MetaType.ienumerable.IsAssignableFrom(typeInfo)
+#else
+            if (type.IsInterface && MetaType.ienumerable.IsAssignableFrom(type)
+#endif
+                    && GetListItemType(type) == null)
             {
                 throw new ArgumentException("IEnumerable[<T>] data cannot be used as a meta-type unless an Add method can be resolved");
             }
@@ -279,7 +284,7 @@ namespace ProtoBuf.Meta
                 {
                     if(!applyDefaultBehaviour) {
                         throw new ArgumentException(
-                            "Default behaviour must be observed for certain types with special handling; " + type.Name,
+                            "Default behaviour must be observed for certain types with special handling; " + type.FullName,
                             "applyDefaultBehaviour");
                     }
                     // we should assume that type is fully configured, though; no need to re-run:
@@ -407,7 +412,7 @@ namespace ProtoBuf.Meta
         {
             //Helpers.DebugWriteLine("Deserialize", value);
             IProtoSerializer ser = ((MetaType)types[key]).Serializer;
-            if (value == null && ser.ExpectedType.IsValueType) {
+            if (value == null && Helpers.IsValueType(ser.ExpectedType)) {
                 return ser.Read(Activator.CreateInstance(ser.ExpectedType), source);
             } else {
                 return ser.Read(value, source);
@@ -744,7 +749,7 @@ namespace ProtoBuf.Meta
             
             il = ctor.GetILGenerator();
             il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Call, baseType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Instance)[0]);
+            il.Emit(OpCodes.Call, Helpers.GetConstructor(baseType, Helpers.EmptyTypes, true));
             il.Emit(OpCodes.Ldarg_0);
             Compiler.CompilerContext.LoadValue(il, types.Count);
             il.Emit(OpCodes.Newarr, typeof(Type));

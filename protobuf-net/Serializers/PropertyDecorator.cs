@@ -25,9 +25,9 @@ namespace ProtoBuf.Serializers
         private static void SanityCheck(PropertyInfo property, IProtoSerializer tail, out bool writeValue, bool nonPublic) {
             if(property == null) throw new ArgumentNullException("property");
             
-            writeValue = tail.ReturnsValue && (GetShadowSetter(property) != null || (property.CanWrite && property.GetSetMethod(nonPublic) != null));
-            if (!property.CanRead || property.GetGetMethod(nonPublic) == null) throw new InvalidOperationException("Cannot serialize property without a get accessor");
-            if (!writeValue && (!tail.RequiresOldValue || tail.ExpectedType.IsValueType))
+            writeValue = tail.ReturnsValue && (GetShadowSetter(property) != null || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic) != null));
+            if (!property.CanRead || Helpers.GetGetMethod(property, nonPublic) == null) throw new InvalidOperationException("Cannot serialize property without a get accessor");
+            if (!writeValue && (!tail.RequiresOldValue || Helpers.IsValueType(tail.ExpectedType)))
             { // so we can't save the value, and the tail doesn't use it either... not helpful
                 // or: can't write the value, so the struct value will be lost
                 throw new InvalidOperationException("Cannot apply changes to property " + property.DeclaringType.FullName + "." + property.Name);

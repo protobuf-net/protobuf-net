@@ -274,7 +274,7 @@ namespace ProtoBuf.Serializers
                 iteratorType = getEnumerator.ReturnType;
                 moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext", null);
                 PropertyInfo prop = iteratorType.GetProperty("Current", BindingFlags.Public | BindingFlags.Instance);
-                current = prop == null ? null : prop.GetGetMethod(false);
+                current = prop == null ? null : Helpers.GetGetMethod(prop, false);
                 if (moveNext == null && typeof(IEnumerator).IsAssignableFrom(iteratorType))
                 {
                     moveNext = Helpers.GetInstanceMethod(typeof(IEnumerator), "MoveNext", null);
@@ -295,7 +295,7 @@ namespace ProtoBuf.Serializers
                 getEnumerator = enumeratorType.GetMethod("GetEnumerator");
                 iteratorType = getEnumerator.ReturnType;
                 moveNext = typeof(IEnumerator).GetMethod("MoveNext");
-                current = iteratorType.GetProperty("Current").GetGetMethod(false);
+                current = Helpers.GetGetMethod(iteratorType.GetProperty("Current"), false);
                 return getEnumerator;
             }
 #endif
@@ -303,7 +303,7 @@ namespace ProtoBuf.Serializers
             getEnumerator = enumeratorType.GetMethod("GetEnumerator");
             iteratorType = getEnumerator.ReturnType;
             moveNext = iteratorType.GetMethod("MoveNext");
-            current = iteratorType.GetProperty("Current").GetGetMethod(false);
+            current = Helpers.GetGetMethod(iteratorType.GetProperty("Current"), false);
             return getEnumerator;
         }
 #if FEAT_COMPILER

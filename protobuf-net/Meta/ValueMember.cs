@@ -101,29 +101,29 @@ namespace ProtoBuf.Meta
             {
                 string s = (string)value;
                 if (type.IsEnum) return Enum.Parse(type, s, true);
-                switch (Type.GetTypeCode(type))
+                switch (Helpers.GetTypeCode(type))
                 {
-                    case TypeCode.Boolean: return bool.Parse(s);
-                    case TypeCode.Byte: return byte.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
-                    case TypeCode.Char: // char.Parse missing on CF/phone7
+                    case ProtoTypeCode.Boolean: return bool.Parse(s);
+                    case ProtoTypeCode.Byte: return byte.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.Char: // char.Parse missing on CF/phone7
                         if (s.Length == 1) return s[0];
                         throw new FormatException("Single character expected: \"" + s + "\"");
-                    case TypeCode.DateTime: return DateTime.Parse(s, CultureInfo.InvariantCulture);
-                    case TypeCode.Decimal: return decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    case TypeCode.Double: return double.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    case TypeCode.Int16: return short.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    case TypeCode.Int32: return int.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    case TypeCode.Int64: return long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    case TypeCode.SByte: return sbyte.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
-                    case TypeCode.Single: return float.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    case TypeCode.String: return s;
-                    case TypeCode.UInt16: return ushort.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    case TypeCode.UInt32: return uint.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
-                    case TypeCode.UInt64: return ulong.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.DateTime: return DateTime.Parse(s, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.Decimal: return decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.Double: return double.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.Int16: return short.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.Int32: return int.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.Int64: return long.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.SByte: return sbyte.Parse(s, NumberStyles.Integer, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.Single: return float.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.String: return s;
+                    case ProtoTypeCode.UInt16: return ushort.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.UInt32: return uint.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.UInt64: return ulong.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.TimeSpan: return TimeSpan.Parse(s);
+                    case ProtoTypeCode.Uri: return s; // Uri is decorated as string
+                    case ProtoTypeCode.Guid: return new Guid(s); 
                 }
-                if (type == typeof(TimeSpan)) return TimeSpan.Parse(s);
-                if (type == typeof(Uri)) return s; // Uri is decorated as string
-                if (type == typeof(Guid)) return new Guid(s);
             }
             if (type.IsEnum) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
@@ -346,78 +346,70 @@ namespace ProtoBuf.Meta
                     return null;
                 }
             }
-            TypeCode code = Type.GetTypeCode(type);
+            ProtoTypeCode code = Helpers.GetTypeCode(type);
             switch (code)
             {
-                case TypeCode.Int32:
+                case ProtoTypeCode.Int32:
                     defaultWireType = GetIntWireType(dataFormat, 32);
                     return new Int32Serializer();
-                case TypeCode.UInt32:
+                case ProtoTypeCode.UInt32:
                     defaultWireType = GetIntWireType(dataFormat, 32);
                     return new UInt32Serializer();
-                case TypeCode.Int64:
+                case ProtoTypeCode.Int64:
                     defaultWireType = GetIntWireType(dataFormat, 64);
                     return new Int64Serializer();
-                case TypeCode.UInt64:
+                case ProtoTypeCode.UInt64:
                     defaultWireType = GetIntWireType(dataFormat, 64);
                     return new UInt64Serializer();
-                case TypeCode.String:
+                case ProtoTypeCode.String:
                     defaultWireType = WireType.String;
                     if (asReference)
                     {
                         return new NetObjectSerializer(typeof(string), 0, BclHelpers.NetObjectOptions.AsReference);
                     }
                     return new StringSerializer();
-                case TypeCode.Single:
+                case ProtoTypeCode.Single:
                     defaultWireType = WireType.Fixed32;
                     return new SingleSerializer();
-                case TypeCode.Double:
+                case ProtoTypeCode.Double:
                     defaultWireType = WireType.Fixed64;
                     return new DoubleSerializer();
-                case TypeCode.Boolean:
+                case ProtoTypeCode.Boolean:
                     defaultWireType = WireType.Variant;
                     return new BooleanSerializer();
-                case TypeCode.DateTime:
+                case ProtoTypeCode.DateTime:
                     defaultWireType = GetDateTimeWireType(dataFormat);
                     return new DateTimeSerializer();
-                case TypeCode.Decimal:
+                case ProtoTypeCode.Decimal:
                     defaultWireType = WireType.String;
                     return new DecimalSerializer();
-                case TypeCode.Byte:
+                case ProtoTypeCode.Byte:
                     defaultWireType = GetIntWireType(dataFormat, 32);
                     return new ByteSerializer();
-                case TypeCode.SByte:
+                case ProtoTypeCode.SByte:
                     defaultWireType = GetIntWireType(dataFormat, 32);
                     return new SByteSerializer();
-                case TypeCode.Char:
+                case ProtoTypeCode.Char:
                     defaultWireType = WireType.Variant;
                     return new CharSerializer();
-                case TypeCode.Int16:
+                case ProtoTypeCode.Int16:
                     defaultWireType = GetIntWireType(dataFormat, 32);
                     return new Int16Serializer();
-                case TypeCode.UInt16:
+                case ProtoTypeCode.UInt16:
                     defaultWireType = GetIntWireType(dataFormat, 32);
                     return new UInt16Serializer();
-            }
-            if (type == typeof(TimeSpan))
-            {
-                defaultWireType = GetDateTimeWireType(dataFormat);
-                return new TimeSpanSerializer();
-            }
-            if (type == typeof(Guid))
-            {
-                defaultWireType = WireType.String;
-                return new GuidSerializer();
-            }
-            if (type == typeof(Uri))
-            {
-                defaultWireType = WireType.String;
-                return new StringSerializer(); // treat as string; wrapped in decorator later
-            }
-            if (type == typeof(byte[]))
-            {
-                defaultWireType = WireType.String;
-                return new BlobSerializer();
+                case ProtoTypeCode.TimeSpan:
+                    defaultWireType = GetDateTimeWireType(dataFormat);
+                    return new TimeSpanSerializer();
+                case ProtoTypeCode.Guid:
+                    defaultWireType = WireType.String;
+                    return new GuidSerializer();
+                case ProtoTypeCode.Uri:
+                    defaultWireType = WireType.String;
+                    return new StringSerializer(); // treat as string; wrapped in decorator later
+                case ProtoTypeCode.ByteArray:
+                    defaultWireType = WireType.String;
+                    return new BlobSerializer();
             }
             IProtoSerializer parseable = ParseableSerializer.TryCreate(type);
             if (parseable != null)

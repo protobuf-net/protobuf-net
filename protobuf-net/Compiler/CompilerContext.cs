@@ -575,9 +575,7 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                ConstructorInfo ctor = type.GetConstructor(
-                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                    null, parameterTypes, null);
+                ConstructorInfo ctor =  Helpers.GetConstructor(type, parameterTypes, true);
                 if (ctor == null) throw new InvalidOperationException("No suitable constructor found for " + type.FullName);
                 il.Emit(OpCodes.Newobj, ctor);
 #if DEBUG_COMPILE
@@ -604,11 +602,11 @@ namespace ProtoBuf.Compiler
         }
         public void LoadValue(PropertyInfo property)
         {
-            EmitCall(property.GetGetMethod(NonPublic));
+            EmitCall(Helpers.GetGetMethod(property, NonPublic));
         }
         public void StoreValue(PropertyInfo property)
         {
-            EmitCall(property.GetSetMethod(NonPublic));
+            EmitCall(Helpers.GetSetMethod(property, NonPublic));
         }
 
         internal void EmitInstance()
@@ -962,19 +960,19 @@ namespace ProtoBuf.Compiler
             Helpers.DebugAssert(type != null, "Not an array: " + arr.Type.FullName);
             LoadValue(arr);
             LoadValue(i);
-            switch(Type.GetTypeCode(type)) {
-                case TypeCode.SByte: Emit(OpCodes.Ldelem_I1); break;
-                case TypeCode.Int16: Emit(OpCodes.Ldelem_I2); break;
-                case TypeCode.Int32: Emit(OpCodes.Ldelem_I4); break;
-                case TypeCode.Int64: Emit(OpCodes.Ldelem_I8); break;
+            switch(Helpers.GetTypeCode(type)) {
+                case ProtoTypeCode.SByte: Emit(OpCodes.Ldelem_I1); break;
+                case ProtoTypeCode.Int16: Emit(OpCodes.Ldelem_I2); break;
+                case ProtoTypeCode.Int32: Emit(OpCodes.Ldelem_I4); break;
+                case ProtoTypeCode.Int64: Emit(OpCodes.Ldelem_I8); break;
 
-                case TypeCode.Byte: Emit(OpCodes.Ldelem_U1); break;
-                case TypeCode.UInt16: Emit(OpCodes.Ldelem_U2); break;
-                case TypeCode.UInt32: Emit(OpCodes.Ldelem_U4); break;
-                case TypeCode.UInt64: Emit(OpCodes.Ldelem_I8); break; // odd, but this is what C# does...
+                case ProtoTypeCode.Byte: Emit(OpCodes.Ldelem_U1); break;
+                case ProtoTypeCode.UInt16: Emit(OpCodes.Ldelem_U2); break;
+                case ProtoTypeCode.UInt32: Emit(OpCodes.Ldelem_U4); break;
+                case ProtoTypeCode.UInt64: Emit(OpCodes.Ldelem_I8); break; // odd, but this is what C# does...
 
-                case TypeCode.Single: Emit(OpCodes.Ldelem_R4); break;
-                case TypeCode.Double: Emit(OpCodes.Ldelem_R8); break;
+                case ProtoTypeCode.Single: Emit(OpCodes.Ldelem_R4); break;
+                case ProtoTypeCode.Double: Emit(OpCodes.Ldelem_R8); break;
                 default:
                     if (type.IsValueType)
                     {
@@ -1006,23 +1004,23 @@ namespace ProtoBuf.Compiler
             EmitCall(typeof(Type).GetMethod("GetTypeFromHandle"));
         }
 
-        internal void ConvertToInt32(TypeCode typeCode)
+        internal void ConvertToInt32(ProtoTypeCode typeCode)
         {
             switch (typeCode)
             {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.Int16:
-                case TypeCode.UInt16:
+                case ProtoTypeCode.Byte:
+                case ProtoTypeCode.SByte:
+                case ProtoTypeCode.Int16:
+                case ProtoTypeCode.UInt16:
                     Emit(OpCodes.Conv_I4);
                     break;
-                case TypeCode.Int32:
-                    break;                
-                case TypeCode.Int64:
+                case ProtoTypeCode.Int32:
+                    break;
+                case ProtoTypeCode.Int64:
                     Emit(OpCodes.Conv_Ovf_I4);
                     break;
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
+                case ProtoTypeCode.UInt32:
+                case ProtoTypeCode.UInt64:
                     Emit(OpCodes.Conv_Ovf_I4_Un);
                     break;
                 default:
@@ -1030,18 +1028,18 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        internal void ConvertFromInt32(TypeCode typeCode)
+        internal void ConvertFromInt32(ProtoTypeCode typeCode)
         {
             switch (typeCode)
             {
-                case TypeCode.SByte: Emit(OpCodes.Conv_Ovf_U1); break;
-                case TypeCode.Byte: Emit(OpCodes.Conv_Ovf_I1); break;
-                case TypeCode.Int16: Emit(OpCodes.Conv_Ovf_I2); break;
-                case TypeCode.UInt16: Emit(OpCodes.Conv_Ovf_U2); break;
-                case TypeCode.Int32: break;
-                case TypeCode.UInt32: Emit(OpCodes.Conv_Ovf_U4); break;
-                case TypeCode.Int64: Emit(OpCodes.Conv_I8); break;
-                case TypeCode.UInt64: Emit(OpCodes.Conv_U8); break;
+                case ProtoTypeCode.SByte: Emit(OpCodes.Conv_Ovf_U1); break;
+                case ProtoTypeCode.Byte: Emit(OpCodes.Conv_Ovf_I1); break;
+                case ProtoTypeCode.Int16: Emit(OpCodes.Conv_Ovf_I2); break;
+                case ProtoTypeCode.UInt16: Emit(OpCodes.Conv_Ovf_U2); break;
+                case ProtoTypeCode.Int32: break;
+                case ProtoTypeCode.UInt32: Emit(OpCodes.Conv_Ovf_U4); break;
+                case ProtoTypeCode.Int64: Emit(OpCodes.Conv_I8); break;
+                case ProtoTypeCode.UInt64: Emit(OpCodes.Conv_U8); break;
                 default: throw new InvalidOperationException();
             }
         }

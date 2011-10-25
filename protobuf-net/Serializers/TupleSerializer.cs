@@ -73,21 +73,25 @@ namespace ProtoBuf.Serializers
         }
         private object GetValue(object obj, int index)
         {
-            switch (members[index].MemberType)
+            PropertyInfo prop;
+            FieldInfo field;
+            
+            if ((prop = members[index] as PropertyInfo) != null)
             {
-                case MemberTypes.Field:
-                    FieldInfo field = (FieldInfo)members[index];
-                    if(obj == null)
-                        return field.FieldType.IsValueType ? Activator.CreateInstance(field.FieldType) : null;
-                    return field.GetValue(obj);
-                case MemberTypes.Property:
-                    PropertyInfo prop = (PropertyInfo)members[index];
-                    if (obj == null) return prop.PropertyType.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
-                    return prop.GetValue(obj, null);
-                default:
-                    throw new InvalidOperationException();
+                if (obj == null)
+                    return Helpers.IsValueType(prop.PropertyType) ? Activator.CreateInstance(prop.PropertyType) : null;
+                return prop.GetValue(obj, null);
             }
-           
+            else if ((field = members[index] as FieldInfo) != null)
+            {
+                if (obj == null)
+                    return Helpers.IsValueType(field.FieldType) ? Activator.CreateInstance(field.FieldType) : null;
+                return field.GetValue(obj);
+            }
+            else
+            {
+                throw new InvalidOperationException();
+            }          
         }
 
         public object Read(object value, ProtoReader source)
@@ -178,41 +182,37 @@ namespace ProtoBuf.Serializers
                             // value-types always read the old value
                             if (type.IsValueType)
                             {
-                                switch (Type.GetTypeCode(type))
+                                switch (Helpers.GetTypeCode(type))
                                 {
-                                    case TypeCode.Boolean:
-                                    case TypeCode.Byte:
-                                    case TypeCode.Int16:
-                                    case TypeCode.Int32:
-                                    case TypeCode.SByte:
-                                    case TypeCode.UInt16:
-                                    case TypeCode.UInt32:
+                                    case ProtoTypeCode.Boolean:
+                                    case ProtoTypeCode.Byte:
+                                    case ProtoTypeCode.Int16:
+                                    case ProtoTypeCode.Int32:
+                                    case ProtoTypeCode.SByte:
+                                    case ProtoTypeCode.UInt16:
+                                    case ProtoTypeCode.UInt32:
                                         ctx.LoadValue(0);
                                         break;
-                                    case TypeCode.Int64:
-                                    case TypeCode.UInt64:
+                                    case ProtoTypeCode.Int64:
+                                    case ProtoTypeCode.UInt64:
                                         ctx.LoadValue(0L);
                                         break;
-                                    case TypeCode.Single:
+                                    case ProtoTypeCode.Single:
                                         ctx.LoadValue(0.0F);
                                         break;
-                                    case TypeCode.Double:
+                                    case ProtoTypeCode.Double:
                                         ctx.LoadValue(0.0D);
                                         break;
-                                    case TypeCode.Decimal:
+                                    case ProtoTypeCode.Decimal:
                                         ctx.LoadValue(0M);
                                         break;
+                                    case ProtoTypeCode.Guid:
+                                        ctx.LoadValue(Guid.Empty);
+                                        break;
                                     default:
-                                        if (type == typeof (Guid))
-                                        {
-                                            ctx.LoadValue(Guid.Empty);
-                                        }
-                                        else
-                                        {
-                                            ctx.LoadAddress(locals[i], type);
-                                            ctx.EmitCtor(type);
-                                            store = false;
-                                        }
+                                        ctx.LoadAddress(locals[i], type);
+                                        ctx.EmitCtor(type);
+                                        store = false;
                                         break;
                                 }
                             }

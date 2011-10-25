@@ -58,20 +58,20 @@ namespace ProtoBuf.Serializers
         }
         private void EmitBeq(Compiler.CompilerContext ctx, Compiler.CodeLabel label, Type type)
         {
-            switch (Type.GetTypeCode(type))
+            switch (Helpers.GetTypeCode(type))
             {
-                case TypeCode.Boolean:
-                case TypeCode.Byte:
-                case TypeCode.Char:
-                case TypeCode.Double:
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64:
-                case TypeCode.SByte:
-                case TypeCode.Single:
-                case TypeCode.UInt16:
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
+                case ProtoTypeCode.Boolean:
+                case ProtoTypeCode.Byte:
+                case ProtoTypeCode.Char:
+                case ProtoTypeCode.Double:
+                case ProtoTypeCode.Int16:
+                case ProtoTypeCode.Int32:
+                case ProtoTypeCode.Int64:
+                case ProtoTypeCode.SByte:
+                case ProtoTypeCode.Single:
+                case ProtoTypeCode.UInt16:
+                case ProtoTypeCode.UInt32:
+                case ProtoTypeCode.UInt64:
                     ctx.BranchIfEqual(label, false);
                     break;
                 default:
@@ -89,9 +89,9 @@ namespace ProtoBuf.Serializers
         }
         private void EmitBranchIfDefaultValue(Compiler.CompilerContext ctx, Compiler.CodeLabel label)
         {
-            switch (Type.GetTypeCode(ExpectedType))
+            switch (Helpers.GetTypeCode(ExpectedType))
             {
-                case TypeCode.Boolean:
+                case ProtoTypeCode.Boolean:
                     if ((bool)defaultValue)
                     {
                         ctx.BranchIfTrue(label, false);
@@ -101,7 +101,7 @@ namespace ProtoBuf.Serializers
                         ctx.BranchIfFalse(label, false);
                     }
                     break;
-                case TypeCode.Byte:
+                case ProtoTypeCode.Byte:
                     if ((byte)defaultValue == (byte)0)
                     {
                         ctx.BranchIfFalse(label, false);
@@ -112,7 +112,7 @@ namespace ProtoBuf.Serializers
                         EmitBeq(ctx, label, ExpectedType);
                     }
                     break;
-                case TypeCode.SByte:
+                case ProtoTypeCode.SByte:
                     if ((sbyte)defaultValue == (sbyte)0)
                     {
                         ctx.BranchIfFalse(label, false);
@@ -123,7 +123,7 @@ namespace ProtoBuf.Serializers
                         EmitBeq(ctx, label, ExpectedType);
                     }
                     break;
-                case TypeCode.Int16:
+                case ProtoTypeCode.Int16:
                     if ((short)defaultValue == (short)0)
                     {
                         ctx.BranchIfFalse(label, false);
@@ -134,7 +134,7 @@ namespace ProtoBuf.Serializers
                         EmitBeq(ctx, label, ExpectedType);
                     }
                     break;
-                case TypeCode.UInt16:
+                case ProtoTypeCode.UInt16:
                     if ((ushort)defaultValue == (ushort)0)
                     {
                         ctx.BranchIfFalse(label, false);
@@ -145,7 +145,7 @@ namespace ProtoBuf.Serializers
                         EmitBeq(ctx, label, ExpectedType);
                     }
                     break;
-                case TypeCode.Int32:
+                case ProtoTypeCode.Int32:
                     if ((int)defaultValue == (int)0)
                     {
                         ctx.BranchIfFalse(label, false);
@@ -156,7 +156,7 @@ namespace ProtoBuf.Serializers
                         EmitBeq(ctx, label, ExpectedType);
                     }
                     break;
-                case TypeCode.UInt32:
+                case ProtoTypeCode.UInt32:
                     if ((uint)defaultValue == (uint)0)
                     {
                         ctx.BranchIfFalse(label, false);
@@ -167,7 +167,7 @@ namespace ProtoBuf.Serializers
                         EmitBeq(ctx, label, ExpectedType);
                     }
                     break;
-                case TypeCode.Char:
+                case ProtoTypeCode.Char:
                     if ((char)defaultValue == (char)0)
                     {
                         ctx.BranchIfFalse(label, false);
@@ -178,35 +178,34 @@ namespace ProtoBuf.Serializers
                         EmitBeq(ctx, label, ExpectedType);
                     }
                     break;
-                case TypeCode.Int64:
+                case ProtoTypeCode.Int64:
                     ctx.LoadValue((long)defaultValue);
                     EmitBeq(ctx, label, ExpectedType);
                     break;
-                case TypeCode.UInt64:
+                case ProtoTypeCode.UInt64:
                     ctx.LoadValue((long)(ulong)defaultValue);
                     EmitBeq(ctx, label, ExpectedType);
                     break;
-                case TypeCode.Double:
+                case ProtoTypeCode.Double:
                     ctx.LoadValue((double)defaultValue);
                     EmitBeq(ctx, label, ExpectedType);
                     break;
-                case TypeCode.Single:
+                case ProtoTypeCode.Single:
                     ctx.LoadValue((float)defaultValue);
                     EmitBeq(ctx, label, ExpectedType);
                     break;
-                case TypeCode.String:
+                case ProtoTypeCode.String:
                     ctx.LoadValue((string)defaultValue);
                     EmitBeq(ctx, label, ExpectedType);
                     break;
-                case TypeCode.Decimal:
+                case ProtoTypeCode.Decimal:
                     {
                         decimal d = (decimal)defaultValue;
                         ctx.LoadValue(d);
                         EmitBeq(ctx, label, ExpectedType);
                     }
                     break;
-                default:
-                    if (ExpectedType == typeof(TimeSpan))
+                case ProtoTypeCode.TimeSpan:
                     {
                         TimeSpan ts = (TimeSpan)defaultValue;
                         if (ts == TimeSpan.Zero)
@@ -219,13 +218,15 @@ namespace ProtoBuf.Serializers
                             ctx.EmitCall(typeof(TimeSpan).GetMethod("FromTicks"));
                         }
                         EmitBeq(ctx, label, ExpectedType);
+                        break;
                     }
-                    else if (ExpectedType == typeof(Guid))
+                case ProtoTypeCode.Guid:
                     {
                         ctx.LoadValue((Guid)defaultValue);
                         EmitBeq(ctx, label, ExpectedType);
+                        break;
                     }
-                    else if (ExpectedType == typeof(DateTime))
+                case ProtoTypeCode.DateTime:
                     {
 #if FX11
                         ctx.LoadValue(((DateTime)defaultValue).ToFileTime());
@@ -236,12 +237,10 @@ namespace ProtoBuf.Serializers
 #endif
                         
                         EmitBeq(ctx, label, ExpectedType);
+                        break;
                     }
-                    else
-                    {
-                        throw new NotSupportedException("Type cannot be represented as a default value: " + ExpectedType.FullName);
-                    }
-                    break;
+                default:
+                    throw new NotSupportedException("Type cannot be represented as a default value: " + ExpectedType.FullName);
             }
         }
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

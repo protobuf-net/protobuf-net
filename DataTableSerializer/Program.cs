@@ -72,7 +72,7 @@ namespace ExperimentalDataTableSerialization
         {
             DataTable table = new DataTable();
             object[] values = null;
-            using (ProtoReader reader = new ProtoReader(stream, null))
+            using (ProtoReader reader = new ProtoReader(stream, null, null))
             {
                 int field;
                 List<Func<object>> colReaders = new List<Func<object>>();
@@ -174,7 +174,7 @@ namespace ExperimentalDataTableSerialization
         }
         static void ProtoWrite(DataTable table, Stream stream)
         {
-            using (var writer = new ProtoWriter(stream, null))
+            using (var writer = new ProtoWriter(stream, null, null))
             {
                 // table name
                 if (!string.IsNullOrEmpty(table.TableName))

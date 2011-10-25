@@ -57,14 +57,26 @@ namespace ProtoBuf.Meta
         {
             if (derivedType == null) throw new ArgumentNullException("derivedType");
             if (fieldNumber < 1) throw new ArgumentOutOfRangeException("fieldNumber");
+#if WINRT
+            if (!(typeInfo.IsClass || typeInfo.IsInterface) || typeInfo.IsSealed) {
+#else
             if (!(type.IsClass || type.IsInterface) || type.IsSealed) {
+#endif
                 throw new InvalidOperationException("Sub-types can only be added to non-sealed classes");
             }
-            if (typeof(IEnumerable).IsAssignableFrom(type))
+#if WINRT
+            if (ienumerable.IsAssignableFrom(typeInfo))
+#else
+            if (ienumerable.IsAssignableFrom(type))
+#endif
             {
                 throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
             }
-            if (typeof(IEnumerable).IsAssignableFrom(derivedType))
+#if WINRT
+            if (ienumerable.IsAssignableFrom(derivedType.GetTypeInfo()))
+#else
+            if (ienumerable.IsAssignableFrom(derivedType))
+#endif
             {
                 throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
             }
@@ -79,7 +91,11 @@ namespace ProtoBuf.Meta
             subTypes.Add(subType);
             return this;
         }
-
+#if WINRT
+        internal static readonly TypeInfo ienumerable = typeof(IEnumerable).GetTypeInfo();
+#else
+        internal static readonly Type ienumerable = typeof(IEnumerable);
+#endif
         private void SetBaseType(MetaType baseType)
         {
             if (baseType == null) throw new ArgumentNullException("baseType");
@@ -130,11 +146,22 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                if (callbacks == null && !type.IsValueType) callbacks = new CallbackSet(this);
+                if (callbacks == null && !IsValueType) callbacks = new CallbackSet(this);
                 return callbacks;
             }
         }
 
+        private bool IsValueType
+        {
+            get
+            {
+#if WINRT
+                return typeInfo.IsValueType;
+#else
+                return type.IsValueType;
+#endif
+            }
+        }
         /// <summary>
         /// Assigns the callbacks to use during serialiation/deserialization.
         /// </summary>
@@ -145,7 +172,7 @@ namespace ProtoBuf.Meta
         /// <returns>The set of callbacks.</returns>
         public MetaType SetCallbacks(MethodInfo beforeSerialize, MethodInfo afterSerialize, MethodInfo beforeDeserialize, MethodInfo afterDeserialize)
         {
-            if (type.IsValueType) throw new InvalidOperationException();
+            if (IsValueType) throw new InvalidOperationException();
             CallbackSet callbacks = Callbacks;
             callbacks.BeforeSerialize = beforeSerialize;
             callbacks.AfterSerialize = afterSerialize;
@@ -163,7 +190,7 @@ namespace ProtoBuf.Meta
         /// <returns>The set of callbacks.</returns>
         public MetaType SetCallbacks(string beforeSerialize, string afterSerialize, string beforeDeserialize, string afterDeserialize)
         {
-            if (type.IsValueType) throw new InvalidOperationException();
+            if (IsValueType) throw new InvalidOperationException();
             CallbackSet callbacks = Callbacks;
             callbacks.BeforeSerialize = ResolveCallback(beforeSerialize);
             callbacks.AfterSerialize = ResolveCallback(afterSerialize);
@@ -173,7 +200,11 @@ namespace ProtoBuf.Meta
         }
         private MethodInfo ResolveCallback(string name)
         {
-            return Helpers.IsNullOrEmpty(name) ? null : type.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+#if WINRT
+            return Helpers.IsNullOrEmpty(name) ? null : Helpers.GetInstanceMethod(typeInfo, name);
+#else
+            return Helpers.IsNullOrEmpty(name) ? null : Helpers.GetInstanceMethod(type, name);
+#endif
         }
         private readonly RuntimeTypeModel model;
         internal MetaType(RuntimeTypeModel model, Type type)
@@ -188,13 +219,23 @@ namespace ProtoBuf.Meta
             }
             
             this.type = type;
+#if WINRT
+            this.typeInfo = type.GetTypeInfo();
+#endif
             this.model = model;
-
+            
             if (type.IsEnum)
             {
+#if WINRT
+                EnumPassthru = typeInfo.IsDefined(typeof(FlagsAttribute), false);
+#else
                 EnumPassthru = type.IsDefined(typeof(FlagsAttribute), false);
+#endif
             }
         }
+#if WINRT
+        private readonly TypeInfo typeInfo;
+#endif
         /// <summary>
         /// Throws an exception if the type has been made immutable
         /// </summary>
@@ -319,13 +360,21 @@ namespace ProtoBuf.Meta
         {
             None = 0, ProtoBuf = 1, DataContractSerialier = 2, XmlSerializer = 4, AutoTuple = 8
         }
-        
+        static Type GetBaseType(MetaType type)
+        {
+#if WINRT
+            return type.typeInfo.BaseType;
+#else
+            return type.type.BaseType;
+#endif
+        }
         internal void ApplyDefaultBehaviour()
         {
-            if (type.BaseType != null && model.FindWithoutAdd(type.BaseType) == null
-                && GetContractFamily(type.BaseType, null) != MetaType.AttributeFamily.None)
+            Type baseType = GetBaseType(this);
+            if (baseType != null && model.FindWithoutAdd(baseType) == null
+                && GetContractFamily(baseType, null) != MetaType.AttributeFamily.None)
             {
-                model.FindOrAddAuto(type.BaseType, true, false, false);
+                model.FindOrAddAuto(baseType, true, false, false);
             }
 
             object[] typeAttribs = type.GetCustomAttributes(true);
@@ -397,7 +446,7 @@ namespace ProtoBuf.Meta
                     case MemberTypes.Property:
                         PropertyInfo property = (PropertyInfo)member;
                         effectiveType = property.PropertyType;
-                        isPublic = property.GetGetMethod(false) != null;
+                        isPublic = Helpers.GetGetMethod(property, false) != null;
                         isField = false;
                         goto ProcessMember;
                     case MemberTypes.Field:
@@ -507,8 +556,14 @@ namespace ProtoBuf.Meta
         {
             mappedMembers = null;
             if(type == null) throw new ArgumentNullException("type");
+#if WINRT
+            TypeInfo typeInfo = type.GetTypeInfo();
+            if (typeInfo.IsAbstract) return null; // as if!
+            ConstructorInfo[] ctors = Helpers.GetConstructors(typeInfo, false);
+#else
             if(type.IsAbstract) return null; // as if!
-            ConstructorInfo[] ctors = type.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+            ConstructorInfo[] ctors = Helpers.GetConstructors(type, false);
+#endif
             // need to have an interesting constructor to bother even checking this stuff
             if(ctors.Length == 0 || (ctors.Length == 1 && ctors[0].GetParameters().Length == 0)) return null;
 
@@ -525,7 +580,7 @@ namespace ProtoBuf.Meta
                     case MemberTypes.Property:
                         PropertyInfo prop = (PropertyInfo) membersUnfiltered[i];
                         if (!prop.CanRead) return null; // no use if can't read
-                        if (prop.CanWrite && prop.GetSetMethod(false) != null) return null; // don't allow a public set (need to allow non-public to handle Mono's KeyValuePair<,>)
+                        if (prop.CanWrite && Helpers.GetSetMethod(prop, false) != null) return null; // don't allow a public set (need to allow non-public to handle Mono's KeyValuePair<,>)
                         memberList.Add(membersUnfiltered[i]);
                         break;
                 }
@@ -755,25 +810,23 @@ namespace ProtoBuf.Meta
             // implicit zero default
             if (model.UseImplicitZeroDefaults)
             {
-                switch (Type.GetTypeCode(effectiveType))
+                switch (Helpers.GetTypeCode(effectiveType))
                 {
-                    case TypeCode.Boolean: defaultValue = false; break;
-                    case TypeCode.Decimal: defaultValue = (decimal)0; break;
-                    case TypeCode.Single: defaultValue = (float)0; break;
-                    case TypeCode.Double: defaultValue = (double)0; break;
-                    case TypeCode.Byte: defaultValue = (byte)0; break;
-                    case TypeCode.Char: defaultValue = (char)0; break;
-                    case TypeCode.Int16: defaultValue = (short)0; break;
-                    case TypeCode.Int32: defaultValue = (int)0; break;
-                    case TypeCode.Int64: defaultValue = (long)0; break;
-                    case TypeCode.SByte: defaultValue = (sbyte)0; break;
-                    case TypeCode.UInt16: defaultValue = (ushort)0; break;
-                    case TypeCode.UInt32: defaultValue = (uint)0; break;
-                    case TypeCode.UInt64: defaultValue = (ulong)0; break;
-                    default:
-                        if (effectiveType == typeof(TimeSpan)) defaultValue = TimeSpan.Zero;
-                        if (effectiveType == typeof(Guid)) defaultValue = Guid.Empty;
-                        break;
+                    case ProtoTypeCode.Boolean: defaultValue = false; break;
+                    case ProtoTypeCode.Decimal: defaultValue = (decimal)0; break;
+                    case ProtoTypeCode.Single: defaultValue = (float)0; break;
+                    case ProtoTypeCode.Double: defaultValue = (double)0; break;
+                    case ProtoTypeCode.Byte: defaultValue = (byte)0; break;
+                    case ProtoTypeCode.Char: defaultValue = (char)0; break;
+                    case ProtoTypeCode.Int16: defaultValue = (short)0; break;
+                    case ProtoTypeCode.Int32: defaultValue = (int)0; break;
+                    case ProtoTypeCode.Int64: defaultValue = (long)0; break;
+                    case ProtoTypeCode.SByte: defaultValue = (sbyte)0; break;
+                    case ProtoTypeCode.UInt16: defaultValue = (ushort)0; break;
+                    case ProtoTypeCode.UInt32: defaultValue = (uint)0; break;
+                    case ProtoTypeCode.UInt64: defaultValue = (ulong)0; break;
+                    case ProtoTypeCode.TimeSpan: defaultValue = TimeSpan.Zero; break;
+                    case ProtoTypeCode.Guid: defaultValue = Guid.Empty; break;
                 }
             }
             if ((attrib = GetAttribute(attribs, "System.ComponentModel.DefaultValueAttribute")) != null)
@@ -789,7 +842,7 @@ namespace ProtoBuf.Meta
                     null, typeof(bool), Helpers.EmptyTypes, null);
                 if (prop != null)
                 {
-                    vm.SetSpecified(prop.GetGetMethod(true), prop.GetSetMethod(true));
+                    vm.SetSpecified(Helpers.GetGetMethod(prop, true), Helpers.GetSetMethod(prop, true));
                 }
                 else
                 {
@@ -1013,13 +1066,22 @@ namespace ProtoBuf.Meta
 
             if (itemType != null && defaultType == null)
             {
-                if (type.IsClass && !type.IsAbstract && type.GetConstructor(Helpers.EmptyTypes) != null)
+#if WINRT
+                TypeInfo typeInfo = type.GetTypeInfo();
+                if (typeInfo.IsClass && !typeInfo.IsAbstract && Helpers.GetConstructor(typeInfo, Helpers.EmptyTypes, true) != null)
+#else
+                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Helpers.EmptyTypes, true) != null)
+#endif
                 {
                     defaultType = type;
                 }
                 if (defaultType == null)
                 {
+#if WINRT
+                    if (typeInfo.IsInterface)
+#else
                     if (type.IsInterface)
+#endif
                     {                       
 #if NO_GENERICS
                         defaultType = typeof(ArrayList);

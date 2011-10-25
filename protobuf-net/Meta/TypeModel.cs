@@ -10,35 +10,37 @@ namespace ProtoBuf.Meta
     /// </summary>
     public abstract class TypeModel
     {
-        private WireType GetWireType(TypeCode code, DataFormat format, ref Type type, out int modelKey)
+        private WireType GetWireType(ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
         {
             modelKey = -1;
             if (type.IsEnum) return WireType.None;
             switch (code)
             {
-                case TypeCode.Int16:
-                case TypeCode.Int32:
-                case TypeCode.Int64:
-                case TypeCode.UInt16:
-                case TypeCode.UInt32:
-                case TypeCode.UInt64:
-                case TypeCode.Boolean:
-                case TypeCode.SByte:
-                case TypeCode.Byte:
-                case TypeCode.Char:
+                case ProtoTypeCode.Int16:
+                case ProtoTypeCode.Int32:
+                case ProtoTypeCode.Int64:
+                case ProtoTypeCode.UInt16:
+                case ProtoTypeCode.UInt32:
+                case ProtoTypeCode.UInt64:
+                case ProtoTypeCode.Boolean:
+                case ProtoTypeCode.SByte:
+                case ProtoTypeCode.Byte:
+                case ProtoTypeCode.Char:
                     return WireType.Variant;
-                case TypeCode.Double:
+                case ProtoTypeCode.Double:
                     return WireType.Fixed64;
-                case TypeCode.Single:
+                case ProtoTypeCode.Single:
                     return WireType.Fixed32;
-                case TypeCode.String:
-                case TypeCode.DateTime:
-                case TypeCode.Decimal:
+                case ProtoTypeCode.String:
+                case ProtoTypeCode.DateTime:
+                case ProtoTypeCode.Decimal:
+                case ProtoTypeCode.ByteArray:
+                case ProtoTypeCode.TimeSpan:
+                case ProtoTypeCode.Guid:
+                case ProtoTypeCode.Uri:
                     return WireType.String;
             }
-            if (type == typeof(byte[]) || type == typeof(TimeSpan)
-                || type == typeof(Guid) || type == typeof(Uri)) return WireType.String;
-
+            
             if ((modelKey = GetKey(ref type)) >= 0)
             {
                 return WireType.String;
@@ -58,7 +60,7 @@ namespace ProtoBuf.Meta
         {
             if (type == null) { type = value.GetType(); }
 
-            TypeCode typecode = Type.GetTypeCode(type);
+            ProtoTypeCode typecode = Helpers.GetTypeCode(type);
             int modelKey;
             // note the "ref type" here normalizes against proxies
             WireType wireType = GetWireType(typecode, format, ref type, out modelKey);
@@ -88,26 +90,26 @@ namespace ProtoBuf.Meta
                 ProtoWriter.WriteFieldHeader(tag, wireType, writer);
             }
             switch(typecode) {
-                case TypeCode.Int16: ProtoWriter.WriteInt16((short)value, writer); return true;
-                case TypeCode.Int32: ProtoWriter.WriteInt32((int)value, writer); return true;
-                case TypeCode.Int64: ProtoWriter.WriteInt64((long)value, writer); return true;
-                case TypeCode.UInt16: ProtoWriter.WriteUInt16((ushort)value, writer); return true;
-                case TypeCode.UInt32: ProtoWriter.WriteUInt32((uint)value, writer); return true;
-                case TypeCode.UInt64: ProtoWriter.WriteUInt64((ulong)value, writer); return true;
-                case TypeCode.Boolean: ProtoWriter.WriteBoolean((bool)value, writer); return true;
-                case TypeCode.SByte: ProtoWriter.WriteSByte((sbyte)value, writer); return true;
-                case TypeCode.Byte: ProtoWriter.WriteByte((byte)value, writer); return true;
-                case TypeCode.Char: ProtoWriter.WriteUInt16((ushort)(char)value, writer); return true;
-                case TypeCode.Double: ProtoWriter.WriteDouble((double)value, writer); return true;
-                case TypeCode.Single: ProtoWriter.WriteSingle((float)value, writer); return true;
-                case TypeCode.DateTime: BclHelpers.WriteDateTime((DateTime)value, writer); return true;
-                case TypeCode.Decimal: BclHelpers.WriteDecimal((decimal)value, writer); return true;
-                case TypeCode.String: ProtoWriter.WriteString((string)value, writer); return true;
+                case ProtoTypeCode.Int16: ProtoWriter.WriteInt16((short)value, writer); return true;
+                case ProtoTypeCode.Int32: ProtoWriter.WriteInt32((int)value, writer); return true;
+                case ProtoTypeCode.Int64: ProtoWriter.WriteInt64((long)value, writer); return true;
+                case ProtoTypeCode.UInt16: ProtoWriter.WriteUInt16((ushort)value, writer); return true;
+                case ProtoTypeCode.UInt32: ProtoWriter.WriteUInt32((uint)value, writer); return true;
+                case ProtoTypeCode.UInt64: ProtoWriter.WriteUInt64((ulong)value, writer); return true;
+                case ProtoTypeCode.Boolean: ProtoWriter.WriteBoolean((bool)value, writer); return true;
+                case ProtoTypeCode.SByte: ProtoWriter.WriteSByte((sbyte)value, writer); return true;
+                case ProtoTypeCode.Byte: ProtoWriter.WriteByte((byte)value, writer); return true;
+                case ProtoTypeCode.Char: ProtoWriter.WriteUInt16((ushort)(char)value, writer); return true;
+                case ProtoTypeCode.Double: ProtoWriter.WriteDouble((double)value, writer); return true;
+                case ProtoTypeCode.Single: ProtoWriter.WriteSingle((float)value, writer); return true;
+                case ProtoTypeCode.DateTime: BclHelpers.WriteDateTime((DateTime)value, writer); return true;
+                case ProtoTypeCode.Decimal: BclHelpers.WriteDecimal((decimal)value, writer); return true;
+                case ProtoTypeCode.String: ProtoWriter.WriteString((string)value, writer); return true;
+                case ProtoTypeCode.ByteArray: ProtoWriter.WriteBytes((byte[])value, writer); return true;
+                case ProtoTypeCode.TimeSpan: BclHelpers.WriteTimeSpan((TimeSpan)value, writer); return true;
+                case ProtoTypeCode.Guid: BclHelpers.WriteGuid((Guid)value, writer); return true;
+                case ProtoTypeCode.Uri: ProtoWriter.WriteString(((Uri)value).AbsoluteUri, writer); return true;
             }
-            if (type == typeof(byte[]))  {ProtoWriter.WriteBytes((byte[])value, writer); return true;}
-            if (type == typeof(TimeSpan)) { BclHelpers.WriteTimeSpan((TimeSpan)value, writer); return true;}
-            if (type == typeof(Guid))  { BclHelpers.WriteGuid((Guid)value, writer); return true;}
-            if (type == typeof(Uri)) {  ProtoWriter.WriteString(((Uri)value).AbsoluteUri, writer); return true;}
 
             // by now, we should have covered all the simple cases; if we wrote a field-header, we have
             // forgotten something!
@@ -520,14 +522,11 @@ namespace ProtoBuf.Meta
             }
             bool autoCreate = true;
 #if !NO_GENERICS
-            if (type.IsValueType)
+            Type underlyingType = Nullable.GetUnderlyingType(type);
+            if (underlyingType != null)
             {
-                Type underlyingType = Nullable.GetUnderlyingType(type);
-                if (underlyingType != null)
-                {
-                    type = underlyingType;
-                    autoCreate = false;
-                }
+                type = underlyingType;
+                autoCreate = false;
             }
 #endif
             return autoCreate;
@@ -583,29 +582,44 @@ namespace ProtoBuf.Meta
             TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, noAutoCreate, false);
             return value;
         }
+#if WINRT
+        private static readonly TypeInfo ilist = typeof(IList).GetTypeInfo();
+#else
+        private static readonly Type ilist = typeof(IList);
+#endif
         internal static MethodInfo ResolveListAdd(Type listType, Type itemType, out bool isList)
         {
-            isList = typeof(IList).IsAssignableFrom(listType);
+#if WINRT
+            TypeInfo listTypeInfo = listType.GetTypeInfo();
+#else
+            Type listTypeInfo = listType;
+#endif
+            isList = ilist.IsAssignableFrom(listTypeInfo);
+
             Type[] types = { itemType };
-            MethodInfo add = listType.GetMethod("Add", types);
+            MethodInfo add = Helpers.GetInstanceMethod(listTypeInfo, "Add", types);
 #if !NO_GENERICS
             if (add == null)
             {   // fallback: look for ICollection<T>'s Add(typedObject) method
+#if WINRT
+                TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
+#else
                 Type constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types);
-                if (constuctedListType.IsAssignableFrom(listType))
+#endif
+                if (constuctedListType.IsAssignableFrom(listTypeInfo))
                 {
-                    add = constuctedListType.GetMethod("Add", types);
+                    add = Helpers.GetInstanceMethod(constuctedListType, "Add", types);
                 }
             }
 #endif
             if (add == null)
             {   // fallback: look for a public list.Add(object) method
                 types[0] = typeof(object);
-                add = listType.GetMethod("Add", types);
+                add = Helpers.GetInstanceMethod(listTypeInfo, "Add", types);
             }
             if (add == null && isList)
             {   // fallback: look for IList's Add(object) method
-                add = typeof(IList).GetMethod("Add", types);
+                add = Helpers.GetInstanceMethod(ilist, "Add", types);
             }
             return add;
         }
@@ -741,12 +755,23 @@ namespace ProtoBuf.Meta
             {
                 return Array.CreateInstance(itemType, 0);
             }
-            if (!listType.IsClass || listType.IsAbstract || listType.GetConstructor(
-                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
-                    null, Helpers.EmptyTypes, null) == null)
+
+#if WINRT
+            TypeInfo listTypeInfo = listType.GetTypeInfo();
+            if (!listTypeInfo.IsClass || listTypeInfo.IsAbstract ||
+                Helpers.GetConstructor(listTypeInfo, Helpers.EmptyTypes, true) == null)
+#else
+            if (!listType.IsClass || listType.IsAbstract ||
+                Helpers.GetConstructor(listType, Helpers.EmptyTypes, true) == null)
+#endif
             {
                 bool handled = false;
-                if (listType.IsInterface && listType.Name.Contains("Dictionary")) // have to try to be frugal here...
+#if WINRT
+                if (listTypeInfo.IsInterface &&
+#else
+                if (listType.IsInterface &&
+#endif
+                    listType.FullName.Contains("Dictionary")) // have to try to be frugal here...
                 {
 #if !NO_GENERICS
                     if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
@@ -756,7 +781,7 @@ namespace ProtoBuf.Meta
                         handled = true;
                     }
 #endif
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !WINRT
                     if (!handled && listType == typeof(IDictionary))
                     {
                         concreteListType = typeof(Hashtable);
@@ -772,7 +797,7 @@ namespace ProtoBuf.Meta
                 }
 #endif
 
-#if !SILVERLIGHT
+#if !SILVERLIGHT && !WINRT
                 if (!handled)
                 {
                     concreteListType = typeof(ArrayList);
@@ -796,7 +821,7 @@ namespace ProtoBuf.Meta
         {
             if (type == null) throw new ArgumentNullException("type");
             Type itemType = null;
-            TypeCode typecode = Type.GetTypeCode(type);
+            ProtoTypeCode typecode = Helpers.GetTypeCode(type);
             int modelKey;
             WireType wiretype = GetWireType(typecode, format, ref type, out modelKey);
 
@@ -865,26 +890,26 @@ namespace ProtoBuf.Meta
                 }
                 switch (typecode)
                 {
-                    case TypeCode.Int16: value = reader.ReadInt16(); continue;
-                    case TypeCode.Int32: value = reader.ReadInt32(); continue;
-                    case TypeCode.Int64: value = reader.ReadInt64(); continue;
-                    case TypeCode.UInt16: value = reader.ReadUInt16(); continue;
-                    case TypeCode.UInt32: value = reader.ReadUInt32(); continue;
-                    case TypeCode.UInt64: value = reader.ReadUInt64(); continue;
-                    case TypeCode.Boolean: value = reader.ReadBoolean(); continue;
-                    case TypeCode.SByte: value = reader.ReadSByte(); continue;
-                    case TypeCode.Byte: value = reader.ReadByte(); continue;
-                    case TypeCode.Char: value = (char)reader.ReadUInt16(); continue;
-                    case TypeCode.Double: value = reader.ReadDouble(); continue;
-                    case TypeCode.Single: value = reader.ReadSingle(); continue;
-                    case TypeCode.DateTime: value = BclHelpers.ReadDateTime(reader); continue;
-                    case TypeCode.Decimal: BclHelpers.ReadDecimal(reader); continue;
-                    case TypeCode.String: value = reader.ReadString(); continue;
+                    case ProtoTypeCode.Int16: value = reader.ReadInt16(); continue;
+                    case ProtoTypeCode.Int32: value = reader.ReadInt32(); continue;
+                    case ProtoTypeCode.Int64: value = reader.ReadInt64(); continue;
+                    case ProtoTypeCode.UInt16: value = reader.ReadUInt16(); continue;
+                    case ProtoTypeCode.UInt32: value = reader.ReadUInt32(); continue;
+                    case ProtoTypeCode.UInt64: value = reader.ReadUInt64(); continue;
+                    case ProtoTypeCode.Boolean: value = reader.ReadBoolean(); continue;
+                    case ProtoTypeCode.SByte: value = reader.ReadSByte(); continue;
+                    case ProtoTypeCode.Byte: value = reader.ReadByte(); continue;
+                    case ProtoTypeCode.Char: value = (char)reader.ReadUInt16(); continue;
+                    case ProtoTypeCode.Double: value = reader.ReadDouble(); continue;
+                    case ProtoTypeCode.Single: value = reader.ReadSingle(); continue;
+                    case ProtoTypeCode.DateTime: value = BclHelpers.ReadDateTime(reader); continue;
+                    case ProtoTypeCode.Decimal: BclHelpers.ReadDecimal(reader); continue;
+                    case ProtoTypeCode.String: value = reader.ReadString(); continue;
+                    case ProtoTypeCode.ByteArray: value = ProtoReader.AppendBytes((byte[])value, reader); continue;
+                    case ProtoTypeCode.TimeSpan: value = BclHelpers.ReadTimeSpan(reader); continue;
+                    case ProtoTypeCode.Guid: value = BclHelpers.ReadGuid(reader); continue;
+                    case ProtoTypeCode.Uri: value = new Uri(reader.ReadString()); continue; 
                 }
-                if (type == typeof(byte[])) { value = ProtoReader.AppendBytes((byte[])value, reader); continue; }
-                if (type == typeof(TimeSpan)) { value = BclHelpers.ReadTimeSpan(reader); continue; }
-                if (type == typeof(Guid)) { value = BclHelpers.ReadGuid(reader); continue; }
-                if (type == typeof(Uri)) { value = new Uri(reader.ReadString()); continue; }
 
             }
             if (!found && !asListItem && autoCreate)
@@ -1047,7 +1072,7 @@ namespace ProtoBuf.Meta
                 Helpers.BlockCopy(orig, 0, clone, 0, orig.Length);
                 return clone;
             }
-            else if (GetWireType(Type.GetTypeCode(type), DataFormat.Default, ref type, out modelKey) != WireType.None && modelKey < 0)
+            else if (GetWireType(Helpers.GetTypeCode(type), DataFormat.Default, ref type, out modelKey) != WireType.None && modelKey < 0)
             {   // immutable; just return the original value
                 return value;
             }

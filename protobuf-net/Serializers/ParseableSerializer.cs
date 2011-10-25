@@ -18,7 +18,7 @@ namespace ProtoBuf.Serializers
                 null, new Type[] { typeof(string) }, null);
             if (method != null && method.ReturnType == type)
             {
-                if (type.IsValueType)
+                if (Helpers.IsValueType(type))
                 {
                     MethodInfo toString = GetCustomToString(type);
                     if (toString == null || toString.ReturnType != typeof(string)) return null; // need custom ToString, fools
@@ -29,8 +29,16 @@ namespace ProtoBuf.Serializers
         }
         private static MethodInfo GetCustomToString(Type type)
         {
+#if WINRT
+            foreach (MethodInfo method in type.GetTypeInfo().GetDeclaredMethods("ToString"))
+            {
+                if (method.IsPublic && method.IsStatic && method.GetParameters().Length == 0) return method;
+            }
+            return null;
+#else
             return type.GetMethod("ToString", BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
                         null, Helpers.EmptyTypes, null);
+#endif
         }
         private ParseableSerializer(MethodInfo parse)
         {

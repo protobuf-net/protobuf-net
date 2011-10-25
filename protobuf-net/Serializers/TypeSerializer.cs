@@ -21,6 +21,9 @@ namespace ProtoBuf.Serializers
             return false;
         }
         private readonly Type forType, constructType;
+#if WINRT
+        private readonly TypeInfo typeInfo;
+#endif
         public Type ExpectedType { get { return forType; } }
         private readonly IProtoSerializer[] serializers;
         private readonly int[] fieldNumbers;
@@ -46,13 +49,20 @@ namespace ProtoBuf.Serializers
                 }
             }
             this.forType = forType;
+#if WINRT
+            this.typeInfo = forType.GetTypeInfo();
+#endif
             if (constructType == null)
             {
                 constructType = forType;
             }
             else
             {
+#if WINRT
+                if (!typeInfo.IsAssignableFrom(constructType.GetTypeInfo()))
+#else
                 if (!forType.IsAssignableFrom(constructType))
+#endif
                 {
                     throw new InvalidOperationException(forType.FullName + " cannot be assigned from "+ constructType.FullName);
                 }
@@ -72,25 +82,37 @@ namespace ProtoBuf.Serializers
                 throw new ArgumentException("Cannot create a TypeSerializer for nullable types", "forType");
             }
 #endif
-            
-            if (typeof(IExtensible).IsAssignableFrom(forType))
+
+#if WINRT
+            if (iextensible.IsAssignableFrom(typeInfo))
+            {
+                if (typeInfo.IsValueType || !isRootType || hasSubTypes)
+#else
+            if (iextensible.IsAssignableFrom(forType))
             {
                 if (forType.IsValueType || !isRootType || hasSubTypes)
+#endif
                 {
                     throw new NotSupportedException("IExtensible is not supported in structs or classes with inheritance");
                 }
                 isExtensible = true;
             }
-            hasConstructor = !constructType.IsAbstract && constructType.GetConstructor(
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public,
-                    null, Helpers.EmptyTypes, null) != null;
-
+#if WINRT
+            TypeInfo constructTypeInfo = constructType.GetTypeInfo();
+            hasConstructor = !constructTypeInfo.IsAbstract && Helpers.GetConstructor(constructTypeInfo, Helpers.EmptyTypes, true) != null;
+#else
+            hasConstructor = !constructType.IsAbstract && Helpers.GetConstructor(constructType, Helpers.EmptyTypes, true) != null;
+#endif
             if (constructType != forType && useConstructor && !hasConstructor)
             {
                 throw new ArgumentException("The supplied default implementation cannot be created: " + constructType.FullName, "constructType");
             }
         }
-
+#if WINRT
+        private static readonly TypeInfo iextensible = typeof(IExtensible).GetTypeInfo();
+#else
+        private static readonly Type iextensible = typeof(IExtensible);
+#endif
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
             if (callbacks != null) InvokeCallback(callbacks[callbackType], value, context);
@@ -100,7 +122,13 @@ namespace ProtoBuf.Serializers
         }
         private bool CanHaveInheritance
         {
-            get { return (forType.IsClass || forType.IsInterface) && !forType.IsSealed; }
+            get {
+#if WINRT
+                return (typeInfo.IsClass || typeInfo.IsInterface) && !typeInfo.IsSealed;
+#else
+                return (forType.IsClass || forType.IsInterface) && !forType.IsSealed;
+#endif
+            }
         }
         private IProtoSerializer GetMoreSpecificSerializer(object value)
         {

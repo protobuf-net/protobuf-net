@@ -57,7 +57,7 @@ namespace ProtoBuf.Meta
         }
         internal static Exception CreateInvalidCallbackSignature(MethodInfo method)
         {
-            return new NotSupportedException("Invalid callback signature in " + method.DeclaringType.Name + "." + method.Name);
+            return new NotSupportedException("Invalid callback signature in " + method.DeclaringType.FullName + "." + method.Name);
         }
         /// <summary>Called before deserializing an instance</summary>
         public MethodInfo BeforeDeserialize
