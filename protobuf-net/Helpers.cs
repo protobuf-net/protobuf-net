@@ -100,7 +100,7 @@ namespace ProtoBuf
 #endif
         public static void BlockCopy(byte[] from, int fromIndex, byte[] to, int toIndex, int count)
         {
-#if MF
+#if MF || WINRT
             Array.Copy(from, fromIndex, to, toIndex, count);
 #else
             Buffer.BlockCopy(from, fromIndex, to, toIndex, count);

@@ -38,8 +38,8 @@ namespace ProtoBuf
                         // note: Array.Resize not available on CF
                         int offset = buffer.Length;
                         byte[] tmp = new byte[offset + len];
-                        Buffer.BlockCopy(buffer, 0, tmp, 0, offset);
-                        Buffer.BlockCopy(ms.GetBuffer(), 0, tmp, offset, len);
+                        Helpers.BlockCopy(buffer, 0, tmp, 0, offset);
+                        Helpers.BlockCopy(ms.GetBuffer(), 0, tmp, offset, len);
                         buffer = tmp;
                     }
                 }

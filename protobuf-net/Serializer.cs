@@ -415,6 +415,17 @@ namespace ProtoBuf
             {
                 return RuntimeTypeModel.Default.Deserialize(source, null, type);
             }
+
+            /// <summary>Applies a protocol-buffer stream to an existing instance.</summary>
+            /// <param name="instance">The existing instance to be modified (cannot be null).</param>
+            /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+            /// <returns>The updated instance</returns>
+            public static object Merge(Stream source, object instance)
+            {
+                if (instance == null) throw new ArgumentNullException("instance");
+                return RuntimeTypeModel.Default.Deserialize(source, instance, instance.GetType(), null);
+            }
+
             /// <summary>
             /// Writes a protocol-buffer representation of the given instance to the supplied stream,
             /// with a length-prefix. This is useful for socket programming,
