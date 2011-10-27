@@ -160,6 +160,7 @@
     <Compile Include="DataMemberOffset.cs" />
     <Compile Include="DetectMissing.cs" />
     <Compile Include="DictionaryTests.cs" />
+    <Compile Include="DynamicIFormatter.cs" />
     <Compile Include="EnumTests.cs" />
     <Compile Include="ExtendedTimeTests.cs" />
     <Compile Include="Extensibility.cs" />
@@ -285,6 +286,7 @@
     <Compile Include="TypeFactory.cs" />
     <Compile Include="UnwrappedOuters.cs" />
     <Compile Include="ValueWrapper.cs" />
+    <Compile Include="WcfProtoBridge.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\ProtoGen\descriptor.proto">

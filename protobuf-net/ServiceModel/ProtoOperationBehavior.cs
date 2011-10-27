@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.ServiceModel.Description;
+using System.Xml;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.ServiceModel
@@ -36,12 +37,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override XmlObjectSerializer CreateSerializer(Type type, System.Xml.XmlDictionaryString name, System.Xml.XmlDictionaryString ns, IList<Type> knownTypes)
         {
-            int key = model.GetKey(ref type);
-            if (key >= 0)
-            {
-                return new XmlProtoSerializer(model, key);
-            }
-            return base.CreateSerializer(type, name, ns, knownTypes);
+            return XmlProtoSerializer.TryCreate(model, type) ?? base.CreateSerializer(type, name, ns, knownTypes);
         }
     }
 }
