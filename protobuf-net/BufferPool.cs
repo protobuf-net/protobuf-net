@@ -1,25 +1,27 @@
 ﻿
-using System;
 using System.Threading;
 namespace ProtoBuf
 {
     internal class BufferPool
     {
+        internal static void Flush()
+        {
+            for (int i = 0; i < pool.Length; i++)
+            {
+                Interlocked.Exchange(ref pool[i], null); // and drop the old value on the floor
+            }
+        }
         private BufferPool() { }
         const int PoolSize = 20;
         internal const int BufferLength = 1024;
-        private static readonly object[] _pool = new object[PoolSize];
+        private static readonly object[] pool = new object[PoolSize];
 
         internal static byte[] GetBuffer()
         {
-            for (int i = 0; i < _pool.Length; i++)
+            for (int i = 0; i < pool.Length; i++)
             {
                 object tmp;
-                if ((tmp = Interlocked.Exchange(ref _pool[i], null)) != null)
-                {
-                    byte[] found = (byte[]) (((WeakReference) tmp).Target);
-                    if (found != null) return found;
-                }
+                if ((tmp = Interlocked.Exchange(ref pool[i], null)) != null) return (byte[])tmp;
             }
             return new byte[BufferLength];
         }
@@ -50,10 +52,9 @@ namespace ProtoBuf
             if (buffer == null) return;
             if (buffer.Length == BufferLength)
             {
-                WeakReference tmp = new WeakReference(buffer);
-                for (int i = 0; i < _pool.Length; i++)
+                for (int i = 0; i < pool.Length; i++)
                 {
-                    if (Interlocked.CompareExchange(ref _pool[i], tmp, null) == null)
+                    if (Interlocked.CompareExchange(ref pool[i], buffer, null) == null)
                     {
                         break; // found a null; swapped it in
                     }
