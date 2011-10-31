@@ -261,23 +261,36 @@ namespace ProtoBuf.Meta
                 IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType);
                 if (ser == null) throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
                 // apply tags
-                ser = new TagDecorator(fieldNumber, wireType, IsStrict, ser);
+                if (itemType != null && SupportNull)
+                {
+                    if(IsPacked)
+                    {
+                        throw new NotSupportedException("Packed encodings cannot support null values");
+                    }
+                    ser = new TagDecorator(NullDecorator.Tag, wireType, IsStrict, ser);
+                    ser = new NullDecorator(ser);
+                    ser = new TagDecorator(fieldNumber, WireType.StartGroup, false, ser);
+                }
+                else
+                {
+                    ser = new TagDecorator(fieldNumber, wireType, IsStrict, ser);
+                }
                 // apply lists if appropriate
                 if (itemType != null)
                 {                    
 #if NO_GENERICS
                     Type underlyingItemType = itemType;
 #else
-                    Type underlyingItemType = Nullable.GetUnderlyingType(itemType) ?? itemType;
+                    Type underlyingItemType = SupportNull ? itemType : Nullable.GetUnderlyingType(itemType) ?? itemType;
 #endif
-                    Helpers.DebugAssert(underlyingItemType == ser.ExpectedType, "Wrong type in the taill; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
+                    Helpers.DebugAssert(underlyingItemType == ser.ExpectedType, "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
                     if (memberType.IsArray)
                     {
-                        ser = new ArrayDecorator(ser, fieldNumber, IsPacked, wireType, memberType, OverwriteList);
+                        ser = new ArrayDecorator(ser, fieldNumber, IsPacked, wireType, memberType, OverwriteList, SupportNull);
                     }
                     else
                     {
-                        ser = new ListDecorator(memberType, defaultType, ser, fieldNumber, IsPacked, wireType, member == null || PropertyDecorator.CanWrite(member), OverwriteList);
+                        ser = new ListDecorator(memberType, defaultType, ser, fieldNumber, IsPacked, wireType, member == null || PropertyDecorator.CanWrite(member), OverwriteList, SupportNull);
                     }
                 }
                 else if (defaultValue != null && !IsRequired)
@@ -467,7 +480,8 @@ namespace ProtoBuf.Meta
            OPTIONS_IsStrict = 1,
            OPTIONS_IsPacked = 2,
            OPTIONS_IsRequired = 4,
-           OPTIONS_OverwriteList = 8;
+           OPTIONS_OverwriteList = 8,
+           OPTIONS_SupportNull = 16;
 
         private byte flags;
         private bool HasFlag(byte flag) { return (flags & flag) == flag; }
@@ -481,6 +495,15 @@ namespace ProtoBuf.Meta
                 flags |= flag;
             else
                 flags = (byte)(flags & ~flag);
+        }
+
+        /// <summary>
+        /// Should lists have extended support for null values? Note this makes the serialization less efficient.
+        /// </summary>
+        public bool SupportNull
+        {
+            get { return HasFlag(OPTIONS_SupportNull); }
+            set { SetFlag(OPTIONS_SupportNull, value, true);}
         }
     }
 }

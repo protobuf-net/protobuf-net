@@ -39,11 +39,11 @@ namespace ProtoBuf.Serializers
                 {
                     if (finalType.IsArray)
                     {
-                        serializer = new ArrayDecorator(tail, i + 1, false, wireType, finalType, false);
+                        serializer = new ArrayDecorator(tail, i + 1, false, wireType, finalType, false, false);
                     }
                     else
                     {
-                        serializer = new ListDecorator(finalType, defaultType, tail, i + 1, false, wireType, true, false);
+                        serializer = new ListDecorator(finalType, defaultType, tail, i + 1, false, wireType, true, false, false);
                     }
                 }
                 tails[i] = serializer;

@@ -22,11 +22,13 @@ namespace ProtoBuf.Serializers
             }
         }
         private readonly byte options;
+
         private const byte OPTIONS_IsList = 1,
                            OPTIONS_SuppressIList = 2,
                            OPTIONS_WritePacked = 4,
                            OPTIONS_ReturnList = 8,
-                           OPTIONS_OverwriteList = 16;
+                           OPTIONS_OverwriteList = 16,
+                           OPTIONS_SupportNull = 32;
 
         private readonly Type declaredType, concreteType;
 
@@ -37,13 +39,16 @@ namespace ProtoBuf.Serializers
         private bool IsList { get { return (options & OPTIONS_IsList) != 0; } }
         private bool SuppressIList { get { return (options & OPTIONS_SuppressIList) != 0; } }
         private bool WritePacked { get { return (options & OPTIONS_WritePacked) != 0; } }
+        private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
         private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
         private readonly WireType packedWireType;
 
-        public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList) : base(tail)
+        public ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
+            : base(tail)
         {
             if (returnList) options |= OPTIONS_ReturnList;
             if (overwriteList) options |= OPTIONS_OverwriteList;
+            if (supportNull) options |= OPTIONS_SupportNull;
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
             if (!CanPack(packedWireType))
             {
@@ -396,9 +401,10 @@ namespace ProtoBuf.Serializers
             {
                 token = new SubItemToken(); // default
             }
+            bool checkForNull = !SupportNull;
             foreach (object subItem in (IEnumerable)value)
             {
-                if (subItem == null) { throw new NullReferenceException(); }
+                if (checkForNull && subItem == null) { throw new NullReferenceException(); }
                 Tail.Write(subItem, dest);
             }
             if (writePacked)

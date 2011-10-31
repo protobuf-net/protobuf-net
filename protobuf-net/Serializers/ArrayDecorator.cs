@@ -12,15 +12,23 @@ namespace ProtoBuf.Serializers
         private readonly int fieldNumber;
         private const byte
                    OPTIONS_WritePacked = 1,
-                   OPTIONS_OverwriteList = 2;
+                   OPTIONS_OverwriteList = 2,
+                   OPTIONS_SupportNull = 4;
         private readonly byte options;
         private readonly WireType packedWireType;
-        public ArrayDecorator(IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList)
+        public ArrayDecorator(IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList, bool supportNull)
             : base(tail)
         {
             Helpers.DebugAssert(arrayType != null, "arrayType should be non-null");
             Helpers.DebugAssert(arrayType.IsArray && arrayType.GetArrayRank() == 1, "should be single-dimension array; " + arrayType.FullName);
-            Helpers.DebugAssert(arrayType.GetElementType() == Tail.ExpectedType, "invalid tail");
+            this.itemType = arrayType.GetElementType();
+#if NO_GENERICS
+            Type underlyingItemType = itemType;
+#else
+            Type underlyingItemType = supportNull ? itemType : (Nullable.GetUnderlyingType(itemType) ?? itemType);
+#endif
+
+            Helpers.DebugAssert(underlyingItemType == Tail.ExpectedType, "invalid tail");
             Helpers.DebugAssert(Tail.ExpectedType != typeof(byte), "Should have used BlobSerializer");
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
             if (!ListDecorator.CanPack(packedWireType))
@@ -32,9 +40,8 @@ namespace ProtoBuf.Serializers
             this.packedWireType = packedWireType;
             if (writePacked) options |= OPTIONS_WritePacked;
             if (overwriteList) options |= OPTIONS_OverwriteList;
+            if (supportNull) options |= OPTIONS_SupportNull;
             this.arrayType = arrayType;
-            this.itemType = Tail.ExpectedType;
-            
         }
         readonly Type arrayType, itemType; // this is, for example, typeof(int[])
         public override Type ExpectedType { get { return arrayType; } }
@@ -91,7 +98,14 @@ namespace ProtoBuf.Serializers
 
             // {...}
             ctx.LoadArrayValue(arr, i);
-            ctx.WriteNullCheckedTail(itemType, Tail, null);
+            if (SupportNull)
+            {
+                Tail.EmitWrite(ctx, null);
+            }
+            else
+            {
+                ctx.WriteNullCheckedTail(itemType, Tail, null);
+            }
 
             // i++
             ctx.LoadValue(i);
@@ -110,6 +124,7 @@ namespace ProtoBuf.Serializers
         {
             get { return (options & OPTIONS_OverwriteList) == 0; }
         }
+        private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
         public override void Write(object value, ProtoWriter dest)
         {
             IList arr = (IList)value;
@@ -126,10 +141,11 @@ namespace ProtoBuf.Serializers
             {
                 token = new SubItemToken(); // default
             }
+            bool checkForNull = !SupportNull;
             for (int i = 0; i < len; i++)
             {
                 object obj = arr[i];
-                if (obj == null) { throw new NullReferenceException(); }
+                if (checkForNull && obj == null) { throw new NullReferenceException(); }
                 Tail.Write(obj, dest);
             }
             if (writePacked)
