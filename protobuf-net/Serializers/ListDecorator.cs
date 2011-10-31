@@ -252,6 +252,13 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.CastToObject(itemType);
                 }
+#if !NO_GENERICS
+                else if(Nullable.GetUnderlyingType(addParamType) == itemType)
+                { // list is nullable
+                    ConstructorInfo ctor = Helpers.GetConstructor(addParamType, new Type[] {itemType}, false);
+                    ctx.EmitCtor(ctor); // the itemType on the stack is now a Nullable<ItemType>
+                }
+#endif
                 else
                 {
                     throw new InvalidOperationException("Conflicting item/add type");

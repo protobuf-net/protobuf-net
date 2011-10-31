@@ -57,12 +57,19 @@ namespace ProtoBuf
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugAssert(bool condition, string message)
         {
+            if (!condition)
+            {
 #if MF
-            Microsoft.SPOT.Debug.Assert(condition, message);
+                Microsoft.SPOT.Debug.Assert(false, message);
 #else
-            System.Diagnostics.Debug.Assert(condition, message);
-            
+                System.Diagnostics.Debug.Assert(false, message);
+            }
 #endif
+        }
+        [System.Diagnostics.Conditional("DEBUG")]
+        public static void DebugAssert(bool condition, string message, params object[] args)
+        {
+            if (!condition) DebugAssert(false, string.Format(message, args));
         }
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugAssert(bool condition)

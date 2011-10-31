@@ -264,8 +264,13 @@ namespace ProtoBuf.Meta
                 ser = new TagDecorator(fieldNumber, wireType, IsStrict, ser);
                 // apply lists if appropriate
                 if (itemType != null)
-                {
-                    Helpers.DebugAssert(itemType == ser.ExpectedType, "Wrong type in the tail");
+                {                    
+#if NO_GENERICS
+                    Type underlyingItemType = itemType;
+#else
+                    Type underlyingItemType = Nullable.GetUnderlyingType(itemType) ?? itemType;
+#endif
+                    Helpers.DebugAssert(underlyingItemType == ser.ExpectedType, "Wrong type in the taill; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
                     if (memberType.IsArray)
                     {
                         ser = new ArrayDecorator(ser, fieldNumber, IsPacked, wireType, memberType, OverwriteList);
