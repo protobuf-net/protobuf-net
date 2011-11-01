@@ -239,7 +239,7 @@ namespace ProtoBuf.Serializers
                             result = method.Invoke(obj, new object[] { context });
                             handled = true;
                         }
-#if PLAT_BINARYFORMATTER
+#if PLAT_BINARYFORMATTER || (SILVERLIGHT && NET_4_0)
                         else if (parameterType == typeof(System.Runtime.Serialization.StreamingContext))
                         {
                             System.Runtime.Serialization.StreamingContext tmp = (System.Runtime.Serialization.StreamingContext)context;

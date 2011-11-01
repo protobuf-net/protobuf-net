@@ -30,7 +30,7 @@ namespace ProtoBuf
         /// A default SerializationContext, with minimal information.
         /// </summary>
         internal static SerializationContext Default { get {return @default;}}
-#if PLAT_BINARYFORMATTER
+#if PLAT_BINARYFORMATTER || (SILVERLIGHT && NET_4_0)
         private System.Runtime.Serialization.StreamingContextStates state = System.Runtime.Serialization.StreamingContextStates.Persistence;
         /// <summary>
         /// Gets or sets the source or destination of the transmitted data.
