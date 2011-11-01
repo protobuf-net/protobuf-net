@@ -144,9 +144,16 @@ namespace ProtoBuf.ServiceModel
             switch(reader.NodeType)
             {
                 case XmlNodeType.None: // exhausted doc - must have been an empty xml node
-                    using (ProtoReader protoReader = new ProtoReader(Stream.Null, model, null))
+                    if (isList)
                     {
-                        return model.Deserialize(key, null, protoReader);
+                        return model.Deserialize(Stream.Null, null, type, null);
+                    }
+                    else
+                    {
+                        using (ProtoReader protoReader = new ProtoReader(Stream.Null, model, null))
+                        {
+                            return model.Deserialize(key, null, protoReader);
+                        }
                     }
                 default:
                     try

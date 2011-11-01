@@ -35,6 +35,14 @@ namespace Examples
             Assert.AreEqual(1, clone.Count);
             Assert.AreEqual(123, clone[0].Bar);
         }
+
+        [Test]
+        public void TestEmptyListType()
+        {
+            var obj = new List<Foo> {  };
+            var clone = (List<Foo>)RoundTrip(obj);
+            Assert.AreEqual(0, clone.Count);
+        }
         static object RoundTrip(object obj)
         {
             Assert.IsNotNull(obj, "obj");
