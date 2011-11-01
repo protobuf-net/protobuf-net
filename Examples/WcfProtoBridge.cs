@@ -21,6 +21,13 @@ namespace Examples
             Assert.AreEqual(123, clone.Bar);
         }
         [Test]
+        public void TestBasicTypeWithDefaultValues()
+        {
+            var obj = new Foo { Bar = 0 };
+            var clone = (Foo)RoundTrip(obj);
+            Assert.AreEqual(0, clone.Bar);
+        }
+        [Test]
         public void TestListType()
         {
             var obj = new List<Foo>{new Foo { Bar = 123 }};
@@ -43,8 +50,6 @@ namespace Examples
                 Assert.AreNotSame(obj, clone);
                 return clone;
             }
-            
-
         }
 
         [ProtoContract]

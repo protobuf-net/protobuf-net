@@ -1,6 +1,7 @@
 ﻿#if (FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER) || (SILVERLIGHT && !PHONE7)
 using System.IO;
 using System.Runtime.Serialization;
+using System.Xml;
 using ProtoBuf.Meta;
 using System;
 
@@ -140,26 +141,35 @@ namespace ProtoBuf.ServiceModel
         {
             if (reader.GetAttribute("nil") == "true") return null;
             reader.ReadStartElement(PROTO_ELEMENT);
-            try
+            switch(reader.NodeType)
             {
-                using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
-                {
-                    if (isList)
+                case XmlNodeType.None: // exhausted doc - must have been an empty xml node
+                    using (ProtoReader protoReader = new ProtoReader(Stream.Null, model, null))
                     {
-                        return model.Deserialize(ms, null, type, null);
+                        return model.Deserialize(key, null, protoReader);
                     }
-                    else
+                default:
+                    try
                     {
-                        using (ProtoReader protoReader = new ProtoReader(ms, model, null))
+                        using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
                         {
-                            return model.Deserialize(key, null, protoReader);
+                            if (isList)
+                            {
+                                return model.Deserialize(ms, null, type, null);
+                            }
+                            else
+                            {
+                                using (ProtoReader protoReader = new ProtoReader(ms, model, null))
+                                {
+                                    return model.Deserialize(key, null, protoReader);
+                                }
+                            }
                         }
                     }
-                }
-            }
-            finally
-            {
-                reader.ReadEndElement();
+                    finally
+                    {
+                        reader.ReadEndElement();
+                    }
             }
         }
     }
