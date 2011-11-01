@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
@@ -52,6 +53,7 @@ namespace Examples
             using(var ms = new MemoryStream())
             {
                 ser.WriteObject(ms, obj);
+                Debug.WriteLine(Encoding.UTF8.GetString(ms.GetBuffer(),0,(int)ms.Length));
                 ms.Position = 0;
                 var clone = ser.ReadObject(ms);
                 Assert.IsNotNull(clone, "clone");

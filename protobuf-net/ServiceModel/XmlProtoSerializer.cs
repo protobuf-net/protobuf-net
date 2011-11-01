@@ -141,43 +141,41 @@ namespace ProtoBuf.ServiceModel
         {
             if (reader.GetAttribute("nil") == "true") return null;
             reader.ReadStartElement(PROTO_ELEMENT);
+            object result;
             switch(reader.NodeType)
             {
-                case XmlNodeType.None: // exhausted doc - must have been an empty xml node
+                case XmlNodeType.EndElement:
+                case XmlNodeType.None: 
                     if (isList)
                     {
-                        return model.Deserialize(Stream.Null, null, type, null);
+                        result = model.Deserialize(Stream.Null, null, type, null);
                     }
                     else
                     {
                         using (ProtoReader protoReader = new ProtoReader(Stream.Null, model, null))
                         {
-                            return model.Deserialize(key, null, protoReader);
+                            result = model.Deserialize(key, null, protoReader);
                         }
                     }
+                    break;
                 default:
-                    try
+                    using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
                     {
-                        using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
+                        if (isList)
                         {
-                            if (isList)
+                            result = model.Deserialize(ms, null, type, null);
+                        }
+                        else
+                        {
+                            using (ProtoReader protoReader = new ProtoReader(ms, model, null))
                             {
-                                return model.Deserialize(ms, null, type, null);
-                            }
-                            else
-                            {
-                                using (ProtoReader protoReader = new ProtoReader(ms, model, null))
-                                {
-                                    return model.Deserialize(key, null, protoReader);
-                                }
+                                result = model.Deserialize(key, null, protoReader);
                             }
                         }
                     }
-                    finally
-                    {
-                        reader.ReadEndElement();
-                    }
+                    break;
             }
+            return result;
         }
     }
 }
