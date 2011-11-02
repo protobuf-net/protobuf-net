@@ -139,42 +139,44 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override object ReadObject(System.Xml.XmlDictionaryReader reader, bool verifyObjectName)
         {
-            if (reader.GetAttribute("nil") == "true") return null;
+            bool isSelfClosed = reader.IsEmptyElement, isNil = reader.GetAttribute("nil") == "true";
             reader.ReadStartElement(PROTO_ELEMENT);
-            object result;
-            switch(reader.NodeType)
+
+            // explicitly null
+            if (isNil)
             {
-                case XmlNodeType.EndElement:
-                case XmlNodeType.None: 
-                    if (isList)
-                    {
-                        result = model.Deserialize(Stream.Null, null, type, null);
-                    }
-                    else
-                    {
-                        using (ProtoReader protoReader = new ProtoReader(Stream.Null, model, null))
-                        {
-                            result = model.Deserialize(key, null, protoReader);
-                        }
-                    }
-                    break;
-                default:
-                    using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
-                    {
-                        if (isList)
-                        {
-                            result = model.Deserialize(ms, null, type, null);
-                        }
-                        else
-                        {
-                            using (ProtoReader protoReader = new ProtoReader(ms, model, null))
-                            {
-                                result = model.Deserialize(key, null, protoReader);
-                            }
-                        }
-                    }
-                    break;
+                if(!isSelfClosed) reader.ReadEndElement();
+                return null;
             }
+            if(isSelfClosed) // no real content
+            {
+                if (isList)
+                {
+                    return model.Deserialize(Stream.Null, null, type, null);
+                }
+                using (ProtoReader protoReader = new ProtoReader(Stream.Null, model, null))
+                {
+                    return model.Deserialize(key, null, protoReader);
+                }
+            }
+
+            object result;
+            Helpers.DebugAssert(reader.CanReadBinaryContent, "CanReadBinaryContent");
+            using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
+            {
+                if (isList)
+                {
+                    result = model.Deserialize(ms, null, type, null);
+                }
+                else
+                {
+                    using (ProtoReader protoReader = new ProtoReader(ms, model, null))
+                    {
+                        result = model.Deserialize(key, null, protoReader);
+                    }
+                }
+            }
+            reader.ReadEndElement();
             return result;
         }
     }
