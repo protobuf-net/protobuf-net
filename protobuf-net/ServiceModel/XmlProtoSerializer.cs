@@ -132,13 +132,16 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override bool IsStartObject(System.Xml.XmlDictionaryReader reader)
         {
+            reader.MoveToContent();
             return reader.NodeType == System.Xml.XmlNodeType.Element && reader.Name == PROTO_ELEMENT;
         }
+
         /// <summary>
         /// Reads the body of an object
         /// </summary>
         public override object ReadObject(System.Xml.XmlDictionaryReader reader, bool verifyObjectName)
         {
+            reader.MoveToContent();
             bool isSelfClosed = reader.IsEmptyElement, isNil = reader.GetAttribute("nil") == "true";
             reader.ReadStartElement(PROTO_ELEMENT);
 

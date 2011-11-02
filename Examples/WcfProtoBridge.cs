@@ -59,7 +59,7 @@ namespace Examples
                 object clone;
                 using (var reader = XmlReader.Create(ms))
                 {
-                    reader.MoveToContent();
+                    Assert.IsTrue(ser.IsStartObject(reader));
                     clone = ser.ReadObject(reader);
                 }
                 Assert.IsNotNull(clone, "clone");
