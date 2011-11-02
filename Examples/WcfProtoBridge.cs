@@ -8,6 +8,7 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using ProtoBuf.ServiceModel;
 using System.IO;
+using System.Xml;
 
 namespace Examples
 {
@@ -55,7 +56,12 @@ namespace Examples
                 ser.WriteObject(ms, obj);
                 Debug.WriteLine(Encoding.UTF8.GetString(ms.GetBuffer(),0,(int)ms.Length));
                 ms.Position = 0;
-                var clone = ser.ReadObject(ms);
+                object clone;
+                using (var reader = XmlReader.Create(ms))
+                {
+                    reader.MoveToContent();
+                    clone = ser.ReadObject(reader);
+                }
                 Assert.IsNotNull(clone, "clone");
                 Assert.AreNotSame(obj, clone);
                 return clone;
