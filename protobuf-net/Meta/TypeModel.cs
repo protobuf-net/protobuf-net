@@ -1152,6 +1152,29 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
+        /// Returns true if the type supplied is either a recognised contract type,
+        /// or a *list* of a recognised contract type. 
+        /// </summary>
+        /// <remarks>Note that primitives always return false, even though the engine
+        /// will, if forced, try to serialize such</remarks>
+        /// <returns>True if this type is recognised as a serializable entity, else false</returns>
+        public bool CanSerializeContractType(Type type)
+        {
+            int key = GetKey(ref type);
+            if (key >= 0) return true; // direct entity support
+
+            Type itemType = GetListItemType(type);
+            if (itemType != null)
+            {
+                key = GetKey(ref itemType);
+                if (key >= 0) return true; // list-of-entity support
+            }
+
+            return false; // oh no you don't!
+        }
+
+
+        /// <summary>
         /// Used to provide custom services for writing and parsing type names when using dynamic types. Both parsing and formatting
         /// are provided on a single API as it is essential that both are mapped identically at all times.
         /// </summary>

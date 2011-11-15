@@ -157,6 +157,7 @@
     <Compile Include="AutoFields.cs" />
     <Compile Include="AutoTuple.cs" />
     <Compile Include="Callbacks.cs" />
+    <Compile Include="ComparisonToNDCS.cs" />
     <Compile Include="DataMemberOffset.cs" />
     <Compile Include="DetectMissing.cs" />
     <Compile Include="DictionaryTests.cs" />
