@@ -771,7 +771,7 @@ namespace ProtoBuf.Meta
 #else
                 if (listType.IsInterface &&
 #endif
-                    listType.FullName.Contains("Dictionary")) // have to try to be frugal here...
+                    listType.FullName.IndexOf("Dictionary") >= 0) // have to try to be frugal here...
                 {
 #if !NO_GENERICS
                     if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))

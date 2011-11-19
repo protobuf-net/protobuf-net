@@ -9,10 +9,14 @@ namespace ProtoBuf
         internal const int Root = 0;
         private BasicList underlyingList;
 
-        private BasicList List { get {
-            if (underlyingList == null) underlyingList = new BasicList();
-            return underlyingList;
-        } }
+        private BasicList List
+        {
+            get
+            {
+                if (underlyingList == null) underlyingList = new BasicList();
+                return underlyingList;
+            }
+        }
 
 
         internal object GetKeyedObject(int key)
@@ -29,7 +33,7 @@ namespace ProtoBuf
                 Helpers.DebugWriteLine("Missing key: " + key);
                 throw new ProtoException("Internal error; a missing key occurred");
             }
-            
+
             return list[key];
         }
 
@@ -54,18 +58,7 @@ namespace ProtoBuf
                 }
             }
         }
-        //class StringMatch : BasicList.IPredicate
-        //{
-        //    private readonly string value;
-        //    public StringMatch(string value) {
-        //        this.value = value;
-        //    }
-        //    public bool IsMatch(object obj)
-        //    {
-        //        string s;
-        //        return (s = obj as string) != null && s == value;
-        //    }
-        //}
+
         private object rootObject;
         internal int AddObjectKey(object value, out bool existing)
         {
@@ -80,9 +73,9 @@ namespace ProtoBuf
             string s = value as string;
             BasicList list = List;
             int index;
-            
+
 #if NO_GENERICS
-            //index = s == null ? list.IndexOfReference(value) : list.IndexOf(new StringMatch(s));
+            
             if(s == null)
             {
                 if (objectKeys == null)
@@ -113,6 +106,9 @@ namespace ProtoBuf
 
             if(s == null)
             {
+#if CF          // CF has very limited proper object ref-tracking; so instead, we'll search it the hard way
+                index = list.IndexOfReference(value);
+#else
                 if (objectKeys == null) 
                 {
                     objectKeys = new System.Collections.Generic.Dictionary<object, int>(ReferenceComparer.Default);
@@ -122,6 +118,7 @@ namespace ProtoBuf
                 {
                     if (!objectKeys.TryGetValue(value, out index)) index = -1;
                 }
+#endif
             }
             else
             {
@@ -143,7 +140,9 @@ namespace ProtoBuf
 
                 if (s == null)
                 {
+#if !CF // CF can't handle the object keys very well
                     objectKeys.Add(value, index);
+#endif
                 }
                 else
                 {
@@ -172,8 +171,11 @@ namespace ProtoBuf
             }
         }   
 #else
-        private System.Collections.Generic.Dictionary<object, int> objectKeys;
+
         private System.Collections.Generic.Dictionary<string, int> stringKeys;
+
+#if !CF // CF lacks the ability to get a robust reference-based hash-code, so we'll do it the harder way instead
+        private System.Collections.Generic.Dictionary<object, int> objectKeys;
         private sealed class ReferenceComparer : System.Collections.Generic.IEqualityComparer<object>
         {
             public readonly static ReferenceComparer Default = new ReferenceComparer();
@@ -189,6 +191,7 @@ namespace ProtoBuf
                 return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
             }
         }
+#endif
 
 #endif
     }

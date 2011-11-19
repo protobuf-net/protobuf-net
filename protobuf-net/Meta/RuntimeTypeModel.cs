@@ -843,6 +843,7 @@ namespace ProtoBuf.Meta
             opaqueToken = 0;
 #if CF2 || CF35
             int remaining = metadataTimeoutMilliseconds;
+            bool lockTaken;
             do {
                 lockTaken = Monitor.TryEnter(types);
                 if(!lockTaken)
@@ -852,6 +853,7 @@ namespace ProtoBuf.Meta
                     Thread.Sleep(50);
                 }
             } while(!lockTaken);
+            opaqueToken = Interlocked.CompareExchange(ref contentionCounter, 0, 0); // just fetch current value (starts at 1)
 #else
             if (Monitor.TryEnter(types, metadataTimeoutMilliseconds))
             {
