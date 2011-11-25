@@ -146,7 +146,7 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                if (callbacks == null && !IsValueType) callbacks = new CallbackSet(this);
+                if (callbacks == null) callbacks = new CallbackSet(this);
                 return callbacks;
             }
         }
@@ -172,7 +172,6 @@ namespace ProtoBuf.Meta
         /// <returns>The set of callbacks.</returns>
         public MetaType SetCallbacks(MethodInfo beforeSerialize, MethodInfo afterSerialize, MethodInfo beforeDeserialize, MethodInfo afterDeserialize)
         {
-            if (IsValueType) throw new InvalidOperationException();
             CallbackSet callbacks = Callbacks;
             callbacks.BeforeSerialize = beforeSerialize;
             callbacks.AfterSerialize = afterSerialize;

@@ -178,7 +178,7 @@ namespace ProtoBuf
                     ulong val = ReadUInt64();
                     checked { return (uint)val; }
                 default:
-                    throw CreateException();
+                    throw CreateWireTypeException();
             }
         }
         int ioIndex, position, available; // maxPosition
@@ -276,7 +276,7 @@ namespace ProtoBuf
                 case WireType.SignedVariant:
                     return Zag(ReadUInt32Variant(true));
                 default:
-                    throw CreateException();
+                    throw CreateWireTypeException();
             }
         }
         private const long Int64Msb = ((long)1) << 63;
@@ -320,7 +320,7 @@ namespace ProtoBuf
                 case WireType.SignedVariant:
                     return Zag(ReadUInt64Variant());
                 default:
-                    throw CreateException();
+                    throw CreateWireTypeException();
             }
         }
 
@@ -475,7 +475,7 @@ namespace ProtoBuf
                 ioIndex += bytes;
                 return s;
             }
-            throw CreateException();
+            throw CreateWireTypeException();
         }
         /// <summary>
         /// Throws an exception indication that the given value cannot be mapped to an enum.
@@ -485,9 +485,13 @@ namespace ProtoBuf
             string desc = type == null ? "<null>" : type.FullName;
             throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value), this);
         }
-        private Exception CreateException()
+        private Exception CreateWireTypeException()
         {
-            return AddErrorData(new ProtoException(), this);
+            return CreateException("Invalid wire-type; this usually means you have over-written a file without truncating or setting the length; see http://stackoverflow.com/q/2152978/23354");
+        }
+        private Exception CreateException(string message)
+        {
+            return AddErrorData(new ProtoException(message), this);
         }
         /// <summary>
         /// Reads a double-precision number from the stream; supported wire-types: Fixed32, Fixed64
@@ -510,7 +514,7 @@ namespace ProtoBuf
                     return *(double*)&value;
 #endif
                 default:
-                    throw CreateException();
+                    throw CreateWireTypeException();
             }
         }
 
@@ -557,16 +561,16 @@ namespace ProtoBuf
             {
                 case WireType.EndGroup:
                     if (value >= 0) throw AddErrorData(new ArgumentException("token"), reader);
-                    if (-value != reader.fieldNumber) throw reader.CreateException(); // wrong group ended!
+                    if (-value != reader.fieldNumber) throw reader.CreateException("Wrong group was ended"); // wrong group ended!
                     reader.wireType = WireType.None; // this releases ReadFieldHeader
                     reader.depth--;
                     break;
                 // case WireType.None: // TODO reinstate once reads reset the wire-type
                 default:
-                    if (value < reader.position) throw reader.CreateException();
+                    if (value < reader.position) throw reader.CreateException("Sub-message not read entirely");
                     if (reader.blockEnd != reader.position && reader.blockEnd != int.MaxValue)
                     {
-                        throw reader.CreateException();
+                        throw reader.CreateException("Sub-message not read correctly");
                     }
                     reader.blockEnd = value;
                     reader.depth--;
@@ -596,7 +600,7 @@ namespace ProtoBuf
                     reader.depth++;
                     return new SubItemToken(lastEnd);
                 default:
-                    throw reader.CreateException(); // throws
+                    throw reader.CreateWireTypeException(); // throws
             }
         }
 
@@ -676,7 +680,7 @@ namespace ProtoBuf
             }
             else
             {   // nope; that is *not* what we were expecting!
-                throw CreateException();
+                throw CreateWireTypeException();
             }
         }
 
@@ -732,11 +736,11 @@ namespace ProtoBuf
                         wireType = ProtoBuf.WireType.None;
                         return;
                     }
-                    throw CreateException();
+                    throw CreateWireTypeException();
                 case WireType.None: // treat as explicit errorr
                 case WireType.EndGroup: // treat as explicit error
                 default: // treat as implicit error
-                    throw CreateException();
+                    throw CreateWireTypeException();
             }
         }
 
@@ -765,7 +769,7 @@ namespace ProtoBuf
                         | (((ulong)ioBuffer[ioIndex++]) << 48)
                         | (((ulong)ioBuffer[ioIndex++]) << 56);
                 default:
-                    throw CreateException();
+                    throw CreateWireTypeException();
             }
         }
         /// <summary>
@@ -800,7 +804,7 @@ namespace ProtoBuf
                         return f;
                     }
                 default:
-                    throw CreateException();
+                    throw CreateWireTypeException();
             }
         }
 
@@ -814,7 +818,7 @@ namespace ProtoBuf
             {
                 case 0: return false;
                 case 1: return true;
-                default: throw CreateException();
+                default: throw CreateException("Unexpected boolean value");
             }
         }
 
@@ -869,7 +873,7 @@ namespace ProtoBuf
                     }
                     return value;
                 default:
-                    throw reader.CreateException();
+                    throw reader.CreateWireTypeException();
             }
         }
 
@@ -1121,7 +1125,7 @@ namespace ProtoBuf
                 case WireType.None: // treat as explicit errorr
                 case WireType.EndGroup: // treat as explicit error
                 default: // treat as implicit error
-                    throw CreateException();
+                    throw CreateWireTypeException();
             }
         }
         /// <summary>

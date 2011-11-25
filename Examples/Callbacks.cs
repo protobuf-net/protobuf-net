@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Threading;
 using NUnit.Framework;
 using ProtoBuf;
 using System.Runtime.Serialization;
@@ -183,34 +184,77 @@ namespace Examples
     [TestFixture]
     public class Callbacks
     {
-        public static void Test<T, TCreate>()
+        public static void Test<T, TCreate>(bool compile = false, params Type[] extraTypes)
             where TCreate : T, new()
-            where T : class, ICallbackTest
+            where T : ICallbackTest
         {
-            TCreate cs = new TCreate();
-            cs.Bar = "abc";
-            Assert.IsNotNull(cs, "orig");
-            Assert.AreEqual("ctor", cs.History, "orig before");
-            Assert.AreEqual("abc", cs.Bar, "orig before");
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof (TCreate), true);
+            if(extraTypes != null)
+            {
+                for (int i = 0; i < extraTypes.Length; i++) model.Add(extraTypes[i], true);
+            }
+            model.AutoCompile = false;
+            Test<T, TCreate>(model, "Runtime");
 
-            TCreate clone = Serializer.DeepClone<TCreate>(cs);
-            Assert.AreEqual("ctor;OnSerializing;OnSerialized", cs.History, "orig after");
-            Assert.AreEqual("abc", cs.Bar, "orig after");
+            if(compile)
+            {
+                string name = typeof (TCreate).FullName + "Ser";
+                model.Compile(name, name + ".dll");
+                PEVerify.AssertValid(name + ".dll");
+            }
 
-            Assert.IsNotNull(clone, "clone");
-            Assert.AreNotSame(cs, clone, "clone");
-            Assert.AreEqual("ctor;OnDeserializing;OnDeserialized", clone.History, "clone after");
-            Assert.AreEqual("abc", clone.Bar, "clone after");
+            model.CompileInPlace();
+            Test<T, TCreate>(model, "CompileInPlace");
 
-            T clone2 = Serializer.DeepClone<TCreate>(cs);
-            Assert.AreEqual("ctor;OnSerializing;OnSerialized;OnSerializing;OnSerialized", cs.History, "orig after");
-            Assert.AreEqual("abc", cs.Bar, "orig after");
+            if (compile)
+            {
+                Test<T, TCreate>(model.Compile(), "Compile"); // <===== lots of private members etc
+            }
+        }
+        static void Test<T, TCreate>(TypeModel model, string mode)
+            where TCreate : T, new()
+            where T : ICallbackTest
+        {
+            try
+            {
+                mode = ":" + mode;
+                TCreate cs = new TCreate();
+                cs.Bar = "abc";
+                string ctorExpected = typeof (TCreate).IsValueType ? null : "ctor";
+                Assert.IsNotNull(cs, "orig" + mode);
+                Assert.AreEqual(ctorExpected, cs.History, "orig before" + mode);
+                Assert.AreEqual("abc", cs.Bar, "orig before" + mode);
 
-            Assert.IsNotNull(clone2, "clone2");
-            Assert.AreNotSame(cs, clone2, "clone2");
-            Assert.AreEqual("ctor;OnDeserializing;OnDeserialized", clone2.History, "clone2 after");
-            Assert.AreEqual("abc", clone2.Bar, "clone2 after");
+                TCreate clone = (TCreate) model.DeepClone(cs);
+                if (!typeof (TCreate).IsValueType)
+                {
+                    Assert.AreEqual(ctorExpected + ";OnSerializing;OnSerialized", cs.History, "orig after" + mode);
+                }
+                Assert.AreEqual("abc", cs.Bar, "orig after" + mode);
 
+                Assert.IsNotNull(clone, "clone" + mode);
+                Assert.AreNotSame(cs, clone, "clone" + mode);
+                Assert.AreEqual(ctorExpected + ";OnDeserializing;OnDeserialized", clone.History, "clone after" + mode);
+                Assert.AreEqual("abc", clone.Bar, "clone after" + mode);
+
+                T clone2 = (T) model.DeepClone(cs);
+                if (!typeof (TCreate).IsValueType)
+                {
+                    Assert.AreEqual(ctorExpected + ";OnSerializing;OnSerialized;OnSerializing;OnSerialized", cs.History,
+                                    "orig after" + mode);
+                }
+                Assert.AreEqual("abc", cs.Bar, "orig after" + mode);
+
+                Assert.IsNotNull(clone2, "clone2" + mode);
+                Assert.AreNotSame(cs, clone2, "clone2" + mode);
+                Assert.AreEqual(ctorExpected + ";OnDeserializing;OnDeserialized", clone2.History, "clone2 after" + mode);
+                Assert.AreEqual("abc", clone2.Bar, "clone2 after" + mode);
+            } catch(Exception ex)
+            {
+                Console.Error.WriteLine(ex.StackTrace);
+                Assert.Fail(ex.Message + mode);
+            }
         }
 
         [ProtoContract]
@@ -227,6 +271,17 @@ namespace Examples
         public void TestSimple()
         {
             Test<CallbackSimple, CallbackSimple>();
+        }
+
+        [Test]
+        public void TestStructSimple()
+        {
+            int beforeSer = CallbackStructSimple.BeforeSerializeCount,
+                afterSer = CallbackStructSimple.AfterSerializeCount;
+            Test<CallbackStructSimple, CallbackStructSimple>(true, typeof(CallbackStructSimpleNoCallbacks));
+
+            Assert.AreEqual(6, CallbackStructSimple.BeforeSerializeCount - beforeSer);
+            Assert.AreEqual(6, CallbackStructSimple.AfterSerializeCount - afterSer);
         } 
 
         [Test]
@@ -363,5 +418,58 @@ namespace Examples
             public object WriteState { get; set; }
         }
 #endif
+
+        [ProtoContract]
+        public struct CallbackStructSimple : ICallbackTest
+        {
+            public static int BeforeSerializeCount
+            {
+                get { return Interlocked.CompareExchange(ref beforeSer, 0, 0); }
+            }
+            public static int AfterSerializeCount
+            {
+                get { return Interlocked.CompareExchange(ref afterSer, 0, 0); }
+            }
+
+            private static int beforeSer, afterSer;
+            [ProtoMember(1)]
+            public string Bar { get; set; }
+
+            [OnDeserialized]
+            public void OnDeserialized() { History += ";OnDeserialized"; }
+            [OnDeserializing]
+            public void OnDeserializing() { History += ";OnDeserializing"; }
+            [OnSerialized]
+            public void OnSerialized()
+            {
+                Interlocked.Increment(ref afterSer);
+            }
+            [OnSerializing]
+            public void OnSerializing()
+            {
+                Interlocked.Increment(ref beforeSer);
+            }
+            
+            public string History { get; private set; }
+        }
+
+        [ProtoContract] // this only exists for me to compare the IL to CallbackStructSimple
+        public struct CallbackStructSimpleNoCallbacks
+        {
+            [ProtoMember(1)]
+            public string Bar { get; set; }
+        }
+
+        public void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ProtoWriter writer)
+        {
+            obj.OnSerializing();
+            string bar = obj.Bar;
+            if(bar != null)
+            {
+                ProtoWriter.WriteFieldHeader(1, WireType.String, writer);
+                ProtoWriter.WriteString(bar, writer);
+            }
+            obj.OnSerialized();
+        }
     }
 }

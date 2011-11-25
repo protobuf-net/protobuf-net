@@ -423,18 +423,39 @@ namespace ProtoBuf.Serializers
         }   
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
-            Helpers.DebugAssert(((IProtoTypeSerializer)this).HasCallbacks(callbackType), "Shouldn't be calling this if there is nothing to do");
-            MethodInfo method = callbacks == null ? null : callbacks[callbackType];
-            ctx.LoadValue(valueFrom);
-            EmitInvokeCallback(ctx, method, true);
-            Compiler.CodeLabel @break = ctx.DefineLabel();
+            bool actuallyHasInheritance = false;
             if (CanHaveInheritance)
             {
+
                 for (int i = 0; i < serializers.Length; i++)
                 {
                     IProtoSerializer ser = serializers[i];
                     IProtoTypeSerializer typeser;
                     if (ser.ExpectedType != forType && (typeser = (IProtoTypeSerializer)ser).HasCallbacks(callbackType))
+                    {
+                        actuallyHasInheritance = true;
+                    }
+                }
+            }
+
+            Helpers.DebugAssert(((IProtoTypeSerializer)this).HasCallbacks(callbackType), "Shouldn't be calling this if there is nothing to do");
+            MethodInfo method = callbacks == null ? null : callbacks[callbackType];
+            if(method == null && !actuallyHasInheritance)
+            {
+                return;
+            }
+            ctx.LoadAddress(valueFrom, ExpectedType);
+            EmitInvokeCallback(ctx, method, actuallyHasInheritance);
+
+            if (actuallyHasInheritance)
+            {
+                Compiler.CodeLabel @break = ctx.DefineLabel();
+                for (int i = 0; i < serializers.Length; i++)
+                {
+                    IProtoSerializer ser = serializers[i];
+                    IProtoTypeSerializer typeser;
+                    if (ser.ExpectedType != forType &&
+                        (typeser = (IProtoTypeSerializer) ser).HasCallbacks(callbackType))
                     {
                         Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
                         ctx.CopyValue();
@@ -449,9 +470,9 @@ namespace ProtoBuf.Serializers
                         ctx.MarkLabel(nextTest);
                     }
                 }
+                ctx.MarkLabel(@break);
+                ctx.DiscardValue();
             }
-            ctx.MarkLabel(@break);                
-            ctx.DiscardValue();
         }
 
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -465,11 +486,18 @@ namespace ProtoBuf.Serializers
                 // pre-callbacks
                 if (HasCallbacks(TypeModel.CallbackType.BeforeDeserialize))
                 {
-                    Compiler.CodeLabel callbacksDone = ctx.DefineLabel();
-                    ctx.LoadValue(loc);
-                    ctx.BranchIfFalse(callbacksDone, false);
-                    EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeDeserialize);
-                    ctx.MarkLabel(callbacksDone);
+                    if(ExpectedType.IsValueType)
+                    {
+                        EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeDeserialize);
+                    }
+                    else
+                    { // could be null
+                        Compiler.CodeLabel callbacksDone = ctx.DefineLabel();
+                        ctx.LoadValue(loc);
+                        ctx.BranchIfFalse(callbacksDone, false);
+                        EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeDeserialize);
+                        ctx.MarkLabel(callbacksDone);    
+                    }
                 }
 
                 Compiler.CodeLabel @continue = ctx.DefineLabel(), processField = ctx.DefineLabel();
