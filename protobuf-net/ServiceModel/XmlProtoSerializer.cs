@@ -96,7 +96,7 @@ namespace ProtoBuf.ServiceModel
         {
             writer.WriteStartElement(PROTO_ELEMENT);
         }
-        protected const string PROTO_ELEMENT = "proto";
+        private const string PROTO_ELEMENT = "proto";
         /// <summary>
         /// Writes the body of an object in the output
         /// </summary>
