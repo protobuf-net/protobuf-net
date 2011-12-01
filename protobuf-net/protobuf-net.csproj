@@ -110,7 +110,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'iOS|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\iOS\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NO_RUNTIME FEAT_SAFE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NO_RUNTIME FEAT_SAFE IOS</DefineConstants>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <DocumentationFile>bin\Debug\protobuf-net.xml</DocumentationFile>
     <DebugType>full</DebugType>
