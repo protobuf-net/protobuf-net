@@ -128,6 +128,16 @@ namespace Examples.ServiceModel
                 Assert.IsTrue(proxy.Service.Ping());
             }
         }
+
+        [Test]
+        public void RoundTripTrivial()
+        {
+            using(var proxy = GetProxy())
+            {
+                var data = proxy.Service.UsingProtoItem(new MyData {});
+                Assert.IsNotNull(data);
+            }
+        }
         [Test]
         public void SimpleTypesRegular()
         {
