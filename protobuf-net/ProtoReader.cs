@@ -905,6 +905,67 @@ namespace ProtoBuf
             int bytesRead;
             return ReadLengthPrefix(source, expectHeader, style, out fieldNumber, out bytesRead);
         }
+        /// <summary>
+        /// Reads a little-endian encoded integer. An exception is thrown if the data is not all available.
+        /// </summary>
+        public static int ReadLittleEndianInt32(Stream source)
+        {
+            return ReadByteOrThrow(source)
+                | (ReadByteOrThrow(source) << 8)
+                | (ReadByteOrThrow(source) << 16)
+                | (ReadByteOrThrow(source) << 24);
+        }
+        /// <summary>
+        /// Reads a big-endian encoded integer. An exception is thrown if the data is not all available.
+        /// </summary>
+        public static int ReadBigEndianInt32(Stream source)
+        {
+            return (ReadByteOrThrow(source) << 24)
+                 | (ReadByteOrThrow(source) << 16)
+                 | (ReadByteOrThrow(source) << 8)
+                 | ReadByteOrThrow(source);
+        }
+        /// <summary>
+        /// Reads a varint encoded integer. An exception is thrown if the data is not all available.
+        /// </summary>
+        public static int ReadVarintInt32(Stream source)
+        {
+            uint val;
+            int bytes = TryReadUInt32Variant(source, out val);
+            if (bytes <= 0) throw EoF(null);
+            return (int) val;
+        }
+        /// <summary>
+        /// Reads a string (of a given lenth, in bytes) directly from the source into a pre-existing buffer. An exception is thrown if the data is not all available.
+        /// </summary>
+        public static void ReadBytes(Stream source, byte[] buffer, int offset, int count)
+        {
+            int read;
+            while(count > 0 && (read = source.Read(buffer, offset, count)) > 0)
+            {
+                count -= read;
+                offset += read;
+            }
+            if (count > 0) throw EoF(null);
+        }
+        /// <summary>
+        /// Reads a given number of bytes directly from the source. An exception is thrown if the data is not all available.
+        /// </summary>
+        public static byte[] ReadBytes(Stream source, int count)
+        {
+            byte[] buffer = new byte[count];
+            ReadBytes(source, buffer, 0, count);
+            return buffer;
+        }
+        /// <summary>
+        /// Reads a string (of a given lenth, in bytes) directly from the source. An exception is thrown if the data is not all available.
+        /// </summary>
+        public static string ReadString(Stream source, int length)
+        {
+            byte[] buffer = new byte[length];
+            ReadBytes(source, buffer, 0, length);
+            return Encoding.UTF8.GetString(buffer, 0, length);
+        }
 
         /// <summary>
         /// Reads the length-prefix of a message from a stream without buffering additional data, allowing a fixed-length
