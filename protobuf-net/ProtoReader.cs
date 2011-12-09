@@ -86,7 +86,7 @@ namespace ProtoBuf
             model = null;
             BufferPool.ReleaseBufferToPool(ref ioBuffer);
         }
-        private int TryReadUInt32VariantWithoutMoving(bool trimNegative, out uint value)
+        internal int TryReadUInt32VariantWithoutMoving(bool trimNegative, out uint value)
         {
             if (available < 10) Ensure(10, false);
             if (available == 0)
@@ -960,7 +960,7 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a string (of a given lenth, in bytes) directly from the source. An exception is thrown if the data is not all available.
         /// </summary>
-        public static string RawReadString(Stream source, int length)
+        public static string DirectReadString(Stream source, int length)
         {
             byte[] buffer = new byte[length];
             DirectReadBytes(source, buffer, 0, length);
