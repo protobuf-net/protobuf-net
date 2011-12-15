@@ -9,6 +9,8 @@ using System.Xml.Serialization;
 using NUnit.Framework;
 using ProtoBuf;
 using System.Runtime.Serialization;
+using System.ComponentModel;
+using System.ServiceModel;
 #if NET_3_0
 using System.ServiceModel;
 #if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER

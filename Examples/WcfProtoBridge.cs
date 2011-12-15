@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
+using System.IO;
 using System.Text;
+using System.Xml;
 using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
-using ProtoBuf.ServiceModel;
-using System.IO;
-using System.Xml;
 
+#if (FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER) || (SILVERLIGHT && !PHONE7)
 namespace Examples
 {
     [TestFixture]
@@ -76,3 +74,4 @@ namespace Examples
         }
     }
 }
+#endif

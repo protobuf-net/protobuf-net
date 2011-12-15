@@ -857,11 +857,11 @@ namespace ProtoBuf.Meta
 #else
             if (Monitor.TryEnter(types, metadataTimeoutMilliseconds))
             {
-                opaqueToken = Interlocked.CompareExchange(ref contentionCounter, 0, 0); // just fetch current value (starts at 1)
+                opaqueToken = GetContention(); // just fetch current value (starts at 1)
             }
             else
             {
-                Interlocked.Increment(ref contentionCounter);
+                AddContention();
 #if FX11
                 throw new InvalidOperationException(message);
 #else
@@ -872,12 +872,38 @@ namespace ProtoBuf.Meta
         }
 
         private int contentionCounter = 1;
+#if PLAT_NO_INTERLOCKED
+        private readonly object contentionLock = new object();
+#endif
+        private int GetContention()
+        {
+#if PLAT_NO_INTERLOCKED
+            lock(contentionLock)
+            {
+                return contentionCounter;
+            }
+#else
+            return Interlocked.CompareExchange(ref contentionCounter, 0, 0);
+#endif
+        }
+        private void AddContention()
+        {
+#if PLAT_NO_INTERLOCKED
+            lock(contentionLock)
+            {
+                contentionCounter++;
+            }
+#else
+            Interlocked.Increment(ref contentionCounter);
+#endif
+        }
+
         internal void ReleaseLock(int opaqueToken)
         {
             if (opaqueToken != 0)
             {
                 Monitor.Exit(types);
-                if(opaqueToken != Interlocked.CompareExchange(ref contentionCounter, 0, 0)) // contention-count changes since we looked!
+                if(opaqueToken != GetContention()) // contention-count changes since we looked!
                 {
                     LockContentedEventHandler handler = LockContended;
                     if (handler != null)

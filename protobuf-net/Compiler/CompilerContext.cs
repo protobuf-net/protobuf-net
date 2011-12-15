@@ -223,8 +223,13 @@ namespace ProtoBuf.Compiler
                 returnType = typeof(object);
                 paramTypes = new Type[] { typeof(object), typeof(ProtoReader) };
             }
-            
-            method = new DynamicMethod("proto_" + Interlocked.Increment(ref next), returnType, paramTypes, associatedType.IsInterface ? typeof(object) : associatedType,true);
+            int uniqueIdentifier;
+#if PLAT_NO_INTERLOCKED
+            uniqueIdentifier = ++next;
+#else
+            uniqueIdentifier = Interlocked.Increment(ref next);
+#endif
+            method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType, paramTypes, associatedType.IsInterface ? typeof(object) : associatedType, true);
             this.il = method.GetILGenerator();
         }
 #endif

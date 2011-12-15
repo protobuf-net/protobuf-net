@@ -12,6 +12,9 @@
 
     <!--<Net20Files Include="protobuf-net\bin\iOS\Licence.txt"/>-->
     <iOSFiles Include="protobuf-net\bin\iOS\protobuf-net.*"/>
+
+    <!--<Net20Files Include="protobuf-net\bin\Unity\Licence.txt"/>-->
+    <UnityFiles Include="protobuf-net\bin\Unity\protobuf-net.*"/>
     
     <!--<Net20Files Include="protobuf-net\bin\Net20\Licence.txt"/>-->
     <Net20Files Include="protobuf-net\bin\Net20\protobuf-net.*"/>
@@ -32,6 +35,7 @@
     <MakeDir Directories="$(OutputDirectory)\net20"/>
     <MakeDir Directories="$(OutputDirectory)\net30"/>
     <MakeDir Directories="$(OutputDirectory)\ios"/>
+    <MakeDir Directories="$(OutputDirectory)\unity"/>
     <MakeDir Directories="$(OutputDirectory)\net35"/>
     <MakeDir Directories="$(OutputDirectory)\net40"/>
     <!--<MakeDir Directories="$(OutputDirectory)\sl3"/>-->
@@ -41,8 +45,10 @@
     <MSBuild Projects="@(ProjectToBuild)" Properties="Configuration=Release" BuildInParallel="true"/>
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Net20"/>
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=iOS"/>
+    <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Unity"/>
 
     <Copy SourceFiles="@(iOSFiles)" DestinationFolder="$(OutputDirectory)\ios"/>
+    <Copy SourceFiles="@(UnityFiles)" DestinationFolder="$(OutputDirectory)\unity"/>
     <Copy SourceFiles="@(Net20Files)" DestinationFolder="$(OutputDirectory)\net20"/>
     
     <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(OutputDirectory)\net30"/>

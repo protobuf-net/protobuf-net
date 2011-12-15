@@ -38,7 +38,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
     [TestFixture]
     public class ArrayOfBaseClassTests : AssertionHelper
     {
-        [Test]
+        [Test] // needs dynamic handling of list itself
         public void TestObjectArrayContainerClass()
         {
             var model = CreateModel();
@@ -57,7 +57,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
 
         }
 
-        [Test]
+        [Test]// needs dynamic handling of list itself
         public void TestBaseClassArrayContainerClass()
         {
             var model = CreateModel();

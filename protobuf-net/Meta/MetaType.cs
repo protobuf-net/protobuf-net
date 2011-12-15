@@ -64,24 +64,9 @@ namespace ProtoBuf.Meta
 #endif
                 throw new InvalidOperationException("Sub-types can only be added to non-sealed classes");
             }
-#if WINRT
-            if (ienumerable.IsAssignableFrom(typeInfo))
-#else
-            if (ienumerable.IsAssignableFrom(type))
-#endif
-            {
-                throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
-            }
-#if WINRT
-            if (ienumerable.IsAssignableFrom(derivedType.GetTypeInfo()))
-#else
-            if (ienumerable.IsAssignableFrom(derivedType))
-#endif
-            {
-                throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
-            }
-            ThrowIfFrozen();
+
             MetaType derivedMeta = model[derivedType];
+            ThrowIfFrozen();
             derivedMeta.ThrowIfFrozen();
             SubType subType = new SubType(fieldNumber, derivedMeta);
             ThrowIfFrozen();
@@ -315,17 +300,25 @@ namespace ProtoBuf.Meta
                         new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(type, GetEnumMap()))
                     }, null, true, true, null, constructType, null);
             }
+            Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(type);
+            if (itemType != null)
+            {
+                if(surrogate != null)
+                {
+                    throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
+                }
+                if(subTypes != null && subTypes.Count != 0)
+                {
+                    throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
+                }
+                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, type, DataFormat.Default);
+                return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
+            }
             if (surrogate != null)
             {
                 MetaType mt = model[surrogate], mtBase;
                 while ((mtBase = mt.baseType) != null) { mt = mtBase; }
                 return new SurrogateSerializer(type, surrogate, mt.Serializer);
-            }
-            Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(type);
-            if (itemType != null)
-            {
-                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, type, DataFormat.Default);
-                return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
             }
             if (HasFlag(OPTIONS_AutoTuple))
             {
@@ -346,6 +339,14 @@ namespace ProtoBuf.Meta
             {
                 foreach (SubType subType in subTypes)
                 {
+#if WINRT
+                    if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type.GetTypeInfo()))
+#else
+                    if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type))
+#endif
+                    {
+                        throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
+                    }
                     fieldNumbers[i] = subType.FieldNumber;
                     serializers[i++] = subType.Serializer;
                 }
@@ -1008,11 +1009,8 @@ namespace ProtoBuf.Meta
             if (surrogateType == type) surrogateType = null;
             if (surrogateType != null)
             {
-                if (typeof(IEnumerable).IsAssignableFrom(type))
-                {
-                    throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
-                }
-                if (typeof(IEnumerable).IsAssignableFrom(surrogateType))
+                // note that BuildSerializer checks the **CURRENT TYPE** is OK to be surrogated
+                if (surrogateType != null && typeof(IEnumerable).IsAssignableFrom(surrogateType))
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
                 }
@@ -1021,7 +1019,6 @@ namespace ProtoBuf.Meta
             this.surrogate = surrogateType;
             // no point in offering chaining; no options are respected
         }
-
         private int GetNextFieldNumber()
         {
             int maxField = 0;

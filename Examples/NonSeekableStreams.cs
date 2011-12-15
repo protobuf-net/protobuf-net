@@ -18,7 +18,6 @@ namespace Examples
         {
             var model = TypeModel.Create();
             byte[] raw;
-            int count;
             const int EXPECTED = 830;
             using(var fs = new FakeStream())
             {

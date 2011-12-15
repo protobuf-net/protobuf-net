@@ -316,7 +316,7 @@ namespace Examples.ServiceModel
                     Assert.AreEqual(9, proxy.Service.ComplexMethod(fourItems, trivial, null, fourItems));
                     i++;
                     Assert.AreEqual(8, proxy.Service.ComplexMethod(fourItems, null, null, fourItems));
-                } catch(Exception ex)
+                } catch
                 {
                     Debug.WriteLine(i);
                     throw;

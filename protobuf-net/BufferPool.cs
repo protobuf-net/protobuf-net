@@ -6,10 +6,17 @@ namespace ProtoBuf
     {
         internal static void Flush()
         {
+#if PLAT_NO_INTERLOCKED
+            lock(pool)
+            {
+                for (int i = 0; i < pool.Length; i++) pool[i] = null;
+            }
+#else
             for (int i = 0; i < pool.Length; i++)
             {
                 Interlocked.Exchange(ref pool[i], null); // and drop the old value on the floor
             }
+#endif
         }
         private BufferPool() { }
         const int PoolSize = 20;
@@ -18,11 +25,25 @@ namespace ProtoBuf
 
         internal static byte[] GetBuffer()
         {
+            object tmp;
+            #if PLAT_NO_INTERLOCKED
+            lock(pool)
+            {
+                for (int i = 0; i < pool.Length; i++)
+                {
+                    if((tmp = pool[i]) != null)
+                    {
+                        pool[i] = null;
+                        return (byte[])tmp;
+                    }
+                }
+            }
+#else
             for (int i = 0; i < pool.Length; i++)
             {
-                object tmp;
                 if ((tmp = Interlocked.Exchange(ref pool[i], null)) != null) return (byte[])tmp;
             }
+#endif
             return new byte[BufferLength];
         }
         internal static void ResizeAndFlushLeft(ref byte[] buffer, int toFitAtLeastBytes, int copyFromIndex, int copyBytes)
@@ -52,6 +73,19 @@ namespace ProtoBuf
             if (buffer == null) return;
             if (buffer.Length == BufferLength)
             {
+#if PLAT_NO_INTERLOCKED
+                lock (pool)
+                {
+                    for (int i = 0; i < pool.Length; i++)
+                    {
+                        if(pool[i] == null)
+                        {
+                            pool[i] = buffer;
+                            break;
+                        }
+                    }
+                }
+#else
                 for (int i = 0; i < pool.Length; i++)
                 {
                     if (Interlocked.CompareExchange(ref pool[i], buffer, null) == null)
@@ -59,6 +93,7 @@ namespace ProtoBuf
                         break; // found a null; swapped it in
                     }
                 }
+#endif
             }
             // if no space, just drop it on the floor
             buffer = null;

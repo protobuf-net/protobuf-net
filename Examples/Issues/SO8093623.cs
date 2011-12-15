@@ -67,7 +67,7 @@ namespace Examples.Issues
                 Assert.AreEqual(23, clone.b.Balls, message);
             }
         }
-        [Test]
+        [Test] // this is failing currently; needs some magic to handle out-of-order subclass fields
         public void TestSubclassDeserializes()
         {
             var model = RuntimeTypeModel.Create();
