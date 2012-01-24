@@ -58,11 +58,12 @@ namespace Examples
                 return GetByteString(actual);
             }
         }
-        public static bool CheckBytes<T>(T item, params byte[] expected) 
+        public static bool CheckBytes<T>(T item, TypeModel model, params byte[] expected)
         {
+            if (model == null) model = RuntimeTypeModel.Default;
             using (MemoryStream ms = new MemoryStream())
             {
-                Serializer.Serialize(ms, item);
+                model.Serialize(ms, item);
                 byte[] actual = ms.ToArray();
                 bool equal = Program.ArraysEqual(actual, expected);
                 if (!equal)
@@ -73,6 +74,10 @@ namespace Examples
                 }
                 return equal;
             }
+        }
+        public static bool CheckBytes<T>(T item, params byte[] expected)
+        {
+            return CheckBytes<T>(item, null, expected);
         }
         public static T Build<T>(params byte[] raw) where T : class, new()
         {

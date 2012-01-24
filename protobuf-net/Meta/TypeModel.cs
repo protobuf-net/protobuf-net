@@ -13,7 +13,11 @@ namespace ProtoBuf.Meta
         private WireType GetWireType(ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
         {
             modelKey = -1;
-            if (type.IsEnum) return WireType.None;
+            if (type.IsEnum)
+            {
+                modelKey = GetKey(ref type);
+                return WireType.Variant;
+            }
             switch (code)
             {
                 case ProtoTypeCode.Int16:
@@ -68,22 +72,30 @@ namespace ProtoBuf.Meta
 
             if (modelKey >= 0)
             {   // write the header, but defer to the model
-                ProtoWriter.WriteFieldHeader(tag, wireType, writer);
-                switch (wireType)
+                if (type.IsEnum)
+                { // no header
+                    Serialize(modelKey, value, writer);
+                    return true;
+                }
+                else
                 {
-                    case WireType.None:
-                        throw ProtoWriter.CreateException(writer);
-                    case WireType.StartGroup:
-                    case WireType.String:
-                        // needs a wrapping length etc
-                        SubItemToken token = ProtoWriter.StartSubItem(value, writer);
-                        Serialize(modelKey, value, writer);
-                        ProtoWriter.EndSubItem(token, writer);
-                        return true;
-                    default:
-                        Serialize(modelKey, value, writer);
-                        return true;
-                }                
+                    ProtoWriter.WriteFieldHeader(tag, wireType, writer);
+                    switch (wireType)
+                    {
+                        case WireType.None:
+                            throw ProtoWriter.CreateException(writer);
+                        case WireType.StartGroup:
+                        case WireType.String:
+                            // needs a wrapping length etc
+                            SubItemToken token = ProtoWriter.StartSubItem(value, writer);
+                            Serialize(modelKey, value, writer);
+                            ProtoWriter.EndSubItem(token, writer);
+                            return true;
+                        default:
+                            Serialize(modelKey, value, writer);
+                            return true;
+                    }
+                }
             }
             
             if(wireType != WireType.None) {
@@ -1050,7 +1062,7 @@ namespace ProtoBuf.Meta
             Type type = value.GetType();
             int key = GetKey(ref type);
 
-            if (key >= 0) {
+            if (key >= 0 && !type.IsEnum) {
                 using (MemoryStream ms = new MemoryStream())
                 {
                     using(ProtoWriter writer = new ProtoWriter(ms, this, null))

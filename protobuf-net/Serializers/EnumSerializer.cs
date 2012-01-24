@@ -1,11 +1,6 @@
 ﻿#if !NO_RUNTIME
 using System;
-#if FEAT_COMPILER
-using System.Reflection.Emit;
 using ProtoBuf.Meta;
-
-#endif
-
 
 namespace ProtoBuf.Serializers
 {
@@ -249,7 +244,6 @@ namespace ProtoBuf.Serializers
             ctx.Branch(@continue, false); // "continue"
         }
 #endif
-
     }
 }
 #endif

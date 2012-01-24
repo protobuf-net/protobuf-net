@@ -294,11 +294,7 @@ namespace ProtoBuf.Meta
         {
             if (type.IsEnum)
             {
-                //return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(type, GetEnumMap()));
-                return new TypeSerializer(type, new int[] { ProtoBuf.Serializer.ListItemTag },
-                    new IProtoSerializer[] {
-                        new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(type, GetEnumMap()))
-                    }, null, true, true, null, constructType, null);
+                return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(type, GetEnumMap()));
             }
             Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(type);
             if (itemType != null)
@@ -1328,6 +1324,15 @@ namespace ProtoBuf.Meta
             } finally {
                 model.ReleaseLock(opaqueToken);
             }
+        }
+
+        internal bool IsPrepared()
+        {
+            #if FEAT_COMPILER
+            return (serializer as CompiledSerializer) != null;
+            #else
+            return false;
+            #endif
         }
     }
 }

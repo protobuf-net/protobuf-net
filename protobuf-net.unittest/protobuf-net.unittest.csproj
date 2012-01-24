@@ -104,6 +104,7 @@
     <Compile Include="Attribs\ComplexMultiTypes.cs" />
     <Compile Include="Attribs\PointStruct.cs" />
     <Compile Include="FX11.cs" />
+    <Compile Include="Issues\SO8933251.cs" />
     <Compile Include="Meta\Basic.cs" />
     <Compile Include="Meta\Callbacks.cs" />
     <Compile Include="Meta\AbstractListsWithInheritance.cs" />
@@ -160,6 +161,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

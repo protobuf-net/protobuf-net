@@ -619,7 +619,10 @@ namespace ProtoBuf.Meta
 
                 ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs);
                 pair.Type.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
-                ctx.LoadValue(Compiler.Local.InputValue);
+                if (!pair.Type.Serializer.ReturnsValue)
+                {
+                    ctx.LoadValue(Compiler.Local.InputValue);
+                }
                 ctx.Return();
             }
 
@@ -815,6 +818,11 @@ namespace ProtoBuf.Meta
         internal bool IsDefined(Type type, int fieldNumber)
         {
             return FindWithoutAdd(type).IsDefined(fieldNumber);
+        }
+        internal bool IsPrepared(Type type)
+        {
+            MetaType meta = FindWithoutAdd(type);
+            return meta != null && meta.IsPrepared();
         }
 
         internal EnumSerializer.EnumPair[] GetEnumMap(Type type)
