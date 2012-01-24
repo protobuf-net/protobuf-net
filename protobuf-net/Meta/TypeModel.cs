@@ -915,7 +915,7 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Double: value = reader.ReadDouble(); continue;
                     case ProtoTypeCode.Single: value = reader.ReadSingle(); continue;
                     case ProtoTypeCode.DateTime: value = BclHelpers.ReadDateTime(reader); continue;
-                    case ProtoTypeCode.Decimal: BclHelpers.ReadDecimal(reader); continue;
+                    case ProtoTypeCode.Decimal: value = BclHelpers.ReadDecimal(reader); continue;
                     case ProtoTypeCode.String: value = reader.ReadString(); continue;
                     case ProtoTypeCode.ByteArray: value = ProtoReader.AppendBytes((byte[])value, reader); continue;
                     case ProtoTypeCode.TimeSpan: value = BclHelpers.ReadTimeSpan(reader); continue;
