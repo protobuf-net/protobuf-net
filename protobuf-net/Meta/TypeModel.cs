@@ -586,7 +586,7 @@ namespace ProtoBuf.Meta
         private object DeserializeCore(ProtoReader reader, Type type, object value, bool noAutoCreate)
         {
             int key = GetKey(ref type);
-            if (key >= 0)
+            if (key >= 0 && !type.IsEnum)
             {
                 return Deserialize(key, value, reader);
             }
