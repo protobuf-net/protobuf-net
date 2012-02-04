@@ -15,11 +15,16 @@ namespace ProtoBuf.Serializers
         {
             ProtoWriter.WriteBytes((byte[])value, dest);
         }
+        public BlobSerializer(bool overwriteList)
+        {
+            this.overwriteList = overwriteList;
+        }
+        private readonly bool overwriteList;
         public object Read(object value, ProtoReader source)
         {
-            return ProtoReader.AppendBytes((byte[])value, source);
+            return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, source);
         }
-        bool IProtoSerializer.RequiresOldValue { get { return true; } }
+        bool IProtoSerializer.RequiresOldValue { get { return !overwriteList; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -28,7 +33,14 @@ namespace ProtoBuf.Serializers
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.LoadValue(valueFrom);
+            if (overwriteList)
+            {
+                ctx.LoadNullRef();
+            }
+            else
+            {
+                ctx.LoadValue(valueFrom);
+            }
             ctx.LoadReaderWriter();
             ctx.EmitCall(typeof(ProtoReader).GetMethod("AppendBytes"));
         }

@@ -258,7 +258,7 @@ namespace ProtoBuf.Meta
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 WireType wireType;
                 Type finalType = itemType == null ? memberType : itemType;
-                IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType);
+                IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType, OverwriteList);
                 if (ser == null) throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
                 // apply tags
                 if (itemType != null && SupportNull)
@@ -345,7 +345,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal static IProtoSerializer TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType, bool asReference, bool dynamicType)
+        internal static IProtoSerializer TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType, bool asReference, bool dynamicType, bool overwriteList)
         {
 #if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;
@@ -427,7 +427,7 @@ namespace ProtoBuf.Meta
                     return new StringSerializer(); // treat as string; wrapped in decorator later
                 case ProtoTypeCode.ByteArray:
                     defaultWireType = WireType.String;
-                    return new BlobSerializer();
+                    return new BlobSerializer(overwriteList);
             }
             IProtoSerializer parseable = ParseableSerializer.TryCreate(type);
             if (parseable != null)

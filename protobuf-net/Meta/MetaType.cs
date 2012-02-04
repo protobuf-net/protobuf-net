@@ -224,7 +224,7 @@ namespace ProtoBuf.Meta
             if (model == null) throw new ArgumentNullException("model");
             if (type == null) throw new ArgumentNullException("type");
             WireType defaultWireType;
-            IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(null, DataFormat.Default, type, out defaultWireType, false, false);
+            IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(null, DataFormat.Default, type, out defaultWireType, false, false, false);
             if (coreSerializer != null)
             {
                 throw new ArgumentException("Data of this type has inbuilt behaviour, and cannot be added to a model in this way: " + type.FullName);

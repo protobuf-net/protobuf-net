@@ -247,6 +247,7 @@
     <Compile Include="Issues\SO7727355.cs" />
     <Compile Include="Issues\SO8093623.cs" />
     <Compile Include="Issues\SO8466936.cs" />
+    <Compile Include="Issues\SO9144967.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListsWithInheritance.cs" />

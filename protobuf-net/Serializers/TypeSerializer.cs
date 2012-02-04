@@ -430,8 +430,7 @@ namespace ProtoBuf.Serializers
                 for (int i = 0; i < serializers.Length; i++)
                 {
                     IProtoSerializer ser = serializers[i];
-                    IProtoTypeSerializer typeser;
-                    if (ser.ExpectedType != forType && (typeser = (IProtoTypeSerializer)ser).HasCallbacks(callbackType))
+                    if (ser.ExpectedType != forType && ((IProtoTypeSerializer)ser).HasCallbacks(callbackType))
                     {
                         actuallyHasInheritance = true;
                     }
