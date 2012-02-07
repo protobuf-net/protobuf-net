@@ -953,6 +953,7 @@ namespace ProtoBuf.Meta
         protected internal static Type ResolveProxies(Type type)
         {
             if (type == null) return null;
+            if (type.IsGenericParameter) return null;
 #if !NO_GENERICS            
             // Nullable<T>
             Type tmp = Nullable.GetUnderlyingType(type);
@@ -1139,25 +1140,25 @@ namespace ProtoBuf.Meta
             throw new ProtoException("No parameterless constructor found for " + type.Name);
         }
 
-        internal string SerializeType(Type type)
+        internal static string SerializeType(TypeModel model, Type type)
         {
-            TypeFormatEventHandler handler = DynamicTypeFormatting;
-            if (handler != null)
+            TypeFormatEventHandler handler;
+            if (model != null && (handler = model.DynamicTypeFormatting) != null)
             {
                 TypeFormatEventArgs args = new TypeFormatEventArgs(type);
-                handler(this, args);
+                handler(model, args);
                 if (!Helpers.IsNullOrEmpty(args.FormattedName)) return args.FormattedName;
             }
             return type.AssemblyQualifiedName;
         }
 
-        internal Type DeserializeType(string value)
+        internal static Type DeserializeType(TypeModel model, string value)
         {
-            TypeFormatEventHandler handler = DynamicTypeFormatting;
-            if (handler != null)
+            TypeFormatEventHandler handler;
+            if (model != null && (handler = model.DynamicTypeFormatting) != null)
             {
                 TypeFormatEventArgs args = new TypeFormatEventArgs(value);
-                handler(this, args);
+                handler(model, args);
                 if (args.Type != null) return args.Type;
             }
             return Type.GetType(value);

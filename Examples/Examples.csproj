@@ -248,6 +248,8 @@
     <Compile Include="Issues\SO8093623.cs" />
     <Compile Include="Issues\SO8466936.cs" />
     <Compile Include="Issues\SO9144967.cs" />
+    <Compile Include="Issues\SO9151111.cs" />
+    <Compile Include="Issues\SO9151111b.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListsWithInheritance.cs" />
@@ -310,6 +312,7 @@
     <Compile Include="TestNumbers\NumberTests.cs" />
     <Compile Include="TraceError.cs" />
     <Compile Include="Tuples.cs" />
+    <Compile Include="Type.cs" />
     <Compile Include="TypeFactory.cs" />
     <Compile Include="UnwrappedOuters.cs" />
     <Compile Include="ValueWrapper.cs" />

@@ -878,7 +878,7 @@ namespace ProtoBuf
 
         internal string SerializeType(Type type)
         {
-            return model.SerializeType(type);
+            return TypeModel.SerializeType(model, type);
         }
         /// <summary>
         /// Specifies a known root object to use during reference-tracked serialization
@@ -888,5 +888,12 @@ namespace ProtoBuf
             NetCache.SetKeyedObject(NetObjectCache.Root, value);
         }
 
+        /// <summary>
+        /// Writes a Type to the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
+        /// </summary>
+        public static void WriteType(Type value, ProtoWriter writer)
+        {
+            WriteString(writer.SerializeType(value), writer);
+        }
     }
 }

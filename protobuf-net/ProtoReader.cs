@@ -1215,7 +1215,7 @@ namespace ProtoBuf
 
         internal Type DeserializeType(string value)
         {
-            return model.DeserializeType(value);
+            return TypeModel.DeserializeType(model, value);
         }
 
         internal void SetRootObject(object value)
@@ -1236,5 +1236,12 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Reads a Type from the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
+        /// </summary>
+        public Type ReadType()
+        {
+            return TypeModel.DeserializeType(model, ReadString());
+        }
     }
 }

@@ -428,6 +428,9 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.ByteArray:
                     defaultWireType = WireType.String;
                     return new BlobSerializer(overwriteList);
+                case ProtoTypeCode.Type:
+                    defaultWireType = WireType.String;
+                    return new SystemTypeSerializer();
             }
             IProtoSerializer parseable = ParseableSerializer.TryCreate(type);
             if (parseable != null)
