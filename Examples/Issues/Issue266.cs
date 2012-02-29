@@ -5,6 +5,7 @@ using System.Text;
 using NUnit.Framework;
 using ProtoBuf;
 using System.IO;
+using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
@@ -28,6 +29,18 @@ namespace Examples.Issues
         {
             Foo? foo = Serializer.Deserialize<Foo?>(Stream.Null);
             Assert.IsNull(foo);
+        }
+        [Test]
+        public void TestNakedDirectFoo()
+        {
+            Foo orig = Foo.B, result;
+            using(var ms = new MemoryStream())
+            {
+                RuntimeTypeModel.Default.Serialize(ms, Foo.B);
+                ms.Position = 0;
+                result = (Foo) RuntimeTypeModel.Default.Deserialize(ms, null, typeof (Foo));
+            }
+            Assert.AreEqual(orig, result);
         }
 
         public enum Foo

@@ -413,7 +413,8 @@ namespace ProtoBuf.Meta
             //Helpers.DebugWriteLine("Deserialize", value);
             IProtoSerializer ser = ((MetaType)types[key]).Serializer;
             if (value == null && Helpers.IsValueType(ser.ExpectedType)) {
-                return ser.Read(Activator.CreateInstance(ser.ExpectedType), source);
+                if(ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType);
+                return ser.Read(value, source);
             } else {
                 return ser.Read(value, source);
             }
