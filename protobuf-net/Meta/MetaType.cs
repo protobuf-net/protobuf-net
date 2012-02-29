@@ -50,6 +50,10 @@ namespace ProtoBuf.Meta
         }
 
         private BasicList subTypes;
+        private bool IsValidSubType(Type subType)
+        {
+            return type.IsAssignableFrom(subType);
+        }
         /// <summary>
         /// Adds a known sub-type to the inheritance model
         /// </summary>
@@ -64,7 +68,10 @@ namespace ProtoBuf.Meta
 #endif
                 throw new InvalidOperationException("Sub-types can only be added to non-sealed classes");
             }
-
+            if (!IsValidSubType(derivedType))
+            {
+                throw new ArgumentException(derivedType.Name + " is not a valid sub-type of " + type.Name, "derivedType");
+            }
             MetaType derivedMeta = model[derivedType];
             ThrowIfFrozen();
             derivedMeta.ThrowIfFrozen();
@@ -424,8 +431,8 @@ namespace ProtoBuf.Meta
                     if (knownType == null)
                     {
                         throw new InvalidOperationException("Unable to resolve sub-type: " + pia.KnownTypeName);
-                    }                    
-                    AddSubType(pia.Tag, knownType);
+                    }
+                    if(IsValidSubType(knownType)) AddSubType(pia.Tag, knownType);
                 }
                 if(item is ProtoPartialIgnoreAttribute)
                 {

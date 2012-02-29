@@ -62,6 +62,7 @@ namespace ProtoBuf.Serializers
         {
             System.Reflection.Emit.MethodBuilder method = ctx.GetDedicatedMethod(key, read);
             if (method == null) return false;
+
             using (Compiler.Local token = new ProtoBuf.Compiler.Local(ctx, typeof(SubItemToken)))
             {
                 Type rwType = read ? typeof(ProtoReader) : typeof(ProtoWriter);
