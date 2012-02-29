@@ -252,6 +252,7 @@
     <Compile Include="Issues\SO9151111b.cs" />
     <Compile Include="Issues\SO9398578.cs" />
     <Compile Include="Issues\SO9408133.cs" />
+    <Compile Include="Issues\SO9491933.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListsWithInheritance.cs" />

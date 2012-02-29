@@ -437,15 +437,23 @@ namespace ProtoBuf
                             source.NetCache.SetKeyedObject(newObjectKey, value);
                             if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
                         }
-                        if (!lateSet && !ReferenceEquals(oldValue, value))
+                        if (newObjectKey >= 0 && !lateSet && !ReferenceEquals(oldValue, value))
                         {
                             throw new ProtoException("A reference-tracked object changed reference during deserialization");
-                        }                        
+                        }
+                        if (newObjectKey < 0 && newTypeKey >= 0)
+                        {  // have a new type, but not a new object
+                            source.NetCache.SetKeyedObject(newTypeKey, type);
+                        }
                         break;
                     default:
                         source.SkipField();
                         break;
                 }
+            }
+            if(newObjectKey >= 0 && (options & NetObjectOptions.AsReference) == 0)
+            {
+                throw new ProtoException("Object key in input stream, but reference-tracking was not expected");
             }
             ProtoReader.EndSubItem(token, source);
 
