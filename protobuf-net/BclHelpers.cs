@@ -401,6 +401,7 @@ namespace ProtoBuf
                             throw new ProtoException("Unable to resolve type: " + typeName + " (you can use the TypeModel.DynamicTypeFormatting event to provide a custom mapping)");
                         }
                         key = source.GetTypeKey(ref type);
+                        if(key < 0) throw new InvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                         break;
                     case FieldObject:
                         bool isString = type == typeof(string);
@@ -489,6 +490,7 @@ namespace ProtoBuf
                     bool existing;
                     Type type = value.GetType();
                     key = dest.GetTypeKey(ref type);
+                    if (key < 0) throw new InvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                     int typeKey = dest.NetCache.AddObjectKey(type, out existing);
                     ProtoWriter.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Variant, dest);
                     ProtoWriter.WriteInt32(typeKey, dest);

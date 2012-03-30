@@ -208,6 +208,7 @@
     <Compile Include="Issues\Issue266.cs" />
     <Compile Include="Issues\Issue27.cs" />
     <Compile Include="Issues\Issue218.cs" />
+    <Compile Include="Issues\Issue284.cs" />
     <Compile Include="Issues\Issue29.cs" />
     <Compile Include="Issues\Issue32.cs" />
     <Compile Include="Issues\Issue41.cs" />
