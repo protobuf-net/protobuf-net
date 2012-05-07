@@ -224,7 +224,7 @@ namespace ProtoBuf
         /// <summary>
         /// Precompiles the serializer for a given type.
         /// </summary>
-        public static void PrepareSerializer<T>() where T : class
+        public static void PrepareSerializer<T>()
         { 
 #if FEAT_COMPILER
             RuntimeTypeModel.Default[typeof(T)].CompileInPlace();
