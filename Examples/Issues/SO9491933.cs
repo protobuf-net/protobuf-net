@@ -28,6 +28,10 @@ namespace Examples.Issues
             [ProtoMember(5, DynamicType = true)]
             public object Property5 { get; set; }
 
+            public override int GetHashCode()
+            {
+                return Property1.GetHashCode(); // minimal but sufficient
+            }
             public override bool Equals(object obj)
             {
                 A a = obj as A;
@@ -54,6 +58,10 @@ namespace Examples.Issues
                     return false;
 
                 return b.Property6 == this.Property6 && base.Equals(obj);
+            }
+            public override int GetHashCode()
+            {
+                return Property6.GetHashCode(); // minimal but sufficient
             }
         }
 

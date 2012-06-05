@@ -12,15 +12,12 @@ using System.Runtime.Serialization;
 using System.ComponentModel;
 using System.ServiceModel;
 #if NET_3_0
-using System.ServiceModel;
 #if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
-using ProtoBuf.ServiceModel;
 #endif
 #endif
 #if NET_3_5
 using System.Runtime.Serialization.Json;
 using Serializer = ProtoBuf.Serializer;
-using System.ComponentModel;
 #endif
 
 namespace Examples.SimpleStream

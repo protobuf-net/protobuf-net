@@ -25,7 +25,7 @@ namespace ProtoBuf.Serializers
 
                 Type itemType = null, defaultType = null;
 
-                model.ResolveListTypes(finalType, ref itemType, ref defaultType);
+                MetaType.ResolveListTypes(finalType, ref itemType, ref defaultType);
                 Type tmp = itemType == null ? finalType : itemType;
                 IProtoSerializer tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out wireType, false, false, false), serializer;
                 if (tail == null) throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
