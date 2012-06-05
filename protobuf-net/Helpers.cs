@@ -47,7 +47,7 @@ namespace ProtoBuf
         {
 #if MF
             Microsoft.SPOT.Trace.Print(message);
-#elif SILVERLIGHT || MONODROID || CF2 || WINRT || IOS
+#elif SILVERLIGHT || MONODROID || CF2 || WINRT || IOS || PORTABLE
             System.Diagnostics.Debug.WriteLine(message);
 #else
             System.Diagnostics.Trace.WriteLine(message);
@@ -302,10 +302,16 @@ namespace ProtoBuf
 #else
         internal static ConstructorInfo GetConstructor(Type type, Type[] parameterTypes, bool nonPublic)
         {
+#if PORTABLE
+            // pretty sure this will only ever return public, but...
+            ConstructorInfo ctor = type.GetConstructor(parameterTypes);
+            return (ctor != null && (nonPublic || ctor.IsPublic)) ? ctor : null;
+#else
             return type.GetConstructor(
                 nonPublic ? BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
                           : BindingFlags.Instance | BindingFlags.Public,
                     null, parameterTypes, null);
+#endif
 
         }
         internal static ConstructorInfo[] GetConstructors(Type type, bool nonPublic)

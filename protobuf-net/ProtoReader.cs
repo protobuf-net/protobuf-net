@@ -1122,7 +1122,7 @@ namespace ProtoBuf
         }
         internal static Exception AddErrorData(Exception exception, ProtoReader source)
         {
-#if !CF && !FX11
+#if !CF && !FX11 && !PORTABLE
             if (exception != null && source != null && !exception.Data.Contains("protoSource"))
             {
                 exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",

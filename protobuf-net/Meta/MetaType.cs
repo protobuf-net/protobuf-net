@@ -833,7 +833,7 @@ namespace ProtoBuf.Meta
             
             Type itemType = null;
             Type defaultType = null;
-            ResolveListTypes(effectiveType, ref itemType, ref defaultType);
+            model.ResolveListTypes(effectiveType, ref itemType, ref defaultType);
             object[] attribs = member.GetCustomAttributes(true);
             Attribute attrib;
 
@@ -1061,75 +1061,6 @@ namespace ProtoBuf.Meta
             return this;
         }
 
-        internal static void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType) {
-            if (type == null) return;
-            // handle arrays
-            if (type.IsArray)
-            {
-                if (type.GetArrayRank() != 1)
-                {
-                    throw new NotSupportedException("Multi-dimension arrays are supported");
-                }
-                itemType = type.GetElementType();
-                if (itemType == typeof(byte)) {
-                    defaultType = itemType = null;
-                } else {
-                    defaultType = type;
-                }
-            }
-            // handle lists
-            if (itemType == null) { itemType = TypeModel.GetListItemType(type); }
-
-            // check for nested data (not allowed)
-            if (itemType != null)
-            {
-                Type nestedItemType = null, nestedDefaultType = null;
-                ResolveListTypes(itemType, ref nestedItemType, ref nestedDefaultType);
-                if (nestedItemType != null)
-                {
-                    throw TypeModel.CreateNestedListsNotSupported();
-                }
-            }
-
-            if (itemType != null && defaultType == null)
-            {
-#if WINRT
-                TypeInfo typeInfo = type.GetTypeInfo();
-                if (typeInfo.IsClass && !typeInfo.IsAbstract && Helpers.GetConstructor(typeInfo, Helpers.EmptyTypes, true) != null)
-#else
-                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Helpers.EmptyTypes, true) != null)
-#endif
-                {
-                    defaultType = type;
-                }
-                if (defaultType == null)
-                {
-#if WINRT
-                    if (typeInfo.IsInterface)
-#else
-                    if (type.IsInterface)
-#endif
-                    {                       
-#if NO_GENERICS
-                        defaultType = typeof(ArrayList);
-#else
-                        Type[] genArgs;
-                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
-                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
-                        {
-                            defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
-                        }
-                        else
-                        {
-                            defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
-                        }
-#endif
-                    }
-                }
-                // verify that the default type is appropriate
-                if (defaultType != null && !type.IsAssignableFrom(defaultType)) { defaultType = null; }
-            }
-        }
         /// <summary>
         /// Adds a member (by name) to the MetaType, including an itemType and defaultType for representing lists
         /// </summary>
@@ -1164,7 +1095,7 @@ namespace ProtoBuf.Meta
                     throw new NotSupportedException(mi.MemberType.ToString());
             }
 
-            ResolveListTypes(miType, ref itemType, ref defaultType);
+            model.ResolveListTypes(miType, ref itemType, ref defaultType);
             ValueMember newField = new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType, DataFormat.Default, defaultValue);
             Add(newField);
             return newField;

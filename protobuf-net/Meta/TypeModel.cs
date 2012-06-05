@@ -793,7 +793,7 @@ namespace ProtoBuf.Meta
                         handled = true;
                     }
 #endif
-#if !SILVERLIGHT && !WINRT
+#if !SILVERLIGHT && !WINRT && !PORTABLE
                     if (!handled && listType == typeof(IDictionary))
                     {
                         concreteListType = typeof(Hashtable);
@@ -809,7 +809,7 @@ namespace ProtoBuf.Meta
                 }
 #endif
 
-#if !SILVERLIGHT && !WINRT
+#if !SILVERLIGHT && !WINRT && !PORTABLE
                 if (!handled)
                 {
                     concreteListType = typeof(ArrayList);

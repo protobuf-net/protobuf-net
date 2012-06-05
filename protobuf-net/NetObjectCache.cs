@@ -106,7 +106,7 @@ namespace ProtoBuf
 
             if(s == null)
             {
-#if CF          // CF has very limited proper object ref-tracking; so instead, we'll search it the hard way
+#if CF || PORTABLE // CF has very limited proper object ref-tracking; so instead, we'll search it the hard way
                 index = list.IndexOfReference(value);
 #else
                 if (objectKeys == null) 
@@ -140,7 +140,7 @@ namespace ProtoBuf
 
                 if (s == null)
                 {
-#if !CF // CF can't handle the object keys very well
+#if !CF && !PORTABLE // CF can't handle the object keys very well
                     objectKeys.Add(value, index);
 #endif
                 }
@@ -174,7 +174,7 @@ namespace ProtoBuf
 
         private System.Collections.Generic.Dictionary<string, int> stringKeys;
 
-#if !CF // CF lacks the ability to get a robust reference-based hash-code, so we'll do it the harder way instead
+#if !CF && !PORTABLE // CF lacks the ability to get a robust reference-based hash-code, so we'll do it the harder way instead
         private System.Collections.Generic.Dictionary<object, int> objectKeys;
         private sealed class ReferenceComparer : System.Collections.Generic.IEqualityComparer<object>
         {

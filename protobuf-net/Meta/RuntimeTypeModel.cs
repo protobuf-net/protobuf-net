@@ -850,7 +850,10 @@ namespace ProtoBuf.Meta
         {
             const string message = "Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection; please also see the LockContended event";
             opaqueToken = 0;
-#if CF2 || CF35
+#if PORTABLE
+            if(!Monitor.TryEnter(types)) throw new TimeoutException(message); // yes, we have to do this immediately - I'm not creating a "hot" loop, just because Sleep() doesn't exist...
+            opaqueToken = Interlocked.CompareExchange(ref contentionCounter, 0, 0); // just fetch current value (starts at 1)
+#elif CF2 || CF35
             int remaining = metadataTimeoutMilliseconds;
             bool lockTaken;
             do {
@@ -938,6 +941,84 @@ namespace ProtoBuf.Meta
         /// what caused the problem; this is only raised if the lock-owning code successfully completes.
         /// </summary>
         public event LockContentedEventHandler LockContended;
+
+        internal void ResolveListTypes(Type type, ref Type itemType, ref Type defaultType)
+        {
+            if (type == null) return;
+            if(Helpers.GetTypeCode(type) != ProtoTypeCode.Unknown) return; // don't try this[type] for inbuilts
+            if(this[type].IgnoreListHandling) return;
+
+            // handle arrays
+            if (type.IsArray)
+            {
+                if (type.GetArrayRank() != 1)
+                {
+                    throw new NotSupportedException("Multi-dimension arrays are supported");
+                }
+                itemType = type.GetElementType();
+                if (itemType == typeof(byte))
+                {
+                    defaultType = itemType = null;
+                }
+                else
+                {
+                    defaultType = type;
+                }
+            }
+            // handle lists
+            if (itemType == null) { itemType = TypeModel.GetListItemType(type); }
+
+            // check for nested data (not allowed)
+            if (itemType != null)
+            {
+                Type nestedItemType = null, nestedDefaultType = null;
+                ResolveListTypes(itemType, ref nestedItemType, ref nestedDefaultType);
+                if (nestedItemType != null)
+                {
+                    throw TypeModel.CreateNestedListsNotSupported();
+                }
+            }
+
+            if (itemType != null && defaultType == null)
+            {
+#if WINRT
+                TypeInfo typeInfo = type.GetTypeInfo();
+                if (typeInfo.IsClass && !typeInfo.IsAbstract && Helpers.GetConstructor(typeInfo, Helpers.EmptyTypes, true) != null)
+#else
+                if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Helpers.EmptyTypes, true) != null)
+#endif
+                {
+                    defaultType = type;
+                }
+                if (defaultType == null)
+                {
+#if WINRT
+                    if (typeInfo.IsInterface)
+#else
+                    if (type.IsInterface)
+#endif
+                    {
+#if NO_GENERICS
+                        defaultType = typeof(ArrayList);
+#else
+                        Type[] genArgs;
+                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
+                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
+                        {
+                            defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
+                        }
+                        else
+                        {
+                            defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
+                        }
+#endif
+                    }
+                }
+                // verify that the default type is appropriate
+                if (defaultType != null && !type.IsAssignableFrom(defaultType)) { defaultType = null; }
+            }
+        }
+
         
     }
     /// <summary>

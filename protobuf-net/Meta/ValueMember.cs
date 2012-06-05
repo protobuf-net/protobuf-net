@@ -257,6 +257,7 @@ namespace ProtoBuf.Meta
             {
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 WireType wireType;
+                
                 Type finalType = itemType == null ? memberType : itemType;
                 IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType, OverwriteList);
                 if (ser == null) throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
