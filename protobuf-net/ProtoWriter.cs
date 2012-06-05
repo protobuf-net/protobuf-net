@@ -448,7 +448,6 @@ namespace ProtoBuf
             if (dest != null)
             {
                 Flush(this);
-                dest.Flush(); // down and down it goes...
                 dest = null;
             }
             model = null;
