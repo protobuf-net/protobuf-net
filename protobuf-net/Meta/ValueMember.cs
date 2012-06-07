@@ -257,10 +257,14 @@ namespace ProtoBuf.Meta
             {
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 WireType wireType;
-                
                 Type finalType = itemType == null ? memberType : itemType;
+                if(finalType.Name == "B")
+                {
+                    Console.WriteLine("a");
+                }
                 IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType, OverwriteList);
                 if (ser == null) throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
+
                 // apply tags
                 if (itemType != null && SupportNull)
                 {
@@ -456,7 +460,7 @@ namespace ProtoBuf.Meta
                 }
                 if (key >= 0)
                 {
-                    defaultWireType = WireType.String;
+                    defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return new SubItemSerializer(type, key, model[type], true);
                 }
             }

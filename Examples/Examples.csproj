@@ -224,6 +224,7 @@
     <Compile Include="Issues\Issue80.cs" />
     <Compile Include="Issues\SO10115538.cs" />
     <Compile Include="Issues\SO10841807.cs" />
+    <Compile Include="Issues\SO1930209.cs" />
     <Compile Include="Issues\SO3083847.cs" />
     <Compile Include="Issues\SO3101816.cs" />
     <Compile Include="Issues\SO3261310.cs" />
@@ -257,9 +258,6 @@
     <Compile Include="Issues\SO9398578.cs" />
     <Compile Include="Issues\SO9408133.cs" />
     <Compile Include="Issues\SO9491933.cs" />
-    <Compile Include="Issues\SO9575661.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListsWithInheritance.cs" />

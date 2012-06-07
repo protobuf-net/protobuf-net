@@ -1247,6 +1247,18 @@ namespace ProtoBuf.Meta
             }
         }
 #endif
+
+#if DEBUG // this is used by some unit tests only, to ensure no buffering when buffering is disabled
+        private bool forwardsOnly;
+        /// <summary>
+        /// If true, buffering of nested objects is disabled
+        /// </summary>
+        public bool ForwardsOnly
+        {
+            get { return forwardsOnly; }
+            set { forwardsOnly = value; }
+        }
+#endif
     }
 
 }

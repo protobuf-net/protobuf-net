@@ -314,6 +314,12 @@ namespace ProtoBuf
                     writer.wireType = WireType.None;
                     return new SubItemToken(-writer.fieldNumber);
                 case WireType.String:
+#if DEBUG
+                    if(writer.model != null && writer.model.ForwardsOnly)
+                    {
+                        throw new ProtoException("Should not be buffering data");
+                    }
+#endif
                     writer.wireType = WireType.None;
                     DemandSpace(32, writer); // make some space in anticipation...
                     writer.flushLock++;
