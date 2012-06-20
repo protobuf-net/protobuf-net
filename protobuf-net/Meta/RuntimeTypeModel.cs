@@ -174,7 +174,7 @@ namespace ProtoBuf.Meta
 
                         bool shouldAdd = AutoAddMissingTypes || addEvenIfAutoDisabled;
                         if (!shouldAdd || (
-                            !type.IsEnum && addWithContractOnly && family == MetaType.AttributeFamily.None)
+                            !BclHelpers.IsEnum(type) && addWithContractOnly && family == MetaType.AttributeFamily.None)
                             )
                         {
                             if (demand) ThrowUnexpectedType(type);

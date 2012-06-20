@@ -13,7 +13,7 @@ namespace ProtoBuf.Meta
         private WireType GetWireType(ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
         {
             modelKey = -1;
-            if (type.IsEnum)
+            if (BclHelpers.IsEnum(type))
             {
                 modelKey = GetKey(ref type);
                 return WireType.Variant;
@@ -72,7 +72,7 @@ namespace ProtoBuf.Meta
 
             if (modelKey >= 0)
             {   // write the header, but defer to the model
-                if (type.IsEnum)
+                if (BclHelpers.IsEnum(type))
                 { // no header
                     Serialize(modelKey, value, writer);
                     return true;
@@ -586,7 +586,7 @@ namespace ProtoBuf.Meta
         private object DeserializeCore(ProtoReader reader, Type type, object value, bool noAutoCreate)
         {
             int key = GetKey(ref type);
-            if (key >= 0 && !type.IsEnum)
+            if (key >= 0 && !BclHelpers.IsEnum(type))
             {
                 return Deserialize(key, value, reader);
             }
@@ -638,13 +638,24 @@ namespace ProtoBuf.Meta
         internal static Type GetListItemType(Type listType)
         {
             Helpers.DebugAssert(listType != null);
+
+#if WINRT
+            TypeInfo listTypeInfo = listType.GetTypeInfo();
+            if (listType == typeof(string) || listType.IsArray
+                || !typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(listTypeInfo)) return null;
+#else
             if (listType == typeof(string) || listType.IsArray
                 || !typeof(IEnumerable).IsAssignableFrom(listType)) return null;
-
+#endif
+            
             BasicList candidates = new BasicList();
-            foreach (MethodInfo method in listType.GetMethods(BindingFlags.Public | BindingFlags.Instance))
+#if WINRT
+            foreach (MethodInfo method in listType.GetRuntimeMethods())
+#else
+            foreach (MethodInfo method in listType.GetMethods())
+#endif
             {
-                if (method.Name != "Add") continue;
+                if (method.IsStatic || method.Name != "Add") continue;
                 ParameterInfo[] parameters = method.GetParameters();
                 if (parameters.Length == 1 && !candidates.Contains(parameters[0].ParameterType))
                 {
@@ -652,6 +663,20 @@ namespace ProtoBuf.Meta
                 }
             }
 #if !NO_GENERICS
+#if WINRT
+            foreach (Type iType in listTypeInfo.ImplementedInterfaces)
+            {
+                TypeInfo iTypeInfo = iType.GetTypeInfo();
+                if (iTypeInfo.IsGenericType && iTypeInfo.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ICollection<>))
+                {
+                    Type[] iTypeArgs = iTypeInfo.GenericTypeArguments;
+                    if (!candidates.Contains(iTypeArgs[0]))
+                    {
+                        candidates.Add(iTypeArgs[0]);
+                    }
+                }
+            }
+#else
             foreach (Type iType in listType.GetInterfaces())
             {
                 if (iType.IsGenericType && iType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ICollection<>))
@@ -664,6 +689,20 @@ namespace ProtoBuf.Meta
                 }
             }
 #endif
+#endif
+
+#if WINRT
+            // more convenient GetProperty overload not supported on all platforms
+            foreach (PropertyInfo indexer in listType.GetRuntimeProperties())
+            {
+                if (indexer.Name != "Item" || candidates.Contains(indexer.PropertyType)) continue;
+                ParameterInfo[] args = indexer.GetIndexParameters();
+                if (args.Length != 1 || args[0].ParameterType != typeof(int)) continue;
+                MethodInfo getter = indexer.GetMethod;
+                if (getter == null || getter.IsStatic) continue;
+                candidates.Add(indexer.PropertyType);
+            }
+#else
             // more convenient GetProperty overload not supported on all platforms
             foreach (PropertyInfo indexer in listType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
@@ -672,6 +711,7 @@ namespace ProtoBuf.Meta
                 if (args.Length != 1 || args[0].ParameterType != typeof(int)) continue;
                 candidates.Add(indexer.PropertyType);
             }
+#endif
 
             switch (candidates.Count)
             {
@@ -690,8 +730,13 @@ namespace ProtoBuf.Meta
 
         private static bool CheckDictionaryAccessors(Type pair, Type value)
         {
+            
 #if NO_GENERICS
             return false;
+#elif WINRT
+            TypeInfo finalType = pair.GetTypeInfo();
+            return finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
+                && finalType.GenericTypeArguments[1] == value;
 #else
             return pair.IsGenericType && pair.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
                 && pair.GetGenericArguments()[1] == value;
@@ -786,12 +831,22 @@ namespace ProtoBuf.Meta
                     listType.FullName.IndexOf("Dictionary") >= 0) // have to try to be frugal here...
                 {
 #if !NO_GENERICS
+#if WINRT
+                    TypeInfo finalType = listType.GetTypeInfo();
+                    if (finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
+                    {
+                        Type[] genericTypes = listType.GenericTypeArguments;
+                        concreteListType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genericTypes);
+                        handled = true;
+                    }
+#else
                     if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
                     {
                         Type[] genericTypes = listType.GetGenericArguments();
                         concreteListType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genericTypes);
                         handled = true;
                     }
+#endif
 #endif
 #if !SILVERLIGHT && !WINRT && !PORTABLE
                     if (!handled && listType == typeof(IDictionary))
@@ -960,7 +1015,7 @@ namespace ProtoBuf.Meta
             if (tmp != null) return tmp;
 #endif
 
-#if !CF
+#if !(WINRT || CF)
             // EF POCO
             if (type.FullName.StartsWith("System.Data.Entity.DynamicProxies.")) return type.BaseType;
 
@@ -973,7 +1028,7 @@ namespace ProtoBuf.Meta
                     case "NHibernate.Proxy.INHibernateProxy":
                     case "NHibernate.Proxy.DynamicProxy.IProxy":
                     case "NHibernate.Intercept.IFieldInterceptorAccessor":
-                         return type.BaseType;
+                        return type.BaseType;
                 }
             }
 #endif
@@ -1063,7 +1118,8 @@ namespace ProtoBuf.Meta
             Type type = value.GetType();
             int key = GetKey(ref type);
 
-            if (key >= 0 && !type.IsEnum) {
+            if (key >= 0 && !BclHelpers.IsEnum(type))
+            {
                 using (MemoryStream ms = new MemoryStream())
                 {
                     using(ProtoWriter writer = new ProtoWriter(ms, this, null))

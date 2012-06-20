@@ -1,6 +1,5 @@
-﻿
-using System;
-
+﻿using System;
+using System.Reflection;
 namespace ProtoBuf
 {
     internal enum TimeSpanScale
@@ -511,6 +510,15 @@ namespace ProtoBuf
                 }
             }
             ProtoWriter.EndSubItem(token, dest);
+        }
+
+        internal static bool IsEnum(Type type)
+        {
+#if WINRT
+            return type.GetTypeInfo().IsEnum;
+#else
+            return type.IsEnum;
+#endif
         }
     }
 }

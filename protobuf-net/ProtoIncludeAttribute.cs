@@ -70,7 +70,10 @@ namespace ProtoBuf
             {
                 int i = KnownTypeName.IndexOf(',');
                 string fullName = (i > 0 ? KnownTypeName.Substring(0, i) : KnownTypeName).Trim();
-                Type type = (assembly == null ? Assembly.GetCallingAssembly() : assembly).GetType(fullName);
+#if !WINRT
+                if (assembly == null) assembly = Assembly.GetCallingAssembly();
+#endif
+                Type type = assembly == null ? null : assembly.GetType(fullName);
                 if (type != null) return type;
             }
             catch { }

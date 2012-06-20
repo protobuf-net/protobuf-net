@@ -186,7 +186,6 @@
     <Compile Include="Meta\TypeModel.cs" />
     <Compile Include="Meta\ValueMember.cs" />
     <Compile Include="NetObjectCache.cs" />
-    <Compile Include="NonGeneric.cs" />
     <Compile Include="PrefixStyle.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtoContractAttribute.cs" />

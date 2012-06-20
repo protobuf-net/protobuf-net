@@ -40,7 +40,7 @@ namespace ProtoBuf
                         byte[] tmp = new byte[offset + len];
                         Helpers.BlockCopy(buffer, 0, tmp, 0, offset);
 
-#if PORTABLE // no GetBuffer() - fine, we'll use Read instead
+#if PORTABLE || WINRT // no GetBuffer() - fine, we'll use Read instead
                         int bytesRead;
                         long oldPos = ms.Position;
                         ms.Position = 0;

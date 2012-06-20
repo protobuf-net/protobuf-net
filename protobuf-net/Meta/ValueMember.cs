@@ -61,11 +61,11 @@ namespace ProtoBuf.Meta
         {
             if (member == null) throw new ArgumentNullException("member");
             if (parentType == null) throw new ArgumentNullException("parentType");
-            if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException("fieldNumber");
+            if (fieldNumber < 1 && !BclHelpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
 
             this.member = member;
             this.parentType = parentType;
-                        if (fieldNumber < 1 && !parentType.IsEnum) throw new ArgumentOutOfRangeException("fieldNumber");
+                        if (fieldNumber < 1 && !BclHelpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
             if (defaultValue != null && !memberType.IsInstanceOfType(defaultValue))
             {
                 defaultValue = ParseDefaultValue(memberType, defaultValue);
@@ -100,7 +100,7 @@ namespace ProtoBuf.Meta
             if (value is string)
             {
                 string s = (string)value;
-                if (type.IsEnum) return Enum.Parse(type, s, true);
+                if (BclHelpers.IsEnum(type)) return Enum.Parse(type, s, true);
                 switch (Helpers.GetTypeCode(type))
                 {
                     case ProtoTypeCode.Boolean: return bool.Parse(s);
@@ -125,7 +125,7 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Guid: return new Guid(s); 
                 }
             }
-            if (type.IsEnum) return Enum.ToObject(type, value);
+            if (BclHelpers.IsEnum(type)) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
@@ -355,7 +355,7 @@ namespace ProtoBuf.Meta
 #if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;
 #endif
-            if (type.IsEnum)
+            if (BclHelpers.IsEnum(type))
             {
                 if (model != null)
                 {

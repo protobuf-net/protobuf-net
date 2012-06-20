@@ -243,7 +243,7 @@ namespace ProtoBuf.Meta
 #endif
             this.model = model;
             
-            if (type.IsEnum)
+            if (BclHelpers.IsEnum(type))
             {
 #if WINRT
                 EnumPassthru = typeInfo.IsDefined(typeof(FlagsAttribute), false);
@@ -299,7 +299,7 @@ namespace ProtoBuf.Meta
 
         private IProtoTypeSerializer BuildSerializer()
         {
-            if (type.IsEnum)
+            if (BclHelpers.IsEnum(type))
             {
                 return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(type, GetEnumMap()));
             }
@@ -414,7 +414,7 @@ namespace ProtoBuf.Meta
             {
                 SetFlag(OPTIONS_AutoTuple, true, true);
             }
-            bool isEnum = type.IsEnum;
+            bool isEnum = BclHelpers.IsEnum(type);
             if(family ==  AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
             BasicList partialIgnores = null, partialMembers = null;
             int dataMemberOffset = 0, implicitFirstTag = 1;
