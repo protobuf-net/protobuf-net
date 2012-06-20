@@ -172,7 +172,6 @@
     </Compile>
     <Compile Include="Extensible.cs" />
     <Compile Include="ExtensibleUtil.cs" />
-    <Compile Include="GlobalOptions.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="IExtensible.cs" />
     <Compile Include="IExtension.cs" />
