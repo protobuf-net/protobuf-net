@@ -511,14 +511,5 @@ namespace ProtoBuf
             }
             ProtoWriter.EndSubItem(token, dest);
         }
-
-        internal static bool IsEnum(Type type)
-        {
-#if WINRT
-            return type.GetTypeInfo().IsEnum;
-#else
-            return type.IsEnum;
-#endif
-        }
     }
 }

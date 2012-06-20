@@ -132,15 +132,9 @@ namespace ProtoBuf.Serializers
         }
         Type GetMemberType(int index)
         {
-            switch (members[index].MemberType)
-            {
-                case MemberTypes.Field:
-                    return ((FieldInfo)members[index]).FieldType;
-                case MemberTypes.Property:
-                    return ((PropertyInfo)members[index]).PropertyType;
-                default:
-                    throw new InvalidOperationException();
-            }
+            Type result = Helpers.GetMemberType(members[index]);
+            if (result == null) throw new InvalidOperationException();
+            return result;
         }
 #if FEAT_COMPILER
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

@@ -123,6 +123,17 @@ namespace ProtoBuf
 #endif
         }
 #if WINRT
+        internal static MemberInfo GetInstanceMember(TypeInfo declaringType, string name)
+        {
+            PropertyInfo prop = declaringType.GetDeclaredProperty(name);
+            MethodInfo method;
+            if (prop != null && (method = Helpers.GetGetMethod(prop, true)) != null && !method.IsStatic) return prop;
+
+            FieldInfo field = declaringType.GetDeclaredField(name);
+            if (field != null && !field.IsStatic) return field;
+
+            return null;
+        }
         internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name)
         {
             foreach (MethodInfo method in declaringType.DeclaredMethods)
@@ -173,6 +184,16 @@ namespace ProtoBuf
                 null, types, null);
         }
 #endif
+
+        internal static bool IsSubclassOf(Type type, Type baseClass)
+        {
+#if WINRT
+            return type.GetTypeInfo().IsSubclassOf(baseClass);
+#else
+            return type.IsSubclassOf(baseClass);
+#endif
+        }
+
         public static bool IsInfinity(double value)
         {
 #if MF
@@ -252,8 +273,18 @@ namespace ProtoBuf
 #endif
         }
 
+        internal static bool IsEnum(Type type)
+        {
+#if WINRT
+            return type.GetTypeInfo().IsEnum;
+#else
+            return type.IsEnum;
+#endif
+        }
+
         internal static MethodInfo GetGetMethod(PropertyInfo property, bool nonPublic)
         {
+            if (property == null) return null;
 #if WINRT
             MethodInfo method = property.GetMethod;
             if (!nonPublic && method != null && !method.IsPublic) method = null;
@@ -264,12 +295,24 @@ namespace ProtoBuf
         }
         internal static MethodInfo GetSetMethod(PropertyInfo property, bool nonPublic)
         {
+            if (property == null) return null;
 #if WINRT
             MethodInfo method = property.SetMethod;
             if (!nonPublic && method != null && !method.IsPublic) method = null;
             return method;
 #else
             return property.GetSetMethod(nonPublic);
+#endif
+        }
+
+        internal static object[] GetCustomAttributes(Type type, bool inherit)
+        {
+#if WINRT
+            System.Collections.Generic.List<object> list = new System.Collections.Generic.List<object>();
+            list.AddRange(type.GetTypeInfo().GetCustomAttributes(inherit));
+            return list.ToArray();
+#else
+            return type.GetCustomAttributes(inherit);
 #endif
         }
 
@@ -299,6 +342,10 @@ namespace ProtoBuf
             return System.Linq.Enumerable.ToArray(
                 System.Linq.Enumerable.Where(typeInfo.DeclaredConstructors, x => x.IsPublic));
         }
+        internal static PropertyInfo GetProperty(TypeInfo type, string name)
+        {
+            return type.GetDeclaredProperty(name);
+        }
 #else
         internal static ConstructorInfo GetConstructor(Type type, Type[] parameterTypes, bool nonPublic)
         {
@@ -320,8 +367,76 @@ namespace ProtoBuf
                 nonPublic ? BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
                           : BindingFlags.Instance | BindingFlags.Public);
         }
+        internal static PropertyInfo GetProperty(Type type, string name)
+        {
+            return type.GetProperty(name);
+        }
 #endif
 
+
+        internal static MemberInfo[] GetInstanceFieldsAndProperties(Type type, bool publicOnly)
+        {
+#if WINRT
+            System.Collections.Generic.List<MemberInfo> members = new System.Collections.Generic.List<MemberInfo>();
+            foreach(FieldInfo field in type.GetRuntimeFields())
+            {
+                if(field.IsStatic) continue;
+                if(field.IsPublic || !publicOnly) members.Add(field);
+            }
+            foreach(PropertyInfo prop in type.GetRuntimeProperties())
+            {
+                MethodInfo getter = Helpers.GetGetMethod(prop, true);
+                if(getter == null || getter.IsStatic) continue;
+                if(getter.IsPublic || !publicOnly) members.Add(prop);
+            }
+            return members.ToArray();
+#else
+            BindingFlags flags = publicOnly ? BindingFlags.Public | BindingFlags.Instance : BindingFlags.Public | BindingFlags.Instance | BindingFlags.NonPublic;
+            PropertyInfo[] props = type.GetProperties(flags);
+            FieldInfo[] fields = type.GetFields(flags);
+            MemberInfo[] members = new MemberInfo[fields.Length + props.Length];
+            props.CopyTo(members, 0);
+            fields.CopyTo(members, props.Length);
+            return members;
+#endif
+        }
+
+        internal static Type GetMemberType(MemberInfo member)
+        {
+#if WINRT
+            PropertyInfo prop = member as PropertyInfo;
+            if (prop != null) return prop.PropertyType;
+            FieldInfo fld = member as FieldInfo;
+            return fld == null ? null : fld.FieldType;
+#else
+            switch(member.MemberType)
+            {
+                case MemberTypes.Field: return ((FieldInfo) member).FieldType;
+                case MemberTypes.Property: return ((PropertyInfo) member).PropertyType;
+                default: return null;
+            }
+#endif
+        }
+
+
+        internal static object[] GetCustomAttributes(MemberInfo member, bool inherited)
+        {
+#if WINRT
+            System.Collections.Generic.List<object> list = new System.Collections.Generic.List<object>();
+            list.AddRange(member.GetCustomAttributes(inherited));
+            return list.ToArray();
+#else
+            return Attribute.GetCustomAttributes(member, inherited);
+#endif
+        }
+        internal static bool IsAssignableFrom(Type target, Type type)
+        {
+#if WINRT
+            return target.GetTypeInfo().IsAssignableFrom(type.GetTypeInfo());
+#else
+            return target.IsAssignableFrom(type);
+#endif
+        }
     }
     /// <summary>
     /// Intended to be a direct map to regular TypeCode, but:

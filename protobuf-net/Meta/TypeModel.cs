@@ -13,7 +13,7 @@ namespace ProtoBuf.Meta
         private WireType GetWireType(ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
         {
             modelKey = -1;
-            if (BclHelpers.IsEnum(type))
+            if (Helpers.IsEnum(type))
             {
                 modelKey = GetKey(ref type);
                 return WireType.Variant;
@@ -72,7 +72,7 @@ namespace ProtoBuf.Meta
 
             if (modelKey >= 0)
             {   // write the header, but defer to the model
-                if (BclHelpers.IsEnum(type))
+                if (Helpers.IsEnum(type))
                 { // no header
                     Serialize(modelKey, value, writer);
                     return true;
@@ -586,7 +586,7 @@ namespace ProtoBuf.Meta
         private object DeserializeCore(ProtoReader reader, Type type, object value, bool noAutoCreate)
         {
             int key = GetKey(ref type);
-            if (key >= 0 && !BclHelpers.IsEnum(type))
+            if (key >= 0 && !Helpers.IsEnum(type))
             {
                 return Deserialize(key, value, reader);
             }
@@ -1118,7 +1118,7 @@ namespace ProtoBuf.Meta
             Type type = value.GetType();
             int key = GetKey(ref type);
 
-            if (key >= 0 && !BclHelpers.IsEnum(type))
+            if (key >= 0 && !Helpers.IsEnum(type))
             {
                 using (MemoryStream ms = new MemoryStream())
                 {

@@ -174,7 +174,7 @@ namespace ProtoBuf.Meta
 
                         bool shouldAdd = AutoAddMissingTypes || addEvenIfAutoDisabled;
                         if (!shouldAdd || (
-                            !BclHelpers.IsEnum(type) && addWithContractOnly && family == MetaType.AttributeFamily.None)
+                            !Helpers.IsEnum(type) && addWithContractOnly && family == MetaType.AttributeFamily.None)
                             )
                         {
                             if (demand) ThrowUnexpectedType(type);
@@ -1002,8 +1002,13 @@ namespace ProtoBuf.Meta
                         defaultType = typeof(ArrayList);
 #else
                         Type[] genArgs;
+#if WINRT
+                        if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
+                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = typeInfo.GenericTypeArguments))
+#else
                         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
                             && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
+#endif
                         {
                             defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
                         }
@@ -1015,7 +1020,7 @@ namespace ProtoBuf.Meta
                     }
                 }
                 // verify that the default type is appropriate
-                if (defaultType != null && !type.IsAssignableFrom(defaultType)) { defaultType = null; }
+                if (defaultType != null && !Helpers.IsAssignableFrom(type, defaultType)) { defaultType = null; }
             }
         }
 

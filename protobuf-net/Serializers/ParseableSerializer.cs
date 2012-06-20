@@ -13,9 +13,27 @@ namespace ProtoBuf.Serializers
         public static ParseableSerializer TryCreate(Type type)
         {
             if (type == null) throw new ArgumentNullException("type");
+#if WINRT || PORTABLE
+            MethodInfo method = null;
+            
+#if WINRT
+            foreach (MethodInfo tmp in type.GetTypeInfo().GetDeclaredMethods("Parse"))
+#else
+            foreach (MethodInfo tmp in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
+#endif
+            {
+                ParameterInfo[] p;
+                if (tmp.Name == "Parse" && tmp.IsPublic && tmp.IsStatic && tmp.DeclaringType == type && (p = tmp.GetParameters()) != null && p.Length == 1 && p[0].ParameterType == typeof(string))
+                {
+                    method = tmp;
+                    break;
+                }
+            }
+#else
             MethodInfo method = type.GetMethod("Parse",
                 BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
                 null, new Type[] { typeof(string) }, null);
+#endif
             if (method != null && method.ReturnType == type)
             {
                 if (Helpers.IsValueType(type))

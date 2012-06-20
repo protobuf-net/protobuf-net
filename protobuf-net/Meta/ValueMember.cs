@@ -61,12 +61,16 @@ namespace ProtoBuf.Meta
         {
             if (member == null) throw new ArgumentNullException("member");
             if (parentType == null) throw new ArgumentNullException("parentType");
-            if (fieldNumber < 1 && !BclHelpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
+            if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
 
             this.member = member;
             this.parentType = parentType;
-                        if (fieldNumber < 1 && !BclHelpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
+                        if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
+#if WINRT
+            if (defaultValue != null && defaultValue.GetType() != memberType)
+#else
             if (defaultValue != null && !memberType.IsInstanceOfType(defaultValue))
+#endif
             {
                 defaultValue = ParseDefaultValue(memberType, defaultValue);
             }
@@ -100,7 +104,7 @@ namespace ProtoBuf.Meta
             if (value is string)
             {
                 string s = (string)value;
-                if (BclHelpers.IsEnum(type)) return Enum.Parse(type, s, true);
+                if (Helpers.IsEnum(type)) return Enum.Parse(type, s, true);
                 switch (Helpers.GetTypeCode(type))
                 {
                     case ProtoTypeCode.Boolean: return bool.Parse(s);
@@ -125,7 +129,7 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Guid: return new Guid(s); 
                 }
             }
-            if (BclHelpers.IsEnum(type)) return Enum.ToObject(type, value);
+            if (Helpers.IsEnum(type)) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
@@ -258,10 +262,6 @@ namespace ProtoBuf.Meta
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 WireType wireType;
                 Type finalType = itemType == null ? memberType : itemType;
-                if(finalType.Name == "B")
-                {
-                    Console.WriteLine("a");
-                }
                 IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType, OverwriteList);
                 if (ser == null) throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
 
@@ -308,14 +308,22 @@ namespace ProtoBuf.Meta
                 }
                 if (member != null)
                 {
-                    switch (member.MemberType)
+                    PropertyInfo prop = member as PropertyInfo;
+                    if (prop != null)
                     {
-                        case MemberTypes.Property:
-                            ser = new PropertyDecorator(parentType, (PropertyInfo)member, ser); break;
-                        case MemberTypes.Field:
-                            ser = new FieldDecorator(parentType, (FieldInfo)member, ser); break;
-                        default:
+                        ser = new PropertyDecorator(parentType, (PropertyInfo)member, ser);
+                    }
+                    else
+                    {
+                        FieldInfo fld = member as FieldInfo;
+                        if (fld != null)
+                        {
+                            ser = new FieldDecorator(parentType, (FieldInfo)member, ser);
+                        }
+                        else
+                        {
                             throw new InvalidOperationException();
+                        }
                     }
                     if (getSpecified != null || setSpecified != null)
                     {
@@ -355,7 +363,7 @@ namespace ProtoBuf.Meta
 #if !NO_GENERICS
             type = Nullable.GetUnderlyingType(type) ?? type;
 #endif
-            if (BclHelpers.IsEnum(type))
+            if (Helpers.IsEnum(type))
             {
                 if (model != null)
                 {

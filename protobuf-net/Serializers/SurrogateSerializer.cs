@@ -26,7 +26,7 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(rootTail != null, "rootTail");
             Helpers.DebugAssert(rootTail.RequiresOldValue, "RequiresOldValue");
             Helpers.DebugAssert(!rootTail.ReturnsValue, "ReturnsValue");
-            Helpers.DebugAssert(declaredType == rootTail.ExpectedType || declaredType.IsSubclassOf(rootTail.ExpectedType));
+            Helpers.DebugAssert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
             this.forType = forType;
             this.declaredType = declaredType;
             this.rootTail = rootTail;
@@ -35,8 +35,17 @@ namespace ProtoBuf.Serializers
         }
         private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
         {
+#if WINRT
+            System.Collections.Generic.List<MethodInfo> list = new System.Collections.Generic.List<MethodInfo>();
+            foreach (var item in type.GetRuntimeMethods())
+            {
+                if (item.IsStatic) list.Add(item);
+            }
+            MethodInfo[] found = list.ToArray();
+#else
             const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
             MethodInfo[] found = type.GetMethods(flags);
+#endif
             for(int i = 0 ; i < found.Length ; i++)
             {
                 MethodInfo m = found[i];

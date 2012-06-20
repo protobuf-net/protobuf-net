@@ -276,20 +276,36 @@ namespace ProtoBuf.Serializers
             }
         }
 #endif
+
+#if WINRT
+        private static readonly TypeInfo ienumerableType = typeof(IEnumerator).GetTypeInfo();
+#else
+        private static readonly Type ienumerableType = typeof(IEnumerator);
+#endif
         MethodInfo GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current)
         {
-            MethodInfo getEnumerator = Helpers.GetInstanceMethod(ExpectedType,"GetEnumerator",null);
-            Type iteratorType, itemType = Tail.ExpectedType;
+            
+#if WINRT
+            TypeInfo enumeratorType, iteratorType, expectedType = ExpectedType.GetTypeInfo();
+#else
+            Type enumeratorType, iteratorType, expectedType = ExpectedType;
+#endif
+            MethodInfo getEnumerator = Helpers.GetInstanceMethod(expectedType, "GetEnumerator", null);
+            Type itemType = Tail.ExpectedType;
             
             if (getEnumerator != null)
             {
-                iteratorType = getEnumerator.ReturnType;
+                iteratorType = getEnumerator.ReturnType
+#if WINRT
+                    .GetTypeInfo()
+#endif
+                    ;
                 moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext", null);
-                PropertyInfo prop = iteratorType.GetProperty("Current", BindingFlags.Public | BindingFlags.Instance);
+                PropertyInfo prop = Helpers.GetProperty(iteratorType, "Current");
                 current = prop == null ? null : Helpers.GetGetMethod(prop, false);
-                if (moveNext == null && typeof(IEnumerator).IsAssignableFrom(iteratorType))
+                if (moveNext == null && ienumerableType.IsAssignableFrom(iteratorType))
                 {
-                    moveNext = Helpers.GetInstanceMethod(typeof(IEnumerator), "MoveNext", null);
+                    moveNext = Helpers.GetInstanceMethod(ienumerableType, "MoveNext", null);
                 }
                 // fully typed
                 if (moveNext != null && moveNext.ReturnType == typeof(bool)
@@ -299,23 +315,34 @@ namespace ProtoBuf.Serializers
                 }
                 moveNext = current = getEnumerator = null;
             }
-            Type enumeratorType;
 #if !NO_GENERICS
-            enumeratorType = typeof(System.Collections.Generic.IEnumerable<>).MakeGenericType(itemType);
-            if (enumeratorType.IsAssignableFrom(ExpectedType))
+            enumeratorType = typeof(System.Collections.Generic.IEnumerable<>).MakeGenericType(itemType)
+#if WINRT
+                .GetTypeInfo()
+#endif
+                ;
+            if (enumeratorType.IsAssignableFrom(expectedType))
             {
-                getEnumerator = enumeratorType.GetMethod("GetEnumerator");
-                iteratorType = getEnumerator.ReturnType;
-                moveNext = typeof(IEnumerator).GetMethod("MoveNext");
-                current = Helpers.GetGetMethod(iteratorType.GetProperty("Current"), false);
+                getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
+                iteratorType = getEnumerator.ReturnType
+#if WINRT
+                    .GetTypeInfo()
+#endif                    
+                    ;
+                moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext");
+                current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current"), false);
                 return getEnumerator;
             }
 #endif
-            enumeratorType = typeof(IEnumerable);
-            getEnumerator = enumeratorType.GetMethod("GetEnumerator");
-            iteratorType = getEnumerator.ReturnType;
-            moveNext = iteratorType.GetMethod("MoveNext");
-            current = Helpers.GetGetMethod(iteratorType.GetProperty("Current"), false);
+            enumeratorType = ienumerableType;
+            getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
+            iteratorType = getEnumerator.ReturnType
+#if WINRT
+                .GetTypeInfo()
+#endif
+                ;
+            moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext");
+            current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType,"Current"), false);
             return getEnumerator;
         }
 #if FEAT_COMPILER

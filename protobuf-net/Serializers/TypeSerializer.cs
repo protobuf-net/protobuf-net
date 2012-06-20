@@ -141,7 +141,7 @@ namespace ProtoBuf.Serializers
             for (int i = 0; i < serializers.Length; i++)
             {
                 IProtoSerializer ser = serializers[i];
-                if (ser.ExpectedType != forType && ser.ExpectedType.IsAssignableFrom(actualType))
+                if (ser.ExpectedType != forType && Helpers.IsAssignableFrom(ser.ExpectedType, actualType))
                 {
                     return ser;
                 }
@@ -268,7 +268,7 @@ namespace ProtoBuf.Serializers
             {
                 if (!hasConstructor) TypeModel.ThrowCannotCreateInstance(constructType);
                 obj = Activator.CreateInstance(constructType
-#if !CF && !SILVERLIGHT
+#if !CF && !SILVERLIGHT && !WINRT
                     , true
 #endif
                     );

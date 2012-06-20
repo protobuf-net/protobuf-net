@@ -35,7 +35,11 @@ namespace ProtoBuf.Serializers
         }
         static MethodInfo GetShadowSetter(PropertyInfo property)
         {
+#if WINRT            
+            MethodInfo method = Helpers.GetInstanceMethod(property.DeclaringType.GetTypeInfo(), "Set" + property.Name, new Type[] { property.PropertyType });
+#else
             MethodInfo method = property.ReflectedType.GetMethod("Set" + property.Name, BindingFlags.Public | BindingFlags.Instance, null, new Type[] { property.PropertyType }, null);
+#endif
             if (method == null || method.ReturnType != typeof(void)) return null;
             return method;
         }
@@ -139,15 +143,11 @@ namespace ProtoBuf.Serializers
         internal static bool CanWrite(MemberInfo member)
         {
             if (member == null) throw new ArgumentNullException("member");
-            switch (member.MemberType)
-            {
-                case MemberTypes.Field: return true;
-                case MemberTypes.Property:
-                    PropertyInfo prop = (PropertyInfo)member;
-                    return prop.CanWrite || GetShadowSetter(prop) != null;
-                default:
-                    return false;
-            }
+
+            PropertyInfo prop = member as PropertyInfo;
+            if (prop != null) return prop.CanWrite || GetShadowSetter(prop) != null;
+
+            return member is FieldInfo; // fields are always writeable; anything else: JUST SAY NO!
         }
     }
 }
