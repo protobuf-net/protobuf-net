@@ -327,13 +327,13 @@ namespace ProtoBuf.Serializers
                 
 #if WINRT
                 iteratorType = getEnumerator.ReturnType.GetTypeInfo();
-                Type baseEnumeratorType = typeof (IEnumerator).GetTypeInfo();
+                TypeInfo baseEnumeratorType = typeof (IEnumerator).GetTypeInfo();
 #else
                 iteratorType = getEnumerator.ReturnType;
                 Type baseEnumeratorType = typeof (IEnumerator);
 #endif
 
-                moveNext = Helpers.GetInstanceMethod(typeof(IEnumerator), "MoveNext");
+                moveNext = Helpers.GetInstanceMethod(baseEnumeratorType, "MoveNext");
                 current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current"), false);
                 return getEnumerator;
             }
