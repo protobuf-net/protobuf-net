@@ -278,9 +278,9 @@ namespace ProtoBuf.Serializers
 #endif
 
 #if WINRT
-        private static readonly TypeInfo ienumerableType = typeof(IEnumerator).GetTypeInfo();
+        private static readonly TypeInfo ienumeratorType = typeof(IEnumerator).GetTypeInfo(), ienumerableType = typeof (IEnumerable).GetTypeInfo();
 #else
-        private static readonly Type ienumerableType = typeof(IEnumerator);
+        private static readonly Type ienumeratorType = typeof (IEnumerator), ienumerableType = typeof (IEnumerable);
 #endif
         MethodInfo GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current)
         {
@@ -290,6 +290,8 @@ namespace ProtoBuf.Serializers
 #else
             Type enumeratorType, iteratorType, expectedType = ExpectedType;
 #endif
+
+            // try a custom enumerator
             MethodInfo getEnumerator = Helpers.GetInstanceMethod(expectedType, "GetEnumerator", null);
             Type itemType = Tail.ExpectedType;
             
@@ -303,9 +305,9 @@ namespace ProtoBuf.Serializers
                 moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext", null);
                 PropertyInfo prop = Helpers.GetProperty(iteratorType, "Current");
                 current = prop == null ? null : Helpers.GetGetMethod(prop, false);
-                if (moveNext == null && ienumerableType.IsAssignableFrom(iteratorType))
+                if (moveNext == null && ienumeratorType.IsAssignableFrom(iteratorType))
                 {
-                    moveNext = Helpers.GetInstanceMethod(ienumerableType, "MoveNext", null);
+                    moveNext = Helpers.GetInstanceMethod(ienumeratorType, "MoveNext", null);
                 }
                 // fully typed
                 if (moveNext != null && moveNext.ReturnType == typeof(bool)
@@ -315,7 +317,9 @@ namespace ProtoBuf.Serializers
                 }
                 moveNext = current = getEnumerator = null;
             }
+            
 #if !NO_GENERICS
+            // try IEnumerable<T>
             enumeratorType = typeof(System.Collections.Generic.IEnumerable<>).MakeGenericType(itemType)
 #if WINRT
                 .GetTypeInfo()
@@ -327,17 +331,17 @@ namespace ProtoBuf.Serializers
                 
 #if WINRT
                 iteratorType = getEnumerator.ReturnType.GetTypeInfo();
-                TypeInfo baseEnumeratorType = typeof (IEnumerator).GetTypeInfo();
 #else
                 iteratorType = getEnumerator.ReturnType;
-                Type baseEnumeratorType = typeof (IEnumerator);
 #endif
 
-                moveNext = Helpers.GetInstanceMethod(baseEnumeratorType, "MoveNext");
+                moveNext = Helpers.GetInstanceMethod(ienumeratorType, "MoveNext");
                 current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current"), false);
                 return getEnumerator;
             }
 #endif
+
+            // give up and fall-back to non-generic IEnumerable
             enumeratorType = ienumerableType;
             getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
             iteratorType = getEnumerator.ReturnType
