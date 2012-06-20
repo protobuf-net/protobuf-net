@@ -78,6 +78,7 @@ namespace ProtoBuf
 #if MF
             Microsoft.SPOT.Debug.Assert(condition);
 #else
+            //if(!condition && System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
             System.Diagnostics.Debug.Assert(condition);
 #endif
         }

@@ -324,12 +324,16 @@ namespace ProtoBuf.Serializers
             if (enumeratorType.IsAssignableFrom(expectedType))
             {
                 getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
-                iteratorType = getEnumerator.ReturnType
+                
 #if WINRT
-                    .GetTypeInfo()
-#endif                    
-                    ;
-                moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext");
+                iteratorType = getEnumerator.ReturnType.GetTypeInfo();
+                Type baseEnumeratorType = typeof (IEnumerator).GetTypeInfo();
+#else
+                iteratorType = getEnumerator.ReturnType;
+                Type baseEnumeratorType = typeof (IEnumerator);
+#endif
+
+                moveNext = Helpers.GetInstanceMethod(typeof(IEnumerator), "MoveNext");
                 current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current"), false);
                 return getEnumerator;
             }
