@@ -211,6 +211,7 @@
     <Compile Include="Issues\Issue284.cs" />
     <Compile Include="Issues\Issue29.cs" />
     <Compile Include="Issues\Issue295.cs" />
+    <Compile Include="Issues\Issue297.cs" />
     <Compile Include="Issues\Issue32.cs" />
     <Compile Include="Issues\Issue41.cs" />
     <Compile Include="Issues\Issue45.cs" />
