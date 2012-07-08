@@ -1,7 +1,13 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
+
 using System.Collections;
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
+using System.Reflection;
+#endif
 
 namespace ProtoBuf.Meta
 {
@@ -10,6 +16,23 @@ namespace ProtoBuf.Meta
     /// </summary>
     public abstract class TypeModel
     {
+#if WINRT
+        internal TypeInfo MapType(TypeInfo type)
+        {
+            return type;
+        }
+#endif
+        /// <summary>
+        /// Resolve a System.Type to the compiler-specific type
+        /// </summary>
+        protected internal virtual Type MapType(System.Type type)
+        {
+#if FEAT_IKVM
+            throw new NotImplementedException(); // this should come from RuntimeTypeModel!
+#else
+            return type;
+#endif
+        }
         private WireType GetWireType(ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
         {
             modelKey = -1;
@@ -51,6 +74,8 @@ namespace ProtoBuf.Meta
             }
             return WireType.None;
         }
+
+#if !FEAT_IKVM
         /// <summary>
         /// This is the more "complete" version of Serialize, which handles single instances of mapped types.
         /// The value is written as a complete field, including field-header and (for sub-objects) a
@@ -157,6 +182,7 @@ namespace ProtoBuf.Meta
                 ThrowUnexpectedType(type);
             }
         }
+#endif
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
         /// </summary>
@@ -174,12 +200,16 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             using (ProtoWriter writer = new ProtoWriter(dest, this, context))
             {
                 writer.SetRootObject(value);
                 SerializeCore(writer, value);
                 writer.Close();
             }
+#endif
         }
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
@@ -241,6 +271,9 @@ namespace ProtoBuf.Meta
 
         private object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out int bytesRead, out bool haveObject, SerializationContext context)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             haveObject = false;
             bool skip;
             int len;
@@ -302,6 +335,7 @@ namespace ProtoBuf.Meta
                 haveObject = true;
                 return value;
             }
+#endif
         }
         /// <summary>
         /// Reads a sequence of consecutive length-prefixed items from a stream, using
@@ -394,7 +428,7 @@ namespace ProtoBuf.Meta
             public new T Current { get { return (T)base.Current; } }
             void IDisposable.Dispose() { }
             public DeserializeItemsIterator(TypeModel model, Stream source, PrefixStyle style, int expectedField, SerializationContext context)
-                : base(model, source, typeof(T), style, expectedField, null, context) { }
+                : base(model, source, model.MapType(typeof(T)), style, expectedField, null, context) { }
         }
 #endif
         private class DeserializeItemsIterator : IEnumerator, IEnumerable
@@ -465,7 +499,7 @@ namespace ProtoBuf.Meta
             if (type == null)
             {
                 if(value == null) throw new ArgumentNullException("value");
-                type = value.GetType();
+                type = MapType(value.GetType());
             }
             int key = GetKey(ref type);
             using (ProtoWriter writer = new ProtoWriter(dest, this, context))
@@ -495,7 +529,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize(Stream source, object value, Type type)
+        public object Deserialize(Stream source, object value, System.Type type)
         {
             return Deserialize(source, value, type, null);
         }
@@ -509,17 +543,21 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public object Deserialize(Stream source, object value, Type type, SerializationContext context)
+        public object Deserialize(Stream source, object value, System.Type type, SerializationContext context)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             bool autoCreate = PrepareDeserialize(value, ref type);
             using (ProtoReader reader = new ProtoReader(source, this, context))
             {
                 if (value != null) reader.SetRootObject(value);
                 return DeserializeCore(reader, type, value, autoCreate);
             }
+#endif
         }
 
-        private static bool PrepareDeserialize(object value, ref Type type)
+        private bool PrepareDeserialize(object value, ref Type type)
         {
             if (type == null)
             {
@@ -529,12 +567,12 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    type = value.GetType();
+                    type = MapType(value.GetType());
                 }
             }
             bool autoCreate = true;
 #if !NO_GENERICS
-            Type underlyingType = Nullable.GetUnderlyingType(type);
+            Type underlyingType = Helpers.GetUnderlyingType(type);
             if (underlyingType != null)
             {
                 type = underlyingType;
@@ -554,7 +592,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize(Stream source, object value, Type type, int length)
+        public object Deserialize(Stream source, object value, System.Type type, int length)
         {
             return Deserialize(source, value, type, length, null);
         }
@@ -569,8 +607,11 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public object Deserialize(Stream source, object value, Type type, int length,SerializationContext context)
+        public object Deserialize(Stream source, object value, System.Type type, int length, SerializationContext context)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             bool autoCreate = PrepareDeserialize(value, ref type);
             using (ProtoReader reader = new ProtoReader(source, this, context, length))
             {
@@ -582,7 +623,9 @@ namespace ProtoBuf.Meta
                 }
                 return obj;
             }
+#endif
         }
+#if !FEAT_IKVM
         private object DeserializeCore(ProtoReader reader, Type type, object value, bool noAutoCreate)
         {
             int key = GetKey(ref type);
@@ -594,19 +637,20 @@ namespace ProtoBuf.Meta
             TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, noAutoCreate, false);
             return value;
         }
-#if WINRT
-        private static readonly TypeInfo ilist = typeof(IList).GetTypeInfo();
-#else
-        private static readonly Type ilist = typeof(IList);
 #endif
-        internal static MethodInfo ResolveListAdd(Type listType, Type itemType, out bool isList)
+#if WINRT
+        private static readonly System.Reflection.TypeInfo ilist = typeof(IList).GetTypeInfo();
+#else
+        private static readonly System.Type ilist = typeof(IList);
+#endif
+        internal static MethodInfo ResolveListAdd(TypeModel model, Type listType, Type itemType, out bool isList)
         {
 #if WINRT
             TypeInfo listTypeInfo = listType.GetTypeInfo();
 #else
             Type listTypeInfo = listType;
 #endif
-            isList = ilist.IsAssignableFrom(listTypeInfo);
+            isList = model.MapType(ilist).IsAssignableFrom(listTypeInfo);
 
             Type[] types = { itemType };
             MethodInfo add = Helpers.GetInstanceMethod(listTypeInfo, "Add", types);
@@ -616,7 +660,7 @@ namespace ProtoBuf.Meta
 #if WINRT
                 TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
 #else
-                Type constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types);
+                Type constuctedListType = model.MapType(typeof(System.Collections.Generic.ICollection<>)).MakeGenericType(types);
 #endif
                 if (constuctedListType.IsAssignableFrom(listTypeInfo))
                 {
@@ -626,16 +670,16 @@ namespace ProtoBuf.Meta
 #endif
             if (add == null)
             {   // fallback: look for a public list.Add(object) method
-                types[0] = typeof(object);
+                types[0] = model.MapType(typeof(object));
                 add = Helpers.GetInstanceMethod(listTypeInfo, "Add", types);
             }
             if (add == null && isList)
             {   // fallback: look for IList's Add(object) method
-                add = Helpers.GetInstanceMethod(ilist, "Add", types);
+                add = Helpers.GetInstanceMethod(model.MapType(ilist), "Add", types);
             }
             return add;
         }
-        internal static Type GetListItemType(Type listType)
+        internal static Type GetListItemType(TypeModel model, Type listType)
         {
             Helpers.DebugAssert(listType != null);
 
@@ -644,8 +688,8 @@ namespace ProtoBuf.Meta
             if (listType == typeof(string) || listType.IsArray
                 || !typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(listTypeInfo)) return null;
 #else
-            if (listType == typeof(string) || listType.IsArray
-                || !typeof(IEnumerable).IsAssignableFrom(listType)) return null;
+            if (listType == model.MapType(typeof(string)) || listType.IsArray
+                || !model.MapType(typeof(IEnumerable)).IsAssignableFrom(listType)) return null;
 #endif
             
             BasicList candidates = new BasicList();
@@ -679,7 +723,7 @@ namespace ProtoBuf.Meta
 #else
             foreach (Type iType in listType.GetInterfaces())
             {
-                if (iType.IsGenericType && iType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ICollection<>))
+                if (iType.IsGenericType && iType.GetGenericTypeDefinition() == model.MapType(typeof(System.Collections.Generic.ICollection<>)))
                 {
                     Type[] iTypeArgs = iType.GetGenericArguments();
                     if (!candidates.Contains(iTypeArgs[0]))
@@ -708,7 +752,7 @@ namespace ProtoBuf.Meta
             {
                 if (indexer.Name != "Item" || candidates.Contains(indexer.PropertyType)) continue;
                 ParameterInfo[] args = indexer.GetIndexParameters();
-                if (args.Length != 1 || args[0].ParameterType != typeof(int)) continue;
+                if (args.Length != 1 || args[0].ParameterType != model.MapType(typeof(int))) continue;
                 candidates.Add(indexer.PropertyType);
             }
 #endif
@@ -720,15 +764,15 @@ namespace ProtoBuf.Meta
                 case 1:
                     return (Type)candidates[0];
                 case 2:
-                    if (CheckDictionaryAccessors((Type)candidates[0], (Type)candidates[1])) return (Type)candidates[0];
-                    if (CheckDictionaryAccessors((Type)candidates[1], (Type)candidates[0])) return (Type)candidates[1];
+                    if (CheckDictionaryAccessors(model, (Type)candidates[0], (Type)candidates[1])) return (Type)candidates[0];
+                    if (CheckDictionaryAccessors(model, (Type)candidates[1], (Type)candidates[0])) return (Type)candidates[1];
                     break;
             }
 
             return null;
         }
 
-        private static bool CheckDictionaryAccessors(Type pair, Type value)
+        private static bool CheckDictionaryAccessors(TypeModel model, Type pair, Type value)
         {
             
 #if NO_GENERICS
@@ -738,15 +782,16 @@ namespace ProtoBuf.Meta
             return finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
                 && finalType.GenericTypeArguments[1] == value;
 #else
-            return pair.IsGenericType && pair.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
+            return pair.IsGenericType && pair.GetGenericTypeDefinition() == model.MapType(typeof(System.Collections.Generic.KeyValuePair<,>))
                 && pair.GetGenericArguments()[1] == value;
 #endif
         }
 
-        private bool TryDeserializeList(ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
+#if !FEAT_IKVM
+        private bool TryDeserializeList(TypeModel model, ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
         {
             bool isList;
-            MethodInfo addMethod = TypeModel.ResolveListAdd(listType, itemType, out isList);
+            MethodInfo addMethod = TypeModel.ResolveListAdd(model, listType, itemType, out isList);
             if (addMethod == null) throw new NotSupportedException("Unknown list variant: " + listType.FullName);
             bool found = false;
             object nextItem = null;
@@ -895,7 +940,7 @@ namespace ProtoBuf.Meta
             bool found = false;
             if (wiretype == WireType.None)
             {
-                itemType = GetListItemType(type);
+                itemType = GetListItemType(this, type);
                 if (itemType == null && type.IsArray && type.GetArrayRank() == 1 && type != typeof(byte[]))
                 {
                     itemType = type.GetElementType();
@@ -903,7 +948,7 @@ namespace ProtoBuf.Meta
                 if (itemType != null)
                 {
                     if (insideList) throw TypeModel.CreateNestedListsNotSupported();
-                    found = TryDeserializeList(reader, format, tag, type, itemType, ref value);
+                    found = TryDeserializeList(this, reader, format, tag, type, itemType, ref value);
                     if (!found && autoCreate)
                     {
                         value = CreateListInstance(type, itemType);
@@ -988,6 +1033,7 @@ namespace ProtoBuf.Meta
             }
             return found;
         }
+#endif
 
 #if !NO_RUNTIME
         /// <summary>
@@ -1011,7 +1057,7 @@ namespace ProtoBuf.Meta
             if (type.IsGenericParameter) return null;
 #if !NO_GENERICS            
             // Nullable<T>
-            Type tmp = Nullable.GetUnderlyingType(type);
+            Type tmp =  Helpers.GetUnderlyingType(type);
             if (tmp != null) return tmp;
 #endif
 
@@ -1114,6 +1160,9 @@ namespace ProtoBuf.Meta
         /// </summary>
         public object DeepClone(object value)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             if (value == null) return null;
             Type type = value.GetType();
             int key = GetKey(ref type);
@@ -1160,7 +1209,7 @@ namespace ProtoBuf.Meta
                     return value;
                 }
             }
-            
+#endif       
 
         }
 
@@ -1196,7 +1245,7 @@ namespace ProtoBuf.Meta
             throw new ProtoException("No parameterless constructor found for " + type.Name);
         }
 
-        internal static string SerializeType(TypeModel model, Type type)
+        internal static string SerializeType(TypeModel model, System.Type type)
         {
             TypeFormatEventHandler handler;
             if (model != null && (handler = model.DynamicTypeFormatting) != null)
@@ -1208,7 +1257,7 @@ namespace ProtoBuf.Meta
             return type.AssemblyQualifiedName;
         }
 
-        internal static Type DeserializeType(TypeModel model, string value)
+        internal static System.Type DeserializeType(TypeModel model, string value)
         {
             TypeFormatEventHandler handler;
             if (model != null && (handler = model.DynamicTypeFormatting) != null)
@@ -1217,7 +1266,7 @@ namespace ProtoBuf.Meta
                 handler(model, args);
                 if (args.Type != null) return args.Type;
             }
-            return Type.GetType(value);
+            return System.Type.GetType(value);
         }
 
         /// <summary>
@@ -1232,7 +1281,7 @@ namespace ProtoBuf.Meta
             int key = GetKey(ref type);
             if (key >= 0) return true; // direct entity support
 
-            Type itemType = GetListItemType(type);
+            Type itemType = GetListItemType(this, type);
             if (itemType != null)
             {
                 key = GetKey(ref itemType);
@@ -1287,7 +1336,11 @@ namespace ProtoBuf.Meta
 
             public object Deserialize(Stream source)
             {
+#if FEAT_IKVM
+                throw new NotSupportedException();
+#else
                 return model.Deserialize(source, null, type, -1, Context);
+#endif
             }
 
             public void Serialize(Stream destination, object graph)
@@ -1315,6 +1368,15 @@ namespace ProtoBuf.Meta
             set { forwardsOnly = value; }
         }
 #endif
+
+        internal virtual Type GetType(string fullName)
+        {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
+            return Type.GetType(fullName);
+#endif
+        }
     }
 
 }

@@ -2,19 +2,31 @@
 using System;
 using ProtoBuf.Meta;
 
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
+using System.Reflection;
+#endif
+
 namespace ProtoBuf.Serializers
 {
-
     sealed class EnumSerializer : IProtoSerializer
     {
         public struct EnumPair
         {
-            public readonly Enum Value; // note that this is boxing, but I'll live with it
+            public readonly object RawValue; // note that this is boxing, but I'll live with it
+#if !FEAT_IKVM
+            public readonly Enum TypedValue; // note that this is boxing, but I'll live with it
+#endif
             public readonly int WireValue;
-            public EnumPair(int wireValue, Enum value)
+            public EnumPair(int wireValue, object raw, Type type)
             {
                 WireValue = wireValue;
-                Value = value;
+                RawValue = raw;
+#if !FEAT_IKVM
+                TypedValue = (Enum)Enum.ToObject(type, raw);
+#endif
             }
         } 
         private readonly Type enumType; 
@@ -29,22 +41,29 @@ namespace ProtoBuf.Serializers
                 for (int i = 1; i < map.Length; i++)
                 for (int j = 0 ; j < i ; j++)
                 {
-                    if (map[i].WireValue == map[j].WireValue && !Equals(map[i].Value,map[j].Value))
+                    if (map[i].WireValue == map[j].WireValue && !Equals(map[i].RawValue, map[j].RawValue))
                     {
                         throw new ProtoException("Multiple enums with wire-value " + map[i].WireValue);
                     }
-                    if (Equals(map[i].Value, map[j].Value) && map[i].WireValue != map[j].WireValue)
+                    if (Equals(map[i].RawValue, map[j].RawValue) && map[i].WireValue != map[j].WireValue)
                     {
-                        throw new ProtoException("Multiple enums with deserialized-value " + map[i].WireValue);
+                        throw new ProtoException("Multiple enums with deserialized-value " + map[i].RawValue);
                     }
                 }
 
             }
         }
         private ProtoTypeCode GetTypeCode() {
-            return Helpers.GetTypeCode(Enum.GetUnderlyingType(enumType));
+            return Helpers.GetTypeCode(Helpers.GetUnderlyingType(enumType) ?? enumType);
         }
 
+        
+        public Type ExpectedType { get { return enumType; } }
+        
+        bool IProtoSerializer.RequiresOldValue { get { return false; } }
+        bool IProtoSerializer.ReturnsValue { get { return true; } }
+
+#if !FEAT_IKVM
         private int EnumToWire(object value)
         {
             checked
@@ -82,26 +101,6 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public Type ExpectedType { get { return enumType; } }
-        public void Write(object value, ProtoWriter dest)
-        {
-            if (map == null)
-            {
-                ProtoWriter.WriteInt32(EnumToWire(value), dest);
-            }
-            else
-            {
-                for (int i = 0; i < map.Length; i++) {
-                    if (object.Equals(map[i].Value, value)) {
-                        ProtoWriter.WriteInt32(map[i].WireValue, dest);
-                        return;
-                    }
-                }
-                ProtoWriter.ThrowEnumException(dest, value);
-            }            
-        }
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
         public object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
@@ -111,12 +110,32 @@ namespace ProtoBuf.Serializers
             }
             for(int i = 0 ; i < map.Length ; i++) {
                 if(map[i].WireValue == wireValue) {
-                    return map[i].Value;
+                    return map[i].TypedValue;
                 }
             }
             source.ThrowEnumException(ExpectedType, wireValue);
             return null; // to make compiler happy
         }
+        public void Write(object value, ProtoWriter dest)
+        {
+            if (map == null)
+            {
+                ProtoWriter.WriteInt32(EnumToWire(value), dest);
+            }
+            else
+            {
+                for (int i = 0; i < map.Length; i++)
+                {
+                    if (object.Equals(map[i].TypedValue, value))
+                    {
+                        ProtoWriter.WriteInt32(map[i].WireValue, dest);
+                        return;
+                    }
+                }
+                ProtoWriter.ThrowEnumException(dest, value);
+            }
+        }
+#endif
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
@@ -136,7 +155,7 @@ namespace ProtoBuf.Serializers
                     {
                         Compiler.CodeLabel tryNextValue = ctx.DefineLabel(), processThisValue = ctx.DefineLabel();
                         ctx.LoadValue(loc);
-                        WriteEnumValue(ctx, typeCode, map[i].Value);
+                        WriteEnumValue(ctx, typeCode, map[i].RawValue);
                         ctx.BranchIfEqual(processThisValue, true);
                         ctx.Branch(tryNextValue, true);
                         ctx.MarkLabel(processThisValue);
@@ -148,7 +167,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadReaderWriter();
                     ctx.LoadValue(loc);
                     ctx.CastToObject(ExpectedType);
-                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("ThrowEnumException"));
+                    ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("ThrowEnumException"));
                     ctx.MarkLabel(@continue);
                 }
             }
@@ -159,7 +178,7 @@ namespace ProtoBuf.Serializers
             ProtoTypeCode typeCode = GetTypeCode();
             if (map == null)
             {
-                ctx.EmitBasicRead("ReadInt32", typeof(int));
+                ctx.EmitBasicRead("ReadInt32", ctx.MapType(typeof(int)));
                 ctx.ConvertFromInt32(typeCode);
             }
             else
@@ -169,12 +188,12 @@ namespace ProtoBuf.Serializers
                 for (int i = 0; i < map.Length; i++)
                 {
                     wireValues[i] = map[i].WireValue;
-                    values[i] = map[i].Value;
+                    values[i] = map[i].RawValue;
                 }
                 using (Compiler.Local result = new Compiler.Local(ctx, ExpectedType))
-                using (Compiler.Local wireValue = new Compiler.Local(ctx, typeof(int)))
+                using (Compiler.Local wireValue = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
                 {
-                    ctx.EmitBasicRead("ReadInt32", typeof(int));
+                    ctx.EmitBasicRead("ReadInt32", ctx.MapType(typeof(int)));
                     ctx.StoreValue(wireValue);
                     Compiler.CodeLabel @continue = ctx.DefineLabel();
                     foreach (BasicList.Group group in BasicList.GetContiguousGroups(wireValues, values))
@@ -215,7 +234,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadReaderWriter();
                     ctx.LoadValue(ExpectedType);
                     ctx.LoadValue(wireValue);
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("ThrowEnumException"));
+                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("ThrowEnumException"));
                     ctx.MarkLabel(@continue);
                     ctx.LoadValue(result);
                 }

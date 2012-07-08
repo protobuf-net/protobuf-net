@@ -6,6 +6,11 @@ using ProtoBuf.Meta;
 #if MF
 using OverflowException = System.ApplicationException;
 #endif
+
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+#endif
+
 namespace ProtoBuf
 {
     /// <summary>
@@ -26,26 +31,29 @@ namespace ProtoBuf
         /// <param name="writer">The destination.</param>
         public static void WriteObject(object value, int key, ProtoWriter writer)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             if (writer.model == null)
             {
                 throw new InvalidOperationException("Cannot serialize sub-objects unless a model is provided");
             }
 
-                SubItemToken token = StartSubItem(value, writer);
-                if (key >= 0)
-                {
-                    writer.model.Serialize(key, value, writer);
-                }
-                else if (writer.model != null && writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value, false))
-                {
-                    // all ok
-                }
-                else
-                {
-                    TypeModel.ThrowUnexpectedType(value.GetType());
-                }
-                EndSubItem(token, writer);
- 
+            SubItemToken token = StartSubItem(value, writer);
+            if (key >= 0)
+            {
+                writer.model.Serialize(key, value, writer);
+            }
+            else if (writer.model != null && writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value, false))
+            {
+                // all ok
+            }
+            else
+            {
+                TypeModel.ThrowUnexpectedType(value.GetType());
+            }
+            EndSubItem(token, writer);
+#endif 
         }
         /// <summary>
         /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
@@ -67,6 +75,9 @@ namespace ProtoBuf
         }
         internal static void WriteObject(object value, int key, ProtoWriter writer, PrefixStyle style, int fieldNumber)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             if (writer.model == null)
             {
                 throw new InvalidOperationException("Cannot serialize sub-objects unless a model is provided");
@@ -101,7 +112,7 @@ namespace ProtoBuf
                 writer.model.Serialize(key, value, writer);
             }
             EndSubItem(token, writer, style);
-            
+#endif       
         }
 
         internal int GetTypeKey(ref Type type)
@@ -881,7 +892,7 @@ namespace ProtoBuf
             writer.packedFieldNumber = fieldNumber;
         }
 
-        internal string SerializeType(Type type)
+        internal string SerializeType(System.Type type)
         {
             return TypeModel.SerializeType(model, type);
         }
@@ -896,7 +907,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a Type to the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
         /// </summary>
-        public static void WriteType(Type value, ProtoWriter writer)
+        public static void WriteType(System.Type value, ProtoWriter writer)
         {
             WriteString(writer.SerializeType(value), writer);
         }

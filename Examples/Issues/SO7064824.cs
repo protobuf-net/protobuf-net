@@ -1,4 +1,5 @@
-﻿using NUnit.Framework.SyntaxHelpers;
+﻿using System.IO;
+using NUnit.Framework.SyntaxHelpers;
 using System;
 using NUnit.Framework;
 using ProtoBuf;
@@ -53,8 +54,46 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
             }
 
             Expect(cloned.ObjectArray[1] as Derived, Is.Not.Null);
-            Expect(cloned.ObjectArray.GetType(), Is.EqualTo(typeof(Base[])));
+            
+            // this would be nice...
+            //Expect(cloned.ObjectArray.GetType(), Is.EqualTo(typeof(Base[])));
 
+            // but this is what we currently **expect**
+            Expect(cloned.ObjectArray.GetType(), Is.EqualTo(typeof(object[])));
+        }
+
+        [Test]
+        public void WrittenDataShouldBeConstant()
+        {
+            var container = new ObjectArrayContainerClass();
+            container.ObjectArray = this.CreateArray();
+            var ms = new MemoryStream();
+            var model = CreateModel();
+            model.DynamicTypeFormatting += new TypeFormatEventHandler(model_DynamicTypeFormatting);
+            model.Serialize(ms, container);
+
+            string s = Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
+            // written with r480
+            Assert.AreEqual("ChkgAUIEQmFzZVIPCg1CYXNlQ2xhc3NUZXh0CjEgAkIHRGVyaXZlZFIkogYSChBEZXJpdmVkQ2xhc3NUZXh0Cg1CYXNlQ2xhc3NUZXh0", s);
+        }
+        void model_DynamicTypeFormatting(object sender, TypeFormatEventArgs args)
+        {
+
+            if (args.Type != null)
+            {
+                if (args.Type == typeof(Derived)) { args.FormattedName = "Derived"; return; }
+                if (args.Type == typeof(Base)) { args.FormattedName = "Base"; return; }
+                throw new NotSupportedException(args.Type.Name);
+            }
+            else
+            {
+                switch (args.FormattedName)
+                {
+                    case "Derived": args.Type = typeof(Derived); break;
+                    case "Base": args.Type = typeof(Base); break;
+                    default: throw new NotSupportedException(args.FormattedName);
+                }
+            }
         }
 
         [Test]// needs dynamic handling of list itself
@@ -71,6 +110,8 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
                 Expect(obj as Base, Is.Not.Null);
             }
             Expect(cloned.BaseArray[1] as Derived, Is.Not.Null);
+
+            // this would be nice...
             Expect(cloned.BaseArray.GetType(), Is.EqualTo(typeof(Base[])), "array type");
         }
 

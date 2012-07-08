@@ -1,7 +1,13 @@
 ﻿#if !NO_RUNTIME
 using System;
-using System.Reflection;
 using ProtoBuf.Meta;
+
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
+using System.Reflection;
+#endif
 
 namespace ProtoBuf.Serializers
 {
@@ -11,7 +17,9 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
 #endif
+#if !FEAT_IKVM
         void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
+#endif
         public bool ReturnsValue { get { return false; } }
         public bool RequiresOldValue { get { return true; } }
         public Type ExpectedType { get { return forType; } }
@@ -77,7 +85,7 @@ namespace ProtoBuf.Serializers
                 forType.FullName + " / " + declaredType.FullName);
         }
 
-
+#if !FEAT_IKVM
         public void Write(object value, ProtoWriter writer)
         {
             rootTail.Write(toTail.Invoke(null, new object[] { value }), writer);
@@ -92,6 +100,8 @@ namespace ProtoBuf.Serializers
             args[0] = rootTail.Read(value, source);
             return fromTail.Invoke(null, args);
         }
+#endif
+
 #if FEAT_COMPILER
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

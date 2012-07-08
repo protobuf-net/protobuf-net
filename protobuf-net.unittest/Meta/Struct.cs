@@ -21,13 +21,14 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void RunStructDesrializerForEmptyStream()
         {
-            var head = new TypeSerializer(typeof(CustomerStruct),
+            var model = ProtoBuf.Meta.TypeModel.Create();
+            var head = new TypeSerializer(model, typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IProtoSerializer[] {
-                    new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant, false, new Int32Serializer())),
-                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String, false, new StringSerializer()))
+                    new PropertyDecorator(model, typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant, false, new Int32Serializer(model))),
+                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String, false, new StringSerializer(model)))
                 }, null, false, true, null, null, null);
-            var deser = CompilerContext.BuildDeserializer(head);
+            var deser = CompilerContext.BuildDeserializer(head, model);
 
             using (var reader = new ProtoReader(Stream.Null, null, null))
             {
@@ -44,14 +45,15 @@ namespace ProtoBuf.unittest.Meta
         [Test]
         public void GenerateTypeSerializer()
         {
-            var head = new TypeSerializer(typeof(CustomerStruct),
+            var model = ProtoBuf.Meta.TypeModel.Create();
+            var head = new TypeSerializer(model, typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IProtoSerializer[] {
-                    new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant,false,  new Int32Serializer())),
-                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String,false,  new StringSerializer()))
+                    new PropertyDecorator(model, typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant,false,  new Int32Serializer(model))),
+                    new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String,false,  new StringSerializer(model)))
                 }, null, false, true, null, null, null);
-            var ser = CompilerContext.BuildSerializer(head);
-            var deser = CompilerContext.BuildDeserializer(head);
+            var ser = CompilerContext.BuildSerializer(head, model);
+            var deser = CompilerContext.BuildDeserializer(head, model);
             CustomerStruct cs1 = new CustomerStruct { Id = 123, Name = "Fred" };
             using (MemoryStream ms = new MemoryStream())
             {

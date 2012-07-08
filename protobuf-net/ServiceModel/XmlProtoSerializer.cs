@@ -66,7 +66,7 @@ namespace ProtoBuf.ServiceModel
                     isList = false;
                     return key;
                 }
-                Type itemType = TypeModel.GetListItemType(type);
+                Type itemType = TypeModel.GetListItemType(model, type);
                 if (itemType != null)
                 {
                     key = model.GetKey(ref itemType);

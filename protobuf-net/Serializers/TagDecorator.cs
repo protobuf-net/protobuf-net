@@ -1,8 +1,14 @@
 ﻿#if !NO_RUNTIME
 using System;
 
-using System.Reflection;
 using ProtoBuf.Meta;
+
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
+using System.Reflection;
+#endif
 
 
 namespace ProtoBuf.Serializers
@@ -15,11 +21,13 @@ namespace ProtoBuf.Serializers
             IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
             return pts != null && pts.HasCallbacks(callbackType);
         }
+#if !FEAT_IKVM
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
             IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
             if (pts != null) pts.Callback(value, callbackType, context);
         }
+#endif
 #if FEAT_COMPILER
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
@@ -44,15 +52,12 @@ namespace ProtoBuf.Serializers
         private readonly bool strict;
         private readonly int fieldNumber;
         private readonly WireType wireType;
-        public override void Write(object value, ProtoWriter dest)
-        {
-            ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest);
-            Tail.Write(value, dest);
-        }
+
         private bool NeedsHint
         {
             get { return ((int)wireType & ~7) != 0; }
         }
+#if !FEAT_IKVM
         public override object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(fieldNumber == source.FieldNumber);
@@ -60,13 +65,20 @@ namespace ProtoBuf.Serializers
             else if (NeedsHint) { source.Hint(wireType); }
             return Tail.Read(value, source);
         }
+        public override void Write(object value, ProtoWriter dest)
+        {
+            ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest);
+            Tail.Write(value, dest);
+        }
+#endif
+
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue((int)fieldNumber);
             ctx.LoadValue((int)wireType);
             ctx.LoadReaderWriter();
-            ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
+            ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("WriteFieldHeader"));
             Tail.EmitWrite(ctx, valueFrom);    
         }
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
@@ -75,7 +87,7 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadReaderWriter();
                 ctx.LoadValue((int)wireType);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod(strict ? "Assert" : "Hint"));
+                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod(strict ? "Assert" : "Hint"));
             }
             Tail.EmitRead(ctx, valueFrom);
         }

@@ -1,6 +1,14 @@
 ﻿#if !NO_RUNTIME
 using System;
+
+using ProtoBuf.Meta;
+
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
 using System.Reflection;
+#endif
 
 
 
@@ -21,6 +29,7 @@ namespace ProtoBuf.Serializers
             this.forType = forType;
             this.field = field;
         }
+#if !FEAT_IKVM
         public override void Write(object value, ProtoWriter dest)
         {
             Helpers.DebugAssert(value != null);
@@ -34,6 +43,8 @@ namespace ProtoBuf.Serializers
             if(newValue != null) field.SetValue(value,newValue);
             return null;
         }
+#endif
+
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

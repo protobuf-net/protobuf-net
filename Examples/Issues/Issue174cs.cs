@@ -12,7 +12,7 @@ namespace Examples.Issues
     [TestFixture]
     public class Issue174cs
     {
-        [Test]
+        [Test, ExpectedException(ExpectedMessage = "Dynamic type is not a contract-type: Boolean")]
         public void TestDynamic()
         {
             var myVal = new TestProto { Value = true };

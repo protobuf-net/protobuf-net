@@ -4,26 +4,40 @@ using System;
 using System.Reflection.Emit;
 #endif
 
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+#endif
 
 
 namespace ProtoBuf.Serializers
 {
     sealed class BlobSerializer : IProtoSerializer
     {
-        public Type ExpectedType { get { return typeof(byte[]); } }
-        public void Write(object value, ProtoWriter dest)
+        public Type ExpectedType { get { return expectedType; } }
+
+#if FEAT_IKVM
+        readonly Type expectedType;
+#else
+        static readonly Type expectedType = typeof(byte[]);
+#endif
+        public BlobSerializer(ProtoBuf.Meta.TypeModel model, bool overwriteList)
         {
-            ProtoWriter.WriteBytes((byte[])value, dest);
-        }
-        public BlobSerializer(bool overwriteList)
-        {
+#if FEAT_IKVM
+            expectedType = model.MapType(typeof(byte[]));
+#endif
             this.overwriteList = overwriteList;
         }
         private readonly bool overwriteList;
+#if !FEAT_IKVM
         public object Read(object value, ProtoReader source)
         {
             return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, source);
         }
+        public void Write(object value, ProtoWriter dest)
+        {
+            ProtoWriter.WriteBytes((byte[])value, dest);
+        }
+#endif
         bool IProtoSerializer.RequiresOldValue { get { return !overwriteList; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
 #if FEAT_COMPILER
@@ -42,7 +56,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(valueFrom);
             }
             ctx.LoadReaderWriter();
-            ctx.EmitCall(typeof(ProtoReader).GetMethod("AppendBytes"));
+            ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("AppendBytes"));
         }
 #endif
     }

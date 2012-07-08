@@ -1,5 +1,12 @@
 ﻿using System;
 
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
+using System.Reflection;
+#endif
+
 namespace ProtoBuf
 {
     /// <summary>
@@ -47,7 +54,7 @@ namespace ProtoBuf
         }
 
 #if !NO_RUNTIME
-        internal System.Reflection.MemberInfo Member;
+        internal MemberInfo Member;
         internal bool TagIsPinned;
 #endif
         /// <summary>

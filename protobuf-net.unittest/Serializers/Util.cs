@@ -23,10 +23,11 @@ namespace ProtoBuf.unittest.Serializers
             NilSerializer nil = new NilSerializer(innerType);
             var ser = ctor(nil);
 
-            var decorator = RuntimeTypeModel.GetSerializer(ser, false);
+            var model = RuntimeTypeModel.Create();
+            var decorator = model.GetSerializer(ser, false);
             Test(value, decorator, "decorator", expected);
 
-            var compiled = RuntimeTypeModel.GetSerializer(ser, true);
+            var compiled = model.GetSerializer(ser, true);
             Test(value, compiled, "compiled", expected);
         }
         public static void Test(object obj, ProtoSerializer serializer, string message, byte[] expected)

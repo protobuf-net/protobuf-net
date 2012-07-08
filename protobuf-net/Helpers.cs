@@ -1,6 +1,14 @@
 ﻿
 using System;
+using System.Collections;
+
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
 using System.Reflection;
+#endif
+
 namespace ProtoBuf
 {
     /// <summary>
@@ -224,7 +232,44 @@ namespace ProtoBuf
         };
 
 #endif
-        public static ProtoTypeCode GetTypeCode(Type type)
+
+#if FEAT_IKVM
+        public static ProtoTypeCode GetTypeCode(IKVM.Reflection.Type type)
+        {
+            TypeCode code = IKVM.Reflection.Type.GetTypeCode(type);
+            switch (code)
+            {
+                case TypeCode.Empty:
+                case TypeCode.Boolean:
+                case TypeCode.Char:
+                case TypeCode.SByte:
+                case TypeCode.Byte:
+                case TypeCode.Int16:
+                case TypeCode.UInt16:
+                case TypeCode.Int32:
+                case TypeCode.UInt32:
+                case TypeCode.Int64:
+                case TypeCode.UInt64:
+                case TypeCode.Single:
+                case TypeCode.Double:
+                case TypeCode.Decimal:
+                case TypeCode.DateTime:
+                case TypeCode.String:
+                    return (ProtoTypeCode)code;
+            }
+            switch(type.FullName)
+            {
+                case "System.TimeSpan": return ProtoTypeCode.TimeSpan;
+                case "System.Guid": return ProtoTypeCode.Guid;
+                case "System.Uri": return ProtoTypeCode.Uri;
+                case "System.Byte[]": return ProtoTypeCode.ByteArray;
+                case "System.Type": return ProtoTypeCode.Type;
+            }
+            return ProtoTypeCode.Unknown;
+        }
+#endif
+
+        public static ProtoTypeCode GetTypeCode(System.Type type)
         {
 #if WINRT
             
@@ -232,7 +277,7 @@ namespace ProtoBuf
             if (idx >= 0) return knownCodes[idx];
             return type == null ? ProtoTypeCode.Empty : ProtoTypeCode.Unknown;
 #else
-            TypeCode code = Type.GetTypeCode(type);
+            TypeCode code = System.Type.GetTypeCode(type);
             switch (code)
             {
                 case TypeCode.Empty:
@@ -263,7 +308,22 @@ namespace ProtoBuf
 #endif
         }
 
+        
+#if FEAT_IKVM
+        internal static IKVM.Reflection.Type GetUnderlyingType(IKVM.Reflection.Type type)
+        {
+            if (type.IsValueType && type.IsGenericType && type.GetGenericTypeDefinition().FullName == "System.Nullable`1")
+            {
+                return type.GetGenericArguments()[0];
+            }
+            return null;
+        }
+#endif
 
+        internal static System.Type GetUnderlyingType(System.Type type)
+        {
+            return Nullable.GetUnderlyingType(type);
+        }
 
         internal static bool IsValueType(Type type)
         {
@@ -306,17 +366,18 @@ namespace ProtoBuf
 #endif
         }
 
-        internal static object[] GetCustomAttributes(Type type, bool inherit)
+#if FEAT_IKVM
+        internal static bool IsMatch(IKVM.Reflection.ParameterInfo[] parameters, IKVM.Reflection.Type[] parameterTypes)
         {
-#if WINRT
-            System.Collections.Generic.List<object> list = new System.Collections.Generic.List<object>();
-            list.AddRange(type.GetTypeInfo().GetCustomAttributes(inherit));
-            return list.ToArray();
-#else
-            return type.GetCustomAttributes(inherit);
-#endif
+            if (parameterTypes == null) parameterTypes = Helpers.EmptyTypes;
+            if (parameters.Length != parameterTypes.Length) return false;
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                if (parameters[i].ParameterType != parameterTypes[i]) return false;
+            }
+            return true;
         }
-
+#endif
 #if WINRT
         private static bool IsMatch(ParameterInfo[] parameters, Type[] parameterTypes)
         {
@@ -348,6 +409,7 @@ namespace ProtoBuf
             return type.GetDeclaredProperty(name);
         }
 #else
+
         internal static ConstructorInfo GetConstructor(Type type, Type[] parameterTypes, bool nonPublic)
         {
 #if PORTABLE
@@ -373,6 +435,21 @@ namespace ProtoBuf
             return type.GetProperty(name);
         }
 #endif
+
+
+        internal static object ParseEnum(Type type, string value)
+        {
+#if FEAT_IKVM
+            FieldInfo[] fields = type.GetFields();
+            foreach (FieldInfo field in fields)
+            {
+                if (string.Equals(field.Name, value, StringComparison.OrdinalIgnoreCase)) return field.GetRawConstantValue();
+            }
+            throw new ArgumentException("Enum value could not be parsed: " + value + ", " + type.FullName);
+#else
+            return Enum.Parse(type, value, true);
+#endif
+        }
 
 
         internal static MemberInfo[] GetInstanceFieldsAndProperties(Type type, bool publicOnly)
@@ -419,17 +496,6 @@ namespace ProtoBuf
 #endif
         }
 
-
-        internal static object[] GetCustomAttributes(MemberInfo member, bool inherited)
-        {
-#if WINRT
-            System.Collections.Generic.List<object> list = new System.Collections.Generic.List<object>();
-            list.AddRange(member.GetCustomAttributes(inherited));
-            return list.ToArray();
-#else
-            return Attribute.GetCustomAttributes(member, inherited);
-#endif
-        }
         internal static bool IsAssignableFrom(Type target, Type type)
         {
 #if WINRT

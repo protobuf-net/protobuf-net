@@ -1,16 +1,20 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Net;
+using ProtoBuf.Meta;
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
 using System.Reflection;
-
-
+#endif
 
 namespace ProtoBuf.Serializers
 {
     sealed class ParseableSerializer : IProtoSerializer
     {
         private readonly MethodInfo parse;
-        public static ParseableSerializer TryCreate(Type type)
+        public static ParseableSerializer TryCreate(Type type, TypeModel model)
         {
             if (type == null) throw new ArgumentNullException("type");
 #if WINRT || PORTABLE
@@ -32,14 +36,14 @@ namespace ProtoBuf.Serializers
 #else
             MethodInfo method = type.GetMethod("Parse",
                 BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
-                null, new Type[] { typeof(string) }, null);
+                null, new Type[] { model.MapType(typeof(string)) }, null);
 #endif
             if (method != null && method.ReturnType == type)
             {
                 if (Helpers.IsValueType(type))
                 {
                     MethodInfo toString = GetCustomToString(type);
-                    if (toString == null || toString.ReturnType != typeof(string)) return null; // need custom ToString, fools
+                    if (toString == null || toString.ReturnType != model.MapType(typeof(string))) return null; // need custom ToString, fools
                 }
                 return new ParseableSerializer(method);
             }
@@ -63,17 +67,22 @@ namespace ProtoBuf.Serializers
             this.parse = parse;
         }
         public Type ExpectedType { get { return parse.DeclaringType; } }
-        public void Write(object value, ProtoWriter dest)
-        {
-            ProtoWriter.WriteString(value.ToString(), dest);
-        }
+
         bool IProtoSerializer.RequiresOldValue { get { return false; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
+
+#if !FEAT_IKVM
         public object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return parse.Invoke(null, new object[] { source.ReadString() });
         }
+        public void Write(object value, ProtoWriter dest)
+        {
+            ProtoWriter.WriteString(value.ToString(), dest);
+        }
+#endif
+
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
@@ -83,13 +92,13 @@ namespace ProtoBuf.Serializers
                 ctx.EmitCall(GetCustomToString(type));
             }
             else {
-                ctx.EmitCall(typeof(object).GetMethod("ToString"));
+                ctx.EmitCall(ctx.MapType(typeof(object)).GetMethod("ToString"));
             }
             ctx.EmitBasicWrite("WriteString", valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicRead("ReadString", typeof(string));
+            ctx.EmitBasicRead("ReadString", ctx.MapType(typeof(string)));
             ctx.EmitCall(parse);
         }
 #endif

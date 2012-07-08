@@ -177,6 +177,7 @@
     <Compile Include="IExtension.cs" />
     <Compile Include="ImplicitFields.cs" />
     <Compile Include="KeyValuePairProxy.cs" />
+    <Compile Include="Meta\AttributeMap.cs" />
     <Compile Include="Meta\BasicList.cs" />
     <Compile Include="Meta\CallbackSet.cs" />
     <Compile Include="Meta\MetaType.cs" />

@@ -1,7 +1,12 @@
 ﻿#if !NO_RUNTIME
 using System;
+using ProtoBuf.Meta;
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
 using System.Reflection;
-
+#endif
 
 
 namespace ProtoBuf.Serializers
@@ -13,15 +18,16 @@ namespace ProtoBuf.Serializers
         public override bool RequiresOldValue { get { return Tail.RequiresOldValue; } }
         public override bool ReturnsValue { get { return Tail.ReturnsValue; } }
         private readonly object defaultValue;
-        public DefaultValueDecorator(object defaultValue, IProtoSerializer tail) : base(tail)
+        public DefaultValueDecorator(TypeModel model, object defaultValue, IProtoSerializer tail) : base(tail)
         {
             if (defaultValue == null) throw new ArgumentNullException("defaultValue");
-            if (defaultValue.GetType() != tail.ExpectedType)
+            if (model.MapType(defaultValue.GetType()) != tail.ExpectedType)
             {
                 throw new ArgumentException("Default value is of incorrect type", "defaultValue");
             }
             this.defaultValue = defaultValue;
         }
+#if !FEAT_IKVM
         public override void Write(object value, ProtoWriter dest)
         {
             if (!object.Equals(value, defaultValue))
@@ -33,6 +39,7 @@ namespace ProtoBuf.Serializers
         {
             return Tail.Read(value, source);
         }
+#endif
 
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -76,8 +83,8 @@ namespace ProtoBuf.Serializers
                     break;
                 default:
                     MethodInfo method = type.GetMethod("op_Equality", BindingFlags.Public | BindingFlags.Static,
-                        null, new Type[] { type, type }, null);
-                    if (method == null || method.ReturnType != typeof(bool))
+                        null, new Type[] { type, type}, null);
+                    if (method == null || method.ReturnType != ctx.MapType(typeof(bool)))
                     {
                         throw new InvalidOperationException("No suitable equality operator found for default-values of type: " + type.FullName);
                     }
@@ -215,7 +222,7 @@ namespace ProtoBuf.Serializers
                         else
                         {
                             ctx.LoadValue(ts.Ticks);
-                            ctx.EmitCall(typeof(TimeSpan).GetMethod("FromTicks"));
+                            ctx.EmitCall(ctx.MapType(typeof(TimeSpan)).GetMethod("FromTicks"));
                         }
                         EmitBeq(ctx, label, ExpectedType);
                         break;
@@ -233,7 +240,7 @@ namespace ProtoBuf.Serializers
                         ctx.EmitCall(typeof(DateTime).GetMethod("FromFileTime"));                      
 #else
                         ctx.LoadValue(((DateTime)defaultValue).ToBinary());
-                        ctx.EmitCall(typeof(DateTime).GetMethod("FromBinary"));
+                        ctx.EmitCall(ctx.MapType(typeof(DateTime)).GetMethod("FromBinary"));
 #endif
                         
                         EmitBeq(ctx, label, ExpectedType);

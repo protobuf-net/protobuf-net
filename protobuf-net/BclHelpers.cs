@@ -370,6 +370,9 @@ namespace ProtoBuf
         /// </summary>
         public static object ReadNetObject(object value, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             SubItemToken token = ProtoReader.StartSubItem(source);
             int fieldNumber;
             int newObjectKey = -1, newTypeKey = -1, tmp;
@@ -399,8 +402,16 @@ namespace ProtoBuf
                         {
                             throw new ProtoException("Unable to resolve type: " + typeName + " (you can use the TypeModel.DynamicTypeFormatting event to provide a custom mapping)");
                         }
-                        key = source.GetTypeKey(ref type);
-                        if(key < 0) throw new InvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
+                        if (type == typeof(string))
+                        {
+                            key = -1;
+                        }
+                        else
+                        {
+                            key = source.GetTypeKey(ref type);
+                            if (key < 0)
+                                throw new InvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
+                        }
                         break;
                     case FieldObject:
                         bool isString = type == typeof(string);
@@ -458,12 +469,16 @@ namespace ProtoBuf
             ProtoReader.EndSubItem(token, source);
 
             return value;
+#endif
         }
         /// <summary>
         /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
         public static void WriteNetObject(object value, ProtoWriter dest, int key, NetObjectOptions options)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             Helpers.DebugAssert(value != null);
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
                  asReference = (options & NetObjectOptions.AsReference) != 0;
@@ -488,8 +503,12 @@ namespace ProtoBuf
                 {
                     bool existing;
                     Type type = value.GetType();
-                    key = dest.GetTypeKey(ref type);
-                    if (key < 0) throw new InvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
+
+                    if (!(value is string))
+                    {
+                        key = dest.GetTypeKey(ref type);
+                        if (key < 0) throw new InvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
+                    }
                     int typeKey = dest.NetCache.AddObjectKey(type, out existing);
                     ProtoWriter.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Variant, dest);
                     ProtoWriter.WriteInt32(typeKey, dest);
@@ -510,6 +529,7 @@ namespace ProtoBuf
                 }
             }
             ProtoWriter.EndSubItem(token, dest);
+#endif
         }
     }
 }

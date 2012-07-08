@@ -1,7 +1,14 @@
 ﻿#if !NO_RUNTIME
 using System;
-using System.Reflection;
 using ProtoBuf.Meta;
+
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+using IKVM.Reflection;
+#else
+using System.Reflection;
+#endif
+
 namespace ProtoBuf.Serializers
 {
     sealed class TupleSerializer : IProtoTypeSerializer
@@ -25,9 +32,9 @@ namespace ProtoBuf.Serializers
 
                 Type itemType = null, defaultType = null;
 
-                MetaType.ResolveListTypes(finalType, ref itemType, ref defaultType);
+                MetaType.ResolveListTypes(model, finalType, ref itemType, ref defaultType);
                 Type tmp = itemType == null ? finalType : itemType;
-                IProtoSerializer tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out wireType, false, false, false), serializer;
+                IProtoSerializer tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out wireType, false, false, false, true), serializer;
                 if (tail == null) throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
 
                 tail = new TagDecorator(i + 1, wireType, false, tail);
@@ -39,11 +46,11 @@ namespace ProtoBuf.Serializers
                 {
                     if (finalType.IsArray)
                     {
-                        serializer = new ArrayDecorator(tail, i + 1, false, wireType, finalType, false, false);
+                        serializer = new ArrayDecorator(model, tail, i + 1, false, wireType, finalType, false, false);
                     }
                     else
                     {
-                        serializer = new ListDecorator(finalType, defaultType, tail, i + 1, false, wireType, true, false, false);
+                        serializer = new ListDecorator(model, finalType, defaultType, tail, i + 1, false, wireType, true, false, false);
                     }
                 }
                 tails[i] = serializer;
@@ -58,19 +65,14 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, Meta.TypeModel.CallbackType callbackType){}
 #endif
-        public System.Type ExpectedType
+        public Type ExpectedType
         {
             get { return ctor.DeclaringType; }
         }
 
-        public void Write(object value, ProtoWriter dest)
-        {
-            for(int i = 0 ; i < tails.Length ; i++)
-            {
-                object val = GetValue(value, i);
-                if(val != null) tails[i].Write(val, dest);
-            }
-        }
+
+        
+#if !FEAT_IKVM
         private object GetValue(object obj, int index)
         {
             PropertyInfo prop;
@@ -93,7 +95,6 @@ namespace ProtoBuf.Serializers
                 throw new InvalidOperationException();
             }          
         }
-
         public object Read(object value, ProtoReader source)
         {
             object[] values = new object[members.Length];
@@ -120,7 +121,15 @@ namespace ProtoBuf.Serializers
             }
             return invokeCtor ? ctor.Invoke(values) : value;
         }
-
+        public void Write(object value, ProtoWriter dest)
+        {
+            for (int i = 0; i < tails.Length; i++)
+            {
+                object val = GetValue(value, i);
+                if (val != null) tails[i].Write(val, dest);
+            }
+        }
+#endif
         public bool RequiresOldValue
         {
             get { return true; }
@@ -246,7 +255,7 @@ namespace ProtoBuf.Serializers
 
                     if (!ExpectedType.IsValueType) ctx.MarkLabel(skipOld);
 
-                    using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof (int)))
+                    using (Compiler.Local fieldNumber = new Compiler.Local(ctx, ctx.MapType(typeof (int))))
                     {
                         Compiler.CodeLabel @continue = ctx.DefineLabel(),
                                            processField = ctx.DefineLabel(),
@@ -298,10 +307,10 @@ namespace ProtoBuf.Serializers
 
                         ctx.MarkLabel(notRecognised);
                         ctx.LoadReaderWriter();
-                        ctx.EmitCall(typeof (ProtoReader).GetMethod("SkipField"));
+                        ctx.EmitCall(ctx.MapType(typeof (ProtoReader)).GetMethod("SkipField"));
 
                         ctx.MarkLabel(@continue);
-                        ctx.EmitBasicRead("ReadFieldHeader", typeof (int));
+                        ctx.EmitBasicRead("ReadFieldHeader", ctx.MapType(typeof (int)));
                         ctx.CopyValue();
                         ctx.StoreValue(fieldNumber);
                         ctx.LoadValue(0);

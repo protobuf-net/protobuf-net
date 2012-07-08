@@ -107,6 +107,12 @@ namespace DAL
                 }
                 watch.Stop();
                 Console.WriteLine(watch.ElapsedMilliseconds);
+                if(Debugger.IsAttached)
+                {
+                    Console.WriteLine("(press any key)");
+                    Console.ReadKey();
+                }
+
             }
         }
 

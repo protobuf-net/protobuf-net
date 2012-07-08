@@ -142,6 +142,9 @@ namespace ProtoBuf
         
         internal static void AppendExtendValue<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             if(instance == null) throw new ArgumentNullException("instance");
             if(value == null) throw new ArgumentNullException("value");
 
@@ -163,6 +166,7 @@ namespace ProtoBuf
             finally {
                 extn.EndAppend(stream, commit);
             }
+#endif
         }
 
         /// <summary>

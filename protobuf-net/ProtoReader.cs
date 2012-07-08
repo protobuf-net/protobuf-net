@@ -5,6 +5,10 @@ using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
 
+#if FEAT_IKVM
+using Type = IKVM.Reflection.Type;
+#endif
+
 #if MF
 using EndOfStreamException = System.ApplicationException;
 using OverflowException = System.ApplicationException;
@@ -480,7 +484,7 @@ namespace ProtoBuf
         /// <summary>
         /// Throws an exception indication that the given value cannot be mapped to an enum.
         /// </summary>
-        public void ThrowEnumException(Type type, int value)
+        public void ThrowEnumException(System.Type type, int value)
         {
             string desc = type == null ? "<null>" : type.FullName;
             throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value), this);
@@ -524,8 +528,13 @@ namespace ProtoBuf
         /// </summary>
         public static object ReadObject(object value, int key, ProtoReader reader)
         {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
             return ReadTypedObject(value, key, reader, null);
+#endif
         }
+#if !FEAT_IKVM
         internal static object ReadTypedObject(object value, int key, ProtoReader reader, Type type)
         {
             if (reader.model == null)
@@ -548,6 +557,7 @@ namespace ProtoBuf
             ProtoReader.EndSubItem(token, reader);
             return value;
         }
+#endif
 
         /// <summary>
         /// Makes the end of consuming a nested message in the stream; the stream must be either at the correct EndGroup
@@ -1214,7 +1224,7 @@ namespace ProtoBuf
             get { return netCache; }
         }
 
-        internal Type DeserializeType(string value)
+        internal System.Type DeserializeType(string value)
         {
             return TypeModel.DeserializeType(model, value);
         }
@@ -1240,7 +1250,7 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a Type from the stream, using the model's DynamicTypeFormatting if appropriate; supported wire-types: String
         /// </summary>
-        public Type ReadType()
+        public System.Type ReadType()
         {
             return TypeModel.DeserializeType(model, ReadString());
         }
