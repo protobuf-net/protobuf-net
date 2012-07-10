@@ -1083,8 +1083,13 @@ namespace ProtoBuf.Meta
 
       
 #if FEAT_IKVM
-        internal override Type GetType(string fullName)
+        internal override Type GetType(string fullName, Assembly context)
         {
+            if (context != null)
+            {
+                Type found = universe.GetType(context, fullName, false);
+                if (found != null) return found;
+            }
             return universe.GetType(fullName, false);
         }
 #endif

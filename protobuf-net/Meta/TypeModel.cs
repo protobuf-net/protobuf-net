@@ -1369,14 +1369,43 @@ namespace ProtoBuf.Meta
         }
 #endif
 
-        internal virtual Type GetType(string fullName)
+        internal virtual Type GetType(string fullName, Assembly context)
         {
 #if FEAT_IKVM
-            throw new NotSupportedException();
+            throw new NotImplementedException();
 #else
-            return Type.GetType(fullName);
+            return ResolveKnownType(fullName, this, context);
 #endif
         }
+
+        internal static Type ResolveKnownType(string name, TypeModel model, Assembly assembly)
+        {
+            if (Helpers.IsNullOrEmpty(name)) return null;
+            try
+            {
+#if FEAT_IKVM
+                // looks like a NullReferenceException, but this should call into RuntimeTypeModel's version
+                Type type = model == null ? null : model.GetType(name, assembly);
+#else
+                Type type = Type.GetType(name);
+#endif
+                if (type != null) return type;
+            }
+            catch { }
+            try
+            {
+                int i = name.IndexOf(',');
+                string fullName = (i > 0 ? name.Substring(0, i) : name).Trim();
+#if !(WINRT || FEAT_IKVM)
+                if (assembly == null) assembly = Assembly.GetCallingAssembly();
+#endif
+                Type type = assembly == null ? null : assembly.GetType(fullName);
+                if (type != null) return type;
+            }
+            catch { }
+            return null;
+        }
+
     }
 
 }

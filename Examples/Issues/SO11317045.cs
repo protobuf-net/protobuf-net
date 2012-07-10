@@ -73,5 +73,32 @@ namespace Examples.Issues
             Assert.IsInstanceOfType(typeof(B), clone.B);
             Assert.AreEqual(sum, clone.B.Data.Sum(x => x.Sum(b => (int)b)));
         }
+
+
+        [Test]
+        public void TestProtoIncludeWithStringKnownTypeName()
+        {
+            NamedProtoInclude.Foo foo = new NamedProtoInclude.Bar();
+            var clone = Serializer.DeepClone(foo);
+
+            Assert.IsInstanceOfType(typeof(NamedProtoInclude.Bar), foo);
+        }
+
+    }
+}
+
+namespace Examples.Issues.NamedProtoInclude
+{
+    [ProtoContract]
+    [ProtoInclude(1, "Examples.Issues.NamedProtoInclude.Bar")]
+    internal class Foo
+    {
+
+    }
+
+    [ProtoContract]
+    internal class Bar : Foo
+    {
+
     }
 }

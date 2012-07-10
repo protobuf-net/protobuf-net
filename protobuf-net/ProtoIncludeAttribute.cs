@@ -59,37 +59,9 @@ namespace ProtoBuf
         {
             get
             {
-                return ResolveKnownType(null, null);
+                return TypeModel.ResolveKnownType(KnownTypeName, null, null);
             }
         }
-
-        internal Type ResolveKnownType(TypeModel model, Assembly assembly)
-        {
-            if (Helpers.IsNullOrEmpty(KnownTypeName)) return null;
-            try
-            {
-#if FEAT_IKVM
-                Type type = model == null ? null : model.GetType(KnownTypeName);
-#else
-                Type type = Type.GetType(KnownTypeName);
-#endif
-                if (type != null) return type;
-            }
-            catch { }
-            try
-            {
-                int i = KnownTypeName.IndexOf(',');
-                string fullName = (i > 0 ? KnownTypeName.Substring(0, i) : KnownTypeName).Trim();
-#if !(WINRT || FEAT_IKVM)
-                if (assembly == null) assembly = Assembly.GetCallingAssembly();
-#endif
-                Type type = assembly == null ? null : assembly.GetType(fullName);
-                if (type != null) return type;
-            }
-            catch { }
-            return null;
-        }
-
 
         /// <summary>
         /// Specifies whether the inherited sype's sub-message should be
