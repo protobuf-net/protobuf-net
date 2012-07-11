@@ -556,8 +556,11 @@ namespace ProtoBuf.Compiler
                 if(tail.RequiresOldValue)
                 {
                     // we expect the input value to be in valueFrom; need to unpack it from T?
-                    LoadAddress(valueFrom, type);
-                    EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes)); 
+                    using (var loc = GetLocalWithValue(type, valueFrom))
+                    {
+                        LoadAddress(loc, type);
+                        EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
+                    }
                 }
                 else
                 {
@@ -699,7 +702,10 @@ namespace ProtoBuf.Compiler
         {
             if (type.IsValueType)
             {
-                if (local == null) throw new InvalidOperationException("Cannot load the address of a struct at the head of the stack");
+                if (local == null)
+                {
+                    throw new InvalidOperationException("Cannot load the address of a struct at the head of the stack");
+                }
 
                 if (local == Local.InputValue)
                 {
