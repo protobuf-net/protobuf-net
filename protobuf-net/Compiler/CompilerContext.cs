@@ -556,7 +556,7 @@ namespace ProtoBuf.Compiler
                 if(tail.RequiresOldValue)
                 {
                     // we expect the input value to be in valueFrom; need to unpack it from T?
-                    using (var loc = GetLocalWithValue(type, valueFrom))
+                    using (Local loc = GetLocalWithValue(type, valueFrom))
                     {
                         LoadAddress(loc, type);
                         EmitCall(type.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));

@@ -27,13 +27,14 @@ namespace ProtoBuf.Meta
         /// <param name="fieldNumber">The field-number that is used to encapsulate the data (as a nested
         /// message) for the derived dype.</param>
         /// <param name="derivedType">The sub-type to be considered.</param>
-        public SubType(int fieldNumber, MetaType derivedType, DataFormat dataFormat)
+        /// <param name="format">Specific encoding style to use; in particular, Grouped can be used to avoid buffering, but is not the default.</param>
+        public SubType(int fieldNumber, MetaType derivedType, DataFormat format)
         {
             if (derivedType == null) throw new ArgumentNullException("derivedType");
             if (fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
             this.fieldNumber = fieldNumber;
             this.derivedType = derivedType;
-            this.dataFormat = dataFormat;
+            this.dataFormat = format;
         }
 
         private readonly DataFormat dataFormat;

@@ -463,7 +463,11 @@ namespace ProtoBuf.Meta
                     Type knownType = null;
                     try
                     {
-                        if (item.TryGet("knownTypeName", out tmp)) knownType = model.GetType((string)tmp, type.Assembly);
+                        if (item.TryGet("knownTypeName", out tmp)) knownType = model.GetType((string)tmp, type
+#if WINRT
+                            .GetTypeInfo()
+#endif       
+                            .Assembly);
                         else if (item.TryGet("knownType", out tmp)) knownType = (Type)tmp;
                     }
                     catch (Exception ex)
