@@ -10,9 +10,7 @@ namespace TestIkvm
         static void Main()
         {
             var model = TypeModel.Create();
-            model.Load(@"C:\Dev\protobuf-net\MetroDto\bin\x86\Debug\MetroDto");
-            model.Add("DAL.DatabaseCompat, MetroDto", false);
-            
+            model.Add(typeof (Foo), true);
             model.Compile("ViaIKVM", "ViaIKVM.dll");
             if(!PEVerify.AssertValid("ViaIKVM.dll"))
             {
