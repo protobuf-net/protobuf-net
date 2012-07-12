@@ -98,6 +98,10 @@ namespace ProtoBuf.Meta
 
         internal RuntimeTypeModel(bool isDefault)
         {
+#if FEAT_IKVM
+            universe = new IKVM.Reflection.Universe();
+            universe.EnableMissingMemberResolution(); // needed to avoid TypedReference issue on WinRT
+#endif
             AutoAddMissingTypes = true;
             UseImplicitZeroDefaults = true;
             SetOption(OPTIONS_IsDefaultModel, isDefault);
@@ -107,19 +111,44 @@ namespace ProtoBuf.Meta
         }
 
 #if FEAT_IKVM
-        IKVM.Reflection.Universe universe = new IKVM.Reflection.Universe();
+        readonly IKVM.Reflection.Universe universe;
 
-
+        public event IKVM.Reflection.ResolveEventHandler AssemblyResolve
+        {
+            add { universe.AssemblyResolve += value; }
+            remove { universe.AssemblyResolve -= value; }
+        }
         public void Load(string path)
         {
             universe.LoadFile(path);
         }
-
+        /// <summary>
+        /// Adds support for an additional type in this model, optionally
+        /// appplying inbuilt patterns. If the type is already known to the
+        /// model, the existing type is returned **without** applying
+        /// any additional behaviour.
+        /// </summary>
         public MetaType Add(string assemblyQualifiedTypeName, bool applyDefaults)
         {
             Type type = universe.GetType(assemblyQualifiedTypeName, true);
             return Add(type, applyDefaults);
         }
+        /// <summary>
+        /// Adds support for an additional type in this model, optionally
+        /// appplying inbuilt patterns. If the type is already known to the
+        /// model, the existing type is returned **without** applying
+        /// any additional behaviour.
+        /// </summary>
+        public MetaType Add(System.Type type, bool applyDefaultBehaviour)
+        {
+            return Add(MapType(type), applyDefaultBehaviour);
+        }
+        /// <summary>
+        /// Obtains the MetaType associated with a given Type for the current model,
+        /// allowing additional configuration.
+        /// </summary>
+        public MetaType this[System.Type type] { get { return this[MapType(type)]; } }
+        
 #endif
 
         /// <summary>
@@ -265,7 +294,6 @@ namespace ProtoBuf.Meta
             ThrowIfFrozen();
             return new MetaType(this, type);
         }
-
 
         /// <summary>
         /// Adds support for an additional type in this model, optionally
@@ -588,7 +616,30 @@ namespace ProtoBuf.Meta
         protected internal override Type MapType(System.Type type)
         {
             if (type == null) return null;
-            return universe.GetType(type.AssemblyQualifiedName);
+#if DEBUG
+            if (type.Assembly == typeof(IKVM.Reflection.Type).Assembly)
+            {
+                throw new InvalidOperationException(string.Format(
+                    "Somebody is passing me IKVM types! {0} should be fully-qualified at the call-site",
+                    type.Name));
+            }
+#endif
+            Type result = universe.GetType(type.AssemblyQualifiedName);
+            
+            if(result == null)
+            {
+                // things also tend to move around... *a lot* - especially in WinRT; search all as a fallback strategy
+                foreach (Assembly a in universe.GetAssemblies())
+                {
+                    result = a.GetType(type.FullName);
+                    if (result != null) break;
+                }
+                if (result == null)
+                {
+                    throw new InvalidOperationException("Unable to map type: " + type.AssemblyQualifiedName);
+                }
+            }
+            return result;
         }
 #endif
         
@@ -680,7 +731,7 @@ namespace ProtoBuf.Meta
                 ctx.Return();
             }
 
-            FieldBuilder knownTypes = type.DefineField("knownTypes", MapType(typeof(Type[])), FieldAttributes.Private | FieldAttributes.InitOnly);
+            FieldBuilder knownTypes = type.DefineField("knownTypes", MapType(typeof(System.Type[])), FieldAttributes.Private | FieldAttributes.InitOnly);
 
             ILGenerator il = Override(type, "GetKeyImpl");
             il.Emit(OpCodes.Ldarg_0);
@@ -809,7 +860,7 @@ namespace ProtoBuf.Meta
             il.Emit(OpCodes.Call, Helpers.GetConstructor(baseType, Helpers.EmptyTypes, true));
             il.Emit(OpCodes.Ldarg_0);
             Compiler.CompilerContext.LoadValue(il, types.Count);
-            il.Emit(OpCodes.Newarr, ctx.MapType(typeof(Type)));
+            il.Emit(OpCodes.Newarr, ctx.MapType(typeof(System.Type)));
             
             index = 0;
             foreach(SerializerPair pair in methodPairs)
@@ -817,7 +868,7 @@ namespace ProtoBuf.Meta
                 il.Emit(OpCodes.Dup);
                 Compiler.CompilerContext.LoadValue(il, index);
                 il.Emit(OpCodes.Ldtoken, pair.Type.Type);
-                il.EmitCall(OpCodes.Call, ctx.MapType(typeof(Type)).GetMethod("GetTypeFromHandle"), null);
+                il.EmitCall(OpCodes.Call, ctx.MapType(typeof(System.Type)).GetMethod("GetTypeFromHandle"), null);
                 il.Emit(OpCodes.Stelem_Ref);
                 index++;
             }

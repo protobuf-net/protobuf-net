@@ -107,7 +107,7 @@ namespace ProtoBuf
                 return Deserialize<TTo>(ms);
             }
         }
-#if PLAT_BINARYFORMATTER
+#if PLAT_BINARYFORMATTER && !WINRT
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.
         /// </summary>
@@ -191,7 +191,7 @@ namespace ProtoBuf
 #endif
 
         private const string ProtoBinaryField = "proto";
-#if PLAT_BINARYFORMATTER && !NO_GENERICS
+#if PLAT_BINARYFORMATTER && !NO_GENERICS && !WINRT
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
         /// </summary>
@@ -240,7 +240,7 @@ namespace ProtoBuf
 #endif
         }
 
-#if PLAT_BINARYFORMATTER
+#if PLAT_BINARYFORMATTER && !WINRT
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
         /// </summary>

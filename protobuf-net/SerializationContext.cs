@@ -31,6 +31,8 @@ namespace ProtoBuf
         /// </summary>
         internal static SerializationContext Default { get {return @default;}}
 #if PLAT_BINARYFORMATTER || (SILVERLIGHT && NET_4_0)
+
+#if !WINRT
         private System.Runtime.Serialization.StreamingContextStates state = System.Runtime.Serialization.StreamingContextStates.Persistence;
         /// <summary>
         /// Gets or sets the source or destination of the transmitted data.
@@ -40,13 +42,18 @@ namespace ProtoBuf
             get { return state; }
             set { if (state != value) { ThrowIfFrozen(); state = value; } }
         }
+#endif
         /// <summary>
         /// Convert a SerializationContext to a StreamingContext
         /// </summary>
         public static implicit operator System.Runtime.Serialization.StreamingContext(SerializationContext ctx)
         {
+#if WINRT
+            return new System.Runtime.Serialization.StreamingContext();
+#else
             if (ctx == null) return new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.Persistence);
             return new System.Runtime.Serialization.StreamingContext(ctx.state, ctx.context);
+#endif
         }
         /// <summary>
         /// Convert a StreamingContext to a SerializationContext
@@ -54,8 +61,10 @@ namespace ProtoBuf
         public static implicit operator SerializationContext (System.Runtime.Serialization.StreamingContext ctx)
         {
             SerializationContext result = new SerializationContext();
+#if !WINRT
             result.Context = ctx.Context;
             result.State = ctx.State;
+#endif
             return result;
         }
 #endif

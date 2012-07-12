@@ -22,7 +22,8 @@ namespace ProtoBuf.Meta
         public static AttributeMap[] Create(TypeModel model, Type type, bool inherit)
         {
 #if FEAT_IKVM
-            System.Collections.Generic.IList<CustomAttributeData> all = type.__GetCustomAttributes(model.MapType(typeof(Attribute)), inherit);
+            Type attribType = model.MapType(typeof(System.Attribute));
+            System.Collections.Generic.IList<CustomAttributeData> all = type.__GetCustomAttributes(attribType, inherit);
             AttributeMap[] result = new AttributeMap[all.Count];
             int index = 0;
             foreach (CustomAttributeData attrib in all)

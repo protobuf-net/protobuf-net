@@ -6,6 +6,8 @@ using System.Reflection;
 using ProtoBuf;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
+using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -39,9 +41,24 @@ namespace Metro_DevRig
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
-            var obj = new MyDto { Foo = "abc", Bar = 234 };
-            var clone = Serializer.DeepClone(obj);
-            ((Button)sender).Content = clone.Foo + ", " + clone.Bar;
+            ReadProto(((Button)sender));
+            //((Button)sender).Content = clone.Foo + ", " + clone.Bar;
+        }
+        private async void ReadProto(Button button)
+        {
+            var path = @"nwind.proto.bin";
+            var folder = Windows.ApplicationModel.Package.Current.InstalledLocation;
+            var file = await folder.GetFileAsync(path);
+
+            var readStream = await file.OpenReadAsync();
+            IInputStream inputSteam = readStream.GetInputStreamAt(0);
+            DataReader dataReader = new DataReader(inputSteam);
+            uint numBytesLoaded = await dataReader.LoadAsync((uint)readStream.Size);
+            byte[] raw = new byte[readStream.Size];
+            dataReader.ReadBytes(raw);
+            var ms = new MemoryStream(raw);
+            var dal = (DAL.DatabaseCompat)new Foo().Deserialize(ms, null, typeof(DAL.DatabaseCompat));
+            button.Content = dal.Orders.Count;
         }
     }
 }

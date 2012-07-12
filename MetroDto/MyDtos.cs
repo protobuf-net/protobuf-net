@@ -12,6 +12,11 @@ namespace DAL
     static class Database
     {
         public const DataFormat SubObjectFormat = DataFormat.Group;
+
+        static Database()
+        {
+            
+        }
     }
 
     // these are just so I don't need to hack everything too much

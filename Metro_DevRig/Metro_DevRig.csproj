@@ -101,6 +101,10 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <ProjectReference Include="..\MetroDto\MetroDto.csproj">
+      <Project>{ed830391-ffcf-4aa4-b472-a4449bd307b6}</Project>
+      <Name>MetroDto</Name>
+    </ProjectReference>
     <ProjectReference Include="..\protobuf-net_WinRT\protobuf-net_WinRT.csproj">
       <Project>{8507284e-1c31-413d-a390-166200fa38d2}</Project>
       <Name>protobuf-net_WinRT</Name>
@@ -119,6 +123,9 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <Content Include="..\Tools\nwind.proto.bin">
+      <Link>nwind.proto.bin</Link>
+    </Content>
     <None Include="Metro_DevRig_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
@@ -140,6 +147,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Foo">
+      <HintPath>..\TestIkvm\bin\Debug\Foo.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">
     <VisualStudioVersion>11.0</VisualStudioVersion>

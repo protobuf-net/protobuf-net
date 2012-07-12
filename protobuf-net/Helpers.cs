@@ -221,7 +221,7 @@ namespace ProtoBuf
                 typeof(long), typeof(ulong), typeof(float), typeof(double),
                 typeof(decimal), typeof(string),
                 typeof(DateTime), typeof(TimeSpan), typeof(Guid), typeof(Uri),
-                typeof(byte[]), typeof(Type)};
+                typeof(byte[]), typeof(System.Type)};
         private static readonly ProtoTypeCode[] knownCodes = new ProtoTypeCode[] {
             ProtoTypeCode.Boolean, ProtoTypeCode.Char, ProtoTypeCode.SByte, ProtoTypeCode.Byte,
             ProtoTypeCode.Int16, ProtoTypeCode.UInt16, ProtoTypeCode.Int32, ProtoTypeCode.UInt32,
@@ -302,7 +302,7 @@ namespace ProtoBuf
             if (type == typeof(Guid)) return ProtoTypeCode.Guid;
             if (type == typeof(Uri)) return ProtoTypeCode.Uri;
             if (type == typeof(byte[])) return ProtoTypeCode.ByteArray;
-            if (type == typeof(Type)) return ProtoTypeCode.Type;
+            if (type == typeof(System.Type)) return ProtoTypeCode.Type;
 
             return ProtoTypeCode.Unknown;
 #endif

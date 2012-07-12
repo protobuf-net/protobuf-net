@@ -330,7 +330,7 @@ namespace ProtoBuf.Serializers
 
                     if (constructType != null && constructType != forType)
                     {
-                        using(Compiler.Local actualType = new Compiler.Local(ctx, ctx.MapType(typeof(Type))))
+                        using(Compiler.Local actualType = new Compiler.Local(ctx, ctx.MapType(typeof(System.Type))))
                         {
                             // would have jumped to "fields" if an expected sub-type, so two options:
                             // a: *exactly* that type, b: an *unexpected* type
@@ -405,7 +405,8 @@ namespace ProtoBuf.Serializers
                         else if (parameterType == ctx.MapType(typeof(System.Runtime.Serialization.StreamingContext)))
                         {
                             ctx.LoadSerializationContext();
-                            ctx.EmitCall(ctx.MapType(typeof(SerializationContext)).GetMethod("op_Implicit", new Type[] { ctx.MapType(typeof(SerializationContext)) }));
+                            MethodInfo op = ctx.MapType(typeof(SerializationContext)).GetMethod("op_Implicit", new Type[] { ctx.MapType(typeof(SerializationContext)) });
+                            ctx.EmitCall(op);
                             handled = true;
                         }
 #endif

@@ -1062,7 +1062,7 @@ namespace ProtoBuf.Compiler
 #if DEBUG_COMPILE
             Helpers.DebugWriteLine(OpCodes.Ldtoken + ": " + type);
 #endif
-            EmitCall(MapType(typeof(Type)).GetMethod("GetTypeFromHandle"));
+            EmitCall(MapType(typeof(System.Type)).GetMethod("GetTypeFromHandle"));
         }
 
         internal void ConvertToInt32(ProtoTypeCode typeCode)

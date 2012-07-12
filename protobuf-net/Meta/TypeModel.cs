@@ -1298,7 +1298,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public event TypeFormatEventHandler DynamicTypeFormatting;
 
-#if PLAT_BINARYFORMATTER
+#if PLAT_BINARYFORMATTER && !WINRT
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
         /// </summary>

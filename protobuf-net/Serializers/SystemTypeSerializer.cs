@@ -16,12 +16,12 @@ namespace ProtoBuf.Serializers
 #if FEAT_IKVM
         readonly Type expectedType;
 #else
-        static readonly Type expectedType = typeof(Type);
+        static readonly Type expectedType = typeof(System.Type);
 #endif
         public SystemTypeSerializer(ProtoBuf.Meta.TypeModel model)
         {
 #if FEAT_IKVM
-            expectedType = model.MapType(typeof(Type));
+            expectedType = model.MapType(typeof(System.Type));
 #endif
         }
         public Type ExpectedType { get { return expectedType; } }
