@@ -5,34 +5,47 @@ using ProtoBuf.Meta;
 
 namespace TestIkvm
 {
-    [System.ComponentModel.Description("Just testing")]
     class Program
     {
+        // this sample loads a Metro/WinRT assembly into a TypeModel, explores the model with
+        // IKVM-reflection, and builds a Metro/WinRT serialization assembly matching the
+        // input assembly. We can then reference and use this serialization library from
+        // our WinRT application, and: zero reflection
         static void Main()
         {
-            
+            // model to work with
             var model = TypeModel.Create();
+
+            // all of the following is configuring IKVM to target the Metro/WinRT platform
             string root = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
             if (string.IsNullOrEmpty(root)) root = Environment.GetEnvironmentVariable("ProgramFiles");
-            
             root = Path.Combine(root, @"Reference Assemblies\Microsoft\Framework\.NETCore\v4.5");
             string[] probePaths = { root, @"..\..\..\MetroDto\bin\x86\release" };
             model.AssemblyResolve += (sender,args) => Resolve(probePaths, sender, args);
-
             model.Load(Path.Combine(root, @"System.Runtime.dll"));
             model.Load(Path.Combine(root, @"System.Runtime.Serialization.Primitives.dll"));
 
+            // load our root types into the model (it will cascade them automatically)
             var metaType = model.Add("DAL.DatabaseCompat, MetroDto", true);
+
+            // configure the output file/serializer name, and borrow the framework particulars from
+            // the type we loaded
             var options = new RuntimeTypeModel.CompilerOptions
             {
                 TypeName = "Foo",
                 OutputPath = "Foo.dll"
-            };
+            };            
             options.SetFrameworkOptions(metaType);
+
+            // GO WORK YOUR MAGIC, CRAZY THING!!
             model.Compile(options);
 
         }
 
+        // this big-chunk-o redirection exists to cater for the fact that in WinRT a lot of types have
+        // moved around; find them in their new homes! this also does some voodoo to mimic
+        // regular probling paths, allowing it to look for all likely-looking assemblies in a few
+        // locations, rather than having to specify everything explicitly
         static IKVM.Reflection.Assembly Resolve(string[] probePaths, object sender, IKVM.Reflection.ResolveEventArgs args)
         {
             string name = args.Name;
