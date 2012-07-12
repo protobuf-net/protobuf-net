@@ -642,7 +642,47 @@ namespace ProtoBuf.Meta
             return result;
         }
 #endif
-        
+        /// <summary>
+        /// Represents configuration options for compiling a model to 
+        /// a standalone assembly.
+        /// </summary>
+        public sealed class CompilerOptions
+        {
+            public void SetFrameworkOptions(MetaType from)
+            {
+                AttributeMap[] attribs = AttributeMap.Create(from.Model, from.Type.Assembly);
+                foreach (AttributeMap attrib in attribs)
+                {
+                    if (attrib.AttributeType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute")
+                    {
+                        object tmp;
+                        if (attrib.TryGet("FrameworkName", out tmp)) TargetFrameworkName = (string)tmp;
+                        if (attrib.TryGet("FrameworkDisplayName", out tmp)) TargetFrameworkDisplayName = (string)tmp;
+                        break;
+                    }
+                }
+            }
+
+            private string targetFrameworkName, targetFrameworkDisplayName, typeName, outputPath;
+
+            /// <summary>
+            /// The TargetFrameworkAttribute FrameworkName value to burn into the generated assembly
+            /// </summary>
+            public string TargetFrameworkName { get { return targetFrameworkName; } set { targetFrameworkName = value; } }
+
+            /// <summary>
+            /// The TargetFrameworkAttribute FrameworkDisplayName value to burn into the generated assembly
+            /// </summary>
+            public string TargetFrameworkDisplayName { get { return targetFrameworkDisplayName; } set { targetFrameworkDisplayName = value; } }
+            /// <summary>
+            /// The name of the TypeModel class to create
+            /// </summary>
+            public string TypeName { get { return typeName; } set { typeName = value; } }
+            /// <summary>
+            /// The path for the new dll
+            /// </summary>
+            public string OutputPath { get { return outputPath; } set { outputPath = value; } }
+        }
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
         /// (the serialization dll still requires protobuf-net for support services).
@@ -653,6 +693,24 @@ namespace ProtoBuf.Meta
         /// <returns>An instance of the newly created compiled type-model</returns>
         public TypeModel Compile(string name, string path)
         {
+            CompilerOptions options = new CompilerOptions();
+            options.TypeName = name;
+            options.OutputPath = path;
+            return Compile(options);
+        }
+        /// <summary>
+        /// Fully compiles the current model into a static-compiled serialization dll
+        /// (the serialization dll still requires protobuf-net for support services).
+        /// </summary>
+        /// <remarks>A full compilation is restricted to accessing public types / members</remarks>
+        /// <param name="name">The name of the TypeModel class to create</param>
+        /// <param name="path">The path for the new dll</param>
+        /// <returns>An instance of the newly created compiled type-model</returns>
+        public TypeModel Compile(CompilerOptions options)
+        {
+            if (options == null) throw new ArgumentNullException("options");
+            string name = options.TypeName;
+            string path = options.OutputPath;
             BuildAllSerializers();
             Freeze();
             bool save = !Helpers.IsNullOrEmpty(path);
@@ -676,6 +734,38 @@ namespace ProtoBuf.Meta
             ModuleBuilder module = save ? asm.DefineDynamicModule(name, path)
                 : asm.DefineDynamicModule(name);
 #endif
+
+            if (!string.IsNullOrEmpty(options.TargetFrameworkName))
+            {
+                // get [TargetFramework] from mscorlib/equivalent and burn into the new assembly
+                Type versionAttribType = null;
+                try
+                { // this is best-endeavours only
+                    versionAttribType = GetType("System.Runtime.Versioning.TargetFrameworkAttribute", MapType(typeof(string)).Assembly);
+                }
+                catch { /* don't stress */ }
+                if (versionAttribType != null)
+                {
+                    PropertyInfo[] props;
+                    object[] propValues;
+                    if (string.IsNullOrEmpty(options.TargetFrameworkDisplayName))
+                    {
+                        props = new PropertyInfo[0];
+                        propValues = new object[0];
+                    }
+                    else
+                    {
+                        props = new PropertyInfo[1] { versionAttribType.GetProperty("FrameworkDisplayName") };
+                        propValues = new object[1] { options.TargetFrameworkDisplayName };
+                    }
+                    CustomAttributeBuilder builder = new CustomAttributeBuilder(
+                        versionAttribType.GetConstructor(new Type[] { MapType(typeof(string)) }),
+                        new object[] { options.TargetFrameworkName },
+                        props,
+                        propValues);
+                    asm.SetCustomAttribute(builder);
+                }
+            }            
 
             Type baseType = MapType(typeof(TypeModel));
             TypeBuilder type = module.DefineType(name,

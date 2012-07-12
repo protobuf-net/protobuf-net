@@ -22,16 +22,15 @@ namespace TestIkvm
             model.Load(Path.Combine(root, @"System.Runtime.dll"));
             model.Load(Path.Combine(root, @"System.Runtime.Serialization.Primitives.dll"));
 
-            model.Add("DAL.DatabaseCompat, MetroDto", true);
-            model.Compile("Foo", "Foo.dll");
+            var metaType = model.Add("DAL.DatabaseCompat, MetroDto", true);
+            var options = new RuntimeTypeModel.CompilerOptions
+            {
+                TypeName = "Foo",
+                OutputPath = "Foo.dll"
+            };
+            options.SetFrameworkOptions(metaType);
+            model.Compile(options);
 
-
-            //var attribType = universe.GetType("System.Attribute, mscorlib");
-            //Console.WriteLine("Found: " + attribType.AssemblyQualifiedName);
-            //var dtoType = universe.GetType("DAL.DatabaseCompat, MetroDto");
-            //Console.WriteLine("Found: " + dtoType.AssemblyQualifiedName);
-            //// BOOM!
-            //System.Collections.Generic.IList<CustomAttributeData> all = dtoType.__GetCustomAttributes(attribType, true);
         }
 
         static IKVM.Reflection.Assembly Resolve(string[] probePaths, object sender, IKVM.Reflection.ResolveEventArgs args)

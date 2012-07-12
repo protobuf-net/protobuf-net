@@ -71,6 +71,32 @@ namespace ProtoBuf.Meta
             return result;
 #endif
         }
+        public static AttributeMap[] Create(TypeModel model, Assembly assembly)
+        {
+            const bool inherit = false;
+#if FEAT_IKVM
+            System.Collections.Generic.IList<CustomAttributeData> all = assembly.__GetCustomAttributes(model.MapType(typeof(Attribute)), inherit);
+            AttributeMap[] result = new AttributeMap[all.Count];
+            int index = 0;
+            foreach (CustomAttributeData attrib in all)
+            {
+                result[index++] = new AttributeDataMap(attrib);
+            }
+            return result;
+#else
+#if WINRT
+            Attribute[] all = System.Linq.Enumerable.ToArray(assembly.GetCustomAttributes());
+#else
+            object[] all = assembly.GetCustomAttributes(inherit);
+#endif
+            AttributeMap[] result = new AttributeMap[all.Length];
+            for(int i = 0 ; i < all.Length ; i++)
+            {
+                result[i] = new ReflectionAttributeMap((Attribute)all[i]);
+            }
+            return result;
+#endif
+        }
 #if FEAT_IKVM
         private class AttributeDataMap : AttributeMap
         {
