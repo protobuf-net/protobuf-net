@@ -1,23 +1,8 @@
-Clarification in the context of protobuf-net:
-
-IKVM has an open an non-restrictive license:
-http://www.ikvm.net/license.html
-
-The formal text below makes reference to the GPL, but that relates
-to some components such as "classpath". protobuf-net **does not
-use that**, nor is it included here, therefore no GPL issue
-arises.
-
-below: "LICENSE" fike from IKVM distribution:
-
-===================================
-
-
 IMPORTANT NOTICE
 
   Copyright (C) 1998-2008 Free Software Foundation, Inc.
-  Copyright (C) 1996-2011 Oracle and/or its affiliates
-  Copyright (C) 2002-2011 Jeroen Frijters
+  Copyright (C) 1996-2012 Oracle and/or its affiliates
+  Copyright (C) 2002-2012 Jeroen Frijters
 
   Some files in this distribution are part of GNU Classpath or OpenJDK and
   are licensed under the GNU General Public License (GPL) version 2
@@ -33,7 +18,7 @@ IMPORTANT NOTICE
 
 -----------------------------------------------------------------------------
 
-  Copyright (C) 2002-2011 Jeroen Frijters
+  Copyright (C) 2002-2012 Jeroen Frijters
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -407,7 +392,7 @@ exception as provided by Oracle in the LICENSE file that accompanied this code."
 -----------------------------------------------------------------------------
 
  -------------------------------------------------------------------------
-        $Id: LICENSE,v 1.7 2011/10/31 13:30:20 jfrijters Exp $
+        $Id: LICENSE,v 1.7.4.1 2012/06/12 08:44:39 jfrijters Exp $
  -------------------------------------------------------------------------
         Copyright (c) 1999 Visual Numerics Inc. All Rights Reserved.
 
