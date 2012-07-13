@@ -1,19 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text;
 using ProtoBuf;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at http://go.microsoft.com/fwlink/?LinkId=234238
@@ -61,6 +54,50 @@ namespace Metro_DevRig
             var ser = new Foo();
             var dal = (DAL.DatabaseCompat)ser.Deserialize(ms, null, typeof(DAL.DatabaseCompat));
             button.Content = dal.Orders.Count;
+
+            StringBuilder perfStats = new StringBuilder();
+            var dcs = new DataContractSerializer(typeof(DAL.DatabaseCompat));
+            using (var buffer = new MemoryStream())
+            {
+                const int loop = 50;
+                var watch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    buffer.SetLength(0);
+                    dcs.WriteObject(buffer, dal);
+                }
+                watch.Stop();
+                perfStats.AppendLine().AppendFormat("DCS: WriteObject x {0}: {1}ms, {2}bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
+
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    buffer.Position = 0;
+                    dcs.ReadObject(buffer);
+                }
+                watch.Stop();
+                perfStats.AppendLine().AppendFormat("DCS: ReadObject x {0}: {1}ms", loop, watch.ElapsedMilliseconds);
+
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    buffer.SetLength(0);
+                    ser.Serialize(buffer, dal);
+                }
+                watch.Stop();
+                perfStats.AppendLine().AppendFormat("PB: Serialize x {0}: {1}ms, {2}bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
+
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    buffer.Position = 0;
+                    ser.Deserialize(buffer, null, typeof(DAL.DatabaseCompat));
+                }
+                watch.Stop();
+                perfStats.AppendLine().AppendFormat("PB: Deserialize x {0}: {1}ms", loop, watch.ElapsedMilliseconds);
+            }
+            button.Content = button.Content + perfStats.ToString();
+
 
             // test SM2Stats
             bool isSer = ser.CanSerializeContractType(typeof(SM2Stats));
