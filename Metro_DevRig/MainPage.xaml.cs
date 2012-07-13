@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Xml.Serialization;
 using ProtoBuf;
 using Windows.Storage.Streams;
 using Windows.UI.Xaml;
@@ -60,6 +61,7 @@ namespace Metro_DevRig
             perfStats.AppendFormat("{0} orders from NWind", dal.Orders.Count).AppendLine();
             
             var dcs = new DataContractSerializer(typeof(DAL.DatabaseCompat));
+            var xs = new XmlSerializer(typeof(DAL.DatabaseCompat));
             using (var buffer = new MemoryStream())
             {
                 const int loop = 50;
@@ -70,7 +72,7 @@ namespace Metro_DevRig
                     dcs.WriteObject(buffer, dal);
                 }
                 watch.Stop();
-                perfStats.AppendLine().AppendLine("DataContractSerializer:").AppendFormat("WriteObject x {0}: {1}ms, {2}bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
+                perfStats.AppendLine().AppendLine().AppendLine("DataContractSerializer:").AppendFormat("WriteObject x {0}: {1:###,###}ms, {2:###,###} bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
 
                 watch = Stopwatch.StartNew();
                 for (int i = 0; i < loop; i++)
@@ -79,7 +81,25 @@ namespace Metro_DevRig
                     dcs.ReadObject(buffer);
                 }
                 watch.Stop();
-                perfStats.AppendLine().AppendFormat("ReadObject x {0}: {1}ms", loop, watch.ElapsedMilliseconds);
+                perfStats.AppendLine().AppendFormat("ReadObject x {0}: {1:###,###}ms", loop, watch.ElapsedMilliseconds);
+
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    buffer.SetLength(0);
+                    xs.Serialize(buffer, dal);
+                }
+                watch.Stop();
+                perfStats.AppendLine().AppendLine().AppendLine("XmlSerializer:").AppendFormat("Serialize x {0}: {1:###,###}ms, {2:###,###} bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
+
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    buffer.Position = 0;
+                    xs.Deserialize(buffer);
+                }
+                watch.Stop();
+                perfStats.AppendLine().AppendFormat("Deserialize x {0}: {1:###,###}ms", loop, watch.ElapsedMilliseconds);
 
                 watch = Stopwatch.StartNew();
                 for (int i = 0; i < loop; i++)
@@ -88,7 +108,7 @@ namespace Metro_DevRig
                     ser.Serialize(buffer, dal);
                 }
                 watch.Stop();
-                perfStats.AppendLine().AppendLine("protobuf-net").AppendFormat("PB: Serialize x {0}: {1}ms, {2}bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
+                perfStats.AppendLine().AppendLine().AppendLine("protobuf-net").AppendFormat("Serialize x {0}: {1:###,###}ms, {2:###,###} bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
 
                 watch = Stopwatch.StartNew();
                 for (int i = 0; i < loop; i++)
@@ -97,7 +117,7 @@ namespace Metro_DevRig
                     ser.Deserialize(buffer, null, typeof(DAL.DatabaseCompat));
                 }
                 watch.Stop();
-                perfStats.AppendLine().AppendFormat("PB: Deserialize x {0}: {1}ms", loop, watch.ElapsedMilliseconds);
+                perfStats.AppendLine().AppendFormat("Deserialize x {0}: {1:###,###}ms", loop, watch.ElapsedMilliseconds);
             }
             button.Content = perfStats.ToString();
 
