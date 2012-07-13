@@ -9,7 +9,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>protobuf_net_IKVM</RootNamespace>
-    <AssemblyName>protobuf-net_IKVM</AssemblyName>
+    <AssemblyName>protobuf-net</AssemblyName>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -33,6 +33,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="IKVM.Reflection">
+      <HintPath>..\Tools\IKVM.Reflection.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -45,12 +48,6 @@
       <Link>IKVM-LICENSE</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\ikvm-7.1.4532.2\reflect\IKVM.Reflection.csproj">
-      <Project>{4cb170ef-dfe6-4a56-9e1b-a85449e827a7}</Project>
-      <Name>IKVM.Reflection</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

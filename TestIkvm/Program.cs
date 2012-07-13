@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using IKVM.Reflection;
 using ProtoBuf.Meta;
@@ -80,10 +81,6 @@ namespace TestIkvm
             //        break;
             //    }
             //}
-            if (name == "protobuf-net_IKVM" || name.StartsWith("protobuf-net_IKVM"))
-            {
-                name = "protobuf-net";
-            }
             Universe universe = ((Universe)sender);
             foreach (var asm in universe.GetAssemblies())
             {
