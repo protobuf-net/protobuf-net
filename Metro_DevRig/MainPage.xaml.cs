@@ -57,8 +57,23 @@ namespace Metro_DevRig
             byte[] raw = new byte[readStream.Size];
             dataReader.ReadBytes(raw);
             var ms = new MemoryStream(raw);
-            var dal = (DAL.DatabaseCompat)new Foo().Deserialize(ms, null, typeof(DAL.DatabaseCompat));
+
+            var ser = new Foo();
+            var dal = (DAL.DatabaseCompat)ser.Deserialize(ms, null, typeof(DAL.DatabaseCompat));
             button.Content = dal.Orders.Count;
+
+            // test SM2Stats
+            bool isSer = ser.CanSerializeContractType(typeof(SM2Stats));
+
+            SM2Stats stats = new SM2Stats
+            {
+                acqreps = 1,
+                difficultyhistory =  {
+                    new DiffHistPair { date = 123, values = { 3.4f }}
+                }
+            };
+            var clone = (SM2Stats)ser.DeepClone(stats); // checked by eye; is the same
+
         }
     }
 }

@@ -13,6 +13,7 @@ namespace TestIkvm
         // our WinRT application, and: zero reflection
         static void Main()
         {
+
             // model to work with
             var model = TypeModel.Create();
 
@@ -21,12 +22,33 @@ namespace TestIkvm
             if (string.IsNullOrEmpty(root)) root = Environment.GetEnvironmentVariable("ProgramFiles");
             root = Path.Combine(root, @"Reference Assemblies\Microsoft\Framework\.NETCore\v4.5");
             string[] probePaths = { root, @"..\..\..\MetroDto\bin\x86\release" };
-            model.AssemblyResolve += (sender,args) => Resolve(probePaths, sender, args);
-            model.Load(Path.Combine(root, @"System.Runtime.dll"));
-            model.Load(Path.Combine(root, @"System.Runtime.Serialization.Primitives.dll"));
+            //model.AssemblyResolve += (sender,args) => Resolve(probePaths, sender, args);
+
+            model.AssemblyResolve += (sender, args) =>
+            {
+                string nameOnly = args.Name.Split(',')[0];
+                if (nameOnly == "protobuf-net_IKVM") nameOnly = "protobuf-net";
+                foreach (var asm in ((Universe)sender).GetAssemblies())
+                {
+                    if(asm.GetName().Name == nameOnly) return asm;
+                }
+                throw new InvalidOperationException("All assemblies must be resolved explicity; did not resolve: " + args.Name);
+            };
+            model.Load(Path.Combine(root, "mscorlib.dll"));
+            model.Load(Path.Combine(root, "System.Runtime.dll"));
+            foreach (var file in Directory.GetFiles(root, "*.dll"))
+            {
+                if (Path.GetFileName(file) == "mscorlib.dll") continue;
+                if (Path.GetFileName(file) == "System.Runtime.dll") continue;
+                model.Load(file);
+            }
+            // load our actual library/model dll
+            model.Load(@"..\..\..\MetroDto\bin\x86\release\protobuf-net.dll");
+            model.Load(@"..\..\..\MetroDto\bin\x86\release\MetroDto.dll");
 
             // load our root types into the model (it will cascade them automatically)
             var metaType = model.Add("DAL.DatabaseCompat, MetroDto", true);
+            model.Add("SM2Stats, MetroDto", true);
 
             // configure the output file/serializer name, and borrow the framework particulars from
             // the type we loaded
@@ -34,12 +56,11 @@ namespace TestIkvm
             {
                 TypeName = "Foo",
                 OutputPath = "Foo.dll"
-            };            
+            };
             options.SetFrameworkOptions(metaType);
 
             // GO WORK YOUR MAGIC, CRAZY THING!!
             model.Compile(options);
-
         }
 
         // this big-chunk-o redirection exists to cater for the fact that in WinRT a lot of types have
@@ -50,15 +71,15 @@ namespace TestIkvm
         {
             string name = args.Name;
             if(string.IsNullOrEmpty(name)) return null;
-            string[] systemRuntime = { "mscorlib", "System" };
-            for (int i = 0; i < systemRuntime.Length; i++)
-            {
-                if(name == systemRuntime[i] || name.StartsWith(systemRuntime[i] + ","))
-                {
-                    name = "System.Runtime";
-                    break;
-                }
-            }
+            //string[] systemRuntime = { "mscorlib", "System" };
+            //for (int i = 0; i < systemRuntime.Length; i++)
+            //{
+            //    if(name == systemRuntime[i] || name.StartsWith(systemRuntime[i] + ","))
+            //    {
+            //        name = "System.Runtime";
+            //        break;
+            //    }
+            //}
             if (name == "protobuf-net_IKVM" || name.StartsWith("protobuf-net_IKVM"))
             {
                 name = "protobuf-net";

@@ -156,6 +156,7 @@ namespace ProtoBuf.Meta
                 }
             }
 #if FEAT_IKVM
+            if (Helpers.IsEnum(type)) return value; // return the underlying type instead
             throw new ArgumentException("Unable to process default value: " + value + ", " + type.FullName);
 #else
             if (Helpers.IsEnum(type)) return Enum.ToObject(type, value);
