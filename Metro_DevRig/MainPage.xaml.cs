@@ -53,9 +53,12 @@ namespace Metro_DevRig
 
             var ser = new Foo();
             var dal = (DAL.DatabaseCompat)ser.Deserialize(ms, null, typeof(DAL.DatabaseCompat));
-            button.Content = dal.Orders.Count;
 
             StringBuilder perfStats = new StringBuilder();
+
+            perfStats.AppendLine(".NET for Metro style apps");
+            perfStats.AppendFormat("{0} orders from NWind", dal.Orders.Count).AppendLine();
+            
             var dcs = new DataContractSerializer(typeof(DAL.DatabaseCompat));
             using (var buffer = new MemoryStream())
             {
@@ -67,7 +70,7 @@ namespace Metro_DevRig
                     dcs.WriteObject(buffer, dal);
                 }
                 watch.Stop();
-                perfStats.AppendLine().AppendFormat("DCS: WriteObject x {0}: {1}ms, {2}bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
+                perfStats.AppendLine().AppendLine("DataContractSerializer:").AppendFormat("WriteObject x {0}: {1}ms, {2}bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
 
                 watch = Stopwatch.StartNew();
                 for (int i = 0; i < loop; i++)
@@ -76,7 +79,7 @@ namespace Metro_DevRig
                     dcs.ReadObject(buffer);
                 }
                 watch.Stop();
-                perfStats.AppendLine().AppendFormat("DCS: ReadObject x {0}: {1}ms", loop, watch.ElapsedMilliseconds);
+                perfStats.AppendLine().AppendFormat("ReadObject x {0}: {1}ms", loop, watch.ElapsedMilliseconds);
 
                 watch = Stopwatch.StartNew();
                 for (int i = 0; i < loop; i++)
@@ -85,7 +88,7 @@ namespace Metro_DevRig
                     ser.Serialize(buffer, dal);
                 }
                 watch.Stop();
-                perfStats.AppendLine().AppendFormat("PB: Serialize x {0}: {1}ms, {2}bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
+                perfStats.AppendLine().AppendLine("protobuf-net").AppendFormat("PB: Serialize x {0}: {1}ms, {2}bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
 
                 watch = Stopwatch.StartNew();
                 for (int i = 0; i < loop; i++)
@@ -96,7 +99,7 @@ namespace Metro_DevRig
                 watch.Stop();
                 perfStats.AppendLine().AppendFormat("PB: Deserialize x {0}: {1}ms", loop, watch.ElapsedMilliseconds);
             }
-            button.Content = button.Content + perfStats.ToString();
+            button.Content = perfStats.ToString();
 
 
             // test SM2Stats
