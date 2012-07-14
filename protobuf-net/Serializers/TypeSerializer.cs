@@ -404,10 +404,14 @@ namespace ProtoBuf.Serializers
 #if PLAT_BINARYFORMATTER
                         else if (parameterType == ctx.MapType(typeof(System.Runtime.Serialization.StreamingContext)))
                         {
+                            
                             ctx.LoadSerializationContext();
                             MethodInfo op = ctx.MapType(typeof(SerializationContext)).GetMethod("op_Implicit", new Type[] { ctx.MapType(typeof(SerializationContext)) });
-                            ctx.EmitCall(op);
-                            handled = true;
+                            if (op != null)
+                            { // it isn't always! (framework versions, etc)
+                                ctx.EmitCall(op);
+                                handled = true;
+                            }
                         }
 #endif
                         break;

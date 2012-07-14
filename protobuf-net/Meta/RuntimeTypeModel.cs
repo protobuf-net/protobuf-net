@@ -118,10 +118,12 @@ namespace ProtoBuf.Meta
             add { universe.AssemblyResolve += value; }
             remove { universe.AssemblyResolve -= value; }
         }
-        public void Load(string path)
+        public Assembly Load(string path)
         {
-            universe.LoadFile(path);
+            return universe.LoadFile(path);
         }
+        public Universe Universe { get { return universe; } }
+
         /// <summary>
         /// Adds support for an additional type in this model, optionally
         /// appplying inbuilt patterns. If the type is already known to the
@@ -611,8 +613,12 @@ namespace ProtoBuf.Meta
                     throw new InvalidOperationException("No serializer available for " + mt.Type.Name);
             }
         }
-
 #if FEAT_IKVM
+
+        public void Cascade()
+        {
+            BuildAllSerializers();
+        }
         protected internal override Type MapType(System.Type type)
         {
             if (type == null) return null;

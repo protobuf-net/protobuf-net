@@ -28,7 +28,6 @@ namespace TestIkvm
             model.AssemblyResolve += (sender, args) =>
             {
                 string nameOnly = args.Name.Split(',')[0];
-                if (nameOnly == "protobuf-net_IKVM") nameOnly = "protobuf-net";
                 foreach (var asm in ((Universe)sender).GetAssemblies())
                 {
                     if(asm.GetName().Name == nameOnly) return asm;

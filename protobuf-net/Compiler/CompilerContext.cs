@@ -487,6 +487,7 @@ namespace ProtoBuf.Compiler
         }
         public void EmitCall(MethodInfo method)
         {
+            Helpers.DebugAssert(method != null);
             OpCode opcode = (method.IsStatic || method.DeclaringType.IsValueType) ? OpCodes.Call : OpCodes.Callvirt;
             il.EmitCall(opcode, method, null);
 #if DEBUG_COMPILE
