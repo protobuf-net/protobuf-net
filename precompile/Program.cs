@@ -21,7 +21,34 @@ namespace precompile
 
                 if (ctx.Help)
                 {
-                    Console.WriteLine("I really should write some help, sorry");
+                    Console.WriteLine(@"
+
+Generates a serialization dll that can be used with just the
+(platform-specific) protobuf-net core, allowing fast and efficient
+serialization even on light frameworks (CF, SL, SP7, Metro, etc).
+
+The input assembly(ies) is(are) anaylsed for types decorated with
+[ProtoContract]. All such types are added to the model, as are any
+types that they require.
+
+Note: the compiler must be able to resolve a protobuf-net.dll
+that is suitable for the target framework; this is done most simply
+by ensuring that the appropriate protobuf-net.dll is next to the
+input assembly.
+
+Options:
+
+    -f:<framework> - Can be an explicit path, or a path relative to:
+                     Reference Assemblies\Microsoft\Framework
+    -o:<file>      - Output dll path
+    -t:<typename>  - Type name of the serializer to generate
+    -p:<path>      - Additional directory to probe for assemblies
+    <file>         - Input file to analyse
+
+Example:
+
+    precompile -f:.NETCore\v4.5 MyDtos\My.dll -o:MySerializer.dll
+        -t:MySerializer");
                     return -1;
                 }
                 if (!ctx.SanityCheck()) return -1;
