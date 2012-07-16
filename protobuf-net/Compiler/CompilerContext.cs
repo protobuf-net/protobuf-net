@@ -1066,7 +1066,7 @@ namespace ProtoBuf.Compiler
             EmitCall(MapType(typeof(System.Type)).GetMethod("GetTypeFromHandle"));
         }
 
-        internal void ConvertToInt32(ProtoTypeCode typeCode)
+        internal void ConvertToInt32(ProtoTypeCode typeCode, bool uint32Overflow)
         {
             switch (typeCode)
             {
@@ -1082,6 +1082,8 @@ namespace ProtoBuf.Compiler
                     Emit(OpCodes.Conv_Ovf_I4);
                     break;
                 case ProtoTypeCode.UInt32:
+                    Emit(uint32Overflow ? OpCodes.Conv_Ovf_I4_Un : OpCodes.Conv_Ovf_I4);
+                    break;
                 case ProtoTypeCode.UInt64:
                     Emit(OpCodes.Conv_Ovf_I4_Un);
                     break;
@@ -1090,7 +1092,7 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        internal void ConvertFromInt32(ProtoTypeCode typeCode)
+        internal void ConvertFromInt32(ProtoTypeCode typeCode, bool uint32Overflow)
         {
             switch (typeCode)
             {
@@ -1099,7 +1101,7 @@ namespace ProtoBuf.Compiler
                 case ProtoTypeCode.Int16: Emit(OpCodes.Conv_Ovf_I2); break;
                 case ProtoTypeCode.UInt16: Emit(OpCodes.Conv_Ovf_U2); break;
                 case ProtoTypeCode.Int32: break;
-                case ProtoTypeCode.UInt32: Emit(OpCodes.Conv_Ovf_U4); break;
+                case ProtoTypeCode.UInt32: Emit(uint32Overflow ? OpCodes.Conv_Ovf_U4 : OpCodes.Conv_U4); break;
                 case ProtoTypeCode.Int64: Emit(OpCodes.Conv_I8); break;
                 case ProtoTypeCode.UInt64: Emit(OpCodes.Conv_U8); break;
                 default: throw new InvalidOperationException();

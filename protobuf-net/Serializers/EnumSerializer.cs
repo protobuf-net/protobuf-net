@@ -66,7 +66,7 @@ namespace ProtoBuf.Serializers
 #if !FEAT_IKVM
         private int EnumToWire(object value)
         {
-            checked
+            unchecked
             {
                 switch (GetTypeCode())
                 { // unbox then convert to int
@@ -84,7 +84,7 @@ namespace ProtoBuf.Serializers
         }
         private object WireToEnum(int value)
         {
-            checked
+            unchecked
             {
                 switch (GetTypeCode())
                 { // convert from int then box 
@@ -143,7 +143,7 @@ namespace ProtoBuf.Serializers
             if (map == null)
             {
                 ctx.LoadValue(valueFrom);
-                ctx.ConvertToInt32(typeCode);
+                ctx.ConvertToInt32(typeCode, false);
                 ctx.EmitBasicWrite("WriteInt32", null);
             }
             else
@@ -179,7 +179,7 @@ namespace ProtoBuf.Serializers
             if (map == null)
             {
                 ctx.EmitBasicRead("ReadInt32", ctx.MapType(typeof(int)));
-                ctx.ConvertFromInt32(typeCode);
+                ctx.ConvertFromInt32(typeCode, false);
             }
             else
             {

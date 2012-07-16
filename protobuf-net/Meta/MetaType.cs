@@ -440,7 +440,7 @@ namespace ProtoBuf.Meta
             {
                 SetFlag(OPTIONS_AutoTuple, true, true);
             }
-            bool isEnum = Helpers.IsEnum(type);
+            bool isEnum = !EnumPassthru && Helpers.IsEnum(type);
             if(family ==  AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
             BasicList partialIgnores = null, partialMembers = null;
             int dataMemberOffset = 0, implicitFirstTag = 1;
