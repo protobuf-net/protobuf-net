@@ -118,6 +118,24 @@ namespace Metro_DevRig
                 }
                 watch.Stop();
                 perfStats.AppendLine().AppendFormat("Deserialize x {0}: {1:###,###}ms", loop, watch.ElapsedMilliseconds);
+
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    buffer.SetLength(0);
+                    Serializer.Serialize(buffer, dal);
+                }
+                watch.Stop();
+                perfStats.AppendLine().AppendLine().AppendLine("protobuf-net (runtime)").AppendFormat("Serialize x {0}: {1:###,###}ms, {2:###,###} bytes", loop, watch.ElapsedMilliseconds, buffer.Length);
+
+                watch = Stopwatch.StartNew();
+                for (int i = 0; i < loop; i++)
+                {
+                    buffer.Position = 0;
+                    Serializer.Deserialize<DAL.DatabaseCompat>(buffer);
+                }
+                watch.Stop();
+                perfStats.AppendLine().AppendFormat("Deserialize x {0}: {1:###,###}ms", loop, watch.ElapsedMilliseconds);
             }
             button.Content = perfStats.ToString();
 

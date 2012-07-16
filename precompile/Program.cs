@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
@@ -92,7 +93,41 @@ Example:
         [CommandLine("?"), CommandLine("help"), CommandLine("h")]
         public bool Help { get; set; }
 
-
+        static string TryInferFramework(string path)
+        {
+            try
+            {
+                using (var uni = new IKVM.Reflection.Universe())
+                {
+                    uni.AssemblyResolve += (s, a) => ((IKVM.Reflection.Universe)s).CreateMissingAssembly(a.Name);
+                    var asm = uni.LoadFile(path);
+                    var attr = uni.GetType("System.Attribute, mscorlib");
+                    foreach(var attrib in asm.__GetCustomAttributes(attr, false))
+                    {
+                        if (attrib.Constructor.DeclaringType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute"
+                            && attrib.ConstructorArguments.Count == 1)
+                        {
+                            var parts = ((string)attrib.ConstructorArguments[0].Value).Split(',');
+                            if (parts.Length == 2)
+                            {
+                                string[] versionParts = parts[1].Split('=');
+                                if (versionParts.Length == 2)
+                                {
+                                    return parts[0] + Path.DirectorySeparatorChar + versionParts[1];
+                                }
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+            catch (Exception ex) {
+                // not really fussed; we could have multiple inputs to try, and the user
+                // can always use -f:blah to specify it explicitly
+                Debug.WriteLine(ex.Message);
+                return null;
+            }
+        }
         public bool SanityCheck()
         {
             bool allGood = true;
@@ -114,6 +149,20 @@ Example:
 
             if (string.IsNullOrEmpty(Framework))
             {
+                foreach (var inp in inputs)
+                {
+                    string tmp = TryInferFramework(inp);
+                    if (tmp != null)
+                    {
+                        Console.WriteLine("Detected framework: " + tmp);
+                        Framework = tmp;
+                        break;
+                    }
+                }
+                
+            }
+            if (string.IsNullOrEmpty(Framework))
+            {
                 Console.WriteLine("No framework specified; defaulting to " + Environment.Version);
                 probePaths.Add(Path.GetDirectoryName(typeof(string).Assembly.Location));
             }
@@ -128,10 +177,13 @@ Example:
                     string root = Environment.GetEnvironmentVariable("ProgramFiles(x86)");
                     if (string.IsNullOrEmpty(root)) root = Environment.GetEnvironmentVariable("ProgramFiles");
                     root = Path.Combine(root, @"Reference Assemblies\Microsoft\Framework\");
-                    if(!Directory.Exists(root)) {
+                    if (!Directory.Exists(root))
+                    {
                         Console.Error.WriteLine("Framework reference assemblies root folder could not be found");
                         allGood = false;
-                    } else {
+                    }
+                    else
+                    {
                         string frameworkRoot = Path.Combine(root, Framework);
                         if (Directory.Exists(frameworkRoot))
                         {
