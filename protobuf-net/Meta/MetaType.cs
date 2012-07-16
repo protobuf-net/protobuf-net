@@ -819,7 +819,7 @@ namespace ProtoBuf.Meta
                 else
                 {
                     attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
-#if WINRT
+#if WINRT || PORTABLE
                     fieldNumber = Convert.ToInt32(((FieldInfo)member).GetValue(null));
 #else
                     fieldNumber = Convert.ToInt32(((FieldInfo)member).GetRawConstantValue());
@@ -1184,7 +1184,7 @@ namespace ProtoBuf.Meta
             if (mi == null) throw new ArgumentException("Unable to determine member: " + memberName, "memberName");
 
             Type miType;
-#if WINRT
+#if WINRT || PORTABLE
             PropertyInfo pi = mi as PropertyInfo;
             if (pi == null)
             {

@@ -34,7 +34,8 @@ namespace ProtoBuf.Meta
 #if FEAT_COMPILER && !FX11
            OPTIONS_AutoCompile = 16,
 #endif
-           OPTIONS_UseImplicitZeroDefaults = 32;
+           OPTIONS_UseImplicitZeroDefaults = 32,
+           OPTIONS_AllowParseableTypes = 64;
         private bool GetOption(byte option)
         {
             return (options & option) == option;
@@ -77,6 +78,23 @@ namespace ProtoBuf.Meta
                 SetOption(OPTIONS_UseImplicitZeroDefaults, value);
             }
         }
+
+        /// <summary>
+        /// Global switch that determines whether types with a <c>.ToString()</c> and a <c>Parse(string)</c>
+        /// should be serialized as strings.
+        /// </summary>
+        public bool AllowParseableTypes
+        {
+            get { return GetOption(OPTIONS_AllowParseableTypes); }
+            set {
+                if (value && GetOption(OPTIONS_IsDefaultModel))
+                {
+                    throw new InvalidOperationException("AllowParseableTypes cannot be enabled on the default model");
+                }
+                SetOption(OPTIONS_AllowParseableTypes, value);
+            }
+        }
+        
 
         private class Singleton
         {
@@ -715,30 +733,33 @@ namespace ProtoBuf.Meta
         public TypeModel Compile(CompilerOptions options)
         {
             if (options == null) throw new ArgumentNullException("options");
-            string name = options.TypeName;
+            string typeName = options.TypeName;
             string path = options.OutputPath;
             BuildAllSerializers();
             Freeze();
             bool save = !Helpers.IsNullOrEmpty(path);
-            if (Helpers.IsNullOrEmpty(name))
+            if (Helpers.IsNullOrEmpty(typeName))
             {
-                if (save) throw new ArgumentNullException("name");
-                name = Guid.NewGuid().ToString();
+                if (save) throw new ArgumentNullException("typeName");
+                typeName = Guid.NewGuid().ToString();
             }
+
+
+            string assemblyName = path == null ? typeName : new System.IO.FileInfo(System.IO.Path.GetFileNameWithoutExtension(path)).Name;
             
 #if FEAT_IKVM
             IKVM.Reflection.AssemblyName an = new IKVM.Reflection.AssemblyName();
-            an.Name = name;
+            an.Name = assemblyName;
             AssemblyBuilder asm = universe.DefineDynamicAssembly(an, AssemblyBuilderAccess.Save);
-            ModuleBuilder module = asm.DefineDynamicModule(name, path);
+            ModuleBuilder module = asm.DefineDynamicModule(an.Name, path);
 #else
             AssemblyName an = new AssemblyName();
-            an.Name = name;
+            an.Name = assemblyName;
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
                 (save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.Run)
                 );
-            ModuleBuilder module = save ? asm.DefineDynamicModule(name, path)
-                : asm.DefineDynamicModule(name);
+            ModuleBuilder module = save ? asm.DefineDynamicModule(an.Name, path)
+                                        : asm.DefineDynamicModule(an.Name);
 #endif
 
             if (!string.IsNullOrEmpty(options.TargetFrameworkName))
@@ -774,7 +795,7 @@ namespace ProtoBuf.Meta
             }            
 
             Type baseType = MapType(typeof(TypeModel));
-            TypeBuilder type = module.DefineType(name,
+            TypeBuilder type = module.DefineType(typeName,
                 (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed,
                 baseType);
             Compiler.CompilerContext ctx;

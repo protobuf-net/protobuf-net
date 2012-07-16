@@ -108,13 +108,39 @@ Example:
                             && attrib.ConstructorArguments.Count == 1)
                         {
                             var parts = ((string)attrib.ConstructorArguments[0].Value).Split(',');
-                            if (parts.Length == 2)
+                            string runtime = null, version = null, profile = null;
+                            for (int i = 0; i < parts.Length; i++)
                             {
-                                string[] versionParts = parts[1].Split('=');
-                                if (versionParts.Length == 2)
+                                int idx = parts[i].IndexOf('=');
+                                if (idx < 0)
                                 {
-                                    return parts[0] + Path.DirectorySeparatorChar + versionParts[1];
+                                    runtime = parts[i];
+                                } else
+                                {
+                                    switch(parts[i].Substring(0,idx))
+                                    {
+                                        case "Version":
+                                            version = parts[i].Substring(idx + 1);
+                                            break;
+                                        case "Profile":
+                                            profile = parts[i].Substring(idx + 1);
+                                            break;
+                                    }
                                 }
+                            }
+                            if(runtime != null)
+                            {
+                                var sb = new StringBuilder(runtime);
+                                if(version != null)
+                                {
+                                    sb.Append(Path.DirectorySeparatorChar).Append(version);
+                                }
+                                if (profile != null)
+                                {
+                                    sb.Append(Path.DirectorySeparatorChar).Append("Profile").Append(Path.DirectorySeparatorChar).Append(profile);
+                                }
+                                string targetFramework = sb.ToString();
+                                return targetFramework;
                             }
                         }
                     }
@@ -335,7 +361,7 @@ Example:
             {
                 options.SetFrameworkOptions(metaType);
             }
-            Console.WriteLine("Compiling to " + options.OutputPath + "...");
+            Console.WriteLine("Compiling " + options.TypeName + " to " + options.OutputPath + "...");
             // GO WORK YOUR MAGIC, CRAZY THING!!
             model.Compile(options);
             Console.WriteLine("All done");

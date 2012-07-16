@@ -189,8 +189,14 @@ namespace ProtoBuf
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
         {
             if(types == null) types = EmptyTypes;
+#if PORTABLE
+            MethodInfo method = declaringType.GetMethod(name, types);
+            if (method != null && method.IsStatic) method = null;
+            return method;
+#else
             return declaringType.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
                 null, types, null);
+#endif
         }
 #endif
 
@@ -481,7 +487,7 @@ namespace ProtoBuf
 
         internal static Type GetMemberType(MemberInfo member)
         {
-#if WINRT
+#if WINRT || PORTABLE
             PropertyInfo prop = member as PropertyInfo;
             if (prop != null) return prop.PropertyType;
             FieldInfo fld = member as FieldInfo;

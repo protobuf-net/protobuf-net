@@ -104,7 +104,7 @@ namespace ProtoBuf.Meta
         }
         internal object GetRawEnumValue()
         {
-#if WINRT
+#if WINRT || PORTABLE
             object value = ((FieldInfo)member).GetValue(null);
             switch(Helpers.GetTypeCode(Enum.GetUnderlyingType(((FieldInfo)member).FieldType)))
             {
@@ -477,7 +477,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.String;
                     return new SystemTypeSerializer(model);
             }
-            IProtoSerializer parseable = ParseableSerializer.TryCreate(type, model);
+            IProtoSerializer parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type, model) : null;
             if (parseable != null)
             {
                 defaultWireType = WireType.String;

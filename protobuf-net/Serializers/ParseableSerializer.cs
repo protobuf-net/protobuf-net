@@ -54,11 +54,16 @@ namespace ProtoBuf.Serializers
 #if WINRT
             foreach (MethodInfo method in type.GetTypeInfo().GetDeclaredMethods("ToString"))
             {
-                if (method.IsPublic && method.IsStatic && method.GetParameters().Length == 0) return method;
+                if (method.IsPublic && !method.IsStatic && method.GetParameters().Length == 0) return method;
             }
             return null;
+#elif PORTABLE
+            MethodInfo method = Helpers.GetInstanceMethod(type, "ToString", Helpers.EmptyTypes);
+            if (method == null || !method.IsPublic || method.IsStatic || method.DeclaringType != type) return null;
+            return method;
 #else
-            return type.GetMethod("ToString", BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
+
+            return type.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly,
                         null, Helpers.EmptyTypes, null);
 #endif
         }

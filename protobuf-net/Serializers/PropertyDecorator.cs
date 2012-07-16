@@ -54,9 +54,9 @@ namespace ProtoBuf.Serializers
 #else
             Type reflectedType = property.ReflectedType;
 #endif
-            MethodInfo method = reflectedType.GetMethod("Set" + property.Name, BindingFlags.Public | BindingFlags.Instance, null, new Type[] { property.PropertyType }, null);
+            MethodInfo method = Helpers.GetInstanceMethod(reflectedType, "Set" + property.Name, new Type[] { property.PropertyType });
 #endif
-            if (method == null || method.ReturnType != model.MapType(typeof(void))) return null;
+            if (method == null || !method.IsPublic || method.ReturnType != model.MapType(typeof(void))) return null;
             return method;
         }
 #if !FEAT_IKVM

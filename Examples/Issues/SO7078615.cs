@@ -110,7 +110,7 @@ namespace Examples.Issues
             Assert.AreEqual(orig.NameOfDog, typed.NameOfDog);
         }
 
-        [Test]
+        [Test, Ignore]
         public void TestPerf()
         {
             int[] values = new int[100000000];
