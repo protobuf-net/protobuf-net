@@ -531,8 +531,9 @@ namespace ProtoBuf.Meta
 
 #if WINRT
             System.Collections.Generic.IEnumerable<MemberInfo> foundList;
-            if(isEnum)
+            if(isEnum) {
                 foundList = type.GetRuntimeFields();
+            }
             else
             {
                 System.Collections.Generic.List<MemberInfo> list = new System.Collections.Generic.List<MemberInfo>();
@@ -563,6 +564,8 @@ namespace ProtoBuf.Meta
                 MethodInfo method;
                 if((property = member as PropertyInfo) != null)
                 {
+                    if (isEnum) continue; // wasn't expecting any props!
+
                     effectiveType = property.PropertyType;
                     isPublic = Helpers.GetGetMethod(property, false) != null;
                     isField = false;
@@ -572,6 +575,10 @@ namespace ProtoBuf.Meta
                     effectiveType = field.FieldType;
                     isPublic = field.IsPublic;
                     isField = true;
+                    if (isEnum && !field.IsStatic)
+                    { // only care about static things on enums; WinRT has a __value instance field!
+                        continue;
+                    }
                     ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType);
                 } else if ((method = member as MethodInfo) != null)
                 {

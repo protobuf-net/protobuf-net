@@ -35,6 +35,10 @@ namespace Metro_DevRig
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
+            var ser = new MySerializer();
+            var obj = new MetroDto.TestClass { EnumVal = MetroDto.MyEnum.Bar };
+            var clone2 = (MetroDto.TestClass)ser.DeepClone(obj);
+            var clone3 = Serializer.DeepClone(obj); // runtime
             ReadProto(((Button)sender));
             //((Button)sender).Content = clone.Foo + ", " + clone.Bar;
         }
@@ -52,7 +56,7 @@ namespace Metro_DevRig
             dataReader.ReadBytes(raw);
             var ms = new MemoryStream(raw);
 
-            var ser = new Foo();
+            var ser = new MySerializer();
             var dal = (DAL.DatabaseCompat)ser.Deserialize(ms, null, typeof(DAL.DatabaseCompat));
 
             StringBuilder perfStats = new StringBuilder();
@@ -136,6 +140,9 @@ namespace Metro_DevRig
                 }
                 watch.Stop();
                 perfStats.AppendLine().AppendFormat("Deserialize x {0}: {1:###,###}ms", loop, watch.ElapsedMilliseconds);
+
+
+             
             }
             button.Content = perfStats.ToString();
 

@@ -149,8 +149,8 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Foo">
-      <HintPath>..\TestIkvm\bin\Debug\Foo.dll</HintPath>
+    <Reference Include="MySerializer">
+      <HintPath>..\precompile\bin\Debug\MySerializer.dll</HintPath>
     </Reference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '11.0' ">

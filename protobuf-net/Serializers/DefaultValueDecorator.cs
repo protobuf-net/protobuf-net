@@ -21,7 +21,12 @@ namespace ProtoBuf.Serializers
         public DefaultValueDecorator(TypeModel model, object defaultValue, IProtoSerializer tail) : base(tail)
         {
             if (defaultValue == null) throw new ArgumentNullException("defaultValue");
-            if (model.MapType(defaultValue.GetType()) != tail.ExpectedType)
+            Type type = model.MapType(defaultValue.GetType());
+            if (type != tail.ExpectedType
+#if FEAT_IKVM // in IKVM, we'll have the default value as an underlying type
+                && !(tail.ExpectedType.IsEnum && type == tail.ExpectedType.GetEnumUnderlyingType())
+#endif
+                )
             {
                 throw new ArgumentException("Default value is of incorrect type", "defaultValue");
             }
