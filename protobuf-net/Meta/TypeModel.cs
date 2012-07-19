@@ -1230,6 +1230,17 @@ namespace ProtoBuf.Meta
         protected internal static void ThrowUnexpectedType(Type type)
         {
             string fullName = type == null ? "(unknown)" : type.FullName;
+#if !NO_GENERICS
+            if (type != null)
+            {
+                Type baseType = type.BaseType;
+                if (baseType != null && baseType.IsGenericType && baseType.GetGenericTypeDefinition().Name == "GeneratedMessage`2")
+                {
+                    throw new InvalidOperationException(
+                        "Are you mixing protobuf-net and protobuf-csharp-port? See http://stackoverflow.com/q/11564914; type: " + fullName);
+                }
+            }
+#endif
             throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
         }
         internal static Exception CreateNestedListsNotSupported()
