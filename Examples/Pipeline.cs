@@ -32,7 +32,9 @@ namespace Examples
         [Test]
         public void TestEnumerableProto()
         {
+#pragma warning disable 0618
             string proto = Serializer.GetProto<EnumWrapper>();
+#pragma warning restore 0618
             string expected = @"package Examples;
 
 message EnumWrapper {
@@ -94,7 +96,9 @@ message EnumWrapper {
         [Test]
         public void TestEnumerableGroupProto()
         {
+#pragma warning disable 0618
             string proto = Serializer.GetProto<EnumParentGroupWrapper>();
+#pragma warning restore 0618
             string expected = @"package Examples;
 
 message EnumParentWrapper {
@@ -171,7 +175,9 @@ message EnumWrapper {
         [Test]
         public void TestEnumerableStandardProto()
         {
+#pragma warning disable 0618
             string proto = Serializer.GetProto<EnumParentStandardWrapper>();
+#pragma warning restore 0618
             string expected = @"package Examples;
 
 message EnumParentWrapper {

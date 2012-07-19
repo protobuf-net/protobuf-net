@@ -54,7 +54,9 @@ message abc {
         [Test]
         public void TestProtoGenerationWithDefaultString()
         {
+#pragma warning disable 0618
             string proto = Serializer.GetProto<MyClass>();
+#pragma warning restore 0618
             Assert.AreEqual(@"
 message MyClass {
    optional string TestString = 1 [default = ""Test Test TEst""];

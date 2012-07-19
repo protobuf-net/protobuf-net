@@ -109,7 +109,9 @@ namespace Examples.DesignIdeas
         [Test]
         public void EnumGeneration()
         {
+#pragma warning disable 0618
             string proto = Serializer.GetProto<EnumFoo>();
+#pragma warning restore 0618
             Assert.AreEqual(@"package Examples.DesignIdeas;
 
 message EnumFoo {
@@ -151,7 +153,9 @@ enum blah {
         [Test]
         public void TestNullValues()
         {
+#pragma warning disable 0618
             string proto = Serializer.GetProto<NullValues>();
+#pragma warning restore 0618
             Assert.AreEqual(@"package Examples.DesignIdeas;
 
 message NullValues {

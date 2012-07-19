@@ -117,8 +117,12 @@ namespace DAL
         }
 
         [Test]
-        public void TestProtoGen() {
+        public void TestProtoGen()
+        {
+            // just show it can do *something*!
+#pragma warning disable 0618
             string proto = Serializer.GetProto<Database>();
+#pragma warning restore 0618
         }
 
         static void DbMetrics(string caption, Database database)
