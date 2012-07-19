@@ -1230,7 +1230,7 @@ namespace ProtoBuf.Meta
         protected internal static void ThrowUnexpectedType(Type type)
         {
             string fullName = type == null ? "(unknown)" : type.FullName;
-#if !NO_GENERICS
+#if !NO_GENERICS && !WINRT
             if (type != null)
             {
                 Type baseType = type.BaseType;
