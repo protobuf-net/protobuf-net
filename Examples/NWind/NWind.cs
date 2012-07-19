@@ -116,7 +116,7 @@ namespace DAL
             }
         }
 
-        [Test, Ignore("GetProto not implemented")]
+        [Test]
         public void TestProtoGen() {
             string proto = Serializer.GetProto<Database>();
         }

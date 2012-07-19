@@ -1,7 +1,7 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Collections;
-
+using System.Text;
 
 #if FEAT_IKVM
 using Type = IKVM.Reflection.Type;
@@ -113,6 +113,68 @@ namespace ProtoBuf.Meta
         /// processed by this model.
         /// </summary>
         public IEnumerable GetTypes() { return types; }
+
+        /// <summary>
+        /// Suggest a .proto definition for the given type
+        /// </summary>
+        /// <param name="type">The type to generate a .proto definition for</param>
+        /// <returns>The .proto definition as a string</returns>
+        public override string GetSchema(Type type)
+        {
+            if (type == null) throw new ArgumentNullException("type");
+            int index = FindOrAddAuto(type, false, false, false);
+            if(index < 0) throw new ArgumentException("type");
+
+            // get the required types
+            MetaType meta = (MetaType)types[index];            
+            BasicList requiredTypes = new BasicList();
+            requiredTypes.Add(meta);
+            CascadeDependents(requiredTypes, meta);
+
+            MetaType[] metaTypesArr = new MetaType[requiredTypes.Count];
+            requiredTypes.CopyTo(metaTypesArr, 0);
+            Array.Sort(metaTypesArr, MetaType.Comparer.Default);
+
+            // use the provided type's namespace for the "package"
+            StringBuilder builder = new StringBuilder();
+            if (!Helpers.IsNullOrEmpty(type.Namespace))
+            {
+                builder.Append("package ").Append(type.Namespace).Append(';').AppendLine();
+            }
+
+            // write the messages
+            for (int i = 0; i < metaTypesArr.Length; i++ )
+            {
+                metaTypesArr[i].WriteSchema(builder, 0);
+            }
+            return builder.AppendLine().ToString();
+        }
+
+        private void CascadeDependents(BasicList list, MetaType metaType)
+        {
+            foreach(ValueMember member in metaType.Fields)
+            {
+                Type type = member.ItemType;
+                if(type == null) type = member.MemberType;
+                WireType defaultWireType;
+                IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false);
+                if (coreSerializer == null)
+                {
+                    // is an interesting type
+                    int index = FindOrAddAuto(type, false, false, false);
+                    if(index >= 0)
+                    {
+                        MetaType next = (MetaType) types[index];
+                        if(!list.Contains(next))
+                        { // could perhaps also implement as a queue, but this should work OK for sane models
+                            list.Add(next);
+                            CascadeDependents(list, next);
+                        }
+                    }
+                }
+            }
+        }
+
 
         internal RuntimeTypeModel(bool isDefault)
         {
@@ -543,7 +605,21 @@ namespace ProtoBuf.Meta
 
         //}
 
+        
 #if FEAT_COMPILER
+        private void BuildAllSerializers()
+        {
+            // note that types.Count may increase during this operation, as some serializers
+            // bring other types into play
+            for (int i = 0; i < types.Count; i++)
+            {
+                // the primary purpose of this is to force the creation of the Serializer
+                MetaType mt = (MetaType)types[i];
+                if (mt.Serializer == null)
+                    throw new InvalidOperationException("No serializer available for " + mt.Type.Name);
+            }
+        }
+
         internal class SerializerPair : IComparable
         {
             int IComparable.CompareTo(object obj)
@@ -619,20 +695,8 @@ namespace ProtoBuf.Meta
             type.DefineMethodOverride(newMethod, baseMethod);
             return il;
         }
-        private void BuildAllSerializers()
-        {
-            // note that types.Count may increase during this operation, as some serializers
-            // bring other types into play
-            for (int i = 0; i < types.Count; i++)
-            {
-                // the primary purpose of this is to force the creation of the Serializer
-                MetaType mt = (MetaType) types[i];
-                if (mt.Serializer == null)
-                    throw new InvalidOperationException("No serializer available for " + mt.Type.Name);
-            }
-        }
-#if FEAT_IKVM
 
+#if FEAT_IKVM
         public void Cascade()
         {
             BuildAllSerializers();

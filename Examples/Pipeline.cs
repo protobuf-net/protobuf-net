@@ -29,7 +29,7 @@ namespace Examples
             Assert.AreEqual(1 + 2 + 3 + 4 + 5, clone.SubData.Sum, "clone Sum");
         }
 
-        [Test, Ignore("GetProto not implemented yet")]
+        [Test]
         public void TestEnumerableProto()
         {
             string proto = Serializer.GetProto<EnumWrapper>();
@@ -91,7 +91,7 @@ message EnumWrapper {
             Assert.AreEqual(1 + 2 + 3 + 4 + 5, clone.Wrapper.SubData.Sum, "clone Sum");
         }
 
-        [Test, Ignore("GetProto not implemented yet")]
+        [Test]
         public void TestEnumerableGroupProto()
         {
             string proto = Serializer.GetProto<EnumParentGroupWrapper>();
@@ -100,7 +100,6 @@ message EnumWrapper {
 message EnumParentWrapper {
    optional group EnumWrapper Wrapper = 1;
 }
-
 message EnumWrapper {
    repeated int32 SubData = 1;
 }
@@ -169,7 +168,7 @@ message EnumWrapper {
             }
         }
 
-        [Test, Ignore("GetProto not implemented yet")]
+        [Test]
         public void TestEnumerableStandardProto()
         {
             string proto = Serializer.GetProto<EnumParentStandardWrapper>();
@@ -178,7 +177,6 @@ message EnumWrapper {
 message EnumParentWrapper {
    optional EnumWrapper Wrapper = 1;
 }
-
 message EnumWrapper {
    repeated int32 SubData = 1;
 }

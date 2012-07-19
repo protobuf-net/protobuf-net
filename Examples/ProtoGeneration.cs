@@ -2,15 +2,20 @@
 using NUnit.Framework;
 using ProtoBuf;
 using System.ComponentModel;
+using ProtoBuf.Meta;
+using System.Runtime.Serialization;
 
 namespace Examples
 {
     [TestFixture]
     public class ProtoGeneration
     {
-        [Test, Ignore("GetProto not implemented yet")]
-        public void GetProtoTest1() {
-            string proto = Serializer.GetProto<Test1>();
+        [Test]
+        public void GetProtoTest1()
+        {
+            var model = TypeModel.Create();
+            model.UseImplicitZeroDefaults = false;
+            string proto = model.GetSchema(typeof(Test1));
             Assert.AreEqual(
 @"package Examples.SimpleStream;
 
@@ -20,7 +25,33 @@ message Test1 {
 ", proto);
         }
 
-        [Test, Ignore("GetProto not implemented yet")]
+        [Test]
+        public void GetProtoTest2()
+        {
+            var model = TypeModel.Create();
+            model.UseImplicitZeroDefaults = false;
+            string proto = model.GetSchema(typeof(Test2));
+            Assert.AreEqual(
+@"package Examples;
+
+message abc {
+   required uint32 ghi = 2;
+   required bytes def = 3;
+}
+", proto);
+        }
+
+        [DataContract(Name="abc")]
+        public class Test2
+        {
+            [DataMember(Name = "def", IsRequired = true, Order = 3)]
+            public byte[] X { get; set; }
+
+            [DataMember(Name = "ghi", IsRequired = true, Order = 2)]
+            public char Y { get; set; }
+        }
+
+        [Test]
         public void TestProtoGenerationWithDefaultString()
         {
             string proto = Serializer.GetProto<MyClass>();

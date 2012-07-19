@@ -44,7 +44,7 @@ namespace ProtoBuf
         /// <returns>The .proto definition as a string</returns>
         public static string GetProto<T>()
         {
-            throw new NotImplementedException();//TODO: NotImplementedException
+            return RuntimeTypeModel.Default.GetSchema(RuntimeTypeModel.Default.MapType(typeof(T)));
         }
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.

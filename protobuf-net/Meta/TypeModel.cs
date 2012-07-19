@@ -1224,6 +1224,7 @@ namespace ProtoBuf.Meta
                 throw new InvalidOperationException("Unexpected sub-type: " + actual.FullName);
             }
         }
+
         /// <summary>
         /// Indicates that the given type was not expected, and cannot be processed.
         /// </summary>
@@ -1300,6 +1301,16 @@ namespace ProtoBuf.Meta
             }
 
             return false; // oh no you don't!
+        }
+
+        /// <summary>
+        /// Suggest a .proto definition for the given type
+        /// </summary>
+        /// <param name="type">The type to generate a .proto definition for</param>
+        /// <returns>The .proto definition as a string</returns>
+        public virtual string GetSchema(Type type)
+        {
+            throw new NotSupportedException();
         }
 
 

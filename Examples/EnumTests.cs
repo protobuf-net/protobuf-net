@@ -4,6 +4,7 @@ using System.IO;
 using NUnit.Framework;
 using ProtoBuf;
 using System.Runtime.Serialization;
+using ProtoBuf.Meta;
 
 namespace Examples.DesignIdeas
 {
@@ -105,7 +106,7 @@ namespace Examples.DesignIdeas
     public class EnumTests
     {
 
-        [Test, Ignore("GetProto not implemented yet")]
+        [Test]
         public void EnumGeneration()
         {
             string proto = Serializer.GetProto<EnumFoo>();
@@ -125,10 +126,12 @@ enum blah {
         }
 
 
-        [Test, Ignore("GetProto not implemented yet")]
+        [Test]
         public void TestNonNullValues()
         {
-            string proto = Serializer.GetProto<NonNullValues>();
+            var model = TypeModel.Create();
+            model.UseImplicitZeroDefaults = false;
+            string proto = model.GetSchema(typeof (NonNullValues));
             Assert.AreEqual(@"package Examples.DesignIdeas;
 
 message NonNullValues {
@@ -145,7 +148,7 @@ enum blah {
 ", proto);
         }
 
-        [Test, Ignore("GetProto not implemented yet")]
+        [Test]
         public void TestNullValues()
         {
             string proto = Serializer.GetProto<NullValues>();

@@ -1,10 +1,7 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Collections;
-using System.Runtime.InteropServices;
 using ProtoBuf.Serializers;
-using System.Text.RegularExpressions;
-using System.Threading;
 
 
 #if FEAT_IKVM
@@ -28,6 +25,25 @@ namespace ProtoBuf.Meta
     /// </summary>
     public class MetaType : ISerializerProxy
     {
+        internal class Comparer : IComparer
+#if !NO_GENERICS
+             , System.Collections.Generic.IComparer<MetaType>
+#endif
+        {
+            public static readonly Comparer Default = new Comparer();
+            public int Compare(object x, object y)
+            {
+                return Compare(x as MetaType, y as MetaType);
+            }
+            public int Compare(MetaType x, MetaType y)
+            {
+                if (ReferenceEquals(x, y)) return 0;
+                if (x == null) return -1;
+                if (y == null) return 1;
+
+                return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+            }
+        }
         /// <summary>
         /// Get the name of the type being represented
         /// </summary>
@@ -214,6 +230,20 @@ namespace ProtoBuf.Meta
             callbacks.BeforeDeserialize = ResolveMethod(beforeDeserialize, true);
             callbacks.AfterDeserialize = ResolveMethod(afterDeserialize, true);
             return this;
+        }
+
+        private string name;
+        public string Name
+        {
+            get
+            {
+                return Helpers.IsNullOrEmpty(name) ? type.Name : name;
+            }
+            set
+            {
+                ThrowIfFrozen();
+                name = value;
+            }
         }
 
         private MethodInfo factory;
@@ -446,7 +476,7 @@ namespace ProtoBuf.Meta
             int dataMemberOffset = 0, implicitFirstTag = 1;
             bool inferTagByName = model.InferTagFromNameDefault;
             ImplicitFields implicitMode = ImplicitFields.None;
-
+            string name = null;
             for (int i = 0; i < typeAttribs.Length; i++)
             {
                 AttributeMap item = (AttributeMap)typeAttribs[i];
@@ -494,33 +524,49 @@ namespace ProtoBuf.Meta
                     if (partialMembers == null) partialMembers = new BasicList();
                     partialMembers.Add(item);
                 }
-                if (!isEnum && item.AttributeType.FullName == "ProtoBuf.ProtoContractAttribute")
+                
+                if (item.AttributeType.FullName == "ProtoBuf.ProtoContractAttribute")
                 {
-                    if(item.TryGet("DataMemberOffset", out tmp)) dataMemberOffset = (int)tmp;
+                    if (item.TryGet("Name", out tmp)) name = (string) tmp;
+                    if (!isEnum)
+                    {
+                        if (item.TryGet("DataMemberOffset", out tmp)) dataMemberOffset = (int) tmp;
 
-#if !FEAT_IKVM // IKVM can't access InferTagFromNameHasValue, but conveniently, InferTagFromName will only be returned if set via ctor or property
-                    if (item.TryGet("InferTagFromNameHasValue", false, out tmp) && (bool)tmp)
+#if !FEAT_IKVM
+                        // IKVM can't access InferTagFromNameHasValue, but conveniently, InferTagFromName will only be returned if set via ctor or property
+                        if (item.TryGet("InferTagFromNameHasValue", false, out tmp) && (bool) tmp)
 #endif
-                    {
-                        if (item.TryGet("InferTagFromName", out tmp)) inferTagByName = (bool)tmp;
-                    }
-
-                    if (item.TryGet("ImplicitFields", out tmp))
-                    {
-                        if (tmp is ImplicitFields) implicitMode = (ImplicitFields)tmp;
-                        else if (tmp is int) implicitMode = (ImplicitFields)(int)tmp;
-                        else
                         {
-                            throw new NotSupportedException(tmp.GetType().FullName);
+                            if (item.TryGet("InferTagFromName", out tmp)) inferTagByName = (bool) tmp;
                         }
+
+                        if (item.TryGet("ImplicitFields", out tmp))
+                        {
+                            if (tmp is ImplicitFields) implicitMode = (ImplicitFields) tmp;
+                            else if (tmp is int) implicitMode = (ImplicitFields) (int) tmp;
+                            else
+                            {
+                                throw new NotSupportedException(tmp.GetType().FullName);
+                            }
+                        }
+
+                        if (item.TryGet("SkipConstructor", out tmp)) UseConstructor = !(bool) tmp;
+                        if (item.TryGet("IgnoreListHandling", out tmp)) IgnoreListHandling = (bool) tmp;
+
+                        if (item.TryGet("ImplicitFirstTag", out tmp) && (int) tmp > 0) implicitFirstTag = (int) tmp;
                     }
+                }
 
-                    if (item.TryGet("SkipConstructor", out tmp)) UseConstructor = !(bool)tmp;
-                    if (item.TryGet("IgnoreListHandling", out tmp)) IgnoreListHandling = (bool)tmp;
-
-                    if (item.TryGet("ImplicitFirstTag", out tmp) && (int)tmp > 0) implicitFirstTag = (int)tmp;
+                if (item.AttributeType.FullName == "System.Runtime.Serialization.DataContractAttribute")
+                {
+                    if (name == null && item.TryGet("Name", out tmp)) name = (string)tmp;
+                }
+                if (item.AttributeType.FullName == "System.Xml.Serialization.XmlTypeAttribute")
+                {
+                    if (name == null && item.TryGet("TypeName", out tmp)) name = (string)tmp;
                 }
             }
+            if (!Helpers.IsNullOrEmpty(name)) Name = name;
             if (implicitMode != ImplicitFields.None)
             {
                 family &= AttributeFamily.ProtoBuf; // with implicit fields, **only** proto attributes are important
@@ -1480,6 +1526,53 @@ namespace ProtoBuf.Meta
             #else
             return false;
             #endif
+        }
+
+        internal System.Collections.IEnumerable Fields { get { return this.fields; } }
+
+        private System.Text.StringBuilder NewLine(System.Text.StringBuilder builder, int indent)
+        {
+            return builder.AppendLine().Append(' ', indent*3);
+
+        }
+        internal void WriteSchema(System.Text.StringBuilder builder, int indent)
+        {
+            ValueMember[] fieldsArr = new ValueMember[fields.Count];
+            fields.CopyTo(fieldsArr, 0);
+            Array.Sort(fieldsArr, ValueMember.Comparer.Default);
+            if(Helpers.IsEnum(type))
+            {
+                NewLine(builder, indent).Append("enum ").Append(Name).Append(" {");
+                foreach (ValueMember member in fieldsArr)
+                {
+                    NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
+                }
+                NewLine(builder, indent).Append('}');
+            } else
+            {
+                NewLine(builder, indent).Append("message ").Append(Name).Append(" {");
+                foreach (ValueMember member in fieldsArr)
+                {
+                    string ordinality = member.ItemType != null ? "repeated" : member.IsRequired ? "required" : "optional";
+                    NewLine(builder, indent + 1).Append(ordinality).Append(' ');
+                    if (member.DataFormat == DataFormat.Group) builder.Append("group ");
+                    builder.Append(member.GetSchemaTypeName()).Append(" ")
+                         .Append(member.Name).Append(" = ").Append(member.FieldNumber);
+                    if(member.DefaultValue != null)
+                    {
+                        if (member.DefaultValue is string)
+                        {
+                            builder.Append(" [default = \"").Append(member.DefaultValue).Append("\"]");
+                        }
+                        else
+                        {
+                            builder.Append(" [default = ").Append(member.DefaultValue).Append(']');
+                        }
+                    }
+                    builder.Append(';');
+                }
+                NewLine(builder, indent).Append('}');
+            }
         }
     }
 }
