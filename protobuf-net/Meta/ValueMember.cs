@@ -564,7 +564,7 @@ namespace ProtoBuf.Meta
             if (effectiveType == model.MapType(typeof(byte[]))) return "bytes";
 
             WireType wireType;
-            IProtoSerializer ser = ValueMember.TryGetCoreSerializer(model, dataFormat, effectiveType, out wireType, false, false, false, true);
+            IProtoSerializer ser = ValueMember.TryGetCoreSerializer(model, dataFormat, effectiveType, out wireType, false, false, false, false);
             if (ser == null)
             {   // model type
                 return model[effectiveType].Name;
