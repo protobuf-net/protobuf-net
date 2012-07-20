@@ -1,0 +1,11 @@
+package com.idatt.dto;
+ 
+option java_package = "com.idatt.dto";
+option java_outer_classname = "Protos";
+option optimize_for = LITE_RUNTIME;
+ 
+message Positions
+{
+    repeated Position Items = 1;
+}
+message Position {}

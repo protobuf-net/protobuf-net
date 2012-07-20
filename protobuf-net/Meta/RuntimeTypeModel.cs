@@ -737,6 +737,9 @@ namespace ProtoBuf.Meta
         /// </summary>
         public sealed class CompilerOptions
         {
+            /// <summary>
+            /// Import framework options from an existing type
+            /// </summary>
             public void SetFrameworkOptions(MetaType from)
             {
                 AttributeMap[] attribs = AttributeMap.Create(from.Model, from.Type.Assembly);
@@ -792,8 +795,6 @@ namespace ProtoBuf.Meta
         /// (the serialization dll still requires protobuf-net for support services).
         /// </summary>
         /// <remarks>A full compilation is restricted to accessing public types / members</remarks>
-        /// <param name="name">The name of the TypeModel class to create</param>
-        /// <param name="path">The path for the new dll</param>
         /// <returns>An instance of the newly created compiled type-model</returns>
         public TypeModel Compile(CompilerOptions options)
         {

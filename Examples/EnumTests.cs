@@ -133,7 +133,9 @@ enum blah {
         {
             var model = TypeModel.Create();
             model.UseImplicitZeroDefaults = false;
+#pragma warning disable 0618
             string proto = model.GetSchema(typeof (NonNullValues));
+#pragma warning restore 0618
             Assert.AreEqual(@"package Examples.DesignIdeas;
 
 message NonNullValues {

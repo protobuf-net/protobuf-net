@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-// Generated from: ProtoGen/descriptor.proto
+// Generated from: descriptor.proto
 namespace google.protobuf
 {
   [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"FileDescriptorSet")]
@@ -93,6 +93,15 @@ namespace google.protobuf
     {
       get { return _options; }
       set { _options = value; }
+    }
+
+    private google.protobuf.SourceCodeInfo _source_code_info = null;
+    [global::ProtoBuf.ProtoMember(9, IsRequired = false, Name=@"source_code_info", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue(null)]
+    public google.protobuf.SourceCodeInfo source_code_info
+    {
+      get { return _source_code_info; }
+      set { _source_code_info = value; }
     }
     private global::ProtoBuf.IExtension extensionObject;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
@@ -531,6 +540,15 @@ namespace google.protobuf
       set { _java_multiple_files = value; }
     }
 
+    private bool _java_generate_equals_and_hash = (bool)false;
+    [global::ProtoBuf.ProtoMember(20, IsRequired = false, Name=@"java_generate_equals_and_hash", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue((bool)false)]
+    public bool java_generate_equals_and_hash
+    {
+      get { return _java_generate_equals_and_hash; }
+      set { _java_generate_equals_and_hash = value; }
+    }
+
     private google.protobuf.FileOptions.OptimizeMode _optimize_for = google.protobuf.FileOptions.OptimizeMode.SPEED;
     [global::ProtoBuf.ProtoMember(9, IsRequired = false, Name=@"optimize_for", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
     [global::System.ComponentModel.DefaultValue(google.protobuf.FileOptions.OptimizeMode.SPEED)]
@@ -539,6 +557,33 @@ namespace google.protobuf
       get { return _optimize_for; }
       set { _optimize_for = value; }
     }
+
+    private bool _cc_generic_services = (bool)false;
+    [global::ProtoBuf.ProtoMember(16, IsRequired = false, Name=@"cc_generic_services", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue((bool)false)]
+    public bool cc_generic_services
+    {
+      get { return _cc_generic_services; }
+      set { _cc_generic_services = value; }
+    }
+
+    private bool _java_generic_services = (bool)false;
+    [global::ProtoBuf.ProtoMember(17, IsRequired = false, Name=@"java_generic_services", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue((bool)false)]
+    public bool java_generic_services
+    {
+      get { return _java_generic_services; }
+      set { _java_generic_services = value; }
+    }
+
+    private bool _py_generic_services = (bool)false;
+    [global::ProtoBuf.ProtoMember(18, IsRequired = false, Name=@"py_generic_services", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue((bool)false)]
+    public bool py_generic_services
+    {
+      get { return _py_generic_services; }
+      set { _py_generic_services = value; }
+    }
     private readonly global::System.Collections.Generic.List<google.protobuf.UninterpretedOption> _uninterpreted_option = new global::System.Collections.Generic.List<google.protobuf.UninterpretedOption>();
     [global::ProtoBuf.ProtoMember(999, Name=@"uninterpreted_option", DataFormat = global::ProtoBuf.DataFormat.Default)]
     public global::System.Collections.Generic.List<google.protobuf.UninterpretedOption> uninterpreted_option
@@ -546,15 +591,6 @@ namespace google.protobuf
       get { return _uninterpreted_option; }
     }
   
-
-    private string _namespace = "";
-    [global::ProtoBuf.ProtoMember(52500, IsRequired = false, Name=@"namespace", DataFormat = global::ProtoBuf.DataFormat.Default)]
-    [global::System.ComponentModel.DefaultValue("")]
-    public string @namespace
-    {
-      get { return _namespace; }
-      set { _namespace = value; }
-    }
     [global::ProtoBuf.ProtoContract(Name=@"OptimizeMode")]
     public enum OptimizeMode
     {
@@ -563,7 +599,10 @@ namespace google.protobuf
       SPEED = 1,
             
       [global::ProtoBuf.ProtoEnum(Name=@"CODE_SIZE", Value=2)]
-      CODE_SIZE = 2
+      CODE_SIZE = 2,
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"LITE_RUNTIME", Value=3)]
+      LITE_RUNTIME = 3
     }
   
     private global::ProtoBuf.IExtension extensionObject;
@@ -585,6 +624,15 @@ namespace google.protobuf
       get { return _message_set_wire_format; }
       set { _message_set_wire_format = value; }
     }
+
+    private bool _no_standard_descriptor_accessor = (bool)false;
+    [global::ProtoBuf.ProtoMember(2, IsRequired = false, Name=@"no_standard_descriptor_accessor", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue((bool)false)]
+    public bool no_standard_descriptor_accessor
+    {
+      get { return _no_standard_descriptor_accessor; }
+      set { _no_standard_descriptor_accessor = value; }
+    }
     private readonly global::System.Collections.Generic.List<google.protobuf.UninterpretedOption> _uninterpreted_option = new global::System.Collections.Generic.List<google.protobuf.UninterpretedOption>();
     [global::ProtoBuf.ProtoMember(999, Name=@"uninterpreted_option", DataFormat = global::ProtoBuf.DataFormat.Default)]
     public global::System.Collections.Generic.List<google.protobuf.UninterpretedOption> uninterpreted_option
@@ -603,9 +651,9 @@ namespace google.protobuf
     public FieldOptions() {}
     
 
-    private google.protobuf.FieldOptions.CType _ctype = google.protobuf.FieldOptions.CType.CORD;
+    private google.protobuf.FieldOptions.CType _ctype = google.protobuf.FieldOptions.CType.STRING;
     [global::ProtoBuf.ProtoMember(1, IsRequired = false, Name=@"ctype", DataFormat = global::ProtoBuf.DataFormat.TwosComplement)]
-    [global::System.ComponentModel.DefaultValue(google.protobuf.FieldOptions.CType.CORD)]
+    [global::System.ComponentModel.DefaultValue(google.protobuf.FieldOptions.CType.STRING)]
     public google.protobuf.FieldOptions.CType ctype
     {
       get { return _ctype; }
@@ -648,6 +696,9 @@ namespace google.protobuf
     [global::ProtoBuf.ProtoContract(Name=@"CType")]
     public enum CType
     {
+            
+      [global::ProtoBuf.ProtoEnum(Name=@"STRING", Value=0)]
+      STRING = 0,
             
       [global::ProtoBuf.ProtoEnum(Name=@"CORD", Value=1)]
       CORD = 1,
@@ -786,6 +837,15 @@ namespace google.protobuf
       get { return _string_value; }
       set { _string_value = value; }
     }
+
+    private string _aggregate_value = "";
+    [global::ProtoBuf.ProtoMember(8, IsRequired = false, Name=@"aggregate_value", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    [global::System.ComponentModel.DefaultValue("")]
+    public string aggregate_value
+    {
+      get { return _aggregate_value; }
+      set { _aggregate_value = value; }
+    }
   [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"NamePart")]
   public partial class NamePart : global::ProtoBuf.IExtensible
   {
@@ -815,9 +875,45 @@ namespace google.protobuf
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
   }
   
-}
-// Generated from: protobuf-net.proto
-// Note: requires additional types generated from: descriptor.proto
-namespace protobuf_net
-{
+  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"SourceCodeInfo")]
+  public partial class SourceCodeInfo : global::ProtoBuf.IExtensible
+  {
+    public SourceCodeInfo() {}
+    
+    private readonly global::System.Collections.Generic.List<google.protobuf.SourceCodeInfo.Location> _location = new global::System.Collections.Generic.List<google.protobuf.SourceCodeInfo.Location>();
+    [global::ProtoBuf.ProtoMember(1, Name=@"location", DataFormat = global::ProtoBuf.DataFormat.Default)]
+    public global::System.Collections.Generic.List<google.protobuf.SourceCodeInfo.Location> location
+    {
+      get { return _location; }
+    }
+  
+  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"Location")]
+  public partial class Location : global::ProtoBuf.IExtensible
+  {
+    public Location() {}
+    
+    private readonly global::System.Collections.Generic.List<int> _path = new global::System.Collections.Generic.List<int>();
+    [global::ProtoBuf.ProtoMember(1, Name=@"path", DataFormat = global::ProtoBuf.DataFormat.TwosComplement, Options = global::ProtoBuf.MemberSerializationOptions.Packed)]
+    public global::System.Collections.Generic.List<int> path
+    {
+      get { return _path; }
+    }
+  
+    private readonly global::System.Collections.Generic.List<int> _span = new global::System.Collections.Generic.List<int>();
+    [global::ProtoBuf.ProtoMember(2, Name=@"span", DataFormat = global::ProtoBuf.DataFormat.TwosComplement, Options = global::ProtoBuf.MemberSerializationOptions.Packed)]
+    public global::System.Collections.Generic.List<int> span
+    {
+      get { return _span; }
+    }
+  
+    private global::ProtoBuf.IExtension extensionObject;
+    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+  }
+  
+    private global::ProtoBuf.IExtension extensionObject;
+    global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+      { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
+  }
+  
 }

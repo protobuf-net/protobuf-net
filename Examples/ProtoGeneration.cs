@@ -15,7 +15,9 @@ namespace Examples
         {
             var model = TypeModel.Create();
             model.UseImplicitZeroDefaults = false;
+#pragma warning disable 0618
             string proto = model.GetSchema(typeof(Test1));
+#pragma warning restore 0618
             Assert.AreEqual(
 @"package Examples.SimpleStream;
 
@@ -30,7 +32,9 @@ message Test1 {
         {
             var model = TypeModel.Create();
             model.UseImplicitZeroDefaults = false;
+#pragma warning disable 0618
             string proto = model.GetSchema(typeof(Test2));
+#pragma warning restore 0618
             Assert.AreEqual(
 @"package Examples;
 

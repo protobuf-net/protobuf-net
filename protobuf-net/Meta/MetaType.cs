@@ -233,6 +233,9 @@ namespace ProtoBuf.Meta
         }
 
         private string name;
+        /// <summary>
+        /// Gets or sets the name of this contract.
+        /// </summary>
         public string Name
         {
             get
