@@ -1569,6 +1569,10 @@ namespace ProtoBuf.Meta
                             builder.Append(" [default = ").Append(member.DefaultValue).Append(']');
                         }
                     }
+                    if(member.ItemType != null && member.IsPacked)
+                    {
+                        builder.Append(" [packed=true]");
+                    }
                     builder.Append(';');
                 }
                 NewLine(builder, indent).Append('}');
