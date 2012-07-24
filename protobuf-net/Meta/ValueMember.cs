@@ -329,8 +329,9 @@ namespace ProtoBuf.Meta
                         ser = new ListDecorator(model, memberType, defaultType, ser, fieldNumber, IsPacked, wireType, member == null || PropertyDecorator.CanWrite(model, member), OverwriteList, SupportNull);
                     }
                 }
-                else if (defaultValue != null && !IsRequired)
-                {
+                else if (defaultValue != null && !IsRequired && getSpecified == null)
+                {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
+                    // as does "IsRequired"
                     ser = new DefaultValueDecorator(model, defaultValue, ser);
                 }
                 if (memberType == model.MapType(typeof(Uri)))
