@@ -104,7 +104,7 @@ namespace ProtoBuf.Meta
         }
         internal object GetRawEnumValue()
         {
-#if WINRT || PORTABLE
+#if WINRT || PORTABLE || CF
             object value = ((FieldInfo)member).GetValue(null);
             switch(Helpers.GetTypeCode(Enum.GetUnderlyingType(((FieldInfo)member).FieldType)))
             {

@@ -875,7 +875,7 @@ namespace ProtoBuf.Meta
                 else
                 {
                     attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
-#if WINRT || PORTABLE
+#if WINRT || PORTABLE || CF
                     fieldNumber = Convert.ToInt32(((FieldInfo)member).GetValue(null));
 #else
                     fieldNumber = Convert.ToInt32(((FieldInfo)member).GetRawConstantValue());

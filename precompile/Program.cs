@@ -5,7 +5,7 @@ using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
 
-namespace precompile
+namespace ProtoBuf.Precompile
 {
     class Program
     {
@@ -22,34 +22,9 @@ namespace precompile
 
                 if (ctx.Help)
                 {
-                    Console.WriteLine(@"
-
-Generates a serialization dll that can be used with just the
-(platform-specific) protobuf-net core, allowing fast and efficient
-serialization even on light frameworks (CF, SL, SP7, Metro, etc).
-
-The input assembly(ies) is(are) anaylsed for types decorated with
-[ProtoContract]. All such types are added to the model, as are any
-types that they require.
-
-Note: the compiler must be able to resolve a protobuf-net.dll
-that is suitable for the target framework; this is done most simply
-by ensuring that the appropriate protobuf-net.dll is next to the
-input assembly.
-
-Options:
-
-    -f:<framework> - Can be an explicit path, or a path relative to:
-                     Reference Assemblies\Microsoft\Framework
-    -o:<file>      - Output dll path
-    -t:<typename>  - Type name of the serializer to generate
-    -p:<path>      - Additional directory to probe for assemblies
-    <file>         - Input file to analyse
-
-Example:
-
-    precompile -f:.NETCore\v4.5 MyDtos\My.dll -o:MySerializer.dll
-        -t:MySerializer");
+                    Console.WriteLine();
+                    Console.WriteLine();
+                    Console.WriteLine(ctx.GetUsage());
                     return -1;
                 }
                 if (!ctx.SanityCheck()) return -1;
@@ -71,25 +46,47 @@ Example:
         }
     }
 
-    class PreCompileContext
+    /// <summary>
+    /// Defines the rules for a precompilation operation
+    /// </summary>
+    public class PreCompileContext
     {
+        /// <summary>
+        /// The target framework to use
+        /// </summary>
         [CommandLine("f"), CommandLine("framework")]
         public string Framework { get; set; }
 
         private readonly List<string> probePaths = new List<string>();
+
+        /// <summary>
+        /// Locations to check for referenced assemblies
+        /// </summary>
         [CommandLine("p"), CommandLine("probe")]
         public List<string> ProbePaths { get { return probePaths; } }
 
         private readonly List<string> inputs = new List<string>();
+        /// <summary>
+        /// The paths for assemblies to process
+        /// </summary>
         [CommandLine("")]
         public List<string> Inputs { get { return inputs; } }
 
+        /// <summary>
+        /// The type name of the serializer to generate
+        /// </summary>
         [CommandLine("t"), CommandLine("type")]
         public string TypeName { get; set; }
 
+        /// <summary>
+        /// The name of the assembly to generate
+        /// </summary>
         [CommandLine("o"), CommandLine("out")]
         public string AssemblyName { get; set; }
 
+        /// <summary>
+        /// Show help
+        /// </summary>
         [CommandLine("?"), CommandLine("help"), CommandLine("h")]
         public bool Help { get; set; }
 
@@ -154,6 +151,9 @@ Example:
                 return null;
             }
         }
+        /// <summary>
+        /// Check the context for obvious errrs
+        /// </summary>
         public bool SanityCheck()
         {
             bool allGood = true;
@@ -258,6 +258,9 @@ Example:
                 }
             }
         }
+        /// <summary>
+        /// Perform the precompilation operation
+        /// </summary>
         public bool Execute()
         {
             // model to work with
@@ -383,32 +386,83 @@ Example:
             }
             return null;
         }
+
+        /// <summary>
+        /// Return the syntax guide for the utility
+        /// </summary>
+        public string GetUsage()
+        {
+            return
+                @"Generates a serialization dll that can be used with just the
+(platform-specific) protobuf-net core, allowing fast and efficient
+serialization even on light frameworks (CF, SL, SP7, Metro, etc).
+
+The input assembly(ies) is(are) anaylsed for types decorated with
+[ProtoContract]. All such types are added to the model, as are any
+types that they require.
+
+Note: the compiler must be able to resolve a protobuf-net.dll
+that is suitable for the target framework; this is done most simply
+by ensuring that the appropriate protobuf-net.dll is next to the
+input assembly.
+
+Options:
+
+    -f:<framework> - Can be an explicit path, or a path relative to:
+                     Reference Assemblies\Microsoft\Framework
+    -o:<file>      - Output dll path
+    -t:<typename>  - Type name of the serializer to generate
+    -p:<path>      - Additional directory to probe for assemblies
+    <file>         - Input file to analyse
+
+Example:
+
+    precompile -f:.NETCore\v4.5 MyDtos\My.dll -o:MySerializer.dll
+        -t:MySerializer";
+        }
     }
+    /// <summary>
+    /// Defines a mapping from command-line attributes to properties
+    /// </summary>
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
     public class CommandLineAttribute : Attribute
     {
+        /// <summary>
+        /// Attempt to parse the incoming command-line switches, matching by prefix
+        /// onto properties of the specified type
+        /// </summary>
         public static bool TryParse<T>(string[] args, out T result) where T : class, new()
         {
             result = new T();
             bool allGood = true;
             var props = typeof(T).GetProperties();
 
+            char[] leadChars = {'/', '+', '-'};
             for (int i = 0; i < args.Length; i++)
             {
-                string arg = args[i].Trim().TrimStart('/','+','-');
-                string prefix, value;
-                int idx = arg.IndexOf(':');
-                if (idx < 0)
+                string arg = args[i].Trim(), prefix, value;
+                if(arg.IndexOfAny(leadChars) == 0)
+                {
+                    int idx = arg.IndexOf(':');
+                    if (idx < 0)
+                    {
+                        prefix = arg.Substring(1);
+                        value = "";
+                    }
+                    else
+                    {
+                        prefix = arg.Substring(1,idx - 1);
+                        value = arg.Substring(idx + 1);
+                    }    
+                }
+                else
                 {
                     prefix = "";
                     value = arg;
                 }
-                else
-                {
-                    prefix = arg.Substring(0,idx);
-                    value = arg.Substring(idx + 1);
-                }
+                
                 System.Reflection.PropertyInfo foundProp = null;
+
                 foreach (var prop in props)
                 {
                     foreach (CommandLineAttribute atttib in prop.GetCustomAttributes(typeof(CommandLineAttribute), true))
@@ -447,7 +501,13 @@ Example:
             return allGood;
         }
         private readonly string prefix;
+        /// <summary>
+        /// Create a new CommandLineAttribute object for the given prefix
+        /// </summary>
         public CommandLineAttribute(string prefix) { this.prefix = prefix; }
+        /// <summary>
+        /// The prefix to recognise this command-line switch
+        /// </summary>
         public string Prefix { get { return prefix; } }
     }
 
