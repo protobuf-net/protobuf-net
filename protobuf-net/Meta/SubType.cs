@@ -9,6 +9,25 @@ namespace ProtoBuf.Meta
     /// </summary>
     public sealed class SubType
     {
+        internal class Comparer : System.Collections.IComparer
+#if !NO_GENERICS
+, System.Collections.Generic.IComparer<SubType>
+#endif
+        {
+            public static readonly Comparer Default = new Comparer();
+            public int Compare(object x, object y)
+            {
+                return Compare(x as SubType, y as SubType);
+            }
+            public int Compare(SubType x, SubType y)
+            {
+                if (ReferenceEquals(x, y)) return 0;
+                if (x == null) return -1;
+                if (y == null) return 1;
+
+                return x.FieldNumber.CompareTo(y.FieldNumber);
+            }
+        }
         private readonly int fieldNumber;
         /// <summary>
         /// The field-number that is used to encapsulate the data (as a nested

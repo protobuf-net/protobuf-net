@@ -167,7 +167,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public SubType[] GetSubtypes()
         {
-            if (!HasSubtypes) return null;
+            if (!HasSubtypes) return new SubType[0];
             SubType[] arr = new SubType[subTypes.Count];
             subTypes.CopyTo(arr, 0);
             return arr;
@@ -1567,6 +1567,10 @@ namespace ProtoBuf.Meta
                         {
                             builder.Append(" [default = \"").Append(member.DefaultValue).Append("\"]");
                         }
+                        else if(member.DefaultValue is bool)
+                        {   // need to be lower case (issue 304)
+                            builder.Append((bool)member.DefaultValue ? " [default = true]" : " [default = false]");
+                        }
                         else
                         {
                             builder.Append(" [default = ").Append(member.DefaultValue).Append(']');
@@ -1577,6 +1581,18 @@ namespace ProtoBuf.Meta
                         builder.Append(" [packed=true]");
                     }
                     builder.Append(';');
+                }
+                if (subTypes != null && subTypes.Count != 0)
+                {
+                    NewLine(builder, indent + 1).Append("// the following represent sub-types; at most 1 should have a value");
+                    SubType[] subTypeArr = new SubType[subTypes.Count];
+                    subTypes.CopyTo(subTypeArr, 0);
+                    Array.Sort(fieldsArr, SubType.Comparer.Default);
+                    foreach(SubType subType in subTypes)
+                    {
+                        NewLine(builder, indent + 1).Append("optional ").Append(subType.DerivedType.Name)
+                            .Append(" ").Append(subType.DerivedType.Name).Append(" = ").Append(subType.FieldNumber).Append(';');
+                    }
                 }
                 NewLine(builder, indent).Append('}');
             }

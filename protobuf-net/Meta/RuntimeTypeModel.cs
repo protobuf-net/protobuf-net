@@ -150,7 +150,6 @@ namespace ProtoBuf.Meta
             }
             return builder.AppendLine().ToString();
         }
-
         private void CascadeDependents(BasicList list, MetaType metaType)
         {
             foreach(ValueMember member in metaType.Fields)
@@ -163,16 +162,32 @@ namespace ProtoBuf.Meta
                 {
                     // is an interesting type
                     int index = FindOrAddAuto(type, false, false, false);
-                    if(index >= 0)
+                    if (index >= 0)
                     {
-                        MetaType next = (MetaType) types[index];
-                        if(!list.Contains(next))
+                        MetaType next = (MetaType)types[index];
+                        if (!list.Contains(next))
                         { // could perhaps also implement as a queue, but this should work OK for sane models
                             list.Add(next);
                             CascadeDependents(list, next);
                         }
                     }
                 }
+            }
+            if (metaType.HasSubtypes)
+            {
+                foreach (SubType subType in metaType.GetSubtypes())
+                {
+                    if (!list.Contains(subType.DerivedType))
+                    {
+                        list.Add(subType.DerivedType);
+                        CascadeDependents(list, subType.DerivedType);
+                    }
+                }
+            }
+            if (metaType.BaseType != null && !list.Contains(metaType.BaseType))
+            {
+                list.Add(metaType.BaseType);
+                CascadeDependents(list, metaType.BaseType);
             }
         }
 
