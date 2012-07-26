@@ -117,20 +117,33 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Suggest a .proto definition for the given type
         /// </summary>
-        /// <param name="type">The type to generate a .proto definition for</param>
+        /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
         [Obsolete("GetSchema is experimental and newly implemented; treat with caution")]
         public override string GetSchema(Type type)
         {
-            if (type == null) throw new ArgumentNullException("type");
-            int index = FindOrAddAuto(type, false, false, false);
-            if(index < 0) throw new ArgumentException("type");
-
-            // get the required types
-            MetaType meta = (MetaType)types[index];            
             BasicList requiredTypes = new BasicList();
-            requiredTypes.Add(meta);
-            CascadeDependents(requiredTypes, meta);
+            if (type == null)
+            { // generate for the entire model
+                foreach(MetaType meta in types)
+                {
+                    if(!requiredTypes.Contains(meta))
+                    { // ^^^ note that the type might have been added as a descendent
+                        requiredTypes.Add(meta);
+                        CascadeDependents(requiredTypes, meta);
+                    }
+                }
+            }
+            else
+            { // generate just relative to the supplied type
+                int index = FindOrAddAuto(type, false, false, false);
+                if (index < 0) throw new ArgumentException("type");
+
+                // get the required types
+                MetaType meta = (MetaType) types[index];
+                requiredTypes.Add(meta);
+                CascadeDependents(requiredTypes, meta);
+            }
 
             MetaType[] metaTypesArr = new MetaType[requiredTypes.Count];
             requiredTypes.CopyTo(metaTypesArr, 0);
@@ -138,9 +151,36 @@ namespace ProtoBuf.Meta
 
             // use the provided type's namespace for the "package"
             StringBuilder builder = new StringBuilder();
-            if (!Helpers.IsNullOrEmpty(type.Namespace))
+            string package = null;
+            if(type == null)
             {
-                builder.Append("package ").Append(type.Namespace).Append(';').AppendLine();
+                foreach(MetaType meta in types)
+                {
+                    string tmp = meta.Type.Namespace;
+                    if(!Helpers.IsNullOrEmpty(tmp))
+                    {
+                        if (package == null)
+                        { // haven't seen any suggestions yet
+                            package = tmp;
+                        }
+                        else if (package == tmp)
+                        { // that's fine; a repeat of the one we already saw
+                        }
+                        else
+                        { // something else; have confliucting suggestions; abort
+                            package = null;
+                            break;
+                        }
+                    }
+                }
+            }
+            else
+            {
+                package = type.Namespace;
+            }
+            if (!Helpers.IsNullOrEmpty(package))
+            {
+                builder.Append("package ").Append(package).Append(';').AppendLine();
             }
 
             // write the messages
