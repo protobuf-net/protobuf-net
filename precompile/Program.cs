@@ -266,10 +266,10 @@ namespace ProtoBuf.Precompile
             // model to work with
             var model = TypeModel.Create();
 
-            model.AssemblyResolve += (sender, args) =>
+            model.Universe.AssemblyResolve += (sender, args) =>
             {
                 string nameOnly = args.Name.Split(',')[0];
-                var uni = ((IKVM.Reflection.Universe)sender);
+                var uni = model.Universe;
                 foreach (var tmp in uni.GetAssemblies())
                 {
                     if (tmp.GetName().Name == nameOnly) return tmp;

@@ -15,7 +15,11 @@ namespace Examples.Issues
 message Foo {
    optional bool Bar = 1 [default = true];
 }
-", Serializer.GetProto<Foo>());
+",
+#pragma warning disable 0618
+        Serializer.GetProto<Foo>()
+#pragma warning restore 0618
+        );
         }
         [ProtoContract]
         public class Foo

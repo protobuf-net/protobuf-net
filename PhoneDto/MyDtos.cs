@@ -18,6 +18,23 @@ namespace DAL
         }
     }
 
+    [ProtoContract]
+    public class VariousFieldTypes
+    {
+        [ProtoMember(1)] public int Int32 { get; set; }
+        [ProtoMember(2)] public uint UInt32 { get; set; }
+        [ProtoMember(3)] public long Int64{ get; set; }
+        [ProtoMember(4), DefaultValue((ulong)0)] public ulong UInt64 { get; set; }
+        [ProtoMember(5)] public short Int16 { get; set; }
+        [ProtoMember(6)] public ushort UInt16 { get; set; }
+        [ProtoMember(7)] public byte Byte { get; set; }
+        [ProtoMember(8)] public sbyte SByte { get; set; }
+        [ProtoMember(9)] public float Single { get; set; }
+        [ProtoMember(10)] public double Double { get; set; }
+        [ProtoMember(11)] public decimal Decimal { get; set; }
+        [ProtoMember(12)] public string String { get; set; }
+    }
+
     // these are just so I don't need to hack everything too much
     class TagAttribute : Attribute
     {

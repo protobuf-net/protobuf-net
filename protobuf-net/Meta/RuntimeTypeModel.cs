@@ -249,15 +249,13 @@ namespace ProtoBuf.Meta
 #if FEAT_IKVM
         readonly IKVM.Reflection.Universe universe;
 
-        public event IKVM.Reflection.ResolveEventHandler AssemblyResolve
-        {
-            add { universe.AssemblyResolve += value; }
-            remove { universe.AssemblyResolve -= value; }
-        }
         public Assembly Load(string path)
         {
             return universe.LoadFile(path);
         }
+        /// <summary>
+        /// Gets the IKVM Universe that relates to this model
+        /// </summary>
         public Universe Universe { get { return universe; } }
 
         /// <summary>

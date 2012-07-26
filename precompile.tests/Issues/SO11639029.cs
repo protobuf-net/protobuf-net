@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using ProtoBuf.Precompile;
+using Examples;
 namespace precompile.tests.Issues
 {
     [TestFixture]
@@ -38,6 +39,16 @@ namespace precompile.tests.Issues
             Assert.AreEqual(2, ctx.Inputs.Count);
             Assert.AreEqual(@"c:\a.dll", ctx.Inputs[0]);
             Assert.AreEqual("b.dll", ctx.Inputs[1]);
+        }
+
+        [Test]
+        public void ExecuteSilverDto()
+        {
+            PreCompileContext ctx;
+            Assert.IsTrue(CommandLineAttribute.TryParse(new[] { @"..\..\..\PhoneDto\bin\release\PhoneDto.dll"
+                , "-o:PhoneSerializer.dll", "-t:MySerializer" }, out ctx), "TryParse");
+            Assert.IsTrue(ctx.SanityCheck(), "SanityCheck");
+            Assert.IsTrue(ctx.Execute(), "Execute");
         }
     }
 }
