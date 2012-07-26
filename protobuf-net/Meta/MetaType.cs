@@ -1587,7 +1587,7 @@ namespace ProtoBuf.Meta
                     NewLine(builder, indent + 1).Append("// the following represent sub-types; at most 1 should have a value");
                     SubType[] subTypeArr = new SubType[subTypes.Count];
                     subTypes.CopyTo(subTypeArr, 0);
-                    Array.Sort(fieldsArr, SubType.Comparer.Default);
+                    Array.Sort(subTypeArr, SubType.Comparer.Default);
                     foreach(SubType subType in subTypes)
                     {
                         NewLine(builder, indent + 1).Append("optional ").Append(subType.DerivedType.Name)
