@@ -342,7 +342,7 @@ namespace ProtoBuf.Meta
                     }
                     else
                     {
-                        ser = new ListDecorator(model, memberType, defaultType, ser, fieldNumber, IsPacked, wireType, member == null || PropertyDecorator.CanWrite(model, member), OverwriteList, SupportNull);
+                        ser = new ListDecorator(model, memberType, defaultType, ser, fieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(model, member), OverwriteList, SupportNull);
                     }
                 }
                 else if (defaultValue != null && !IsRequired && getSpecified == null)
