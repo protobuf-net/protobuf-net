@@ -1,6 +1,7 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Collections;
+using System.Text;
 using ProtoBuf.Serializers;
 
 
@@ -240,7 +241,30 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                return Helpers.IsNullOrEmpty(name) ? type.Name : name;
+                if(!Helpers.IsNullOrEmpty(name)) return name;
+                if(type.IsGenericType)
+                {
+
+                    StringBuilder sb = new StringBuilder(type.Name);
+                    int split = type.Name.IndexOf('`');
+                    if (split >= 0) sb.Length = split;
+                    foreach(Type arg in type.GetGenericArguments())
+                    {
+                        sb.Append('_');
+                        Type tmp = arg;
+                        int key = model.GetKey(ref tmp);
+                        MetaType mt;
+                        if (key >= 0 && (mt = model[tmp]) != null)
+                        {
+                            sb.Append(mt.Name);
+                        } else
+                        {
+                            sb.Append(tmp.Name);
+                        }
+                    }
+                    return sb.ToString();
+                }
+                return type.Name;
             }
             set
             {
@@ -1543,7 +1567,30 @@ namespace ProtoBuf.Meta
             ValueMember[] fieldsArr = new ValueMember[fields.Count];
             fields.CopyTo(fieldsArr, 0);
             Array.Sort(fieldsArr, ValueMember.Comparer.Default);
-            if(Helpers.IsEnum(type))
+            if (HasFlag(OPTIONS_AutoTuple))
+            { // key-value-pair etc
+                MemberInfo[] mapping;
+                ResolveTupleConstructor(type, out mapping);
+                NewLine(builder, indent).Append("message ").Append(Name).Append(" {");
+                for(int i = 0 ; i < mapping.Length ; i++)
+                {
+                    Type effectiveType;
+                    if(mapping[i] is PropertyInfo)
+                    {
+                        effectiveType = ((PropertyInfo) mapping[i]).PropertyType;
+                    } else if (mapping[i] is FieldInfo)
+                    {
+                        effectiveType = ((FieldInfo) mapping[i]).FieldType;
+                    } else
+                    {
+                        throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
+                    }
+                    NewLine(builder, indent + 1).Append("optional ").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default))
+                        .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
+                }
+                NewLine(builder, indent).Append('}');
+            }
+            else if(Helpers.IsEnum(type))
             {
                 NewLine(builder, indent).Append("enum ").Append(Name).Append(" {");
                 foreach (ValueMember member in fieldsArr)

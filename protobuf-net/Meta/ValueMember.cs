@@ -574,68 +574,11 @@ namespace ProtoBuf.Meta
         internal string GetSchemaTypeName()
         {
             Type effectiveType = ItemType;
-            if(effectiveType == null) effectiveType = MemberType;
-            Type tmp = Helpers.GetUnderlyingType(effectiveType);
-            if (tmp != null) effectiveType = tmp;
-
-            if (effectiveType == model.MapType(typeof(byte[]))) return "bytes";
-
-            WireType wireType;
-            IProtoSerializer ser = ValueMember.TryGetCoreSerializer(model, dataFormat, effectiveType, out wireType, false, false, false, false);
-            if (ser == null)
-            {   // model type
-                return model[effectiveType].Name;
-            } else
-            {
-                if (ser is ParseableSerializer) return "string";
-
-                switch(Helpers.GetTypeCode(effectiveType))
-                {
-                    case ProtoTypeCode.Boolean: return "bool";
-                    case ProtoTypeCode.Single: return "float";
-                    case ProtoTypeCode.Double: return "double";
-                    case ProtoTypeCode.String: return "string";
-                    case ProtoTypeCode.Byte:
-                    case ProtoTypeCode.Char:
-                    case ProtoTypeCode.UInt16:
-                    case ProtoTypeCode.UInt32:
-                        switch (DataFormat)
-                        {
-                            case DataFormat.FixedSize: return "fixed32";
-                            default: return "uint32";
-                        }
-                    case ProtoTypeCode.SByte:
-                    case ProtoTypeCode.Int16:
-                    case ProtoTypeCode.Int32:
-                        switch(DataFormat)
-                        {
-                            case DataFormat.ZigZag: return "sint32";
-                            case DataFormat.FixedSize: return "sfixed32";
-                            default: return "int32";
-                        }
-                    case ProtoTypeCode.UInt64:
-                        switch (DataFormat)
-                        {
-                            case DataFormat.FixedSize: return "fixed64";
-                            default: return "uint64";
-                        }
-                    case ProtoTypeCode.Int64:
-                        switch (DataFormat)
-                        {
-                            case DataFormat.ZigZag: return "sint64";
-                            case DataFormat.FixedSize: return "sfixed64";
-                            default: return "int64";
-                        }
-                    case ProtoTypeCode.DateTime: return "bcl.DateTime";
-                    case ProtoTypeCode.TimeSpan: return "bcl.TimeSpan";
-                    case ProtoTypeCode.Decimal: return "bcl.Decimal";
-                    case ProtoTypeCode.Guid: return "bcl.Guid";
-                    default: throw new NotSupportedException("No .proto map found for: " + effectiveType.FullName);
-                }
-            }
-
+            if (effectiveType == null) effectiveType = MemberType;
+            return model.GetSchemaTypeName(effectiveType, DataFormat);
         }
 
+        
         internal class Comparer : System.Collections.IComparer
 #if !NO_GENERICS
 , System.Collections.Generic.IComparer<ValueMember>

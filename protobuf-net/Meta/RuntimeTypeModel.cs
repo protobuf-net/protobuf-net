@@ -1380,6 +1380,71 @@ namespace ProtoBuf.Meta
             return universe.GetType(fullName, false);
         }
 #endif
+
+        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat)
+        {
+            Type tmp = Helpers.GetUnderlyingType(effectiveType);
+            if (tmp != null) effectiveType = tmp;
+
+            if (effectiveType == this.MapType(typeof(byte[]))) return "bytes";
+
+            WireType wireType;
+            IProtoSerializer ser = ValueMember.TryGetCoreSerializer(this, dataFormat, effectiveType, out wireType, false, false, false, false);
+            if (ser == null)
+            {   // model type
+                return this[effectiveType].Name;
+            }
+            else
+            {
+                if (ser is ParseableSerializer) return "string";
+
+                switch (Helpers.GetTypeCode(effectiveType))
+                {
+                    case ProtoTypeCode.Boolean: return "bool";
+                    case ProtoTypeCode.Single: return "float";
+                    case ProtoTypeCode.Double: return "double";
+                    case ProtoTypeCode.String: return "string";
+                    case ProtoTypeCode.Byte:
+                    case ProtoTypeCode.Char:
+                    case ProtoTypeCode.UInt16:
+                    case ProtoTypeCode.UInt32:
+                        switch (dataFormat)
+                        {
+                            case DataFormat.FixedSize: return "fixed32";
+                            default: return "uint32";
+                        }
+                    case ProtoTypeCode.SByte:
+                    case ProtoTypeCode.Int16:
+                    case ProtoTypeCode.Int32:
+                        switch (dataFormat)
+                        {
+                            case DataFormat.ZigZag: return "sint32";
+                            case DataFormat.FixedSize: return "sfixed32";
+                            default: return "int32";
+                        }
+                    case ProtoTypeCode.UInt64:
+                        switch (dataFormat)
+                        {
+                            case DataFormat.FixedSize: return "fixed64";
+                            default: return "uint64";
+                        }
+                    case ProtoTypeCode.Int64:
+                        switch (dataFormat)
+                        {
+                            case DataFormat.ZigZag: return "sint64";
+                            case DataFormat.FixedSize: return "sfixed64";
+                            default: return "int64";
+                        }
+                    case ProtoTypeCode.DateTime: return "bcl.DateTime";
+                    case ProtoTypeCode.TimeSpan: return "bcl.TimeSpan";
+                    case ProtoTypeCode.Decimal: return "bcl.Decimal";
+                    case ProtoTypeCode.Guid: return "bcl.Guid";
+                    default: throw new NotSupportedException("No .proto map found for: " + effectiveType.FullName);
+                }
+            }
+
+        }
+
     }
     /// <summary>
     /// Contains the stack-trace of the owning code when a lock-contention scenario is detected
