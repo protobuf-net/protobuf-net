@@ -7,13 +7,13 @@ namespace ProtoBuf
     internal sealed class NetObjectCache
     {
         internal const int Root = 0;
-        private BasicList underlyingList;
+        private MutableList underlyingList;
 
-        private BasicList List
+        private MutableList List
         {
             get
             {
-                if (underlyingList == null) underlyingList = new BasicList();
+                if (underlyingList == null) underlyingList = new MutableList();
                 return underlyingList;
             }
         }
@@ -34,7 +34,9 @@ namespace ProtoBuf
                 throw new ProtoException("Internal error; a missing key occurred");
             }
 
-            return list[key];
+            object tmp = list[key];
+            if(tmp == null) throw new ProtoException("A deferred key does not have a value yet");
+            return tmp;
         }
 
         internal void SetKeyedObject(int key, object value)
@@ -47,10 +49,18 @@ namespace ProtoBuf
             }
             else
             {
-                BasicList list = List;
+                MutableList list = List;
                 if (key < list.Count)
                 {
-                    if (!ReferenceEquals(list[key], value)) throw new ProtoException("Reference-tracked objects cannot change reference");
+                    object oldVal = list[key];
+                    if (oldVal == null)
+                    {
+                        list[key] = value;
+                    }
+                    else if (!ReferenceEquals(oldVal, value) )
+                    {
+                        throw new ProtoException("Reference-tracked objects cannot change reference");
+                    } // otherwise was the same; nothing to do
                 }
                 else if (key != list.Add(value))
                 {
@@ -152,9 +162,33 @@ namespace ProtoBuf
             return index + 1;
         }
 
-        internal void ProposeRoot(object value)
+        private int trapStartIndex; // defaults to 0 - optimization for RegisterTrappedObject
+                                    // to make it faster at seeking to find deferred-objects
+
+        internal void RegisterTrappedObject(object value)
         {
-            if (rootObject == null) rootObject = value;
+            if (rootObject == null)
+            {
+                rootObject = value;
+            }
+            else
+            {
+                if(underlyingList != null)
+                {
+                    for (int i = trapStartIndex; i < underlyingList.Count; i++)
+                    {
+                        trapStartIndex = i + 1; // things never *become* null; whether or
+                                                // not the next item is null, it will never
+                                                // need to be checked again
+
+                        if(underlyingList[i] == null)
+                        {
+                            underlyingList[i] = value;    
+                            break;
+                        }
+                    }
+                }
+            }
         }
 #if NO_GENERICS
         private ReferenceHashtable objectKeys;

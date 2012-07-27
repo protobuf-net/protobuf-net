@@ -1232,18 +1232,24 @@ namespace ProtoBuf
         internal void SetRootObject(object value)
         {
             netCache.SetKeyedObject(NetObjectCache.Root, value);
-            firstObject = false;
+            trapCount--;
         }
-        bool firstObject = true; // not guaranteed to be correct, but avoids a call
+
+        // this is how many outstanding objects do not currently have
+        // values for the purposes of reference tracking; we'll default
+        // to just trapping the root object
+        // note: objects are trapped (the ref and key mapped) via NoteObject
+        uint trapCount = 1; // uint is so we can use beq/bne more efficiently than bgt
+
         /// <summary>
         /// Utility method, not intended for public use; this helps maintain the root object is complex scenarios
         /// </summary>
         public static void NoteObject(object value, ProtoReader reader)
         {
-            if(reader.firstObject)
+            if(reader.trapCount != 0)
             {
-                reader.netCache.ProposeRoot(value);
-                reader.firstObject = false;
+                reader.netCache.RegisterTrappedObject(value);
+                reader.trapCount--;
             }
         }
 
@@ -1253,6 +1259,12 @@ namespace ProtoBuf
         public System.Type ReadType()
         {
             return TypeModel.DeserializeType(model, ReadString());
+        }
+
+        internal void TrapNextObject(int newObjectKey)
+        {
+            trapCount++;
+            netCache.SetKeyedObject(newObjectKey, null); // use null as a temp
         }
     }
 }

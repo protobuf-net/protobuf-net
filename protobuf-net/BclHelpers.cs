@@ -415,22 +415,19 @@ namespace ProtoBuf
                         break;
                     case FieldObject:
                         bool isString = type == typeof(string);
-                        bool lateSet = value == null && isString;
-                        if (value == null && !lateSet)
-                        {
-                            try
-                            {
-                                value = ((options & NetObjectOptions.UseConstructor) == 0)
-                                            ? BclHelpers.GetUninitializedObject(type)
-                                            : Activator.CreateInstance(type);
-                            } catch (Exception ex)
-                            {
-                                throw new ProtoException("Unable to create type " + (type == null ? "<null>" : type.FullName) + ": " + ex.Message, ex);
-                            }
-                        }
+                        bool wasNull = value == null;
+                        bool lateSet = wasNull && isString;
+                        
                         if (newObjectKey >= 0 && !lateSet)
                         {
-                            source.NetCache.SetKeyedObject(newObjectKey, value);
+                            if (value == null)
+                            {
+                                source.TrapNextObject(newObjectKey);
+                            }
+                            else
+                            {
+                                source.NetCache.SetKeyedObject(newObjectKey, value);
+                            }
                             if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
                         }
                         object oldValue = value;
@@ -443,10 +440,18 @@ namespace ProtoBuf
                             value = ProtoReader.ReadTypedObject(oldValue, key, source, type);
                         }
                         
-                        if (newObjectKey >= 0 && lateSet)
+                        if (newObjectKey >= 0)
                         {
-                            source.NetCache.SetKeyedObject(newObjectKey, value);
-                            if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
+                            if(wasNull && !lateSet)
+                            { // this both ensures (via exception) that it *was* set, and makes sure we don't shout
+                                // about changed references
+                                oldValue = source.NetCache.GetKeyedObject(newObjectKey);
+                            }
+                            if (lateSet)
+                            {
+                                source.NetCache.SetKeyedObject(newObjectKey, value);
+                                if (newTypeKey >= 0) source.NetCache.SetKeyedObject(newTypeKey, type);
+                            }
                         }
                         if (newObjectKey >= 0 && !lateSet && !ReferenceEquals(oldValue, value))
                         {
