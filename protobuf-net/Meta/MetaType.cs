@@ -1014,7 +1014,19 @@ namespace ProtoBuf.Meta
             
             Type itemType = null;
             Type defaultType = null;
+
+            // check for list types
             ResolveListTypes(model, effectiveType, ref itemType, ref defaultType);
+            // but take it back if it is explicitly excluded
+            if(itemType != null)
+            { // looks like a list, but double check for IgnoreListHandling
+                int idx = model.FindOrAddAuto(effectiveType, false, true, false);
+                if(idx >= 0 && model[effectiveType].IgnoreListHandling)
+                {
+                    itemType = null;
+                    defaultType = null;
+                }
+            }
             AttributeMap[] attribs = AttributeMap.Create(model, member, true);
             AttributeMap attrib;
 
