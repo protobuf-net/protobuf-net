@@ -30,6 +30,15 @@ message DateTime {
   }
 }
 
+message NetObjectProxy {
+  optional int32 existingObjectKey = 1; // for a tracked object, the key of the **first** time this object was seen
+  optional int32 newObjectKey = 2; // for a tracked object, a **new** key, the first time this object is seen
+  optional int32 existingTypeKey = 3; // for dynamic typing, the key of the **first** time this type was seen
+  optional int32 newTypeKey = 4; // for dynamic typing, a **new** key, the first time this type is seen
+  optional string typeName = 8; // for dynamic typing, the name of the type (only present along with newTypeKey)
+  optional bytes payload = 10; // the new string/value (only present along with newObjectKey)
+}
+
 message Guid {
   optional fixed64 lo = 1; // the first 8 bytes of the guid
   optional fixed64 hi = 2; // the second 8 bytes of the guid

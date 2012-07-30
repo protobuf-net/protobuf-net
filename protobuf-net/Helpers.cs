@@ -357,7 +357,7 @@ namespace ProtoBuf
             if (!nonPublic && method != null && !method.IsPublic) method = null;
             return method;
 #else
-            return property.GetGetMethod(nonPublic);
+            return property.GetGetMethod(nonPublic); 
 #endif
         }
         internal static MethodInfo GetSetMethod(PropertyInfo property, bool nonPublic)

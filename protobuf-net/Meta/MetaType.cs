@@ -42,7 +42,7 @@ namespace ProtoBuf.Meta
                 if (x == null) return -1;
                 if (y == null) return 1;
 
-                return string.Compare(x.Name, y.Name, StringComparison.Ordinal);
+                return string.Compare(x.GetSchemaTypeName(), y.GetSchemaTypeName(), StringComparison.Ordinal);
             }
         }
         /// <summary>
@@ -233,6 +233,37 @@ namespace ProtoBuf.Meta
             return this;
         }
 
+        internal string GetSchemaTypeName()
+        {
+            if (surrogate != null) return model[surrogate].GetSchemaTypeName();
+
+            if (!Helpers.IsNullOrEmpty(name)) return name;
+            if (type.IsGenericType)
+            {
+
+                StringBuilder sb = new StringBuilder(type.Name);
+                int split = type.Name.IndexOf('`');
+                if (split >= 0) sb.Length = split;
+                foreach (Type arg in type.GetGenericArguments())
+                {
+                    sb.Append('_');
+                    Type tmp = arg;
+                    int key = model.GetKey(ref tmp);
+                    MetaType mt;
+                    if (key >= 0 && (mt = model[tmp]) != null)
+                    {
+                        sb.Append(mt.Name);
+                    }
+                    else
+                    {
+                        sb.Append(tmp.Name);
+                    }
+                }
+                return sb.ToString();
+            }
+            return type.Name;
+        }
+
         private string name;
         /// <summary>
         /// Gets or sets the name of this contract.
@@ -241,30 +272,7 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                if(!Helpers.IsNullOrEmpty(name)) return name;
-                if(type.IsGenericType)
-                {
-
-                    StringBuilder sb = new StringBuilder(type.Name);
-                    int split = type.Name.IndexOf('`');
-                    if (split >= 0) sb.Length = split;
-                    foreach(Type arg in type.GetGenericArguments())
-                    {
-                        sb.Append('_');
-                        Type tmp = arg;
-                        int key = model.GetKey(ref tmp);
-                        MetaType mt;
-                        if (key >= 0 && (mt = model[tmp]) != null)
-                        {
-                            sb.Append(mt.Name);
-                        } else
-                        {
-                            sb.Append(tmp.Name);
-                        }
-                    }
-                    return sb.ToString();
-                }
-                return type.Name;
+                return name;
             }
             set
             {
@@ -379,7 +387,14 @@ namespace ProtoBuf.Meta
                 return serializer;
             }
         }
-
+        internal bool IsList
+        {
+            get
+            {
+                Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(model, type);
+                return itemType != null;
+            }
+        }
         private IProtoTypeSerializer BuildSerializer()
         {
             if (Helpers.IsEnum(type))
@@ -1576,6 +1591,7 @@ namespace ProtoBuf.Meta
         }
         internal void WriteSchema(System.Text.StringBuilder builder, int indent)
         {
+            if (surrogate != null) return; // nothing to write
             ValueMember[] fieldsArr = new ValueMember[fields.Count];
             fields.CopyTo(fieldsArr, 0);
             Array.Sort(fieldsArr, ValueMember.Comparer.Default);
@@ -1583,7 +1599,7 @@ namespace ProtoBuf.Meta
             { // key-value-pair etc
                 MemberInfo[] mapping;
                 ResolveTupleConstructor(type, out mapping);
-                NewLine(builder, indent).Append("message ").Append(Name).Append(" {");
+                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
                 for(int i = 0 ; i < mapping.Length ; i++)
                 {
                     Type effectiveType;
@@ -1597,14 +1613,14 @@ namespace ProtoBuf.Meta
                     {
                         throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
                     }
-                    NewLine(builder, indent + 1).Append("optional ").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default))
+                    NewLine(builder, indent + 1).Append("optional ").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false))
                         .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
                 }
                 NewLine(builder, indent).Append('}');
             }
             else if(Helpers.IsEnum(type))
             {
-                NewLine(builder, indent).Append("enum ").Append(Name).Append(" {");
+                NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName()).Append(" {");
                 foreach (ValueMember member in fieldsArr)
                 {
                     NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
@@ -1612,13 +1628,14 @@ namespace ProtoBuf.Meta
                 NewLine(builder, indent).Append('}');
             } else
             {
-                NewLine(builder, indent).Append("message ").Append(Name).Append(" {");
+                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
                 foreach (ValueMember member in fieldsArr)
                 {
                     string ordinality = member.ItemType != null ? "repeated" : member.IsRequired ? "required" : "optional";
                     NewLine(builder, indent + 1).Append(ordinality).Append(' ');
                     if (member.DataFormat == DataFormat.Group) builder.Append("group ");
-                    builder.Append(member.GetSchemaTypeName()).Append(" ")
+                    string schemaTypeName = member.GetSchemaTypeName(true);
+                    builder.Append(schemaTypeName).Append(" ")
                          .Append(member.Name).Append(" = ").Append(member.FieldNumber);
                     if(member.DefaultValue != null)
                     {
@@ -1640,6 +1657,10 @@ namespace ProtoBuf.Meta
                         builder.Append(" [packed=true]");
                     }
                     builder.Append(';');
+                    if (schemaTypeName == "bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
+                    {
+                        builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false));
+                    }
                 }
                 if (subTypes != null && subTypes.Count != 0)
                 {

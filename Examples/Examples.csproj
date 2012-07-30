@@ -218,6 +218,7 @@
     <Compile Include="Issues\Issue302.cs" />
     <Compile Include="Issues\Issue303.cs" />
     <Compile Include="Issues\Issue304.cs" />
+    <Compile Include="Issues\Issue306.cs" />
     <Compile Include="Issues\Issue32.cs" />
     <Compile Include="Issues\Issue41.cs" />
     <Compile Include="Issues\Issue45.cs" />
@@ -238,6 +239,7 @@
     <Compile Include="Issues\SO11641262.cs" />
     <Compile Include="Issues\SO11656439.cs" />
     <Compile Include="Issues\SO11657482.cs" />
+    <Compile Include="Issues\SO11705351.cs" />
     <Compile Include="Issues\SO1930209.cs" />
     <Compile Include="Issues\SO3083847.cs" />
     <Compile Include="Issues\SO3101816.cs" />

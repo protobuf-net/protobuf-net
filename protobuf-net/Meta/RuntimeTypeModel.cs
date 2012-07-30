@@ -145,10 +145,6 @@ namespace ProtoBuf.Meta
                 CascadeDependents(requiredTypes, meta);
             }
 
-            MetaType[] metaTypesArr = new MetaType[requiredTypes.Count];
-            requiredTypes.CopyTo(metaTypesArr, 0);
-            Array.Sort(metaTypesArr, MetaType.Comparer.Default);
-
             // use the provided type's namespace for the "package"
             StringBuilder builder = new StringBuilder();
             string package = null;
@@ -156,6 +152,7 @@ namespace ProtoBuf.Meta
             {
                 foreach(MetaType meta in types)
                 {
+                    if (meta.IsList) continue;
                     string tmp = meta.Type.Namespace;
                     if(!Helpers.IsNullOrEmpty(tmp))
                     {
@@ -183,9 +180,15 @@ namespace ProtoBuf.Meta
                 builder.Append("package ").Append(package).Append(';').AppendLine();
             }
 
+            // sort them by schema-name
+            MetaType[] metaTypesArr = new MetaType[requiredTypes.Count];
+            requiredTypes.CopyTo(metaTypesArr, 0);
+            Array.Sort(metaTypesArr, MetaType.Comparer.Default);
+
             // write the messages
             for (int i = 0; i < metaTypesArr.Length; i++ )
             {
+                if (metaTypesArr[i].IsList) continue;
                 metaTypesArr[i].WriteSchema(builder, 0);
             }
             return builder.AppendLine().ToString();
@@ -1381,7 +1384,7 @@ namespace ProtoBuf.Meta
         }
 #endif
 
-        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat)
+        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType)
         {
             Type tmp = Helpers.GetUnderlyingType(effectiveType);
             if (tmp != null) effectiveType = tmp;
@@ -1392,18 +1395,19 @@ namespace ProtoBuf.Meta
             IProtoSerializer ser = ValueMember.TryGetCoreSerializer(this, dataFormat, effectiveType, out wireType, false, false, false, false);
             if (ser == null)
             {   // model type
-                return this[effectiveType].Name;
+                if (asReference || dynamicType) return "bcl.NetObjectProxy";
+                return this[effectiveType].GetSchemaTypeName();
             }
             else
             {
-                if (ser is ParseableSerializer) return "string";
+                if (ser is ParseableSerializer) return asReference ? "bcl.NetObjectProxy" : "string";
 
                 switch (Helpers.GetTypeCode(effectiveType))
                 {
                     case ProtoTypeCode.Boolean: return "bool";
                     case ProtoTypeCode.Single: return "float";
                     case ProtoTypeCode.Double: return "double";
-                    case ProtoTypeCode.String: return "string";
+                    case ProtoTypeCode.String: return asReference ? "bcl.NetObjectProxy" : "string";
                     case ProtoTypeCode.Byte:
                     case ProtoTypeCode.Char:
                     case ProtoTypeCode.UInt16:
