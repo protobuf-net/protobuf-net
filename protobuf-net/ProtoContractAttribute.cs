@@ -66,7 +66,7 @@ namespace ProtoBuf
         /// care to increase the Order for new elements, otherwise data corruption
         /// may occur.
         /// </summary>
-        /// <remarks>If not explicitly specified, the default is assumed from <see cref="Serializer.GlobalOptions.InferTagFromName"/>.</remarks>
+        /// <remarks>If not explicitly specified, the default is assumed from Serializer.GlobalOptions.InferTagFromName.</remarks>
         public bool InferTagFromName
         {
             get { return HasFlag(OPTIONS_InferTagFromName); }

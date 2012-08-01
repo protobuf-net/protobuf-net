@@ -1,11 +1,13 @@
 ﻿
 namespace ProtoBuf
 {
+
+    
     /// <summary>
     /// Indicates that the implementing type has support for protocol-buffer
     /// <see cref="IExtension">extensions</see>.
     /// </summary>
-    /// <remarks>Can be implemented by deriving from <see cref="Extensible"/>.</remarks>
+    /// <remarks>Can be implemented by deriving from Extensible.</remarks>
     public interface IExtensible
     {
         /// <summary>

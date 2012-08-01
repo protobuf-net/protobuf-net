@@ -219,6 +219,7 @@
     <Compile Include="Issues\Issue303.cs" />
     <Compile Include="Issues\Issue304.cs" />
     <Compile Include="Issues\Issue306.cs" />
+    <Compile Include="Issues\Issue307.cs" />
     <Compile Include="Issues\Issue32.cs" />
     <Compile Include="Issues\Issue41.cs" />
     <Compile Include="Issues\Issue45.cs" />
@@ -240,6 +241,7 @@
     <Compile Include="Issues\SO11656439.cs" />
     <Compile Include="Issues\SO11657482.cs" />
     <Compile Include="Issues\SO11705351.cs" />
+    <Compile Include="Issues\SO11730610.cs" />
     <Compile Include="Issues\SO1930209.cs" />
     <Compile Include="Issues\SO3083847.cs" />
     <Compile Include="Issues\SO3101816.cs" />
@@ -274,6 +276,7 @@
     <Compile Include="Issues\SO9398578.cs" />
     <Compile Include="Issues\SO9408133.cs" />
     <Compile Include="Issues\SO9491933.cs" />
+    <Compile Include="Issues\SurrogateForObjectUsage.cs" />
     <Compile Include="ItemsWithLengthPrefix.cs" />
     <Compile Include="ListAsInterfaceTests.cs" />
     <Compile Include="ListsWithInheritance.cs" />
