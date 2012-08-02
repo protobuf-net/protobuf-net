@@ -220,6 +220,7 @@
     <Compile Include="Issues\Issue304.cs" />
     <Compile Include="Issues\Issue306.cs" />
     <Compile Include="Issues\Issue307.cs" />
+    <Compile Include="Issues\Issue310.cs" />
     <Compile Include="Issues\Issue32.cs" />
     <Compile Include="Issues\Issue41.cs" />
     <Compile Include="Issues\Issue45.cs" />

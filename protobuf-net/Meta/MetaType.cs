@@ -1668,10 +1668,11 @@ namespace ProtoBuf.Meta
                     SubType[] subTypeArr = new SubType[subTypes.Count];
                     subTypes.CopyTo(subTypeArr, 0);
                     Array.Sort(subTypeArr, SubType.Comparer.Default);
-                    foreach(SubType subType in subTypes)
+                    foreach (SubType subType in subTypeArr)
                     {
-                        NewLine(builder, indent + 1).Append("optional ").Append(subType.DerivedType.Name)
-                            .Append(" ").Append(subType.DerivedType.Name).Append(" = ").Append(subType.FieldNumber).Append(';');
+                        string subTypeName = subType.DerivedType.GetSchemaTypeName();
+                        NewLine(builder, indent + 1).Append("optional ").Append(subTypeName)
+                            .Append(" ").Append(subTypeName).Append(" = ").Append(subType.FieldNumber).Append(';');
                     }
                 }
                 NewLine(builder, indent).Append('}');
