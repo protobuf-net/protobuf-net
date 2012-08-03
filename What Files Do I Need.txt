@@ -15,8 +15,13 @@ can reference and use (now very fast etc) from your chosen framework.
 More information about the precompiler is here:
 http://marcgravell.blogspot.co.uk/2012/07/introducing-protobuf-net-precompiler.html
 
+protobuf-net also includes a utility for processing ".proto" files (the schema DSL used by multiple protobuf
+implementations) into C# and VB.NET; this is the ProtoGen tool.
 
-What do I need:
+Neither precompile nor ProtoGen need to be deployed with your application.
+
+
+So: what do I need?
 
 example: running on .NET 4.0
 

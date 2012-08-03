@@ -23,6 +23,7 @@
     <PortableFiles Include="protobuf-net_Portable\bin\Release\protobuf-net.*"/>
     <PortableFiles_CoreOnly Include="protobuf-net_Portable\bin\CoreOnly\protobuf-net.*"/>
     <PrecompileFiles Include="precompile\bin\Release\*.*"/>
+    <ProtogenFiles Include="ProtoGen\bin\Release\*.*"/>
   </ItemGroup>
   <Target Name="BuildKit">
     <RemoveDir Directories="$(NugetDirectory)"/>
@@ -37,6 +38,7 @@
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Unity"/>
     <MSBuild Projects="protobuf-net_IKVM\protobuf-net_IKVM.csproj" Properties="Configuration=Release"/>
     <MSBuild Projects="precompile\precompile.csproj" Properties="Configuration=Release"/>
+    <MSBuild Projects="ProtoGen\ProtoGen.csproj" Properties="Configuration=Release"/>
     
     <Copy SourceFiles="@(Net20Files)" DestinationFolder="$(NugetDirectory)\net20"/>
     <Copy SourceFiles="@(Net20Files)" DestinationFolder="$(ZipDirectory)\Full\net20"/>
@@ -64,5 +66,6 @@
     <Copy SourceFiles="@(WP7Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\sl3-wp"/>
     <Copy SourceFiles="@(PortableFiles_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\portable"/>
     <Copy SourceFiles="@(PrecompileFiles)" DestinationFolder="$(ZipDirectory)\Precompile"/>
+    <Copy SourceFiles="@(ProtoGenFiles)" DestinationFolder="$(ZipDirectory)\ProtoGen"/>
   </Target>
 </Project>
