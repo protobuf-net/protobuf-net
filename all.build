@@ -2,62 +2,67 @@
 <Project DefaultTargets="BuildKit"
          xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <OutputDirectory>Nuget\lib</OutputDirectory>
+    <NugetDirectory>Nuget\lib</NugetDirectory>
+    <ZipDirectory>Package</ZipDirectory>
   </PropertyGroup>
   <ItemGroup>
     <ProjectToBuild Include="protobuf-net\protobuf-net.csproj"/>
     <ProjectToBuild Include="protobuf-net_Phone7\protobuf-net_Phone7.csproj"/>
-    
     <ProjectToBuild Include="protobuf-net_Silverlight\protobuf-net_Silverlight.csproj"/>
+    <ProjectToBuild Include="protobuf-net_Portable\protobuf-net_Portable.csproj"/>
 
-    <!--<Net20Files Include="protobuf-net\bin\iOS\Licence.txt"/>-->
-    <iOSFiles Include="protobuf-net\bin\iOS\protobuf-net.*"/>
-
-    <!--<Net20Files Include="protobuf-net\bin\Unity\Licence.txt"/>-->
+    <iOSFiles Include="protobuf-net\bin\iOS\protobuf-net.*"/> 
     <UnityFiles Include="protobuf-net\bin\Unity\protobuf-net.*"/>
-    
-    <!--<Net20Files Include="protobuf-net\bin\Net20\Licence.txt"/>-->
     <Net20Files Include="protobuf-net\bin\Net20\protobuf-net.*"/>
-
-    <!--<Net30Files Include="protobuf-net\bin\Release\Licence.txt"/>-->
     <Net30Files Include="protobuf-net\bin\Release\protobuf-net.*"/>
-
-    <!--<SLFiles Include="protobuf-net_Silverlight\bin\Release\Licence.txt"/>-->
+    <Net30Files_CoreOnly Include="protobuf-net\bin\CoreOnly\protobuf-net.*"/>
     <SLFiles Include="protobuf-net_Silverlight\bin\Release\protobuf-net.*"/>
-
-    <!--<WP7Files Include="protobuf-net_Phone7\bin\Release\Licence.txt"/>-->
+    <SLFiles_CoreOnly Include="protobuf-net_Silverlight\bin\CoreOnly\protobuf-net.*"/>
     <WP7Files Include="protobuf-net_Phone7\bin\Release\protobuf-net.*"/>
+    <WP7Files_CoreOnly Include="protobuf-net_Phone7\bin\CoreOnly\protobuf-net.*"/>
+    <PortableFiles Include="protobuf-net_Portable\bin\Release\protobuf-net.*"/>
+    <PortableFiles_CoreOnly Include="protobuf-net_Portable\bin\CoreOnly\protobuf-net.*"/>
+    <PrecompileFiles Include="precompile\bin\Release\*.*"/>
   </ItemGroup>
   <Target Name="BuildKit">
-    <RemoveDir Directories="$(OutputDirectory)"/>
-    
-    <MakeDir Directories="$(OutputDirectory)"/>
-    <MakeDir Directories="$(OutputDirectory)\net20"/>
-    <MakeDir Directories="$(OutputDirectory)\net30"/>
-    <MakeDir Directories="$(OutputDirectory)\ios"/>
-    <MakeDir Directories="$(OutputDirectory)\unity"/>
-    <MakeDir Directories="$(OutputDirectory)\net35"/>
-    <MakeDir Directories="$(OutputDirectory)\net40"/>
-    <!--<MakeDir Directories="$(OutputDirectory)\sl3"/>-->
-    <MakeDir Directories="$(OutputDirectory)\sl3-wp"/>
-    <MakeDir Directories="$(OutputDirectory)\sl4"/>
-    
+    <RemoveDir Directories="$(NugetDirectory)"/>
+    <RemoveDir Directories="$(ZipDirectory)"/>
+    <Copy SourceFiles="Licence.txt" DestinationFolder="$(ZipDirectory)"/>
+    <Copy SourceFiles="What Files Do I Need.txt" DestinationFolder="$(ZipDirectory)"/>
+
     <MSBuild Projects="@(ProjectToBuild)" Properties="Configuration=Release" BuildInParallel="true"/>
+    <MSBuild Projects="@(ProjectToBuild)" Properties="Configuration=CoreOnly" BuildInParallel="true"/>
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Net20"/>
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=iOS"/>
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Unity"/>
-
-    <Copy SourceFiles="@(iOSFiles)" DestinationFolder="$(OutputDirectory)\ios"/>
-    <Copy SourceFiles="@(UnityFiles)" DestinationFolder="$(OutputDirectory)\unity"/>
-    <Copy SourceFiles="@(Net20Files)" DestinationFolder="$(OutputDirectory)\net20"/>
+    <MSBuild Projects="protobuf-net_IKVM\protobuf-net_IKVM.csproj" Properties="Configuration=Release"/>
+    <MSBuild Projects="precompile\precompile.csproj" Properties="Configuration=Release"/>
     
-    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(OutputDirectory)\net30"/>
-    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(OutputDirectory)\net35"/>
-    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(OutputDirectory)\net40"/>
+    <Copy SourceFiles="@(Net20Files)" DestinationFolder="$(NugetDirectory)\net20"/>
+    <Copy SourceFiles="@(Net20Files)" DestinationFolder="$(ZipDirectory)\Full\net20"/>
+    
+    <!-- these are for NuGet to pick up correctly -->
+    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(NugetDirectory)\net30"/>
+    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(ZipDirectory)\Full\net30"/>
+    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(NugetDirectory)\net35"/>
+    <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(NugetDirectory)\net40"/>
     
     <!--<Copy SourceFiles="@(SLFiles)" DestinationFolder="$(OutputDirectory)\sl3"/>-->
-    <Copy SourceFiles="@(SLFiles)" DestinationFolder="$(OutputDirectory)\sl4"/>
+    <Copy SourceFiles="@(SLFiles)" DestinationFolder="$(NugetDirectory)\sl4"/>
+    <Copy SourceFiles="@(SLFiles)" DestinationFolder="$(ZipDirectory)\Full\sl4"/>
     
-    <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(OutputDirectory)\sl3-wp"/>
+    <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(NugetDirectory)\sl3-wp"/>
+    <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(ZipDirectory)\Full\sl3-wp"/>
+
+    <!-- these are not used by NuGet; should probably relocate -->
+    <Copy SourceFiles="@(UnityFiles)" DestinationFolder="$(ZipDirectory)\Full\unity"/>
+    <Copy SourceFiles="@(PortableFiles)" DestinationFolder="$(ZipDirectory)\Full\portable"/>
+
+    <Copy SourceFiles="@(iOSFiles)" DestinationFolder="$(ZipDirectory)\CoreOnly\ios"/>
+    <Copy SourceFiles="@(Net30Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\net30"/>
+    <Copy SourceFiles="@(SLFiles_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\sl4"/>
+    <Copy SourceFiles="@(WP7Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\sl3-wp"/>
+    <Copy SourceFiles="@(PortableFiles_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\portable"/>
+    <Copy SourceFiles="@(PrecompileFiles)" DestinationFolder="$(ZipDirectory)\Precompile"/>
   </Target>
 </Project>
