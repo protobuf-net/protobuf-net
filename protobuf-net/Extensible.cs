@@ -1,6 +1,8 @@
 ﻿#if !NO_GENERICS
 using System.Collections.Generic;
+#endif
 using ProtoBuf.Meta;
+using System.Collections;
 
 namespace ProtoBuf
 {
@@ -62,7 +64,7 @@ namespace ProtoBuf
             return extensionObject;
         }
 
-#if !NO_RUNTIME
+#if !NO_RUNTIME || !NO_GENERICS
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
         /// Note that for non-repeated sub-objects, this equates to a merge operation;
@@ -95,9 +97,10 @@ namespace ProtoBuf
         /// <param name="value">The value to append.</param>
         public static void AppendValue<TValue>(IExtensible instance, int tag, DataFormat format, TValue value)
         {
-            ExtensibleUtil.AppendExtendValue<TValue>(RuntimeTypeModel.Default, instance, tag, format, value);
+            ExtensibleUtil.AppendExtendValue(RuntimeTypeModel.Default, instance, tag, format, value);
         }
 #endif
+#if !NO_RUNTIME && !NO_GENERICS
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
         /// Note that for non-repeated sub-objects, this equates to a merge operation;
@@ -112,9 +115,9 @@ namespace ProtoBuf
         /// <param name="instance">The extensible object to append the value to.</param>
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="value">The value to append.</param>
-        public static void AppendValue<TValue>(TypeModel model, IExtensible instance, int tag, DataFormat format, TValue value)
+        public static void AppendValue(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
         {
-            ExtensibleUtil.AppendExtendValue<TValue>(model, instance, tag, format, value);
+            ExtensibleUtil.AppendExtendValue(model, instance, tag, format, value);
         }
         
         /// <summary>
@@ -236,9 +239,48 @@ namespace ProtoBuf
         {
             return ExtensibleUtil.GetExtendedValues<TValue>(instance, tag, format, false, false);
         }
-    }
-
-
-    
-}
 #endif
+
+        /// <summary>
+        /// Queries an extensible object for an additional (unexpected) data-field for the instance.
+        /// The value returned (in "value") is the composed value after merging any duplicated content;
+        /// if the value is "repeated" (a list), then use GetValues instead.
+        /// </summary>
+        /// <typeparam name="TValue">The data-type of the field.</typeparam>
+        /// <param name="value">The effective value of the field, or the default value if not found.</param>
+        /// <param name="instance">The extensible object to obtain the value from.</param>
+        /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
+        /// <param name="format">The data-format to use when decoding the value.</param>
+        /// <param name="allowDefinedTag">Allow tags that are present as part of the definition; for example, to query unknown enum values.</param>
+        /// <returns>True if data for the field was present, false otherwise.</returns>
+        public static bool TryGetValue(TypeModel model, System.Type type, IExtensible instance, int tag, DataFormat format, bool allowDefinedTag, out object value)
+        {
+            value = null;
+            bool set = false;
+            foreach (object val in ExtensibleUtil.GetExtendedValues(model, type, instance, tag, format, true, allowDefinedTag))
+            {
+                // expecting at most one yield...
+                // but don't break; need to read entire stream
+                value = val;
+                set = true;
+            }
+
+            return set;
+        }
+        /// <summary>
+        /// Queries an extensible object for an additional (unexpected) data-field for the instance.
+        /// Each occurrence of the field is yielded separately, making this usage suitable for "repeated"
+        /// (list) fields.
+        /// </summary>
+        /// <remarks>The extended data is processed lazily as the enumerator is iterated.</remarks>
+        /// <typeparam name="TValue">The data-type of the field.</typeparam>
+        /// <param name="instance">The extensible object to obtain the value from.</param>
+        /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
+        /// <param name="format">The data-format to use when decoding the value.</param>
+        /// <returns>An enumerator that yields each occurrence of the field.</returns>
+        public static IEnumerable GetValues(TypeModel model, System.Type type, IExtensible instance, int tag, DataFormat format)
+        {
+            return ExtensibleUtil.GetExtendedValues(model, type, instance, tag, format, false, false);
+        }
+    }   
+}

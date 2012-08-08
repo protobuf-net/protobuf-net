@@ -1,8 +1,10 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using NUnit.Framework;
 using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace Examples
 {
@@ -77,9 +79,75 @@ namespace Examples
         public string Eof { get; set; }
     }
 
-    [TestFixture, Ignore("Not fully re-implemented")]
+    [TestFixture]
     public class Extensibility
     {
+        [Test]
+        public void TestExpectedMakeFromScratchOutput()
+        {
+            var canHaz = new CanHazData {
+                A = "abc", B = 456.7F, C = 123
+            };
+            Assert.IsTrue(Program.CheckBytes(canHaz, RuntimeTypeModel.Default, new byte[] {
+                0x0A, 0x03, 0x61, 0x62, 0x63, // abc
+                0x15, 0x9A, 0x59, 0xE4, 0x43, // 456.7F
+                0x1D, 0x7B, 0x00, 0x00, 0x00  // 123
+            }));
+        }
+
+        [Test]
+        public void MakeFromScratch()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(Naked), true);
+            model.Add(typeof(CanHazData), true)[3].IsStrict = true;
+
+            MakeFromScratch(model, "Runtime");
+            model.CompileInPlace();
+            MakeFromScratch(model, "CompileInPlace");
+            MakeFromScratch(model.Compile(), "Compile");
+        }
+        static void MakeFromScratch(TypeModel model, string caption)
+        {
+            var obj = new Naked();
+            try
+            {
+                Extensible.AppendValue(model, obj, 1, DataFormat.Default, "abc");
+                Extensible.AppendValue(model, obj, 2, DataFormat.Default, 456.7F);
+                Extensible.AppendValue(model, obj, 3, DataFormat.FixedSize, 123);
+
+                CanHazData clone;
+                using (var ms = new MemoryStream())
+                {
+                    model.Serialize(ms, obj);
+                    string s = Program.GetByteString(ms.ToArray());
+                    Assert.AreEqual("0A 03 61 62 63 15 9A 59 E4 43 1D 7B 00 00 00", s, caption);
+                    ms.Position = 0;
+                    clone = (CanHazData) model.Deserialize(ms, null, typeof(CanHazData));
+                }
+                Assert.AreEqual("abc", clone.A, caption);
+                Assert.AreEqual(456.7F, clone.B, caption);
+                Assert.AreEqual(123, clone.C, caption);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(caption);
+                throw;
+            }
+        }
+        [ProtoContract]
+        public class Naked : Extensible
+        {
+        }
+        [ProtoContract]
+        public class CanHazData
+        {
+            [ProtoMember(1)] public string A {get;set;}
+            [ProtoMember(2)] public float B { get; set; }
+            [ProtoMember(3, DataFormat = DataFormat.FixedSize)] public int C { get; set; }
+        }
+
+
         internal static BiggerObject GetBigObject()
         {
             return new BiggerObject
