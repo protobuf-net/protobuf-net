@@ -251,7 +251,9 @@ namespace ProtoBuf.Meta
 
 #if FEAT_IKVM
         readonly IKVM.Reflection.Universe universe;
-
+        /// <summary>
+        /// Load an assembly into the model's universe
+        /// </summary>
         public Assembly Load(string path)
         {
             return universe.LoadFile(path);
@@ -754,10 +756,16 @@ namespace ProtoBuf.Meta
         }
 
 #if FEAT_IKVM
+        /// <summary>
+        /// Inspect the model, and resolve all related types
+        /// </summary>
         public void Cascade()
         {
             BuildAllSerializers();
         }
+        /// <summary>
+        /// Translate a System.Type into the universe's type representation
+        /// </summary>
         protected internal override Type MapType(System.Type type)
         {
             if (type == null) return null;

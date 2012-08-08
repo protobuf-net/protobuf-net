@@ -81,6 +81,12 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="foo.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>foo.proto</DependentUpon>
+    </Compile>
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -102,6 +108,11 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
+    <None Include="foo.proto">
+      <Generator>ProtoBufTool</Generator>
+      <LastGenOutput>foo.cs</LastGenOutput>
+      <CustomToolNamespace>%3blightFramework</CustomToolNamespace>
+    </None>
     <None Include="Properties\AppManifest.xml" />
     <None Include="Properties\WMAppManifest.xml" />
   </ItemGroup>
@@ -119,9 +130,9 @@
       <Project>{1959C64F-5B99-44F0-B358-CFCD0B83ECBD}</Project>
       <Name>PhoneDto</Name>
     </ProjectReference>
-    <ProjectReference Include="..\protobuf-net_Phone7\protobuf-net_Phone7.csproj">
-      <Project>{9308A24C-0A5C-40AE-9767-EBBE54605CA2}</Project>
-      <Name>protobuf-net_Phone7</Name>
+    <ProjectReference Include="..\protobuf-net_Portable\protobuf-net_Portable.csproj">
+      <Project>{24AB5D8D-8161-4BA8-B643-BAB10402D766}</Project>
+      <Name>protobuf-net_Portable</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

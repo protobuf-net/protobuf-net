@@ -206,6 +206,7 @@
     <Compile Include="InheritanceMidLevel.cs" />
     <Compile Include="Issues\AssortedGoLiveRegressions.cs" />
     <Compile Include="Issues\ComplexGenerics\ComplexGenericExample.cs" />
+    <Compile Include="Issues\DeserializeExtensible.cs" />
     <Compile Include="Issues\DetectMissing\DetectMissing.cs" />
     <Compile Include="Issues\DetectMissing\Generated.cs" />
     <Compile Include="Issues\Issue124.cs" />

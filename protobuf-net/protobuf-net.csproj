@@ -192,6 +192,7 @@
     </Compile>
     <Compile Include="Extensible.cs" />
     <Compile Include="ExtensibleUtil.cs" />
+    <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="Helpers.cs" />
     <Compile Include="IExtensible.cs" />
     <Compile Include="IExtension.cs" />

@@ -47,3 +47,22 @@ Note that each framework contains 3 files:
 
 Of these - the only one you **need** to deploy is the dll; the pdb may be useful for investigating crash reports. The
 xml is used only by the IDE.
+
+Folders:
+
+ios      iPad/iPod/iPhone via MonoTouch
+net20    regular .NET 2.0 (excludes WCF hooks)
+net30    regular .NET 3.0 or above (including 3.5, 4.0, 4.5, ...)
+portable portable framework (phone 7, xna, silverlight)
+sl3-wp   phone 7
+sl4      silverlight
+unity    specific to unity (avoids missing "interlocked" methods)
+
+Licese:
+
+The license is shown separately, but boils down to "do what you like with it, don't sue me,
+don't blame me if it goes horribly wrong, don't claim you wrote protobuf-net"
+
+Finally:
+
+All feedback welcome.

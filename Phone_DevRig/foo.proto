@@ -1,0 +1,3 @@
+message Foo {
+  optional int32 bar = 1;
+}

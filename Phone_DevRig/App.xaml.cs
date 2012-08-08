@@ -14,6 +14,8 @@ using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using System.IO;
 using System.Diagnostics;
+using ProtoBuf.Meta;
+using ProtoBuf;
 
 namespace Phone_DevRig
 {
@@ -66,21 +68,48 @@ namespace Phone_DevRig
         // This code will not execute when the application is reactivated
         private void Application_Launching(object sender, LaunchingEventArgs e)
         {
-            try
-            {
-                var blob = Resource1.nwind_proto;
-                using(var ms = new MemoryStream(blob))
-                {
-                    var db = (DAL.DatabaseCompat) new MySerializer().Deserialize(ms, null, typeof (DAL.DatabaseCompat));
-                    int i = db.Orders.Count;
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message);
-            }
+            //Execute();
+            //try
+            //{
+            //    var blob = Resource1.nwind_proto;
+            //    using(var ms = new MemoryStream(blob))
+            //    {
+            //        var db = (DAL.DatabaseCompat) new MySerializer().Deserialize(ms, null, typeof (DAL.DatabaseCompat));
+            //        int i = db.Orders.Count;
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    Debug.WriteLine(ex.Message);
+            //}
         }
 
+        ////public void Execute()
+        ////{
+        ////    var model = TypeModel.Create();
+        ////    var large = new LargeType { Foo = 1, Bar = "abc" };
+        ////    SmallType small;
+        ////    using(var ms = new MemoryStream())
+        ////    {
+        ////        model.Serialize(ms, large);
+        ////        ms.Position = 0;
+        ////        small = (SmallType) model.Deserialize(ms, null, typeof(SmallType));
+        ////    }
+        ////    string s = small.Bar;
+        ////}
+        [ProtoContract]
+        public class LargeType {
+            [ProtoMember(1)]
+            public int Foo {get;set;}
+
+            [ProtoMember(2)]
+            public string Bar {get;set;}
+        }
+        [ProtoContract]
+        public class SmallType : Extensible {
+            [ProtoMember(2)]
+            public string Bar {get;set;}
+        }
         // Code to execute when the application is activated (brought to foreground)
         // This code will not execute when the application is first launched
         private void Application_Activated(object sender, ActivatedEventArgs e)

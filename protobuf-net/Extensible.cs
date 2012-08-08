@@ -1,4 +1,4 @@
-﻿#if !NO_GENERICS && !NO_RUNTIME
+﻿#if !NO_GENERICS
 using System.Collections.Generic;
 using ProtoBuf.Meta;
 
@@ -62,6 +62,7 @@ namespace ProtoBuf
             return extensionObject;
         }
 
+#if !NO_RUNTIME
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
         /// Note that for non-repeated sub-objects, this equates to a merge operation;
@@ -96,7 +97,7 @@ namespace ProtoBuf
         {
             ExtensibleUtil.AppendExtendValue<TValue>(RuntimeTypeModel.Default, instance, tag, format, value);
         }
-
+#endif
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
         /// Note that for non-repeated sub-objects, this equates to a merge operation;
