@@ -750,7 +750,7 @@ namespace ProtoBuf.Meta
             return mi;
         }
 
-        internal static AttributeFamily GetContractFamily(TypeModel model, Type type, AttributeMap[] attributes)
+        internal static AttributeFamily GetContractFamily(RuntimeTypeModel model, Type type, AttributeMap[] attributes)
         {
             AttributeFamily family = AttributeFamily.None;
 
@@ -766,8 +766,18 @@ namespace ProtoBuf.Meta
                         if (tmp) return AttributeFamily.ProtoBuf;
                         family |= AttributeFamily.ProtoBuf;
                         break;
-                    case "System.Xml.Serialization.XmlTypeAttribute": family |= AttributeFamily.XmlSerializer; break;
-                    case "System.Runtime.Serialization.DataContractAttribute": family |= AttributeFamily.DataContractSerialier; break;
+                    case "System.Xml.Serialization.XmlTypeAttribute":
+                        if (!model.AutoAddProtoContractTypesOnly)
+                        {
+                            family |= AttributeFamily.XmlSerializer;
+                        }
+                        break;
+                    case "System.Runtime.Serialization.DataContractAttribute":
+                        if (!model.AutoAddProtoContractTypesOnly)
+                        {
+                            family |= AttributeFamily.DataContractSerialier;
+                        }
+                        break;
                 }
             }
             if(family == AttributeFamily.None)

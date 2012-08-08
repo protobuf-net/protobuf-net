@@ -35,7 +35,8 @@ namespace ProtoBuf.Meta
            OPTIONS_AutoCompile = 16,
 #endif
            OPTIONS_UseImplicitZeroDefaults = 32,
-           OPTIONS_AllowParseableTypes = 64;
+           OPTIONS_AllowParseableTypes = 64,
+           OPTIONS_AutoAddProtoContractTypesOnly = 128;
         private bool GetOption(byte option)
         {
             return (options & option) == option;
@@ -46,7 +47,7 @@ namespace ProtoBuf.Meta
             else options &= (byte)~option;
         }
         /// <summary>
-        /// Global default for that
+        /// Global default that
         /// enables/disables automatic tag generation based on the existing name / order
         /// of the defined members. See <seealso cref="ProtoContractAttribute.InferTagFromName"/>
         /// for usage and <b>important warning</b> / explanation.
@@ -58,6 +59,18 @@ namespace ProtoBuf.Meta
             get { return GetOption(OPTIONS_InferTagFromNameDefault); }
             set { SetOption(OPTIONS_InferTagFromNameDefault, value); }
         }
+
+        /// <summary>
+        /// Global default that determines whether types are considered serializable
+        /// if they have [DataContract] / [XmlType]. With this enabled, <b>ONLY</b>
+        /// types marked as [ProtoContract] are added automatically.
+        /// </summary>
+        public bool AutoAddProtoContractTypesOnly
+        {
+            get { return GetOption(OPTIONS_AutoAddProtoContractTypesOnly); }
+            set { SetOption(OPTIONS_AutoAddProtoContractTypesOnly, value); }
+        }
+
         /// <summary>
         /// Global switch that enables or disables the implicit
         /// handling of "zero defaults"; meanning: if no other default is specified,
