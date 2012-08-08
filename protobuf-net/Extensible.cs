@@ -64,7 +64,7 @@ namespace ProtoBuf
             return extensionObject;
         }
 
-#if !NO_RUNTIME || !NO_GENERICS
+#if !NO_RUNTIME && !NO_GENERICS
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
         /// Note that for non-repeated sub-objects, this equates to a merge operation;
@@ -99,27 +99,6 @@ namespace ProtoBuf
         {
             ExtensibleUtil.AppendExtendValue(RuntimeTypeModel.Default, instance, tag, format, value);
         }
-#endif
-#if !NO_RUNTIME && !NO_GENERICS
-        /// <summary>
-        /// Appends the value as an additional (unexpected) data-field for the instance.
-        /// Note that for non-repeated sub-objects, this equates to a merge operation;
-        /// for repeated sub-objects this adds a new instance to the set; for simple
-        /// values the new value supercedes the old value.
-        /// </summary>
-        /// <remarks>Note that appending a value does not remove the old value from
-        /// the stream; avoid repeatedly appending values for the same field.</remarks>
-        /// <typeparam name="TValue">The data-type of the field.</typeparam>
-        /// <param name="model">The model that represents the data.</param>
-        /// <param name="format">The data-format to use when encoding the value.</param>
-        /// <param name="instance">The extensible object to append the value to.</param>
-        /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
-        /// <param name="value">The value to append.</param>
-        public static void AppendValue(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
-        {
-            ExtensibleUtil.AppendExtendValue(model, instance, tag, format, value);
-        }
-        
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
         /// The value returned is the composed value after merging any duplicated content; if the
@@ -246,7 +225,8 @@ namespace ProtoBuf
         /// The value returned (in "value") is the composed value after merging any duplicated content;
         /// if the value is "repeated" (a list), then use GetValues instead.
         /// </summary>
-        /// <typeparam name="TValue">The data-type of the field.</typeparam>
+        /// <param name="type">The data-type of the field.</param>
+        /// <param name="model">The model to use for configuration.</param>
         /// <param name="value">The effective value of the field, or the default value if not found.</param>
         /// <param name="instance">The extensible object to obtain the value from.</param>
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
@@ -273,7 +253,8 @@ namespace ProtoBuf
         /// (list) fields.
         /// </summary>
         /// <remarks>The extended data is processed lazily as the enumerator is iterated.</remarks>
-        /// <typeparam name="TValue">The data-type of the field.</typeparam>
+        /// <param name="model">The model to use for configuration.</param>
+        /// <param name="type">The data-type of the field.</param>
         /// <param name="instance">The extensible object to obtain the value from.</param>
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="format">The data-format to use when decoding the value.</param>
@@ -282,5 +263,24 @@ namespace ProtoBuf
         {
             return ExtensibleUtil.GetExtendedValues(model, type, instance, tag, format, false, false);
         }
+
+        /// <summary>
+        /// Appends the value as an additional (unexpected) data-field for the instance.
+        /// Note that for non-repeated sub-objects, this equates to a merge operation;
+        /// for repeated sub-objects this adds a new instance to the set; for simple
+        /// values the new value supercedes the old value.
+        /// </summary>
+        /// <remarks>Note that appending a value does not remove the old value from
+        /// the stream; avoid repeatedly appending values for the same field.</remarks>
+        /// <param name="model">The model to use for configuration.</param>
+        /// <param name="format">The data-format to use when encoding the value.</param>
+        /// <param name="instance">The extensible object to append the value to.</param>
+        /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
+        /// <param name="value">The value to append.</param>
+        public static void AppendValue(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
+        {
+            ExtensibleUtil.AppendExtendValue(model, instance, tag, format, value);
+        }
+        
     }   
 }
