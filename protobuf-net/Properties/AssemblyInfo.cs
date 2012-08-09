@@ -35,9 +35,9 @@ using System.Runtime.CompilerServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.0.0.565")]
+[assembly: AssemblyVersion("2.0.0.569")]
 #if !CF
-[assembly: AssemblyFileVersion("2.0.0.564")]
+[assembly: AssemblyFileVersion("2.0.0.569")]
 #endif
 #if !FX11
 [assembly: InternalsVisibleTo("protobuf-net.unittest, PublicKey="
