@@ -70,6 +70,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\precompile\bin\Debug\PhoneSerializer.dll</HintPath>
     </Reference>
+    <Reference Include="SO11895998_PortableSerializer">
+      <HintPath>..\precompile.tests\bin\Debug\SO11895998_PortableSerializer.dll</HintPath>
+      <Aliases>so11</Aliases>
+    </Reference>
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core" />
@@ -133,6 +137,10 @@
     <ProjectReference Include="..\protobuf-net_Portable\protobuf-net_Portable.csproj">
       <Project>{24AB5D8D-8161-4BA8-B643-BAB10402D766}</Project>
       <Name>protobuf-net_Portable</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SO11895998_Portable\SO11895998_Portable.csproj">
+      <Project>{A2472946-41DE-4574-8266-F9EF7A455D19}</Project>
+      <Name>SO11895998_Portable</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

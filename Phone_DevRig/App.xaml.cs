@@ -1,4 +1,5 @@
-﻿using System;
+﻿extern alias so11;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -16,6 +17,7 @@ using System.IO;
 using System.Diagnostics;
 using ProtoBuf.Meta;
 using ProtoBuf;
+
 
 namespace Phone_DevRig
 {
@@ -68,13 +70,24 @@ namespace Phone_DevRig
         // This code will not execute when the application is reactivated
         private void Application_Launching(object sender, LaunchingEventArgs e)
         {
-            //Execute();
+            var ser = new so11::MySerializer();
+            SO11895998.Foo foo = new SO11895998.Bar {Name = "abc", Value = 4};
+            var clone = (SO11895998.Bar) ser.DeepClone(foo);
+            Debug.Assert(clone.Name == "abc");
+            Debug.Assert(clone.Value == 4);
+
+            clone = (SO11895998.Bar)Serializer.DeepClone(foo);
+            Debug.Assert(clone.Name == "abc");
+            Debug.Assert(clone.Value == 4);
+
+            Execute();
             //try
             //{
             //    var blob = Resource1.nwind_proto;
-            //    using(var ms = new MemoryStream(blob))
+            //    using (var ms = new MemoryStream(blob))
             //    {
-            //        var db = (DAL.DatabaseCompat) new MySerializer().Deserialize(ms, null, typeof (DAL.DatabaseCompat));
+                    
+            //        var db = (DAL.DatabaseCompat)new MySerializer().Deserialize(ms, null, typeof(DAL.DatabaseCompat));
             //        int i = db.Orders.Count;
             //    }
             //}
@@ -84,19 +97,19 @@ namespace Phone_DevRig
             //}
         }
 
-        ////public void Execute()
-        ////{
-        ////    var model = TypeModel.Create();
-        ////    var large = new LargeType { Foo = 1, Bar = "abc" };
-        ////    SmallType small;
-        ////    using(var ms = new MemoryStream())
-        ////    {
-        ////        model.Serialize(ms, large);
-        ////        ms.Position = 0;
-        ////        small = (SmallType) model.Deserialize(ms, null, typeof(SmallType));
-        ////    }
-        ////    string s = small.Bar;
-        ////}
+        public void Execute()
+        {
+            var model = TypeModel.Create();
+            var large = new LargeType { Foo = 1, Bar = "abc" };
+            SmallType small;
+            using (var ms = new MemoryStream())
+            {
+                model.Serialize(ms, large);
+                ms.Position = 0;
+                small = (SmallType)model.Deserialize(ms, null, typeof(SmallType));
+            }
+            string s = small.Bar;
+        }
         [ProtoContract]
         public class LargeType {
             [ProtoMember(1)]

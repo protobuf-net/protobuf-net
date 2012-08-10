@@ -274,7 +274,7 @@ namespace ProtoBuf.Serializers
             {
                 if (!hasConstructor) TypeModel.ThrowCannotCreateInstance(constructType);
                 obj = Activator.CreateInstance(constructType
-#if !CF && !SILVERLIGHT && !WINRT
+#if !CF && !SILVERLIGHT && !WINRT && !PORTABLE 
                     , true
 #endif
                     );
