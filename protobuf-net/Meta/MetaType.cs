@@ -506,7 +506,7 @@ namespace ProtoBuf.Meta
                 model.FindOrAddAuto(baseType, true, false, false);
             }
 
-            AttributeMap[] typeAttribs = AttributeMap.Create(model, type, true);
+            AttributeMap[] typeAttribs = AttributeMap.Create(model, type, false);
             AttributeFamily family = GetContractFamily(model, type, typeAttribs);
             if(family == AttributeFamily.AutoTuple)
             {

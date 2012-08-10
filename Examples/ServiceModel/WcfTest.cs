@@ -1,5 +1,4 @@
-﻿#warning excised
-#if NET_3_0
+﻿#if NET_3_0
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

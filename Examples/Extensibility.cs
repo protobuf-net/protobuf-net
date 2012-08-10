@@ -129,7 +129,7 @@ namespace Examples
                 Assert.AreEqual(456.7F, clone.B, caption);
                 Assert.AreEqual(123, clone.C, caption);
             }
-            catch (Exception ex)
+            catch
             {
                 Debug.WriteLine(caption);
                 throw;

@@ -1,4 +1,4 @@
-﻿#warning excised
+﻿#warning HttpBasic excised
 //using System;
 //using System.Linq;
 //using System.ServiceModel;

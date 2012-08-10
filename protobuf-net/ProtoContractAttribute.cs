@@ -6,7 +6,7 @@ namespace ProtoBuf
     /// Indicates that a type is defined for protocol-buffer serialization.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum | AttributeTargets.Interface,
-        AllowMultiple = false, Inherited = true)]
+        AllowMultiple = false, Inherited = false)]
     public sealed class ProtoContractAttribute : Attribute
     {
         /// <summary>

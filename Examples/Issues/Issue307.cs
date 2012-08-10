@@ -7,7 +7,7 @@ using ProtoBuf.ServiceModel;
 namespace Examples.Issues
 {
     [TestFixture]
-    class Issue307
+    public class Issue307
     {
         public enum Foo
         {

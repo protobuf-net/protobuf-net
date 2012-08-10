@@ -24,7 +24,7 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="tag">The unique index (within the type) that will identify this data.</param>
         /// <param name="knownType">The additional type to serialize/deserialize.</param>
-        public ProtoIncludeAttribute(int tag, Type knownType)
+        public ProtoIncludeAttribute(int tag, System.Type knownType)
             : this(tag, knownType == null ? "" : knownType.AssemblyQualifiedName) { }
 
         /// <summary>

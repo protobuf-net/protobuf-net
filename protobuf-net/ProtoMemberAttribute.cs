@@ -193,7 +193,7 @@ namespace ProtoBuf
     /// fixed-length encoding for large values.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class,
-            AllowMultiple = true, Inherited = true)]
+            AllowMultiple = true, Inherited = false)]
     public class ProtoPartialMemberAttribute : ProtoMemberAttribute
     {
         /// <summary>

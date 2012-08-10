@@ -25,7 +25,7 @@ namespace Examples.SimpleStream
             Assert.AreEqual(150, t3.C.A);
         }
 
-        [Test, Ignore("depends on extension")]
+        [Test]
         public void TestGroupAsExtension()
         {
             NoddyExtends ne = Program.Build<NoddyExtends>(0x1B, 0x08, 0x96, 0x01, 0x1C);// [start group 3] [test1] [end group 3]
