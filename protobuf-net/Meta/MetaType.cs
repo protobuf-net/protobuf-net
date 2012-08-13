@@ -236,15 +236,25 @@ namespace ProtoBuf.Meta
         internal string GetSchemaTypeName()
         {
             if (surrogate != null) return model[surrogate].GetSchemaTypeName();
-
+            
             if (!Helpers.IsNullOrEmpty(name)) return name;
-            if (type.IsGenericType)
+            if (type
+#if WINRT
+                .GetTypeInfo()
+#endif       
+                .IsGenericType)
             {
 
                 StringBuilder sb = new StringBuilder(type.Name);
                 int split = type.Name.IndexOf('`');
                 if (split >= 0) sb.Length = split;
-                foreach (Type arg in type.GetGenericArguments())
+                foreach (Type arg in type
+#if WINRT
+                    .GetTypeInfo().GenericTypeArguments
+#else               
+                    .GetGenericArguments()
+#endif
+                    )
                 {
                     sb.Append('_');
                     Type tmp = arg;
