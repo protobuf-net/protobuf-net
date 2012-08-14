@@ -269,6 +269,11 @@ namespace ProtoBuf.Precompile
             model.Universe.AssemblyResolve += (sender, args) =>
             {
                 string nameOnly = args.Name.Split(',')[0];
+
+                if (nameOnly == "IKVM.Reflection" && args.RequestingAssembly.FullName.StartsWith("protobuf-net"))
+                {
+                    throw new InvalidOperationException("This operation needs access to the protobuf-net.dll used by your library, **in addition to** the protobuf-net.dll that is included with the precompiler; the easiest way to do this is to ensure the referenced protobuf-net.dll is in the same folder as your library.");
+                }
                 var uni = model.Universe;
                 foreach (var tmp in uni.GetAssemblies())
                 {
@@ -278,7 +283,7 @@ namespace ProtoBuf.Precompile
                 if(asm != null) return asm;
                 asm = ResolveNewAssembly(uni, nameOnly + ".exe");
                 if(asm != null) return asm;
-                
+
                 throw new InvalidOperationException("All assemblies must be resolved explicity; did not resolve: " + args.Name);
             };
             bool allGood = true;
