@@ -104,7 +104,7 @@ namespace ProtoBuf.Meta
         }
         internal object GetRawEnumValue()
         {
-#if WINRT || PORTABLE || CF
+#if WINRT || PORTABLE || CF || FX11
             object value = ((FieldInfo)member).GetValue(null);
             switch(Helpers.GetTypeCode(Enum.GetUnderlyingType(((FieldInfo)member).FieldType)))
             {
@@ -125,12 +125,15 @@ namespace ProtoBuf.Meta
         }
         private static object ParseDefaultValue(Type type, object value)
         {
-            type = Helpers.GetUnderlyingType(type) ?? type;
+            {
+                Type tmp = Helpers.GetUnderlyingType(type);
+                if (tmp != null) type = tmp;
+            }
             if (value is string)
             {
                 string s = (string)value;
                 if (Helpers.IsEnum(type)) return Helpers.ParseEnum(type, s);
-                
+
                 switch (Helpers.GetTypeCode(type))
                 {
                     case ProtoTypeCode.Boolean: return bool.Parse(s);
@@ -152,7 +155,7 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.UInt64: return ulong.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case ProtoTypeCode.TimeSpan: return TimeSpan.Parse(s);
                     case ProtoTypeCode.Uri: return s; // Uri is decorated as string
-                    case ProtoTypeCode.Guid: return new Guid(s); 
+                    case ProtoTypeCode.Guid: return new Guid(s);
                 }
             }
 #if FEAT_IKVM

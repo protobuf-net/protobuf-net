@@ -50,17 +50,21 @@ xml is used only by the IDE.
 
 Folders:
 
-ios      iPad/iPod/iPhone via MonoTouch
-net20    regular .NET 2.0 (excludes WCF hooks)
-net30    regular .NET 3.0 or above (including 3.5, 4.0, 4.5, ...)
-portable portable framework (phone 7, xna, silverlight)
-sl3-wp   phone 7
-sl4      silverlight
-unity    specific to unity (avoids missing "interlocked" methods)
+cf20	     compact framework 2.0
+cf35	     compact framework 3.5
+ios          iPad/iPod/iPhone via MonoTouch
+net11	     regular .NET 1.1 (excluded generics)
+net20        regular .NET 2.0 (excludes WCF hooks)
+net30        regular .NET 3.0 or above (including 3.5, 4.0, 4.5, ...)
+netcore45	 windows store apps / windows runtime 4.5
+portable     portable class library (phone 7, xna, silverlight)
+sl4          silverlight 4 or above
+wp71         windows phone 7.1
+unity        specific to unity (avoids missing "interlocked" methods)
 
-Licese:
+License:
 
-The license is shown separately, but boils down to "do what you like with it, don't sue me,
+The full license is shown separately, but boils down to "do what you like with it, don't sue me,
 don't blame me if it goes horribly wrong, don't claim you wrote protobuf-net"
 
 Finally:

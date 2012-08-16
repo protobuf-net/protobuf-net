@@ -1055,8 +1055,8 @@ namespace ProtoBuf.Meta
         protected internal static Type ResolveProxies(Type type)
         {
             if (type == null) return null;
-            if (type.IsGenericParameter) return null;
 #if !NO_GENERICS            
+            if (type.IsGenericParameter) return null;
             // Nullable<T>
             Type tmp =  Helpers.GetUnderlyingType(type);
             if (tmp != null) return tmp;

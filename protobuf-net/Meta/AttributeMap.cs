@@ -73,8 +73,9 @@ namespace ProtoBuf.Meta
         }
         public static AttributeMap[] Create(TypeModel model, Assembly assembly)
         {
-            const bool inherit = false;
+            
 #if FEAT_IKVM
+            const bool inherit = false;
             System.Collections.Generic.IList<CustomAttributeData> all = assembly.__GetCustomAttributes(model.MapType(typeof(Attribute)), inherit);
             AttributeMap[] result = new AttributeMap[all.Count];
             int index = 0;
@@ -87,6 +88,7 @@ namespace ProtoBuf.Meta
 #if WINRT
             Attribute[] all = System.Linq.Enumerable.ToArray(assembly.GetCustomAttributes());
 #else
+            const bool inherit = false;
             object[] all = assembly.GetCustomAttributes(inherit);
 #endif
             AttributeMap[] result = new AttributeMap[all.Length];
@@ -152,7 +154,11 @@ namespace ProtoBuf.Meta
                 MemberInfo[] members = Helpers.GetInstanceFieldsAndProperties(attribute.GetType(), publicOnly);
                 foreach (MemberInfo member in members)
                 {
+#if FX11
+                    if (member.Name.ToUpper() == key.ToUpper())
+#else
                     if (string.Equals(member.Name, key, StringComparison.OrdinalIgnoreCase))
+#endif
                     {
                         PropertyInfo prop = member as PropertyInfo;
                         if (prop != null) {

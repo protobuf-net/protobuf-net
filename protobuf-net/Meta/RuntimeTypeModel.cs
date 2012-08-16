@@ -190,7 +190,8 @@ namespace ProtoBuf.Meta
             }
             if (!Helpers.IsNullOrEmpty(package))
             {
-                builder.Append("package ").Append(package).Append(';').AppendLine();
+                builder.Append("package ").Append(package).Append(';');
+                Helpers.AppendLine(builder);
             }
 
             // sort them by schema-name
@@ -204,7 +205,7 @@ namespace ProtoBuf.Meta
                 if (metaTypesArr[i].IsList) continue;
                 metaTypesArr[i].WriteSchema(builder, 0);
             }
-            return builder.AppendLine().ToString();
+            return Helpers.AppendLine(builder).ToString();
         }
         private void CascadeDependents(BasicList list, MetaType metaType)
         {
@@ -905,7 +906,7 @@ namespace ProtoBuf.Meta
                                         : asm.DefineDynamicModule(an.Name);
 #endif
 
-            if (!string.IsNullOrEmpty(options.TargetFrameworkName))
+            if (!Helpers.IsNullOrEmpty(options.TargetFrameworkName))
             {
                 // get [TargetFramework] from mscorlib/equivalent and burn into the new assembly
                 Type versionAttribType = null;
@@ -918,7 +919,7 @@ namespace ProtoBuf.Meta
                 {
                     PropertyInfo[] props;
                     object[] propValues;
-                    if (string.IsNullOrEmpty(options.TargetFrameworkDisplayName))
+                    if (Helpers.IsNullOrEmpty(options.TargetFrameworkDisplayName))
                     {
                         props = new PropertyInfo[0];
                         propValues = new object[0];

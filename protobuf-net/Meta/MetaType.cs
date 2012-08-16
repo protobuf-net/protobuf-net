@@ -42,7 +42,11 @@ namespace ProtoBuf.Meta
                 if (x == null) return -1;
                 if (y == null) return 1;
 
+#if FX11
+                return string.Compare(x.GetSchemaTypeName(), y.GetSchemaTypeName());
+#else
                 return string.Compare(x.GetSchemaTypeName(), y.GetSchemaTypeName(), StringComparison.Ordinal);
+#endif
             }
         }
         /// <summary>
@@ -238,13 +242,13 @@ namespace ProtoBuf.Meta
             if (surrogate != null) return model[surrogate].GetSchemaTypeName();
             
             if (!Helpers.IsNullOrEmpty(name)) return name;
+#if !NO_GENERICS
             if (type
 #if WINRT
                 .GetTypeInfo()
 #endif       
                 .IsGenericType)
             {
-
                 StringBuilder sb = new StringBuilder(type.Name);
                 int split = type.Name.IndexOf('`');
                 if (split >= 0) sb.Length = split;
@@ -271,6 +275,7 @@ namespace ProtoBuf.Meta
                 }
                 return sb.ToString();
             }
+#endif
             return type.Name;
         }
 
@@ -319,7 +324,7 @@ namespace ProtoBuf.Meta
 
         private MethodInfo ResolveMethod(string name, bool instance)
         {
-            if (string.IsNullOrEmpty(name)) return null;
+            if (Helpers.IsNullOrEmpty(name)) return null;
 #if WINRT
             return instance ? Helpers.GetInstanceMethod(typeInfo, name) : Helpers.GetStaticMethod(typeInfo, name);
 #else
@@ -934,7 +939,7 @@ namespace ProtoBuf.Meta
                 else
                 {
                     attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
-#if WINRT || PORTABLE || CF
+#if WINRT || PORTABLE || CF || FX11
                     fieldNumber = Convert.ToInt32(((FieldInfo)member).GetValue(null));
 #else
                     fieldNumber = Convert.ToInt32(((FieldInfo)member).GetRawConstantValue());
@@ -1595,7 +1600,7 @@ namespace ProtoBuf.Meta
 
         internal bool IsPrepared()
         {
-            #if FEAT_COMPILER && !FEAT_IKVM
+            #if FEAT_COMPILER && !FEAT_IKVM && !FX11
             return (serializer as CompiledSerializer) != null;
             #else
             return false;
@@ -1606,8 +1611,7 @@ namespace ProtoBuf.Meta
 
         private System.Text.StringBuilder NewLine(System.Text.StringBuilder builder, int indent)
         {
-            return builder.AppendLine().Append(' ', indent*3);
-
+            return Helpers.AppendLine(builder).Append(' ', indent*3);
         }
         internal void WriteSchema(System.Text.StringBuilder builder, int indent)
         {

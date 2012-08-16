@@ -22,6 +22,16 @@ namespace ProtoBuf
     {
         private Helpers() { }
 
+        public static System.Text.StringBuilder AppendLine(System.Text.StringBuilder builder)
+        {
+#if CF2
+            return builder.Append("\r\n");
+#elif FX11
+            return builder.Append(Environment.NewLine);
+#else
+            return builder.AppendLine();
+#endif
+        }
         public static bool IsNullOrEmpty(string value)
         { // yes, FX11 lacks this!
             return value == null || value.Length == 0;
@@ -328,7 +338,11 @@ namespace ProtoBuf
 
         internal static System.Type GetUnderlyingType(System.Type type)
         {
+#if NO_GENERICS
+            return null; // never a Nullable<T>, so always returns null
+#else
             return Nullable.GetUnderlyingType(type);
+#endif
         }
 
         internal static bool IsValueType(Type type)

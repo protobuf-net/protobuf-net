@@ -1,8 +1,8 @@
-﻿#if !NO_GENERICS
-
-using System;
+﻿using System;
 using System.Collections;
+#if !NO_GENERICS
 using System.Collections.Generic;
+#endif
 using System.IO;
 using ProtoBuf.Meta;
 
@@ -26,7 +26,7 @@ namespace ProtoBuf
         private ExtensibleUtil() { } // not a static class for C# 1.2 reasons
 #endif
 
-#if !NO_RUNTIME
+#if !NO_RUNTIME && !NO_GENERICS
         /// <summary>
         /// All this does is call GetExtendedValuesTyped with the correct type for "instance";
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
@@ -50,11 +50,23 @@ namespace ProtoBuf
 #if FEAT_IKVM
             throw new NotSupportedException();
 #else
+
             if (instance == null) throw new ArgumentNullException("instance");
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag");
             IExtension extn = instance.GetExtensionObject(false);
-            if (extn == null) yield break;
 
+            if (extn == null)
+            {
+#if FX11
+                return new object[0];
+#else
+                yield break;
+#endif
+            }
+
+#if FX11
+            BasicList result = new BasicList();
+#endif
             Stream stream = extn.BeginQuery();
             object value = null;
             try {
@@ -65,12 +77,28 @@ namespace ProtoBuf
                     {
                         if (!singleton)
                         {
+#if FX11
+                            result.Add(value);
+#else
                             yield return value;
+#endif
                             value = null; // fresh item each time
                         }
                     }
                 }
-                if (singleton && value != null) yield return value;
+                if (singleton && value != null)
+                {
+#if FX11
+                    result.Add(value);
+#else
+                    yield return value;
+#endif
+                }
+#if FX11
+                object[] resultArr = new object[result.Count];
+                result.CopyTo(resultArr, 0);
+                return resultArr;
+#endif
             } finally {
                 extn.EndQuery(stream);
             }
@@ -105,7 +133,7 @@ namespace ProtoBuf
             }
 #endif
         }
-
+#if !NO_GENERICS
         /// <summary>
         /// Stores the given value into the instance's stream; the serializer
         /// is inferred from TValue and format.
@@ -117,6 +145,7 @@ namespace ProtoBuf
         {
             AppendExtendValue(model, instance, tag, format, value);
         }
-    }
-}
 #endif
+    }
+
+}

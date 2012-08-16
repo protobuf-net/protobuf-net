@@ -10,7 +10,8 @@
     <ProjectToBuild Include="protobuf-net_Phone7\protobuf-net_Phone7.csproj"/>
     <ProjectToBuild Include="protobuf-net_Silverlight\protobuf-net_Silverlight.csproj"/>
     <ProjectToBuild Include="protobuf-net_Portable\protobuf-net_Portable.csproj"/>
-
+    <ProjectToBuild Include="protobuf-net_WinRT\protobuf-net_WinRT.csproj"/>
+    
     <iOSFiles Include="protobuf-net\bin\iOS\protobuf-net.*"/> 
     <UnityFiles Include="protobuf-net\bin\Unity\protobuf-net.*"/>
     <Net20Files Include="protobuf-net\bin\Net20\protobuf-net.*"/>
@@ -24,47 +25,77 @@
     <PortableFiles_CoreOnly Include="protobuf-net_Portable\bin\CoreOnly\protobuf-net.*"/>
     <PrecompileFiles Include="precompile\bin\Release\*.*"/>
     <ProtogenFiles Include="ProtoGen\bin\Release\*.*"/>
+
+    <CF20Files Include="protobuf-net-CF20\bin\Release\protobuf-net.*"/>
+    <CF35Files Include="protobuf-net-CF35\bin\Release\protobuf-net.*"/>
+    <WinRTFiles Include="protobuf-net_WinRT\bin\Release\protobuf-net.*"/>
+    <CF20Files_CoreOnly Include="protobuf-net-CF20\bin\CoreOnly\protobuf-net.*"/>
+    <CF35Files_CoreOnly Include="protobuf-net-CF35\bin\CoreOnly\protobuf-net.*"/>    
+    <WinRTFiles_CoreOnly Include="protobuf-net_WinRT\bin\CoreOnly\protobuf-net.*"/>
   </ItemGroup>
   <Target Name="BuildKit">
+    
     <RemoveDir Directories="$(NugetDirectory)"/>
     <RemoveDir Directories="$(ZipDirectory)"/>
+
+    <MakeDir Directories="$(ZipDirectory)\Full\net11"/>
+    <MakeDir Directories="$(ZipDirectory)\CoreOnly\net11"/>
+    
+    <Exec Command="&quot;%SystemRoot%\Microsoft.Net\Framework\v1.1.4322\csc.exe&quot; /debug- /optimize+ &quot;/out:$(ZipDirectory)\Full\net11\protobuf-net.dll&quot; /define:FX11 /define:NO_GENERICS /define:FEAT_COMPILER /target:library /unsafe /recurse:protobuf-net\*.cs"/>
+    <Exec Command="&quot;%SystemRoot%\Microsoft.Net\Framework\v1.1.4322\csc.exe&quot; /debug- /optimize+ &quot;/out:$(ZipDirectory)\CoreOnly\net11\protobuf-net.dll&quot; /define:FX11 /define:NO_GENERICS /define:NO_RUNTIME /target:library /unsafe /recurse:protobuf-net\*.cs"/>
+
+    <MSBuild Projects="protobuf-net-CF20\protobuf-net-CF20.csproj" Properties="Configuration=Release"/>
+    <MSBuild Projects="protobuf-net-CF35\protobuf-net-CF35.csproj" Properties="Configuration=Release"/>
+    <MSBuild Projects="protobuf-net-CF20\protobuf-net-CF20.csproj" Properties="Configuration=CoreOnly"/>
+    <MSBuild Projects="protobuf-net-CF35\protobuf-net-CF35.csproj" Properties="Configuration=CoreOnly"/>
+
+    
     <Copy SourceFiles="Licence.txt" DestinationFolder="$(ZipDirectory)"/>
     <Copy SourceFiles="What Files Do I Need.txt" DestinationFolder="$(ZipDirectory)"/>
 
     <MSBuild Projects="@(ProjectToBuild)" Properties="Configuration=Release" BuildInParallel="true"/>
     <MSBuild Projects="@(ProjectToBuild)" Properties="Configuration=CoreOnly" BuildInParallel="true"/>
+    
+    
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Net20"/>
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=iOS"/>
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Unity"/>
     <MSBuild Projects="protobuf-net_IKVM\protobuf-net_IKVM.csproj" Properties="Configuration=Release"/>
+
     <MSBuild Projects="precompile\precompile.csproj" Properties="Configuration=Release"/>
     <MSBuild Projects="ProtoGen\ProtoGen.csproj" Properties="Configuration=Release"/>
-    
+
     <Copy SourceFiles="@(Net20Files)" DestinationFolder="$(NugetDirectory)\net20"/>
     <Copy SourceFiles="@(Net20Files)" DestinationFolder="$(ZipDirectory)\Full\net20"/>
     
-    <!-- these are for NuGet to pick up correctly -->
     <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(NugetDirectory)\net30"/>
     <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(ZipDirectory)\Full\net30"/>
     <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(NugetDirectory)\net35"/>
     <Copy SourceFiles="@(Net30Files)" DestinationFolder="$(NugetDirectory)\net40"/>
     
-    <!--<Copy SourceFiles="@(SLFiles)" DestinationFolder="$(OutputDirectory)\sl3"/>-->
     <Copy SourceFiles="@(SLFiles)" DestinationFolder="$(NugetDirectory)\sl4"/>
     <Copy SourceFiles="@(SLFiles)" DestinationFolder="$(ZipDirectory)\Full\sl4"/>
     
     <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(NugetDirectory)\sl3-wp"/>
-    <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(ZipDirectory)\Full\sl3-wp"/>
+    <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(ZipDirectory)\Full\wp71"/>
 
-    <!-- these are not used by NuGet; should probably relocate -->
     <Copy SourceFiles="@(UnityFiles)" DestinationFolder="$(ZipDirectory)\Full\unity"/>
     <Copy SourceFiles="@(PortableFiles)" DestinationFolder="$(ZipDirectory)\Full\portable"/>
+
+    
+    <Copy SourceFiles="@(CF20Files)" DestinationFolder="$(ZipDirectory)\Full\cf20"/>
+    <Copy SourceFiles="@(CF35Files)" DestinationFolder="$(ZipDirectory)\Full\cf35"/>
+    <Copy SourceFiles="@(WinRTFiles)" DestinationFolder="$(ZipDirectory)\Full\netcore45"/>
+    <Copy SourceFiles="@(CF20Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\cf20"/>
+    <Copy SourceFiles="@(CF35Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\cf35"/>
+    <Copy SourceFiles="@(WinRTFiles_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\netcore45"/>
 
     <Copy SourceFiles="@(iOSFiles)" DestinationFolder="$(ZipDirectory)\CoreOnly\ios"/>
     <Copy SourceFiles="@(Net30Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\net30"/>
     <Copy SourceFiles="@(SLFiles_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\sl4"/>
-    <Copy SourceFiles="@(WP7Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\sl3-wp"/>
+    <Copy SourceFiles="@(WP7Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\wp71"/>
     <Copy SourceFiles="@(PortableFiles_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\portable"/>
+   
     <Copy SourceFiles="@(PrecompileFiles)" DestinationFolder="$(ZipDirectory)\Precompile"/>
     <Copy SourceFiles="@(ProtoGenFiles)" DestinationFolder="$(ZipDirectory)\ProtoGen"/>
   </Target>
