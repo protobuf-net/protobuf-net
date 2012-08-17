@@ -1,0 +1,31 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net11_Poco", "Net11_Poco.csproj", "{62C687B9-7AC0-4525-A3B2-927ABDCD8EAF}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Net11_Runner", "..\Net11_Runner\Net11_Runner.csproj", "{C31B89EB-7EA4-45DA-B015-A9D612C59BF8}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectDependencies) = postSolution
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{62C687B9-7AC0-4525-A3B2-927ABDCD8EAF}.Debug.ActiveCfg = Debug|.NET
+		{62C687B9-7AC0-4525-A3B2-927ABDCD8EAF}.Debug.Build.0 = Debug|.NET
+		{62C687B9-7AC0-4525-A3B2-927ABDCD8EAF}.Release.ActiveCfg = Release|.NET
+		{62C687B9-7AC0-4525-A3B2-927ABDCD8EAF}.Release.Build.0 = Release|.NET
+		{C31B89EB-7EA4-45DA-B015-A9D612C59BF8}.Debug.ActiveCfg = Debug|.NET
+		{C31B89EB-7EA4-45DA-B015-A9D612C59BF8}.Debug.Build.0 = Debug|.NET
+		{C31B89EB-7EA4-45DA-B015-A9D612C59BF8}.Release.ActiveCfg = Release|.NET
+		{C31B89EB-7EA4-45DA-B015-A9D612C59BF8}.Release.Build.0 = Release|.NET
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal

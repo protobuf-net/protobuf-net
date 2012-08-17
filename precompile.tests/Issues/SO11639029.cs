@@ -45,8 +45,8 @@ namespace precompile.tests.Issues
         public void ExecuteSilverDto()
         {
             PreCompileContext ctx;
-            Assert.IsTrue(CommandLineAttribute.TryParse(new[] { @"..\..\..\PhoneDto\bin\release\PhoneDto.dll"
-                , "-o:PhoneSerializer.dll", "-t:MySerializer" }, out ctx), "TryParse");
+            Assert.IsTrue(CommandLineAttribute.TryParse(new[] { @"..\..\..\SilverDto\bin\release\SilverDto.dll"
+                , "-o:SilverSerializer.dll", "-t:MySerializer" }, out ctx), "TryParse");
             Assert.IsTrue(ctx.SanityCheck(), "SanityCheck");
             Assert.IsTrue(ctx.Execute(), "Execute");
         }

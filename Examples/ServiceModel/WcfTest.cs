@@ -100,6 +100,8 @@ namespace Examples.ServiceModel
             catch (Exception ex)
             {
                 Console.WriteLine(ex.GetType().FullName);
+                Console.WriteLine("You may need to execute (as admin):");
+                Console.WriteLine(@"netsh http add urlacl url=http://+:84/MyService/ user=""NT AUTHORITY\Authenticated Users""");
                 Console.WriteLine(ex.Message);
                 throw;
             }

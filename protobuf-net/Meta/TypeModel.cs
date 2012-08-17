@@ -25,7 +25,14 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
         /// </summary>
-        protected internal virtual Type MapType(System.Type type)
+        protected internal Type MapType(System.Type type)
+        {
+            return MapType(type, true);
+        }
+        /// <summary>
+        /// Resolve a System.Type to the compiler-specific type
+        /// </summary>
+        protected internal virtual Type MapType(System.Type type, bool demand)
         {
 #if FEAT_IKVM
             throw new NotImplementedException(); // this should come from RuntimeTypeModel!

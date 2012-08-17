@@ -780,7 +780,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Translate a System.Type into the universe's type representation
         /// </summary>
-        protected internal override Type MapType(System.Type type)
+        protected internal override Type MapType(System.Type type, bool demand)
         {
             if (type == null) return null;
 #if DEBUG
@@ -801,7 +801,7 @@ namespace ProtoBuf.Meta
                     result = a.GetType(type.FullName);
                     if (result != null) break;
                 }
-                if (result == null)
+                if (result == null && demand)
                 {
                     throw new InvalidOperationException("Unable to map type: " + type.AssemblyQualifiedName);
                 }
@@ -833,8 +833,8 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            private string targetFrameworkName, targetFrameworkDisplayName, typeName, outputPath;
-
+            private string targetFrameworkName, targetFrameworkDisplayName, typeName, outputPath, imageRuntimeVersion;
+            private int metaDataVersion;
             /// <summary>
             /// The TargetFrameworkAttribute FrameworkName value to burn into the generated assembly
             /// </summary>
@@ -852,6 +852,14 @@ namespace ProtoBuf.Meta
             /// The path for the new dll
             /// </summary>
             public string OutputPath { get { return outputPath; } set { outputPath = value; } }
+            /// <summary>
+            /// The runtime version for the generated assembly
+            /// </summary>
+            public string ImageRuntimeVersion { get { return imageRuntimeVersion; } set { imageRuntimeVersion = value; } }
+            /// <summary>
+            /// The runtime version for the generated assembly
+            /// </summary>
+            public int MetaDataVersion { get { return metaDataVersion; } set { metaDataVersion = value; } }
         }
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
@@ -895,6 +903,10 @@ namespace ProtoBuf.Meta
             IKVM.Reflection.AssemblyName an = new IKVM.Reflection.AssemblyName();
             an.Name = assemblyName;
             AssemblyBuilder asm = universe.DefineDynamicAssembly(an, AssemblyBuilderAccess.Save);
+            if(!Helpers.IsNullOrEmpty(options.ImageRuntimeVersion) && options.MetaDataVersion != 0)
+            {
+                asm.__SetImageRuntimeVersion(options.ImageRuntimeVersion, options.MetaDataVersion);
+            }
             ModuleBuilder module = asm.DefineDynamicModule(an.Name, path);
 #else
             AssemblyName an = new AssemblyName();
@@ -975,15 +987,20 @@ namespace ProtoBuf.Meta
             {
                 Array.Sort(methodPairs);
             }
-            
+
+            Compiler.CompilerContext.ILVersion ilVersion = Compiler.CompilerContext.ILVersion.Net2;
+            if (options.MetaDataVersion == 0x10000)
+            {
+                ilVersion = Compiler.CompilerContext.ILVersion.Net1; // old-school!
+            }
             for(index = 0; index < methodPairs.Length ; index++)
             {
                 SerializerPair pair = methodPairs[index];
-                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this);
+                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion);
                 pair.Type.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
                 ctx.Return();
 
-                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs, this);
+                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs, this, ilVersion);
                 pair.Type.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
                 if (!pair.Type.Serializer.ReturnsValue)
                 {
@@ -1059,7 +1076,7 @@ namespace ProtoBuf.Meta
             }
             
             il = Override(type, "Serialize");
-            ctx = new Compiler.CompilerContext(il, false, true, methodPairs, this);
+            ctx = new Compiler.CompilerContext(il, false, true, methodPairs, this, ilVersion);
             // arg0 = this, arg1 = key, arg2=obj, arg3=dest
             Label[] jumpTable = new Label[types.Count];
             for (int i = 0; i < jumpTable.Length; i++) {
@@ -1080,7 +1097,7 @@ namespace ProtoBuf.Meta
             }
 
             il = Override(type, "Deserialize");
-            ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this);
+            ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion);
             // arg0 = this, arg1 = key, arg2=obj, arg3=source
             for (int i = 0; i < jumpTable.Length; i++)
             {
@@ -1099,7 +1116,7 @@ namespace ProtoBuf.Meta
                 {
                     il.Emit(OpCodes.Ldarg_2);
                     il.Emit(OpCodes.Ldarg_3);
-                    il.EmitCall(OpCodes.Call, EmitBoxedSerializer(type, i, keyType, methodPairs, this), null);
+                    il.EmitCall(OpCodes.Call, EmitBoxedSerializer(type, i, keyType, methodPairs, this, ilVersion), null);
                     ctx.Return();
                 }
                 else
@@ -1150,12 +1167,12 @@ namespace ProtoBuf.Meta
 #endif
         }
 
-        private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model)
+        private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion)
         {
             MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i, MethodAttributes.Static, CallingConventions.Standard,
                 model.MapType(typeof(object)), new Type[] { model.MapType(typeof(object)), model.MapType(typeof(ProtoReader)) });
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model);
+            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion);
             ctx.LoadValue(Compiler.Local.InputValue);
             Compiler.CodeLabel @null = ctx.DefineLabel();
             ctx.BranchIfFalse(@null, true);

@@ -292,9 +292,9 @@ namespace ProtoBuf.Serializers
         {
             
 #if WINRT
-            TypeInfo enumeratorType, iteratorType, expectedType = ExpectedType.GetTypeInfo();
+            TypeInfo enumeratorType = null, iteratorType, expectedType = ExpectedType.GetTypeInfo();
 #else
-            Type enumeratorType, iteratorType, expectedType = ExpectedType;
+            Type enumeratorType = null, iteratorType, expectedType = ExpectedType;
 #endif
 
             // try a custom enumerator
@@ -326,12 +326,20 @@ namespace ProtoBuf.Serializers
             
 #if !NO_GENERICS
             // try IEnumerable<T>
-            enumeratorType =  model.MapType(typeof(System.Collections.Generic.IEnumerable<>)).MakeGenericType(itemType)
+            Type tmp = model.MapType(typeof(System.Collections.Generic.IEnumerable<>), false);
+            
+            if (tmp != null)
+            {
+                tmp = tmp.MakeGenericType(itemType);
+
 #if WINRT
-                .GetTypeInfo()
+                enumeratorType = tmp.GetTypeInfo();
+#else
+                enumeratorType = tmp;
 #endif
-                ;
-            if (enumeratorType.IsAssignableFrom(expectedType))
+            }
+;
+            if (enumeratorType != null && enumeratorType.IsAssignableFrom(expectedType))
             {
                 getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
                 
@@ -346,7 +354,6 @@ namespace ProtoBuf.Serializers
                 return getEnumerator;
             }
 #endif
-
             // give up and fall-back to non-generic IEnumerable
             enumeratorType = model.MapType(ienumerableType);
             getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");

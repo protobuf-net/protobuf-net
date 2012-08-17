@@ -174,20 +174,27 @@ namespace ProtoBuf.Compiler
             { }
             else if (type.IsValueType)
             {
+                switch (MetadataVersion)
+                {
+                    case ILVersion.Net1:
+                        il.Emit(OpCodes.Unbox, type);
+                        il.Emit(OpCodes.Ldobj, type);
+#if DEBUG_COMPILE
+                        Helpers.DebugWriteLine(OpCodes.Unbox + ": " + type);
+                        Helpers.DebugWriteLine(OpCodes.Ldobj + ": " + type);
+#endif
+                        break;
+                    default:
 #if FX11
-                il.Emit(OpCodes.Unbox, type);
-                il.Emit(OpCodes.Ldobj, type);
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Unbox + ": " + type);
-                Helpers.DebugWriteLine(OpCodes.Ldobj + ": " + type);
-#endif
+                        throw new NotSupportedException();
 #else
-                il.Emit(OpCodes.Unbox_Any, type);
+                        il.Emit(OpCodes.Unbox_Any, type);
 #if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Unbox_Any + ": " + type);
+                        Helpers.DebugWriteLine(OpCodes.Unbox_Any + ": " + type);
 #endif
 #endif
-
+                        break;
+                }
             }
             else
             {
@@ -212,7 +219,7 @@ namespace ProtoBuf.Compiler
         private readonly bool nonPublic, isWriter;
         internal bool NonPublic { get { return nonPublic; } }
 
-        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model)
+        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion)
         {
             if (il == null) throw new ArgumentNullException("il");
             if (methodPairs == null) throw new ArgumentNullException("methodPairs");
@@ -223,11 +230,17 @@ namespace ProtoBuf.Compiler
             nonPublic = false;
             this.isWriter = isWriter;
             this.model = model;
+            this.metadataVersion = metadataVersion;
         }
 #if !(FX11 || FEAT_IKVM)
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model)
         {
             if (model == null) throw new ArgumentNullException("model");
+#if FX11
+            metadataVersion = ILVersion.Net1;
+#else
+            metadataVersion = ILVersion.Net2;
+#endif
             this.isStatic = isStatic;
             this.isWriter = isWriter;
             this.model = model;
@@ -934,12 +947,20 @@ namespace ProtoBuf.Compiler
                 if (type.IsValueType)
                 {
                     ctx.LoadAddress(local, type);
+                    switch (ctx.MetadataVersion)
+                    {
+                        case ILVersion.Net1:
+                            ctx.LoadValue(local);
+                            ctx.CastToObject(type);
+                            break;
+                        default:
 #if FX11
-                    ctx.LoadValue(local);
-                    ctx.CastToObject(type);
+                            throw new NotSupportedException();
 #else
-                    ctx.Constrain(type);
+                            ctx.Constrain(type);
 #endif
+                            break;
+                    }
                     ctx.EmitCall(dispose);                    
                 }
                 else
@@ -1169,6 +1190,12 @@ namespace ProtoBuf.Compiler
             return model.MapType(type);
         }
 
+        private readonly ILVersion metadataVersion;
+        public ILVersion MetadataVersion { get { return metadataVersion; } }
+        public enum ILVersion
+        {
+            Net1, Net2
+        }
     }
 }
 #endif

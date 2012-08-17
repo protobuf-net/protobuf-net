@@ -63,6 +63,7 @@
     <Compile Include="..\Examples\PEVerify.cs">
       <Link>PEVerify.cs</Link>
     </Compile>
+    <Compile Include="Issues\Net11.cs" />
     <Compile Include="Issues\SO11895998.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Issues\SO11639029.cs" />

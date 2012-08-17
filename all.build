@@ -41,8 +41,8 @@
     <MakeDir Directories="$(ZipDirectory)\Full\net11"/>
     <MakeDir Directories="$(ZipDirectory)\CoreOnly\net11"/>
     
-    <Exec Command="&quot;%SystemRoot%\Microsoft.Net\Framework\v1.1.4322\csc.exe&quot; /debug- /optimize+ &quot;/out:$(ZipDirectory)\Full\net11\protobuf-net.dll&quot; /define:FX11 /define:NO_GENERICS /define:FEAT_COMPILER /target:library /unsafe /recurse:protobuf-net\*.cs"/>
-    <Exec Command="&quot;%SystemRoot%\Microsoft.Net\Framework\v1.1.4322\csc.exe&quot; /debug- /optimize+ &quot;/out:$(ZipDirectory)\CoreOnly\net11\protobuf-net.dll&quot; /define:FX11 /define:NO_GENERICS /define:NO_RUNTIME /target:library /unsafe /recurse:protobuf-net\*.cs"/>
+    <Exec Command="&quot;%SystemRoot%\Microsoft.Net\Framework\v1.1.4322\csc.exe&quot; /debug- /optimize+ &quot;/out:$(ZipDirectory)\Full\net11\protobuf-net.dll&quot; /define:FX11 /define:NO_GENERICS /define:PLAT_BINARYFORMATTER /define:FEAT_COMPILER /target:library /unsafe /recurse:protobuf-net\*.cs"/>
+    <Exec Command="&quot;%SystemRoot%\Microsoft.Net\Framework\v1.1.4322\csc.exe&quot; /debug- /optimize+ &quot;/out:$(ZipDirectory)\CoreOnly\net11\protobuf-net.dll&quot; /define:FX11 /define:NO_GENERICS /define:PLAT_BINARYFORMATTER /define:NO_RUNTIME /target:library /unsafe /recurse:protobuf-net\*.cs"/>
 
     <MSBuild Projects="protobuf-net-CF20\protobuf-net-CF20.csproj" Properties="Configuration=Release"/>
     <MSBuild Projects="protobuf-net-CF35\protobuf-net-CF35.csproj" Properties="Configuration=Release"/>

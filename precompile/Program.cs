@@ -287,7 +287,8 @@ namespace ProtoBuf.Precompile
                 throw new InvalidOperationException("All assemblies must be resolved explicity; did not resolve: " + args.Name);
             };
             bool allGood = true;
-            if (ResolveNewAssembly(model.Universe, "mscorlib.dll") == null)
+            var mscorlib = ResolveNewAssembly(model.Universe, "mscorlib.dll");
+            if (mscorlib == null)
             {
                 Console.Error.WriteLine("mscorlib.dll not found!");
                 allGood = false;
@@ -363,8 +364,14 @@ namespace ProtoBuf.Precompile
             var options = new RuntimeTypeModel.CompilerOptions
             {
                 TypeName = TypeName,
-                OutputPath = AssemblyName
+                OutputPath = AssemblyName,
+                ImageRuntimeVersion = mscorlib.ImageRuntimeVersion,
+                MetaDataVersion = 0x20000 // use .NET 2 onwards
             };
+            if (mscorlib.ImageRuntimeVersion == "v1.1.4322")
+            { // .NET 1.1-style
+                options.MetaDataVersion = 0x10000;
+            }
             if (metaType != null)
             {
                 options.SetFrameworkOptions(metaType);
