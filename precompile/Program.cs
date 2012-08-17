@@ -92,13 +92,17 @@ namespace ProtoBuf.Precompile
 
         static string TryInferFramework(string path)
         {
+            string imageRuntimeVersion = null;
             try
             {
                 using (var uni = new IKVM.Reflection.Universe())
                 {
                     uni.AssemblyResolve += (s, a) => ((IKVM.Reflection.Universe)s).CreateMissingAssembly(a.Name);
                     var asm = uni.LoadFile(path);
+                    imageRuntimeVersion = asm.ImageRuntimeVersion;
+
                     var attr = uni.GetType("System.Attribute, mscorlib");
+
                     foreach(var attrib in asm.__GetCustomAttributes(attr, false))
                     {
                         if (attrib.Constructor.DeclaringType.FullName == "System.Runtime.Versioning.TargetFrameworkAttribute"
@@ -142,14 +146,22 @@ namespace ProtoBuf.Precompile
                         }
                     }
                 }
-                return null;
             }
             catch (Exception ex) {
                 // not really fussed; we could have multiple inputs to try, and the user
                 // can always use -f:blah to specify it explicitly
                 Debug.WriteLine(ex.Message);
-                return null;
             }
+
+            if (!string.IsNullOrEmpty(imageRuntimeVersion))
+            {
+                string frameworkPath = Path.Combine(
+                    Environment.ExpandEnvironmentVariables(@"%windir%\Microsoft.NET\Framework"),
+                    imageRuntimeVersion);
+                if (Directory.Exists(frameworkPath)) return frameworkPath;
+            }
+
+            return null;
         }
         /// <summary>
         /// Check the context for obvious errrs
@@ -384,7 +396,7 @@ namespace ProtoBuf.Precompile
             return true;
 
         }
-
+        
         private IKVM.Reflection.Assembly ResolveNewAssembly(IKVM.Reflection.Universe uni, string fileName)
         {
             foreach (var match in ProbeForFiles(fileName))
