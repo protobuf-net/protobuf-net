@@ -192,8 +192,8 @@ namespace ProtoBuf.Compiler
 #if DEBUG_COMPILE
                         Helpers.DebugWriteLine(OpCodes.Unbox_Any + ": " + type);
 #endif
-#endif
                         break;
+#endif
                 }
             }
             else
@@ -958,8 +958,8 @@ namespace ProtoBuf.Compiler
                             throw new NotSupportedException();
 #else
                             ctx.Constrain(type);
-#endif
                             break;
+#endif
                     }
                     ctx.EmitCall(dispose);                    
                 }
