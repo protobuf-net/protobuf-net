@@ -90,7 +90,7 @@ namespace DAL
     {
         
         
-        private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+        private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs("");
 
         private int _OrderID;
 
@@ -541,7 +541,7 @@ namespace DAL
     public partial class OrderLine : INotifyPropertyChanging, INotifyPropertyChanged
     {
 
-        private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs(String.Empty);
+        private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs("");
 
         private int _OrderID;
 

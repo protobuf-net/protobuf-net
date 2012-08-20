@@ -1472,7 +1472,27 @@ namespace ProtoBuf.Meta
         }
         private readonly BasicList fields = new BasicList();
 
-        //IEnumerable GetFields() { return fields; }
+        /// <summary>
+        /// Returns the ValueMember instances associated with this type
+        /// </summary>
+        public ValueMember[] GetFields() {
+            ValueMember[] arr = new ValueMember[fields.Count];
+            fields.CopyTo(arr, 0);
+            Array.Sort(arr, ValueMember.Comparer.Default);
+            return arr;
+        }
+
+        /// <summary>
+        /// Returns the SubType instances associated with this type
+        /// </summary>
+        public SubType[] GetSubTypes()
+        {
+            if (subTypes == null || subTypes.Count == 0) return new SubType[0];
+            SubType[] arr = new SubType[subTypes.Count];
+            subTypes.CopyTo(arr, 0);
+            Array.Sort(arr, SubType.Comparer.Default);
+            return arr;
+        }
 
 #if FEAT_COMPILER && !FX11
 

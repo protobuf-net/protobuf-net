@@ -51,6 +51,15 @@ namespace ProtoBuf
 
         private int dataRemaining;
         private readonly bool isFixedLength;
+        private bool internStrings = true;
+        /// <summary>
+        /// Gets / sets a flag indicating whether strings should be checked for repetition; if
+        /// true, any repeated UTF-8 byte sequence will result in the same String instance, rather
+        /// than a second instance of the same string. Enabled by default. Note that this uses
+        /// a <i>custom</i> interner - the system-wide string interner is not used.
+        /// </summary>
+        public bool InternStrings { get { return internStrings; } set { internStrings = value; } }
+
         /// <summary>
         /// Creates a new reader against a stream
         /// </summary>
@@ -409,7 +418,7 @@ namespace ProtoBuf
         private string Intern(string value)
         {
             if (value == null) return null;
-            if (value.Length == 0) return string.Empty;
+            if (value.Length == 0) return "";
             if (stringInterner == null)
             {
                 stringInterner = new System.Collections.Hashtable();
@@ -430,7 +439,7 @@ namespace ProtoBuf
                 private string Intern(string value)
         {
             if (value == null) return null;
-            if (value.Length == 0) return string.Empty;
+            if (value.Length == 0) return "";
             string found;
             if (stringInterner == null)
             {
@@ -473,7 +482,7 @@ namespace ProtoBuf
 #else
                 string s = encoding.GetString(ioBuffer, ioIndex, bytes);
 #endif
-                s = Intern(s);
+                if (internStrings) { s = Intern(s); }
                 available -= bytes;
                 position += bytes;
                 ioIndex += bytes;
@@ -663,6 +672,11 @@ namespace ProtoBuf
             }
             return false;
         }
+
+        /// <summary>
+        /// Get the TypeModel associated with this reader
+        /// </summary>
+        public TypeModel Model { get { return model; } }
 
         /// <summary>
         /// Compares the streams current wire-type to the hinted wire-type, updating the reader if necessary; for example,
@@ -1265,6 +1279,14 @@ namespace ProtoBuf
         {
             trapCount++;
             netCache.SetKeyedObject(newObjectKey, null); // use null as a temp
+        }
+
+        internal void CheckFullyConsumed()
+        {
+            if (isFixedLength && dataRemaining != 0)
+            {
+                throw new ProtoException("Incorrect number of bytes consumed");
+            }
         }
     }
 }

@@ -220,6 +220,24 @@ namespace ProtoBuf.Meta
 #endif
         }
         /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
+        /// </summary>
+        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="dest">The destination writer to write to.</param>
+        public void Serialize(ProtoWriter dest, object value)
+        {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
+            dest.CheckDepthFlushlock();
+            dest.SetRootObject(value);
+            SerializeCore(dest, value);
+            dest.CheckDepthFlushlock();
+            ProtoWriter.Flush(dest);
+#endif
+        }
+
+        /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
         /// data - useful with network IO.
         /// </summary>
@@ -625,14 +643,33 @@ namespace ProtoBuf.Meta
             {
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeCore(reader, type, value, autoCreate);
-                if (length >= 0 && reader.Position != length)
-                {
-                    throw new ProtoException("Incorrect number of bytes consumed");
-                }
+                reader.CheckFullyConsumed();
                 return obj;
             }
 #endif
         }
+        /// <summary>
+        /// Applies a protocol-buffer reader to an existing instance (which may be null).
+        /// </summary>
+        /// <param name="type">The type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The reader to apply to the instance (cannot be null).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        public object Deserialize(ProtoReader source, object value, System.Type type)
+        {
+#if FEAT_IKVM
+            throw new NotSupportedException();
+#else
+            bool autoCreate = PrepareDeserialize(value, ref type);
+            if (value != null) source.SetRootObject(value);
+            object obj = DeserializeCore(source, type, value, autoCreate);
+            source.CheckFullyConsumed();
+            return obj;
+#endif
+        }
+
 #if !FEAT_IKVM
         private object DeserializeCore(ProtoReader reader, Type type, object value, bool noAutoCreate)
         {

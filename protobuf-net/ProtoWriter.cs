@@ -498,13 +498,24 @@ namespace ProtoBuf
             if (depth != 0 || flushLock != 0) throw new InvalidOperationException("Unable to close stream in an incomplete state");
             Dispose();
         }
+
+        internal void CheckDepthFlushlock()
+        {
+            if (depth != 0 || flushLock != 0) throw new InvalidOperationException("The writer is in an incomplete state");
+        }
+
+        /// <summary>
+        /// Get the TypeModel associated with this writer
+        /// </summary>
+        public TypeModel Model { get { return model; } }
+
         /// <summary>
         /// Writes any buffered data (if possible) to the underlying stream.
         /// </summary>
         /// <param name="writer">The writer to flush</param>
         /// <remarks>It is not always possible to fully flush, since some sequences
         /// may require values to be back-filled into the byte-stream.</remarks>
-        private static void Flush(ProtoWriter writer)
+        internal static void Flush(ProtoWriter writer)
         {
             if (writer.flushLock == 0 && writer.ioIndex != 0)
             {
