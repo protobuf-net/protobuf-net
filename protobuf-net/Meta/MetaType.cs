@@ -166,17 +166,6 @@ namespace ProtoBuf.Meta
         {
             get { return subTypes != null && subTypes.Count != 0; }
         }
-        
-        /// <summary>
-        /// Obtains the subtypes that are defined for the current type
-        /// </summary>
-        public SubType[] GetSubtypes()
-        {
-            if (!HasSubtypes) return new SubType[0];
-            SubType[] arr = new SubType[subTypes.Count];
-            subTypes.CopyTo(arr, 0);
-            return arr;
-        }
 
         /// <summary>
         /// Returns the set of callbacks defined for this type
@@ -1485,7 +1474,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Returns the SubType instances associated with this type
         /// </summary>
-        public SubType[] GetSubTypes()
+        public SubType[] GetSubtypes()
         {
             if (subTypes == null || subTypes.Count == 0) return new SubType[0];
             SubType[] arr = new SubType[subTypes.Count];
