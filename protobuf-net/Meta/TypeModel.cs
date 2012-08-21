@@ -1335,17 +1335,60 @@ namespace ProtoBuf.Meta
         /// <returns>True if this type is recognised as a serializable entity, else false</returns>
         public bool CanSerializeContractType(Type type)
         {
-            int key = GetKey(ref type);
-            if (key >= 0) return true; // direct entity support
+            return CanSerialize(type, false, true, true);
+        }
 
-            Type itemType = GetListItemType(this, type);
-            if (itemType != null)
+        /// <summary>
+        /// Returns true if the type supplied is a basic type with inbuilt handling,
+        /// a recognised contract type, or a *list* of a basic / contract type. 
+        /// </summary>
+        public bool CanSerialize(Type type)
+        {
+            return CanSerialize(type, true, true, true);
+        }
+
+        /// <summary>
+        /// Returns true if the type supplied is a basic type with inbuilt handling,
+        /// or a *list* of a basic type with inbuilt handling
+        /// </summary>
+        public bool CanSerializeBasicType(Type type)
+        {
+            return CanSerialize(type, true, false, true);
+        }
+        private bool CanSerialize(Type type, bool allowBasic, bool allowContract, bool allowLists)
+        {
+            if (type == null) throw new ArgumentNullException("type");
+            Type tmp = Helpers.GetUnderlyingType(type);
+            if (tmp != null) type = tmp;
+
+            // is it a basic type?
+            ProtoTypeCode typeCode = Helpers.GetTypeCode(type);
+            switch(typeCode)
             {
-                key = GetKey(ref itemType);
-                if (key >= 0) return true; // list-of-entity support
+                case ProtoTypeCode.Empty:
+                case ProtoTypeCode.Unknown:
+                    break;
+                default:
+                    return allowBasic; // well-known basic type
             }
+            int modelKey = GetKey(ref type);
+            if (modelKey >= 0) return allowContract; // known contract type
 
-            return false; // oh no you don't!
+            // is it a list?
+            if (allowLists)
+            {
+                Type itemType = null;
+                if (type.IsArray)
+                {   // note we don't need to exclude byte[], as that is handled by GetTypeCode already
+                    if (type.GetArrayRank() == 1) itemType = type.GetElementType();
+                }
+                else
+                {
+                    itemType = GetListItemType(this, type);
+                }
+                if (itemType != null) return CanSerialize(itemType, allowBasic, allowContract, false);
+            }
+            return false;
         }
 
         /// <summary>
