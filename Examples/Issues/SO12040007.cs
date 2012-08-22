@@ -144,7 +144,7 @@ namespace Examples.Issues
             Assert.IsTrue(model.CanSerialize(typeof(int?[])), "int?");
             Assert.IsTrue(model.CanSerialize(typeof(short[])), "short");
             Assert.IsTrue(model.CanSerialize(typeof(short?[])), "short?");
-            Assert.IsFalse(model.CanSerialize(typeof(byte[][])), "byte[]");
+            Assert.IsTrue(model.CanSerialize(typeof(byte[][])), "byte[]");
             Assert.IsTrue(model.CanSerialize(typeof(string[])), "string");
             Assert.IsTrue(model.CanSerialize(typeof(DateTime[])), "DateTime");
             Assert.IsTrue(model.CanSerialize(typeof(DateTime?[])), "DateTime?");

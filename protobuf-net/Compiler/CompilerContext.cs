@@ -501,6 +501,7 @@ namespace ProtoBuf.Compiler
         public void EmitCall(MethodInfo method)
         {
             Helpers.DebugAssert(method != null);
+            CheckAccessibility(method);
             OpCode opcode = (method.IsStatic || method.DeclaringType.IsValueType) ? OpCodes.Call : OpCodes.Callvirt;
             il.EmitCall(opcode, method, null);
 #if DEBUG_COMPILE
@@ -603,6 +604,7 @@ namespace ProtoBuf.Compiler
         public void EmitCtor(ConstructorInfo ctor)
         {
             if (ctor == null) throw new ArgumentNullException("ctor");
+            CheckAccessibility(ctor);
             il.Emit(OpCodes.Newobj, ctor);
 #if DEBUG_COMPILE
             Helpers.DebugWriteLine(OpCodes.Newobj + ": " + ctor.DeclaringType);
@@ -624,15 +626,72 @@ namespace ProtoBuf.Compiler
             {
                 ConstructorInfo ctor =  Helpers.GetConstructor(type, parameterTypes, true);
                 if (ctor == null) throw new InvalidOperationException("No suitable constructor found for " + type.FullName);
-                il.Emit(OpCodes.Newobj, ctor);
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Newobj + ": " + type);
-#endif
+                EmitCtor(ctor);
+            }
+        }
+
+        internal void CheckAccessibility(MemberInfo member)
+        {
+            if (member == null)
+            {
+                throw new ArgumentNullException("member");
+            }
+
+            if (!NonPublic)
+            {
+                bool isPublic;
+                switch (member.MemberType)
+                {
+                    case MemberTypes.TypeInfo:
+                        isPublic = ((Type)member).IsPublic;
+                        break;
+                    case MemberTypes.NestedType:
+                        Type type = (Type)member;
+                        do
+                        {
+                            isPublic = type.IsNestedPublic || type.IsPublic;
+                        } while (isPublic && (type = type.DeclaringType) != null);
+                        break;
+                    case MemberTypes.Field:
+                        isPublic = ((FieldInfo)member).IsPublic;
+                        break;
+                    case MemberTypes.Constructor:
+                        isPublic = ((ConstructorInfo)member).IsPublic;
+                        break;
+                    case MemberTypes.Method:
+                        isPublic = ((MethodInfo)member).IsPublic;
+                        if (!isPublic)
+                        {
+                            // allow calls to TypeModel protected methods, and methods we are in the process of creating
+                            if(member is MethodBuilder || member.DeclaringType == MapType(typeof(TypeModel))) isPublic = true; 
+                        }
+                        break;
+                    case MemberTypes.Property:
+                        isPublic = true; // defer to get/set
+                        break;
+                    default:
+                        throw new NotSupportedException(member.MemberType.ToString());
+                }
+                if (!isPublic)
+                {
+                    switch (member.MemberType)
+                    {
+                        case MemberTypes.TypeInfo:
+                        case MemberTypes.NestedType:
+                            throw new InvalidOperationException("Non-public type cannot be used with full dll compilation: " +
+                                ((Type)member).FullName);
+                        default:
+                            throw new InvalidOperationException("Non-public member cannot be used with full dll compilation: " +
+                                member.DeclaringType.FullName + "." + member.Name);
+                    }
+                    
+                }
             }
         }
 
         public void LoadValue(FieldInfo field)
         {
+            CheckAccessibility(field);
             OpCode code = field.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld;
             il.Emit(code, field);
 #if DEBUG_COMPILE
@@ -659,6 +718,7 @@ namespace ProtoBuf.Compiler
 #endif
         public void StoreValue(FieldInfo field)
         {
+            CheckAccessibility(field);
             OpCode code = field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld;
             il.Emit(code, field);
 #if DEBUG_COMPILE
@@ -667,11 +727,13 @@ namespace ProtoBuf.Compiler
         }
         public void LoadValue(PropertyInfo property)
         {
-            EmitCall(Helpers.GetGetMethod(property, NonPublic));
+            CheckAccessibility(property);
+            EmitCall(Helpers.GetGetMethod(property, true));
         }
         public void StoreValue(PropertyInfo property)
         {
-            EmitCall(Helpers.GetSetMethod(property, NonPublic));
+            CheckAccessibility(property);
+            EmitCall(Helpers.GetSetMethod(property, true));
         }
 
         internal void EmitInstance()

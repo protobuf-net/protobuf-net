@@ -168,6 +168,7 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Runtime.Serialization.Formatters.Soap" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -292,6 +293,7 @@
     <Compile Include="Issues\SO7686734.cs" />
     <Compile Include="Issues\SO7719000.cs" />
     <Compile Include="Issues\SO7727355.cs" />
+    <Compile Include="Issues\SO7793527.cs" />
     <Compile Include="Issues\SO8093623.cs" />
     <Compile Include="Issues\SO8466936.cs" />
     <Compile Include="Issues\SO9144967.cs" />
@@ -309,6 +311,7 @@
     <Compile Include="MultiTypesWithLengthPrefix.cs" />
     <Compile Include="NetObjectOptions.cs" />
     <Compile Include="NonGeneric.cs" />
+    <Compile Include="NonPublic_Compile.cs" />
     <Compile Include="NonSeekableStreams.cs" />
     <Compile Include="NWind\CompatDb.cs" />
     <Compile Include="NWind\DataContext.cs" />

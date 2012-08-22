@@ -997,6 +997,7 @@ namespace ProtoBuf.Meta
             {
                 SerializerPair pair = methodPairs[index];
                 ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion);
+                ctx.CheckAccessibility(pair.Deserialize.ReturnType);
                 pair.Type.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
                 ctx.Return();
 
