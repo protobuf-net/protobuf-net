@@ -1236,8 +1236,15 @@ namespace ProtoBuf.Meta
             // no point in offering chaining; no options are respected
         }
 
-        internal MetaType SurrogateOrSelf {
-            get { return surrogate == null ? this : model[surrogate]; }
+        internal MetaType GetSurrogateOrSelf()
+        {
+            if (surrogate != null) return model[surrogate];
+            return this;
+        }
+        internal MetaType GetSurrogateOrBaseOrSelf() {
+            if(surrogate != null) return model[surrogate];
+            if(baseType != null) return baseType;
+            return this;
         }
         
         private int GetNextFieldNumber()

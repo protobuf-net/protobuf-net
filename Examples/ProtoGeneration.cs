@@ -209,6 +209,33 @@ message MySurrogate {
 }
 ", proto);
         }
+
+        [Test]
+        public void InheritanceShouldCiteBaseType()
+        {
+            string proto = Serializer.GetProto<Dictionary<string, Cat>>();
+            Assert.AreEqual(@"package Examples;
+
+message Animal {
+   // the following represent sub-types; at most 1 should have a value
+   optional Cat Cat = 1;
+}
+message Cat {
+}
+message Dictionary_String_Cat {
+   repeated KeyValuePair_String_Cat items = 1;
+}
+message KeyValuePair_String_Cat {
+   optional string Key = 1;
+   optional Animal Value = 2;
+}
+", proto);
+        }
+
+        [ProtoContract, ProtoInclude(1, typeof(Cat))] public class Animal {}
+        [ProtoContract] public class Cat : Animal {}
+
+
         [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = @"The type specified is not a contract-type
 Parameter name: type")]
         public void ProtoForNonContractTypeShouldThrowException()
