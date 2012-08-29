@@ -119,11 +119,78 @@ message EvilParent {
 ", proto);
         }
 
-        [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage=@"The type specified is a list; schema-generation requires a non-list contract type
-Parameter name: type")]
-        public void ProtoForListsShouldThrowException()
+        [Test]
+        public void ProtoForContractListsShouldGenerateSchema()
         {
-            Serializer.GetProto<List<ProtoGenerationTypes.BrokenProto.Type2>>();
+            string proto = GetSurrogateModel().GetSchema(typeof(List<MySurrogate>));
+            Assert.AreEqual(@"package Examples;
+
+message List_MySurrogate {
+   repeated MySurrogate items = 1;
+}
+message MySurrogate {
+}
+", proto);
+        }
+
+        [Test]
+        public void ProtoForContractViaSurrogateListsShouldGenerateSchema()
+        {
+            string proto = GetSurrogateModel().GetSchema(typeof(List<MyNonSurrogate>));
+            Assert.AreEqual(@"package Examples;
+
+message List_MyNonSurrogate {
+   repeated MySurrogate items = 1;
+}
+message MySurrogate {
+}
+", proto);
+        }
+
+        [Test]
+        public void ProtoForPrimitiveListsShouldGenerateSchema()
+        {
+            string proto = Serializer.GetProto<List<int>>();
+            Assert.AreEqual(@"
+message List_Int32 {
+   repeated int32 items = 1;
+}
+", proto);
+        }
+
+        [Test]
+        public void ProtoForPrimitiveShouldGenerateSchema()
+        {
+            string proto = Serializer.GetProto<int>();
+            Assert.AreEqual(@"
+message Int32 {
+   optional int32 value = 1;
+}
+", proto);
+        }
+        [Test]
+        public void ProtoForNullablePrimitiveShouldGenerateSchema()
+        {
+            string proto = Serializer.GetProto<int?>();
+            Assert.AreEqual(@"
+message Int32 {
+   optional int32 value = 1;
+}
+", proto);
+        }
+        [Test]
+        public void ProtoForDictionaryShouldGenerateSchema()
+        {
+            string proto = Serializer.GetProto<Dictionary<string,int>>();
+            Assert.AreEqual(@"
+message Dictionary_String_Int32 {
+   repeated KeyValuePair_String_Int32 items = 1;
+}
+message KeyValuePair_String_Int32 {
+   optional string Key = 1;
+   optional int32 Value = 2;
+}
+", proto);
         }
         [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = @"The type specified is not a contract-type
 Parameter name: type")]
@@ -155,6 +222,8 @@ message HasPrimitives {
             model.Add(typeof(MySurrogate), true);
             model.Add(typeof(MyNonSurrogate), false).SetSurrogate(typeof(MySurrogate));
             model.Add(typeof(UsesSurrogates), true);
+            model.Add(typeof(List<MySurrogate>), true);
+            model.Add(typeof(List<MyNonSurrogate>), true);
             return model;
         }
         [Test]

@@ -135,6 +135,8 @@ namespace ProtoBuf.Meta
         public override string GetSchema(Type type)
         {
             BasicList requiredTypes = new BasicList();
+            MetaType primaryType = null;
+            bool isInbuiltType = false;
             if (type == null)
             { // generate for the entire model
                 foreach(MetaType meta in types)
@@ -148,31 +150,39 @@ namespace ProtoBuf.Meta
                 }
             }
             else
-            { // generate just relative to the supplied type
-                int index = FindOrAddAuto(type, false, false, false);
-                if (index < 0) throw new ArgumentException("The type specified is not a contract-type", "type");
+            {
+                Type tmp = Helpers.GetUnderlyingType(type);
+                if (tmp != null) type = tmp;
 
-                // get the required types
-                MetaType meta = ((MetaType) types[index]).SurrogateOrSelf;
-                if (meta.IsList)
+                WireType defaultWireType;
+                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false) != null);
+                if (!isInbuiltType)
                 {
-                    throw new ArgumentException("The type specified is a list; schema-generation requires a non-list contract type", "type");
+                    //Agenerate just relative to the supplied type
+                    int index = FindOrAddAuto(type, false, false, false);
+                    if (index < 0) throw new ArgumentException("The type specified is not a contract-type", "type");
+
+                    // get the required types
+                    primaryType = ((MetaType)types[index]).SurrogateOrSelf;
+                    requiredTypes.Add(primaryType);
+                    CascadeDependents(requiredTypes, primaryType);
                 }
-                requiredTypes.Add(meta);
-                CascadeDependents(requiredTypes, meta);
             }
 
             // use the provided type's namespace for the "package"
             StringBuilder headerBuilder = new StringBuilder();
             string package = null;
-            if(type == null)
+
+            if (!isInbuiltType)
             {
-                foreach(MetaType meta in types)
+                IEnumerable typesForNamespace = primaryType == null ? types : requiredTypes;
+                foreach (MetaType meta in typesForNamespace)
                 {
                     if (meta.IsList) continue;
                     string tmp = meta.Type.Namespace;
-                    if(!Helpers.IsNullOrEmpty(tmp))
+                    if (!Helpers.IsNullOrEmpty(tmp))
                     {
+                        if (tmp.StartsWith("System.")) continue;
                         if (package == null)
                         { // haven't seen any suggestions yet
                             package = tmp;
@@ -188,10 +198,7 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-            else
-            {
-                package = type.Namespace;
-            }
+
             if (!Helpers.IsNullOrEmpty(package))
             {
                 headerBuilder.Append("package ").Append(package).Append(';');
@@ -206,10 +213,21 @@ namespace ProtoBuf.Meta
             Array.Sort(metaTypesArr, MetaType.Comparer.Default);
 
             // write the messages
-            for (int i = 0; i < metaTypesArr.Length; i++ )
+            if (isInbuiltType)
             {
-                if (metaTypesArr[i].IsList) continue;
-                metaTypesArr[i].WriteSchema(bodyBuilder, 0, ref requiresBclImport);
+                Helpers.AppendLine(bodyBuilder).Append("message ").Append(type.Name).Append(" {");
+                MetaType.NewLine(bodyBuilder, 1).Append("optional ").Append(GetSchemaTypeName(type, DataFormat.Default, false, false, ref requiresBclImport))
+                    .Append(" value = 1;");
+                Helpers.AppendLine(bodyBuilder).Append('}');
+            }
+            else
+            {
+                for (int i = 0; i < metaTypesArr.Length; i++)
+                {
+                    MetaType tmp = metaTypesArr[i];
+                    if (tmp.IsList && tmp != primaryType) continue;
+                    tmp.WriteSchema(bodyBuilder, 0, ref requiresBclImport);
+                }
             }
             if (requiresBclImport)
             {
@@ -221,16 +239,14 @@ namespace ProtoBuf.Meta
         private void CascadeDependents(BasicList list, MetaType metaType)
         {
             MetaType tmp;
-            foreach(ValueMember member in metaType.Fields)
+            if (metaType.IsList)
             {
-                Type type = member.ItemType;
-                if(type == null) type = member.MemberType;
+                Type itemType = TypeModel.GetListItemType(this, metaType.Type);
                 WireType defaultWireType;
-                IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false);
+                IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, itemType, out defaultWireType, false, false, false, false);
                 if (coreSerializer == null)
                 {
-                    // is an interesting type
-                    int index = FindOrAddAuto(type, false, false, false);
+                    int index = FindOrAddAuto(itemType, false, false, false);
                     if (index >= 0)
                     {
                         tmp = ((MetaType)types[index]).SurrogateOrSelf;
@@ -242,24 +258,48 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-            if (metaType.HasSubtypes)
+            else
             {
-                foreach (SubType subType in metaType.GetSubtypes())
+                foreach (ValueMember member in metaType.Fields)
                 {
-                    tmp = subType.DerivedType.SurrogateOrSelf;
-                    if (!list.Contains(tmp))
+                    Type type = member.ItemType;
+                    if (type == null) type = member.MemberType;
+                    WireType defaultWireType;
+                    IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false);
+                    if (coreSerializer == null)
                     {
-                        list.Add(tmp);
-                        CascadeDependents(list, tmp);
+                        // is an interesting type
+                        int index = FindOrAddAuto(type, false, false, false);
+                        if (index >= 0)
+                        {
+                            tmp = ((MetaType)types[index]).SurrogateOrSelf;
+                            if (!list.Contains(tmp))
+                            { // could perhaps also implement as a queue, but this should work OK for sane models
+                                list.Add(tmp);
+                                CascadeDependents(list, tmp);
+                            }
+                        }
                     }
                 }
-            }
-            tmp = metaType.BaseType;
-            if (tmp != null) tmp = tmp.SurrogateOrSelf;
-            if (tmp != null && !list.Contains(tmp))
-            {
-                list.Add(tmp);
-                CascadeDependents(list, tmp);
+                if (metaType.HasSubtypes)
+                {
+                    foreach (SubType subType in metaType.GetSubtypes())
+                    {
+                        tmp = subType.DerivedType.SurrogateOrSelf;
+                        if (!list.Contains(tmp))
+                        {
+                            list.Add(tmp);
+                            CascadeDependents(list, tmp);
+                        }
+                    }
+                }
+                tmp = metaType.BaseType;
+                if (tmp != null) tmp = tmp.SurrogateOrSelf;
+                if (tmp != null && !list.Contains(tmp))
+                {
+                    list.Add(tmp);
+                    CascadeDependents(list, tmp);
+                }
             }
         }
 
@@ -1455,7 +1495,7 @@ namespace ProtoBuf.Meta
                     requiresBclImport = true;
                     return "bcl.NetObjectProxy";
                 }
-                return this[effectiveType].GetSchemaTypeName();
+                return this[effectiveType].SurrogateOrSelf.GetSchemaTypeName();
             }
             else
             {

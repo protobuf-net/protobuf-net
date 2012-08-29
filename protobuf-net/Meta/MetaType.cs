@@ -1623,17 +1623,27 @@ namespace ProtoBuf.Meta
 
         internal System.Collections.IEnumerable Fields { get { return this.fields; } }
 
-        private System.Text.StringBuilder NewLine(System.Text.StringBuilder builder, int indent)
+        internal static System.Text.StringBuilder NewLine(System.Text.StringBuilder builder, int indent)
         {
             return Helpers.AppendLine(builder).Append(' ', indent*3);
         }
         internal void WriteSchema(System.Text.StringBuilder builder, int indent, ref bool requiresBclImport)
         {
             if (surrogate != null) return; // nothing to write
+
+
             ValueMember[] fieldsArr = new ValueMember[fields.Count];
             fields.CopyTo(fieldsArr, 0);
             Array.Sort(fieldsArr, ValueMember.Comparer.Default);
-            if (HasFlag(OPTIONS_AutoTuple))
+
+            if (IsList)
+            {
+                string itemTypeName = model.GetSchemaTypeName(TypeModel.GetListItemType(model, type), DataFormat.Default, false, false, ref requiresBclImport);
+                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
+                NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
+                NewLine(builder, indent).Append('}');
+            }
+            else if (HasFlag(OPTIONS_AutoTuple))
             { // key-value-pair etc
                 MemberInfo[] mapping;
                 ResolveTupleConstructor(type, out mapping);
