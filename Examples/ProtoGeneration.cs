@@ -211,6 +211,7 @@ message UsesSurrogates {
 ", proto);
         }
 
+
         [ProtoContract]
         public class UsesSurrogates
         {

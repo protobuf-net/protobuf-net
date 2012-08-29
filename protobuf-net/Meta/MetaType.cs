@@ -229,7 +229,7 @@ namespace ProtoBuf.Meta
         internal string GetSchemaTypeName()
         {
             if (surrogate != null) return model[surrogate].GetSchemaTypeName();
-            
+
             if (!Helpers.IsNullOrEmpty(name)) return name;
 #if !NO_GENERICS
             if (type
@@ -253,8 +253,9 @@ namespace ProtoBuf.Meta
                     Type tmp = arg;
                     int key = model.GetKey(ref tmp);
                     MetaType mt;
-                    if (key >= 0 && (mt = model[tmp]) != null)
+                    if (key >= 0 && (mt = model[tmp]) != null && mt.surrogate == null) // <=== need to exclude surrogate to avoid chance of infinite loop
                     {
+                        
                         sb.Append(mt.GetSchemaTypeName());
                     }
                     else

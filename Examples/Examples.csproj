@@ -206,6 +206,7 @@
     <Compile Include="Inheritance.cs" />
     <Compile Include="InheritanceMidLevel.cs" />
     <Compile Include="InternerTests.cs" />
+    <Compile Include="Issues\Issue316.cs" />
     <Compile Include="Issues\SO11896228.cs" />
     <Compile Include="Issues\AssortedGoLiveRegressions.cs" />
     <Compile Include="Issues\ComplexGenerics\ComplexGenericExample.cs" />
