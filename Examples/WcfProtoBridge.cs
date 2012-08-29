@@ -7,9 +7,10 @@ using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
-#if (FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER) || (SILVERLIGHT && !PHONE7)
+//#if (FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER) || (SILVERLIGHT && !PHONE7)
 namespace Examples
 {
+    using ProtoBuf.ServiceModel;
     [TestFixture]
     public class WcfProtoBridge
     {
@@ -74,4 +75,4 @@ namespace Examples
         }
     }
 }
-#endif
+//#endif

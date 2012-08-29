@@ -147,6 +147,92 @@ message HasPrimitives {
 }
 ", proto);
         }
+
+        static TypeModel GetSurrogateModel() {
+
+            var model = TypeModel.Create();
+            model.AutoAddMissingTypes = false;
+            model.Add(typeof(MySurrogate), true);
+            model.Add(typeof(MyNonSurrogate), false).SetSurrogate(typeof(MySurrogate));
+            model.Add(typeof(UsesSurrogates), true);
+            return model;
+        }
+        [Test]
+        public void SchemaNameForSurrogateShouldBeSane()
+        {
+            
+            string proto = GetSurrogateModel().GetSchema(typeof(MySurrogate));
+
+            Assert.AreEqual(@"package Examples;
+
+message MySurrogate {
+}
+", proto);
+        }
+        [Test]
+        public void SchemaNameForNonSurrogateShouldBeSane()
+        {
+            string proto = GetSurrogateModel().GetSchema(typeof(MyNonSurrogate));
+
+            Assert.AreEqual(@"package Examples;
+
+message MySurrogate {
+}
+", proto);
+        }
+        [Test]
+        public void SchemaNameForTypeUsingSurrogatesShouldBeSane()
+        {
+            string proto = GetSurrogateModel().GetSchema(typeof(UsesSurrogates));
+
+            Assert.AreEqual(@"package Examples;
+
+message MySurrogate {
+}
+message UsesSurrogates {
+   optional MySurrogate A = 1;
+   optional MySurrogate B = 2;
+}
+", proto);
+        }
+        [Test]
+        public void EntireSchemaShouldNotIncludeNonSurrogates()
+        {
+            string proto = GetSurrogateModel().GetSchema(null);
+
+            Assert.AreEqual(@"package Examples;
+
+message MySurrogate {
+}
+message UsesSurrogates {
+   optional MySurrogate A = 1;
+   optional MySurrogate B = 2;
+}
+", proto);
+        }
+
+        [ProtoContract]
+        public class UsesSurrogates
+        {
+            [ProtoMember(1)]
+            public MySurrogate A { get; set; }
+
+            [ProtoMember(2)]
+            public MyNonSurrogate B { get; set; }
+        }
+        [ProtoContract]
+        public class MySurrogate
+        {
+            public static implicit operator MyNonSurrogate(MySurrogate value)
+            {
+                return value == null ? null : new MyNonSurrogate();
+            }
+            public static implicit operator MySurrogate(MyNonSurrogate value)
+            {
+                return value == null ? null : new MySurrogate();
+            }
+        }
+        public class MyNonSurrogate { }
     }
 }
 

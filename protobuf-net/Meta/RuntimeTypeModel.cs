@@ -139,10 +139,11 @@ namespace ProtoBuf.Meta
             { // generate for the entire model
                 foreach(MetaType meta in types)
                 {
-                    if(!requiredTypes.Contains(meta))
+                    MetaType tmp = meta.SurrogateOrSelf;
+                    if (!requiredTypes.Contains(tmp))
                     { // ^^^ note that the type might have been added as a descendent
-                        requiredTypes.Add(meta);
-                        CascadeDependents(requiredTypes, meta);
+                        requiredTypes.Add(tmp);
+                        CascadeDependents(requiredTypes, tmp);
                     }
                 }
             }
@@ -152,7 +153,7 @@ namespace ProtoBuf.Meta
                 if (index < 0) throw new ArgumentException("The type specified is not a contract-type", "type");
 
                 // get the required types
-                MetaType meta = (MetaType) types[index];
+                MetaType meta = ((MetaType) types[index]).SurrogateOrSelf;
                 if (meta.IsList)
                 {
                     throw new ArgumentException("The type specified is a list; schema-generation requires a non-list contract type", "type");
@@ -219,6 +220,7 @@ namespace ProtoBuf.Meta
         }
         private void CascadeDependents(BasicList list, MetaType metaType)
         {
+            MetaType tmp;
             foreach(ValueMember member in metaType.Fields)
             {
                 Type type = member.ItemType;
@@ -231,11 +233,11 @@ namespace ProtoBuf.Meta
                     int index = FindOrAddAuto(type, false, false, false);
                     if (index >= 0)
                     {
-                        MetaType next = (MetaType)types[index];
-                        if (!list.Contains(next))
+                        tmp = ((MetaType)types[index]).SurrogateOrSelf;
+                        if (!list.Contains(tmp))
                         { // could perhaps also implement as a queue, but this should work OK for sane models
-                            list.Add(next);
-                            CascadeDependents(list, next);
+                            list.Add(tmp);
+                            CascadeDependents(list, tmp);
                         }
                     }
                 }
@@ -244,17 +246,20 @@ namespace ProtoBuf.Meta
             {
                 foreach (SubType subType in metaType.GetSubtypes())
                 {
-                    if (!list.Contains(subType.DerivedType))
+                    tmp = subType.DerivedType.SurrogateOrSelf;
+                    if (!list.Contains(tmp))
                     {
-                        list.Add(subType.DerivedType);
-                        CascadeDependents(list, subType.DerivedType);
+                        list.Add(tmp);
+                        CascadeDependents(list, tmp);
                     }
                 }
             }
-            if (metaType.BaseType != null && !list.Contains(metaType.BaseType))
+            tmp = metaType.BaseType;
+            if (tmp != null) tmp = tmp.SurrogateOrSelf;
+            if (tmp != null && !list.Contains(tmp))
             {
-                list.Add(metaType.BaseType);
-                CascadeDependents(list, metaType.BaseType);
+                list.Add(tmp);
+                CascadeDependents(list, tmp);
             }
         }
 
