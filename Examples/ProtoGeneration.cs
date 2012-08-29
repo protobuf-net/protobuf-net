@@ -192,6 +192,23 @@ message KeyValuePair_String_Int32 {
 }
 ", proto);
         }
+        [Test]
+        public void ProtoForDictionaryShouldIncludeSchemasForContainedTypes()
+        {
+            string proto = Serializer.GetProto<Dictionary<string, MySurrogate>>();
+            Assert.AreEqual(@"package Examples;
+
+message Dictionary_String_MySurrogate {
+   repeated KeyValuePair_String_MySurrogate items = 1;
+}
+message KeyValuePair_String_MySurrogate {
+   optional string Key = 1;
+   optional MySurrogate Value = 2;
+}
+message MySurrogate {
+}
+", proto);
+        }
         [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = @"The type specified is not a contract-type
 Parameter name: type")]
         public void ProtoForNonContractTypeShouldThrowException()

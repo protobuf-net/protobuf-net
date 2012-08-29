@@ -426,7 +426,7 @@ namespace ProtoBuf.Meta
                 while ((mtBase = mt.baseType) != null) { mt = mtBase; }
                 return new SurrogateSerializer(type, surrogate, mt.Serializer);
             }
-            if (HasFlag(OPTIONS_AutoTuple))
+            if (IsAutoTuple)
             {
                 MemberInfo[] mapping;
                 ConstructorInfo ctor = ResolveTupleConstructor(type, out mapping);
@@ -795,7 +795,7 @@ namespace ProtoBuf.Meta
             }
             return family;
         }
-        private static ConstructorInfo ResolveTupleConstructor(Type type, out MemberInfo[] mappedMembers)
+        internal static ConstructorInfo ResolveTupleConstructor(Type type, out MemberInfo[] mappedMembers)
         {
             mappedMembers = null;
             if(type == null) throw new ArgumentNullException("type");
@@ -1627,6 +1627,10 @@ namespace ProtoBuf.Meta
         {
             return Helpers.AppendLine(builder).Append(' ', indent*3);
         }
+        internal bool IsAutoTuple
+        {
+            get { return HasFlag(OPTIONS_AutoTuple); }
+        }
         internal void WriteSchema(System.Text.StringBuilder builder, int indent, ref bool requiresBclImport)
         {
             if (surrogate != null) return; // nothing to write
@@ -1643,28 +1647,30 @@ namespace ProtoBuf.Meta
                 NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
                 NewLine(builder, indent).Append('}');
             }
-            else if (HasFlag(OPTIONS_AutoTuple))
+            else if (IsAutoTuple)
             { // key-value-pair etc
                 MemberInfo[] mapping;
-                ResolveTupleConstructor(type, out mapping);
-                NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
-                for(int i = 0 ; i < mapping.Length ; i++)
+                if(ResolveTupleConstructor(type, out mapping) != null)
                 {
-                    Type effectiveType;
-                    if(mapping[i] is PropertyInfo)
+                    NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
+                    for(int i = 0 ; i < mapping.Length ; i++)
                     {
-                        effectiveType = ((PropertyInfo) mapping[i]).PropertyType;
-                    } else if (mapping[i] is FieldInfo)
-                    {
-                        effectiveType = ((FieldInfo) mapping[i]).FieldType;
-                    } else
-                    {
-                        throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
+                        Type effectiveType;
+                        if(mapping[i] is PropertyInfo)
+                        {
+                            effectiveType = ((PropertyInfo) mapping[i]).PropertyType;
+                        } else if (mapping[i] is FieldInfo)
+                        {
+                            effectiveType = ((FieldInfo) mapping[i]).FieldType;
+                        } else
+                        {
+                            throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
+                        }
+                        NewLine(builder, indent + 1).Append("optional ").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false, ref requiresBclImport).Replace('.','_'))
+                            .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
                     }
-                    NewLine(builder, indent + 1).Append("optional ").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false, ref requiresBclImport).Replace('.','_'))
-                        .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
+                    NewLine(builder, indent).Append('}');
                 }
-                NewLine(builder, indent).Append('}');
             }
             else if(Helpers.IsEnum(type))
             {
