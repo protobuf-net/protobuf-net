@@ -132,9 +132,9 @@ namespace Examples.Issues
         {
             var model = GetModel();
             model.Serialize(Stream.Null, GetData()); // to bring the other types into play
-#pragma warning disable 0618
+
             string schema = model.GetSchema(null);
-#pragma warning restore 0618
+
             Assert.AreEqual(@"package Examples.Issues;
 
 message Assemblage {

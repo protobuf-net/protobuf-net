@@ -42,7 +42,6 @@ namespace ProtoBuf
         /// </summary>
         /// <typeparam name="T">The type to generate a .proto definition for</typeparam>
         /// <returns>The .proto definition as a string</returns>
-        [Obsolete("GetProto is experimental and newly implemented; treat with caution")]
         public static string GetProto<T>()
         {
             return RuntimeTypeModel.Default.GetSchema(RuntimeTypeModel.Default.MapType(typeof(T)));

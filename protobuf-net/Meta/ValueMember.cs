@@ -574,11 +574,11 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_SupportNull, value, true);}
         }
 
-        internal string GetSchemaTypeName(bool applyNetObjectProxy)
+        internal string GetSchemaTypeName(bool applyNetObjectProxy, ref bool requiresBclImport)
         {
             Type effectiveType = ItemType;
             if (effectiveType == null) effectiveType = MemberType;
-            return model.GetSchemaTypeName(effectiveType, DataFormat, applyNetObjectProxy && asReference, applyNetObjectProxy && dynamicType);
+            return model.GetSchemaTypeName(effectiveType, DataFormat, applyNetObjectProxy && asReference, applyNetObjectProxy && dynamicType, ref requiresBclImport);
         }
 
         

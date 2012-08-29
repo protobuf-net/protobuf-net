@@ -15,7 +15,7 @@ namespace Examples.Issues
         {
 #pragma warning disable  0618
             string proto = Serializer.GetProto<Animal>();
-#pragma warning restore 0618
+
             Assert.AreEqual(@"package Examples.Issues;
 
 message Animal {

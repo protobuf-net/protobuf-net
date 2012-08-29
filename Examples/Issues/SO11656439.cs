@@ -114,9 +114,9 @@ namespace Examples.Issues
         {
             var model = TypeModel.Create();
             model.Add(typeof (ListWrapper), true);
-#pragma warning disable 0618
+
             var schema = model.GetSchema(null);
-#pragma warning restore 0618
+
             Assert.AreEqual(@"package Examples.Issues;
 
 message ListWrapper {

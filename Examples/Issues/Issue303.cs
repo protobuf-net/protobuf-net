@@ -36,9 +36,9 @@ message vegetable {
    optional int32 size = 1 [default = 0];
 }
 ",
-#pragma warning disable 0618
+
  model.GetSchema(null)
-#pragma warning restore 0618
+
 );
         }
         [Test]
@@ -62,9 +62,9 @@ message vegetable {
    optional int32 size = 1 [default = 0];
 }
 ",
-#pragma warning disable 0618
+
  model.GetSchema(null)
-#pragma warning restore 0618
+
 );
         }
         [Test]
@@ -83,9 +83,9 @@ message cat {
    repeated animal animalsHunted = 1;
 }
 ",
-#pragma warning disable 0618
+
                 model.GetSchema(typeof(Animal))
-#pragma warning restore 0618
+
                 );
         }
         [Test]
@@ -104,9 +104,9 @@ message cat {
    repeated animal animalsHunted = 1;
 }
 ",
-#pragma warning disable 0618
+
                 model.GetSchema(typeof(Animal))
-#pragma warning restore 0618
+
                 );
         }
 

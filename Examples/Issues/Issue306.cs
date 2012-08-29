@@ -16,9 +16,9 @@ namespace Examples.Issues
         {
             var model = TypeModel.Create();
             model.Add(typeof (Foo), true);
-#pragma warning disable 0618
+
             string schema = model.GetSchema(typeof (Foo));
-#pragma warning restore 0618
+
             Assert.AreEqual(@"package Examples.Issues;
 
 message Foo {

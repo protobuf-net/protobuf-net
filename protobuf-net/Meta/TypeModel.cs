@@ -1396,7 +1396,6 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
-        [Obsolete("GetSchema is experimental and newly implemented; treat with caution")]
         public virtual string GetSchema(Type type)
         {
             throw new NotSupportedException();

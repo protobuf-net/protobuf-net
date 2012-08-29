@@ -132,7 +132,6 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
-        [Obsolete("GetSchema is experimental and newly implemented; treat with caution")]
         public override string GetSchema(Type type)
         {
             BasicList requiredTypes = new BasicList();
@@ -150,16 +149,20 @@ namespace ProtoBuf.Meta
             else
             { // generate just relative to the supplied type
                 int index = FindOrAddAuto(type, false, false, false);
-                if (index < 0) throw new ArgumentException("type");
+                if (index < 0) throw new ArgumentException("The type specified is not a contract-type", "type");
 
                 // get the required types
                 MetaType meta = (MetaType) types[index];
+                if (meta.IsList)
+                {
+                    throw new ArgumentException("The type specified is a list; schema-generation requires a non-list contract type", "type");
+                }
                 requiredTypes.Add(meta);
                 CascadeDependents(requiredTypes, meta);
             }
 
             // use the provided type's namespace for the "package"
-            StringBuilder builder = new StringBuilder();
+            StringBuilder headerBuilder = new StringBuilder();
             string package = null;
             if(type == null)
             {
@@ -190,10 +193,12 @@ namespace ProtoBuf.Meta
             }
             if (!Helpers.IsNullOrEmpty(package))
             {
-                builder.Append("package ").Append(package).Append(';');
-                Helpers.AppendLine(builder);
+                headerBuilder.Append("package ").Append(package).Append(';');
+                Helpers.AppendLine(headerBuilder);
             }
 
+            bool requiresBclImport = false;
+            StringBuilder bodyBuilder = new StringBuilder();
             // sort them by schema-name
             MetaType[] metaTypesArr = new MetaType[requiredTypes.Count];
             requiredTypes.CopyTo(metaTypesArr, 0);
@@ -203,9 +208,14 @@ namespace ProtoBuf.Meta
             for (int i = 0; i < metaTypesArr.Length; i++ )
             {
                 if (metaTypesArr[i].IsList) continue;
-                metaTypesArr[i].WriteSchema(builder, 0);
+                metaTypesArr[i].WriteSchema(bodyBuilder, 0, ref requiresBclImport);
             }
-            return Helpers.AppendLine(builder).ToString();
+            if (requiresBclImport)
+            {
+                headerBuilder.Append("import \"bcl.proto\" // schema for protobuf-net's handling of core .NET types");
+                Helpers.AppendLine(headerBuilder);
+            }
+            return Helpers.AppendLine(headerBuilder.Append(bodyBuilder)).ToString();
         }
         private void CascadeDependents(BasicList list, MetaType metaType)
         {
@@ -1424,7 +1434,7 @@ namespace ProtoBuf.Meta
         }
 #endif
 
-        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType)
+        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref bool requiresBclImport)
         {
             Type tmp = Helpers.GetUnderlyingType(effectiveType);
             if (tmp != null) effectiveType = tmp;
@@ -1435,19 +1445,29 @@ namespace ProtoBuf.Meta
             IProtoSerializer ser = ValueMember.TryGetCoreSerializer(this, dataFormat, effectiveType, out wireType, false, false, false, false);
             if (ser == null)
             {   // model type
-                if (asReference || dynamicType) return "bcl.NetObjectProxy";
+                if (asReference || dynamicType)
+                {
+                    requiresBclImport = true;
+                    return "bcl.NetObjectProxy";
+                }
                 return this[effectiveType].GetSchemaTypeName();
             }
             else
             {
-                if (ser is ParseableSerializer) return asReference ? "bcl.NetObjectProxy" : "string";
+                if (ser is ParseableSerializer)
+                {
+                    if (asReference) requiresBclImport = true;
+                    return asReference ? "bcl.NetObjectProxy" : "string";
+                }
 
                 switch (Helpers.GetTypeCode(effectiveType))
                 {
                     case ProtoTypeCode.Boolean: return "bool";
                     case ProtoTypeCode.Single: return "float";
                     case ProtoTypeCode.Double: return "double";
-                    case ProtoTypeCode.String: return asReference ? "bcl.NetObjectProxy" : "string";
+                    case ProtoTypeCode.String:
+                        if (asReference) requiresBclImport = true;
+                        return asReference ? "bcl.NetObjectProxy" : "string";
                     case ProtoTypeCode.Byte:
                     case ProtoTypeCode.Char:
                     case ProtoTypeCode.UInt16:
@@ -1479,10 +1499,10 @@ namespace ProtoBuf.Meta
                             case DataFormat.FixedSize: return "sfixed64";
                             default: return "int64";
                         }
-                    case ProtoTypeCode.DateTime: return "bcl.DateTime";
-                    case ProtoTypeCode.TimeSpan: return "bcl.TimeSpan";
-                    case ProtoTypeCode.Decimal: return "bcl.Decimal";
-                    case ProtoTypeCode.Guid: return "bcl.Guid";
+                    case ProtoTypeCode.DateTime: requiresBclImport = true; return "bcl.DateTime";
+                    case ProtoTypeCode.TimeSpan: requiresBclImport = true; return "bcl.TimeSpan";
+                    case ProtoTypeCode.Decimal: requiresBclImport = true; return "bcl.Decimal";
+                    case ProtoTypeCode.Guid: requiresBclImport = true; return "bcl.Guid";
                     default: throw new NotSupportedException("No .proto map found for: " + effectiveType.FullName);
                 }
             }
