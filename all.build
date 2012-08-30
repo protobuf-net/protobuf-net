@@ -77,14 +77,18 @@
     <Copy SourceFiles="@(SLFiles)" DestinationFolder="$(ZipDirectory)\Full\sl4"/>
     
     <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(NugetDirectory)\sl3-wp"/>
+    <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(NugetDirectory)\sl4-windowsphone71"/>
     <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(ZipDirectory)\Full\wp71"/>
 
     <Copy SourceFiles="@(UnityFiles)" DestinationFolder="$(ZipDirectory)\Full\unity"/>
     <Copy SourceFiles="@(PortableFiles)" DestinationFolder="$(ZipDirectory)\Full\portable"/>
 
-    
+    <Copy SourceFiles="@(CF20Files)" DestinationFolder="$(NugetDirectory)\net20-cf"/>
     <Copy SourceFiles="@(CF20Files)" DestinationFolder="$(ZipDirectory)\Full\cf20"/>
+    <Copy SourceFiles="@(CF35Files)" DestinationFolder="$(NugetDirectory)\net35-cf"/>
+    <Copy SourceFiles="@(CF35Files)" DestinationFolder="$(NugetDirectory)\net40-cf"/>
     <Copy SourceFiles="@(CF35Files)" DestinationFolder="$(ZipDirectory)\Full\cf35"/>
+    <Copy SourceFiles="@(WinRTFiles)" DestinationFolder="$(NugetDirectory)\winrt45"/>
     <Copy SourceFiles="@(WinRTFiles)" DestinationFolder="$(ZipDirectory)\Full\netcore45"/>
     <Copy SourceFiles="@(CF20Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\cf20"/>
     <Copy SourceFiles="@(CF35Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\cf35"/>
