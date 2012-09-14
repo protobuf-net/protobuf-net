@@ -912,13 +912,14 @@ namespace ProtoBuf.Meta
                 Helpers.GetConstructor(listType, Helpers.EmptyTypes, true) == null)
 #endif
             {
+                string fullName;
                 bool handled = false;
 #if WINRT
                 if (listTypeInfo.IsInterface &&
 #else
                 if (listType.IsInterface &&
 #endif
-                    listType.FullName.IndexOf("Dictionary") >= 0) // have to try to be frugal here...
+                    (fullName = listType.FullName) != null && fullName.IndexOf("Dictionary") >= 0) // have to try to be frugal here...
                 {
 #if !NO_GENERICS
 #if WINRT
@@ -1108,7 +1109,8 @@ namespace ProtoBuf.Meta
 
 #if !(WINRT || CF)
             // EF POCO
-            if (type.FullName.StartsWith("System.Data.Entity.DynamicProxies.")) return type.BaseType;
+            string fullName = type.FullName;
+            if (fullName != null && fullName.StartsWith("System.Data.Entity.DynamicProxies.")) return type.BaseType;
 
             // NHibernate
             Type[] interfaces = type.GetInterfaces();

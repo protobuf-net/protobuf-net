@@ -74,7 +74,7 @@ namespace ProtoBuf.unittest.Attribs
             model.CompileInPlace();
             ClonePoint(model, point, "CompileInPlace");
         }
-        [Test, ExpectedException(typeof(FieldAccessException))]
+        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x")]
         public void FullyCompileWithPrivateField_KnownToFail()
         {
             var model = BuildModel();
@@ -108,12 +108,12 @@ namespace ProtoBuf.unittest.Attribs
             PEVerify.Verify("PointWithSurrogate.dll");
         }
 
-        [Test]
+        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x")]
         public void VerifyPointDirect()
         {
             var model = BuildModel();
             model.Compile("PointDirect", "PointDirect.dll");
-            PEVerify.Verify("PointDirect.dll", 1); // expect failure due to field access
+            //PEVerify.Verify("PointDirect.dll", 1); // expect failure due to field access
         }
 
         [Test]

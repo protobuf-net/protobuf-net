@@ -76,7 +76,8 @@ namespace ProtoBuf.Serializers
             if (isList)
             {
                 options |= OPTIONS_IsList;
-                if (declaredType.FullName.StartsWith("System.Data.Linq.EntitySet`1[["))
+                string fullName = declaredType.FullName;
+                if (fullName != null && fullName.StartsWith("System.Data.Linq.EntitySet`1[["))
                 { // see http://stackoverflow.com/questions/6194639/entityset-is-there-a-sane-reason-that-ilist-add-doesnt-set-assigned
                     options |= OPTIONS_SuppressIList;
                 }
