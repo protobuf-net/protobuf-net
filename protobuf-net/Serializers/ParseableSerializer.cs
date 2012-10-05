@@ -93,8 +93,15 @@ namespace ProtoBuf.Serializers
         {
             Type type = ExpectedType;
             if (type.IsValueType)
-            {
-                ctx.EmitCall(GetCustomToString(type));
+            {   // note that for structs, we've already asserted that a custom ToString
+                // exists; no need to handle the box/callvirt scenario
+                
+                // force it to a variable if needed, so we can take the address
+                using (Compiler.Local loc = ctx.GetLocalWithValue(type, valueFrom))
+                {
+                    ctx.LoadAddress(loc, type);
+                    ctx.EmitCall(GetCustomToString(type));
+                }
             }
             else {
                 ctx.EmitCall(ctx.MapType(typeof(object)).GetMethod("ToString"));
