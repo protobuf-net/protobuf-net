@@ -216,6 +216,17 @@ namespace ProtoBuf.Compiler
             }
             throw new ArgumentException("Meta-key not found", "metaKey");
         }
+        internal int MapMetaKeyToCompiledKey(int metaKey)
+        {
+            if (metaKey < 0 || methodPairs == null) return metaKey; // all meta, or a dummy/wildcard key
+
+            for (int i = 0; i < methodPairs.Length; i++)
+            {
+                if (methodPairs[i].MetaKey == metaKey) return i;
+            }
+            throw new ArgumentException("Key could not be mapped: " + metaKey, "metaKey");
+        }
+
         private readonly bool nonPublic, isWriter;
         internal bool NonPublic { get { return nonPublic; } }
 
