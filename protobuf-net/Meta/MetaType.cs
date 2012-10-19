@@ -1682,9 +1682,47 @@ namespace ProtoBuf.Meta
             else if(Helpers.IsEnum(type))
             {
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName()).Append(" {");
-                foreach (ValueMember member in fieldsArr)
+                if (fieldsArr.Length == 0 && EnumPassthru) {
+                    if (type
+#if WINRT
+                    .GetTypeInfo()
+#endif
+.IsDefined(model.MapType(typeof(FlagsAttribute)), false))
+                    {
+                        NewLine(builder, indent + 1).Append("// this is a composite/flags enumeration");
+                    }
+                    else
+                    {
+                        NewLine(builder, indent + 1).Append("// this enumeration will be passed as a raw value");
+                    }
+                    foreach(FieldInfo field in
+#if WINRT
+                        type.GetRuntimeFields()
+#else
+                        type.GetFields()
+#endif
+                        
+                        )
+                    {
+                        if(field.IsStatic && field.IsLiteral)
+                        {
+                            object enumVal;
+#if WINRT || PORTABLE || CF || FX11
+                            enumVal = field.GetValue(null);
+#else
+                            enumVal = field.GetRawConstantValue();
+#endif
+                            NewLine(builder, indent + 1).Append(field.Name).Append(" = ").Append(enumVal).Append(";");
+                        }
+                    }
+                    
+                }
+                else
                 {
-                    NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
+                    foreach (ValueMember member in fieldsArr)
+                    {
+                        NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
+                    }
                 }
                 NewLine(builder, indent).Append('}');
             } else
