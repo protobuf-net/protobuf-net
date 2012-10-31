@@ -427,7 +427,8 @@ namespace ProtoBuf
                     throw new ArgumentOutOfRangeException("style");
             }
             // and this object is no longer a blockage
-            writer.flushLock--;
+            if (--writer.flushLock == 0 || writer.AdvisoryFlush) ProtoWriter.Flush(writer);
+            
         }
 
         /// <summary>
@@ -523,6 +524,9 @@ namespace ProtoBuf
                 writer.ioIndex = 0;                
             }
         }
+
+        internal bool AdvisoryFlush { get { return flushLock == 0 && ioIndex >= 1024; } }
+
         /// <summary>
         /// Writes an unsigned 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
