@@ -26,6 +26,26 @@ namespace Examples.Issues
             Console.Read();
         }
 
+        [Test]
+        public void ExecuteWorkaround()
+        {
+            using (var f = File.Create("Data.protobuf"))
+            {
+                foreach(var obj in GenerateData(1000000))
+                {
+                    Serializer.SerializeWithLengthPrefix<DTO>(
+                        f, obj, PrefixStyle.Base128, Serializer.ListItemTag);
+                }
+            }
+
+            using (var f = File.OpenRead("Data.protobuf"))
+            {
+                var dtos = Serializer.DeserializeItems<DTO>(f, ProtoBuf.PrefixStyle.Base128, 1);
+                Console.WriteLine(dtos.Count());
+            }
+            Console.Read();
+        }
+
         static IEnumerable<DTO> GenerateData(int count)
         {
             for (int i = 0; i < count; i++)
