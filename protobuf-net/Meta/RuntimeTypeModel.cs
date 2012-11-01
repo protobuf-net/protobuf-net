@@ -779,7 +779,7 @@ namespace ProtoBuf.Meta
                     throw new InvalidOperationException("No serializer available for " + mt.Type.Name);
             }
         }
-
+#if !SILVERLIGHT
         internal class SerializerPair : IComparable
         {
             int IComparable.CompareTo(object obj)
@@ -1289,7 +1289,7 @@ namespace ProtoBuf.Meta
         }
         
 #endif
-
+#endif
         internal bool IsDefined(Type type, int fieldNumber)
         {
             return FindWithoutAdd(type).IsDefined(fieldNumber);

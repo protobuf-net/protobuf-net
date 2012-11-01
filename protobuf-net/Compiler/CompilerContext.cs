@@ -205,7 +205,9 @@ namespace ProtoBuf.Compiler
             }
         }
         private readonly bool isStatic;
+#if !SILVERLIGHT
         private readonly RuntimeTypeModel.SerializerPair[] methodPairs;
+
         internal MethodBuilder GetDedicatedMethod(int metaKey, bool read)
         {
             if (methodPairs == null) return null;
@@ -216,6 +218,7 @@ namespace ProtoBuf.Compiler
             }
             throw new ArgumentException("Meta-key not found", "metaKey");
         }
+
         internal int MapMetaKeyToCompiledKey(int metaKey)
         {
             if (metaKey < 0 || methodPairs == null) return metaKey; // all meta, or a dummy/wildcard key
@@ -226,10 +229,20 @@ namespace ProtoBuf.Compiler
             }
             throw new ArgumentException("Key could not be mapped: " + metaKey, "metaKey");
         }
+#else
+        internal int MapMetaKeyToCompiledKey(int metaKey)
+        {
+            return metaKey;
+        }
+#endif
+
+
 
         private readonly bool nonPublic, isWriter;
         internal bool NonPublic { get { return nonPublic; } }
 
+
+#if !SILVERLIGHT
         internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion)
         {
             if (il == null) throw new ArgumentNullException("il");
@@ -243,6 +256,7 @@ namespace ProtoBuf.Compiler
             this.model = model;
             this.metadataVersion = metadataVersion;
         }
+#endif
 #if !(FX11 || FEAT_IKVM)
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model)
         {
@@ -674,7 +688,11 @@ namespace ProtoBuf.Compiler
                         if (!isPublic)
                         {
                             // allow calls to TypeModel protected methods, and methods we are in the process of creating
-                            if(member is MethodBuilder || member.DeclaringType == MapType(typeof(TypeModel))) isPublic = true; 
+                            if(
+#if !SILVERLIGHT
+                                member is MethodBuilder ||
+#endif                
+                                member.DeclaringType == MapType(typeof(TypeModel))) isPublic = true; 
                         }
                         break;
                     case MemberTypes.Property:

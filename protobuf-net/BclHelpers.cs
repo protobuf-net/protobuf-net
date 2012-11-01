@@ -34,7 +34,7 @@ namespace ProtoBuf
         /// <exception cref="NotSupportedException">If the platform does not support constructor-skipping</exception>
         public static object GetUninitializedObject(Type type)
         {
-#if PLAT_BINARYFORMATTER && !WINRT
+#if PLAT_BINARYFORMATTER && !(WINRT || PHONE8)
             return System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
 #else
             throw new NotSupportedException("Constructor-skipping is not supported on this platform");
