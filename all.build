@@ -21,6 +21,8 @@
     <SLFiles_CoreOnly Include="protobuf-net_Silverlight\bin\CoreOnly\protobuf-net.*"/>
     <WP7Files Include="protobuf-net_Phone7\bin\Release\protobuf-net.*"/>
     <WP7Files_CoreOnly Include="protobuf-net_Phone7\bin\CoreOnly\protobuf-net.*"/>
+    <WP8Files Include="protobuf-net_Phone8\bin\Release\protobuf-net.*"/>
+    <WP8Files_CoreOnly Include="protobuf-net_Phone8\bin\CoreOnly\protobuf-net.*"/>
     <PortableFiles Include="protobuf-net_Portable\bin\Release\protobuf-net.*"/>
     <PortableFiles_CoreOnly Include="protobuf-net_Portable\bin\CoreOnly\protobuf-net.*"/>
     <PrecompileFiles Include="precompile\bin\Release\*.*"/>
@@ -46,17 +48,18 @@
 
     <MSBuild Projects="protobuf-net-CF20\protobuf-net-CF20.csproj" Properties="Configuration=Release"/>
     <MSBuild Projects="protobuf-net-CF35\protobuf-net-CF35.csproj" Properties="Configuration=Release"/>
+    <MSBuild Projects="protobuf-net_Phone8\protobuf-net_Phone8.csproj" Properties="Configuration=Release"/>
+    
     <MSBuild Projects="protobuf-net-CF20\protobuf-net-CF20.csproj" Properties="Configuration=CoreOnly"/>
     <MSBuild Projects="protobuf-net-CF35\protobuf-net-CF35.csproj" Properties="Configuration=CoreOnly"/>
+    <MSBuild Projects="protobuf-net_Phone8\protobuf-net_Phone8.csproj" Properties="Configuration=CoreOnly"/>
 
-    
     <Copy SourceFiles="Licence.txt" DestinationFolder="$(ZipDirectory)"/>
     <Copy SourceFiles="What Files Do I Need.txt" DestinationFolder="$(ZipDirectory)"/>
 
     <MSBuild Projects="@(ProjectToBuild)" Properties="Configuration=Release" BuildInParallel="true"/>
     <MSBuild Projects="@(ProjectToBuild)" Properties="Configuration=CoreOnly" BuildInParallel="true"/>
-    
-    
+
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Net20"/>
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=iOS"/>
     <MSBuild Projects="protobuf-net\protobuf-net.csproj" Properties="Configuration=Unity"/>
@@ -78,9 +81,12 @@
     
     <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(NugetDirectory)\sl3-wp"/>
     <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(NugetDirectory)\sl4-windowsphone71"/>
+    <Copy SourceFiles="@(WP8Files)" DestinationFolder="$(NugetDirectory)\windowsphone8"/>
     <Copy SourceFiles="@(WP7Files)" DestinationFolder="$(ZipDirectory)\Full\wp71"/>
+    <Copy SourceFiles="@(WP8Files)" DestinationFolder="$(ZipDirectory)\Full\wp8"/>
 
     <Copy SourceFiles="@(UnityFiles)" DestinationFolder="$(ZipDirectory)\Full\unity"/>
+    <Copy SourceFiles="@(PortableFiles)" DestinationFolder="$(NugetDirectory)\portable-sl4+wp71+windows8"/>
     <Copy SourceFiles="@(PortableFiles)" DestinationFolder="$(ZipDirectory)\Full\portable"/>
 
     <Copy SourceFiles="@(CF20Files)" DestinationFolder="$(NugetDirectory)\net20-cf"/>
@@ -88,7 +94,7 @@
     <Copy SourceFiles="@(CF35Files)" DestinationFolder="$(NugetDirectory)\net35-cf"/>
     <Copy SourceFiles="@(CF35Files)" DestinationFolder="$(NugetDirectory)\net40-cf"/>
     <Copy SourceFiles="@(CF35Files)" DestinationFolder="$(ZipDirectory)\Full\cf35"/>
-    <Copy SourceFiles="@(WinRTFiles)" DestinationFolder="$(NugetDirectory)\winrt45"/>
+    <Copy SourceFiles="@(WinRTFiles)" DestinationFolder="$(NugetDirectory)\netcore45"/>
     <Copy SourceFiles="@(WinRTFiles)" DestinationFolder="$(ZipDirectory)\Full\netcore45"/>
     <Copy SourceFiles="@(CF20Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\cf20"/>
     <Copy SourceFiles="@(CF35Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\cf35"/>
@@ -98,6 +104,7 @@
     <Copy SourceFiles="@(Net30Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\net30"/>
     <Copy SourceFiles="@(SLFiles_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\sl4"/>
     <Copy SourceFiles="@(WP7Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\wp71"/>
+    <Copy SourceFiles="@(WP8Files_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\wp8"/>
     <Copy SourceFiles="@(PortableFiles_CoreOnly)" DestinationFolder="$(ZipDirectory)\CoreOnly\portable"/>
    
     <Copy SourceFiles="@(PrecompileFiles)" DestinationFolder="$(ZipDirectory)\Precompile"/>
