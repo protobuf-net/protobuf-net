@@ -1078,12 +1078,13 @@ namespace ProtoBuf.Meta
 
             // copy assembly:InternalsVisibleTo
             Type internalsVisibleToAttribType = null;
+#if !FX11
             try
             {
                 internalsVisibleToAttribType = MapType(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute));
             }
             catch { /* best endeavors only */ }
-            
+#endif   
             if (internalsVisibleToAttribType != null)
             {
                 BasicList internalAssemblies = new BasicList(), consideredAssemblies = new BasicList();

@@ -657,12 +657,12 @@ namespace ProtoBuf.Compiler
                 EmitCtor(ctor);
             }
         }
-#if !(PHONE8 || SILVERLIGHT)
+#if !(PHONE8 || SILVERLIGHT || FX11)
         BasicList knownTrustedAssemblies, knownUntrustedAssemblies;
 #endif
         bool InternalsVisible(Assembly assembly)
         {
-#if PHONE8 || SILVERLIGHT
+#if PHONE8 || SILVERLIGHT || FX11
             return false;
 #else
             if (Helpers.IsNullOrEmpty(assemblyName)) return false;
@@ -681,8 +681,10 @@ namespace ProtoBuf.Compiler
                 }
             }
             bool isTrusted = false;
+            Type attributeType = MapType(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute));
+            if(attributeType == null) return false;
 #if FEAT_IKVM
-            foreach (CustomAttributeData attrib in assembly.__GetCustomAttributes(MapType(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute)), false))
+            foreach (CustomAttributeData attrib in assembly.__GetCustomAttributes(attributeType, false))
             {
                 if (attrib.ConstructorArguments.Count == 1)
                 {
@@ -695,7 +697,7 @@ namespace ProtoBuf.Compiler
                 }
             }
 #else
-            foreach(System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute), false))
+            foreach(System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType, false))
             {
                 if (attrib.AssemblyName == assemblyName)
                 {
@@ -737,8 +739,8 @@ namespace ProtoBuf.Compiler
                         Type type = (Type)member;
                         do
                         {
-                            isPublic = type.IsNestedPublic || type.IsPublic || ((!type.IsNested || type.IsNestedAssembly || type.IsNestedFamORAssem) && InternalsVisible(type.Assembly));
-                        } while (isPublic && (type = type.DeclaringType) != null);
+                            isPublic = type.IsNestedPublic || type.IsPublic || ((type.DeclaringType == null || type.IsNestedAssembly || type.IsNestedFamORAssem) && InternalsVisible(type.Assembly));
+                        } while (isPublic && (type = type.DeclaringType) != null); // ^^^ !type.IsNested, but not all runtimes have that
                         break;
                     case MemberTypes.Field:
                         FieldInfo field = ((FieldInfo)member);
