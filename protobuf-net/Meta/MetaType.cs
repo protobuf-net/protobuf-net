@@ -631,7 +631,7 @@ namespace ProtoBuf.Meta
             {
                 System.Collections.Generic.List<MemberInfo> list = new System.Collections.Generic.List<MemberInfo>();
                 foreach(PropertyInfo prop in type.GetRuntimeProperties()) {
-                    MethodInfo getter = Helpers.GetGetMethod(prop, false);
+                    MethodInfo getter = Helpers.GetGetMethod(prop, false, false);
                     if(getter != null && !getter.IsStatic) list.Add(prop);
                 }
                 foreach(FieldInfo fld in type.GetRuntimeFields()) if(fld.IsPublic && !fld.IsStatic) list.Add(fld);
@@ -660,7 +660,7 @@ namespace ProtoBuf.Meta
                     if (isEnum) continue; // wasn't expecting any props!
 
                     effectiveType = property.PropertyType;
-                    isPublic = Helpers.GetGetMethod(property, false) != null;
+                    isPublic = Helpers.GetGetMethod(property, false, false) != null;
                     isField = false;
                     ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType);
                 } else if ((field = member as FieldInfo) != null)
@@ -818,7 +818,7 @@ namespace ProtoBuf.Meta
                 if (prop != null)
                 {
                     if (!prop.CanRead) return null; // no use if can't read
-                    if (prop.CanWrite && Helpers.GetSetMethod(prop, false) != null) return null; // don't allow a public set (need to allow non-public to handle Mono's KeyValuePair<,>)
+                    if (prop.CanWrite && Helpers.GetSetMethod(prop, false, false) != null) return null; // don't allow a public set (need to allow non-public to handle Mono's KeyValuePair<,>)
                     memberList.Add(prop);
                 }
                 else
@@ -1099,11 +1099,11 @@ namespace ProtoBuf.Meta
                 Type finalType = type;
 #endif
                 PropertyInfo prop = Helpers.GetProperty(finalType, member.Name + "Specified");
-                MethodInfo getMethod = Helpers.GetGetMethod(prop, true);
+                MethodInfo getMethod = Helpers.GetGetMethod(prop, true, true);
                 if (getMethod == null || getMethod.IsStatic) prop = null;
                 if (prop != null)
                 {
-                    vm.SetSpecified(getMethod, Helpers.GetSetMethod(prop, true));
+                    vm.SetSpecified(getMethod, Helpers.GetSetMethod(prop, true, true));
                 }
                 else
                 {

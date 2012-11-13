@@ -70,7 +70,6 @@ namespace Phone8_DevRig
             using (var ms = new MemoryStream())
             {
                 // write to MS so we can test the deserialize perf
-                var ser = new DataContractSerializer(typeof(DatabaseCompat));
                 ser.WriteObject(ms, db);
                 ms.Position = 0;
                 var watch = Stopwatch.StartNew();
@@ -79,6 +78,8 @@ namespace Phone8_DevRig
                 dcsButton.Content = string.Format("DCS: {0} orders, {1} ms", obj.Orders.Count, watch.ElapsedMilliseconds);
             }
         }
+
+        private readonly DataContractSerializer ser = new DataContractSerializer(typeof(DatabaseCompat));
 
         // Sample code for building a localized ApplicationBar
         //private void BuildLocalizedApplicationBar()

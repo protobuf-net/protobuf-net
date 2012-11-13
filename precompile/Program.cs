@@ -90,6 +90,20 @@ namespace ProtoBuf.Precompile
         [CommandLine("?"), CommandLine("help"), CommandLine("h")]
         public bool Help { get; set; }
 
+        /// <summary>
+        /// The accessibility of the generated type
+        /// </summary>
+        [CommandLine("access")]
+        public ProtoBuf.Meta.RuntimeTypeModel.Accessibility Accessibility { get; set; }
+
+        /// <summary>
+        /// Create a new instance of PreCompileContext
+        /// </summary>
+        public PreCompileContext()
+        {
+            Accessibility = ProtoBuf.Meta.RuntimeTypeModel.Accessibility.Public;
+        }
+
         static string TryInferFramework(string path)
         {
             string imageRuntimeVersion = null;
@@ -388,6 +402,7 @@ namespace ProtoBuf.Precompile
             {
                 options.SetFrameworkOptions(metaType);
             }
+            options.Accessibility = this.Accessibility;
             Console.WriteLine("Compiling " + options.TypeName + " to " + options.OutputPath + "...");
             // GO WORK YOUR MAGIC, CRAZY THING!!
             model.Compile(options);
@@ -432,12 +447,20 @@ input assembly.
 
 Options:
 
-    -f:<framework> - Can be an explicit path, or a path relative to:
-                     Reference Assemblies\Microsoft\Framework
-    -o:<file>      - Output dll path
-    -t:<typename>  - Type name of the serializer to generate
-    -p:<path>      - Additional directory to probe for assemblies
-    <file>         - Input file to analyse
+    -f[ramework]:<framework>
+           Can be an explicit path, or a path relative to:
+           Reference Assemblies\Microsoft\Framework
+    -o[ut]:<file>
+           Output dll path
+    -t[ype]:<typename>
+           Type name of the serializer to generate
+    -p[robe]:<path>
+           Additional directory to probe for assemblies
+    -access:<access>
+           Specify accessibility of generated serializer
+           to 'Public' or 'Internal'
+    <file>
+           Input file to analyse
 
 Example:
 
@@ -518,6 +541,19 @@ Example:
                     else if (foundProp.PropertyType == typeof(bool))
                     {
                         foundProp.SetValue(result, true, null);
+                    }
+                    else if (foundProp.PropertyType.IsEnum)
+                    {
+                        object parsedValue;
+                        try {
+                            parsedValue = Enum.Parse(foundProp.PropertyType, value, true); 
+                        } catch {
+                            Console.Error.WriteLine("Invalid option for: " + arg);
+                            Console.Error.WriteLine("Options: " + string.Join(", ", Enum.GetNames(foundProp.PropertyType)));
+                            allGood = false;
+                            parsedValue = null;
+                        }
+                        if (parsedValue != null) foundProp.SetValue(result, parsedValue, null);
                     }
                 }
             }

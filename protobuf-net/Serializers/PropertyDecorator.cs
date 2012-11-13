@@ -29,14 +29,17 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(property != null);
             this.forType = forType;
             this.property = property;
-            SanityCheck(model, property, tail, out readOptionsWriteValue, true);
+            SanityCheck(model, property, tail, out readOptionsWriteValue, true, true);
             shadowSetter = GetShadowSetter(model, property);
         }
-        private static void SanityCheck(TypeModel model, PropertyInfo property, IProtoSerializer tail, out bool writeValue, bool nonPublic) {
+        private static void SanityCheck(TypeModel model, PropertyInfo property, IProtoSerializer tail, out bool writeValue, bool nonPublic, bool allowInternal) {
             if(property == null) throw new ArgumentNullException("property");
             
-            writeValue = tail.ReturnsValue && (GetShadowSetter(model, property) != null || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic) != null));
-            if (!property.CanRead || Helpers.GetGetMethod(property, nonPublic) == null) throw new InvalidOperationException("Cannot serialize property without a get accessor");
+            writeValue = tail.ReturnsValue && (GetShadowSetter(model, property) != null || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic, allowInternal) != null));
+            if (!property.CanRead || Helpers.GetGetMethod(property, nonPublic, allowInternal) == null)
+            {
+                throw new InvalidOperationException("Cannot serialize property without a get accessor");
+            }
             if (!writeValue && (!tail.RequiresOldValue || Helpers.IsValueType(tail.ExpectedType)))
             { // so we can't save the value, and the tail doesn't use it either... not helpful
                 // or: can't write the value, so the struct value will be lost
@@ -98,7 +101,7 @@ namespace ProtoBuf.Serializers
         {
 
             bool writeValue;
-            SanityCheck(ctx.Model, property, Tail, out writeValue, ctx.NonPublic);
+            SanityCheck(ctx.Model, property, Tail, out writeValue, ctx.NonPublic, ctx.AllowInternal(property));
             if (ExpectedType.IsValueType && valueFrom == null)
             {
                 throw new InvalidOperationException("Attempt to mutate struct on the head of the stack; changes would be lost");

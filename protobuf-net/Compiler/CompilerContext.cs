@@ -242,12 +242,15 @@ namespace ProtoBuf.Compiler
         internal bool NonPublic { get { return nonPublic; } }
 
 
-#if !SILVERLIGHT
-        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion)
+#if !(SILVERLIGHT || PHONE8)
+        private readonly string assemblyName;
+        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName)
         {
             if (il == null) throw new ArgumentNullException("il");
             if (methodPairs == null) throw new ArgumentNullException("methodPairs");
             if (model == null) throw new ArgumentNullException("model");
+            if (Helpers.IsNullOrEmpty(assemblyName)) throw new ArgumentNullException("assemblyName");
+            this.assemblyName = assemblyName;
             this.isStatic = isStatic;
             this.methodPairs = methodPairs;
             this.il = il;
@@ -654,7 +657,66 @@ namespace ProtoBuf.Compiler
                 EmitCtor(ctor);
             }
         }
-
+#if !(PHONE8 || SILVERLIGHT)
+        BasicList knownTrustedAssemblies, knownUntrustedAssemblies;
+#endif
+        bool InternalsVisible(Assembly assembly)
+        {
+#if PHONE8 || SILVERLIGHT
+            return false;
+#else
+            if (Helpers.IsNullOrEmpty(assemblyName)) return false;
+            if (knownTrustedAssemblies != null)
+            {
+                if (knownTrustedAssemblies.IndexOfReference(assembly) >= 0)
+                {
+                    return true;
+                }
+            }
+            if (knownUntrustedAssemblies != null)
+            {
+                if (knownUntrustedAssemblies.IndexOfReference(assembly) >= 0)
+                {
+                    return false;
+                }
+            }
+            bool isTrusted = false;
+#if FEAT_IKVM
+            foreach (CustomAttributeData attrib in assembly.__GetCustomAttributes(MapType(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute)), false))
+            {
+                if (attrib.ConstructorArguments.Count == 1)
+                {
+                    string privelegedAssembly = attrib.ConstructorArguments[0].Value as string;
+                    if (privelegedAssembly == assemblyName)
+                    {
+                        isTrusted = true;
+                        break;
+                    }
+                }
+            }
+#else
+            foreach(System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute), false))
+            {
+                if (attrib.AssemblyName == assemblyName)
+                {
+                    isTrusted = true;
+                    break;
+                }
+            }
+#endif
+            if (isTrusted)
+            {
+                if (knownTrustedAssemblies == null) knownTrustedAssemblies = new BasicList();
+                knownTrustedAssemblies.Add(assembly);
+            }
+            else
+            {
+                if (knownUntrustedAssemblies == null) knownUntrustedAssemblies = new BasicList();
+                knownUntrustedAssemblies.Add(assembly);
+            }
+            return isTrusted;
+#endif
+        }
         internal void CheckAccessibility(MemberInfo member)
         {
             if (member == null)
@@ -668,23 +730,27 @@ namespace ProtoBuf.Compiler
                 switch (member.MemberType)
                 {
                     case MemberTypes.TypeInfo:
-                        isPublic = ((Type)member).IsPublic;
+                        // top-level type
+                        isPublic = ((Type)member).IsPublic || InternalsVisible(((Type)member).Assembly);
                         break;
                     case MemberTypes.NestedType:
                         Type type = (Type)member;
                         do
                         {
-                            isPublic = type.IsNestedPublic || type.IsPublic;
+                            isPublic = type.IsNestedPublic || type.IsPublic || ((!type.IsNested || type.IsNestedAssembly || type.IsNestedFamORAssem) && InternalsVisible(type.Assembly));
                         } while (isPublic && (type = type.DeclaringType) != null);
                         break;
                     case MemberTypes.Field:
-                        isPublic = ((FieldInfo)member).IsPublic;
+                        FieldInfo field = ((FieldInfo)member);
+                        isPublic = field.IsPublic || ((field.IsAssembly || field.IsFamilyOrAssembly) && InternalsVisible(field.DeclaringType.Assembly));
                         break;
                     case MemberTypes.Constructor:
-                        isPublic = ((ConstructorInfo)member).IsPublic;
+                        ConstructorInfo ctor = ((ConstructorInfo)member);
+                        isPublic = ctor.IsPublic || ((ctor.IsAssembly || ctor.IsFamilyOrAssembly) && InternalsVisible(ctor.DeclaringType.Assembly));
                         break;
                     case MemberTypes.Method:
-                        isPublic = ((MethodInfo)member).IsPublic;
+                        MethodInfo method = ((MethodInfo)member);
+                        isPublic = method.IsPublic || ((method.IsAssembly || method.IsFamilyOrAssembly) && InternalsVisible(method.DeclaringType.Assembly));
                         if (!isPublic)
                         {
                             // allow calls to TypeModel protected methods, and methods we are in the process of creating
@@ -757,12 +823,12 @@ namespace ProtoBuf.Compiler
         public void LoadValue(PropertyInfo property)
         {
             CheckAccessibility(property);
-            EmitCall(Helpers.GetGetMethod(property, true));
+            EmitCall(Helpers.GetGetMethod(property, true, true));
         }
         public void StoreValue(PropertyInfo property)
         {
             CheckAccessibility(property);
-            EmitCall(Helpers.GetSetMethod(property, true));
+            EmitCall(Helpers.GetSetMethod(property, true, true));
         }
 
         internal void EmitInstance()
@@ -1286,6 +1352,11 @@ namespace ProtoBuf.Compiler
         public enum ILVersion
         {
             Net1, Net2
+        }
+
+        internal bool AllowInternal(PropertyInfo property)
+        {
+            return nonPublic ? true : InternalsVisible(property.DeclaringType.Assembly);
         }
     }
 }

@@ -146,7 +146,7 @@ namespace ProtoBuf
         {
             PropertyInfo prop = declaringType.GetDeclaredProperty(name);
             MethodInfo method;
-            if (prop != null && (method = Helpers.GetGetMethod(prop, true)) != null && !method.IsStatic) return prop;
+            if (prop != null && (method = Helpers.GetGetMethod(prop, true, true)) != null && !method.IsStatic) return prop;
 
             FieldInfo field = declaringType.GetDeclaredField(name);
             if (field != null && !field.IsStatic) return field;
@@ -363,7 +363,7 @@ namespace ProtoBuf
 #endif
         }
 
-        internal static MethodInfo GetGetMethod(PropertyInfo property, bool nonPublic)
+        internal static MethodInfo GetGetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
         {
             if (property == null) return null;
 #if WINRT
@@ -371,10 +371,19 @@ namespace ProtoBuf
             if (!nonPublic && method != null && !method.IsPublic) method = null;
             return method;
 #else
-            return property.GetGetMethod(nonPublic); 
+            MethodInfo method = property.GetGetMethod(nonPublic);
+            if (method == null && !nonPublic && allowInternal)
+            { // could be "internal" or "protected internal"; look for a non-public, then back-check
+                method = property.GetGetMethod(true);
+                if (method == null && !(method.IsAssembly || method.IsFamilyOrAssembly))
+                {
+                    method = null;
+                }
+            }
+            return method;
 #endif
         }
-        internal static MethodInfo GetSetMethod(PropertyInfo property, bool nonPublic)
+        internal static MethodInfo GetSetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
         {
             if (property == null) return null;
 #if WINRT
@@ -382,7 +391,16 @@ namespace ProtoBuf
             if (!nonPublic && method != null && !method.IsPublic) method = null;
             return method;
 #else
-            return property.GetSetMethod(nonPublic);
+            MethodInfo method = property.GetSetMethod(nonPublic);
+            if (method == null && !nonPublic && allowInternal)
+            { // could be "internal" or "protected internal"; look for a non-public, then back-check
+                method = property.GetGetMethod(true);
+                if (method == null && !(method.IsAssembly || method.IsFamilyOrAssembly))
+                {
+                    method = null;
+                }
+            }
+            return method;
 #endif
         }
 
@@ -483,7 +501,7 @@ namespace ProtoBuf
             }
             foreach(PropertyInfo prop in type.GetRuntimeProperties())
             {
-                MethodInfo getter = Helpers.GetGetMethod(prop, true);
+                MethodInfo getter = Helpers.GetGetMethod(prop, true, true);
                 if(getter == null || getter.IsStatic) continue;
                 if(getter.IsPublic || !publicOnly) members.Add(prop);
             }

@@ -99,13 +99,7 @@ namespace ProtoBuf.Meta
         public bool AllowParseableTypes
         {
             get { return GetOption(OPTIONS_AllowParseableTypes); }
-            set {
-                if (value && GetOption(OPTIONS_IsDefaultModel))
-                {
-                    throw new InvalidOperationException("AllowParseableTypes cannot be enabled on the default model");
-                }
-                SetOption(OPTIONS_AllowParseableTypes, value);
-            }
+            set { SetOption(OPTIONS_AllowParseableTypes, value); }
         }
         
 
@@ -947,6 +941,27 @@ namespace ProtoBuf.Meta
             /// The runtime version for the generated assembly
             /// </summary>
             public int MetaDataVersion { get { return metaDataVersion; } set { metaDataVersion = value; } }
+
+
+            private Accessibility accessibility = Accessibility.Public;
+            /// <summary>
+            /// The acecssibility of the generated serializer
+            /// </summary>
+            public Accessibility Accessibility { get { return accessibility; } set { accessibility = value; } }
+        }
+        /// <summary>
+        /// Type accessibility
+        /// </summary>
+        public enum Accessibility
+        {
+            /// <summary>
+            /// Available to all callers
+            /// </summary>
+            Public,
+            /// <summary>
+            /// Available to all callers in the same assembly, or assemblies specified via [InternalsVisibleTo(...)]
+            /// </summary>
+            Internal
         }
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
@@ -963,6 +978,20 @@ namespace ProtoBuf.Meta
             options.OutputPath = path;
             return Compile(options);
         }
+
+        sealed class StringFinder : BasicList.IPredicate
+        {
+            private readonly string value;
+            public StringFinder(string value)
+            {
+                this.value = value;
+            }
+            bool BasicList.IPredicate.IsMatch(object obj)
+            {
+                return value == (string)obj;
+            }
+        }
+
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
         /// (the serialization dll still requires protobuf-net for support services).
@@ -984,8 +1013,18 @@ namespace ProtoBuf.Meta
             }
 
 
-            string assemblyName = path == null ? typeName : new System.IO.FileInfo(System.IO.Path.GetFileNameWithoutExtension(path)).Name;
-            
+            string assemblyName, moduleName;
+            if(path == null)
+            {
+                assemblyName = typeName;
+                moduleName = assemblyName + ".dll";
+            }
+            else
+            {
+                assemblyName = new System.IO.FileInfo(System.IO.Path.GetFileNameWithoutExtension(path)).Name;
+                moduleName = assemblyName + System.IO.Path.GetExtension(path);
+            }
+
 #if FEAT_IKVM
             IKVM.Reflection.AssemblyName an = new IKVM.Reflection.AssemblyName();
             an.Name = assemblyName;
@@ -994,15 +1033,15 @@ namespace ProtoBuf.Meta
             {
                 asm.__SetImageRuntimeVersion(options.ImageRuntimeVersion, options.MetaDataVersion);
             }
-            ModuleBuilder module = asm.DefineDynamicModule(an.Name, path);
+            ModuleBuilder module = asm.DefineDynamicModule(moduleName, path);
 #else
             AssemblyName an = new AssemblyName();
             an.Name = assemblyName;
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
                 (save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.Run)
                 );
-            ModuleBuilder module = save ? asm.DefineDynamicModule(an.Name, path)
-                                        : asm.DefineDynamicModule(an.Name);
+            ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
+                                        : asm.DefineDynamicModule(moduleName);
 #endif
 
             if (!Helpers.IsNullOrEmpty(options.TargetFrameworkName))
@@ -1035,12 +1074,55 @@ namespace ProtoBuf.Meta
                         propValues);
                     asm.SetCustomAttribute(builder);
                 }
-            }            
+            }
 
+            // copy assembly:InternalsVisibleTo
+            Type internalsVisibleToAttribType = null;
+            try
+            {
+                internalsVisibleToAttribType = MapType(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute));
+            }
+            catch { /* best endeavors only */ }
+            
+            if (internalsVisibleToAttribType != null)
+            {
+                BasicList internalAssemblies = new BasicList(), consideredAssemblies = new BasicList();
+                foreach (MetaType metaType in types)
+                {
+                    Assembly assembly = metaType.Type.Assembly;
+                    if (consideredAssemblies.IndexOfReference(assembly) >= 0) continue;
+                    consideredAssemblies.Add(assembly);
+
+                    AttributeMap[] assemblyAttribsMap = AttributeMap.Create(this, assembly);
+                    for (int i = 0; i < assemblyAttribsMap.Length; i++)
+                    {
+                        
+                        if (assemblyAttribsMap[i].AttributeType != internalsVisibleToAttribType) continue;
+
+                        object privelegedAssemblyObj;
+                        assemblyAttribsMap[i].TryGet("AssemblyName", out privelegedAssemblyObj);
+                        string privelegedAssemblyName = privelegedAssemblyObj as string;
+                        if (privelegedAssemblyName == assemblyName || Helpers.IsNullOrEmpty(privelegedAssemblyName)) continue; // ignore
+
+                        if (internalAssemblies.IndexOf(new StringFinder(privelegedAssemblyName)) >= 0) continue; // seen it before
+                        internalAssemblies.Add(privelegedAssemblyName);
+
+
+                        CustomAttributeBuilder builder = new CustomAttributeBuilder(
+                            internalsVisibleToAttribType.GetConstructor(new Type[] { MapType(typeof(string)) }),
+                            new object[] { privelegedAssemblyName });
+                        asm.SetCustomAttribute(builder);
+                    }
+                }
+            }
             Type baseType = MapType(typeof(TypeModel));
-            TypeBuilder type = module.DefineType(typeName,
-                (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed,
-                baseType);
+            TypeAttributes typeAttributes = (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed;
+            if(options.Accessibility == Accessibility.Internal)
+            {
+                typeAttributes &= ~TypeAttributes.Public;
+            }
+            
+            TypeBuilder type = module.DefineType(typeName, typeAttributes, baseType);
             Compiler.CompilerContext ctx;
             
             int index = 0;
@@ -1083,12 +1165,12 @@ namespace ProtoBuf.Meta
             for(index = 0; index < methodPairs.Length ; index++)
             {
                 SerializerPair pair = methodPairs[index];
-                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion);
+                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName);
                 ctx.CheckAccessibility(pair.Deserialize.ReturnType);
                 pair.Type.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
                 ctx.Return();
 
-                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs, this, ilVersion);
+                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs, this, ilVersion, assemblyName);
                 pair.Type.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
                 if (!pair.Type.Serializer.ReturnsValue)
                 {
@@ -1164,7 +1246,7 @@ namespace ProtoBuf.Meta
             }
             
             il = Override(type, "Serialize");
-            ctx = new Compiler.CompilerContext(il, false, true, methodPairs, this, ilVersion);
+            ctx = new Compiler.CompilerContext(il, false, true, methodPairs, this, ilVersion, assemblyName);
             // arg0 = this, arg1 = key, arg2=obj, arg3=dest
             Label[] jumpTable = new Label[types.Count];
             for (int i = 0; i < jumpTable.Length; i++) {
@@ -1185,7 +1267,7 @@ namespace ProtoBuf.Meta
             }
 
             il = Override(type, "Deserialize");
-            ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion);
+            ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName);
             // arg0 = this, arg1 = key, arg2=obj, arg3=source
             for (int i = 0; i < jumpTable.Length; i++)
             {
@@ -1204,7 +1286,7 @@ namespace ProtoBuf.Meta
                 {
                     il.Emit(OpCodes.Ldarg_2);
                     il.Emit(OpCodes.Ldarg_3);
-                    il.EmitCall(OpCodes.Call, EmitBoxedSerializer(type, i, keyType, methodPairs, this, ilVersion), null);
+                    il.EmitCall(OpCodes.Call, EmitBoxedSerializer(type, i, keyType, methodPairs, this, ilVersion, assemblyName), null);
                     ctx.Return();
                 }
                 else
@@ -1255,12 +1337,12 @@ namespace ProtoBuf.Meta
 #endif
         }
 
-        private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion)
+        private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName)
         {
             MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i, MethodAttributes.Static, CallingConventions.Standard,
                 model.MapType(typeof(object)), new Type[] { model.MapType(typeof(object)), model.MapType(typeof(ProtoReader)) });
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion);
+            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName);
             ctx.LoadValue(Compiler.Local.InputValue);
             Compiler.CodeLabel @null = ctx.DefineLabel();
             ctx.BranchIfFalse(@null, true);
