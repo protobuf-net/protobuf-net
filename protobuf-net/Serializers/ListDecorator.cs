@@ -310,7 +310,7 @@ namespace ProtoBuf.Serializers
 #endif
                     ;
                 moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext", null);
-                PropertyInfo prop = Helpers.GetProperty(iteratorType, "Current");
+                PropertyInfo prop = Helpers.GetProperty(iteratorType, "Current", false);
                 current = prop == null ? null : Helpers.GetGetMethod(prop, false, false);
                 if (moveNext == null && (model.MapType(ienumeratorType).IsAssignableFrom(iteratorType)))
                 {
@@ -351,7 +351,7 @@ namespace ProtoBuf.Serializers
 #endif
 
                 moveNext = Helpers.GetInstanceMethod(model.MapType(ienumeratorType), "MoveNext");
-                current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current"), false, false);
+                current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current", false), false, false);
                 return getEnumerator;
             }
 #endif
@@ -364,7 +364,7 @@ namespace ProtoBuf.Serializers
 #endif
                 ;
             moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext");
-            current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType,"Current"), false, false);
+            current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType,"Current", false), false, false);
             return getEnumerator;
         }
 #if FEAT_COMPILER

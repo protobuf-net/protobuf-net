@@ -442,7 +442,7 @@ namespace ProtoBuf
             return System.Linq.Enumerable.ToArray(
                 System.Linq.Enumerable.Where(typeInfo.DeclaredConstructors, x => x.IsPublic));
         }
-        internal static PropertyInfo GetProperty(TypeInfo type, string name)
+        internal static PropertyInfo GetProperty(TypeInfo type, string name, bool nonPublic)
         {
             return type.GetDeclaredProperty(name);
         }
@@ -468,9 +468,11 @@ namespace ProtoBuf
                 nonPublic ? BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
                           : BindingFlags.Instance | BindingFlags.Public);
         }
-        internal static PropertyInfo GetProperty(Type type, string name)
+        internal static PropertyInfo GetProperty(Type type, string name, bool nonPublic)
         {
-            return type.GetProperty(name);
+            return type.GetProperty(name,
+                nonPublic ? BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic
+                          : BindingFlags.Instance | BindingFlags.Public);
         }
 #endif
 

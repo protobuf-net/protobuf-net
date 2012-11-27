@@ -1098,7 +1098,7 @@ namespace ProtoBuf.Meta
 #else
                 Type finalType = type;
 #endif
-                PropertyInfo prop = Helpers.GetProperty(finalType, member.Name + "Specified");
+                PropertyInfo prop = Helpers.GetProperty(finalType, member.Name + "Specified", true);
                 MethodInfo getMethod = Helpers.GetGetMethod(prop, true, true);
                 if (getMethod == null || getMethod.IsStatic) prop = null;
                 if (prop != null)
