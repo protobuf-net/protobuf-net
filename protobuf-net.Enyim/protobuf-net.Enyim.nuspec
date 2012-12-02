@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package>
+  <metadata>
+    <id>protobuf-net.Enyim</id>
+    <version>1.0</version>
+    <authors>Marc Gravell</authors>
+    <owners>Marc Gravell</owners>
+    <summary>Provides support for protobuf-net as an Enyim (memcached) transcoder</summary>
+    <description>The Enyim memcached client provides "memcached" cache support; this package adds a protobuf-net transcoder, allowing fast and efficient serialization/deserialization instead of using BinaryFormatter.</description>
+    <projectUrl>http://code.google.com/p/protobuf-net/</projectUrl>
+    <licenseUrl>http://protobuf-net.googlecode.com/svn/trunk/Licence.txt</licenseUrl>
+    <tags>protobuf-net memcached enyim cache transcoder</tags>
+    <language>en-US</language>
+    <dependencies>
+      <dependency id="EnyimMemcached" version="2.12" />
+      <dependency id="protobuf-net" version="2.0.0.602" />
+    </dependencies>
+    <releaseNotes>
+      * 1.0.0.0		Initial release
+    </releaseNotes>
+  </metadata>
+  <files>
+    <file src="protobuf-net.Enyim\bin\Release\protobuf-net.Enyim.*" target="lib" />
+  </files>
+</package>
