@@ -1180,11 +1180,10 @@ namespace ProtoBuf.Meta
                 ctx.Return();
             }
 
-            FieldBuilder knownTypes = type.DefineField("knownTypes", MapType(typeof(System.Type[])), FieldAttributes.Private | FieldAttributes.InitOnly);
+            FieldBuilder knownTypes = type.DefineField("knownTypes", MapType(typeof(System.Type[])), FieldAttributes.Private | FieldAttributes.InitOnly | FieldAttributes.Static);
 
             ILGenerator il = Override(type, "GetKeyImpl");
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldfld, knownTypes);
+            il.Emit(OpCodes.Ldsfld, knownTypes);
             il.Emit(OpCodes.Ldarg_1);
             // note that Array.IndexOf is not supported under CF
             il.EmitCall(OpCodes.Callvirt,MapType(typeof(IList)).GetMethod(
@@ -1300,14 +1299,7 @@ namespace ProtoBuf.Meta
                 }
             }
 
-            
-
-            ConstructorBuilder ctor = type.DefineConstructor(MethodAttributes.Public, CallingConventions.HasThis, Helpers.EmptyTypes);
-            
-            il = ctor.GetILGenerator();
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Call, Helpers.GetConstructor(baseType, Helpers.EmptyTypes, true));
-            il.Emit(OpCodes.Ldarg_0);
+            il = type.DefineTypeInitializer().GetILGenerator();
             Compiler.CompilerContext.LoadValue(il, types.Count);
             il.Emit(OpCodes.Newarr, ctx.MapType(typeof(System.Type)));
             
@@ -1321,7 +1313,7 @@ namespace ProtoBuf.Meta
                 il.Emit(OpCodes.Stelem_Ref);
                 index++;
             }
-            il.Emit(OpCodes.Stfld, knownTypes);            
+            il.Emit(OpCodes.Stsfld, knownTypes);            
             il.Emit(OpCodes.Ret);
 
 
