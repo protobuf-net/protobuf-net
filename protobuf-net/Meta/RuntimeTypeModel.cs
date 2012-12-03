@@ -1301,6 +1301,10 @@ namespace ProtoBuf.Meta
                         il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetProperty("Item").GetGetMethod(), null);
                         il.Emit(OpCodes.Dup);
                         il.Emit(OpCodes.Brfalse_S, otherwise);
+#if FX11
+                        il.Emit(OpCodes.Unbox, MapType(typeof(int)));
+                        il.Emit(OpCodes.Ldobj, MapType(typeof(int)));
+#else
                         if (ilVersion == Compiler.CompilerContext.ILVersion.Net1)
                         {
                             il.Emit(OpCodes.Unbox, MapType(typeof(int)));
@@ -1309,7 +1313,8 @@ namespace ProtoBuf.Meta
                         else
                         {
                             il.Emit(OpCodes.Unbox_Any, MapType(typeof(int)));
-                        }                        
+                        }
+#endif
                         il.Emit(OpCodes.Ret);
                         il.MarkLabel(otherwise);
                         il.Emit(OpCodes.Pop);
