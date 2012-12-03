@@ -12,9 +12,13 @@ namespace ProtoBuf.unittest
     {
         public static void Verify(string path)
         {
-            Verify(path, 0);
+            Verify(path, 0, true);
         }
         public static void Verify(string path, int exitCode)
+        {
+            Verify(path, 0, true);
+        }
+        public static void Verify(string path, int exitCode, bool deleteOnSuccess)
         {
             // note; PEVerify can be found %ProgramFiles%\Microsoft SDKs\Windows\v6.0A\bin
             const string exePath = "PEVerify.exe";
@@ -26,7 +30,7 @@ namespace ProtoBuf.unittest
                 if (proc.WaitForExit(10000))
                 {
                     Assert.AreEqual(exitCode, proc.ExitCode, path);
-                    File.Delete(path);
+                    if(deleteOnSuccess) File.Delete(path);
                 }
                 else
                 {

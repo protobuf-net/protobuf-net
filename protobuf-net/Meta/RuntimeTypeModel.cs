@@ -1180,69 +1180,141 @@ namespace ProtoBuf.Meta
                 ctx.Return();
             }
 
-            FieldBuilder knownTypes = type.DefineField("knownTypes", MapType(typeof(System.Type[])), FieldAttributes.Private | FieldAttributes.InitOnly | FieldAttributes.Static);
-
             ILGenerator il = Override(type, "GetKeyImpl");
-            il.Emit(OpCodes.Ldsfld, knownTypes);
-            il.Emit(OpCodes.Ldarg_1);
-            // note that Array.IndexOf is not supported under CF
-            il.EmitCall(OpCodes.Callvirt,MapType(typeof(IList)).GetMethod(
-                "IndexOf", new Type[] { MapType(typeof(object)) }), null);
-            if (hasInheritance)
+            int knownTypesCategory;
+            FieldBuilder knownTypes;
+            Type knownTypesLookupType;
+            const int KnownTypes_Array = 1, KnownTypes_Dictionary = 2, KnownTypes_Hashtable = 3, KnownTypes_ArrayCutoff = 20;
+
+            if (types.Count <= KnownTypes_ArrayCutoff)
             {
-                il.DeclareLocal(MapType(typeof(int))); // loc-0
-                il.Emit(OpCodes.Dup);
-                il.Emit(OpCodes.Stloc_0);
-
-                BasicList getKeyLabels = new BasicList();
-                int lastKey = -1;
-                for (int i = 0; i < methodPairs.Length; i++)
-                {
-                    if (methodPairs[i].MetaKey == methodPairs[i].BaseKey) break;
-                    if (lastKey == methodPairs[i].BaseKey)
-                    {   // add the last label again
-                        getKeyLabels.Add(getKeyLabels[getKeyLabels.Count - 1]);
-                    }
-                    else
-                    {   // add a new unique label
-                        getKeyLabels.Add(il.DefineLabel());
-                        lastKey = methodPairs[i].BaseKey;
-                    }                    
-                }
-                Label[] subtypeLabels = new Label[getKeyLabels.Count];
-                getKeyLabels.CopyTo(subtypeLabels, 0);
-
-                il.Emit(OpCodes.Switch, subtypeLabels);
-                il.Emit(OpCodes.Ldloc_0); // not a sub-type; use the original value
-                il.Emit(OpCodes.Ret);
-
-                lastKey = -1;
-                // now output the different branches per sub-type (not derived type)
-                for (int i = subtypeLabels.Length - 1; i >= 0; i--)
-                {
-                    if (lastKey != methodPairs[i].BaseKey)
-                    {
-                        lastKey = methodPairs[i].BaseKey;
-                        // find the actual base-index for this base-key (i.e. the index of
-                        // the base-type)
-                        int keyIndex = -1;
-                        for (int j = subtypeLabels.Length; j < methodPairs.Length; j++)
-                        {
-                            if (methodPairs[j].BaseKey == lastKey && methodPairs[j].MetaKey == lastKey)
-                            {
-                                keyIndex = j;
-                                break;
-                            }
-                        }
-                        il.MarkLabel(subtypeLabels[i]);
-                        Compiler.CompilerContext.LoadValue(il, keyIndex);
-                        il.Emit(OpCodes.Ret);
-                    }
-                }
+                knownTypesCategory = KnownTypes_Array;
+                knownTypesLookupType = MapType(typeof(System.Type[]), true);
             }
             else
             {
-                il.Emit(OpCodes.Ret);
+                knownTypesLookupType = MapType(typeof(System.Collections.Generic.Dictionary<Type, int>), false);
+                if (knownTypesLookupType == null)
+                {
+                    knownTypesLookupType = MapType(typeof(Hashtable), true);
+                    knownTypesCategory = KnownTypes_Hashtable;
+                }
+                else
+                {
+                    knownTypesCategory = KnownTypes_Dictionary; 
+                }
+            }
+            knownTypes = type.DefineField("knownTypes", knownTypesLookupType, FieldAttributes.Private | FieldAttributes.InitOnly | FieldAttributes.Static);
+            
+            switch(knownTypesCategory)
+            {
+                case KnownTypes_Array:
+                    {
+                        il.Emit(OpCodes.Ldsfld, knownTypes);
+                        il.Emit(OpCodes.Ldarg_1);
+                        // note that Array.IndexOf is not supported under CF
+                        il.EmitCall(OpCodes.Callvirt, MapType(typeof(IList)).GetMethod(
+                            "IndexOf", new Type[] { MapType(typeof(object)) }), null);
+                        if (hasInheritance)
+                        {
+                            il.DeclareLocal(MapType(typeof(int))); // loc-0
+                            il.Emit(OpCodes.Dup);
+                            il.Emit(OpCodes.Stloc_0);
+
+                            BasicList getKeyLabels = new BasicList();
+                            int lastKey = -1;
+                            for (int i = 0; i < methodPairs.Length; i++)
+                            {
+                                if (methodPairs[i].MetaKey == methodPairs[i].BaseKey) break;
+                                if (lastKey == methodPairs[i].BaseKey)
+                                {   // add the last label again
+                                    getKeyLabels.Add(getKeyLabels[getKeyLabels.Count - 1]);
+                                }
+                                else
+                                {   // add a new unique label
+                                    getKeyLabels.Add(il.DefineLabel());
+                                    lastKey = methodPairs[i].BaseKey;
+                                }
+                            }
+                            Label[] subtypeLabels = new Label[getKeyLabels.Count];
+                            getKeyLabels.CopyTo(subtypeLabels, 0);
+
+                            il.Emit(OpCodes.Switch, subtypeLabels);
+                            il.Emit(OpCodes.Ldloc_0); // not a sub-type; use the original value
+                            il.Emit(OpCodes.Ret);
+
+                            lastKey = -1;
+                            // now output the different branches per sub-type (not derived type)
+                            for (int i = subtypeLabels.Length - 1; i >= 0; i--)
+                            {
+                                if (lastKey != methodPairs[i].BaseKey)
+                                {
+                                    lastKey = methodPairs[i].BaseKey;
+                                    // find the actual base-index for this base-key (i.e. the index of
+                                    // the base-type)
+                                    int keyIndex = -1;
+                                    for (int j = subtypeLabels.Length; j < methodPairs.Length; j++)
+                                    {
+                                        if (methodPairs[j].BaseKey == lastKey && methodPairs[j].MetaKey == lastKey)
+                                        {
+                                            keyIndex = j;
+                                            break;
+                                        }
+                                    }
+                                    il.MarkLabel(subtypeLabels[i]);
+                                    Compiler.CompilerContext.LoadValue(il, keyIndex);
+                                    il.Emit(OpCodes.Ret);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Ret);
+                        }
+                    }
+                    break;
+                case KnownTypes_Dictionary:
+                    {
+                        LocalBuilder result = il.DeclareLocal(MapType(typeof(int)));
+                        Label otherwise = il.DefineLabel();
+                        il.Emit(OpCodes.Ldsfld, knownTypes);
+                        il.Emit(OpCodes.Ldarg_1);
+                        il.Emit(OpCodes.Ldloca_S, result);
+                        il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetMethod("TryGetValue", BindingFlags.Instance | BindingFlags.Public), null);
+                        il.Emit(OpCodes.Brfalse_S, otherwise);
+                        il.Emit(OpCodes.Ldloc_S, result);
+                        il.Emit(OpCodes.Ret);
+                        il.MarkLabel(otherwise);
+                        il.Emit(OpCodes.Ldc_I4_M1);
+                        il.Emit(OpCodes.Ret);
+                    }
+                    break;
+                case KnownTypes_Hashtable:
+                    {
+                        Label otherwise = il.DefineLabel();
+                        il.Emit(OpCodes.Ldsfld, knownTypes);
+                        il.Emit(OpCodes.Ldarg_1);
+                        il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetProperty("Item").GetGetMethod(), null);
+                        il.Emit(OpCodes.Dup);
+                        il.Emit(OpCodes.Brfalse_S, otherwise);
+                        if (ilVersion == Compiler.CompilerContext.ILVersion.Net1)
+                        {
+                            il.Emit(OpCodes.Unbox, MapType(typeof(int)));
+                            il.Emit(OpCodes.Ldobj, MapType(typeof(int)));
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Unbox_Any, MapType(typeof(int)));
+                        }                        
+                        il.Emit(OpCodes.Ret);
+                        il.MarkLabel(otherwise);
+                        il.Emit(OpCodes.Pop);
+                        il.Emit(OpCodes.Ldc_I4_M1);
+                        il.Emit(OpCodes.Ret);
+                    }
+                    break;
+                default:
+                    throw new InvalidOperationException();
             }
             
             il = Override(type, "Serialize");
@@ -1300,21 +1372,92 @@ namespace ProtoBuf.Meta
             }
 
             il = type.DefineTypeInitializer().GetILGenerator();
-            Compiler.CompilerContext.LoadValue(il, types.Count);
-            il.Emit(OpCodes.Newarr, ctx.MapType(typeof(System.Type)));
-            
-            index = 0;
-            foreach(SerializerPair pair in methodPairs)
+            switch (knownTypesCategory)
             {
-                il.Emit(OpCodes.Dup);
-                Compiler.CompilerContext.LoadValue(il, index);
-                il.Emit(OpCodes.Ldtoken, pair.Type.Type);
-                il.EmitCall(OpCodes.Call, ctx.MapType(typeof(System.Type)).GetMethod("GetTypeFromHandle"), null);
-                il.Emit(OpCodes.Stelem_Ref);
-                index++;
+                case KnownTypes_Array:
+                    {
+                        Compiler.CompilerContext.LoadValue(il, types.Count);
+                        il.Emit(OpCodes.Newarr, ctx.MapType(typeof(System.Type)));
+                        index = 0;
+                        foreach (SerializerPair pair in methodPairs)
+                        {
+                            il.Emit(OpCodes.Dup);
+                            Compiler.CompilerContext.LoadValue(il, index);
+                            il.Emit(OpCodes.Ldtoken, pair.Type.Type);
+                            il.EmitCall(OpCodes.Call, ctx.MapType(typeof(System.Type)).GetMethod("GetTypeFromHandle"), null);
+                            il.Emit(OpCodes.Stelem_Ref);
+                            index++;
+                        }
+                        il.Emit(OpCodes.Stsfld, knownTypes);
+                        il.Emit(OpCodes.Ret);
+                    }
+                    break;
+                case KnownTypes_Dictionary:
+                    {
+                        Compiler.CompilerContext.LoadValue(il, types.Count);
+                        LocalBuilder loc = il.DeclareLocal(knownTypesLookupType);
+                        il.Emit(OpCodes.Newobj, knownTypesLookupType.GetConstructor(new Type[] { MapType(typeof(int)) }));
+                        il.Emit(OpCodes.Stsfld, knownTypes);
+                        int typeIndex = 0;
+                        foreach (SerializerPair pair in methodPairs)
+                        {
+                            il.Emit(OpCodes.Ldsfld, knownTypes);
+                            il.Emit(OpCodes.Ldtoken, pair.Type.Type);
+                            il.EmitCall(OpCodes.Call, ctx.MapType(typeof(System.Type)).GetMethod("GetTypeFromHandle"), null);
+                            int keyIndex = typeIndex++, lastKey = pair.BaseKey;
+                            if (lastKey != pair.MetaKey) // not a base-type; need to give the index of the base-type
+                            {
+                                keyIndex = -1; // assume epic fail
+                                for (int j = 0; j < methodPairs.Length; j++)
+                                {
+                                    if (methodPairs[j].BaseKey == lastKey && methodPairs[j].MetaKey == lastKey)
+                                    {
+                                        keyIndex = j;
+                                        break;
+                                    }
+                                }
+                            }
+                            Compiler.CompilerContext.LoadValue(il, keyIndex);
+                            il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetMethod("Add", new Type[] { MapType(typeof(Type)), MapType(typeof(int)) }), null);
+                        }
+                        il.Emit(OpCodes.Ret);
+                    }
+                    break;
+                case KnownTypes_Hashtable:
+                    {
+                        Compiler.CompilerContext.LoadValue(il, types.Count);
+                        il.Emit(OpCodes.Newobj, knownTypesLookupType.GetConstructor(new Type[] { MapType(typeof(int)) }));
+                        il.Emit(OpCodes.Stsfld, knownTypes);
+                        int typeIndex = 0;
+                        foreach (SerializerPair pair in methodPairs)
+                        {
+                            il.Emit(OpCodes.Ldsfld, knownTypes);
+                            il.Emit(OpCodes.Ldtoken, pair.Type.Type);
+                            il.EmitCall(OpCodes.Call, ctx.MapType(typeof(System.Type)).GetMethod("GetTypeFromHandle"), null);
+                            int keyIndex = typeIndex++, lastKey = pair.BaseKey;
+                            if (lastKey != pair.MetaKey) // not a base-type; need to give the index of the base-type
+                            {
+                                keyIndex = -1; // assume epic fail
+                                for (int j = 0; j < methodPairs.Length; j++)
+                                {
+                                    if (methodPairs[j].BaseKey == lastKey && methodPairs[j].MetaKey == lastKey)
+                                    {
+                                        keyIndex = j;
+                                        break;
+                                    }
+                                }
+                            }
+                            Compiler.CompilerContext.LoadValue(il, keyIndex);
+                            il.Emit(OpCodes.Box, MapType(typeof(int)));
+                            il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetMethod("Add", new Type[] { MapType(typeof(object)), MapType(typeof(object)) }), null);
+                        }
+                        il.Emit(OpCodes.Ret);
+                    }
+                    break;
+                default:
+                    throw new InvalidOperationException();
             }
-            il.Emit(OpCodes.Stsfld, knownTypes);            
-            il.Emit(OpCodes.Ret);
+            
 
 
             Type finalType = type.CreateType();
