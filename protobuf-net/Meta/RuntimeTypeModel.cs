@@ -1193,7 +1193,11 @@ namespace ProtoBuf.Meta
             }
             else
             {
+#if NO_GENERICS
+                knownTypesLookupType = null;
+#else
                 knownTypesLookupType = MapType(typeof(System.Collections.Generic.Dictionary<Type, int>), false);
+#endif
                 if (knownTypesLookupType == null)
                 {
                     knownTypesLookupType = MapType(typeof(Hashtable), true);
