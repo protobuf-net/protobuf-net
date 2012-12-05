@@ -86,7 +86,7 @@
     <Copy SourceFiles="@(WP8Files)" DestinationFolder="$(ZipDirectory)\Full\wp8"/>
 
     <Copy SourceFiles="@(UnityFiles)" DestinationFolder="$(ZipDirectory)\Full\unity"/>
-    <Copy SourceFiles="@(PortableFiles)" DestinationFolder="$(NugetDirectory)\portable-sl4+net45+wp7+windows8"/>
+    <Copy SourceFiles="@(PortableFiles)" DestinationFolder="$(NugetDirectory)\portable-sl4+net40+wp7+windows8"/>
     <Copy SourceFiles="@(PortableFiles)" DestinationFolder="$(ZipDirectory)\Full\portable"/>
 
     <Copy SourceFiles="@(CF20Files)" DestinationFolder="$(NugetDirectory)\net20-cf"/>
@@ -109,5 +109,7 @@
    
     <Copy SourceFiles="@(PrecompileFiles)" DestinationFolder="$(ZipDirectory)\Precompile"/>
     <Copy SourceFiles="@(ProtoGenFiles)" DestinationFolder="$(ZipDirectory)\ProtoGen"/>
+  
+    <Exec Command="packages\NuGet.CommandLine.2.0.40000\tools\NuGet.exe pack $(NugetDirectory)\..\protobuf-net.nuspec"/>
   </Target>
 </Project>
