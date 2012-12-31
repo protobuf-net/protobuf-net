@@ -1276,8 +1276,8 @@ namespace ProtoBuf.Compiler
         {
             switch (typeCode)
             {
-                case ProtoTypeCode.SByte: Emit(OpCodes.Conv_Ovf_U1); break;
-                case ProtoTypeCode.Byte: Emit(OpCodes.Conv_Ovf_I1); break;
+                case ProtoTypeCode.SByte: Emit(OpCodes.Conv_Ovf_I1); break;
+                case ProtoTypeCode.Byte: Emit(OpCodes.Conv_Ovf_U1); break;
                 case ProtoTypeCode.Int16: Emit(OpCodes.Conv_Ovf_I2); break;
                 case ProtoTypeCode.UInt16: Emit(OpCodes.Conv_Ovf_U2); break;
                 case ProtoTypeCode.Int32: break;
