@@ -1379,7 +1379,7 @@ namespace ProtoBuf.Meta
                     ctx.Return();
                 }
             }
-
+            type.DefineDefaultConstructor(MethodAttributes.Public);
             il = type.DefineTypeInitializer().GetILGenerator();
             switch (knownTypesCategory)
             {
