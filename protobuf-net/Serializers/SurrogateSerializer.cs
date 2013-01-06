@@ -16,10 +16,14 @@ namespace ProtoBuf.Serializers
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
 #if FEAT_COMPILER
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx) { throw new NotSupportedException(); }
 #endif
+        bool IProtoTypeSerializer.CanCreateInstance() { return false; }
 #if !FEAT_IKVM
+        object IProtoTypeSerializer.CreateInstance(ProtoReader source) { throw new NotSupportedException(); }
         void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
 #endif
+
         public bool ReturnsValue { get { return false; } }
         public bool RequiresOldValue { get { return true; } }
         public Type ExpectedType { get { return forType; } }

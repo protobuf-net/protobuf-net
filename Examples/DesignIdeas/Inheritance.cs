@@ -104,11 +104,6 @@ namespace Examples.DesignIdeas
         }
 
         [Test]
-#if DEBUG
-        [ExpectedException(typeof(TargetException))]
-#else
-        [ExpectedException(typeof(InvalidCastException))]
-#endif
         public void InheritanceCheckBytesWrongOrder()
         {   // breaking change: not supported in v2; frankly, this is moot - the entire
             // inheritance chain is protobuf-net specific, and that always writes data in

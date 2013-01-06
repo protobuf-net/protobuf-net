@@ -251,7 +251,7 @@ Parameter name: type")]
             string proto = Serializer.GetProto<ProtoGenerationTypes.BclImports.HasPrimitives>();
 
             Assert.AreEqual(@"package ProtoGenerationTypes.BclImports;
-import ""bcl.proto"" // schema for protobuf-net's handling of core .NET types
+import ""bcl.proto""; // schema for protobuf-net's handling of core .NET types
 
 message HasPrimitives {
    optional bcl.DateTime When = 1;

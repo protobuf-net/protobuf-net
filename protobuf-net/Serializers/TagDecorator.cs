@@ -21,7 +21,17 @@ namespace ProtoBuf.Serializers
             IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
             return pts != null && pts.HasCallbacks(callbackType);
         }
+        
+        public bool CanCreateInstance()
+        {
+            IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
+            return pts != null && pts.CanCreateInstance();
+        }
 #if !FEAT_IKVM
+        public object CreateInstance(ProtoReader source)
+        {
+            return ((IProtoTypeSerializer)Tail).CreateInstance(source);
+        }
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
             IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
@@ -34,6 +44,10 @@ namespace ProtoBuf.Serializers
             // we only expect this to be invoked if HasCallbacks returned true, so implicitly Tail
             // **must** be of the correct type
             ((IProtoTypeSerializer)Tail).EmitCallback(ctx, valueFrom, callbackType);
+        }
+        public void EmitCreateInstance(Compiler.CompilerContext ctx)
+        {
+            ((IProtoTypeSerializer)Tail).EmitCreateInstance(ctx);
         }
 #endif
         public override Type ExpectedType

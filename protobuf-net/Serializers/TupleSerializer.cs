@@ -61,7 +61,6 @@ namespace ProtoBuf.Serializers
             return false;
         }
 
-        public void Callback(object value, Meta.TypeModel.CallbackType callbackType, SerializationContext context){}
 #if FEAT_COMPILER
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, Meta.TypeModel.CallbackType callbackType){}
 #endif
@@ -73,6 +72,8 @@ namespace ProtoBuf.Serializers
 
         
 #if !FEAT_IKVM
+        void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
+        object IProtoTypeSerializer.CreateInstance(ProtoReader source) { throw new NotSupportedException(); }
         private object GetValue(object obj, int index)
         {
             PropertyInfo prop;
@@ -145,6 +146,8 @@ namespace ProtoBuf.Serializers
             if (result == null) throw new InvalidOperationException();
             return result;
         }
+        bool IProtoTypeSerializer.CanCreateInstance() { return false; }
+
 #if FEAT_COMPILER
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
@@ -167,6 +170,8 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
+
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx) { throw new NotSupportedException(); }
 
         public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local incoming)
         {

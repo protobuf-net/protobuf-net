@@ -56,8 +56,10 @@ namespace Examples
         [ProtoContract]
         public class PrivateField
         {
+#pragma warning disable 0169
             [ProtoMember(1)]
             private int Foo;
+#pragma warning restore 0169
         }
         [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Non-public member cannot be used with full dll compilation: Examples.NonPublic_Compile+PrivateField.Foo")]
         public void PrivateFieldShouldFail()

@@ -12,6 +12,14 @@ namespace ProtoBuf.Serializers
         {
             return head.HasCallbacks(callbackType); // these routes only used when bits of the model not compiled
         }
+        bool IProtoTypeSerializer.CanCreateInstance()
+        {
+            return head.CanCreateInstance();
+        }
+        object IProtoTypeSerializer.CreateInstance(ProtoReader source)
+        {
+            return head.CreateInstance(source);
+        }
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
             head.Callback(value, callbackType, context); // these routes only used when bits of the model not compiled
@@ -60,6 +68,10 @@ namespace ProtoBuf.Serializers
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             head.EmitCallback(ctx, valueFrom, callbackType);
+        }
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx)
+        {
+            head.EmitCreateInstance(ctx);
         }
     }
 }

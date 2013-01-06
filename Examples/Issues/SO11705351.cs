@@ -136,6 +136,7 @@ namespace Examples.Issues
             string schema = model.GetSchema(null);
 
             Assert.AreEqual(@"package Examples.Issues;
+import ""bcl.proto""; // schema for protobuf-net's handling of core .NET types
 
 message Assemblage {
    optional PartCollectionSurrogate Parts = 1;

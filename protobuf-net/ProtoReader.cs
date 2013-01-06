@@ -1288,5 +1288,22 @@ namespace ProtoBuf
                 throw new ProtoException("Incorrect number of bytes consumed");
             }
         }
+
+        /// <summary>
+        /// Merge two objects using the details from the current reader; this is used to change the type
+        /// of objects when an inheritance relationship is discovered later than usual during deserilazation.
+        /// </summary>
+        public static object Merge(ProtoReader parent, object from, object to)
+        {
+            TypeModel model = parent.Model;
+            SerializationContext ctx = parent.Context;
+            if(model == null) throw new InvalidOperationException("Types cannot be merged unless a type-model has been specified");
+            using (MemoryStream ms = new MemoryStream())
+            {
+                model.Serialize(ms, from, ctx);
+                ms.Position = 0;
+                return model.Deserialize(ms, to, null);
+            }
+        }
     }
 }

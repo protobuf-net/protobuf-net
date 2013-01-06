@@ -34,7 +34,7 @@ namespace Examples.Issues
             [ProtoMember(1)]
             public int Age;
         }
-
+        [ProtoContract]
         public class B : A
         {
             [ProtoMember(2)]
@@ -67,7 +67,7 @@ namespace Examples.Issues
                 Assert.AreEqual(23, clone.b.Balls, message);
             }
         }
-        [Test] // this is failing currently; needs some magic to handle out-of-order subclass fields
+        [Test]
         public void TestSubclassDeserializes()
         {
             var model = RuntimeTypeModel.Create();
