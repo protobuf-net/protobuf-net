@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>protobuf-net</id>
-    <version>2.0.0.614</version>
+    <version>2.0.0.619</version>
     <authors>Marc Gravell</authors>
     <owners>Marc Gravell</owners>
     <summary>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</summary>
@@ -12,13 +12,16 @@
     <tags>binary serialization protocol buffers protobuf deserialization</tags>
     <language>en-US</language>
     <releaseNotes>
+      * 2.0.0.619 - fix: GetSchema() should use ultimate base-type names when modelling inheritance
+                  - fix: ensure precomile always generates a .ctor() on the concrete serializer
+                  - add: support out-of-order fields when deseiralizing inheritance from other protobuf implementations
       * 2.0.0.614 - fix: enum handling of ": byte" confusing signed/unsigned bytes
       * 2.0.0.612 - fix: allow adding enum maps at runtime via MetaType
       * 2.0.0.611 - fix: *Specified should work with non-public methods
-      - performance: pre-compiled serializers now use dictionary lookups where appropriate
-      - fix: nuget package for portable library should be more inclusive
+                  - performance: pre-compiled serializers now use dictionary lookups where appropriate
+                  - fix: nuget package for portable library should be more inclusive
       * 2.0.0.602 - added precompiler support for internal-types and [InternalsVisibleTo(...)]-forwarding
-      - made AllowParseableTypes available on default type-model
+                  - made AllowParseableTypes available on default type-model
       * 2.0.0.601 - added phone8 support
     </releaseNotes>
   </metadata>
