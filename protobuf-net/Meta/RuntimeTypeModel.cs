@@ -135,7 +135,7 @@ namespace ProtoBuf.Meta
             { // generate for the entire model
                 foreach(MetaType meta in types)
                 {
-                    MetaType tmp = meta.GetSurrogateOrBaseOrSelf();
+                    MetaType tmp = meta.GetSurrogateOrBaseOrSelf(false);
                     if (!requiredTypes.Contains(tmp))
                     { // ^^^ note that the type might have been added as a descendent
                         requiredTypes.Add(tmp);
@@ -157,7 +157,7 @@ namespace ProtoBuf.Meta
                     if (index < 0) throw new ArgumentException("The type specified is not a contract-type", "type");
 
                     // get the required types
-                    primaryType = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf();
+                    primaryType = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
                     requiredTypes.Add(primaryType);
                     CascadeDependents(requiredTypes, primaryType);
                 }
@@ -243,7 +243,7 @@ namespace ProtoBuf.Meta
                     int index = FindOrAddAuto(itemType, false, false, false);
                     if (index >= 0)
                     {
-                        tmp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf();
+                        tmp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
                         if (!list.Contains(tmp))
                         { // could perhaps also implement as a queue, but this should work OK for sane models
                             list.Add(tmp);
@@ -272,7 +272,7 @@ namespace ProtoBuf.Meta
                                 int index = FindOrAddAuto(type, false, false, false);
                                 if (index >= 0)
                                 {
-                                    tmp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf();
+                                    tmp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
                                     if (!list.Contains(tmp))
                                     { // could perhaps also implement as a queue, but this should work OK for sane models
                                         list.Add(tmp);
@@ -297,7 +297,7 @@ namespace ProtoBuf.Meta
                             int index = FindOrAddAuto(type, false, false, false);
                             if (index >= 0)
                             {
-                                tmp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf();
+                                tmp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
                                 if (!list.Contains(tmp))
                                 { // could perhaps also implement as a queue, but this should work OK for sane models
                                     list.Add(tmp);
@@ -1754,7 +1754,7 @@ namespace ProtoBuf.Meta
                     requiresBclImport = true;
                     return "bcl.NetObjectProxy";
                 }
-                return this[effectiveType].GetSurrogateOrBaseOrSelf().GetSchemaTypeName();
+                return this[effectiveType].GetSurrogateOrBaseOrSelf(true).GetSchemaTypeName();
             }
             else
             {

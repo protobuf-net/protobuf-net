@@ -348,6 +348,62 @@ message UsesSurrogates {
         }
         public class MyNonSurrogate { }
     }
+
+    [TestFixture]
+    public class InheritanceGeneration
+    {
+        [ProtoContract]
+        [ProtoInclude(15, typeof(B))]
+        public class A
+        {
+            [ProtoMember(1)]
+            public int DataA { get; set; }
+        }
+        [ProtoContract]
+        [ProtoInclude(16, typeof(C))]
+        public class B : A
+        {
+            [ProtoMember(2)]
+            public int DataB { get; set; }
+        }
+        [ProtoContract]
+        public class C : B
+        {
+            [ProtoMember(3)]
+            public int DataC { get; set; }
+        }
+        [ProtoContract]
+        public class TestCase
+        {
+            [ProtoMember(10)]
+            public C Data;
+        }
+
+        [Test]
+        public void InheritanceShouldListBaseType()
+        {
+            string s = Serializer.GetProto<TestCase>();
+            Assert.AreEqual(@"package Examples;
+
+message A {
+   optional int32 DataA = 1 [default = 0];
+   // the following represent sub-types; at most 1 should have a value
+   optional B B = 15;
+}
+message B {
+   optional int32 DataB = 2 [default = 0];
+   // the following represent sub-types; at most 1 should have a value
+   optional C C = 16;
+}
+message C {
+   optional int32 DataC = 3 [default = 0];
+}
+message TestCase {
+   optional A Data = 10;
+}
+", s);
+        }
+    }
 }
 
 [ProtoContract]

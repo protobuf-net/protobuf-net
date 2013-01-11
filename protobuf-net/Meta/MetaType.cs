@@ -1241,9 +1241,23 @@ namespace ProtoBuf.Meta
             if (surrogate != null) return model[surrogate];
             return this;
         }
-        internal MetaType GetSurrogateOrBaseOrSelf() {
+        internal MetaType GetSurrogateOrBaseOrSelf(bool deep) {
             if(surrogate != null) return model[surrogate];
-            if(baseType != null) return baseType;
+            if (baseType != null)
+            {
+                if (deep)
+                {
+                    MetaType tmp;
+                    do
+                    {
+                        tmp = baseType;
+                        baseType = baseType.baseType;
+                    } while(baseType != null);
+                    return tmp;
+                }
+                return baseType;
+
+            }
             return this;
         }
         
