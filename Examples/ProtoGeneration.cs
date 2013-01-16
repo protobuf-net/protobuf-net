@@ -382,7 +382,21 @@ message UsesSurrogates {
         [Test]
         public void InheritanceShouldListBaseType()
         {
-            string s = Serializer.GetProto<TestCase>();
+            // all done on separate models in case of order dependencies, etc
+            var model = TypeModel.Create();
+            Assert.IsNull(model[typeof(A)].BaseType);
+
+            model = TypeModel.Create();
+            Assert.IsNull(model[typeof(TestCase)].BaseType);
+
+            model = TypeModel.Create();
+            Assert.AreEqual(typeof(A), model[typeof(B)].BaseType.Type);
+
+            model = TypeModel.Create();
+            Assert.AreEqual(typeof(B), model[typeof(C)].BaseType.Type);
+
+            model = TypeModel.Create();
+            string s = model.GetSchema(typeof(TestCase));
             Assert.AreEqual(@"package Examples;
 
 message A {

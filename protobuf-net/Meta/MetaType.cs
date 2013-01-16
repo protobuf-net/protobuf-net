@@ -1243,20 +1243,20 @@ namespace ProtoBuf.Meta
         }
         internal MetaType GetSurrogateOrBaseOrSelf(bool deep) {
             if(surrogate != null) return model[surrogate];
-            if (baseType != null)
+            MetaType snapshot = this.baseType;
+            if (snapshot != null)
             {
                 if (deep)
                 {
                     MetaType tmp;
                     do
                     {
-                        tmp = baseType;
-                        baseType = baseType.baseType;
-                    } while(baseType != null);
+                        tmp = snapshot;
+                        snapshot = snapshot.baseType;
+                    } while(snapshot != null);
                     return tmp;
                 }
-                return baseType;
-
+                return snapshot;
             }
             return this;
         }
