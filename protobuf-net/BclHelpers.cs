@@ -363,7 +363,11 @@ namespace ProtoBuf
             /// If false, the constructor for the type is bypassed during deserialization, meaning any field initializers
             /// or other initialization code is skipped.
             /// </summary>
-            UseConstructor = 4
+            UseConstructor = 4,
+            /// <summary>
+            /// Should the object index be reserved, rather than creating an object promptly
+            /// </summary>
+            LateSet = 8
         }
         /// <summary>
         /// Reads an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
@@ -416,7 +420,7 @@ namespace ProtoBuf
                     case FieldObject:
                         bool isString = type == typeof(string);
                         bool wasNull = value == null;
-                        bool lateSet = wasNull && isString;
+                        bool lateSet = wasNull && (isString || ((options & NetObjectOptions.LateSet) != 0));
                         
                         if (newObjectKey >= 0 && !lateSet)
                         {

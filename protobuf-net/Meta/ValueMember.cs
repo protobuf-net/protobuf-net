@@ -514,7 +514,23 @@ namespace ProtoBuf.Meta
                     if (dynamicType) options |= BclHelpers.NetObjectOptions.DynamicType;
                     if (key >= 0)
                     { // exists
-                        if (model[type].UseConstructor) options |= BclHelpers.NetObjectOptions.UseConstructor;
+                        if (asReference && Helpers.IsValueType(type))
+                        {
+                            string message = "AsReference cannot be used with value-types";
+
+                            if (type.Name == "KeyValuePair`2")
+                            {
+                                message += "; please see http://stackoverflow.com/q/14436606/";
+                            }
+                            else
+                            {
+                                message += ": " + type.FullName;
+                            }
+                            throw new InvalidOperationException(message);
+                        }
+                        MetaType meta = model[type];
+                        if (asReference && meta.IsAutoTuple) options |= BclHelpers.NetObjectOptions.LateSet;                        
+                        if (meta.UseConstructor) options |= BclHelpers.NetObjectOptions.UseConstructor;
                     }
                     return new NetObjectSerializer(model, type, key, options);
                 }
