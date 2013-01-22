@@ -1,0 +1,47 @@
+message CosDgp
+{
+	enum Type
+	{
+		Offline = 1;
+		Online = 2;
+		//... skipped
+	}
+
+	enum RestartReason
+	{
+		ResetPin = 1;
+		PowerCycle = 2;
+		//...skipped
+	}
+
+	enum ActiveTask
+	{
+		HeartBeat = 1;
+		Task0 = 2;
+		//... skipped
+	}
+
+	//Cos type
+	required Type type = 1;
+
+	//Panel number
+	required int32 panel = 2;
+
+	//Dgp number
+	required int32 dgp = 3;
+
+	//User number (used for types Isolated, Deisolated, DePolled and Polled)
+	optional int32 user = 5;
+
+	//Restart reason (used for type CpuRestart)
+	optional RestartReason restart_reason = 6;
+
+	//Active task at reset (used for type CpuRestart)
+	optional ActiveTask active_task = 7;
+
+	//Checkpoint (used for type CpuRestart)
+	optional int32 checkpoint = 8;
+
+	//Time and date
+	required int32 time = 9;
+}

@@ -338,7 +338,7 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
     <xsl:variable name="hunt" select="type_name"/>
     <xsl:for-each select="//EnumDescriptorProto">
       <xsl:variable name="fullName">
-        <xsl:for-each select="ancestor::FileDescriptorProto">.<xsl:value-of select="package"/></xsl:for-each>
+        <xsl:for-each select="ancestor::FileDescriptorProto[package!='']">.<xsl:value-of select="package"/></xsl:for-each>
         <xsl:for-each select="ancestor::DescriptorProto">.<xsl:value-of select="name"/></xsl:for-each>
         <xsl:value-of select="'.'"/>
         <xsl:call-template name="pascal"/>

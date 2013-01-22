@@ -220,7 +220,12 @@ namespace Examples.ProtoGen
             TestCompileCSharpV3(code, "System.Runtime.Serialization.dll");
         }
 
-
+        [Test]
+        public void TestEnums()
+        {
+            string code = GetCode(@"-i:ProtoGen\Enums.proto"); // "-p:partialMethods", "-p:detectMissing", "-p:datacontract");
+            TestCompileCSharpV3(code);
+        }
         private static void TestLoadXml(string xml)
         {
             XmlDocument doc = new XmlDocument();
