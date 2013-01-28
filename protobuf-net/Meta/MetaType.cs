@@ -599,7 +599,7 @@ namespace ProtoBuf.Meta
 
                         if (item.TryGet("SkipConstructor", out tmp)) UseConstructor = !(bool) tmp;
                         if (item.TryGet("IgnoreListHandling", out tmp)) IgnoreListHandling = (bool) tmp;
-
+                        if (item.TryGet("AsReferenceDefault", out tmp)) AsReferenceDefault = (bool) tmp;
                         if (item.TryGet("ImplicitFirstTag", out tmp) && (int) tmp > 0) implicitFirstTag = (int) tmp;
                     }
                 }
@@ -913,7 +913,7 @@ namespace ProtoBuf.Meta
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
             int fieldNumber = int.MinValue, minAcceptFieldNumber = inferByTagName ? -1 : 1;
             string name = null;
-            bool isPacked = false, ignore = false, done = false, isRequired = false, asReference = false, dynamicType = false, tagIsPinned = false, overwriteList = false;
+            bool isPacked = false, ignore = false, done = false, isRequired = false, asReference = false, asReferenceHasValue = false, dynamicType = false, tagIsPinned = false, overwriteList = false;
             DataFormat dataFormat = DataFormat.Default;
             if (isEnum) forced = true;
             AttributeMap[] attribs = AttributeMap.Create(model, member, true);
@@ -958,6 +958,7 @@ namespace ProtoBuf.Meta
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
                 GetIgnore(ref ignore, attrib, attribs, "ProtoBuf.ProtoIgnoreAttribute");
+
                 if (!ignore && attrib != null)
                 {
                     GetFieldNumber(ref fieldNumber, attrib, "Tag");
@@ -966,7 +967,15 @@ namespace ProtoBuf.Meta
                     GetFieldBoolean(ref isPacked, attrib, "IsPacked");
                     GetFieldBoolean(ref overwriteList, attrib, "OverwriteList");
                     GetDataFormat(ref dataFormat, attrib, "DataFormat");
-                    GetFieldBoolean(ref asReference, attrib, "AsReference");
+
+#if !FEAT_IKVM
+                    // IKVM can't access AsReferenceHasValue, but conveniently, AsReference will only be returned if set via ctor or property
+                    GetFieldBoolean(ref asReferenceHasValue, attrib, "AsReferenceHasValue", false);
+                    if(asReferenceHasValue)
+#endif
+                    {
+                        asReferenceHasValue = GetFieldBoolean(ref asReference, attrib, "AsReference", true);
+                    }
                     GetFieldBoolean(ref dynamicType, attrib, "DynamicType");
                     done = tagIsPinned = fieldNumber > 0; // note minAcceptFieldNumber only applies to non-proto
                 }
@@ -984,7 +993,15 @@ namespace ProtoBuf.Meta
                             GetFieldBoolean(ref isPacked, ppma, "IsPacked");
                             GetFieldBoolean(ref overwriteList, attrib, "OverwriteList");
                             GetDataFormat(ref dataFormat, ppma, "DataFormat");
-                            GetFieldBoolean(ref asReference, ppma, "AsReference");
+
+#if !FEAT_IKVM
+                            // IKVM can't access AsReferenceHasValue, but conveniently, AsReference will only be returned if set via ctor or property
+                            GetFieldBoolean(ref asReferenceHasValue, attrib, "AsReferenceHasValue", false);
+                            if (asReferenceHasValue)
+#endif
+                            {
+                                asReferenceHasValue = GetFieldBoolean(ref asReference, ppma, "AsReference", true);
+                            }
                             GetFieldBoolean(ref dynamicType, ppma, "DynamicType");
                             if (done = tagIsPinned = fieldNumber > 0) break; // note minAcceptFieldNumber only applies to non-proto
                         }
@@ -1023,6 +1040,7 @@ namespace ProtoBuf.Meta
             if (ignore || (fieldNumber < minAcceptFieldNumber && !forced)) return null;
             ProtoMemberAttribute result = new ProtoMemberAttribute(fieldNumber, forced || inferByTagName);
             result.AsReference = asReference;
+            result.AsReferenceHasValue = asReferenceHasValue;
             result.DataFormat = dataFormat;
             result.DynamicType = dynamicType;
             result.IsPacked = isPacked;
@@ -1117,7 +1135,10 @@ namespace ProtoBuf.Meta
                 vm.IsPacked = normalizedAttribute.IsPacked;
                 vm.IsRequired = normalizedAttribute.IsRequired;
                 vm.OverwriteList = normalizedAttribute.OverwriteList;
-                vm.AsReference = normalizedAttribute.AsReference;
+                if (normalizedAttribute.AsReferenceHasValue)
+                {
+                    vm.AsReference = normalizedAttribute.AsReference;
+                }
                 vm.DynamicType = normalizedAttribute.DynamicType;
             }
             return vm;
@@ -1139,9 +1160,19 @@ namespace ProtoBuf.Meta
 
         private static void GetFieldBoolean(ref bool value, AttributeMap attrib, string memberName)
         {
-            if (attrib == null || value) return;
+            GetFieldBoolean(ref value, attrib, memberName, true);
+        }
+        private static bool GetFieldBoolean(ref bool value, AttributeMap attrib, string memberName, bool publicOnly)
+        {
+            if (attrib == null) return false;
+            if (value) return true;
             object obj;
-            if (attrib.TryGet(memberName, out obj) && obj != null) value = (bool)obj;
+            if (attrib.TryGet(memberName, publicOnly, out obj) && obj != null)
+            {
+                value = (bool)obj;
+                return true;
+            }
+            return false;
         }
 
         private static void GetFieldNumber(ref int value, AttributeMap attrib, string memberName)

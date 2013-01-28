@@ -125,6 +125,17 @@ namespace ProtoBuf
             {
                 if (value) options |= MemberSerializationOptions.AsReference;
                 else options &= ~MemberSerializationOptions.AsReference;
+
+                options |= MemberSerializationOptions.AsReferenceHasValue;
+            }
+        }
+
+        internal bool AsReferenceHasValue
+        {
+            get { return (options & MemberSerializationOptions.AsReferenceHasValue) == MemberSerializationOptions.AsReferenceHasValue; }
+            set {
+                if (value) options |= MemberSerializationOptions.AsReferenceHasValue;
+                else options &= ~MemberSerializationOptions.AsReferenceHasValue;
             }
         }
 
@@ -181,6 +192,10 @@ namespace ProtoBuf
         /// This option only applies to list/array data.
         /// </summary>
         OverwriteList = 16,
+        /// <summary>
+        /// Determines whether the types AsReferenceDefault value is used, or whether this member's AsReference should be used
+        /// </summary>
+        AsReferenceHasValue = 32
     }
 
     /// <summary>

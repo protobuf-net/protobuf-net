@@ -712,7 +712,28 @@ namespace ProtoBuf.Meta
                     add = Helpers.GetInstanceMethod(constuctedListType, "Add", types);
                 }
             }
+
+            if (add == null)
+            {
+                
+#if WINRT
+                foreach (Type tmpType in listTypeInfo.ImplementedInterfaces)
+#else
+                foreach (Type interfaceType in listTypeInfo.GetInterfaces())
 #endif
+                {
+#if WINRT
+                    TypeInfo interfaceType = tmpType.GetTypeInfo();
+#endif
+                    if (interfaceType.Name == "IProducerConsumerCollection`1" && interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
+                    {
+                        add = Helpers.GetInstanceMethod(interfaceType, "TryAdd", types);
+                        if (add != null) break;
+                    }
+                }
+            }
+#endif
+
             if (add == null)
             {   // fallback: look for a public list.Add(object) method
                 types[0] = model.MapType(typeof(object));
@@ -751,34 +772,49 @@ namespace ProtoBuf.Meta
                     candidates.Add(parameters[0].ParameterType);
                 }
             }
+
+            string name = listType.Name;
+            bool isQueueStack = name != null && (name.Contains("Queue") || name.Contains("Stack"));
+            if(!isQueueStack)
+            {
 #if !NO_GENERICS
 #if WINRT
-            foreach (Type iType in listTypeInfo.ImplementedInterfaces)
-            {
-                TypeInfo iTypeInfo = iType.GetTypeInfo();
-                if (iTypeInfo.IsGenericType && iTypeInfo.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ICollection<>))
+                foreach (Type iType in listTypeInfo.ImplementedInterfaces)
                 {
-                    Type[] iTypeArgs = iTypeInfo.GenericTypeArguments;
-                    if (!candidates.Contains(iTypeArgs[0]))
+                    TypeInfo iTypeInfo = iType.GetTypeInfo();
+                    if (iTypeInfo.IsGenericType)
                     {
-                        candidates.Add(iTypeArgs[0]);
+                        Type typeDef = iTypeInfo.GetGenericTypeDefinition();
+                        if(typeDef == typeof(System.Collections.Generic.ICollection<>) || typeDef.GetTypeInfo().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
+                        {
+                        
+                            Type[] iTypeArgs = iTypeInfo.GenericTypeArguments;
+                            if (!candidates.Contains(iTypeArgs[0]))
+                            {
+                                candidates.Add(iTypeArgs[0]);
+                            }
+                        }
                     }
                 }
-            }
 #else
-            foreach (Type iType in listType.GetInterfaces())
-            {
-                if (iType.IsGenericType && iType.GetGenericTypeDefinition() == model.MapType(typeof(System.Collections.Generic.ICollection<>)))
+                foreach (Type iType in listType.GetInterfaces())
                 {
-                    Type[] iTypeArgs = iType.GetGenericArguments();
-                    if (!candidates.Contains(iTypeArgs[0]))
+                    if (iType.IsGenericType)
                     {
-                        candidates.Add(iTypeArgs[0]);
+                        Type typeDef = iType.GetGenericTypeDefinition();
+                        if (typeDef == model.MapType(typeof(System.Collections.Generic.ICollection<>)) || typeDef.FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
+                        {
+                            Type[] iTypeArgs = iType.GetGenericArguments();
+                            if (!candidates.Contains(iTypeArgs[0]))
+                            {
+                                candidates.Add(iTypeArgs[0]);
+                            }
+                        }
                     }
                 }
+#endif
+#endif
             }
-#endif
-#endif
 
 #if WINRT
             // more convenient GetProperty overload not supported on all platforms

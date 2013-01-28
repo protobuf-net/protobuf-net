@@ -34,7 +34,14 @@ namespace ProtoBuf.Serializers
 
                 MetaType.ResolveListTypes(model, finalType, ref itemType, ref defaultType);
                 Type tmp = itemType == null ? finalType : itemType;
-                IProtoSerializer tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out wireType, false, false, false, true), serializer;
+
+                bool asReference = false;
+                int typeIndex = model.FindOrAddAuto(tmp, false, true, false);
+                if (typeIndex >= 0)
+                {
+                    asReference = model[tmp].AsReferenceDefault;
+                }
+                IProtoSerializer tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out wireType, asReference, false, false, true), serializer;
                 if (tail == null) throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
 
                 tail = new TagDecorator(i + 1, wireType, false, tail);

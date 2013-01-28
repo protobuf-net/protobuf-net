@@ -110,6 +110,18 @@ namespace ProtoBuf
             set { SetFlag(OPTIONS_SkipConstructor, value); }
         }
 
+        /// <summary>
+        /// Should this type be treated as a reference by default? Please also see the implications of this,
+        /// as recorded on ProtoMemberAttribute.AsReference
+        /// </summary>
+        public bool AsReferenceDefault
+        {
+            get { return HasFlag(OPTIONS_AsReferenceDefault); }
+            set {
+                SetFlag(OPTIONS_AsReferenceDefault, value);
+            }
+        }
+
         private bool HasFlag(byte flag) { return (flags & flag) == flag; }
         private void SetFlag(byte flag, bool value)
         {
@@ -124,8 +136,7 @@ namespace ProtoBuf
             OPTIONS_InferTagFromNameHasValue = 2,
             OPTIONS_UseProtoMembersOnly = 4,
             OPTIONS_SkipConstructor = 8,
-            OPTIONS_IgnoreListHandling = 16;
-
-
+            OPTIONS_IgnoreListHandling = 16,
+            OPTIONS_AsReferenceDefault = 32;
     }
 }

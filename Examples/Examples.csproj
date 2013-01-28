@@ -219,6 +219,7 @@
     <Compile Include="Issues\Issue316.cs" />
     <Compile Include="Issues\Issue329.cs" />
     <Compile Include="Issues\Issue331.cs" />
+    <Compile Include="Issues\Issue354.cs" />
     <Compile Include="Issues\MissingBaseTypes.cs" />
     <Compile Include="Issues\SO11896228.cs" />
     <Compile Include="Issues\AssortedGoLiveRegressions.cs" />
