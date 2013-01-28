@@ -587,13 +587,22 @@ namespace ProtoBuf.Meta
                             if (item.TryGet("InferTagFromName", out tmp)) inferTagByName = (bool) tmp;
                         }
 
-                        if (item.TryGet("ImplicitFields", out tmp))
+                        if (item.TryGet("ImplicitFields", out tmp) && tmp != null)
                         {
                             if (tmp is ImplicitFields) implicitMode = (ImplicitFields) tmp;
                             else if (tmp is int) implicitMode = (ImplicitFields) (int) tmp;
                             else
                             {
-                                throw new NotSupportedException(tmp.GetType().FullName);
+                                // see http://stackoverflow.com/questions/14540862/proto-serializing-hierarchy-type-with-reflection
+                                System.Type t = tmp.GetType();
+                                if (Helpers.GetTypeCode(t) == ProtoTypeCode.Int32)
+                                {
+                                    implicitMode = (ImplicitFields)(int)tmp;
+                                }
+                                else
+                                {
+                                    // do nothing
+                                }
                             }
                         }
 
