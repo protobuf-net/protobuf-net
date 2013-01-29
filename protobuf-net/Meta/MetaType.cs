@@ -292,18 +292,14 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType SetFactory(MethodInfo factory)
         {
-            if(factory != null)
-            {
-                if(IsValueType) throw new InvalidOperationException();
-                if(!factory.IsStatic) throw new ArgumentException("A factory-method must be static", "factory");
-                if (factory.ReturnType != type) throw new ArgumentException("The factory-method must return " + type.FullName, "factory");
-
-                if (!CallbackSet.CheckCallbackParameters(model, factory)) throw new ArgumentException("Invalid factory signature in " + factory.DeclaringType.FullName + "." + factory.Name, "factory");
-            }
+            model.VerifyFactory(factory, type);
             ThrowIfFrozen();
             this.factory = factory;
             return this;
         }
+
+
+
         /// <summary>
         /// Designate a factory-method to use to create instances of this type
         /// </summary>
@@ -322,8 +318,9 @@ namespace ProtoBuf.Meta
 #endif
         }
         private readonly RuntimeTypeModel model;
-        internal MetaType(RuntimeTypeModel model, Type type)
+        internal MetaType(RuntimeTypeModel model, Type type, MethodInfo factory)
         {
+            this.factory = factory;
             if (model == null) throw new ArgumentNullException("model");
             if (type == null) throw new ArgumentNullException("type");
             WireType defaultWireType;
@@ -589,21 +586,7 @@ namespace ProtoBuf.Meta
 
                         if (item.TryGet("ImplicitFields", out tmp) && tmp != null)
                         {
-                            if (tmp is ImplicitFields) implicitMode = (ImplicitFields) tmp;
-                            else if (tmp is int) implicitMode = (ImplicitFields) (int) tmp;
-                            else
-                            {
-                                // see http://stackoverflow.com/questions/14540862/proto-serializing-hierarchy-type-with-reflection
-                                System.Type t = tmp.GetType();
-                                if (Helpers.GetTypeCode(t) == ProtoTypeCode.Int32)
-                                {
-                                    implicitMode = (ImplicitFields)(int)tmp;
-                                }
-                                else
-                                {
-                                    // do nothing
-                                }
-                            }
+                            implicitMode = (ImplicitFields) (int) tmp; // note that this uses the bizarre unboxing rules of enums/underlying-types
                         }
 
                         if (item.TryGet("SkipConstructor", out tmp)) UseConstructor = !(bool) tmp;

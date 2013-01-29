@@ -528,7 +528,7 @@ namespace ProtoBuf.Meta
         private MetaType Create(Type type)
         {
             ThrowIfFrozen();
-            return new MetaType(this, type);
+            return new MetaType(this, type, defaultFactory);
         }
 
         /// <summary>
@@ -1813,6 +1813,27 @@ namespace ProtoBuf.Meta
 
         }
 
+        /// <summary>
+        /// Designate a factory-method to use to create instances of any type; note that this only affect types seen by the serializer *after* setting the factory.
+        /// </summary>
+        public void SetDefaultFactory(MethodInfo methodInfo)
+        {
+            VerifyFactory(methodInfo, null);
+            defaultFactory = methodInfo;
+        }
+        private MethodInfo defaultFactory;
+
+        internal void VerifyFactory(MethodInfo factory, Type type)
+        {
+            if (factory != null)
+            {
+                if (type != null && Helpers.IsValueType(type)) throw new InvalidOperationException();
+                if (!factory.IsStatic) throw new ArgumentException("A factory-method must be static", "factory");
+                if ((type != null && factory.ReturnType != type) && factory.ReturnType != MapType(typeof(object))) throw new ArgumentException("The factory-method must return object" + (type == null ? "" : (" or " + type.FullName)), "factory");
+
+                if (!CallbackSet.CheckCallbackParameters(this, factory)) throw new ArgumentException("Invalid factory signature in " + factory.DeclaringType.FullName + "." + factory.Name, "factory");
+            }
+        }
     }
     /// <summary>
     /// Contains the stack-trace of the owning code when a lock-contention scenario is detected

@@ -38,12 +38,17 @@ namespace ProtoBuf.Meta
         internal static bool CheckCallbackParameters(TypeModel model, MethodInfo method)
         {
             ParameterInfo[] args = method.GetParameters();
-            return args.Length == 0
-                || (args.Length == 1 && (args[0].ParameterType == model.MapType(typeof(SerializationContext))
+            for (int i = 0; i < args.Length; i++)
+            {
+                Type paramType = args[i].ParameterType;
+                if(paramType == model.MapType(typeof(SerializationContext))) {}
+                else if(paramType == model.MapType(typeof(Type))) {}
 #if PLAT_BINARYFORMATTER
-                || args[0].ParameterType == model.MapType(typeof(System.Runtime.Serialization.StreamingContext))
+                else if(paramType == model.MapType(typeof(System.Runtime.Serialization.StreamingContext))) {}
 #endif
-            ));
+                else return false;
+            }
+            return true;
         }
         private MethodInfo SanityCheckCallback(TypeModel model, MethodInfo callback)
         {
