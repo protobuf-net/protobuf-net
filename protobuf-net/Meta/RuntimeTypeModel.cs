@@ -1196,7 +1196,7 @@ namespace ProtoBuf.Meta
 #if NO_GENERICS
                 knownTypesLookupType = null;
 #else
-                knownTypesLookupType = MapType(typeof(System.Collections.Generic.Dictionary<Type, int>), false);
+                knownTypesLookupType = MapType(typeof(System.Collections.Generic.Dictionary<System.Type, int>), false);
 #endif
                 if (knownTypesLookupType == null)
                 {
@@ -1427,7 +1427,7 @@ namespace ProtoBuf.Meta
                                 }
                             }
                             Compiler.CompilerContext.LoadValue(il, keyIndex);
-                            il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetMethod("Add", new Type[] { MapType(typeof(Type)), MapType(typeof(int)) }), null);
+                            il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetMethod("Add", new Type[] { MapType(typeof(System.Type)), MapType(typeof(int)) }), null);
                         }
                         il.Emit(OpCodes.Ret);
                     }

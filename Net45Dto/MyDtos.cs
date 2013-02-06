@@ -726,4 +726,27 @@ namespace DAL
             this.Initialize();
         }
     }
+
+    // to force over the array/hashtable divide
+    [ProtoContract] public class Dummy1 { }
+    [ProtoContract] public class Dummy2 { }
+    [ProtoContract] public class Dummy3 { }
+    [ProtoContract] public class Dummy4 { }
+    [ProtoContract] public class Dummy5 { }
+    [ProtoContract] public class Dummy6 { }
+    [ProtoContract] public class Dummy7 { }
+    [ProtoContract] public class Dummy8 { }
+    [ProtoContract] public class Dummy9 { }
+    [ProtoContract] public class Dummy10 { }
+    [ProtoContract] public class Dummy11 { }
+    [ProtoContract] public class Dummy12 { }
+    [ProtoContract] public class Dummy13 { }
+    [ProtoContract] public class Dummy14 { }
+    [ProtoContract] public class Dummy15 { }
+    [ProtoContract] public class Dummy16 { }
+    [ProtoContract] public class Dummy17 { }
+    [ProtoContract] public class Dummy18 { }
+    [ProtoContract] public class Dummy19 { }
+    [ProtoContract] public class Dummy20 { }
+
 }

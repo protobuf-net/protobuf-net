@@ -296,7 +296,7 @@ namespace ProtoBuf.Precompile
             {
                 string nameOnly = args.Name.Split(',')[0];
 
-                if (nameOnly == "IKVM.Reflection" && args.RequestingAssembly.FullName.StartsWith("protobuf-net"))
+                if (nameOnly == "IKVM.Reflection" && args.RequestingAssembly != null && args.RequestingAssembly.FullName.StartsWith("protobuf-net"))
                 {
                     throw new InvalidOperationException("This operation needs access to the protobuf-net.dll used by your library, **in addition to** the protobuf-net.dll that is included with the precompiler; the easiest way to do this is to ensure the referenced protobuf-net.dll is in the same folder as your library.");
                 }

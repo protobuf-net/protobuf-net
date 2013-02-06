@@ -274,7 +274,7 @@ namespace ProtoBuf.Serializers
                             object val;
                             Type paramType = parameters[i].ParameterType;
                             if (paramType == typeof(SerializationContext)) val = context;
-                            else if (paramType == typeof(Type)) val = constructType;
+                            else if (paramType == typeof(System.Type)) val = constructType;
 #if PLAT_BINARYFORMATTER || (SILVERLIGHT && NET_4_0)
                             else if (paramType == typeof(System.Runtime.Serialization.StreamingContext)) val = (System.Runtime.Serialization.StreamingContext)context;
 #endif
@@ -436,7 +436,7 @@ namespace ProtoBuf.Serializers
                     {
                         ctx.LoadSerializationContext();
                     }
-                    else if (parameterType == ctx.MapType(typeof(Type)))
+                    else if (parameterType == ctx.MapType(typeof(System.Type)))
                     {
                         ctx.LoadValue(constructType ?? type);
                     }

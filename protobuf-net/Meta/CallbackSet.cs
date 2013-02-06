@@ -42,7 +42,7 @@ namespace ProtoBuf.Meta
             {
                 Type paramType = args[i].ParameterType;
                 if(paramType == model.MapType(typeof(SerializationContext))) {}
-                else if(paramType == model.MapType(typeof(Type))) {}
+                else if(paramType == model.MapType(typeof(System.Type))) {}
 #if PLAT_BINARYFORMATTER
                 else if(paramType == model.MapType(typeof(System.Runtime.Serialization.StreamingContext))) {}
 #endif
