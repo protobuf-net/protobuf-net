@@ -71,7 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\precompile\precompile.csproj">
-      <Project>{2EA60052-319B-4079-8DA1-4D65853A9A76}</Project>
+      <Project>{2ea60052-319b-4079-8da1-4d65853a9a76}</Project>
       <Name>precompile</Name>
     </ProjectReference>
     <ProjectReference Include="..\protobuf-net_IKVM\protobuf-net_IKVM.csproj">

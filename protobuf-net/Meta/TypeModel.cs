@@ -578,7 +578,9 @@ namespace ProtoBuf.Meta
             using (ProtoReader reader = new ProtoReader(source, this, context))
             {
                 if (value != null) reader.SetRootObject(value);
-                return DeserializeCore(reader, type, value, autoCreate);
+                object obj = DeserializeCore(reader, type, value, autoCreate);
+                reader.CheckFullyConsumed();
+                return obj;
             }
 #endif
         }

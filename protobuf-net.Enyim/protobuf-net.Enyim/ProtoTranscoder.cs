@@ -75,7 +75,7 @@ namespace ProtoBuf.Caching.Enyim
 
             // resolve while we flip the lock, and create a new buffer to use
             // for the key (standalone)
-            type = Type.GetType(enc.GetString(buffer, keyOffset, len));
+            type = Type.GetType(enc.GetString(buffer, keyOffset, len), true);
             byte[] standaloneBuffer = new byte[len];
             Buffer.BlockCopy(buffer, keyOffset, standaloneBuffer, 0, len);
             key = new ArraySegment<byte>(standaloneBuffer, 0, len);

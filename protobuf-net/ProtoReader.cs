@@ -646,8 +646,12 @@ namespace ProtoBuf
                 wireType = WireType.None;
                 fieldNumber = 0;
             }
-            // watch for end-of-group
-            return wireType == WireType.EndGroup ? 0 : fieldNumber;
+            if (wireType == ProtoBuf.WireType.EndGroup)
+            {
+                if (depth > 0) return 0; // spoof an end, but note we still set the field-number
+                throw new ProtoException("Unexpected end-group in source data; this usually means the source data is corrupt");
+            }
+            return fieldNumber;
         }
         /// <summary>
         /// Looks ahead to see whether the next field in the stream is what we expect
@@ -755,7 +759,9 @@ namespace ProtoBuf
                     return;
                 case WireType.StartGroup:
                     int originalFieldNumber = this.fieldNumber;
+                    depth++; // need to satisfy the sanity-checks in ReadFieldHeader
                     while (ReadFieldHeader() > 0) { SkipField(); }
+                    depth--;
                     if (wireType == WireType.EndGroup && fieldNumber == originalFieldNumber)
                     { // we expect to exit in a similar state to how we entered
                         wireType = ProtoBuf.WireType.None;
@@ -1283,9 +1289,13 @@ namespace ProtoBuf
 
         internal void CheckFullyConsumed()
         {
-            if (isFixedLength && dataRemaining != 0)
+            if (isFixedLength)
             {
-                throw new ProtoException("Incorrect number of bytes consumed");
+                if (dataRemaining != 0) throw new ProtoException("Incorrect number of bytes consumed");
+            }
+            else
+            {
+                if (available != 0) throw new ProtoException("Unconsumed data left in the buffer; this suggests corrupt input");
             }
         }
 
