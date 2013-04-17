@@ -48,14 +48,16 @@ namespace ProtoBuf.Meta
         }
         public void Trim() { head = head.Trim(); }
         public int Count { get { return head.Length; } }
-        public IEnumerator GetEnumerator() { return new NodeEnumerator(head); }
+        IEnumerator IEnumerable.GetEnumerator() { return new NodeEnumerator(head); }
+        public NodeEnumerator GetEnumerator() { return new NodeEnumerator(head); }
 
-        private sealed class NodeEnumerator : IEnumerator
+        public struct NodeEnumerator : IEnumerator
         {
-            private int position = -1;
+            private int position;
             private readonly Node node;
-            public NodeEnumerator(Node node)
+            internal NodeEnumerator(Node node)
             {
+                this.position = -1;
                 this.node = node;
             }
             void IEnumerator.Reset() { position = -1; }
@@ -66,7 +68,7 @@ namespace ProtoBuf.Meta
                 return (position <= len) && (++position < len);
             }
         }
-        protected sealed class Node
+        internal sealed class Node
         {
             public object this[int index]
             {

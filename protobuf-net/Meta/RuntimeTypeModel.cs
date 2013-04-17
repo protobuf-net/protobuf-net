@@ -408,15 +408,25 @@ namespace ProtoBuf.Meta
             Type underlyingType = ResolveProxies(type);
             return underlyingType == null ? null : FindWithoutAdd(underlyingType);
         }
-        sealed class TypeFinder : BasicList.IPredicate
+        sealed class MetaTypeFinder : BasicList.IPredicate
         {
             private readonly Type type;
-            public TypeFinder(Type type) { this.type = type; }
+            public MetaTypeFinder(Type type) { this.type = type; }
             public bool IsMatch(object obj)
             {
                 return ((MetaType)obj).Type == type;
             }
         }
+        sealed class BasicTypeFinder : BasicList.IPredicate
+        {
+            private readonly Type type;
+            public BasicTypeFinder(Type type) { this.type = type; }
+            public bool IsMatch(object obj)
+            {
+                return ((BasicType)obj).Type == type;
+            }
+        }
+
         private void WaitOnLock(MetaType type)
         {
             int opaqueToken = 0;
@@ -429,25 +439,81 @@ namespace ProtoBuf.Meta
                 ReleaseLock(opaqueToken);
             }
         }
+        BasicList basicTypes = new BasicList();
+
+        class BasicType
+        {
+            private readonly Type type;
+            public Type Type { get { return type; } }
+            private readonly IProtoSerializer serializer;
+            public IProtoSerializer Serializer { get { return serializer; } }
+            public BasicType(Type type, IProtoSerializer serializer)
+            {
+                this.type = type;
+                this.serializer = serializer;
+            }
+        }
+        internal IProtoSerializer TryGetBasicTypeSerializer(Type type)
+        {
+            BasicList.IPredicate predicate = new BasicTypeFinder(type);
+            int idx = basicTypes.IndexOf(predicate);
+
+            if (idx >= 0) return ((BasicType)basicTypes[idx]).Serializer;
+
+            lock(basicTypes)
+            { // don't need a full model lock for this
+
+                // double-checked
+                idx = basicTypes.IndexOf(predicate);
+                if (idx >= 0) return ((BasicType)basicTypes[idx]).Serializer;
+
+                WireType defaultWireType;
+                MetaType.AttributeFamily family = MetaType.GetContractFamily(this, type, null);
+                IProtoSerializer ser = family == MetaType.AttributeFamily.None
+                    ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false)
+                    : null;
+
+                if(ser != null) basicTypes.Add(new BasicType(type, ser));
+                return ser;
+            }
+
+        }
+
         internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled)
         {
-            TypeFinder predicate = new TypeFinder(type);
+            MetaTypeFinder predicate = new MetaTypeFinder(type);
             int key = types.IndexOf(predicate);
             MetaType metaType;
-            if (key >= 0 && (metaType = ((MetaType)types[key])).Pending)
+
+            // the fast happy path: meta-types we've already seen
+            if (key >= 0)
             {
-                WaitOnLock(metaType);
-            }
-            if (key < 0)
-            {
-                // check for proxy types
-                Type underlyingType = ResolveProxies(type);
-                if (underlyingType != null)
+                metaType = (MetaType)types[key];
+                if (metaType.Pending)
                 {
-                    predicate = new TypeFinder(underlyingType);
-                    key = types.IndexOf(predicate);
-                    type = underlyingType; // if new added, make it reflect the underlying type
+                    WaitOnLock(metaType);
                 }
+                return key;
+            }
+
+            // the fast fail path: types that will never have a meta-type
+            bool shouldAdd = AutoAddMissingTypes || addEvenIfAutoDisabled;
+
+            if (!Helpers.IsEnum(type) && TryGetBasicTypeSerializer(type) != null)
+            {
+                if (shouldAdd && !addWithContractOnly) throw MetaType.InbuiltType(type);
+                return -1; // this will never be a meta-type
+            }
+
+            // otherwise: we don't yet know
+
+            // check for proxy types
+            Type underlyingType = ResolveProxies(type);
+            if (underlyingType != null)
+            {
+                predicate = new MetaTypeFinder(underlyingType);
+                key = types.IndexOf(predicate);
+                type = underlyingType; // if new added, make it reflect the underlying type
             }
 
             if (key < 0)
@@ -460,9 +526,11 @@ namespace ProtoBuf.Meta
                     if ((metaType = RecogniseCommonTypes(type)) == null)
                     { // otherwise, check if it is a contract
                         MetaType.AttributeFamily family = MetaType.GetContractFamily(this, type, null);
-                        if (family == MetaType.AttributeFamily.AutoTuple) addEvenIfAutoDisabled = true; // always add basic tuples, such as KeyValuePair
+                        if (family == MetaType.AttributeFamily.AutoTuple)
+                        {
+                            shouldAdd = addEvenIfAutoDisabled = true; // always add basic tuples, such as KeyValuePair
+                        }
 
-                        bool shouldAdd = AutoAddMissingTypes || addEvenIfAutoDisabled;
                         if (!shouldAdd || (
                             !Helpers.IsEnum(type) && addWithContractOnly && family == MetaType.AttributeFamily.None)
                             )
@@ -1166,16 +1234,16 @@ namespace ProtoBuf.Meta
             for(index = 0; index < methodPairs.Length ; index++)
             {
                 SerializerPair pair = methodPairs[index];
-                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName);
+                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, pair.Type.Type);
                 ctx.CheckAccessibility(pair.Deserialize.ReturnType);
-                pair.Type.Serializer.EmitWrite(ctx, Compiler.Local.InputValue);
+                pair.Type.Serializer.EmitWrite(ctx, ctx.InputValue);
                 ctx.Return();
 
-                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs, this, ilVersion, assemblyName);
-                pair.Type.Serializer.EmitRead(ctx, Compiler.Local.InputValue);
+                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs, this, ilVersion, assemblyName, pair.Type.Type);
+                pair.Type.Serializer.EmitRead(ctx, ctx.InputValue);
                 if (!pair.Type.Serializer.ReturnsValue)
                 {
-                    ctx.LoadValue(Compiler.Local.InputValue);
+                    ctx.LoadValue(ctx.InputValue);
                 }
                 ctx.Return();
             }
@@ -1327,7 +1395,7 @@ namespace ProtoBuf.Meta
             }
             
             il = Override(type, "Serialize");
-            ctx = new Compiler.CompilerContext(il, false, true, methodPairs, this, ilVersion, assemblyName);
+            ctx = new Compiler.CompilerContext(il, false, true, methodPairs, this, ilVersion, assemblyName, MapType(typeof(object)));
             // arg0 = this, arg1 = key, arg2=obj, arg3=dest
             Label[] jumpTable = new Label[types.Count];
             for (int i = 0; i < jumpTable.Length; i++) {
@@ -1348,7 +1416,7 @@ namespace ProtoBuf.Meta
             }
 
             il = Override(type, "Deserialize");
-            ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName);
+            ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, MapType(typeof(object)));
             // arg0 = this, arg1 = key, arg2=obj, arg3=source
             for (int i = 0; i < jumpTable.Length; i++)
             {
@@ -1487,13 +1555,13 @@ namespace ProtoBuf.Meta
             MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i, MethodAttributes.Static, CallingConventions.Standard,
                 model.MapType(typeof(object)), new Type[] { model.MapType(typeof(object)), model.MapType(typeof(ProtoReader)) });
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName);
-            ctx.LoadValue(Compiler.Local.InputValue);
+            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName, model.MapType(typeof(object)));
+            ctx.LoadValue(ctx.InputValue);
             Compiler.CodeLabel @null = ctx.DefineLabel();
             ctx.BranchIfFalse(@null, true);
 
             Type mappedValueType = valueType;
-            ctx.LoadValue(Compiler.Local.InputValue);
+            ctx.LoadValue(ctx.InputValue);
             ctx.CastFromObject(mappedValueType);
             ctx.LoadReaderWriter();
             ctx.EmitCall(dedicated);
@@ -1547,6 +1615,13 @@ namespace ProtoBuf.Meta
             }
         }
 
+#if DEBUG
+        int lockCount;
+        /// <summary>
+        /// Gets how many times a model lock was taken
+        /// </summary>
+        public int LockCount { get { return lockCount; } }
+#endif
         internal void TakeLock(ref int opaqueToken)
         {
             const string message = "Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection; please also see the LockContended event";
@@ -1581,6 +1656,10 @@ namespace ProtoBuf.Meta
                 throw new TimeoutException(message);
 #endif
             }
+#endif
+
+#if DEBUG // note that here, through all code-paths: we have the lock
+            lockCount++;
 #endif
         }
 

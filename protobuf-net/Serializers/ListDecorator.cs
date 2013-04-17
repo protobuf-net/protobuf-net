@@ -109,6 +109,7 @@ namespace ProtoBuf.Serializers
              *  - handling whether or not the tail *returns* the value vs updates the input
              */
             bool returnList = ReturnList;
+            bool castListForAdd = !add.DeclaringType.IsAssignableFrom(declaredType);
             using (Compiler.Local list = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : new Compiler.Local(ctx, declaredType))
             using (Compiler.Local origlist = (returnList && AppendToCollection) ? new Compiler.Local(ctx, ExpectedType) : null)
             {
@@ -132,7 +133,7 @@ namespace ProtoBuf.Serializers
                     ctx.MarkLabel(notNull);
                 }
 
-                EmitReadList(ctx, list, Tail, add, packedWireType);
+                EmitReadList(ctx, list, Tail, add, packedWireType, castListForAdd);
 
                 if (returnList)
                 {
@@ -157,7 +158,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        internal static void EmitReadList(ProtoBuf.Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add, WireType packedWireType)
+        internal static void EmitReadList(ProtoBuf.Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add, WireType packedWireType, bool castListForAdd)
         {
             using (Compiler.Local fieldNumber = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
             {
@@ -176,7 +177,7 @@ namespace ProtoBuf.Serializers
                 Compiler.CodeLabel @continue = ctx.DefineLabel();
                 ctx.MarkLabel(@continue);
 
-                EmitReadAndAddItem(ctx, list, tail, add);
+                EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
 
                 ctx.LoadReaderWriter();
                 ctx.LoadValue(fieldNumber);
@@ -199,7 +200,7 @@ namespace ProtoBuf.Serializers
                     ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("HasSubValue"));
                     ctx.BranchIfFalse(noMoreData, false);
 
-                    EmitReadAndAddItem(ctx, list, tail, add);
+                    EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
                     ctx.Branch(testForData, false);
 
                     ctx.MarkLabel(noMoreData);
@@ -213,9 +214,10 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        private static void EmitReadAndAddItem(Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add)
+        private static void EmitReadAndAddItem(Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add, bool castListForAdd)
         {
             ctx.LoadValue(list);
+            if (castListForAdd) ctx.Cast(add.DeclaringType);
             Type itemType = tail.ExpectedType;
             if (tail.RequiresOldValue)
             {

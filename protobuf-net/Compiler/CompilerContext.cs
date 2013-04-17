@@ -53,8 +53,8 @@ namespace ProtoBuf.Compiler
         public static ProtoSerializer BuildSerializer(IProtoSerializer head, TypeModel model)
         {
             Type type = head.ExpectedType;
-            CompilerContext ctx = new CompilerContext(type, true, true, model);
-            ctx.LoadValue(Local.InputValue);
+            CompilerContext ctx = new CompilerContext(type, true, true, model, typeof(object));
+            ctx.LoadValue(ctx.InputValue);
             ctx.CastFromObject(type);
             ctx.WriteNullCheckedTail(type, head, null);
             ctx.Emit(OpCodes.Ret);
@@ -94,19 +94,19 @@ namespace ProtoBuf.Compiler
         public static ProtoDeserializer BuildDeserializer(IProtoSerializer head, TypeModel model)
         {
             Type type = head.ExpectedType;
-            CompilerContext ctx = new CompilerContext(type, false, true, model);
+            CompilerContext ctx = new CompilerContext(type, false, true, model, typeof(object));
             
             using (Local typedVal = new Local(ctx, type))
             {
                 if (!type.IsValueType)
                 {
-                    ctx.LoadValue(Local.InputValue);
+                    ctx.LoadValue(ctx.InputValue);
                     ctx.CastFromObject(type);
                     ctx.StoreValue(typedVal);
                 }
                 else
                 {   
-                    ctx.LoadValue(Local.InputValue);
+                    ctx.LoadValue(ctx.InputValue);
                     CodeLabel notNull = ctx.DefineLabel(), endNull = ctx.DefineLabel();
                     ctx.BranchIfTrue(notNull, true);
 
@@ -115,7 +115,7 @@ namespace ProtoBuf.Compiler
                     ctx.Branch(endNull, true);
 
                     ctx.MarkLabel(notNull);
-                    ctx.LoadValue(Local.InputValue);
+                    ctx.LoadValue(ctx.InputValue);
                     ctx.CastFromObject(type);
                     ctx.StoreValue(typedVal);
 
@@ -242,9 +242,11 @@ namespace ProtoBuf.Compiler
         internal bool NonPublic { get { return nonPublic; } }
 
 
+        private readonly Local inputValue;
+        public Local InputValue { get { return inputValue; } }
 #if !(SILVERLIGHT || PHONE8)
         private readonly string assemblyName;
-        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName)
+        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType)
         {
             if (il == null) throw new ArgumentNullException("il");
             if (methodPairs == null) throw new ArgumentNullException("methodPairs");
@@ -258,10 +260,11 @@ namespace ProtoBuf.Compiler
             this.isWriter = isWriter;
             this.model = model;
             this.metadataVersion = metadataVersion;
+            if (inputType != null) this.inputValue = new Local(null, inputType);
         }
 #endif
 #if !(FX11 || FEAT_IKVM)
-        private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model)
+        private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
         {
             if (model == null) throw new ArgumentNullException("model");
 #if FX11
@@ -293,7 +296,9 @@ namespace ProtoBuf.Compiler
 #endif
             method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType, paramTypes, associatedType.IsInterface ? typeof(object) : associatedType, true);
             this.il = method.GetILGenerator();
+            if (inputType != null) this.inputValue = new Local(null, inputType);
         }
+
 #endif
         private readonly ILGenerator il;
 
@@ -412,7 +417,7 @@ namespace ProtoBuf.Compiler
         }
         public void StoreValue(Local local)
         {
-            if (local == Local.InputValue)
+            if (local == this.InputValue)
             {
                 byte b = isStatic ? (byte) 0 : (byte)1;
                 il.Emit(OpCodes.Starg_S, b);
@@ -445,7 +450,7 @@ namespace ProtoBuf.Compiler
         public void LoadValue(Local local)
         {
             if (local == null) { /* nothing to do; top of stack */}
-            else if (local == Local.InputValue)
+            else if (local == this.InputValue)
             {
                 Emit(isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
             }
@@ -473,7 +478,16 @@ namespace ProtoBuf.Compiler
         }
         public Local GetLocalWithValue(Type type, Compiler.Local fromValue)
         {
-            if (fromValue != null) { return fromValue.AsCopy(); }
+            if (fromValue != null)
+            {
+                if (fromValue.Type == type) return fromValue.AsCopy();
+                // otherwise, load onto the stack and let the default handling (below) deal with it
+                LoadValue(fromValue);
+                if (!type.IsValueType && (fromValue.Type == null || !type.IsAssignableFrom(fromValue.Type)))
+                { // need to cast
+                    Cast(type);
+                }
+            }
             // need to store the value from the stack
             Local result = new Local(this, type);
             StoreValue(result);
@@ -880,7 +894,7 @@ namespace ProtoBuf.Compiler
                     throw new InvalidOperationException("Cannot load the address of a struct at the head of the stack");
                 }
 
-                if (local == Local.InputValue)
+                if (local == this.InputValue)
                 {
                     il.Emit(OpCodes.Ldarga_S, (isStatic ? (byte)0 : (byte)1));
 #if DEBUG_COMPILE

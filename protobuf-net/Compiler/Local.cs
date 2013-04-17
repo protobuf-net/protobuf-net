@@ -11,21 +11,22 @@ namespace ProtoBuf.Compiler
 {
     internal sealed class Local : IDisposable
     {
-        public static readonly Local InputValue = new Local(null, null);
+        // public static readonly Local InputValue = new Local(null, null);
         LocalBuilder value;
-        public Type Type { get {
-            return value == null ? null : value.LocalType;
-        } }
+        public Type Type { get { return type; } }
         public Local AsCopy()
         {
             if (ctx == null) return this; // can re-use if context-free
-            return new Local(value);
+            return new Local(value, this.type);
         }
         internal LocalBuilder Value
         {
             get
             {
-                if (value == null) throw new ObjectDisposedException(GetType().Name);
+                if (value == null)
+                {
+                    throw new ObjectDisposedException(GetType().Name);
+                }
                 return value;
             }
         }
@@ -42,14 +43,25 @@ namespace ProtoBuf.Compiler
             }            
             
         }
-        private Local(LocalBuilder value)
+        private Local(LocalBuilder value, Type type)
         {
             this.value = value;
+            this.type = type;
         }
+        private readonly Type type;
         internal Local(Compiler.CompilerContext ctx, Type type)
         {
             this.ctx = ctx;
             if (ctx != null) { value = ctx.GetFromPool(type); }
+            this.type = type;
+        }
+
+        internal bool IsSame(Local other)
+        {
+            if((object)this == (object)other) return true;
+
+            object ourVal = value; // use prop to ensure obj-disposed etc
+            return other != null && ourVal == (object)(other.value); 
         }
     }
 

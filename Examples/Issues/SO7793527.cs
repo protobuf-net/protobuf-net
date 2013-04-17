@@ -107,5 +107,85 @@ namespace Examples.Issues
                 Assert.AreEqual(1, clone.Bars.Count());
             }
         }
+
+        // see https://gist.github.com/gmcelhanon/5391894
+        [Serializable, ProtoContract]
+        public class GoalPlanningModel1
+        {
+            [ProtoMember(1)]
+            public IEnumerable<ProposedGoal> ProposedGoals { get; set; }
+
+            [ProtoMember(2)]
+            public IEnumerable<PublishedGoal> PublishedGoals { get; set; }
+        }
+
+        // In order to get protobuf-net to serialize it, I have to change the IEnumerabe<T> members to IList<T>.
+
+        [Serializable, ProtoContract]
+        public class GoalPlanningModel2
+        {
+            [ProtoMember(1)]
+            public IList<ProposedGoal> ProposedGoals { get; set; }
+
+            [ProtoMember(2)]
+            public IList<PublishedGoal> PublishedGoals { get; set; }
+        }
+        [ProtoContract]
+        public class ProposedGoal { [ProtoMember(1)] public int X { get; set; } }
+        [ProtoContract]
+        public class PublishedGoal { [ProtoMember(1)] public int X { get; set; } }
+
+        [Test]
+        public void TestPlanningModelWithEnumerables()
+        {
+            var obj = new GoalPlanningModel1
+            {
+                ProposedGoals = new List<ProposedGoal> { new ProposedGoal { X = 23 } }
+            };
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            Verify(obj, model, "Runtime");
+            model.CompileInPlace();
+            Verify(obj, model, "CompileInPlace");
+            Verify(obj, model.Compile(), "Compile");
+            var dll = model.Compile("TestPlanningModelWithEnumerables", "TestPlanningModelWithEnumerables.dll");
+            Verify(obj, dll, "dll");
+            PEVerify.AssertValid("TestPlanningModelWithEnumerables.dll");
+        }
+
+        [Test]
+        public void TestPlanningModelWithLists()
+        {
+            var obj = new GoalPlanningModel2
+            {
+                ProposedGoals = new List<ProposedGoal> {new ProposedGoal { X = 23 }}
+            };
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            Verify(obj, model, "Runtime");
+            model.CompileInPlace();
+            Verify(obj, model, "CompileInPlace");
+            Verify(obj, model.Compile(), "Compile");
+            var dll = model.Compile("TestPlanningModelWithLists", "TestPlanningModelWithLists.dll");
+            Verify(obj, dll, "dll");
+            PEVerify.AssertValid("TestPlanningModelWithLists.dll");
+        }
+
+        private static void Verify(GoalPlanningModel2 obj, TypeModel model, string caption)
+        {
+            var clone = (GoalPlanningModel2)model.DeepClone(obj);
+            Assert.IsNull(clone.PublishedGoals, caption + ":published");
+            Assert.IsNotNull(clone.ProposedGoals, caption + ":proposed");
+            Assert.AreEqual(1, clone.ProposedGoals.Count, caption + ":count");
+            Assert.AreEqual(23, clone.ProposedGoals[0].X, caption + ":X");
+        }
+        private static void Verify(GoalPlanningModel1 obj, TypeModel model, string caption)
+        {
+            var clone = (GoalPlanningModel1)model.DeepClone(obj);
+            Assert.IsNull(clone.PublishedGoals, caption + ":published");
+            Assert.IsNotNull(clone.ProposedGoals, caption + ":proposed");
+            Assert.AreEqual(1, clone.ProposedGoals.Count(), caption + ":count");
+            Assert.AreEqual(23, clone.ProposedGoals.Single().X, caption + ":X");
+        }
     }
 }

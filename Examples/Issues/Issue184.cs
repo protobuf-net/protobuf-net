@@ -13,8 +13,8 @@ namespace Examples.Issues
     [TestFixture]
     public class Issue184
     {
-        [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = "IEnumerable[<T>] data cannot be used as a meta-type unless an Add method can be resolved")]
-        public void CantCreateUnusableEnumerableMetaType()
+        [Test]
+        public void CanCreateUsableEnumerableMetaType()
         {
             var model = TypeModel.Create();
             model.Add(typeof(IEnumerable<int>), false);

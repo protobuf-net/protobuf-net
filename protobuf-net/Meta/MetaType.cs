@@ -318,16 +318,20 @@ namespace ProtoBuf.Meta
 #endif
         }
         private readonly RuntimeTypeModel model;
+        internal static Exception InbuiltType(Type type)
+        {
+            return new ArgumentException("Data of this type has inbuilt behaviour, and cannot be added to a model in this way: " + type.FullName);
+        }
         internal MetaType(RuntimeTypeModel model, Type type, MethodInfo factory)
         {
             this.factory = factory;
             if (model == null) throw new ArgumentNullException("model");
             if (type == null) throw new ArgumentNullException("type");
-            WireType defaultWireType;
-            IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, type, out defaultWireType, false, false, false, false);
+            
+            IProtoSerializer coreSerializer = model.TryGetBasicTypeSerializer(type);
             if (coreSerializer != null)
             {
-                throw new ArgumentException("Data of this type has inbuilt behaviour, and cannot be added to a model in this way: " + type.FullName);
+                throw InbuiltType(type);
             }
             
             this.type = type;
@@ -414,7 +418,9 @@ namespace ProtoBuf.Meta
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
                 }
-                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, type, DataFormat.Default);
+                Type defaultType = null;
+                ResolveListTypes(model, type, ref itemType, ref defaultType);
+                ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, defaultType, DataFormat.Default);
                 return new TypeSerializer(model, type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
             }
             if (surrogate != null)
@@ -498,6 +504,21 @@ namespace ProtoBuf.Meta
 #else
             return type.type.BaseType;
 #endif
+        }
+        internal static bool GetAsReferenceDefault(RuntimeTypeModel model, Type type)
+        {
+            if (type == null) throw new ArgumentNullException("type");
+            if (Helpers.IsEnum(type)) return false; // never as-ref
+            AttributeMap[] typeAttribs = AttributeMap.Create(model, type, false);
+            for (int i = 0; i < typeAttribs.Length; i++)
+            {
+                if (typeAttribs[i].AttributeType.FullName == "ProtoBuf.ProtoContractAttribute")
+                {
+                    object tmp;
+                    if (typeAttribs[i].TryGet("AsReferenceDefault", out tmp)) return (bool)tmp;
+                }
+            }
+            return false;
         }
         internal void ApplyDefaultBehaviour()
         {

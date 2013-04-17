@@ -42,7 +42,10 @@ namespace ProtoBuf.Serializers
                     asReference = model[tmp].AsReferenceDefault;
                 }
                 IProtoSerializer tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out wireType, asReference, false, false, true), serializer;
-                if (tail == null) throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
+                if (tail == null)
+                {
+                    throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
+                }
 
                 tail = new TagDecorator(i + 1, wireType, false, tail);
                 if(itemType == null)

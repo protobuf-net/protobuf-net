@@ -70,7 +70,10 @@ namespace ProtoBuf.ServiceModel
             if (dcsOperationBehavior != null)
             {
                 description.Behaviors.Remove(dcsOperationBehavior);
-                description.Behaviors.Add(new ProtoOperationBehavior(description));
+
+                ProtoOperationBehavior newBehavior = new ProtoOperationBehavior(description);
+                newBehavior.MaxItemsInObjectGraph = dcsOperationBehavior.MaxItemsInObjectGraph;
+                description.Behaviors.Add(newBehavior);
             }
         }
 

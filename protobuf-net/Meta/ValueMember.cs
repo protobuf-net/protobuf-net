@@ -84,7 +84,14 @@ namespace ProtoBuf.Meta
             this.defaultValue = defaultValue;
 
             MetaType type = model.FindWithoutAdd(memberType);
-            if (type != null) this.asReference = type.AsReferenceDefault;
+            if (type != null)
+            {
+                this.asReference = type.AsReferenceDefault;
+            }
+            else
+            { // we need to scan the hard way; can't risk recursion by fully walking it
+                this.asReference = MetaType.GetAsReferenceDefault(model, memberType);
+            }
         }
         /// <summary>
         /// Creates a new ValueMember instance
@@ -313,7 +320,10 @@ namespace ProtoBuf.Meta
                 WireType wireType;
                 Type finalType = itemType == null ? memberType : itemType;
                 IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType, OverwriteList, true);
-                if (ser == null) throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
+                if (ser == null)
+                {
+                    throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
+                }
 
                 // apply tags
                 if (itemType != null && SupportNull)
@@ -508,7 +518,7 @@ namespace ProtoBuf.Meta
                 int key = model.GetKey(type, false, true);
                 if (asReference || dynamicType)
                 {
-                    defaultWireType = WireType.String;
+                    defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     BclHelpers.NetObjectOptions options = BclHelpers.NetObjectOptions.None;
                     if (asReference) options |= BclHelpers.NetObjectOptions.AsReference;
                     if (dynamicType) options |= BclHelpers.NetObjectOptions.DynamicType;

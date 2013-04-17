@@ -205,7 +205,7 @@ namespace ProtoBuf.Serializers
             {
                 ctx.EmitCtor(listType);
                 ctx.StoreValue(list);
-                ListDecorator.EmitReadList(ctx, list, Tail, listType.GetMethod("Add"), packedWireType);
+                ListDecorator.EmitReadList(ctx, list, Tail, listType.GetMethod("Add"), packedWireType, false);
 
                 // leave this "using" here, as it can share the "FieldNumber" local with EmitReadList
                 using(Compiler.Local oldLen = AppendToCollection ? new ProtoBuf.Compiler.Local(ctx, ctx.MapType(typeof(int))) : null) {

@@ -701,15 +701,24 @@ namespace ProtoBuf.Meta
 
             Type[] types = { itemType };
             MethodInfo add = Helpers.GetInstanceMethod(listTypeInfo, "Add", types);
+
 #if !NO_GENERICS
             if (add == null)
             {   // fallback: look for ICollection<T>'s Add(typedObject) method
+
+                bool forceList = listTypeInfo.IsInterface &&
+                    listTypeInfo == model.MapType(typeof(System.Collections.Generic.IEnumerable<>)).MakeGenericType(types)
+#if WINRT
+                    .GetTypeInfo()
+#endif
+                    ;
+
 #if WINRT
                 TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
 #else
                 Type constuctedListType = model.MapType(typeof(System.Collections.Generic.ICollection<>)).MakeGenericType(types);
 #endif
-                if (constuctedListType.IsAssignableFrom(listTypeInfo))
+                if (forceList || constuctedListType.IsAssignableFrom(listTypeInfo))
                 {
                     add = Helpers.GetInstanceMethod(constuctedListType, "Add", types);
                 }
@@ -777,46 +786,23 @@ namespace ProtoBuf.Meta
 
             string name = listType.Name;
             bool isQueueStack = name != null && (name.Contains("Queue") || name.Contains("Stack"));
+#if !NO_GENERICS
             if(!isQueueStack)
             {
-#if !NO_GENERICS
+                TestEnumerableListPatterns(model, candidates, listType);
 #if WINRT
                 foreach (Type iType in listTypeInfo.ImplementedInterfaces)
                 {
-                    TypeInfo iTypeInfo = iType.GetTypeInfo();
-                    if (iTypeInfo.IsGenericType)
-                    {
-                        Type typeDef = iTypeInfo.GetGenericTypeDefinition();
-                        if(typeDef == typeof(System.Collections.Generic.ICollection<>) || typeDef.GetTypeInfo().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
-                        {
-                        
-                            Type[] iTypeArgs = iTypeInfo.GenericTypeArguments;
-                            if (!candidates.Contains(iTypeArgs[0]))
-                            {
-                                candidates.Add(iTypeArgs[0]);
-                            }
-                        }
-                    }
+                    TestEnumerableListPatterns(model, candidates, iType);
                 }
 #else
                 foreach (Type iType in listType.GetInterfaces())
                 {
-                    if (iType.IsGenericType)
-                    {
-                        Type typeDef = iType.GetGenericTypeDefinition();
-                        if (typeDef == model.MapType(typeof(System.Collections.Generic.ICollection<>)) || typeDef.FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
-                        {
-                            Type[] iTypeArgs = iType.GetGenericArguments();
-                            if (!candidates.Contains(iTypeArgs[0]))
-                            {
-                                candidates.Add(iTypeArgs[0]);
-                            }
-                        }
-                    }
+                    TestEnumerableListPatterns(model, candidates, iType);
                 }
 #endif
-#endif
             }
+#endif
 
 #if WINRT
             // more convenient GetProperty overload not supported on all platforms
@@ -853,6 +839,42 @@ namespace ProtoBuf.Meta
             }
 
             return null;
+        }
+
+        private static void TestEnumerableListPatterns(TypeModel model, BasicList candidates, Type iType)
+        {
+
+#if WINRT
+            TypeInfo iTypeInfo = iType.GetTypeInfo();
+            if (iTypeInfo.IsGenericType)
+            {
+                Type typeDef = iTypeInfo.GetGenericTypeDefinition();
+                if(typeDef == typeof(System.Collections.Generic.ICollection<>) || typeDef.GetTypeInfo().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
+                {
+                        
+                    Type[] iTypeArgs = iTypeInfo.GenericTypeArguments;
+                    if (!candidates.Contains(iTypeArgs[0]))
+                    {
+                        candidates.Add(iTypeArgs[0]);
+                    }
+                }
+            }
+#else
+            if (iType.IsGenericType)
+            {
+                Type typeDef = iType.GetGenericTypeDefinition();
+                if (typeDef == model.MapType(typeof(System.Collections.Generic.IEnumerable<>))
+                    || typeDef == model.MapType(typeof(System.Collections.Generic.ICollection<>))
+                    || typeDef.FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
+                {
+                    Type[] iTypeArgs = iType.GetGenericArguments();
+                    if (!candidates.Contains(iTypeArgs[0]))
+                    {
+                        candidates.Add(iTypeArgs[0]);
+                    }
+                }
+            }
+#endif
         }
 
         private static bool CheckDictionaryAccessors(TypeModel model, Type pair, Type value)

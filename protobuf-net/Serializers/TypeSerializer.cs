@@ -619,6 +619,13 @@ namespace ProtoBuf.Serializers
                 EmitCreateIfNull(ctx, loc);
                 // post-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterDeserialize);
+
+                if (valueFrom != null && !loc.IsSame(valueFrom))
+                {
+                    ctx.LoadValue(loc);
+                    ctx.Cast(valueFrom.Type);
+                    ctx.StoreValue(valueFrom);
+                }
             }
         }
 

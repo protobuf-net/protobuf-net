@@ -73,15 +73,19 @@ namespace Examples.Issues
         }
 
         [Test]
-        public void VerifyModelViaDefaultRef()
+        public void VerifyModelViaDefaultRef_AFirst()
         {
             var model = CreateDefaultRefModel(true);
             Assert.IsTrue(model[typeof(A_WithDefaultRef)].AsReferenceDefault, "A:AsReferenceDefault - A first");
-            Assert.IsTrue(model[typeof(B_WithDefaultRef)][1].AsReference, "B:AsReference  - A first");
+            Assert.IsTrue(model[typeof(B_WithDefaultRef)][1].AsReference, "B.A:AsReference  - A first");
 
-            model = CreateDefaultRefModel(true);
+        }
+        [Test]
+        public void VerifyModelViaDefaultRef_BFirst()
+        {
+            var model = CreateDefaultRefModel(false);
             Assert.IsTrue(model[typeof(A_WithDefaultRef)].AsReferenceDefault, "A:AsReferenceDefault - B first");
-            Assert.IsTrue(model[typeof(B_WithDefaultRef)][1].AsReference, "B:AsReference  - B first");
+            Assert.IsTrue(model[typeof(B_WithDefaultRef)][1].AsReference, "B.A:AsReference  - B first");
         }
 
         [Test]
