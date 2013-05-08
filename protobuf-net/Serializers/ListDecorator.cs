@@ -219,9 +219,10 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue(list);
             if (castListForAdd) ctx.Cast(add.DeclaringType);
             Type itemType = tail.ExpectedType;
+            bool tailReturnsValue = tail.ReturnsValue;
             if (tail.RequiresOldValue)
             {
-                if (itemType.IsValueType || !tail.ReturnsValue)
+                if (itemType.IsValueType || !tailReturnsValue)
                 {
                     // going to need a variable
                     using (Compiler.Local item = new Compiler.Local(ctx, itemType))
@@ -237,7 +238,7 @@ namespace ProtoBuf.Serializers
                             ctx.StoreValue(item);
                         }
                         tail.EmitRead(ctx, item);
-                        if (!tail.ReturnsValue) { ctx.LoadValue(item); }
+                        if (!tailReturnsValue) { ctx.LoadValue(item); }
                     }
                 }
                 else
@@ -248,7 +249,7 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                if (tail.ReturnsValue)
+                if (tailReturnsValue)
                 {   // out only (on the stack); just emit it
                     tail.EmitRead(ctx, null);
                 }
@@ -303,10 +304,12 @@ namespace ProtoBuf.Serializers
             // try a custom enumerator
             MethodInfo getEnumerator = Helpers.GetInstanceMethod(expectedType, "GetEnumerator", null);
             Type itemType = Tail.ExpectedType;
-            
+
+            Type getReturnType = null;
             if (getEnumerator != null)
             {
-                iteratorType = getEnumerator.ReturnType
+                getReturnType = getEnumerator.ReturnType;
+                iteratorType = getReturnType
 #if WINRT
                     .GetTypeInfo()
 #endif
@@ -345,11 +348,12 @@ namespace ProtoBuf.Serializers
             if (enumeratorType != null && enumeratorType.IsAssignableFrom(expectedType))
             {
                 getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
+                getReturnType = getEnumerator.ReturnType;
                 
 #if WINRT
-                iteratorType = getEnumerator.ReturnType.GetTypeInfo();
+                iteratorType = getReturnType.GetTypeInfo();
 #else
-                iteratorType = getEnumerator.ReturnType;
+                iteratorType = getReturnType;
 #endif
 
                 moveNext = Helpers.GetInstanceMethod(model.MapType(ienumeratorType), "MoveNext");
@@ -360,7 +364,8 @@ namespace ProtoBuf.Serializers
             // give up and fall-back to non-generic IEnumerable
             enumeratorType = model.MapType(ienumerableType);
             getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
-            iteratorType = getEnumerator.ReturnType
+            getReturnType = getEnumerator.ReturnType;
+            iteratorType = getReturnType
 #if WINRT
                 .GetTypeInfo()
 #endif

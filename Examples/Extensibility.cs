@@ -291,6 +291,7 @@ namespace Examples
         {
             T obj = new T { Bof = "hi" };
             string hi = Extensible.GetValue<string>(obj,1);
+            Assert.AreEqual("hi", hi);
         }
 
         [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]

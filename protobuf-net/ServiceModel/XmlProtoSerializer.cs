@@ -87,6 +87,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override void WriteEndObject(System.Xml.XmlDictionaryWriter writer)
         {
+            if (writer == null) throw new ArgumentNullException("writer");
             writer.WriteEndElement();
         }
         /// <summary>
@@ -94,6 +95,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override void WriteStartObject(System.Xml.XmlDictionaryWriter writer, object graph)
         {
+            if (writer == null) throw new ArgumentNullException("writer");
             writer.WriteStartElement(PROTO_ELEMENT);
         }
         private const string PROTO_ELEMENT = "proto";
@@ -102,6 +104,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override void WriteObjectContent(System.Xml.XmlDictionaryWriter writer, object graph)
         {
+            if (writer == null) throw new ArgumentNullException("writer");
             if (graph == null)
             {
                 writer.WriteAttributeString("nil", "true");
@@ -132,6 +135,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override bool IsStartObject(System.Xml.XmlDictionaryReader reader)
         {
+            if (reader == null) throw new ArgumentNullException("reader");
             reader.MoveToContent();
             return reader.NodeType == System.Xml.XmlNodeType.Element && reader.Name == PROTO_ELEMENT;
         }
@@ -141,6 +145,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override object ReadObject(System.Xml.XmlDictionaryReader reader, bool verifyObjectName)
         {
+            if (reader == null) throw new ArgumentNullException("reader");
             reader.MoveToContent();
             bool isSelfClosed = reader.IsEmptyElement, isNil = reader.GetAttribute("nil") == "true";
             reader.ReadStartElement(PROTO_ELEMENT);

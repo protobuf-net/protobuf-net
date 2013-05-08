@@ -18,7 +18,7 @@ namespace ProtoBuf
     /// otherwise make the real code unnecessarily messy, providing fallback
     /// implementations if necessary.
     /// </summary>
-    internal class Helpers
+    internal sealed class Helpers
     {
         private Helpers() { }
 
@@ -40,6 +40,7 @@ namespace ProtoBuf
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugWriteLine(string message, object obj)
         {
+#if DEBUG
             string suffix;
             try
             {
@@ -50,19 +51,23 @@ namespace ProtoBuf
                 suffix = "(exception)";
             }
             DebugWriteLine(message + ": " + suffix);
+#endif
         }
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugWriteLine(string message)
         {
+#if DEBUG
 #if MF      
             Microsoft.SPOT.Debug.Print(message);
 #else
             System.Diagnostics.Debug.WriteLine(message);
 #endif
+#endif
         }
         [System.Diagnostics.Conditional("TRACE")]
         public static void TraceWriteLine(string message)
         {
+#if TRACE
 #if MF
             Microsoft.SPOT.Trace.Print(message);
 #elif SILVERLIGHT || MONODROID || CF2 || WINRT || IOS || PORTABLE
@@ -70,11 +75,13 @@ namespace ProtoBuf
 #else
             System.Diagnostics.Trace.WriteLine(message);
 #endif
+#endif
         }
 
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugAssert(bool condition, string message)
         {
+#if DEBUG
             if (!condition)
             {
 #if MF
@@ -83,21 +90,25 @@ namespace ProtoBuf
                 System.Diagnostics.Debug.Assert(false, message);
             }
 #endif
+#endif
         }
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugAssert(bool condition, string message, params object[] args)
         {
+#if DEBUG
             if (!condition) DebugAssert(false, string.Format(message, args));
+#endif
         }
         [System.Diagnostics.Conditional("DEBUG")]
         public static void DebugAssert(bool condition)
         {
-            
+#if DEBUG   
 #if MF
             Microsoft.SPOT.Debug.Assert(condition);
 #else
             if(!condition && System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
             System.Diagnostics.Debug.Assert(condition);
+#endif
 #endif
         }
 #if !NO_RUNTIME
@@ -228,7 +239,12 @@ namespace ProtoBuf
             return double.IsInfinity(value);
 #endif
         }
-        public readonly static Type[] EmptyTypes = new Type[0];
+        public readonly static Type[] EmptyTypes =
+#if PORTABLE || WINRT
+            new Type[0];
+#else
+            Type.EmptyTypes;
+#endif
 
 #if WINRT
         private static readonly Type[] knownTypes = new Type[] {

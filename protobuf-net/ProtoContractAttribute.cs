@@ -80,7 +80,7 @@ namespace ProtoBuf
         /// Has a InferTagFromName value been explicitly set? if not, the default from the type-model is assumed.
         /// </summary>
         internal bool InferTagFromNameHasValue
-        {
+        { // note that this property is accessed via reflection and should not be removed
             get { return HasFlag(OPTIONS_InferTagFromNameHasValue); }
         }
 

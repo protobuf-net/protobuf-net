@@ -229,6 +229,7 @@ namespace ProtoBuf.Meta
 #if FEAT_IKVM
             throw new NotSupportedException();
 #else
+            if (dest == null) throw new ArgumentNullException("dest");
             dest.CheckDepthFlushlock();
             dest.SetRootObject(value);
             SerializeCore(dest, value);
@@ -446,7 +447,7 @@ namespace ProtoBuf.Meta
             return new DeserializeItemsIterator<T>(this, source, style, expectedField, context);
         }
 
-        private class DeserializeItemsIterator<T> : DeserializeItemsIterator,
+        private sealed class DeserializeItemsIterator<T> : DeserializeItemsIterator,
             System.Collections.Generic.IEnumerator<T>,
             System.Collections.Generic.IEnumerable<T>
         {
@@ -664,6 +665,7 @@ namespace ProtoBuf.Meta
 #if FEAT_IKVM
             throw new NotSupportedException();
 #else
+            if (source == null) throw new ArgumentNullException("source");
             bool autoCreate = PrepareDeserialize(value, ref type);
             if (value != null) source.SetRootObject(value);
             object obj = DeserializeCore(source, type, value, autoCreate);
@@ -778,9 +780,10 @@ namespace ProtoBuf.Meta
             {
                 if (method.IsStatic || method.Name != "Add") continue;
                 ParameterInfo[] parameters = method.GetParameters();
-                if (parameters.Length == 1 && !candidates.Contains(parameters[0].ParameterType))
+                Type paramType;
+                if (parameters.Length == 1 && !candidates.Contains(paramType = parameters[0].ParameterType))
                 {
-                    candidates.Add(parameters[0].ParameterType);
+                    candidates.Add(paramType);
                 }
             }
 
@@ -1086,7 +1089,7 @@ namespace ProtoBuf.Meta
                         continue;
                     }
                     throw ProtoReader.AddErrorData(new InvalidOperationException(
-                        "Expected field " + tag + ", but found " + fieldNumber), reader);
+                        "Expected field " + tag.ToString() + ", but found " + fieldNumber.ToString()), reader);
                 }
                 found = true;
                 reader.Hint(wiretype); // handle signed data etc
@@ -1200,6 +1203,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal int GetKey(ref Type type)
         {
+            if (type == null) return -1;
             int key = GetKeyImpl(type);
             if (key < 0)
             {
@@ -1361,29 +1365,36 @@ namespace ProtoBuf.Meta
         /// </summary>
         public static void ThrowCannotCreateInstance(Type type)
         {
-            throw new ProtoException("No parameterless constructor found for " + type.Name);
+            throw new ProtoException("No parameterless constructor found for " + (type == null ? "(null)" : type.Name));
         }
 
         internal static string SerializeType(TypeModel model, System.Type type)
         {
-            TypeFormatEventHandler handler;
-            if (model != null && (handler = model.DynamicTypeFormatting) != null)
+            if (model != null)
             {
-                TypeFormatEventArgs args = new TypeFormatEventArgs(type);
-                handler(model, args);
-                if (!Helpers.IsNullOrEmpty(args.FormattedName)) return args.FormattedName;
+                TypeFormatEventHandler handler = model.DynamicTypeFormatting;
+                if (handler != null)
+                {
+                    TypeFormatEventArgs args = new TypeFormatEventArgs(type);
+                    handler(model, args);
+                    if (!Helpers.IsNullOrEmpty(args.FormattedName)) return args.FormattedName;
+                }
             }
             return type.AssemblyQualifiedName;
         }
 
         internal static System.Type DeserializeType(TypeModel model, string value)
         {
-            TypeFormatEventHandler handler;
-            if (model != null && (handler = model.DynamicTypeFormatting) != null)
+            
+            if (model != null)
             {
-                TypeFormatEventArgs args = new TypeFormatEventArgs(value);
-                handler(model, args);
-                if (args.Type != null) return args.Type;
+                TypeFormatEventHandler handler = model.DynamicTypeFormatting;
+                if (handler != null)
+                {
+                    TypeFormatEventArgs args = new TypeFormatEventArgs(value);
+                    handler(model, args);
+                    if (args.Type != null) return args.Type;
+                }
             }
             return System.Type.GetType(value);
         }
@@ -1549,6 +1560,7 @@ namespace ProtoBuf.Meta
 #endif
         }
 
+        [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         internal static Type ResolveKnownType(string name, TypeModel model, Assembly assembly)
         {
             if (Helpers.IsNullOrEmpty(name)) return null;

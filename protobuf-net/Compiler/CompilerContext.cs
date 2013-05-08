@@ -27,7 +27,7 @@ namespace ProtoBuf.Compiler
             this.Index = index;
         }
     }
-    internal class CompilerContext
+    internal sealed class CompilerContext
     {
         public TypeModel Model { get { return model; } }
 
@@ -227,7 +227,7 @@ namespace ProtoBuf.Compiler
             {
                 if (methodPairs[i].MetaKey == metaKey) return i;
             }
-            throw new ArgumentException("Key could not be mapped: " + metaKey, "metaKey");
+            throw new ArgumentException("Key could not be mapped: " + metaKey.ToString(), "metaKey");
         }
 #else
         internal int MapMetaKeyToCompiledKey(int metaKey)
@@ -256,7 +256,7 @@ namespace ProtoBuf.Compiler
             this.isStatic = isStatic;
             this.methodPairs = methodPairs;
             this.il = il;
-            nonPublic = false;
+            // nonPublic = false; <== implicit
             this.isWriter = isWriter;
             this.model = model;
             this.metadataVersion = metadataVersion;
@@ -740,17 +740,20 @@ namespace ProtoBuf.Compiler
                 throw new ArgumentNullException("member");
             }
 
+            MemberTypes memberType = member.MemberType;
+            Type type;
             if (!NonPublic)
             {
                 bool isPublic;
-                switch (member.MemberType)
+                switch (memberType)
                 {
                     case MemberTypes.TypeInfo:
                         // top-level type
-                        isPublic = ((Type)member).IsPublic || InternalsVisible(((Type)member).Assembly);
+                        type = (Type)member;
+                        isPublic = type.IsPublic || InternalsVisible(type.Assembly);
                         break;
                     case MemberTypes.NestedType:
-                        Type type = (Type)member;
+                        type = (Type)member;
                         do
                         {
                             isPublic = type.IsNestedPublic || type.IsPublic || ((type.DeclaringType == null || type.IsNestedAssembly || type.IsNestedFamORAssem) && InternalsVisible(type.Assembly));
@@ -781,11 +784,11 @@ namespace ProtoBuf.Compiler
                         isPublic = true; // defer to get/set
                         break;
                     default:
-                        throw new NotSupportedException(member.MemberType.ToString());
+                        throw new NotSupportedException(memberType.ToString());
                 }
                 if (!isPublic)
                 {
-                    switch (member.MemberType)
+                    switch (memberType)
                     {
                         case MemberTypes.TypeInfo:
                         case MemberTypes.NestedType:
@@ -847,11 +850,11 @@ namespace ProtoBuf.Compiler
             EmitCall(Helpers.GetSetMethod(property, true, true));
         }
 
-        internal void EmitInstance()
-        {
-            if (isStatic) throw new InvalidOperationException();
-            Emit(OpCodes.Ldarg_0);
-        }
+        //internal void EmitInstance()
+        //{
+        //    if (isStatic) throw new InvalidOperationException();
+        //    Emit(OpCodes.Ldarg_0);
+        //}
 
         internal static void LoadValue(ILGenerator il, int value)
         {
@@ -950,10 +953,10 @@ namespace ProtoBuf.Compiler
             Helpers.DebugWriteLine(code + ": " + label.Index);
 #endif
         }
-        internal void TestEqual()
-        {
-            Emit(OpCodes.Ceq);
-        }
+        //internal void TestEqual()
+        //{
+        //    Emit(OpCodes.Ceq);
+        //}
 
 
         internal void CopyValue()
@@ -1073,7 +1076,7 @@ namespace ProtoBuf.Compiler
         {
             return new UsingBlock(this, local);
         }
-        private class UsingBlock : IDisposable{
+        private sealed class UsingBlock : IDisposable{
             private Local local;
             CompilerContext ctx;
             CodeLabel label;
@@ -1282,7 +1285,7 @@ namespace ProtoBuf.Compiler
                     Emit(OpCodes.Conv_Ovf_I4_Un);
                     break;
                 default:
-                    throw new InvalidOperationException("ConvertToInt32 not implemented for: " + typeCode);
+                    throw new InvalidOperationException("ConvertToInt32 not implemented for: " + typeCode.ToString());
             }
         }
 
@@ -1345,10 +1348,10 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        internal void LoadValue(bool value)
-        {
-            Emit(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
-        }
+        //internal void LoadValue(bool value)
+        //{
+        //    Emit(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+        //}
 
         internal void LoadSerializationContext()
         {

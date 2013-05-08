@@ -496,7 +496,7 @@ namespace ProtoBuf
         public void ThrowEnumException(System.Type type, int value)
         {
             string desc = type == null ? "<null>" : type.FullName;
-            throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value), this);
+            throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value.ToString()), this);
         }
         private Exception CreateWireTypeException()
         {
@@ -575,6 +575,7 @@ namespace ProtoBuf
         /// </summary>
         public static void EndSubItem(SubItemToken token, ProtoReader reader)
         {
+            if (reader == null) throw new ArgumentNullException("reader");
             int value = token.value;
             switch (reader.wireType)
             {
@@ -605,6 +606,7 @@ namespace ProtoBuf
         /// <remarks>The token returned must be help and used when callining EndSubItem</remarks>
         public static SubItemToken StartSubItem(ProtoReader reader)
         {
+            if (reader == null) throw new ArgumentNullException("reader");
             switch (reader.wireType)
             {
                 case WireType.StartGroup:
@@ -639,7 +641,7 @@ namespace ProtoBuf
             {
                 wireType = (WireType)(tag & 7);
                 fieldNumber = (int)(tag >> 3);
-                if(fieldNumber < 1) throw new ProtoException("Invalid field in source data: " + fieldNumber);
+                if(fieldNumber < 1) throw new ProtoException("Invalid field in source data: " + fieldNumber.ToString());
             }
             else
             {
@@ -859,6 +861,7 @@ namespace ProtoBuf
         /// </summary>
         public static byte[] AppendBytes(byte[] value, ProtoReader reader)
         {
+            if (reader == null) throw new ArgumentNullException("reader");
             switch (reader.wireType)
             {
                 case WireType.String:
@@ -908,19 +911,19 @@ namespace ProtoBuf
             }
         }
 
-        static byte[] ReadBytes(Stream stream, int length)
-        {
-            if (stream == null) throw new ArgumentNullException("stream");
-            if (length < 0) throw new ArgumentOutOfRangeException("length");
-            byte[] buffer = new byte[length];
-            int offset = 0, read;
-            while (length > 0 && (read = stream.Read(buffer, offset, length)) > 0)
-            {
-                length -= read;
-            }
-            if (length > 0) throw EoF(null);
-            return buffer;
-        }
+        //static byte[] ReadBytes(Stream stream, int length)
+        //{
+        //    if (stream == null) throw new ArgumentNullException("stream");
+        //    if (length < 0) throw new ArgumentOutOfRangeException("length");
+        //    byte[] buffer = new byte[length];
+        //    int offset = 0, read;
+        //    while (length > 0 && (read = stream.Read(buffer, offset, length)) > 0)
+        //    {
+        //        length -= read;
+        //    }
+        //    if (length > 0) throw EoF(null);
+        //    return buffer;
+        //}
         private static int ReadByteOrThrow(Stream source)
         {
             int val = source.ReadByte();
@@ -972,6 +975,7 @@ namespace ProtoBuf
         public static void DirectReadBytes(Stream source, byte[] buffer, int offset, int count)
         {
             int read;
+            if (source == null) throw new ArgumentNullException("source");
             while(count > 0 && (read = source.Read(buffer, offset, count)) > 0)
             {
                 count -= read;
@@ -1227,6 +1231,7 @@ namespace ProtoBuf
         /// </summary>
         public static bool HasSubValue(ProtoBuf.WireType wireType, ProtoReader source)
         {
+            if (source == null) throw new ArgumentNullException("source");
             // check for virtual end of stream
             if (source.blockEnd <= source.position || wireType == WireType.EndGroup) { return false; }
             source.wireType = wireType;
@@ -1266,6 +1271,7 @@ namespace ProtoBuf
         /// </summary>
         public static void NoteObject(object value, ProtoReader reader)
         {
+            if (reader == null) throw new ArgumentNullException("reader");
             if(reader.trapCount != 0)
             {
                 reader.netCache.RegisterTrappedObject(value);
@@ -1305,6 +1311,7 @@ namespace ProtoBuf
         /// </summary>
         public static object Merge(ProtoReader parent, object from, object to)
         {
+            if (parent == null) throw new ArgumentNullException("parent");
             TypeModel model = parent.Model;
             SerializationContext ctx = parent.Context;
             if(model == null) throw new InvalidOperationException("Types cannot be merged unless a type-model has been specified");

@@ -96,7 +96,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
             }
         }
 
-        [Test]// needs dynamic handling of list itself
+        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Conflicting item/add type")]// needs dynamic handling of list itself
         public void TestBaseClassArrayContainerClass()
         {
             var model = CreateModel();

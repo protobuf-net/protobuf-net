@@ -133,19 +133,19 @@ namespace ProtoBuf
             }
 #endif
         }
-#if !NO_GENERICS
-        /// <summary>
-        /// Stores the given value into the instance's stream; the serializer
-        /// is inferred from TValue and format.
-        /// </summary>
-        /// <remarks>Needs to be public to be callable thru reflection in Silverlight</remarks>
-        public static void AppendExtendValueTyped<TSource, TValue>(
-            TypeModel model, TSource instance, int tag, DataFormat format, TValue value)
-            where TSource : class, IExtensible
-        {
-            AppendExtendValue(model, instance, tag, format, value);
-        }
-#endif
+//#if !NO_GENERICS
+//        /// <summary>
+//        /// Stores the given value into the instance's stream; the serializer
+//        /// is inferred from TValue and format.
+//        /// </summary>
+//        /// <remarks>Needs to be public to be callable thru reflection in Silverlight</remarks>
+//        public static void AppendExtendValueTyped<TSource, TValue>(
+//            TypeModel model, TSource instance, int tag, DataFormat format, TValue value)
+//            where TSource : class, IExtensible
+//        {
+//            AppendExtendValue(model, instance, tag, format, value);
+//        }
+//#endif
     }
 
 }

@@ -42,10 +42,10 @@ namespace ProtoBuf.Meta
             return (head = head.Append(value)).Length - 1;
         }
         public object this[int index] { get { return head[index]; } }
-        public object TryGet(int index)
-        {
-            return head.TryGet(index);
-        }
+        //public object TryGet(int index)
+        //{
+        //    return head.TryGet(index);
+        //}
         public void Trim() { head = head.Trim(); }
         public int Count { get { return head.Length; } }
         IEnumerator IEnumerable.GetEnumerator() { return new NodeEnumerator(head); }
@@ -91,10 +91,10 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-            public object TryGet(int index)
-            {
-                return (index >= 0 && index < length) ? data[index] : null;
-            }
+            //public object TryGet(int index)
+            //{
+            //    return (index >= 0 && index < length) ? data[index] : null;
+            //}
             private readonly object[] data;
             
             private int length;
@@ -188,7 +188,7 @@ namespace ProtoBuf.Meta
             }
             return false;
         }
-        internal class Group
+        internal sealed class Group
         {
             public readonly int First;
             public readonly BasicList Items;

@@ -117,13 +117,14 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadValue(property); // stack is: [old-addr]|old-value
             }
-            ctx.ReadNullCheckedTail(property.PropertyType, Tail, null); // stack is [old-addr]|[new-value]
+            Type propertyType = property.PropertyType;
+            ctx.ReadNullCheckedTail(propertyType, Tail, null); // stack is [old-addr]|[new-value]
             
             if (writeValue)
             {
                 // stack is old-addr|new-value
                 Compiler.CodeLabel @skip = new Compiler.CodeLabel(), allDone = new Compiler.CodeLabel(); // <=== default structs
-                if (!property.PropertyType.IsValueType)
+                if (!propertyType.IsValueType)
                 { // if the tail returns a null, intepret that as *no assign*
                     ctx.CopyValue(); // old-addr|new-value|new-value
                     @skip = ctx.DefineLabel();
@@ -139,7 +140,7 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.EmitCall(shadowSetter);
                 }
-                if (!property.PropertyType.IsValueType)
+                if (!propertyType.IsValueType)
                 {
                     ctx.Branch(allDone, true);
 
