@@ -25,6 +25,7 @@ message DateTime {
     MINUTES = 2;
     SECONDS = 3;
     MILLISECONDS = 4;
+	TICKS = 5;
 
     MINMAX = 15; // dubious
   }
@@ -47,5 +48,5 @@ message Guid {
 message Decimal {
   optional uint64 lo = 1; // the first 64 bits of the underlying value
   optional uint32 hi = 2; // the last 32 bis of the underlying value
-  optional sint32 signScale = 3; // the number of decimal digits, and the sign
+  optional uint32 signScale = 3; // the number of decimal digits (bits 1-16), and the sign (bit 0)
 }

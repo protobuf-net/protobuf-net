@@ -13,6 +13,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AltBuilds", "AltBuilds", "{71D3E579-BBA2-4020-B3F2-804481770FD2}"
 	ProjectSection(SolutionItems) = preProject
 		all.build = all.build
+		Tools\bcl.proto = Tools\bcl.proto
 		Nuget\protobuf-net.nuspec = Nuget\protobuf-net.nuspec
 	EndProjectSection
 EndProject
