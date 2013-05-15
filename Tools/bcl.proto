@@ -11,6 +11,7 @@ message TimeSpan {
     MINUTES = 2;
     SECONDS = 3;
     MILLISECONDS = 4;
+	TICKS = 5;
 
     MINMAX = 15; // dubious
   }
