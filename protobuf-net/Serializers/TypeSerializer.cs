@@ -440,7 +440,9 @@ namespace ProtoBuf.Serializers
                     }
                     else if (parameterType == ctx.MapType(typeof(System.Type)))
                     {
-                        ctx.LoadValue(constructType ?? type);
+                        Type tmp = constructType;
+                        if (tmp == null) tmp = type; // no ?? in some C# profiles
+                        ctx.LoadValue(tmp);
                     }
 #if PLAT_BINARYFORMATTER
                     else if (parameterType == ctx.MapType(typeof(System.Runtime.Serialization.StreamingContext)))

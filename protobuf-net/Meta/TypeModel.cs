@@ -788,7 +788,7 @@ namespace ProtoBuf.Meta
             }
 
             string name = listType.Name;
-            bool isQueueStack = name != null && (name.Contains("Queue") || name.Contains("Stack"));
+            bool isQueueStack = name != null && (name.IndexOf("Queue") >= 0 || name.IndexOf("Stack") >= 0);
 #if !NO_GENERICS
             if(!isQueueStack)
             {
@@ -862,7 +862,7 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-#else
+#elif !NO_GENERICS
             if (iType.IsGenericType)
             {
                 Type typeDef = iType.GetGenericTypeDefinition();
