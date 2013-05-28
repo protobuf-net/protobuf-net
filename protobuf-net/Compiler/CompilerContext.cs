@@ -236,10 +236,13 @@ namespace ProtoBuf.Compiler
         }
 #endif
 
-
-
-        private readonly bool nonPublic, isWriter;
+        private readonly bool isWriter;
+#if FX11 || FEAT_IKVM
+        internal bool NonPublic { get { return false; } }
+#else
+        private readonly bool nonPublic;
         internal bool NonPublic { get { return nonPublic; } }
+#endif
 
 
         private readonly Local inputValue;
@@ -1375,7 +1378,7 @@ namespace ProtoBuf.Compiler
 
         internal bool AllowInternal(PropertyInfo property)
         {
-            return nonPublic ? true : InternalsVisible(property.DeclaringType.Assembly);
+            return NonPublic ? true : InternalsVisible(property.DeclaringType.Assembly);
         }
     }
 }

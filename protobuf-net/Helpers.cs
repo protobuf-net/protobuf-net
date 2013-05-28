@@ -240,7 +240,7 @@ namespace ProtoBuf
 #endif
         }
         public readonly static Type[] EmptyTypes =
-#if PORTABLE || WINRT
+#if PORTABLE || WINRT || CF2
             new Type[0];
 #else
             Type.EmptyTypes;
