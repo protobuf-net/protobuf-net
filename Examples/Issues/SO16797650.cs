@@ -1,12 +1,7 @@
 ﻿using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Examples.Issues
 {
@@ -26,8 +21,6 @@ namespace Examples.Issues
         public class Echo : MessageBase
         {
             public const int ID = 1;
-
-
 
             public override int Type
             {
