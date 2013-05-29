@@ -1,0 +1,1 @@
+@packages\NuGet.CommandLine.2.0.40000\tools\NuGet.exe push protobuf-net.2.0.0.%1.nupkg
