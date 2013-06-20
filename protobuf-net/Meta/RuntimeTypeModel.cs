@@ -1177,12 +1177,19 @@ namespace ProtoBuf.Meta
             return (TypeModel)Activator.CreateInstance(finalType);
 #endif
         }
-
-        private byte[] FromHex(string p)
+#if FEAT_IKVM
+        private byte[] FromHex(string value)
         {
-            throw new NotImplementedException();
+            if (Helpers.IsNullOrEmpty(value)) throw new ArgumentNullException("value");
+            int len = value.Length / 2;
+            byte[] result = new byte[len];
+            for(int i = 0 ; i < len ; i++)
+            {
+                result[i] = Convert.ToByte(value.Substring(i * 2, 2), 16);
+            }
+            return result;
         }
-
+#endif
         private void WriteConstructors(TypeBuilder type, ref int index, SerializerPair[] methodPairs, ref ILGenerator il, int knownTypesCategory, FieldBuilder knownTypes, Type knownTypesLookupType, Compiler.CompilerContext ctx)
         {
             type.DefineDefaultConstructor(MethodAttributes.Public);

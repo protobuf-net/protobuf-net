@@ -102,6 +102,9 @@ namespace ProtoBuf.Precompile
         [CommandLine("keycontainer")]
         public string KeyContainer { get; set; }
 
+        [CommandLine("publickey")]
+        public string PublicKey { get; set; }
+
         /// <summary>
         /// Create a new instance of PreCompileContext
         /// </summary>
@@ -406,7 +409,8 @@ namespace ProtoBuf.Precompile
                 ImageRuntimeVersion = mscorlib.ImageRuntimeVersion,
                 MetaDataVersion = 0x20000, // use .NET 2 onwards
                 KeyContainer = KeyContainer,
-                KeyFile = KeyFile
+                KeyFile = KeyFile,
+                PublicKey = PublicKey
             };
             if (mscorlib.ImageRuntimeVersion == "v1.1.4322")
             { // .NET 1.1-style
