@@ -96,6 +96,12 @@ namespace ProtoBuf.Precompile
         [CommandLine("access")]
         public ProtoBuf.Meta.RuntimeTypeModel.Accessibility Accessibility { get; set; }
 
+        [CommandLine("keyfile")]
+        public string KeyFile { get; set; }
+
+        [CommandLine("keycontainer")]
+        public string KeyContainer { get; set; }
+
         /// <summary>
         /// Create a new instance of PreCompileContext
         /// </summary>
@@ -258,6 +264,12 @@ namespace ProtoBuf.Precompile
                     }
                 }
             }
+            if (!string.IsNullOrEmpty(KeyFile) && !File.Exists(KeyFile))
+            {
+                Console.Error.WriteLine("Key file not found: " + KeyFile);
+                allGood = false;
+            }
+
             foreach (var inp in inputs)
             {
                 if(File.Exists(inp)) {
@@ -392,7 +404,9 @@ namespace ProtoBuf.Precompile
                 TypeName = TypeName,
                 OutputPath = AssemblyName,
                 ImageRuntimeVersion = mscorlib.ImageRuntimeVersion,
-                MetaDataVersion = 0x20000 // use .NET 2 onwards
+                MetaDataVersion = 0x20000, // use .NET 2 onwards
+                KeyContainer = KeyContainer,
+                KeyFile = KeyFile
             };
             if (mscorlib.ImageRuntimeVersion == "v1.1.4322")
             { // .NET 1.1-style

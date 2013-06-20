@@ -706,7 +706,7 @@ namespace ProtoBuf.Compiler
                 if (attrib.ConstructorArguments.Count == 1)
                 {
                     string privelegedAssembly = attrib.ConstructorArguments[0].Value as string;
-                    if (privelegedAssembly == assemblyName)
+                    if (privelegedAssembly == assemblyName || privelegedAssembly.StartsWith(assemblyName + ","))
                     {
                         isTrusted = true;
                         break;
@@ -714,9 +714,9 @@ namespace ProtoBuf.Compiler
                 }
             }
 #else
-            foreach(System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType, false))
+            foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType, false))
             {
-                if (attrib.AssemblyName == assemblyName)
+                if (attrib.AssemblyName == assemblyName || attrib.AssemblyName.StartsWith(assemblyName + ","))
                 {
                     isTrusted = true;
                     break;

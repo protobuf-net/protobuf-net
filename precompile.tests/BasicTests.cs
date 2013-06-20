@@ -31,6 +31,20 @@ namespace precompile.tests
             Assert.IsTrue(ctx.SanityCheck(), "SanityCheck");
             Assert.IsTrue(ctx.Execute(), "Execute");
             PEVerify.AssertValid(@"..\..\..\Net45Dto\bin\release\Net45Serializer.dll");
-        }        
+        }
+
+        [Test]
+        public void ExecuteSigned()
+        {
+            PreCompileContext ctx;
+            Assert.IsTrue(CommandLineAttribute.TryParse(new[] { @"..\..\..\SignedDto\bin\release\SignedDto.dll"
+                , @"-o:..\..\..\SignedDto\bin\release\SignedSerializer.dll",
+                "-t:MySignedSerializer",
+                @"-keyfile:..\..\..\SignedDto\ProtoBuf.snk"
+            }, out ctx), "TryParse");
+            Assert.IsTrue(ctx.SanityCheck(), "SanityCheck");
+            Assert.IsTrue(ctx.Execute(), "Execute");
+            PEVerify.AssertValid(@"..\..\..\SignedDto\bin\release\SignedSerializer.dll");
+        }
     }
 }

@@ -16,6 +16,7 @@ using System.Reflection.Emit;
 
 using ProtoBuf.Serializers;
 using System.Threading;
+using System.IO;
 
 
 namespace ProtoBuf.Meta
@@ -1018,6 +1019,22 @@ namespace ProtoBuf.Meta
             /// The acecssibility of the generated serializer
             /// </summary>
             public Accessibility Accessibility { get { return accessibility; } set { accessibility = value; } }
+
+#if FEAT_IKVM
+            /// <summary>
+            /// The name of the container that holds the key pair.
+            /// </summary>
+            public string KeyContainer { get; set; }
+            /// <summary>
+            /// The path to a file that hold the key pair.
+            /// </summary>
+            public string KeyFile { get; set; }
+
+            /// <summary>
+            /// The public  key to sign the file with.
+            /// </summary>
+            public string PublicKey { get; set; }
+#endif
         }
         /// <summary>
         /// Type accessibility
@@ -1099,6 +1116,18 @@ namespace ProtoBuf.Meta
             IKVM.Reflection.AssemblyName an = new IKVM.Reflection.AssemblyName();
             an.Name = assemblyName;
             AssemblyBuilder asm = universe.DefineDynamicAssembly(an, AssemblyBuilderAccess.Save);
+            if (!Helpers.IsNullOrEmpty(options.KeyFile))
+            {
+                asm.__SetAssemblyKeyPair(new StrongNameKeyPair(File.OpenRead(options.KeyFile)));
+            }
+            else if (!Helpers.IsNullOrEmpty(options.KeyContainer))
+            {
+                asm.__SetAssemblyKeyPair(new StrongNameKeyPair(options.KeyContainer));
+            }
+            else if (!Helpers.IsNullOrEmpty(options.PublicKey))
+            {
+                asm.__SetAssemblyPublicKey(FromHex(options.PublicKey));
+            }
             if(!Helpers.IsNullOrEmpty(options.ImageRuntimeVersion) && options.MetaDataVersion != 0)
             {
                 asm.__SetImageRuntimeVersion(options.ImageRuntimeVersion, options.MetaDataVersion);
@@ -1147,6 +1176,11 @@ namespace ProtoBuf.Meta
 #else
             return (TypeModel)Activator.CreateInstance(finalType);
 #endif
+        }
+
+        private byte[] FromHex(string p)
+        {
+            throw new NotImplementedException();
         }
 
         private void WriteConstructors(TypeBuilder type, ref int index, SerializerPair[] methodPairs, ref ILGenerator il, int knownTypesCategory, FieldBuilder knownTypes, Type knownTypesLookupType, Compiler.CompilerContext ctx)
