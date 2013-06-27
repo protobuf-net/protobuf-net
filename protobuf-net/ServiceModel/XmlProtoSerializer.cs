@@ -14,7 +14,7 @@ namespace ProtoBuf.ServiceModel
     {
         private readonly TypeModel model;
         private readonly int key;
-        private readonly bool isList;
+        private readonly bool isList, isEnum;
         private readonly Type type;
         internal XmlProtoSerializer(TypeModel model, int key, Type type, bool isList)
         {
@@ -25,6 +25,7 @@ namespace ProtoBuf.ServiceModel
             this.key = key;
             this.isList = isList;
             this.type = type;
+            this.isEnum = Helpers.IsEnum(type);
         }
         /// <summary>
         /// Attempt to create a new serializer for the given model and type
@@ -54,6 +55,7 @@ namespace ProtoBuf.ServiceModel
             key = GetKey(model, ref type, out isList);
             this.model = model;
             this.type = type;
+            this.isEnum = Helpers.IsEnum(type);
             if (key < 0) throw new ArgumentOutOfRangeException("type", "Type not recognised by the model: " + type.FullName);
         }
         static int GetKey(TypeModel model, ref Type type, out bool isList)
@@ -158,7 +160,7 @@ namespace ProtoBuf.ServiceModel
             }
             if(isSelfClosed) // no real content
             {
-                if (isList)
+                if (isList || isEnum)
                 {
                     return model.Deserialize(Stream.Null, null, type, null);
                 }
@@ -172,7 +174,7 @@ namespace ProtoBuf.ServiceModel
             Helpers.DebugAssert(reader.CanReadBinaryContent, "CanReadBinaryContent");
             using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
             {
-                if (isList)
+                if (isList || isEnum)
                 {
                     result = model.Deserialize(ms, null, type, null);
                 }
