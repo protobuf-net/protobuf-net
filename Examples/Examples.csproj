@@ -299,6 +299,9 @@
     <Compile Include="Issues\SO16756104.cs" />
     <Compile Include="Issues\SO16797650.cs" />
     <Compile Include="Issues\SO16803233.cs" />
+    <Compile Include="Issues\SO16838287.cs" />
+    <Compile Include="Issues\SO17040488.cs" />
+    <Compile Include="Issues\SO17245073.cs" />
     <Compile Include="Issues\SO1930209.cs" />
     <Compile Include="Issues\SO3083847.cs" />
     <Compile Include="Issues\SO3101816.cs" />

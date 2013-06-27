@@ -596,7 +596,21 @@ namespace ProtoBuf.Meta
                 if (fullAttributeTypeName == "ProtoBuf.ProtoContractAttribute")
                 {
                     if (item.TryGet("Name", out tmp)) name = (string) tmp;
-                    if (!isEnum)
+                    if (Helpers.IsEnum(type)) // note this is subtly different to isEnum; want to do this even if [Flags]
+                    {
+#if !FEAT_IKVM
+                        // IKVM can't access EnumPassthruHasValue, but conveniently, InferTagFromName will only be returned if set via ctor or property
+                        if (item.TryGet("EnumPassthruHasValue", false, out tmp) && (bool)tmp)
+#endif
+                        {
+                            if (item.TryGet("EnumPassthru", out tmp))
+                            {
+                                EnumPassthru = (bool)tmp;
+                                if (EnumPassthru) isEnum = false; // no longer treated as an enum
+                            }
+                        }
+                    }
+                    else
                     {
                         if (item.TryGet("DataMemberOffset", out tmp)) dataMemberOffset = (int) tmp;
 
@@ -658,7 +672,7 @@ namespace ProtoBuf.Meta
             MemberInfo[] foundList = type.GetMembers(isEnum ? BindingFlags.Public | BindingFlags.Static
                 : BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 #endif
-                foreach (MemberInfo member in foundList)
+            foreach (MemberInfo member in foundList)
             {
                 if (member.DeclaringType != type) continue;
                 if (member.IsDefined(model.MapType(typeof(ProtoIgnoreAttribute)), true)) continue;
