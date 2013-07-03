@@ -96,12 +96,19 @@ namespace ProtoBuf.Precompile
         [CommandLine("access")]
         public ProtoBuf.Meta.RuntimeTypeModel.Accessibility Accessibility { get; set; }
 
+        /// <summary>
+        /// The path to the file to use to sign the assembly
+        /// </summary>
         [CommandLine("keyfile")]
         public string KeyFile { get; set; }
-
+        /// <summary>
+        /// The container to use to sign the assembly
+        /// </summary>
         [CommandLine("keycontainer")]
         public string KeyContainer { get; set; }
-
+        /// <summary>
+        /// The public key (in hexadecimal) to use to sign the assembly
+        /// </summary>
         [CommandLine("publickey")]
         public string PublicKey { get; set; }
 
