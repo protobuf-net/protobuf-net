@@ -477,6 +477,12 @@ Options:
     -access:<access>
            Specify accessibility of generated serializer
            to 'Public' or 'Internal'
+    -keyfile:<file>
+           Sign with the file (snk, etc) specified
+    -keycontainer:<container>
+           Sign with the container specified
+    -publickey:<key>
+           Sign with the public key specified (as hex)
     <file>
            Input file to analyse
 
