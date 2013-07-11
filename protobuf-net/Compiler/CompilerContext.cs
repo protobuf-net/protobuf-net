@@ -53,13 +53,22 @@ namespace ProtoBuf.Compiler
         public static ProtoSerializer BuildSerializer(IProtoSerializer head, TypeModel model)
         {
             Type type = head.ExpectedType;
-            CompilerContext ctx = new CompilerContext(type, true, true, model, typeof(object));
-            ctx.LoadValue(ctx.InputValue);
-            ctx.CastFromObject(type);
-            ctx.WriteNullCheckedTail(type, head, null);
-            ctx.Emit(OpCodes.Ret);
-            return (ProtoSerializer)ctx.method.CreateDelegate(
-                typeof(ProtoSerializer));
+            try
+            {
+                CompilerContext ctx = new CompilerContext(type, true, true, model, typeof(object));
+                ctx.LoadValue(ctx.InputValue);
+                ctx.CastFromObject(type);
+                ctx.WriteNullCheckedTail(type, head, null);
+                ctx.Emit(OpCodes.Ret);
+                return (ProtoSerializer)ctx.method.CreateDelegate(
+                    typeof(ProtoSerializer));
+            }
+            catch (Exception ex)
+            {
+                string name = type.FullName;
+                if(string.IsNullOrEmpty(name)) name = type.Name;
+                throw new InvalidOperationException("It was not possible to prepare a serializer for: " + name, ex);
+            }
         }
         /*public static ProtoCallback BuildCallback(IProtoTypeSerializer head)
         {
