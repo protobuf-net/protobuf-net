@@ -1008,22 +1008,44 @@ namespace ProtoBuf.Compiler
 
         public void Switch(CodeLabel[] jumpTable)
         {
-            Label[] labels = new Label[jumpTable.Length];
-#if DEBUG_COMPILE
-            StringBuilder sb = new StringBuilder(OpCodes.Switch.ToString());
-#endif
-            for (int i = 0; i < labels.Length; i++)
+            const int MAX_JUMPS = 128;
+            // if too many jumps, push the value into a local
+            using(Local val = jumpTable.Length >= MAX_JUMPS ? GetLocalWithValue(MapType(typeof(int)),null) : null)
             {
-                labels[i] = jumpTable[i].Value;
-#if DEBUG_COMPILE
-                sb.Append("; ").Append(i).Append("=>").Append(jumpTable[i].Index);
-#endif
-            }
+                int count = jumpTable.Length, offset = 0;
+                do
+                {
+                    // if multi-switch, need to load the value again, and offset if necessary
+                    if (val != null)
+                    {
+                        LoadValue(val);
+                        if (offset != 0)
+                        {
+                            LoadValue(offset);
+                            Subtract();
+                        }
+                    }
+                    int itemsThisIteration = Math.Min(count, MAX_JUMPS);
+                    count -= itemsThisIteration;
 
-            il.Emit(OpCodes.Switch, labels);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(sb.ToString());
-#endif
+                    Label[] labels = new Label[itemsThisIteration];
+    #if DEBUG_COMPILE
+                    StringBuilder sb = new StringBuilder(OpCodes.Switch.ToString());
+    #endif
+                    for (int i = 0; i < labels.Length; i++)
+                    {
+                        labels[i] = jumpTable[offset++].Value;
+    #if DEBUG_COMPILE
+                    sb.Append("; ").Append(i).Append("=>").Append(jumpTable[i].Index);
+    #endif
+                    }
+
+                    il.Emit(OpCodes.Switch, labels);
+    #if DEBUG_COMPILE
+                    Helpers.DebugWriteLine(sb.ToString());
+    #endif
+                } while (count > 0);
+            }
         }
 
         internal void EndFinally()

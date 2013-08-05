@@ -15,5 +15,13 @@ namespace SignedDto
     {
         [ProtoMember(1)]
         public string Foo { get; set; }
+        [ProtoMember(2)]
+        internal string field;
+
+        internal bool ShouldSerializefield() { return true; }
+
+        [ProtoAfterSerialization]
+        internal void OnAfterSerialized()
+        {}
     }
 }
