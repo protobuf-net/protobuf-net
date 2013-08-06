@@ -1345,7 +1345,7 @@ namespace ProtoBuf.Meta
         {
 
             il = Override(type, "GetKeyImpl");
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, MapType(typeof(Type), true));
+            Compiler.CompilerContext ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, MapType(typeof(System.Type), true));
             
             if (types.Count <= KnownTypes_ArrayCutoff)
             {
