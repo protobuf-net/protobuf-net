@@ -1040,7 +1040,7 @@ namespace ProtoBuf.Compiler
                     CodeLabel endOfSwitch = DefineLabel();
                     
                     LoadValue(val);
-                    LoadValue(blockCount);
+                    LoadValue(MAX_JUMPS);
                     Emit(OpCodes.Div);
 #if DEBUG_COMPILE
                 Helpers.DebugWriteLine(OpCodes.Switch.ToString());

@@ -25,17 +25,41 @@ namespace Examples
 
         private void Test(TypeModel model, string test)
         {
-            var orig = new Outer { Value500 = new Inner500 { Value = 123 } };
+            var orig = new Outer {
+                Value500 = new Inner500 { Value = 123 },
+                Value501 = new Inner501 { Value = 456 }
+            };
             var clone = (Outer)model.DeepClone(orig);
-            Assert.AreEqual(123, clone.Value500.Value, test + ":Value500");
-
+            Assert.AreNotSame(orig, clone, test);
+            
             var props = typeof(Outer).GetProperties();
             foreach (var prop in props)
             {
-                if (prop.Name == "Value500") continue;
-                Assert.IsNull(prop.GetValue(orig), test + ":orig:" + prop.Name);
-                Assert.IsNull(prop.GetValue(clone), test + ":clone:" + prop.Name);
+                switch(prop.Name)
+                {
+                    case "Value500":
+                    case "Value501":
+                        Assert.IsNotNull(prop.GetValue(orig), test + ":orig:" + prop.Name);
+                        Assert.IsNotNull(prop.GetValue(clone), test + ":clone:" + prop.Name);
+                        break;
+                    default:
+                        Assert.IsNull(prop.GetValue(orig), test + ":orig:" + prop.Name);
+                        Assert.IsNull(prop.GetValue(clone), test + ":clone:" + prop.Name);
+                    break;
+                }
             }
+
+            Assert.AreEqual(123, orig.Value500.Value, test + ":orig:Value500.Value");
+            Assert.AreEqual(123, clone.Value500.Value, test + ":clone:Value500.Value");
+            Assert.AreEqual(456, orig.Value501.Value, test + ":orig:Value501.Value");
+            Assert.AreEqual(456, clone.Value501.Value, test + ":clone:Value501.Value");
+          
+            var clone500 = (Inner500)model.DeepClone(orig.Value500);
+            var clone501 = (Inner501)model.DeepClone(orig.Value501);
+
+            Assert.AreEqual(123, clone500.Value, test + ":clone500.Value");
+            Assert.AreEqual(456, clone501.Value, test + ":clone501.Value");
+          
         }
         [ProtoContract]
         public class Outer
