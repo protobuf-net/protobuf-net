@@ -1009,42 +1009,77 @@ namespace ProtoBuf.Compiler
         public void Switch(CodeLabel[] jumpTable)
         {
             const int MAX_JUMPS = 128;
-            // if too many jumps, push the value into a local
-            using(Local val = jumpTable.Length >= MAX_JUMPS ? GetLocalWithValue(MapType(typeof(int)),null) : null)
+
+            if (jumpTable.Length <= MAX_JUMPS)
             {
-                int count = jumpTable.Length, offset = 0;
-                do
+                // simple case
+                Label[] labels = new Label[jumpTable.Length];
+                for (int i = 0; i < labels.Length; i++)
                 {
-                    // if multi-switch, need to load the value again, and offset if necessary
-                    if (val != null)
+                    labels[i] = jumpTable[i].Value;
+                }
+#if DEBUG_COMPILE
+                Helpers.DebugWriteLine(OpCodes.Switch.ToString());
+#endif
+                il.Emit(OpCodes.Switch, labels);
+            }
+            else
+            {
+                // too many to jump easily (especially on Android) - need to split up (note: uses a local pulled from the stack)
+                using (Local val = GetLocalWithValue(MapType(typeof(int)), null))
+                {
+                    int count = jumpTable.Length, offset = 0;
+                    int blockCount = count / MAX_JUMPS;
+                    if ((count % MAX_JUMPS) != 0) blockCount++;
+
+                    Label[] blockLabels = new Label[blockCount];
+                    for (int i = 0; i < blockCount; i++)
                     {
-                        LoadValue(val);
-                        if (offset != 0)
+                        blockLabels[i] = il.DefineLabel();
+                    }
+                    CodeLabel endOfSwitch = DefineLabel();
+                    
+                    LoadValue(val);
+                    LoadValue(blockCount);
+                    Emit(OpCodes.Div);
+#if DEBUG_COMPILE
+                Helpers.DebugWriteLine(OpCodes.Switch.ToString());
+#endif
+                    il.Emit(OpCodes.Switch, blockLabels);
+                    Branch(endOfSwitch, false);
+
+                    Label[] innerLabels = new Label[MAX_JUMPS];
+                    for (int blockIndex = 0; blockIndex < blockCount; blockIndex++)
+                    {
+                        il.MarkLabel(blockLabels[blockIndex]);
+
+                        int itemsThisBlock = Math.Min(MAX_JUMPS, count);
+                        count -= itemsThisBlock;
+                        if (innerLabels.Length != itemsThisBlock) innerLabels = new Label[itemsThisBlock];
+
+                        int subtract = offset;
+                        for (int j = 0; j < itemsThisBlock; j++)
                         {
-                            LoadValue(offset);
-                            Subtract();
+                            innerLabels[j] = jumpTable[offset++].Value;
+                        }
+                        LoadValue(val);
+                        if (subtract != 0) // switches are always zero-based
+                        {
+                            LoadValue(subtract);
+                            Emit(OpCodes.Sub);
+                        }
+#if DEBUG_COMPILE
+                        Helpers.DebugWriteLine(OpCodes.Switch.ToString());
+#endif
+                        il.Emit(OpCodes.Switch, innerLabels);
+                        if (count != 0)
+                        { // force default to the very bottom
+                            Branch(endOfSwitch, false);
                         }
                     }
-                    int itemsThisIteration = Math.Min(count, MAX_JUMPS);
-                    count -= itemsThisIteration;
-
-                    Label[] labels = new Label[itemsThisIteration];
-    #if DEBUG_COMPILE
-                    StringBuilder sb = new StringBuilder(OpCodes.Switch.ToString());
-    #endif
-                    for (int i = 0; i < labels.Length; i++)
-                    {
-                        labels[i] = jumpTable[offset++].Value;
-    #if DEBUG_COMPILE
-                    sb.Append("; ").Append(i).Append("=>").Append(jumpTable[i].Index);
-    #endif
-                    }
-
-                    il.Emit(OpCodes.Switch, labels);
-    #if DEBUG_COMPILE
-                    Helpers.DebugWriteLine(sb.ToString());
-    #endif
-                } while (count > 0);
+                    Helpers.DebugAssert(count == 0, "Should use exactly all switch items");
+                    MarkLabel(endOfSwitch);
+                }
             }
         }
 

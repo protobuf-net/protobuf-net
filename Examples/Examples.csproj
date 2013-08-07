@@ -397,6 +397,7 @@
     <Compile Include="SimpleStream\SimpleStreamDemo.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="StupidlyComplexModel.cs" />
     <Compile Include="TagInference.cs" />
     <Compile Include="TestNumbers\NumberTests.cs" />
     <Compile Include="TraceError.cs" />

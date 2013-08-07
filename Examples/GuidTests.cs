@@ -116,6 +116,40 @@ namespace Examples
         }
 
         [Test]
+        public void TestGuidLayout()
+        {
+            var guid = new Guid("00112233445566778899AABBCCDDEEFF");
+            var msBlob = guid.ToByteArray();
+            var msHex = BitConverter.ToString(msBlob);
+            Assert.AreEqual("33-22-11-00-55-44-77-66-88-99-AA-BB-CC-DD-EE-FF", msHex);
+
+            var obj = new GuidLayout { Value = guid };
+            using (var ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, obj);
+                string hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                // 0A = 1010 = field 1, length delimited (sub-object)
+                // 12 = length 18
+                  // 09 = field 1, fixed-length 64 bit
+                  // 33-22-11-00-55-44-77-66 = payload
+                  // 11 = field 2, fixed-length 64 bit
+                  // 88-99-AA-BB-CC-DD-EE-FF
+
+                Assert.AreEqual(
+                    "0A-12-09-33-22-11-00-55-44-77-66-11-88-99-AA-BB-CC-DD-EE-FF",
+                    hex
+                    );
+            }
+        }
+
+        [ProtoContract]
+        public class GuidLayout
+        {
+            [ProtoMember(1)]
+            public Guid Value { get; set; }
+        }
+
+        [Test]
         public void TestDeserializeEmptyWide()
         {
             GuidData data = Program.Build<GuidData>(
