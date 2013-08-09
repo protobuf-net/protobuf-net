@@ -2,7 +2,9 @@
 @rem @del protobuf-net.dll
 @rem del gmcs-test.exe
 
-@gmcs -recurse:protobuf-net\*.cs -out:protobuf-net.dll -target:library -unsafe+ -define:FEAT_COMPILER -define:PLAT_BINARYFORMATTER -doc:protobuf-net.xml -define:FEAT_SERVICEMODEL -define:PLAT_XMLSERIALIZER -r:System.Runtime.Serialization.dll -r:System.ServiceModel.dll /keyfile:ProtoBuf.snk
+@rd /s /q Package\Full\mono
+@md Package\Full\mono
+@gmcs -recurse:protobuf-net\*.cs -out:Package\Full\mono\protobuf-net.dll -target:library -unsafe+ -define:FEAT_COMPILER -define:PLAT_BINARYFORMATTER -doc:Package\Full\mono\protobuf-net.xml -define:FEAT_SERVICEMODEL -define:PLAT_XMLSERIALIZER -r:System.Runtime.Serialization.dll -r:System.ServiceModel.dll /keyfile:ProtoBuf.snk
 
 @rem gmcs -recurse:protobuf-net\*.cs -out:protobuf-net-gmcs.dll -target:library -unsafe+ -define:FEAT_COMPILER
 
