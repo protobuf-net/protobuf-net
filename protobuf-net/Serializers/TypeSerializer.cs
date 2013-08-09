@@ -645,7 +645,7 @@ namespace ProtoBuf.Serializers
                 serializer.EmitRead(ctx, loc);
             }
             else {
-                RuntimeTypeModel rtm = (RuntimeTypeModel)ctx.Model;
+                //RuntimeTypeModel rtm = (RuntimeTypeModel)ctx.Model;
                 if (((IProtoTypeSerializer)serializer).CanCreateInstance())
                 {
                     Compiler.CodeLabel allDone = ctx.DefineLabel();

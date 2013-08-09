@@ -1217,7 +1217,7 @@ namespace ProtoBuf.Meta
                 case KnownTypes_Dictionary:
                     {
                         Compiler.CompilerContext.LoadValue(il, types.Count);
-                        LocalBuilder loc = il.DeclareLocal(knownTypesLookupType);
+                        //LocalBuilder loc = il.DeclareLocal(knownTypesLookupType);
                         il.Emit(OpCodes.Newobj, knownTypesLookupType.GetConstructor(new Type[] { MapType(typeof(int)) }));
                         il.Emit(OpCodes.Stsfld, knownTypes);
                         int typeIndex = 0;
