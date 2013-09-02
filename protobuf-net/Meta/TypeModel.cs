@@ -343,9 +343,10 @@ namespace ProtoBuf.Meta
                 }
             } while (skip);
 
-            
-            using (ProtoReader reader = new ProtoReader(source, this, context, len))
+            ProtoReader reader = null;
+            try
             {
+                reader = ProtoReader.Create(source, this, context, len);
                 int key = GetKey(ref type);
                 if (key >= 0 && !Helpers.IsEnum(type))
                 {
@@ -361,6 +362,10 @@ namespace ProtoBuf.Meta
                 bytesRead += reader.Position;
                 haveObject = true;
                 return value;
+            }
+            finally
+            {
+                ProtoReader.Recycle(reader);
             }
 #endif
         }
@@ -576,12 +581,18 @@ namespace ProtoBuf.Meta
             throw new NotSupportedException();
 #else
             bool autoCreate = PrepareDeserialize(value, ref type);
-            using (ProtoReader reader = new ProtoReader(source, this, context))
+            ProtoReader reader = null;
+            try
             {
+                reader = ProtoReader.Create(source, this, context, ProtoReader.TO_EOF);
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeCore(reader, type, value, autoCreate);
                 reader.CheckFullyConsumed();
                 return obj;
+            }
+            finally
+            {
+                ProtoReader.Recycle(reader);
             }
 #endif
         }
@@ -642,12 +653,18 @@ namespace ProtoBuf.Meta
             throw new NotSupportedException();
 #else
             bool autoCreate = PrepareDeserialize(value, ref type);
-            using (ProtoReader reader = new ProtoReader(source, this, context, length))
+            ProtoReader reader = null;
+            try
             {
+                reader = ProtoReader.Create(source, this, context, length);
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeCore(reader, type, value, autoCreate);
                 reader.CheckFullyConsumed();
                 return obj;
+            }
+            finally
+            {
+                ProtoReader.Recycle(reader);
             }
 #endif
         }
@@ -1289,9 +1306,15 @@ namespace ProtoBuf.Meta
                         writer.Close();
                     }
                     ms.Position = 0;
-                    using (ProtoReader reader = new ProtoReader(ms, this, null))
+                    ProtoReader reader = null;
+                    try
                     {
+                        reader = ProtoReader.Create(ms, this, null, ProtoReader.TO_EOF);
                         return Deserialize(key, null, reader);
+                    }
+                    finally
+                    {
+                        ProtoReader.Recycle(reader);
                     }
                 }
             }
@@ -1313,11 +1336,17 @@ namespace ProtoBuf.Meta
                     writer.Close();
                 }
                 ms.Position = 0;
-                using (ProtoReader reader = new ProtoReader(ms, this, null))
+                ProtoReader reader = null;
+                try
                 {
+                    reader = ProtoReader.Create(ms, this, null, ProtoReader.TO_EOF);
                     value = null; // start from scratch!
                     TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false);
                     return value;
+                }
+                finally
+                {
+                    ProtoReader.Recycle(reader);
                 }
             }
 #endif       

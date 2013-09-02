@@ -164,9 +164,15 @@ namespace ProtoBuf.ServiceModel
                 {
                     return model.Deserialize(Stream.Null, null, type, null);
                 }
-                using (ProtoReader protoReader = new ProtoReader(Stream.Null, model, null))
+                ProtoReader protoReader = null;
+                try
                 {
+                    protoReader = ProtoReader.Create(Stream.Null, model, null, ProtoReader.TO_EOF);
                     return model.Deserialize(key, null, protoReader);
+                }
+                finally
+                {
+                    ProtoReader.Recycle(protoReader);
                 }
             }
 
@@ -180,9 +186,15 @@ namespace ProtoBuf.ServiceModel
                 }
                 else
                 {
-                    using (ProtoReader protoReader = new ProtoReader(ms, model, null))
+                    ProtoReader protoReader = null;
+                    try
                     {
+                        protoReader = ProtoReader.Create(ms, model, null, ProtoReader.TO_EOF);
                         result = model.Deserialize(key, null, protoReader);
+                    }
+                    finally
+                    {
+                        ProtoReader.Recycle(protoReader);
                     }
                 }
             }

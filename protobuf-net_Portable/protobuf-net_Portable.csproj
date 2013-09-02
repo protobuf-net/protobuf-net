@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;PORTABLE FEAT_SAFE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;PORTABLE FEAT_SAFE PLAT_NO_THREADSTATIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -27,7 +27,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;PORTABLE FEAT_SAFE</DefineConstants>
+    <DefineConstants>TRACE;PORTABLE FEAT_SAFE PLAT_NO_THREADSTATIC</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>bin\Release\protobuf-net.xml</DocumentationFile>

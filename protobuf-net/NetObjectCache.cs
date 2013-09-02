@@ -228,5 +228,16 @@ namespace ProtoBuf
 #endif
 
 #endif
+
+        internal void Clear()
+        {
+            trapStartIndex = 0;
+            rootObject = null;
+            if (underlyingList != null) underlyingList.Clear();
+            if (stringKeys != null) stringKeys.Clear();
+#if !CF && !PORTABLE
+            if (objectKeys != null) objectKeys.Clear();
+#endif
+        }
     }
 }

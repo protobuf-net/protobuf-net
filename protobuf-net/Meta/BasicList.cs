@@ -16,6 +16,11 @@ namespace ProtoBuf.Meta
         {
             head.RemoveLastWithMutate();
         }
+
+        public void Clear()
+        {
+            head.Clear();
+        }
     }
     internal class BasicList : IEnumerable
     {
@@ -163,6 +168,15 @@ namespace ProtoBuf.Meta
                 {
                     Array.Copy(data, 0, array, offset, length);
                 }
+            }
+
+            internal void Clear()
+            {
+                if(data != null)
+                {
+                    Array.Clear(data, 0, data.Length);
+                }
+                length = 0;
             }
         }
 

@@ -69,21 +69,20 @@ namespace ProtoBuf
 #endif
             Stream stream = extn.BeginQuery();
             object value = null;
+            ProtoReader reader = null;
             try {
                 SerializationContext ctx = new SerializationContext();
-                using (ProtoReader reader = new ProtoReader(stream, model, ctx))
-                {       
-                    while (model.TryDeserializeAuxiliaryType(reader, format, tag, type, ref value, true, false, false, false) && value != null)
+                reader = ProtoReader.Create(stream, model, ctx, ProtoReader.TO_EOF);
+                while (model.TryDeserializeAuxiliaryType(reader, format, tag, type, ref value, true, false, false, false) && value != null)
+                {
+                    if (!singleton)
                     {
-                        if (!singleton)
-                        {
 #if FX11
-                            result.Add(value);
+                        result.Add(value);
 #else
-                            yield return value;
+                        yield return value;
 #endif
-                            value = null; // fresh item each time
-                        }
+                        value = null; // fresh item each time
                     }
                 }
                 if (singleton && value != null)
@@ -100,6 +99,7 @@ namespace ProtoBuf
                 return resultArr;
 #endif
             } finally {
+                ProtoReader.Recycle(reader);
                 extn.EndQuery(stream);
             }
 #endif       
