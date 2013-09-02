@@ -35,7 +35,10 @@ namespace ProtoBuf
             }
 
             object tmp = list[key];
-            if(tmp == null) throw new ProtoException("A deferred key does not have a value yet");
+            if (tmp == null)
+            {
+                throw new ProtoException("A deferred key does not have a value yet");
+            }
             return tmp;
         }
 

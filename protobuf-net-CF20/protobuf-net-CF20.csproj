@@ -32,7 +32,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;PocketPC CF CF2 FEAT_SAFE</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;PocketPC CF CF2 FEAT_SAFE PLAT_NO_THREADSTATIC</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
@@ -45,7 +45,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;PocketPC CF CF2 FEAT_SAFE</DefineConstants>
+    <DefineConstants>TRACE;PocketPC CF CF2 FEAT_SAFE PLAT_NO_THREADSTATIC</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>
@@ -58,7 +58,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\CoreOnly\</OutputPath>
-    <DefineConstants>TRACE;PocketPC CF CF2 FEAT_SAFE NO_RUNTIME</DefineConstants>
+    <DefineConstants>TRACE;PocketPC CF CF2 FEAT_SAFE PLAT_NO_THREADSTATIC NO_RUNTIME</DefineConstants>
     <NoStdLib>true</NoStdLib>
     <NoConfig>true</NoConfig>
     <ErrorReport>prompt</ErrorReport>

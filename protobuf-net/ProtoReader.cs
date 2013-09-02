@@ -34,7 +34,7 @@ namespace ProtoBuf
         // values for the purposes of reference tracking; we'll default
         // to just trapping the root object
         // note: objects are trapped (the ref and key mapped) via NoteObject
-        uint trapCount = 1; // uint is so we can use beq/bne more efficiently than bgt
+        uint trapCount; // uint is so we can use beq/bne more efficiently than bgt
 
 
         /// <summary>
@@ -98,6 +98,7 @@ namespace ProtoBuf
             reader.blockEnd = int.MaxValue;
             reader.internStrings = true;
             reader.wireType = WireType.None;
+            reader.trapCount = 1;
             if(reader.netCache == null) reader.netCache = new NetObjectCache();            
         }
 
