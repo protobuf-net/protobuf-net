@@ -34,7 +34,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'CoreOnly|AnyCPU'">
     <OutputPath>bin\CoreOnly\</OutputPath>
-    <DefineConstants>TRACE;PORTABLE FEAT_SAFE NO_RUNTIME</DefineConstants>
+    <DefineConstants>TRACE;PORTABLE FEAT_SAFE PLAT_NO_THREADSTATIC NO_RUNTIME</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
