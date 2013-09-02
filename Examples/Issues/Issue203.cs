@@ -51,15 +51,18 @@ namespace Examples.Issues
         [Test]
         public void Execute()
         {
-            SerializeClass m = new SerializeClass();
+            for (int i = 0; i < 5; i++)
+            {
+                SerializeClass m = new SerializeClass();
 
-            var u = new SomeCollectionItem("ABC");
-            m.SomeList = new SomeCollection();
-            m.SomeList.Add(u);
-            m.SomeList.Add(u);
+                var u = new SomeCollectionItem("ABC");
+                m.SomeList = new SomeCollection();
+                m.SomeList.Add(u);
+                m.SomeList.Add(u);
 
-            var clone = Serializer.DeepClone(m);
-            Assert.AreNotSame(m, clone);
+                var clone = Serializer.DeepClone(m);
+                Assert.AreNotSame(m, clone);
+            }
         }
     }
 }
