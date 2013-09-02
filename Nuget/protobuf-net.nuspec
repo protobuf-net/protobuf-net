@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>protobuf-net</id>
-    <version>2.0.0.651</version>
+    <version>2.0.0.662</version>
     <authors>Marc Gravell</authors>
     <owners>Marc Gravell</owners>
     <summary>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</summary>
@@ -12,7 +12,9 @@
     <tags>binary serialization protocol buffers protobuf deserialization</tags>
     <language>en-US</language>
     <releaseNotes>
-      * 2.0.0.651 - new key-signing options for precompile
+      * 2.0.0.662 - add: ProtoReader recycling for heavy read throughput
+                  - add: precompile uses alternative switch construct (android limitations)
+      * 2.0.0.651 - add: new key-signing options for precompile
                   - add: enum-passthru defaults
       * 2.0.0.640 - fix: bug with length-prefix / naked enumerations
       * 2.0.0.638 - update: protoc 2.5
