@@ -409,23 +409,17 @@ namespace ProtoBuf.Meta
             Type underlyingType = ResolveProxies(type);
             return underlyingType == null ? null : FindWithoutAdd(underlyingType);
         }
-        sealed class MetaTypeFinder : BasicList.IPredicate
+
+        static readonly BasicList.MatchPredicate
+            MetaTypeFinder = new BasicList.MatchPredicate(MetaTypeFinderImpl),
+            BasicTypeFinder = new BasicList.MatchPredicate(BasicTypeFinderImpl);
+        static bool MetaTypeFinderImpl(object value, object ctx)
         {
-            private readonly Type type;
-            public MetaTypeFinder(Type type) { this.type = type; }
-            public bool IsMatch(object obj)
-            {
-                return ((MetaType)obj).Type == type;
-            }
+            return ((MetaType)value).Type == (Type)ctx;
         }
-        sealed class BasicTypeFinder : BasicList.IPredicate
+        static bool BasicTypeFinderImpl(object value, object ctx)
         {
-            private readonly Type type;
-            public BasicTypeFinder(Type type) { this.type = type; }
-            public bool IsMatch(object obj)
-            {
-                return ((BasicType)obj).Type == type;
-            }
+            return ((BasicType)value).Type == (Type)ctx;
         }
 
         private void WaitOnLock(MetaType type)
@@ -456,8 +450,7 @@ namespace ProtoBuf.Meta
         }
         internal IProtoSerializer TryGetBasicTypeSerializer(Type type)
         {
-            BasicList.IPredicate predicate = new BasicTypeFinder(type);
-            int idx = basicTypes.IndexOf(predicate);
+            int idx = basicTypes.IndexOf(BasicTypeFinder, type);
 
             if (idx >= 0) return ((BasicType)basicTypes[idx]).Serializer;
 
@@ -465,7 +458,7 @@ namespace ProtoBuf.Meta
             { // don't need a full model lock for this
 
                 // double-checked
-                idx = basicTypes.IndexOf(predicate);
+                idx = basicTypes.IndexOf(BasicTypeFinder, type);
                 if (idx >= 0) return ((BasicType)basicTypes[idx]).Serializer;
 
                 WireType defaultWireType;
@@ -482,8 +475,7 @@ namespace ProtoBuf.Meta
 
         internal int FindOrAddAuto(Type type, bool demand, bool addWithContractOnly, bool addEvenIfAutoDisabled)
         {
-            MetaTypeFinder predicate = new MetaTypeFinder(type);
-            int key = types.IndexOf(predicate);
+            int key = types.IndexOf(MetaTypeFinder, type);
             MetaType metaType;
 
             // the fast happy path: meta-types we've already seen
@@ -512,8 +504,7 @@ namespace ProtoBuf.Meta
             Type underlyingType = ResolveProxies(type);
             if (underlyingType != null)
             {
-                predicate = new MetaTypeFinder(underlyingType);
-                key = types.IndexOf(predicate);
+                key = types.IndexOf(MetaTypeFinder, underlyingType);
                 type = underlyingType; // if new added, make it reflect the underlying type
             }
 
@@ -545,7 +536,7 @@ namespace ProtoBuf.Meta
                     bool weAdded = false;
 
                     // double-checked
-                    int winner = types.IndexOf(predicate);
+                    int winner = types.IndexOf(MetaTypeFinder, type);
                     if (winner < 0)
                     {
                         ThrowIfFrozen();
@@ -1064,19 +1055,6 @@ namespace ProtoBuf.Meta
             options.TypeName = name;
             options.OutputPath = path;
             return Compile(options);
-        }
-
-        sealed class StringFinder : BasicList.IPredicate
-        {
-            private readonly string value;
-            public StringFinder(string value)
-            {
-                this.value = value;
-            }
-            bool BasicList.IPredicate.IsMatch(object obj)
-            {
-                return value == (string)obj;
-            }
         }
 
         /// <summary>
@@ -1624,9 +1602,8 @@ namespace ProtoBuf.Meta
                         string privelegedAssemblyName = privelegedAssemblyObj as string;
                         if (privelegedAssemblyName == assemblyName || Helpers.IsNullOrEmpty(privelegedAssemblyName)) continue; // ignore
 
-                        if (internalAssemblies.IndexOf(new StringFinder(privelegedAssemblyName)) >= 0) continue; // seen it before
+                        if (internalAssemblies.IndexOfString(privelegedAssemblyName) >= 0) continue; // seen it before
                         internalAssemblies.Add(privelegedAssemblyName);
-
 
                         CustomAttributeBuilder builder = new CustomAttributeBuilder(
                             internalsVisibleToAttribType.GetConstructor(new Type[] { MapType(typeof(string)) }),

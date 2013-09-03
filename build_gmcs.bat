@@ -1,13 +1,9 @@
-@rem cls
-@rem @del protobuf-net.dll
-@rem del gmcs-test.exe
-
+@echo Building Full...
 @rd /s /q Package\Full\mono
 @md Package\Full\mono
-@gmcs -recurse:protobuf-net\*.cs -out:Package\Full\mono\protobuf-net.dll -target:library -unsafe+ -define:FEAT_COMPILER -define:PLAT_BINARYFORMATTER -doc:Package\Full\mono\protobuf-net.xml -define:FEAT_SERVICEMODEL -define:PLAT_XMLSERIALIZER -r:System.Runtime.Serialization.dll -r:System.ServiceModel.dll /keyfile:ProtoBuf.snk
+@call mcs -recurse:protobuf-net\*.cs -out:Package\Full\mono\protobuf-net.dll -target:library -unsafe+ -define:FEAT_COMPILER -define:PLAT_BINARYFORMATTER -doc:Package\Full\mono\protobuf-net.xml -define:FEAT_SERVICEMODEL -define:PLAT_XMLSERIALIZER -r:System.Runtime.Serialization.dll -r:System.ServiceModel.dll -r:System.Configuration.dll /keyfile:ProtoBuf.snk
 
-@rem gmcs -recurse:protobuf-net\*.cs -out:protobuf-net-gmcs.dll -target:library -unsafe+ -define:FEAT_COMPILER
-
-@rem gmcs -recurse:FX11\*.cs -target:exe -out:gmcs-test.exe -define:FEAT_COMPILER -r:protobuf-net-gmcs
-
-@rem mono gmcs-test.exe
+@echo Building CoreOnly...
+@rd /s /q Package\CoreOnly\mono
+@md Package\CoreOnly\mono
+@call mcs -recurse:protobuf-net\*.cs -out:Package\CoreOnly\mono\protobuf-net.dll -target:library -unsafe+ -define:PLAT_BINARYFORMATTER -doc:Package\CoreOnly\mono\protobuf-net.xml -define:FEAT_SERVICEMODEL -define:PLAT_XMLSERIALIZER -r:System.Runtime.Serialization.dll -r:System.ServiceModel.dll -r:System.Configuration.dll -define:NO_RUNTIME /keyfile:ProtoBuf.snk
