@@ -119,7 +119,7 @@ namespace ProtoBuf.Serializers
 
                 if (writeValue)
                 {
-                    using (Compiler.Local newVal = new Compiler.Local(ctx, Tail.ExpectedType))
+                    using (Compiler.Local newVal = new Compiler.Local(ctx, property.PropertyType))
                     {
                         ctx.StoreValue(newVal); // stack is empty
 

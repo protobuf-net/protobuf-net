@@ -186,6 +186,10 @@ namespace ProtoBuf
             }
             return null;
         }
+        internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
+        {
+            return GetInstanceMethod(declaringType.GetTypeInfo(), name, types);
+        }
         internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name, Type[] types)
         {
             if (types == null) types = EmptyTypes;

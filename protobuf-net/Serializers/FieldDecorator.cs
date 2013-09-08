@@ -66,7 +66,7 @@ namespace ProtoBuf.Serializers
 
                 if (Tail.ReturnsValue)
                 {
-                    using (Compiler.Local newVal = new Compiler.Local(ctx, Tail.ExpectedType))
+                    using (Compiler.Local newVal = new Compiler.Local(ctx, field.FieldType))
                     {
                         ctx.StoreValue(newVal);
                         if (field.FieldType.IsValueType)
