@@ -162,20 +162,21 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="PEVerify.exe">
+    <None Include="..\Tools\PEVerify.exe.config">
+      <Link>PEVerify.exe.config</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
+    </None>
     <None Include="Perf\Types103.proto">
       <Generator>ProtoBufTool</Generator>
       <LastGenOutput>Types103.cs</LastGenOutput>
     </None>
-    <None Include="PEVerify.exe.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="..\Tools\PEVerify.exe">
+      <Link>PEVerify.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

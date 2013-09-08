@@ -172,6 +172,9 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\packages\Microsoft.Bcl.Immutable.1.0.12-beta\lib\portable-net45+win8+wp8\System.Collections.Immutable.dll</HintPath>
+    </Reference>
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Data.Linq">
@@ -215,6 +218,7 @@
     <Compile Include="Extensibility.cs" />
     <Compile Include="Fields.cs" />
     <Compile Include="GuidTests.cs" />
+    <Compile Include="ImmutableCollections.cs" />
     <Compile Include="Inheritance.cs" />
     <Compile Include="InheritanceMidLevel.cs" />
     <Compile Include="InternerTests.cs" />
@@ -418,6 +422,10 @@
       <Link>NWind\nwind.proto.bin</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="..\Tools\PEVerify.exe.config">
+      <Link>PEVerify.exe.config</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="app.config" />
     <None Include="Issues\Issue48\MXP.Common.proto">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -425,6 +433,7 @@
     <None Include="Issues\Issue48\MXP.Extentions.OpenMetaverseFragments.proto">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -481,11 +490,12 @@
       <Link>LateLoaded.dll</Link>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\Tools\protoc-license.txt">
-      <Link>protoc-license.txt</Link>
+    <Content Include="..\Tools\PEVerify.exe">
+      <Link>PEVerify.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="PEVerify.exe">
+    <Content Include="..\Tools\protoc-license.txt">
+      <Link>protoc-license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="..\ProtoGen\protobuf-net.proto">
@@ -494,9 +504,6 @@
     </None>
     <None Include="..\Tools\protoc.exe">
       <Link>protoc.exe</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="PEVerify.exe.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="ProtoGen\Empty.proto">

@@ -12,7 +12,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class ListDecorator : ProtoDecoratorBase
+    class ListDecorator : ProtoDecoratorBase
     {
         internal static bool CanPack(WireType wireType)
         {
@@ -47,9 +47,25 @@ namespace ProtoBuf.Serializers
         private bool WritePacked { get { return (options & OPTIONS_WritePacked) != 0; } }
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
         private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
-        private readonly WireType packedWireType;
+        protected readonly WireType packedWireType;
 
-        public ListDecorator(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
+
+        internal static ListDecorator Create(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
+        {
+#if !NO_GENERICS
+            MethodInfo builderFactory, add, addRange, finish;
+            if (returnList && ImmutableCollectionDecorator.IdentifyImmutable(model, declaredType, out builderFactory, out add, out addRange, out finish))
+            {
+                return new ImmutableCollectionDecorator(
+                    model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull,
+                    builderFactory, add, addRange, finish);
+            }
+
+#endif
+            return new ListDecorator(model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull);
+        }
+
+        protected ListDecorator(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
             : base(tail)
         {
             if (returnList) options |= OPTIONS_ReturnList;
@@ -71,25 +87,30 @@ namespace ProtoBuf.Serializers
             this.concreteType = concreteType;
             
             // look for a public list.Add(typedObject) method
-            bool isList;
-            add = TypeModel.ResolveListAdd(model, declaredType, tail.ExpectedType, out isList);
-            if (isList)
+            if (RequireAdd)
             {
-                options |= OPTIONS_IsList;
-                string fullName = declaredType.FullName;
-                if (fullName != null && fullName.StartsWith("System.Data.Linq.EntitySet`1[["))
-                { // see http://stackoverflow.com/questions/6194639/entityset-is-there-a-sane-reason-that-ilist-add-doesnt-set-assigned
-                    options |= OPTIONS_SuppressIList;
+                bool isList;
+                add = TypeModel.ResolveListAdd(model, declaredType, tail.ExpectedType, out isList);
+                if (isList)
+                {
+                    options |= OPTIONS_IsList;
+                    string fullName = declaredType.FullName;
+                    if (fullName != null && fullName.StartsWith("System.Data.Linq.EntitySet`1[["))
+                    { // see http://stackoverflow.com/questions/6194639/entityset-is-there-a-sane-reason-that-ilist-add-doesnt-set-assigned
+                        options |= OPTIONS_SuppressIList;
+                    }
                 }
+                if (add == null) throw new InvalidOperationException("Unable to resolve a suitable Add method for " + declaredType.FullName);
             }
-            if (add == null) throw new InvalidOperationException("Unable to resolve a suitable Add method for " + declaredType.FullName);
+
         }
+        protected virtual bool RequireAdd { get { return true; } }
 
         public override Type ExpectedType { get { return declaredType;  } }
         public override bool RequiresOldValue { get { return AppendToCollection; } }
         public override bool ReturnsValue { get { return ReturnList; } }
 
-        private bool AppendToCollection
+        protected bool AppendToCollection
         {
             get { return (options & OPTIONS_OverwriteList) == 0; }
         }
@@ -109,7 +130,7 @@ namespace ProtoBuf.Serializers
              *  - handling whether or not the tail *returns* the value vs updates the input
              */
             bool returnList = ReturnList;
-            bool castListForAdd = !add.DeclaringType.IsAssignableFrom(declaredType);
+            
             using (Compiler.Local list = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : new Compiler.Local(ctx, declaredType))
             using (Compiler.Local origlist = (returnList && AppendToCollection) ? new Compiler.Local(ctx, ExpectedType) : null)
             {
@@ -133,6 +154,7 @@ namespace ProtoBuf.Serializers
                     ctx.MarkLabel(notNull);
                 }
 
+                bool castListForAdd = !add.DeclaringType.IsAssignableFrom(declaredType);
                 EmitReadList(ctx, list, Tail, add, packedWireType, castListForAdd);
 
                 if (returnList)
@@ -216,7 +238,7 @@ namespace ProtoBuf.Serializers
 
         private static void EmitReadAndAddItem(Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add, bool castListForAdd)
         {
-            ctx.LoadValue(list);
+            ctx.LoadAddress(list, list.Type); // needs to be the reference in case the list is value-type (static-call)
             if (castListForAdd) ctx.Cast(add.DeclaringType);
             Type itemType = tail.ExpectedType;
             bool tailReturnsValue = tail.ReturnsValue;
@@ -292,7 +314,7 @@ namespace ProtoBuf.Serializers
 #else
         private static readonly System.Type ienumeratorType = typeof (IEnumerator), ienumerableType = typeof (IEnumerable);
 #endif
-        MethodInfo GetEnumeratorInfo(TypeModel model, out MethodInfo moveNext, out MethodInfo current)
+        protected MethodInfo GetEnumeratorInfo(TypeModel model, out MethodInfo moveNext, out MethodInfo current)
         {
             
 #if WINRT
@@ -410,11 +432,8 @@ namespace ProtoBuf.Serializers
                     ctx.StoreValue(iter);
                     using (ctx.Using(iter))
                     {
-                        Compiler.CodeLabel body = ctx.DefineLabel(),
-                                           @next = ctx.DefineLabel();
-                        
-                        
-                        ctx.Branch(@next, false);
+                        Compiler.CodeLabel body = ctx.DefineLabel(), next = ctx.DefineLabel();
+                        ctx.Branch(next, false);
                         
                         ctx.MarkLabel(body);
 

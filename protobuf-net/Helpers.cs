@@ -560,6 +560,7 @@ namespace ProtoBuf
             return target.IsAssignableFrom(type);
 #endif
         }
+
     }
     /// <summary>
     /// Intended to be a direct map to regular TypeCode, but:

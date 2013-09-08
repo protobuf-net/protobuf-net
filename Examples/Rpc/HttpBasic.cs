@@ -1,5 +1,4 @@
-﻿#warning HttpBasic excised
-//using System;
+﻿//using System;
 //using System.Linq;
 //using System.ServiceModel;
 //using DAL;
