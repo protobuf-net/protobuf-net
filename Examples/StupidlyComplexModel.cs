@@ -1,12 +1,71 @@
 ﻿using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
-
+using System;
+using System.Diagnostics;
+using System.Linq;
 namespace Examples
 {
     [TestFixture]
     public class StupidlyComplexModel
     {
+        [Test]
+        public void TimeStupidlyComplexModel()
+        {
+            TimeModel<StupidlyComplexModel>(5, Test);
+        }
+        [Test]
+        public void TimeSimpleModel()
+        {
+            TimeModel<SimpleModel>(100);
+        }
+
+        [ProtoContract]
+        public class SimpleModel
+        {
+            [ProtoMember(1)] public int A {get;set;}
+            [ProtoMember(2)] public float B {get;set;}
+            [ProtoMember(3)] public decimal C {get;set;}
+            [ProtoMember(4)] public bool D {get;set;}
+            [ProtoMember(5)] public byte E {get;set;}
+            [ProtoMember(6)] public long F {get;set;}
+            [ProtoMember(7)] public short G {get;set;}
+            [ProtoMember(8)] public double H {get;set;}
+            [ProtoMember(9)] public float I {get;set;}
+            [ProtoMember(10)] public uint J {get;set;}
+            [ProtoMember(11)] public ulong K {get;set;}
+            [ProtoMember(12)] public ushort L {get;set;}
+            [ProtoMember(13)] public sbyte M {get;set;}
+            [ProtoMember(14)] public DateTime N {get;set;}
+            [ProtoMember(15)] public string O {get;set;}
+            [ProtoMember(16)] public Type P {get;set;}
+            [ProtoMember(17)] public byte[] Q {get;set;}
+            [ProtoMember(18)] public SimpleModel R {get;set;}
+            [ProtoMember(19)] public TimeSpan S {get;set;}
+            [ProtoMember(20)] public int T {get;set;}
+        }
+
+        private static void TimeModel<T>(int count, Action<TypeModel, string> test = null)
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(T), true);
+            if (test != null) test(model, "Time");
+            model.Compile(); // do discovery etc
+            int typeCount = model.GetTypes().Cast<MetaType>().Count();
+
+            var watch = Stopwatch.StartNew();
+            for (int i = 0; i < count; i++)
+            {
+                model.Compile();
+            }
+            watch.Stop();
+            Console.WriteLine(string.Format("{0}: {1}ms/Compile, {2} types, {3}ms total, {4} iteratons",
+                typeof(T).Name, watch.ElapsedMilliseconds / count, typeCount, watch.ElapsedMilliseconds, count));
+            
+        }
+
+
         [Test]
         public void TestStupidlyComplexModel()
         {

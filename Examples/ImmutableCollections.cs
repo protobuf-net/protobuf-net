@@ -64,19 +64,19 @@ namespace Examples
         }
         #endregion
 
-        #region Array
-        [Test]
-        public void Array_ImmutableConcreteProperties()
-        {
-            TestArrayImpl<ImmutableConcreteProperties>();
-        }
+        //#region Array
+        //[Test]
+        //public void Array_ImmutableConcreteProperties()
+        //{
+        //    TestArrayImpl<ImmutableConcreteProperties>();
+        //}
 
-        [Test]
-        public void Array_ImmutableConcreteFields()
-        {
-            TestArrayImpl<ImmutableConcreteFields>();
-        }
-        #endregion
+        //[Test]
+        //public void Array_ImmutableConcreteFields()
+        //{
+        //    TestArrayImpl<ImmutableConcreteFields>();
+        //}
+        //#endregion
 
         #region HashSet
         [Test]
@@ -157,7 +157,7 @@ namespace Examples
         where T : class, IImmutableCollectionWrapper, new()
         {
             var values = new Dictionary<int, string> { { 1, "a" }, { 2, "b" }, { 3, "c" }, { 4, "d" } };
-            var obj = new T { Dictionary = ImmutableDictionary.Create<int,string>(values) };
+            var obj = new T { Dictionary = ImmutableDictionary.Create<int,string>().AddRange(values) };
 
             using (var ms = new MemoryStream())
             {
@@ -259,57 +259,57 @@ namespace Examples
             }
         }
 
-        private static void TestArrayImpl<T>([CallerMemberName] string name = null)
-            where T : class, IImmutableCollectionWrapper, new()
-        {
-            var model = TypeModel.Create();
-            model.AutoCompile = false;
-            TestArrayImpl<T>(model, "Runtime");
+        //private static void TestArrayImpl<T>([CallerMemberName] string name = null)
+        //    where T : class, IImmutableCollectionWrapper, new()
+        //{
+        //    var model = TypeModel.Create();
+        //    model.AutoCompile = false;
+        //    TestArrayImpl<T>(model, "Runtime");
 
-            var external = model.Compile(name, name + ".dll");
-            PEVerify.AssertValid(name + ".dll");
-            TestArrayImpl<T>(external, "External");
+        //    var external = model.Compile(name, name + ".dll");
+        //    PEVerify.AssertValid(name + ".dll");
+        //    TestArrayImpl<T>(external, "External");
 
-            model.CompileInPlace();
-            TestArrayImpl<T>(model, "CompileInPlace");
-            TestArrayImpl<T>(model.Compile(), "Compile");
-        }
-        private static void TestArrayImpl<T>(TypeModel model, string caption)
-            where T : class, IImmutableCollectionWrapper, new()
-        {
-            int[] values = { 1, 2, 3, 4 };
-            var obj = new T { Array = ImmutableArray.Create<int>(values) };
+        //    model.CompileInPlace();
+        //    TestArrayImpl<T>(model, "CompileInPlace");
+        //    TestArrayImpl<T>(model.Compile(), "Compile");
+        //}
+        //private static void TestArrayImpl<T>(TypeModel model, string caption)
+        //    where T : class, IImmutableCollectionWrapper, new()
+        //{
+        //    int[] values = { 1, 2, 3, 4 };
+        //    var obj = new T { Array = ImmutableArray.Create<int>(values) };
 
-            using (var ms = new MemoryStream())
-            {
-                try
-                {
-                    model.Serialize(ms, obj);
-                } catch(Exception ex)
-                {
-                    throw new ProtoException(caption + ":serialize", ex);
-                }
-                ms.Position = 0;
-                T clone;
-                try
-                {
-                    clone = (T)model.Deserialize(ms, null, typeof(T));
-                } catch(Exception ex)
-                {
-                    throw new ProtoException(caption + ":deserialize", ex);
-                }
-                AssertSequence(new[] { 1, 2, 3, 4 }, clone.Array, caption);
-                ms.Position = 0;
-                try
-                {
-                    model.Deserialize(ms, clone, null); // this is append!
-                } catch(Exception ex)
-                {
-                    throw new ProtoException(caption + ":deserialize", ex);
-                }
-                AssertSequence(new[] { 1, 2, 3, 4, 1, 2, 3, 4 }, clone.Array, caption);
-            }
-        }
+        //    using (var ms = new MemoryStream())
+        //    {
+        //        try
+        //        {
+        //            model.Serialize(ms, obj);
+        //        } catch(Exception ex)
+        //        {
+        //            throw new ProtoException(caption + ":serialize", ex);
+        //        }
+        //        ms.Position = 0;
+        //        T clone;
+        //        try
+        //        {
+        //            clone = (T)model.Deserialize(ms, null, typeof(T));
+        //        } catch(Exception ex)
+        //        {
+        //            throw new ProtoException(caption + ":deserialize", ex);
+        //        }
+        //        AssertSequence(new[] { 1, 2, 3, 4 }, clone.Array, caption);
+        //        ms.Position = 0;
+        //        try
+        //        {
+        //            model.Deserialize(ms, clone, null); // this is append!
+        //        } catch(Exception ex)
+        //        {
+        //            throw new ProtoException(caption + ":deserialize", ex);
+        //        }
+        //        AssertSequence(new[] { 1, 2, 3, 4, 1, 2, 3, 4 }, clone.Array, caption);
+        //    }
+        //}
 
 
         private static void TestHashSetImpl<T>([CallerMemberName] string name = null)
@@ -425,7 +425,7 @@ namespace Examples
                 {3,"c"},
                 {2,"b"}
             };
-            var obj = new T { SortedDictionary = ImmutableSortedDictionary.Create<int, string>(dict) };
+            var obj = new T { SortedDictionary = ImmutableSortedDictionary.Create<int, string>().AddRange(dict) };
             using (var ms = new MemoryStream())
             {
                 try
@@ -457,7 +457,7 @@ namespace Examples
         interface IImmutableCollectionWrapper
         {
             ImmutableList<int> List { get; set; }
-            ImmutableArray<int> Array { get; set; }
+            //ImmutableArray<int> Array { get; set; }
             ImmutableDictionary<int, string> Dictionary { get; set; }
             ImmutableHashSet<int> HashSet { get; set; }
             ImmutableSortedSet<int> SortedSet { get; set; }
@@ -470,8 +470,8 @@ namespace Examples
             [ProtoMember(1)]
             public ImmutableList<int> List { get; set; }
 
-            [ProtoMember(2)]
-            public ImmutableArray<int> Array { get; set; }
+            //[ProtoMember(2)]
+            //public ImmutableArray<int> Array { get; set; }
 
             [ProtoMember(3)]
             public ImmutableDictionary<int,string> Dictionary { get; set; }
@@ -500,11 +500,11 @@ namespace Examples
                 set { List = value; }
             }
 
-            ImmutableArray<int> IImmutableCollectionWrapper.Array
-            {
-                get { throw new NotSupportedException(); }
-                set { throw new NotSupportedException(); }
-            }
+            //ImmutableArray<int> IImmutableCollectionWrapper.Array
+            //{
+            //    get { throw new NotSupportedException(); }
+            //    set { throw new NotSupportedException(); }
+            //}
 
             ImmutableDictionary<int, string> IImmutableCollectionWrapper.Dictionary
             {
@@ -541,8 +541,8 @@ namespace Examples
             [ProtoMember(1)]
             public ImmutableList<int> List;
 
-            [ProtoMember(2)]
-            public ImmutableArray<int> Array;
+            //[ProtoMember(2)]
+            //public ImmutableArray<int> Array;
 
             [ProtoMember(3)]
             public ImmutableDictionary<int, string> Dictionary;
@@ -560,11 +560,11 @@ namespace Examples
                 set { List = value; }
             }
 
-            ImmutableArray<int> IImmutableCollectionWrapper.Array
-            {
-                get { return Array; }
-                set { Array = value; }
-            }
+            //ImmutableArray<int> IImmutableCollectionWrapper.Array
+            //{
+            //    get { return Array; }
+            //    set { Array = value; }
+            //}
 
             ImmutableDictionary<int, string> IImmutableCollectionWrapper.Dictionary
             {
@@ -612,11 +612,11 @@ namespace Examples
                 set { List = value; }
             }
 
-            ImmutableArray<int> IImmutableCollectionWrapper.Array
-            {
-                get { throw new NotSupportedException(); }
-                set { throw new NotSupportedException(); }
-            }
+            //ImmutableArray<int> IImmutableCollectionWrapper.Array
+            //{
+            //    get { throw new NotSupportedException(); }
+            //    set { throw new NotSupportedException(); }
+            //}
 
             ImmutableDictionary<int, string> IImmutableCollectionWrapper.Dictionary
             {

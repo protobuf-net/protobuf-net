@@ -159,7 +159,9 @@ namespace Examples.Issues
             using (var ms = new MemoryStream())
             {
                 var model = CreateModel();
+#if DEBUG
                 model.ForwardsOnly = true;
+#endif
                 model.Serialize(ms, CreateCustomObj());
                 Assert.AreEqual("1B-0B-0A-03-61-62-63-13-0A-03-64-65-66-12-03-67-68-69-14-0C-1C-08-01-12-02-6F-6B", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
                 ms.Position = 0;

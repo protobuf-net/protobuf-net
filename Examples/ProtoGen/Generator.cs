@@ -46,6 +46,13 @@ namespace Examples.ProtoGen
             TestCompileCSharp(csharp);
         }
         [Test]
+        public void TestKeywords()
+        {
+            string csharp = GetCode(@"-i:ProtoGen\keywords.proto", "-p:detectMissing");
+            File.WriteAllText(@"ProtoGen\keywords.cs", csharp);
+            TestCompileCSharp(csharp);
+        }
+        [Test]
         public void TestRpcAsCSharp()
         {
             string csharp = GetCode(@"-i:ProtoGen\rpc.proto", "-p:clientProxy");

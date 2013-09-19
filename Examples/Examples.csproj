@@ -172,8 +172,9 @@
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
-    <Reference Include="System.Collections.Immutable">
-      <HintPath>..\packages\Microsoft.Bcl.Immutable.1.0.12-beta\lib\portable-net45+win8+wp8\System.Collections.Immutable.dll</HintPath>
+    <Reference Include="System.Collections.Immutable, Version=1.0.23.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Bcl.Immutable.1.0.23-rc\lib\portable-net45+win8+wp8\System.Collections.Immutable.dll</HintPath>
     </Reference>
     <Reference Include="System.configuration" />
     <Reference Include="System.Data" />
@@ -290,6 +291,7 @@
     <Compile Include="Issues\SO11730610.cs" />
     <Compile Include="Issues\SO11871726.cs" />
     <Compile Include="Issues\SO12040007.cs" />
+    <Compile Include="Issues\SO12475521.cs" />
     <Compile Include="Issues\SO13162642.cs" />
     <Compile Include="Issues\SO13275299.cs" />
     <Compile Include="Issues\SO13783894.cs" />
@@ -307,6 +309,9 @@
     <Compile Include="Issues\SO17040488.cs" />
     <Compile Include="Issues\SO17245073.cs" />
     <Compile Include="Issues\SO18277323.cs" />
+    <Compile Include="Issues\SO18650486.cs" />
+    <Compile Include="Issues\SO18663361.cs" />
+    <Compile Include="Issues\SO18695728.cs" />
     <Compile Include="Issues\SO1930209.cs" />
     <Compile Include="Issues\SO3083847.cs" />
     <Compile Include="Issues\SO3101816.cs" />
@@ -437,6 +442,9 @@
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <None Include="ProtoGen\keywords.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="ProtoGen\Enums.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

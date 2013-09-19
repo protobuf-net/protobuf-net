@@ -1,0 +1,6 @@
+message CanHazValue
+{
+	optional int32 value = 1;
+
+	optional int32 int = 2;
+}
