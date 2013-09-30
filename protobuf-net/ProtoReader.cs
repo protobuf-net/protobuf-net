@@ -94,7 +94,7 @@ namespace ProtoBuf
             if (context == null) { context = SerializationContext.Default; }
             else { context.Freeze(); }
             reader.context = context;
-            reader.available = reader.depth = reader.fieldNumber = reader.ioIndex = 0;
+            reader.position = reader.available = reader.depth = reader.fieldNumber = reader.ioIndex = 0;
             reader.blockEnd = int.MaxValue;
             reader.internStrings = true;
             reader.wireType = WireType.None;
