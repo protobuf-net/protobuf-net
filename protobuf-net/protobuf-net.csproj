@@ -187,6 +187,7 @@
     <Compile Include="Compiler\CompilerDelegates.cs" />
     <Compile Include="Compiler\CompilerContext.cs" />
     <Compile Include="Compiler\Local.cs" />
+    <Compile Include="ProtoConverterAttribute.cs" />
     <Compile Include="DataFormat.cs">
       <SubType>Code</SubType>
     </Compile>

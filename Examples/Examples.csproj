@@ -312,6 +312,7 @@
     <Compile Include="Issues\SO18650486.cs" />
     <Compile Include="Issues\SO18663361.cs" />
     <Compile Include="Issues\SO18695728.cs" />
+    <Compile Include="Issues\SO19161823.cs" />
     <Compile Include="Issues\SO1930209.cs" />
     <Compile Include="Issues\SO3083847.cs" />
     <Compile Include="Issues\SO3101816.cs" />

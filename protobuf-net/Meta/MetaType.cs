@@ -429,7 +429,7 @@ namespace ProtoBuf.Meta
             {
                 MetaType mt = model[surrogate], mtBase;
                 while ((mtBase = mt.baseType) != null) { mt = mtBase; }
-                return new SurrogateSerializer(type, surrogate, mt.Serializer);
+                return new SurrogateSerializer(model, type, surrogate, mt.Serializer);
             }
             if (IsAutoTuple)
             {
