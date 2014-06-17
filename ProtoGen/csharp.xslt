@@ -425,7 +425,7 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
       </xsl:call-template></xsl:variable>
     public <xsl:value-of select="concat($fieldType,' ',$name)"/>
     {
-      get { return <xsl:value-of select="$field"/> <xsl:if test="$specified">?? <xsl:value-of select="$defaultValue"/></xsl:if>; }
+      get { return <xsl:value-of select="$field"/>; }
       set { <xsl:if test="$optionPartialMethods">On<xsl:value-of select="$nameNoKeyword"/>Changing(value); </xsl:if><xsl:if test="$optionPreObservable">OnPropertyChanging(@"<xsl:value-of select="$nameNoKeyword"/>"); </xsl:if><xsl:value-of select="$field"/> = value; <xsl:if test="$optionObservable">OnPropertyChanged(@"<xsl:value-of select="$nameNoKeyword"/>"); </xsl:if><xsl:if test="$optionPartialMethods">On<xsl:value-of select="$nameNoKeyword"/>Changed();</xsl:if>}
     }<xsl:if test="$optionPartialMethods">
     partial void On<xsl:value-of select="$nameNoKeyword"/>Changing(<xsl:value-of select="$propType"/> value);
