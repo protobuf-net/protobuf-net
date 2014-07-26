@@ -77,6 +77,16 @@ namespace ProtoBuf
             return (T) RuntimeTypeModel.Default.Deserialize(source, null, typeof(T));
         }
         /// <summary>
+		/// Creates a new instance from a protocol-buffer stream
+		/// </summary>
+		/// <param name="type">The type to be created.</param>
+		/// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
+		/// <returns>A new, initialized instance.</returns>
+		public static object Deserialize(Type type, Stream source)
+		{
+			return RuntimeTypeModel.Default.Deserialize(source, null, type);
+		}
+        /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
         /// </summary>
         /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
