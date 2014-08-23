@@ -150,6 +150,9 @@ namespace ProtoBuf.Meta
             this.baseType = baseType;
         }
 
+        private MethodInfo shouldSerializeCallback;
+        private MethodInfo wasDeserializedCallback;
+
         private CallbackSet callbacks;
         /// <summary>
         /// Indicates whether the current type has defined callbacks 
@@ -190,6 +193,7 @@ namespace ProtoBuf.Meta
 #endif
             }
         }
+
         /// <summary>
         /// Assigns the callbacks to use during serialiation/deserialization.
         /// </summary>
@@ -708,7 +712,7 @@ namespace ProtoBuf.Meta
                     if (isEnum) continue;
                     AttributeMap[] memberAttribs = AttributeMap.Create(model, method, false);
                     if (memberAttribs != null && memberAttribs.Length > 0)
-                    {
+                    {                        
                         CheckForCallback(method, memberAttribs, "ProtoBuf.ProtoBeforeSerializationAttribute", ref callbacks, 0);
                         CheckForCallback(method, memberAttribs, "ProtoBuf.ProtoAfterSerializationAttribute", ref callbacks, 1);
                         CheckForCallback(method, memberAttribs, "ProtoBuf.ProtoBeforeDeserializationAttribute", ref callbacks, 2);
@@ -734,6 +738,18 @@ namespace ProtoBuf.Meta
                         normalizedAttribute.Rebase(nextTag++);
                     }
                 }
+            }
+
+            if (type.GetInterface("IOptionalMemberCallbacks") != null)
+            {
+                
+                shouldSerializeCallback = type.GetMethod("ShouldSerialize", new Type[] { typeof(int) });
+                if (shouldSerializeCallback == null)
+                    throw new Exception("bool ShouldSerialize(int) expected to exist.");
+
+                wasDeserializedCallback = type.GetMethod("WasDeserialized", new Type[] { typeof(int) });
+                if (wasDeserializedCallback == null)
+                    throw new Exception("void WasDeserialized(int) expected to exist.");
             }
 
             foreach (ProtoMemberAttribute normalizedAttribute in arr)
@@ -932,7 +948,7 @@ namespace ProtoBuf.Meta
                     callbacks[index] = method;
                 }
             }
-        }
+        }        
         private static bool HasFamily(AttributeFamily value, AttributeFamily required)
         {
             return (value & required) == required;
@@ -1146,6 +1162,12 @@ namespace ProtoBuf.Meta
 #else
                 Type finalType = type;
 #endif
+                
+                if (shouldSerializeCallback != null || wasDeserializedCallback != null)
+                {
+                    vm.SetOptionalMemberCallbacks(shouldSerializeCallback, wasDeserializedCallback);
+                }
+
                 PropertyInfo prop = Helpers.GetProperty(finalType, member.Name + "Specified", true);
                 MethodInfo getMethod = Helpers.GetGetMethod(prop, true, true);
                 if (getMethod == null || getMethod.IsStatic) prop = null;

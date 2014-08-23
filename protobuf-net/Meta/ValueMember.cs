@@ -307,6 +307,43 @@ namespace ProtoBuf.Meta
             this.setSpecified = setSpecified;
             
         }
+        private MethodInfo shouldSerialize, wasDeserialized;
+        /// <summary>
+        /// See documentation for SetSpecified(method, method).
+        /// 
+        /// The usage of these is identical the only difference is the method signature. These methods
+        /// take an int parameter corresponding to the member id which is being serialized/deserialized,
+        /// allowing one method to be used as the callback for more than one optional member.
+        /// </summary>
+        public void SetOptionalMemberCallbacks(MethodInfo shouldSerialize, MethodInfo wasDeserialized)
+        {
+            ParameterInfo[] args;
+            if (shouldSerialize != null)
+            {
+                if (shouldSerialize.ReturnType != model.MapType(typeof(bool))
+                    || shouldSerialize.IsStatic
+                    || (args = shouldSerialize.GetParameters()).Length != 1
+                    || args[0].ParameterType != model.MapType(typeof(int)))
+                {
+                    throw new ArgumentException("Method does not match required pattern: (non-static) (bool) {MethodName}(int)", "shouldSerialize");
+                }
+            }
+            if (wasDeserialized != null)
+            {
+
+                if (wasDeserialized.ReturnType != model.MapType(typeof (void))
+                    || wasDeserialized.IsStatic
+                    || (args = wasDeserialized.GetParameters()).Length != 1
+                    || args[0].ParameterType != model.MapType(typeof (int)))
+                {
+                    throw new ArgumentException("Method does not match required pattern: (void) {MethodName}(int)", "wasDeserialized");
+                }
+            }
+            ThrowIfFrozen();
+            this.shouldSerialize = shouldSerialize;
+            this.wasDeserialized = wasDeserialized;
+
+        }
         private void ThrowIfFrozen()
         {
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
@@ -389,6 +426,10 @@ namespace ProtoBuf.Meta
                     if (getSpecified != null || setSpecified != null)
                     {
                         ser = new MemberSpecifiedDecorator(getSpecified, setSpecified, ser);
+                    }
+                    if (shouldSerialize != null || wasDeserialized != null)
+                    {
+                        ser = new OptionalMemberDecorator(fieldNumber, shouldSerialize, wasDeserialized, ser);
                     }
                 }
                 return ser;
