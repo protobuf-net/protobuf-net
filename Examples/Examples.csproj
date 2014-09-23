@@ -223,6 +223,7 @@
     <Compile Include="Inheritance.cs" />
     <Compile Include="InheritanceMidLevel.cs" />
     <Compile Include="InternerTests.cs" />
+    <Compile Include="Issues\Gh24.cs" />
     <Compile Include="Issues\Issue316.cs" />
     <Compile Include="Issues\Issue329.cs" />
     <Compile Include="Issues\Issue331.cs" />
