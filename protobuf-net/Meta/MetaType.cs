@@ -94,6 +94,34 @@ namespace ProtoBuf.Meta
             return type.IsAssignableFrom(subType);
 #endif
         }
+
+        private Type FindValidSubType(Type subType)
+        {
+            if (IsValidSubType(subType))
+            {
+                return subType;
+            }
+            // if subType is invalid, it could be because:
+            // 1. invalid ProtoIncludeAttribute
+            // 2. subType is contained in an assembly that has been loaded multiple times
+#if !FEAT_IKVM && !PORTABLE
+            // Check to see if any other assemblies with the same name contain the desired type.
+            AssemblyName assemblyName = subType.Assembly.GetName();
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (AssemblyName.ReferenceMatchesDefinition(assemblyName, assembly.GetName()))
+                {
+                    Type otherType = assembly.GetType(subType.FullName, false, false);
+                    if (IsValidSubType(otherType))
+                    {
+                        return otherType;
+                    }
+                }
+            }
+#endif
+            return null;
+        }
+
         /// <summary>
         /// Adds a known sub-type to the inheritance model
         /// </summary>
@@ -576,7 +604,8 @@ namespace ProtoBuf.Meta
                     {
                         throw new InvalidOperationException("Unable to resolve sub-type of: " + type.FullName);
                     }
-                    if(IsValidSubType(knownType)) AddSubType(tag, knownType, dataFormat);
+                    knownType = FindValidSubType(knownType);
+                    if (knownType != null) AddSubType(tag, knownType, dataFormat);
                 }
 
                 if (fullAttributeTypeName == "ProtoBuf.ProtoPartialIgnoreAttribute")
