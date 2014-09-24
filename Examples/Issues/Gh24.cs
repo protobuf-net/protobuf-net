@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.Remoting.Lifetime;
 
 namespace Examples.Issues
 {
@@ -18,6 +19,8 @@ namespace Examples.Issues
         DirectoryInfo tempDir;
         AppDomain domain;
         FileInfo assemblyPath;
+        ClientSponsor sponsor;
+        RemoteSide remoteSide;
 
         static readonly byte[] testData = { 0x0a, 0x05, 0x15, 0x46, 0x41, 0x49, 0x4c };
 
@@ -35,14 +38,20 @@ namespace Examples.Issues
 
             var setup = new AppDomainSetup
             {
-                ApplicationBase = tempDir.FullName
+                ApplicationBase = tempDir.FullName,
+                // setting this to true allows both tests to pass
+                DisallowApplicationBaseProbing = false
             };
             domain = AppDomain.CreateDomain("Gh24", null, setup);
 
-            var initializer = (Initializer)domain.CreateInstanceFromAndUnwrap(typeof(Initializer).Assembly.Location, typeof(Initializer).FullName);
+            sponsor = new ClientSponsor();
+
+            remoteSide = (RemoteSide)domain.CreateInstanceFromAndUnwrap(typeof(RemoteSide).Assembly.Location, typeof(RemoteSide).FullName);
+            sponsor.Register(remoteSide);
+
             var assemblyPaths = references.ToDictionary(r => r, r => Assembly.Load(r).Location);
             assemblyPaths[new AssemblyName(ASSEMBLY_NAME)] = assemblyPath.FullName;
-            initializer.Initialize(assemblyPaths);
+            remoteSide.Initialize(assemblyPaths);
         }
 
         static IEnumerable<AssemblyName> CreateAssembly(FileInfo path)
@@ -114,15 +123,24 @@ namespace Examples.Issues
         }
 
         [Test]
-        public void TestKnownTypeResolution()
+        public void TestAppBaseTypeResolution()
         {
-            var invoker = (Invoker)domain.CreateInstanceFromAndUnwrap(typeof(Invoker).Assembly.Location, typeof(Invoker).FullName);
-            var result = invoker.Invoke(testData);
+            var result = remoteSide.InvokeAppBase(testData);
             Assert.AreEqual("Pass", result);
         }
 
-        public class Initializer : MarshalByRefObject
+        [Test]
+        public void TestOtherTypeResolution()
         {
+            var result = remoteSide.InvokeOther(testData);
+            Assert.AreEqual("Pass", result);
+        }
+
+        public class RemoteSide : MarshalByRefObject
+        {
+            Type appBaseType;
+            Type otherType;
+
             public void Initialize(Dictionary<AssemblyName, string> assemblies)
             {
                 var cache = assemblies.ToDictionary(a => a.Key, a => new Lazy<Assembly>(() => Assembly.LoadFile(a.Value)));
@@ -133,20 +151,27 @@ namespace Examples.Issues
                 };
 
                 var main = Assembly.Load(ASSEMBLY_NAME);
+                otherType = main.GetType(ASSEMBLY_NAME + ".Program", true, false);
+
+                // is this a problem with the CLR? I get different behavior if this line is commented...
+                main.GetTypes().Select(t => t.GetCustomAttributes(false)).ToArray();
 
                 // make the assembly available in the application base directory after loading from subdirectory to reproduce issue
                 var copyPath = Path.Combine(Path.GetDirectoryName(main.Location), "..", Path.GetFileName(main.Location));
                 File.Copy(main.Location, copyPath);
-                Assembly.Load(AssemblyName.GetAssemblyName(copyPath));
+                var appBaseMain = Assembly.Load(main.GetName());
+                appBaseType = appBaseMain.GetType(ASSEMBLY_NAME + ".Program", true, false);
             }
-        }
 
-        public class Invoker : MarshalByRefObject
-        {
-            public string Invoke(byte[] bytes)
+            public string InvokeAppBase(byte[] bytes)
             {
-                return (string)Type.GetType(Assembly.CreateQualifiedName(ASSEMBLY_NAME, ASSEMBLY_NAME + ".Program"), true, false)
-                    .GetMethod("Main", BindingFlags.Public | BindingFlags.Static)
+                return (string)appBaseType.GetMethod("Main", BindingFlags.Public | BindingFlags.Static)
+                    .Invoke(null, new object[] { bytes });
+            }
+
+            public string InvokeOther(byte[] bytes)
+            {
+                return (string)otherType.GetMethod("Main", BindingFlags.Public | BindingFlags.Static)
                     .Invoke(null, new object[] { bytes });
             }
         }
