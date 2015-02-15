@@ -2,11 +2,9 @@
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
 using System.Runtime.Remoting.Lifetime;
 
 namespace Examples.Issues
@@ -22,9 +20,7 @@ namespace Examples.Issues
         ClientSponsor sponsor;
         RemoteSide remoteSide;
 
-        static readonly byte[] testData = { 0x0a, 0x05, 0x15, 0x46, 0x41, 0x49, 0x4c };
-
-        const string ASSEMBLY_NAME = "Examples.Issues.Gh24";
+        const string ASSEMBLY_NAME = "LateLoaded";
 
         [SetUp]
         public void SetUp()
@@ -32,9 +28,9 @@ namespace Examples.Issues
             tempDir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "protobuf-net-gh24-" + Convert.ToBase64String(BitConverter.GetBytes(DateTime.UtcNow.Ticks)).Replace('/', '-').Substring(0, 11)));
             tempDir.Create();
 
-            var subdir = tempDir.CreateSubdirectory("payload");
+            var subdir = tempDir.CreateSubdirectory("temp");
             assemblyPath = new FileInfo(Path.Combine(subdir.FullName, ASSEMBLY_NAME + ".dll"));
-            var references = CreateAssembly(assemblyPath);
+            CopyAssembly(assemblyPath);
 
             var setup = new AppDomainSetup
             {
@@ -49,70 +45,16 @@ namespace Examples.Issues
             remoteSide = (RemoteSide)domain.CreateInstanceFromAndUnwrap(typeof(RemoteSide).Assembly.Location, typeof(RemoteSide).FullName);
             sponsor.Register(remoteSide);
 
-            var assemblyPaths = references.ToDictionary(r => r, r => Assembly.Load(r).Location);
+            var references = new[] { typeof(Serializer).Assembly };
+            var assemblyPaths = references.ToDictionary(a => a.GetName(), a => a.Location);
             assemblyPaths[new AssemblyName(ASSEMBLY_NAME)] = assemblyPath.FullName;
             remoteSide.Initialize(assemblyPaths);
         }
 
-        static IEnumerable<AssemblyName> CreateAssembly(FileInfo path)
+        static void CopyAssembly(FileInfo path)
         {
-            var assemblyBuilder = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName(ASSEMBLY_NAME), AssemblyBuilderAccess.Save, path.DirectoryName);
-            var moduleBuilder = assemblyBuilder.DefineDynamicModule(ASSEMBLY_NAME + ".dll");
-
-            var baseTypeBuilderInfo = BuildBaseType(moduleBuilder);
-            var baseTypeBuilder = baseTypeBuilderInfo.Item1;
-            var childTypeBuilderInfo = BuildChildType(moduleBuilder, baseTypeBuilder, baseTypeBuilderInfo.Item2);
-            var childTypeBuilder = childTypeBuilderInfo.Item1;
-            baseTypeBuilder.SetCustomAttribute(new CustomAttributeBuilder(typeof(ProtoIncludeAttribute).GetConstructor(new[] { typeof(int), typeof(Type) }), new object[] { 1, childTypeBuilder }));
-            var programBuilder = BuildProgramType(moduleBuilder, childTypeBuilder, childTypeBuilderInfo.Item2);
-
-            baseTypeBuilder.CreateType();
-            childTypeBuilder.CreateType();
-            programBuilder.CreateType();
-
-            assemblyBuilder.Save(path.Name);
-
-            return assemblyBuilder.GetReferencedAssemblies();
-        }
-
-        static Tuple<TypeBuilder, ConstructorBuilder> BuildBaseType(ModuleBuilder moduleBuilder)
-        {
-            var baseTypeBuilder = moduleBuilder.DefineType(ASSEMBLY_NAME + ".BaseType", TypeAttributes.Public | TypeAttributes.AutoLayout | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, typeof(Object));
-            baseTypeBuilder.SetCustomAttribute(new CustomAttributeBuilder(typeof(ProtoContractAttribute).GetConstructor(Type.EmptyTypes), new object[0]));
-            var baseConstructorBuilder = baseTypeBuilder.DefineDefaultConstructor(MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName);
-            return Tuple.Create(baseTypeBuilder, baseConstructorBuilder);
-        }
-
-        static Tuple<TypeBuilder, FieldBuilder> BuildChildType(ModuleBuilder moduleBuilder, Type baseType, ConstructorInfo baseConstructor)
-        {
-            var childTypeBuilder = moduleBuilder.DefineType(ASSEMBLY_NAME + ".ChildType", TypeAttributes.Public | TypeAttributes.AutoLayout | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit, baseType);
-            childTypeBuilder.SetCustomAttribute(new CustomAttributeBuilder(typeof(ProtoContractAttribute).GetConstructor(Type.EmptyTypes), new object[0]));
-            var statusBuilder = childTypeBuilder.DefineField("Status", typeof(string), FieldAttributes.Public);
-            statusBuilder.SetCustomAttribute(new CustomAttributeBuilder(typeof(ProtoMemberAttribute).GetConstructor(new[] { typeof(int) }), new object[] { 1 }));
-            statusBuilder.SetCustomAttribute(new CustomAttributeBuilder(typeof(DefaultValueAttribute).GetConstructor(new[] { typeof(string) }), new object[] { "Pass" }));
-            var failBuilder = childTypeBuilder.DefineField("Fail", typeof(int), FieldAttributes.Public);
-            failBuilder.SetCustomAttribute(new CustomAttributeBuilder(typeof(ProtoMemberAttribute).GetConstructor(new[] { typeof(int) }), new object[] { 2 }, new[] { typeof(ProtoMemberAttribute).GetProperty("DataFormat") }, new object[] { DataFormat.FixedSize }));
-            var childConstructorBuilder = childTypeBuilder.DefineConstructor(MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, CallingConventions.HasThis, Type.EmptyTypes);
-            var generator = childConstructorBuilder.GetILGenerator();
-            generator.Emit(OpCodes.Ldarg_0);
-            generator.Emit(OpCodes.Call, baseConstructor);
-            generator.Emit(OpCodes.Ldarg_0);
-            generator.Emit(OpCodes.Ldstr, "Pass");
-            generator.Emit(OpCodes.Stfld, statusBuilder);
-            return Tuple.Create(childTypeBuilder, statusBuilder);
-        }
-
-        static TypeBuilder BuildProgramType(ModuleBuilder moduleBuilder, Type childType, FieldInfo statusField)
-        {
-            var programBuilder = moduleBuilder.DefineType(ASSEMBLY_NAME + ".Program", TypeAttributes.Public | TypeAttributes.AutoLayout | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.Abstract | TypeAttributes.Sealed, typeof(Object));
-            var mainBuilder = programBuilder.DefineMethod("Main", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static, typeof(String), new[] { typeof(byte[]) });
-            var generator = mainBuilder.GetILGenerator();
-            generator.Emit(OpCodes.Ldarg_0);
-            generator.Emit(OpCodes.Newobj, typeof(MemoryStream).GetConstructor(new[] { typeof(byte[]) }));
-            generator.EmitCall(OpCodes.Call, typeof(Serializer).GetMethods(BindingFlags.Public | BindingFlags.Static).Single(m => m.Name == "Deserialize" && m.IsGenericMethodDefinition && m.GetGenericArguments().Length == 1).MakeGenericMethod(new[] { childType }), null);
-            generator.Emit(OpCodes.Ldfld, statusField);
-            generator.Emit(OpCodes.Ret);
-            return programBuilder;
+            var source = new FileInfo(Path.Combine(Path.GetDirectoryName(new Uri(typeof(Gh24).Assembly.GetName(false).EscapedCodeBase).LocalPath), ASSEMBLY_NAME + ".dll"));
+            source.CopyTo(path.FullName);
         }
 
         [TearDown]
@@ -125,15 +67,15 @@ namespace Examples.Issues
         [Test]
         public void TestAppBaseTypeResolution()
         {
-            var result = remoteSide.InvokeAppBase(testData);
-            Assert.AreEqual("Pass", result);
+            var result = remoteSide.InvokeAppBase();
+            Assert.AreEqual("Base,Child", result);
         }
 
         [Test]
         public void TestOtherTypeResolution()
         {
-            var result = remoteSide.InvokeOther(testData);
-            Assert.AreEqual("Pass", result);
+            var result = remoteSide.InvokeOther();
+            Assert.AreEqual("Base,Child", result);
         }
 
         public class RemoteSide : MarshalByRefObject
@@ -151,28 +93,39 @@ namespace Examples.Issues
                 };
 
                 var main = Assembly.Load(ASSEMBLY_NAME);
-                otherType = main.GetType(ASSEMBLY_NAME + ".Program", true, false);
-
-                // is this a problem with the CLR? I get different behavior if this line is commented...
-                main.GetTypes().Select(t => t.GetCustomAttributes(false)).ToArray();
+                otherType = main.GetType(ASSEMBLY_NAME + ".Bar", true, false);
 
                 // make the assembly available in the application base directory after loading from subdirectory to reproduce issue
                 var copyPath = Path.Combine(Path.GetDirectoryName(main.Location), "..", Path.GetFileName(main.Location));
                 File.Copy(main.Location, copyPath);
                 var appBaseMain = Assembly.Load(main.GetName());
-                appBaseType = appBaseMain.GetType(ASSEMBLY_NAME + ".Program", true, false);
+                appBaseType = appBaseMain.GetType(ASSEMBLY_NAME + ".Bar", true, false);
             }
 
-            public string InvokeAppBase(byte[] bytes)
+            string Test(Type type)
             {
-                return (string)appBaseType.GetMethod("Main", BindingFlags.Public | BindingFlags.Static)
-                    .Invoke(null, new object[] { bytes });
+                var baseProp = type.GetProperty("BaseProp");
+                var childProp = type.GetProperty("ChildProp");
+                var obj = Activator.CreateInstance(type);
+                baseProp.SetValue(obj, "Base", null);
+                childProp.SetValue(obj, "Child", null);
+
+                MethodInfo method = typeof(Serializer).GetMethod("DeepClone").MakeGenericMethod(type);
+                var clone = method.Invoke(null, new object[] { obj });
+
+                var baseValue = (string)baseProp.GetValue(clone, null);
+                var childValue = (string)childProp.GetValue(clone, null);
+                return baseValue + "," + childValue;
             }
 
-            public string InvokeOther(byte[] bytes)
+            public string InvokeAppBase()
             {
-                return (string)otherType.GetMethod("Main", BindingFlags.Public | BindingFlags.Static)
-                    .Invoke(null, new object[] { bytes });
+                return Test(appBaseType);
+            }
+
+            public string InvokeOther()
+            {
+                return Test(otherType);
             }
         }
     }
