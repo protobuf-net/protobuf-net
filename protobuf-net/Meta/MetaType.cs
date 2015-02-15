@@ -562,7 +562,7 @@ namespace ProtoBuf.Meta
                     try
                     {
                         if (item.TryGet("knownType", out tmp)) knownType = (Type)tmp;
-                        else if (item.TryGet("knownTypeName", out tmp)) knownType = model.GetType((string)tmp, type
+                        if (knownType == null && item.TryGet("knownTypeName", out tmp)) knownType = model.GetType((string)tmp, type
 #if WINRT
                             .GetTypeInfo()
 #endif       
