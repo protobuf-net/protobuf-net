@@ -377,7 +377,7 @@ namespace ProtoBuf.Meta
                             prop = prop.DeclaringType.GetProperty(prop.Name,
                                 BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
                         }
-                        ser = new PropertyDecorator(model, parentType, (PropertyInfo)member, ser);
+                        ser = new PropertyDecorator(model, parentType, prop, ser);
                     }
                     else
                     {
