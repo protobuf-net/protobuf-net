@@ -372,6 +372,11 @@ namespace ProtoBuf.Meta
                     PropertyInfo prop = member as PropertyInfo;
                     if (prop != null)
                     {
+                        if (!prop.CanWrite && prop.DeclaringType != prop.ReflectedType)
+                        {
+                            prop = prop.DeclaringType.GetProperty(prop.Name,
+                                BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static);
+                        }
                         ser = new PropertyDecorator(model, parentType, (PropertyInfo)member, ser);
                     }
                     else
