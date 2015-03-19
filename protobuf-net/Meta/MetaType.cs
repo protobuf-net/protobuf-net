@@ -1812,7 +1812,8 @@ namespace ProtoBuf.Meta
                     string schemaTypeName = member.GetSchemaTypeName(true, ref requiresBclImport);
                     builder.Append(schemaTypeName).Append(" ")
                          .Append(member.Name).Append(" = ").Append(member.FieldNumber);
-                    if(member.DefaultValue != null)
+
+                    if(member.DefaultValue != null && member.IsRequired == false)
                     {
                         if (member.DefaultValue is string)
                         {
