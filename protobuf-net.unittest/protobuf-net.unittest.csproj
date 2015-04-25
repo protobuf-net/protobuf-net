@@ -145,6 +145,7 @@
     <Compile Include="Serializers\DateTimeTests.cs" />
     <Compile Include="Serializers\KeyValuePairTests.cs" />
     <Compile Include="Serializers\NilSerializer.cs" />
+    <Compile Include="Serializers\SerializerTests.cs" />
     <Compile Include="Serializers\SubItems.cs" />
     <Compile Include="Serializers\Tag.cs" />
     <Compile Include="Serializers\Util.cs" />

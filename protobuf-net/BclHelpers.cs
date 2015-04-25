@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Security.Cryptography;
+
 namespace ProtoBuf
 {
     internal enum TimeSpanScale
@@ -43,18 +45,15 @@ namespace ProtoBuf
 #if FX11
         private BclHelpers() { } // not a static class for C# 1.2 reasons
 #endif
-        const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02;
+        const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02, FieldDateTimeKind = 0x04;
         
         internal static readonly DateTime EpochOrigin = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 
-        /// <summary>
-        /// Writes a TimeSpan to a protobuf stream
-        /// </summary>
-        public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
+        private static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest, DateTimeKind? dateTimeKind)
         {
             if (dest == null) throw new ArgumentNullException("dest");
             long value;
-            switch(dest.WireType)
+            switch (dest.WireType)
             {
                 case WireType.String:
                 case WireType.StartGroup:
@@ -101,12 +100,20 @@ namespace ProtoBuf
                     }
 
                     SubItemToken token = ProtoWriter.StartSubItem(null, dest);
-            
-                    if(value != 0) {
+
+                    if (value != 0)
+                    {
                         ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant, dest);
                         ProtoWriter.WriteInt64(value, dest);
+
+                        if (dateTimeKind.HasValue)
+                        {
+                            ProtoWriter.WriteFieldHeader(FieldDateTimeKind, WireType.Variant, dest);
+                            ProtoWriter.WriteInt64((int)dateTimeKind.Value, dest);
+                        }
                     }
-                    if(scale != TimeSpanScale.Days) {
+                    if (scale != TimeSpanScale.Days)
+                    {
                         ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant, dest);
                         ProtoWriter.WriteInt32((int)scale, dest);
                     }
@@ -119,12 +126,20 @@ namespace ProtoBuf
                     throw new ProtoException("Unexpected wire-type: " + dest.WireType.ToString());
             }
         }
+
+        /// <summary>
+        /// Writes a TimeSpan to a protobuf stream
+        /// </summary>
+        public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
+        {
+            WriteTimeSpan(timeSpan, dest, null);
+        }
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream
         /// </summary>        
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
-            long ticks = ReadTimeSpanTicks(source);
+            long ticks = ReadTicksWithDateTimeKind(source).Ticks;
             if (ticks == long.MinValue) return TimeSpan.MinValue;
             if (ticks == long.MaxValue) return TimeSpan.MaxValue;
             return TimeSpan.FromTicks(ticks);
@@ -134,11 +149,12 @@ namespace ProtoBuf
         /// </summary>
         public static DateTime ReadDateTime(ProtoReader source)
         {
-            long ticks = ReadTimeSpanTicks(source);
-            if (ticks == long.MinValue) return DateTime.MinValue;
-            if (ticks == long.MaxValue) return DateTime.MaxValue;
-            return EpochOrigin.AddTicks(ticks);
+            TicksWithDateTimeKind ticksWithDateTimeKind = ReadTicksWithDateTimeKind(source);
+            if (ticksWithDateTimeKind.Ticks == long.MinValue) return DateTime.MinValue;
+            if (ticksWithDateTimeKind.Ticks == long.MaxValue) return DateTime.MaxValue;
+            return DateTime.SpecifyKind(EpochOrigin.AddTicks(ticksWithDateTimeKind.Ticks), ticksWithDateTimeKind.Kind);
         }
+
         /// <summary>
         /// Writes a DateTime to a protobuf stream
         /// </summary>
@@ -167,10 +183,12 @@ namespace ProtoBuf
                     delta = value - EpochOrigin;
                     break;
             }
-            WriteTimeSpan(delta, dest);
+            WriteTimeSpan(delta, dest, value.Kind);
         }
 
-        private static long ReadTimeSpanTicks(ProtoReader source) {
+        private static TicksWithDateTimeKind ReadTicksWithDateTimeKind(ProtoReader source) {
+            DateTimeKind dateTimeKind = DateTimeKind.Unspecified;
+
             switch (source.WireType)
             {
                 case WireType.String:
@@ -179,6 +197,7 @@ namespace ProtoBuf
                     int fieldNumber;
                     TimeSpanScale scale = TimeSpanScale.Days;
                     long value = 0;
+
                     while ((fieldNumber = source.ReadFieldHeader()) > 0)
                     {
                         switch (fieldNumber)
@@ -190,6 +209,9 @@ namespace ProtoBuf
                                 source.Assert(WireType.SignedVariant);
                                 value = source.ReadInt64();
                                 break;
+                            case FieldDateTimeKind:
+                                dateTimeKind = (DateTimeKind)source.ReadInt32();
+                                break;
                             default:
                                 source.SkipField();
                                 break;
@@ -199,29 +221,29 @@ namespace ProtoBuf
                     switch (scale)
                     {
                         case TimeSpanScale.Days:
-                            return value * TimeSpan.TicksPerDay;
+                            return new TicksWithDateTimeKind(value * TimeSpan.TicksPerDay, dateTimeKind);
                         case TimeSpanScale.Hours:
-                            return value * TimeSpan.TicksPerHour;
+                            return new TicksWithDateTimeKind(value * TimeSpan.TicksPerHour, dateTimeKind);
                         case TimeSpanScale.Minutes:
-                            return value * TimeSpan.TicksPerMinute;
+                            return new TicksWithDateTimeKind(value * TimeSpan.TicksPerMinute, dateTimeKind);
                         case TimeSpanScale.Seconds:
-                            return value * TimeSpan.TicksPerSecond;
+                            return new TicksWithDateTimeKind(value * TimeSpan.TicksPerSecond, dateTimeKind);
                         case TimeSpanScale.Milliseconds:
-                            return value * TimeSpan.TicksPerMillisecond;
+                            return new TicksWithDateTimeKind(value * TimeSpan.TicksPerMillisecond, dateTimeKind);
                         case TimeSpanScale.Ticks:
-                            return value;
+                            return new TicksWithDateTimeKind(value, dateTimeKind);
                         case TimeSpanScale.MinMax:
                             switch (value)
                             {
-                                case 1: return long.MaxValue;
-                                case -1: return long.MinValue;
+                                case 1: return new TicksWithDateTimeKind(long.MaxValue, dateTimeKind);
+                                case -1: return new TicksWithDateTimeKind(long.MinValue, dateTimeKind);
                                 default: throw new ProtoException("Unknown min/max value: " + value.ToString());
                             }
                         default:
                             throw new ProtoException("Unknown timescale: " + scale.ToString());
                     }
                 case WireType.Fixed64:
-                    return source.ReadInt64();
+                    return new TicksWithDateTimeKind(source.ReadInt64(), dateTimeKind);
                 default:
                     throw new ProtoException("Unexpected wire-type: " + source.WireType.ToString());
             }
@@ -541,6 +563,18 @@ namespace ProtoBuf
             }
             ProtoWriter.EndSubItem(token, dest);
 #endif
+        }
+
+        private struct TicksWithDateTimeKind
+        {
+            public readonly long Ticks;
+            public readonly DateTimeKind Kind;
+
+            public TicksWithDateTimeKind(long ticks, DateTimeKind kind)
+            {
+                Ticks = ticks;
+                Kind = kind;
+            }
         }
     }
 }
