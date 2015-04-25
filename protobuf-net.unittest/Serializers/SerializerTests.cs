@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using NUnit.Framework;
-using NUnit.Framework.SyntaxHelpers;
 using ProtoBuf;
 
 namespace ProtoBuf.unittest.Serializers
@@ -26,8 +25,7 @@ namespace ProtoBuf.unittest.Serializers
                 deserializedDate = Serializer.Deserialize<DateTime>(stream);
             }
 
-            // Assert
-            Assert.That(deserializedDate.Kind, Is.EqualTo(utcDate.Kind));
+            Assert.AreEqual(deserializedDate.Kind, utcDate.Kind);
         }
 
         [Test]
@@ -48,7 +46,7 @@ namespace ProtoBuf.unittest.Serializers
             }
 
             // Assert
-            Assert.That(deserializedTimeSpan, Is.EqualTo(originalTimeSpan));
+            Assert.AreEqual(deserializedTimeSpan, originalTimeSpan);
         }
     }
 }
