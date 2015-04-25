@@ -26,6 +26,7 @@ namespace ProtoBuf.unittest.Serializers
                 deserializedDate = Serializer.Deserialize<DateTime>(stream);
             }
 
+            // Assert
             Assert.AreEqual(deserializedDate.Kind, utcDate.Kind);
         }
 
