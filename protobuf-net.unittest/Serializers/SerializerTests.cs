@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Runtime.Serialization;
 using NUnit.Framework;
 using ProtoBuf;
 
@@ -47,6 +48,62 @@ namespace ProtoBuf.unittest.Serializers
 
             // Assert
             Assert.AreEqual(deserializedTimeSpan, originalTimeSpan);
+        }
+
+        [Test]
+        public void WhenEmptyArrayIsSerializedAndDeserialized_EmptyArrayIsPreserved()
+        {
+            // Arrange
+            var original = new Test
+            {
+                Array = new int[0]
+            };
+
+            // Act
+            Test deserialized;
+
+            using (var stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, original);
+                stream.Flush();
+                stream.Position = 0;
+                deserialized = Serializer.Deserialize<Test>(stream);
+            }
+
+            // Assert
+            Assert.IsNotNull(deserialized.Array);
+            Assert.AreEqual(deserialized.Array.Length, 0);
+        }
+
+        [Test]
+        public void WhenNullArrayIsSerializedAndDeserialized_ArrayIsNull()
+        {
+            // Arrange
+            var original = new Test
+            {
+                Array = null
+            };
+
+            // Act
+            Test deserialized;
+
+            using (var stream = new MemoryStream())
+            {
+                Serializer.Serialize(stream, original);
+                stream.Flush();
+                stream.Position = 0;
+                deserialized = Serializer.Deserialize<Test>(stream);
+            }
+
+            // Assert
+            Assert.IsNull(deserialized.Array);
+        }
+
+        [DataContract]
+        private class Test
+        {
+            [DataMember(Order = 1)]
+            public int[] Array { get; set; }
         }
     }
 }

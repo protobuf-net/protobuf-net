@@ -138,18 +138,16 @@ namespace ProtoBuf.Serializers
         {
             IList arr = (IList)value;
             int len = arr.Count;
-            SubItemToken token;
+
+            ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
+            SubItemToken token = ProtoWriter.StartSubItem(value, dest);
+
             bool writePacked = (options & OPTIONS_WritePacked) != 0;
             if (writePacked)
             {
-                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
-                token = ProtoWriter.StartSubItem(value, dest);
                 ProtoWriter.SetPackedField(fieldNumber, dest);
             }
-            else
-            {
-                token = new SubItemToken(); // default
-            }
+
             bool checkForNull = !SupportNull;
             for (int i = 0; i < len; i++)
             {
@@ -157,10 +155,8 @@ namespace ProtoBuf.Serializers
                 if (checkForNull && obj == null) { throw new NullReferenceException(); }
                 Tail.Write(obj, dest);
             }
-            if (writePacked)
-            {
-                ProtoWriter.EndSubItem(token, dest);
-            }            
+            
+            ProtoWriter.EndSubItem(token, dest);           
         }
         public override object Read(object value, ProtoReader source)
         {
