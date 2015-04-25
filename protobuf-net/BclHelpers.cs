@@ -109,7 +109,7 @@ namespace ProtoBuf
                         if (dateTimeKind.HasValue)
                         {
                             ProtoWriter.WriteFieldHeader(FieldDateTimeKind, WireType.Variant, dest);
-                            ProtoWriter.WriteInt64((int)dateTimeKind.Value, dest);
+                            ProtoWriter.WriteByte((byte)dateTimeKind.Value, dest);
                         }
                     }
                     if (scale != TimeSpanScale.Days)
@@ -210,7 +210,7 @@ namespace ProtoBuf
                                 value = source.ReadInt64();
                                 break;
                             case FieldDateTimeKind:
-                                dateTimeKind = (DateTimeKind)source.ReadInt32();
+                                dateTimeKind = (DateTimeKind)source.ReadByte();
                                 break;
                             default:
                                 source.SkipField();
