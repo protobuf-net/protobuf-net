@@ -4,7 +4,7 @@ using NUnit.Framework;
 using NUnit.Framework.SyntaxHelpers;
 using ProtoBuf;
 
-namespace protobuf_net.Tests
+namespace ProtoBuf.unittest.Serializers
 {
     [TestFixture]
     public class SerializerTests
