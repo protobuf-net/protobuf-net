@@ -47,6 +47,14 @@ namespace ProtoBuf
         
         internal static readonly DateTime EpochOrigin = new DateTime(1970, 1, 1, 0, 0, 0, 0);
 
+        /// <summary>
+        /// Writes a TimeSpan to a protobuf stream
+        /// </summary>
+        public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
+        {
+            WriteTimeSpan(timeSpan, dest, null);
+        }
+
         private static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest, DateTimeKind? dateTimeKind)
         {
             if (dest == null) throw new ArgumentNullException("dest");
@@ -125,13 +133,6 @@ namespace ProtoBuf
             }
         }
 
-        /// <summary>
-        /// Writes a TimeSpan to a protobuf stream
-        /// </summary>
-        public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
-        {
-            WriteTimeSpan(timeSpan, dest, null);
-        }
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream
         /// </summary>        
