@@ -523,7 +523,7 @@ namespace ProtoBuf
         }
         private Exception CreateWireTypeException()
         {
-            return CreateException("Invalid wire-type; this usually means you have over-written a file without truncating or setting the length; see http://stackoverflow.com/q/2152978/23354");
+            return CreateException("Invalid wire-type; this usually means you have over-written a file without truncating or setting the length; see Exception.Data[\"protoSource\"] and Exception.Data[\"protoMessageFragment\"]; for more info see http://stackoverflow.com/q/2152978/23354");
         }
         private Exception CreateException(string message)
         {
@@ -1183,6 +1183,12 @@ namespace ProtoBuf
             {
                 exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
                     source.fieldNumber, source.wireType, source.position, source.depth));
+            }
+            if (exception != null && source != null && !exception.Data.Contains("protoMessageFragment"))
+            {
+                byte[] messageFragment = new byte[source.ioBuffer.Length];
+                source.ioBuffer.CopyTo(messageFragment, 0);
+                exception.Data.Add("protoMessageFragment", messageFragment);
             }
 #endif
             return exception;

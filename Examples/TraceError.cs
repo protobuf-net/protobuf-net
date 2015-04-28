@@ -25,7 +25,9 @@ namespace Examples
         [Test]
         public void TestTrace()
         {
-            TraceErrorData ed = new TraceErrorData {Foo = 12, Bar = "abcdefghijklmnopqrstuvwxyz"};
+            var fooValue = 12;
+            var barValue = "abcdefghijklmnopqrstuvwxyz";
+            TraceErrorData ed = new TraceErrorData { Foo = fooValue, Bar = barValue };
             MemoryStream ms = new MemoryStream();
             Serializer.Serialize(ms, ed);
             byte[] buffer = ms.GetBuffer();
@@ -41,6 +43,9 @@ namespace Examples
             {
                 Assert.IsTrue(ex.Data.Contains("protoSource"), "Missing protoSource");
                 Assert.AreEqual("tag=2; wire-type=String; offset=4; depth=0", ex.Data["protoSource"]);
+                var fragment = (byte[])ex.Data["protoMessageFragment"];
+                var fragmentAsString = System.Text.Encoding.UTF8.GetString(fragment).Trim('\0');
+                Assert.AreEqual("\b" + Char.ConvertFromUtf32(fooValue) + Char.ConvertFromUtf32(18) + Char.ConvertFromUtf32(barValue.Length) + barValue, fragmentAsString);
             } catch(Exception ex)
             {
                 Assert.Fail("Unexpected exception: " + ex);
