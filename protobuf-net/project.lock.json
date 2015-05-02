@@ -1,0 +1,14 @@
+{
+  "locked": false,
+  "version": -9997,
+  "targets": {
+    "DNX,Version=v4.5.1": {}
+  },
+  "libraries": {},
+  "projectFileDependencyGroups": {
+    "": [],
+    "DNX,Version=v4.5.1": [
+      "framework/System.Xml >= 4.0.0.0"
+    ]
+  }
+}
