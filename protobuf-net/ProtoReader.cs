@@ -1053,7 +1053,7 @@ namespace ProtoBuf
                             fieldNumber = (int)(val >> 3);
                             tmpBytesRead = ProtoReader.TryReadUInt32Variant(source, out val);
                             bytesRead += tmpBytesRead;
-                            if (bytesRead == 0)
+                            if (tmpBytesRead == 0)
                             { // got a header, but no length
                                 throw EoF(null);
                             }
