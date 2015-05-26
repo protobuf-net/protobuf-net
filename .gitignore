@@ -3,3 +3,7 @@ artifacts
 bin
 obj
 *.user
+TestFiles/
+*.suo
+Tools/PEVerify.*
+packages/

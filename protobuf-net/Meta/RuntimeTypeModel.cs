@@ -26,8 +26,8 @@ namespace ProtoBuf.Meta
     /// </summary>
     public sealed class RuntimeTypeModel : TypeModel
     {
-        private byte options;
-        private const byte
+        private ushort options;
+        private const ushort
            OPTIONS_InferTagFromNameDefault = 1,
            OPTIONS_IsDefaultModel = 2,
            OPTIONS_Frozen = 4,
@@ -37,15 +37,16 @@ namespace ProtoBuf.Meta
 #endif
            OPTIONS_UseImplicitZeroDefaults = 32,
            OPTIONS_AllowParseableTypes = 64,
-           OPTIONS_AutoAddProtoContractTypesOnly = 128;
-        private bool GetOption(byte option)
+           OPTIONS_AutoAddProtoContractTypesOnly = 128,
+           OPTIONS_IncludeDateTimeKind = 256;
+        private bool GetOption(ushort option)
         {
             return (options & option) == option;
         }
-        private void SetOption(byte option, bool value)
+        private void SetOption(ushort option, bool value)
         {
             if (value) options |= option;
-            else options &= (byte)~option;
+            else options &= (ushort)~option;
         }
         /// <summary>
         /// Global default that
@@ -101,6 +102,22 @@ namespace ProtoBuf.Meta
         {
             get { return GetOption(OPTIONS_AllowParseableTypes); }
             set { SetOption(OPTIONS_AllowParseableTypes, value); }
+        }
+        /// <summary>
+        /// Global switch that determines whether DateTime serialization should include the <c>Kind</c> of the date/time.
+        /// </summary>
+        public bool IncludeDateTimeKind
+        {
+            get { return GetOption(OPTIONS_IncludeDateTimeKind); }
+            set { SetOption(OPTIONS_IncludeDateTimeKind, value); }
+        }
+
+        /// <summary>
+        /// Should the <c>Kind</c> be included on date/time values?
+        /// </summary>
+        protected internal override bool SerializeDateTimeKind()
+        {
+            return GetOption(OPTIONS_IncludeDateTimeKind);
         }
         
 
@@ -1137,6 +1154,12 @@ namespace ProtoBuf.Meta
             Type knownTypesLookupType;
             WriteGetKeyImpl(type, hasInheritance, methodPairs, ilVersion, assemblyName, out il, out knownTypesCategory, out knownTypes, out knownTypesLookupType);
 
+            // trivial flags
+            il = Override(type, "SerializeDateTimeKind");
+            il.Emit(IncludeDateTimeKind ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+            il.Emit(OpCodes.Ret);
+            // end: trivial flags
+
             Compiler.CompilerContext ctx = WriteSerializeDeserialize(assemblyName, type, methodPairs, ilVersion, ref il);
 
             WriteConstructors(type, ref index, methodPairs, ref il, knownTypesCategory, knownTypes, knownTypesLookupType, ctx);
@@ -1979,6 +2002,7 @@ namespace ProtoBuf.Meta
                 if (!CallbackSet.CheckCallbackParameters(this, factory)) throw new ArgumentException("Invalid factory signature in " + factory.DeclaringType.FullName + "." + factory.Name, "factory");
             }
         }
+
     }
     /// <summary>
     /// Contains the stack-trace of the owning code when a lock-contention scenario is detected

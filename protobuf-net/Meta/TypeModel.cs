@@ -22,6 +22,12 @@ namespace ProtoBuf.Meta
             return type;
         }
 #endif
+
+        /// <summary>
+        /// Should the <c>Kind</c> be included on date/time values?
+        /// </summary>
+        protected internal virtual bool SerializeDateTimeKind() { return false; }
+
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
         /// </summary>
@@ -147,7 +153,12 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.Char: ProtoWriter.WriteUInt16((ushort)(char)value, writer); return true;
                 case ProtoTypeCode.Double: ProtoWriter.WriteDouble((double)value, writer); return true;
                 case ProtoTypeCode.Single: ProtoWriter.WriteSingle((float)value, writer); return true;
-                case ProtoTypeCode.DateTime: BclHelpers.WriteDateTime((DateTime)value, writer); return true;
+                case ProtoTypeCode.DateTime:
+                    if (SerializeDateTimeKind())
+                        BclHelpers.WriteDateTimeWithKind((DateTime)value, writer);
+                    else
+                        BclHelpers.WriteDateTime((DateTime)value, writer);
+                    return true;
                 case ProtoTypeCode.Decimal: BclHelpers.WriteDecimal((decimal)value, writer); return true;
                 case ProtoTypeCode.String: ProtoWriter.WriteString((string)value, writer); return true;
                 case ProtoTypeCode.ByteArray: ProtoWriter.WriteBytes((byte[])value, writer); return true;
