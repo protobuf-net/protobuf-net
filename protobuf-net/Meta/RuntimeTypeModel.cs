@@ -1716,7 +1716,7 @@ namespace ProtoBuf.Meta
             const string message = "Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection; please also see the LockContended event";
             opaqueToken = 0;
 #if PORTABLE
-            if(!Monitor.TryEnter(types)) throw new TimeoutException(message); // yes, we have to do this immediately - I'm not creating a "hot" loop, just because Sleep() doesn't exist...
+            if(!Monitor.TryEnter(types, metadataTimeoutMilliseconds)) throw new TimeoutException(message);
             opaqueToken = Interlocked.CompareExchange(ref contentionCounter, 0, 0); // just fetch current value (starts at 1)
 #elif CF2 || CF35
             int remaining = metadataTimeoutMilliseconds;
