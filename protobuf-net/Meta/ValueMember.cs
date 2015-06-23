@@ -367,6 +367,13 @@ namespace ProtoBuf.Meta
                 {
                     ser = new UriDecorator(model, ser);
                 }
+#if PORTABLE
+                else if(memberType.FullName == typeof(Uri).FullName)
+                {
+                    // In PCLs, the Uri type may not match (WinRT uses Internal/Uri, .Net uses System/Uri)
+                    ser = new ReflectedUriDecorator(memberType, model, ser);
+                }
+#endif
                 if (member != null)
                 {
                     PropertyInfo prop = member as PropertyInfo;
@@ -502,7 +509,7 @@ namespace ProtoBuf.Meta
                     return new GuidSerializer(model);
                 case ProtoTypeCode.Uri:
                     defaultWireType = WireType.String;
-                    return new StringSerializer(model); // treat as string; wrapped in decorator later
+                    return new StringSerializer(model);
                 case ProtoTypeCode.ByteArray:
                     defaultWireType = WireType.String;
                     return new BlobSerializer(model, overwriteList);

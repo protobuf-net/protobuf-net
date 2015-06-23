@@ -237,6 +237,7 @@
     <Compile Include="Serializers\MemberSpecifiedDecorator.cs" />
     <Compile Include="Serializers\SystemTypeSerializer.cs" />
     <Compile Include="Serializers\TupleSerializer.cs" />
+    <Compile Include="Serializers\ReflectedUriDecorator.cs" />
     <Compile Include="Serializers\UriDecorator.cs" />
     <Compile Include="Serializers\EnumSerializer.cs" />
     <Compile Include="Serializers\DefaultValueDecorator.cs" />
