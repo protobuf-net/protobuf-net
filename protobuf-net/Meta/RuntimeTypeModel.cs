@@ -378,7 +378,7 @@ namespace ProtoBuf.Meta
 
         /// <summary>
         /// Adds support for an additional type in this model, optionally
-        /// appplying inbuilt patterns. If the type is already known to the
+        /// applying inbuilt patterns. If the type is already known to the
         /// model, the existing type is returned **without** applying
         /// any additional behaviour.
         /// </summary>
@@ -389,7 +389,7 @@ namespace ProtoBuf.Meta
         }
         /// <summary>
         /// Adds support for an additional type in this model, optionally
-        /// appplying inbuilt patterns. If the type is already known to the
+        /// applying inbuilt patterns. If the type is already known to the
         /// model, the existing type is returned **without** applying
         /// any additional behaviour.
         /// </summary>
@@ -610,7 +610,7 @@ namespace ProtoBuf.Meta
 
         /// <summary>
         /// Adds support for an additional type in this model, optionally
-        /// appplying inbuilt patterns. If the type is already known to the
+        /// applying inbuilt patterns. If the type is already known to the
         /// model, the existing type is returned **without** applying
         /// any additional behaviour.
         /// </summary>
