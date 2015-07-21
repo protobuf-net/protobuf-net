@@ -18,6 +18,7 @@
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
     <UpgradeBackupLocation />
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -118,6 +119,7 @@
     <Compile Include="Attribs\ComplexMultiTypes.cs" />
     <Compile Include="Attribs\PointStruct.cs" />
     <Compile Include="FX11.cs" />
+    <Compile Include="Issues\TurkishL.cs" />
     <Compile Include="Issues\SO8933251.cs" />
     <Compile Include="Meta\Basic.cs" />
     <Compile Include="Meta\Callbacks.cs" />
