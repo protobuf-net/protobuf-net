@@ -659,7 +659,7 @@ namespace ProtoBuf
             // then be called)
             if (blockEnd <= position || wireType == WireType.EndGroup) { return 0; }
             uint tag;
-            if (TryReadUInt32Variant(out tag))
+            if (TryReadUInt32Variant(out tag) && tag != 0)
             {
                 wireType = (WireType)(tag & 7);
                 fieldNumber = (int)(tag >> 3);
@@ -928,6 +928,8 @@ namespace ProtoBuf
                         reader.available -= len;
                     }
                     return value;
+                case WireType.Variant:
+                    return new byte[0];
                 default:
                     throw reader.CreateWireTypeException();
             }
