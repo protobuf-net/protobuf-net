@@ -19,22 +19,22 @@ Nuget : Install-Package protobuf-net
 
 ### 1 First Decorate your classes
 ```csharp
-  [ProtoContract]
-  class Person {
-      [ProtoMember(1)]
-      public int Id {get;set;}
-      [ProtoMember(2)]
-      public string Name {get;set:}
-      [ProtoMember(3)]
-      public Address Address {get;set;}
-  }
-  [ProtoContract]
-  class Address {
-      [ProtoMember(1)]
-      public string Line1 {get;set;}
-      [ProtoMember(2)]
-      public string Line2 {get;set;}
-  }
+[ProtoContract]
+class Person {
+    [ProtoMember(1)]
+    public int Id {get;set;}
+    [ProtoMember(2)]
+    public string Name {get;set:}
+    [ProtoMember(3)]
+    public Address Address {get;set;}
+}
+[ProtoContract]
+class Address {
+    [ProtoMember(1)]
+    public string Line1 {get;set;}
+    [ProtoMember(2)]
+    public string Line2 {get;set;}
+}
 ```
 Note that unlike XmlSerializer, the member-names are not encoded in the data - instead, you must pick an integer to identify each member. Additionally, to show intent it is necessary to show that we intend this type to be serialized (i.e. that it is a data contract).
 
@@ -96,12 +96,12 @@ The code assumes that types will be mutable around the elected members. Accordin
 Inheritance must be explicitly declared, in a similar way that if must for XmlSerializer and DataContractSerializer. This is done via [ProtoInclude(...)] on each type with known sub-types: 
 
 ```csharp
-    [ProtoContract]
-    [ProtoInclude(7, typeof(SomeDerivedType)]
-    class SomeBaseType {...}
+[ProtoContract]
+[ProtoInclude(7, typeof(SomeDerivedType)]
+class SomeBaseType {...}
 
-    [ProtoContract]
-    class SomeDerivedType {...}
+[ProtoContract]
+class SomeDerivedType {...}
 ```
 There is no special significance in the 7 above; it is an integer key, just like every [ProtoMember(...)]. It must be unique in terms of SomeBaseType (no other [ProtoInclude(...)] or [ProtoMember(...)] in SomeBaseType can use 7), but does not need to be unique globally. 
 
