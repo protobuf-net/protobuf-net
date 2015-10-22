@@ -63,6 +63,23 @@ namespace ProtoBuf.CodeGenerator
                 folder = null;
                 return lazyPath;
             }
+
+            // protogen.exe can be run with mono on Mac/Unix (cool mono)
+            // but the embedded protoc.exe cannot be executed, as it's not a .net exe
+            // workaround 1: ln -s /opt/local/bin/protoc protoc.exe
+            // workaround 2: search the protoc in following bin folder
+            string[] UnixProtoc = {
+                "/usr/bin/protoc",
+                "/usr/local/bin/protoc",
+                "/opt/local/bin/protoc"
+            };
+            for(int i=0; i<UnixProtoc.Length; i++) {
+                if(File.Exists(UnixProtoc[i])) {
+                    folder = null;
+                    return UnixProtoc[i];
+                }
+            }
+            
             folder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("n"));
             Directory.CreateDirectory(folder);
             string path = Path.Combine(folder, Name);
