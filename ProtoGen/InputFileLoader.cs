@@ -111,8 +111,9 @@ namespace ProtoBuf.CodeGenerator
                 protocPath = GetProtocPath(out tmpFolder);
                 ProcessStartInfo psi = new ProcessStartInfo(
                     protocPath,
-                    string.Format(@"""--descriptor_set_out={0}"" ""--proto_path={1}"" ""--proto_path={2}"" --error_format=gcc ""{3}"" {4}",
+                    string.Format(@"""--descriptor_set_out={0}"" ""--proto_path={1}"" ""--proto_path={2}"" ""--proto_path={3}"" --error_format=gcc ""{4}"" {5}",
                              tmp, // output file
+                             Path.GetDirectoryName(path), // primary search path
                              Environment.CurrentDirectory, // primary search path
                              Path.GetDirectoryName(protocPath), // secondary search path
                              Path.Combine(Environment.CurrentDirectory, path), // input file
