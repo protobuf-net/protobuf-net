@@ -63,6 +63,23 @@ namespace ProtoBuf.CodeGenerator
                 folder = null;
                 return lazyPath;
             }
+
+            // protogen.exe can be run with mono on Mac/Unix (cool mono)
+            // but the embedded protoc.exe cannot be executed, as it's not a .net exe
+            // workaround 1: ln -s /opt/local/bin/protoc protoc.exe
+            // workaround 2: search the protoc in following bin folder
+            string[] UnixProtoc = {
+                "/usr/bin/protoc",
+                "/usr/local/bin/protoc",
+                "/opt/local/bin/protoc"
+            };
+            for(int i=0; i<UnixProtoc.Length; i++) {
+                if(File.Exists(UnixProtoc[i])) {
+                    folder = null;
+                    return UnixProtoc[i];
+                }
+            }
+            
             folder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("n"));
             Directory.CreateDirectory(folder);
             string path = Path.Combine(folder, Name);
@@ -94,8 +111,9 @@ namespace ProtoBuf.CodeGenerator
                 protocPath = GetProtocPath(out tmpFolder);
                 ProcessStartInfo psi = new ProcessStartInfo(
                     protocPath,
-                    string.Format(@"""--descriptor_set_out={0}"" ""--proto_path={1}"" ""--proto_path={2}"" --error_format=gcc ""{3}"" {4}",
+                    string.Format(@"""--descriptor_set_out={0}"" ""--proto_path={1}"" ""--proto_path={2}"" ""--proto_path={3}"" --error_format=gcc ""{4}"" {5}",
                              tmp, // output file
+                             Path.GetDirectoryName(path), // primary search path
                              Environment.CurrentDirectory, // primary search path
                              Path.GetDirectoryName(protocPath), // secondary search path
                              Path.Combine(Environment.CurrentDirectory, path), // input file
