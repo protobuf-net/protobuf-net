@@ -884,10 +884,9 @@ namespace ProtoBuf.Meta
 
                 for(int j = 0 ; j < parameters.Length ; j++)
                 {
-                    string lower = parameters[j].Name.ToLower();
                     for(int k = 0 ; k < members.Length ; k++)
                     {
-                        if (members[k].Name.ToLower() != lower) continue;
+                        if (string.Compare(parameters[j].Name, members[k].Name, StringComparison.OrdinalIgnoreCase) != 0) continue;
                         Type memberType = Helpers.GetMemberType(members[k]);
                         if (memberType != parameters[j].ParameterType) continue;
 
