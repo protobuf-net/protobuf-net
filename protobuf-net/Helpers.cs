@@ -337,6 +337,10 @@ namespace ProtoBuf
             if (type == typeof(TimeSpan)) return ProtoTypeCode.TimeSpan;
             if (type == typeof(Guid)) return ProtoTypeCode.Guid;
             if (type == typeof(Uri)) return ProtoTypeCode.Uri;
+#if PORTABLE
+            // In PCLs, the Uri type may not match (WinRT uses Internal/Uri, .Net uses System/Uri), so match on the full name instead
+            if (type.FullName == typeof(Uri).FullName) return ProtoTypeCode.Uri;
+#endif
             if (type == typeof(byte[])) return ProtoTypeCode.ByteArray;
             if (type == typeof(System.Type)) return ProtoTypeCode.Type;
 
