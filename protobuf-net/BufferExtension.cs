@@ -51,6 +51,16 @@ namespace ProtoBuf
                         }
                         if(len != 0) throw new EndOfStreamException();
                         ms.Position = oldPos;
+#elif DNXCORE50
+                        ArraySegment<byte> segment;
+                        if(ms.TryGetBuffer(out segment))
+                        {
+                            Helpers.BlockCopy(segment.Array, segment.Offset, tmp, offset, len);
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException("Could not obtain underlying MemoryStream buffer");
+                        }
 #else
                         Helpers.BlockCopy(ms.GetBuffer(), 0, tmp, offset, len);
 #endif

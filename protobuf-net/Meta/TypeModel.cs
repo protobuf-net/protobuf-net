@@ -16,7 +16,7 @@ namespace ProtoBuf.Meta
     /// </summary>
     public abstract class TypeModel
     {
-#if WINRT
+#if WINRT || DNXCORE50
         internal TypeInfo MapType(TypeInfo type)
         {
             return type;
@@ -715,14 +715,14 @@ namespace ProtoBuf.Meta
             return value;
         }
 #endif
-#if WINRT
+#if WINRT || DNXCORE50
         private static readonly System.Reflection.TypeInfo ilist = typeof(IList).GetTypeInfo();
 #else
         private static readonly System.Type ilist = typeof(IList);
 #endif
         internal static MethodInfo ResolveListAdd(TypeModel model, Type listType, Type itemType, out bool isList)
         {
-#if WINRT
+#if WINRT || DNXCORE50
             TypeInfo listTypeInfo = listType.GetTypeInfo();
 #else
             Type listTypeInfo = listType;
@@ -738,12 +738,12 @@ namespace ProtoBuf.Meta
 
                 bool forceList = listTypeInfo.IsInterface &&
                     listTypeInfo == model.MapType(typeof(System.Collections.Generic.IEnumerable<>)).MakeGenericType(types)
-#if WINRT
+#if WINRT || DNXCORE50
                     .GetTypeInfo()
 #endif
                     ;
 
-#if WINRT
+#if WINRT || DNXCORE50
                 TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
 #else
                 Type constuctedListType = model.MapType(typeof(System.Collections.Generic.ICollection<>)).MakeGenericType(types);
@@ -756,14 +756,14 @@ namespace ProtoBuf.Meta
 
             if (add == null)
             {
-                
-#if WINRT
+
+#if WINRT || DNXCORE50
                 foreach (Type tmpType in listTypeInfo.ImplementedInterfaces)
 #else
                 foreach (Type interfaceType in listTypeInfo.GetInterfaces())
 #endif
                 {
-#if WINRT
+#if WINRT || DNXCORE50
                     TypeInfo interfaceType = tmpType.GetTypeInfo();
 #endif
                     if (interfaceType.Name == "IProducerConsumerCollection`1" && interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
@@ -875,7 +875,7 @@ namespace ProtoBuf.Meta
         private static void TestEnumerableListPatterns(TypeModel model, BasicList candidates, Type iType)
         {
 
-#if WINRT
+#if WINRT || DNXCORE50
             TypeInfo iTypeInfo = iType.GetTypeInfo();
             if (iTypeInfo.IsGenericType)
             {
@@ -910,10 +910,10 @@ namespace ProtoBuf.Meta
 
         private static bool CheckDictionaryAccessors(TypeModel model, Type pair, Type value)
         {
-            
+
 #if NO_GENERICS
             return false;
-#elif WINRT
+#elif WINRT || DNXCORE50
             TypeInfo finalType = pair.GetTypeInfo();
             return finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
                 && finalType.GenericTypeArguments[1] == value;
@@ -994,7 +994,7 @@ namespace ProtoBuf.Meta
                 return Array.CreateInstance(itemType, 0);
             }
 
-#if WINRT
+#if WINRT || DNXCORE50
             TypeInfo listTypeInfo = listType.GetTypeInfo();
             if (!listTypeInfo.IsClass || listTypeInfo.IsAbstract ||
                 Helpers.GetConstructor(listTypeInfo, Helpers.EmptyTypes, true) == null)
@@ -1005,7 +1005,7 @@ namespace ProtoBuf.Meta
             {
                 string fullName;
                 bool handled = false;
-#if WINRT
+#if WINRT || DNXCORE50
                 if (listTypeInfo.IsInterface &&
 #else
                 if (listType.IsInterface &&
@@ -1013,7 +1013,7 @@ namespace ProtoBuf.Meta
                     (fullName = listType.FullName) != null && fullName.IndexOf("Dictionary") >= 0) // have to try to be frugal here...
                 {
 #if !NO_GENERICS
-#if WINRT
+#if WINRT || DNXCORE50
                     TypeInfo finalType = listType.GetTypeInfo();
                     if (finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
                     {
@@ -1030,7 +1030,7 @@ namespace ProtoBuf.Meta
                     }
 #endif
 #endif
-#if !SILVERLIGHT && !WINRT && !PORTABLE
+#if !SILVERLIGHT && !WINRT && !PORTABLE && !DNXCORE50
                     if (!handled && listType == typeof(IDictionary))
                     {
                         concreteListType = typeof(Hashtable);
@@ -1046,7 +1046,7 @@ namespace ProtoBuf.Meta
                 }
 #endif
 
-#if !SILVERLIGHT && !WINRT && !PORTABLE
+#if !SILVERLIGHT && !WINRT && !PORTABLE && !DNXCORE50
                 if (!handled)
                 {
                     concreteListType = typeof(ArrayList);
@@ -1201,7 +1201,14 @@ namespace ProtoBuf.Meta
 #if !(WINRT || CF)
             // EF POCO
             string fullName = type.FullName;
-            if (fullName != null && fullName.StartsWith("System.Data.Entity.DynamicProxies.")) return type.BaseType;
+            if (fullName != null && fullName.StartsWith("System.Data.Entity.DynamicProxies."))
+            {
+#if  DNXCORE50
+                return type.GetTypeInfo().BaseType;
+#else
+                return type.BaseType;
+#endif
+            }
 
             // NHibernate
             Type[] interfaces = type.GetInterfaces();
@@ -1212,11 +1219,15 @@ namespace ProtoBuf.Meta
                     case "NHibernate.Proxy.INHibernateProxy":
                     case "NHibernate.Proxy.DynamicProxy.IProxy":
                     case "NHibernate.Intercept.IFieldInterceptorAccessor":
+#if DNXCORE50
+                        return type.GetTypeInfo().BaseType;
+#else
                         return type.BaseType;
+#endif
                 }
             }
 #endif
-            return null;
+                        return null;
         }
         /// <summary>
         /// Indicates whether the supplied type is explicitly modelled by the model
@@ -1385,8 +1396,16 @@ namespace ProtoBuf.Meta
 #if !NO_GENERICS && !WINRT
             if (type != null)
             {
-                Type baseType = type.BaseType;
-                if (baseType != null && baseType.IsGenericType && baseType.GetGenericTypeDefinition().Name == "GeneratedMessage`2")
+                Type baseType = type
+#if DNXCORE50
+                    .GetTypeInfo()
+#endif
+                    .BaseType;
+                if (baseType != null && baseType
+#if DNXCORE50
+                    .GetTypeInfo()
+#endif                    
+                    .IsGenericType && baseType.GetGenericTypeDefinition().Name == "GeneratedMessage`2")
                 {
                     throw new InvalidOperationException(
                         "Are you mixing protobuf-net and protobuf-csharp-port? See http://stackoverflow.com/q/11564914; type: " + fullName);
@@ -1619,7 +1638,7 @@ namespace ProtoBuf.Meta
             {
                 int i = name.IndexOf(',');
                 string fullName = (i > 0 ? name.Substring(0, i) : name).Trim();
-#if !(WINRT || FEAT_IKVM)
+#if !(WINRT || FEAT_IKVM || DNXCORE50)
                 if (assembly == null) assembly = Assembly.GetCallingAssembly();
 #endif
                 Type type = assembly == null ? null : assembly.GetType(fullName);

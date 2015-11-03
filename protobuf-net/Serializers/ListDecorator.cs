@@ -309,15 +309,15 @@ namespace ProtoBuf.Serializers
         }
 #endif
 
-#if WINRT
+#if WINRT || DNXCORE50
         private static readonly TypeInfo ienumeratorType = typeof(IEnumerator).GetTypeInfo(), ienumerableType = typeof (IEnumerable).GetTypeInfo();
 #else
         private static readonly System.Type ienumeratorType = typeof (IEnumerator), ienumerableType = typeof (IEnumerable);
 #endif
         protected MethodInfo GetEnumeratorInfo(TypeModel model, out MethodInfo moveNext, out MethodInfo current)
         {
-            
-#if WINRT
+
+#if WINRT || DNXCORE50
             TypeInfo enumeratorType = null, iteratorType, expectedType = ExpectedType.GetTypeInfo();
 #else
             Type enumeratorType = null, iteratorType, expectedType = ExpectedType;
@@ -332,7 +332,7 @@ namespace ProtoBuf.Serializers
             {
                 getReturnType = getEnumerator.ReturnType;
                 iteratorType = getReturnType
-#if WINRT
+#if WINRT || DNXCORE50 || DNXCORE50
                     .GetTypeInfo()
 #endif
                     ;
@@ -360,7 +360,7 @@ namespace ProtoBuf.Serializers
             {
                 tmp = tmp.MakeGenericType(itemType);
 
-#if WINRT
+#if WINRT || DNXCORE50
                 enumeratorType = tmp.GetTypeInfo();
 #else
                 enumeratorType = tmp;
@@ -371,8 +371,8 @@ namespace ProtoBuf.Serializers
             {
                 getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
                 getReturnType = getEnumerator.ReturnType;
-                
-#if WINRT
+
+#if WINRT || DNXCORE50
                 iteratorType = getReturnType.GetTypeInfo();
 #else
                 iteratorType = getReturnType;
@@ -388,7 +388,7 @@ namespace ProtoBuf.Serializers
             getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
             getReturnType = getEnumerator.ReturnType;
             iteratorType = getReturnType
-#if WINRT
+#if WINRT || DNXCORE50
                 .GetTypeInfo()
 #endif
                 ;

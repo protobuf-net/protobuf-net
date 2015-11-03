@@ -481,7 +481,11 @@ namespace ProtoBuf
         }
 #endif
 
+#if DNXCORE50
+        static readonly Encoding encoding = Encoding.UTF8;
+#else
         static readonly UTF8Encoding encoding = new UTF8Encoding();
+#endif
         /// <summary>
         /// Reads a string from the stream (using UTF8); supported wire-types: String
         /// </summary>

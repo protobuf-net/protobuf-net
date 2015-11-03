@@ -48,7 +48,7 @@ namespace ProtoBuf.Serializers
         }
         static MethodInfo GetShadowSetter(TypeModel model, PropertyInfo property)
         {
-#if WINRT            
+#if WINRT || DNXCORE50
             MethodInfo method = Helpers.GetInstanceMethod(property.DeclaringType.GetTypeInfo(), "Set" + property.Name, new Type[] { property.PropertyType });
 #else
             

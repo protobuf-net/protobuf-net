@@ -34,7 +34,7 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT
+#if WINRT || DNXCORE50
             Attribute[] all = System.Linq.Enumerable.ToArray(type.GetTypeInfo().GetCustomAttributes(inherit));
 #else
             object[] all = type.GetCustomAttributes(inherit);
@@ -60,7 +60,7 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT
+#if WINRT || DNXCORE50
             Attribute[] all = System.Linq.Enumerable.ToArray(member.GetCustomAttributes(inherit));
 #else
             object[] all = member.GetCustomAttributes(inherit);
@@ -75,7 +75,7 @@ namespace ProtoBuf.Meta
         }
         public static AttributeMap[] Create(TypeModel model, Assembly assembly)
         {
-            
+
 #if FEAT_IKVM
             const bool inherit = false;
             System.Collections.Generic.IList<CustomAttributeData> all = assembly.__GetCustomAttributes(model.MapType(typeof(Attribute)), inherit);
@@ -87,7 +87,7 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT
+#if WINRT || DNXCORE50
             Attribute[] all = System.Linq.Enumerable.ToArray(assembly.GetCustomAttributes());
 #else
             const bool inherit = false;

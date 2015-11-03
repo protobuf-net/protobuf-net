@@ -19,7 +19,7 @@ namespace ProtoBuf.Serializers
 
         static Type ResolveIReadOnlyCollection(Type declaredType, Type t)
         {
-#if WINRT
+#if WINRT || DNXCORE50
             foreach (Type intImplBasic in declaredType.GetTypeInfo().ImplementedInterfaces)
             {
                 TypeInfo intImpl = intImplBasic.GetTypeInfo();
@@ -53,7 +53,7 @@ namespace ProtoBuf.Serializers
         {
             builderFactory = add = addRange = finish = null;
             if (model == null || declaredType == null) return false;
-#if WINRT
+#if WINRT || DNXCORE50
             TypeInfo declaredTypeInfo = declaredType.GetTypeInfo();
 #else
             Type declaredTypeInfo = declaredType;
@@ -62,7 +62,7 @@ namespace ProtoBuf.Serializers
             // try to detect immutable collections; firstly, they are all generic, and all implement IReadOnlyCollection<T> for some T
             if(!declaredTypeInfo.IsGenericType) return false;
 
-#if WINRT
+#if WINRT || DNXCORE50
             Type[] typeArgs = declaredTypeInfo.GenericTypeArguments, effectiveType;
 #else
             Type[] typeArgs = declaredTypeInfo.GetGenericArguments(), effectiveType;
