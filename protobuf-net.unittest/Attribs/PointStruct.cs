@@ -74,12 +74,18 @@ namespace ProtoBuf.unittest.Attribs
             model.CompileInPlace();
             ClonePoint(model, point, "CompileInPlace");
         }
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x")]
+        [Test]
         public void FullyCompileWithPrivateField_KnownToFail()
         {
-            var model = BuildModel();
-            Point point = new Point(26, 13);
-            ClonePoint(model.Compile(), point, "Compile");
+            try {
+                var model = BuildModel();
+                Point point = new Point(26, 13);
+                ClonePoint(model.Compile(), point, "Compile");
+                Assert.Fail();
+            } catch (InvalidOperationException ex)
+            {
+                Assert.AreEqual("Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x", ex.Message);
+            }
         }
         static void ClonePoint(TypeModel model, Point original, string message)
         {
@@ -108,12 +114,17 @@ namespace ProtoBuf.unittest.Attribs
             PEVerify.Verify("PointWithSurrogate.dll");
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x")]
+        [Test]
         public void VerifyPointDirect()
         {
-            var model = BuildModel();
-            model.Compile("PointDirect", "PointDirect.dll");
-            //PEVerify.Verify("PointDirect.dll", 1); // expect failure due to field access
+            try {
+                var model = BuildModel();
+                model.Compile("PointDirect", "PointDirect.dll");
+                //PEVerify.Verify("PointDirect.dll", 1); // expect failure due to field access
+            } catch(InvalidOperationException ex)
+            {
+                Assert.AreEqual("Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x", ex.Message);
+            }
         }
 
         [Test]

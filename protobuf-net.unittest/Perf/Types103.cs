@@ -10,7 +10,10 @@
 // Generated from: Types103.proto
 namespace ProtoBuf.unittest.Perf.Issue103Types
 {
-  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"TypeA")]
+#if !COREFX
+    [global::System.Serializable]
+#endif
+    [global::ProtoBuf.ProtoContract(Name=@"TypeA")]
   public partial class TypeA : global::ProtoBuf.IExtensible
   {
     public TypeA() {}
@@ -47,8 +50,10 @@ namespace ProtoBuf.unittest.Perf.Issue103Types
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
   }
-  
-  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"ContainedType")]
+#if !COREFX
+    [global::System.Serializable]
+#endif
+    [global::ProtoBuf.ProtoContract(Name=@"ContainedType")]
   public partial class ContainedType : global::ProtoBuf.IExtensible
   {
     public ContainedType() {}
@@ -91,8 +96,11 @@ namespace ProtoBuf.unittest.Perf.Issue103Types
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
       { return global::ProtoBuf.Extensible.GetExtensionObject(ref extensionObject, createIfMissing); }
   }
-  
-  [global::System.Serializable, global::ProtoBuf.ProtoContract(Name=@"TypeB")]
+
+#if !COREFX
+    [global::System.Serializable]
+#endif
+    [global::ProtoBuf.ProtoContract(Name=@"TypeB")]
   public partial class TypeB : global::ProtoBuf.IExtensible
   {
     public TypeB() {}

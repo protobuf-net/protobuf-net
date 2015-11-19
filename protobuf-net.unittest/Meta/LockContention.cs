@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_INTERNAL_CONTEXT
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -62,7 +63,7 @@ namespace ProtoBuf.unittest.Meta
             };
             model[typeof(ThreadRace.A)].CompileInPlace();
             Assert.IsNull(eek);
-            Assert.That(Interlocked.CompareExchange(ref eekCount, 0, 0), Is.EqualTo(0));
+            Assert.AreEqual(0, Interlocked.CompareExchange(ref eekCount, 0, 0));
         }
 
 
@@ -75,7 +76,7 @@ namespace ProtoBuf.unittest.Meta
             {
                 RuntimeTypeModel.Create().Serialize(ms, data);
                 raw = ms.ToArray();
-                Assert.That(raw.Length, Is.GreaterThan(0));
+                Assert.Greater(raw.Length, 0);
             }
 
             const int threads = 10, loop = 500;
@@ -109,7 +110,7 @@ namespace ProtoBuf.unittest.Meta
                                 }
                                 ThreadRace.A a =
                                     (ThreadRace.A)model.Deserialize(ms, null, typeof(ThreadRace.A));
-                                Assert.That(a, Is.InstanceOfType(typeof(ThreadRace.Y9)));
+                                Assert.IsInstanceOfType(typeof(ThreadRace.Y9), a);
                             }
 
                         }
@@ -125,10 +126,11 @@ namespace ProtoBuf.unittest.Meta
                 {
                     if (!thd.Join(4000)) throw new TimeoutException();
                 }
-                Assert.That(Interlocked.CompareExchange(ref error, 0, 0), Is.EqualTo(0));
-                Assert.That(eek, Is.Null);
-                Assert.That(Interlocked.CompareExchange(ref eekCount, 0, 0), Is.EqualTo(0));
+                Assert.AreEqual(0, Interlocked.CompareExchange(ref error, 0, 0));
+                Assert.IsNull(eek);
+                Assert.AreEqual(0, Interlocked.CompareExchange(ref eekCount, 0, 0));
             }
         }
     }
 }
+#endif

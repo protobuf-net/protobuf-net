@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿#if !NO_INTERNAL_CONTEXT
+using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
@@ -45,3 +46,4 @@ namespace Examples.Issues
         public class D : C { }
     }
 }
+#endif

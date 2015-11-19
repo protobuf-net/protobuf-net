@@ -11,6 +11,7 @@
   },
   "compilationOptions": {
     "keyFile": "../ProtoBuf.snk",
+    "strongName": true,
     "warningsAsErrors": true
   },
   "frameworks": {

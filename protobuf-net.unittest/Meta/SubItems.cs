@@ -174,13 +174,13 @@ namespace ProtoBuf.unittest.Meta
             PEVerify.Verify("TestTypeWithNullableProps.dll");
             var clone3 = (TypeWithNulls)compiled.DeepClone(obj);
             Assert.AreEqual(123, clone1.First);
-            Assert.AreEqual(456.789, clone1.Second);
+            Assert.AreEqual(456.789M, clone1.Second);
 
             Assert.AreEqual(123, clone2.First);
-            Assert.AreEqual(456.789, clone2.Second);
+            Assert.AreEqual(456.789M, clone2.Second);
 
             Assert.AreEqual(123, clone3.First);
-            Assert.AreEqual(456.789, clone3.Second);
+            Assert.AreEqual(456.789M, clone3.Second);
 
         }
 

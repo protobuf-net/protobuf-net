@@ -10,8 +10,9 @@ using ProtoBuf.Compiler;
 
 namespace ProtoBuf.unittest.Serializers
 {
-    static class Util
+    static partial class Util
     {
+#if !NO_INTERNAL_CONTEXT
         public static void Test(object value, Type innerType, Func<IProtoSerializer, IProtoSerializer> ctor,
             string expectedHex)
         {
@@ -30,6 +31,7 @@ namespace ProtoBuf.unittest.Serializers
             var compiled = model.GetSerializer(ser, true);
             Test(value, compiled, "compiled", expected);
         }
+
         public static void Test(object obj, ProtoSerializer serializer, string message, byte[] expected)
         {
             byte[] data;
@@ -50,7 +52,7 @@ namespace ProtoBuf.unittest.Serializers
                 Assert.AreEqual(expected[i], data[i], message + ":" + i);
             }
         }
-
+#endif
         public static void TestModel(RuntimeTypeModel model, object value, string hex)
         {
             byte[] raw;
@@ -81,11 +83,12 @@ namespace ProtoBuf.unittest.Serializers
             Assert.AreEqual(hex, GetHex(raw));
 
         }
-        
+#if !NO_INTERNAL_CONTEXT
         public static void Test<T>(T value, Func<IProtoSerializer, IProtoSerializer> ctor, string expectedHex)
         {
             Test(value, typeof(T), ctor, expectedHex);
         }
+#endif
         internal static string GetHex(byte[] bytes)
         {
             int len = bytes.Length;
@@ -107,6 +110,11 @@ namespace ProtoBuf.unittest.Serializers
                 string s = GetHex(ms.ToArray());               
                 Assert.AreEqual(expectedHex, s);
             }
+        }
+
+        internal static void Test(string v1, Func<object, object> p, string v2)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_INTERNAL_CONTEXT
+using System;
 using System.Collections.Generic;
 using System.Text;
 using ProtoBuf.Compiler;
@@ -36,3 +37,4 @@ namespace ProtoBuf.Serializers
         }
     }
 }
+#endif

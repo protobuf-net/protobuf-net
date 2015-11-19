@@ -150,7 +150,14 @@ namespace FX11
             using (MemoryStream ms = new MemoryStream())
             {
                 compiled.Serialize(ms, prod);
+#if COREFX
+                ArraySegment<byte> tmp;
+                if (!ms.TryGetBuffer(out tmp))
+                    throw new Exception("oops");
+                byte[] buffer = tmp.Array;
+#else
                 byte[] buffer = ms.GetBuffer();
+#endif
                 int len = (int)ms.Length;
                 Console.WriteLine("protobuf-net v2: {0} bytes", len);
                 for (int i = 0; i < len; i++)
@@ -223,7 +230,7 @@ namespace FX11
 
 
 #endif
-            model = TypeModel.Create();
+                model = TypeModel.Create();
             model.Add(typeof(Customer), false)
                .Add(1, "Id")
                .Add(3, "Name")
@@ -280,8 +287,9 @@ namespace FX11
         {
             
             WriteHeading(".NET version");
+#if !COREFX
             Console.WriteLine(Environment.Version);
-
+#endif
             RuntimeTypeModel orderModel = TypeModel.Create();
             orderModel.Add(typeof(OrderHeader), true);
             orderModel.Add(typeof(OrderDetail), true);

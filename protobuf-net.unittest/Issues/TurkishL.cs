@@ -10,8 +10,10 @@ namespace ProtoBuf.unittest.Attribs
         [Test]
         public void FakeTupleTest()
         {
+#if !COREFX
             //Turkish culture has unusual case-sensitivity rules:  http://blog.codinghorror.com/whats-wrong-with-turkey/
             Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("tr-TR");
+#endif
             
             byte[] ser;
             using (var ms = new MemoryStream())
