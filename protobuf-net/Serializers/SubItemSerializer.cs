@@ -97,11 +97,11 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(valueFrom);
                 if (!read) // write requires the object for StartSubItem; read doesn't
                 {  // (if recursion-check is disabled [subtypes] then null is fine too)
-                    if (type.IsValueType || !recursionCheck) { ctx.LoadNullRef(); }
+                    if (Helpers.IsValueType(type) || !recursionCheck) { ctx.LoadNullRef(); }
                     else { ctx.CopyValue(); }
                 }
                 ctx.LoadReaderWriter();
-                ctx.EmitCall(rwType.GetMethod("StartSubItem"));
+                ctx.EmitCall(Helpers.GetStaticMethod(rwType, "StartSubItem"));
                 ctx.StoreValue(token);
 
                 // note: value already on the stack
@@ -113,7 +113,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(token);
                 
                 ctx.LoadReaderWriter();
-                ctx.EmitCall(rwType.GetMethod("EndSubItem"));
+                ctx.EmitCall(Helpers.GetStaticMethod(rwType, "EndSubItem"));
             }            
             return true;
 #endif
@@ -123,10 +123,10 @@ namespace ProtoBuf.Serializers
             if (!EmitDedicatedMethod(ctx, valueFrom, false))
             {
                 ctx.LoadValue(valueFrom);
-                if (type.IsValueType) ctx.CastToObject(type);
+                if (Helpers.IsValueType(type)) ctx.CastToObject(type);
                 ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key)); // re-map for formality, but would expect identical, else dedicated method
                 ctx.LoadReaderWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod(recursionCheck ?  "WriteObject" : "WriteRecursionSafeObject"));
+                ctx.EmitCall(Helpers.GetStaticMethod(ctx.MapType(typeof(ProtoWriter)), recursionCheck ?  "WriteObject" : "WriteRecursionSafeObject"));
             }
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -134,10 +134,10 @@ namespace ProtoBuf.Serializers
             if (!EmitDedicatedMethod(ctx, valueFrom, true))
             {
                 ctx.LoadValue(valueFrom);
-                if (type.IsValueType) ctx.CastToObject(type);
+                if (Helpers.IsValueType(type)) ctx.CastToObject(type);
                 ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key)); // re-map for formality, but would expect identical, else dedicated method
                 ctx.LoadReaderWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("ReadObject"));
+                ctx.EmitCall(Helpers.GetStaticMethod(ctx.MapType(typeof(ProtoReader)), "ReadObject"));
                 ctx.CastFromObject(type);
             }
         }

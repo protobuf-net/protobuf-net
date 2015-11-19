@@ -1,4 +1,5 @@
 ﻿using ProtoBuf;
+using ProtoBuf.Meta;
 using Xunit;
 
 namespace Tests.Dnx
@@ -13,6 +14,18 @@ namespace Tests.Dnx
         {
             var foo = new Foo { Id = 1234567 };
             var clone = Serializer.DeepClone(foo);
+            Assert.Equal(1234567, clone.Id);
+        }
+
+        [Fact]
+        public void CanCompile()
+        {
+            var model = TypeModel.Create();
+            model.Add(typeof(Foo), true);
+            var compiled = model.Compile();
+
+            var foo = new Foo { Id = 1234567 };
+            var clone = (Foo)compiled.DeepClone(foo);
             Assert.Equal(1234567, clone.Id);
         }
         [ProtoContract]

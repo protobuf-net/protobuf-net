@@ -10,12 +10,12 @@
   "dependencies": {
   },
   "compilationOptions": {
-    "keyFile": "../ProtoBuf.snk"
+    "keyFile": "../ProtoBuf.snk",
+    "warningsAsErrors": true
   },
   "frameworks": {
     "net40": {
       "compilationOptions": {
-        "warningsAsErrors": true,
         "allowUnsafe": true,
         "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
       },
@@ -25,12 +25,14 @@
     },
     "net45": {
       "compilationOptions": {
-        "warningsAsErrors": true,
         "allowUnsafe": true,
         "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
       },
       "frameworkAssemblies": {
         "System.Xml": "4.0.0.0"
+      },
+      "dependencies": {
+        "System.Reflection.Emit": "4.0.1-*"
       }
     },
     "dnx451": {
@@ -41,18 +43,26 @@
       },
       "frameworkAssemblies": {
         "System.Xml": "4.0.0.0"
-      }
-
-    },
-    "dnxcore50": {
-      "compilationOptions": {
-        "allowUnsafe": true
       },
       "dependencies": {
-        "Microsoft.CSharp": "4.0.1-beta-",
-        "System.Diagnostics.Tools": "4.0.1-beta-",
-        "System.IO": "4.0.11-beta-",
-        "System.Text.Encoding": "4.0.11-beta-"
+        "System.Reflection.Emit": "4.0.1-*"
+      }
+    },
+    "dotnet5.4": {
+      "compilationOptions": {
+        "allowUnsafe": true,
+        "define": [ "FEAT_COMPILER", "PLAT_XMLSERIALIZER", "COREFX" ]
+      },
+      "dependencies": {
+        "Microsoft.CSharp": "4.0.1-*",
+        "System.Diagnostics.Tools": "4.0.1-*",
+        "System.IO": "4.0.11-*",
+        "System.Text.Encoding": "4.0.11-*",
+        "System.Reflection.Emit": "4.0.1-*",
+        "System.Reflection.Emit.ILGeneration": "4.0.1-*",
+        "System.Reflection.Emit.Lightweight": "4.0.1-*",
+        "System.Reflection.TypeExtensions": "4.1.0-*",
+        "System.Xml.XmlSerializer": "4.0.11-*"
       }
     }
   }

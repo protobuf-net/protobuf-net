@@ -69,7 +69,7 @@ namespace ProtoBuf.Serializers
                     using (Compiler.Local newVal = new Compiler.Local(ctx, field.FieldType))
                     {
                         ctx.StoreValue(newVal);
-                        if (field.FieldType.IsValueType)
+                        if (Helpers.IsValueType(field.FieldType))
                         {
                             ctx.LoadAddress(loc, ExpectedType);
                             ctx.LoadValue(newVal);

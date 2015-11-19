@@ -34,7 +34,7 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT || DNXCORE50
+#if WINRT || COREFX
             Attribute[] all = System.Linq.Enumerable.ToArray(type.GetTypeInfo().GetCustomAttributes(inherit));
 #else
             object[] all = type.GetCustomAttributes(inherit);
@@ -60,7 +60,7 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT || DNXCORE50
+#if WINRT || COREFX
             Attribute[] all = System.Linq.Enumerable.ToArray(member.GetCustomAttributes(inherit));
 #else
             object[] all = member.GetCustomAttributes(inherit);
@@ -87,7 +87,7 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT || DNXCORE50
+#if WINRT || COREFX
             Attribute[] all = System.Linq.Enumerable.ToArray(assembly.GetCustomAttributes());
 #else
             const bool inherit = false;

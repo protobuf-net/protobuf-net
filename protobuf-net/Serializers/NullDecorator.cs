@@ -82,7 +82,7 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(processField);
                 if (Tail.RequiresOldValue)
                 {
-                    if (expectedType.IsValueType)
+                    if (Helpers.IsValueType(expectedType))
                     {
                         ctx.LoadAddress(oldValue, expectedType);
                         ctx.EmitCall(expectedType.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));
@@ -94,7 +94,7 @@ namespace ProtoBuf.Serializers
                 }
                 Tail.EmitRead(ctx, null);
                 // note we demanded always returns a value
-                if (expectedType.IsValueType)
+                if (Helpers.IsValueType(expectedType))
                 {
                     ctx.EmitCtor(expectedType, Tail.ExpectedType); // re-nullable<T> it
                 }
@@ -120,7 +120,7 @@ namespace ProtoBuf.Serializers
                 ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("StartSubItem"));
                 ctx.StoreValue(token);
                 
-                if (expectedType.IsValueType)
+                if (Helpers.IsValueType(expectedType))
                 {
                     ctx.LoadAddress(valOrNull, expectedType);
                     ctx.LoadValue(expectedType.GetProperty("HasValue"));
@@ -131,7 +131,7 @@ namespace ProtoBuf.Serializers
                 }
                 Compiler.CodeLabel @end = ctx.DefineLabel();
                 ctx.BranchIfFalse(@end, false);
-                if (expectedType.IsValueType)
+                if (Helpers.IsValueType(expectedType))
                 {
                     ctx.LoadAddress(valOrNull, expectedType);
                     ctx.EmitCall(expectedType.GetMethod("GetValueOrDefault", Helpers.EmptyTypes));

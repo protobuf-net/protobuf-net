@@ -1,5 +1,8 @@
 ﻿#if !NO_RUNTIME
 using System;
+#if COREFX
+using System.Reflection;
+#endif
 #if FEAT_COMPILER
 using System.Reflection.Emit;
 #endif
@@ -56,7 +59,8 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(valueFrom);
             }
             ctx.LoadReaderWriter();
-            ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("AppendBytes"));
+            ctx.EmitCall(ctx.MapType(typeof(ProtoReader))
+               .GetMethod("AppendBytes"));
         }
 #endif
     }

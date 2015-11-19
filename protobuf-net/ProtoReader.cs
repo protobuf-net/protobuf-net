@@ -481,7 +481,7 @@ namespace ProtoBuf
         }
 #endif
 
-#if DNXCORE50
+#if COREFX
         static readonly Encoding encoding = Encoding.UTF8;
 #else
         static readonly UTF8Encoding encoding = new UTF8Encoding();

@@ -107,7 +107,7 @@ namespace ProtoBuf.Compiler
             
             using (Local typedVal = new Local(ctx, type))
             {
-                if (!type.IsValueType)
+                if (!Helpers.IsValueType(type))
                 {
                     ctx.LoadValue(ctx.InputValue);
                     ctx.CastFromObject(type);
@@ -161,7 +161,7 @@ namespace ProtoBuf.Compiler
         {
             if(IsObject(type))
             { }
-            else if (type.IsValueType)
+            else if (Helpers.IsValueType(type))
             {
                 il.Emit(OpCodes.Box, type);
 #if DEBUG_COMPILE
@@ -181,7 +181,7 @@ namespace ProtoBuf.Compiler
         {
             if (IsObject(type))
             { }
-            else if (type.IsValueType)
+            else if (Helpers.IsValueType(type))
             {
                 switch (MetadataVersion)
                 {
@@ -306,7 +306,11 @@ namespace ProtoBuf.Compiler
 #else
             uniqueIdentifier = Interlocked.Increment(ref next);
 #endif
-            method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType, paramTypes, associatedType.IsInterface ? typeof(object) : associatedType, true);
+            method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType, paramTypes, associatedType
+#if COREFX
+                .GetTypeInfo()
+#endif
+                .IsInterface ? typeof(object) : associatedType, true);
             this.il = method.GetILGenerator();
             if (inputType != null) this.inputValue = new Local(null, inputType);
         }
@@ -495,7 +499,7 @@ namespace ProtoBuf.Compiler
                 if (fromValue.Type == type) return fromValue.AsCopy();
                 // otherwise, load onto the stack and let the default handling (below) deal with it
                 LoadValue(fromValue);
-                if (!type.IsValueType && (fromValue.Type == null || !type.IsAssignableFrom(fromValue.Type)))
+                if (!Helpers.IsValueType(type) && (fromValue.Type == null || !type.IsAssignableFrom(fromValue.Type)))
                 { // need to cast
                     Cast(type);
                 }
@@ -556,7 +560,7 @@ namespace ProtoBuf.Compiler
         {
             Helpers.DebugAssert(method != null);
             CheckAccessibility(method);
-            OpCode opcode = (method.IsStatic || method.DeclaringType.IsValueType) ? OpCodes.Call : OpCodes.Callvirt;
+            OpCode opcode = (method.IsStatic || Helpers.IsValueType(method.DeclaringType)) ? OpCodes.Call : OpCodes.Callvirt;
             il.EmitCall(opcode, method, null);
 #if DEBUG_COMPILE
             Helpers.DebugWriteLine(opcode + ": " + method + " on " + method.DeclaringType);
@@ -576,7 +580,7 @@ namespace ProtoBuf.Compiler
 
         internal void WriteNullCheckedTail(Type type, IProtoSerializer tail, Compiler.Local valueFrom)
         {
-            if (type.IsValueType)
+            if (Helpers.IsValueType(type))
             {
                 Type underlyingType = null;
 #if !FX11
@@ -620,7 +624,7 @@ namespace ProtoBuf.Compiler
 #if !FX11
             Type underlyingType;
             
-            if (type.IsValueType && (underlyingType = Helpers.GetUnderlyingType(type)) != null)
+            if (Helpers.IsValueType(type) && (underlyingType = Helpers.GetUnderlyingType(type)) != null)
             {
                 if(tail.RequiresOldValue)
                 {
@@ -669,7 +673,7 @@ namespace ProtoBuf.Compiler
         {
             Helpers.DebugAssert(type != null);
             Helpers.DebugAssert(parameterTypes != null);
-            if (type.IsValueType && parameterTypes.Length == 0)
+            if (Helpers.IsValueType(type) && parameterTypes.Length == 0)
             {
                 il.Emit(OpCodes.Initobj, type);
 #if DEBUG_COMPILE
@@ -678,7 +682,11 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                ConstructorInfo ctor =  Helpers.GetConstructor(type, parameterTypes, true);
+                ConstructorInfo ctor =  Helpers.GetConstructor(type
+#if COREFX
+                .GetTypeInfo()
+#endif
+                    , parameterTypes, true);
                 if (ctor == null) throw new InvalidOperationException("No suitable constructor found for " + type.FullName);
                 EmitCtor(ctor);
             }
@@ -723,7 +731,12 @@ namespace ProtoBuf.Compiler
                 }
             }
 #else
+
+#if COREFX
+            foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType))
+#else
             foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType, false))
+#endif
             {
                 if (attrib.AssemblyName == assemblyName || attrib.AssemblyName.StartsWith(assemblyName + ","))
                 {
@@ -751,12 +764,54 @@ namespace ProtoBuf.Compiler
             {
                 throw new ArgumentNullException("member");
             }
-
-            MemberTypes memberType = member.MemberType;
+#if ! COREFX
             Type type;
+#endif
             if (!NonPublic)
             {
                 bool isPublic;
+#if COREFX
+                if (member is TypeInfo)
+                {
+                    TypeInfo ti = (TypeInfo)member;
+                    do
+                    {
+                        isPublic = ti.IsNestedPublic || ti.IsPublic || ((ti.IsNested || ti.IsNestedAssembly || ti.IsNestedFamORAssem) && InternalsVisible(ti.Assembly));
+                    } while (isPublic && ti.IsNested && (ti = ti.DeclaringType.GetTypeInfo()) != null);
+                }
+                else if (member is FieldInfo)
+                {
+                    FieldInfo field = ((FieldInfo)member);
+                    isPublic = field.IsPublic || ((field.IsAssembly || field.IsFamilyOrAssembly) && InternalsVisible(Helpers.GetAssembly(field.DeclaringType)));
+                }
+                else if (member is PropertyInfo)
+                {
+                    isPublic = true; // defer to get/set
+                }
+                else if (member is ConstructorInfo)
+                {
+                    ConstructorInfo ctor = ((ConstructorInfo)member);
+                    isPublic = ctor.IsPublic || ((ctor.IsAssembly || ctor.IsFamilyOrAssembly) && InternalsVisible(Helpers.GetAssembly(ctor.DeclaringType)));
+                }
+                else if (member is MethodInfo)
+                {
+                    MethodInfo method = ((MethodInfo)member);
+                    isPublic = method.IsPublic || ((method.IsAssembly || method.IsFamilyOrAssembly) && InternalsVisible(Helpers.GetAssembly(method.DeclaringType)));
+                    if (!isPublic)
+                    {
+                        // allow calls to TypeModel protected methods, and methods we are in the process of creating
+                        if (
+                                member is MethodBuilder ||
+                                member.DeclaringType == MapType(typeof(TypeModel)))
+                            isPublic = true;
+                    }
+                }
+                else
+                {
+                    throw new NotSupportedException(member.GetType().Name);
+                }
+#else
+                MemberTypes memberType = member.MemberType;
                 switch (memberType)
                 {
                     case MemberTypes.TypeInfo:
@@ -788,7 +843,7 @@ namespace ProtoBuf.Compiler
                             if(
 #if !SILVERLIGHT
                                 member is MethodBuilder ||
-#endif                
+#endif
                                 member.DeclaringType == MapType(typeof(TypeModel))) isPublic = true; 
                         }
                         break;
@@ -798,8 +853,22 @@ namespace ProtoBuf.Compiler
                     default:
                         throw new NotSupportedException(memberType.ToString());
                 }
+#endif
                 if (!isPublic)
                 {
+#if COREFX
+                    if (member is TypeInfo)
+                    {
+                        throw new InvalidOperationException("Non-public type cannot be used with full dll compilation: " +
+                                ((TypeInfo)member).FullName);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Non-public member cannot be used with full dll compilation: " +
+                                member.DeclaringType.FullName + "." + member.Name);
+                    }
+
+#else
                     switch (memberType)
                     {
                         case MemberTypes.TypeInfo:
@@ -810,8 +879,9 @@ namespace ProtoBuf.Compiler
                             throw new InvalidOperationException("Non-public member cannot be used with full dll compilation: " +
                                 member.DeclaringType.FullName + "." + member.Name);
                     }
-                    
-                }
+#endif
+
+                    }
             }
         }
 
@@ -902,7 +972,7 @@ namespace ProtoBuf.Compiler
 #endif
         internal void LoadAddress(Local local, Type type)
         {
-            if (type.IsValueType)
+            if (Helpers.IsValueType(type))
             {
                 if (local == null)
                 {
@@ -1166,7 +1236,7 @@ namespace ProtoBuf.Compiler
 
                 Type type = local.Type;
                 // check if **never** disposable
-                if ((type.IsValueType || type.IsSealed) &&
+                if ((Helpers.IsValueType(type) || Helpers.IsSealed(type)) &&
                     !ctx.MapType(typeof(IDisposable)).IsAssignableFrom(type))
                 {
                     return; // nothing to do! easiest "using" block ever
@@ -1189,7 +1259,7 @@ namespace ProtoBuf.Compiler
                 Type type = local.Type;
                 // remember that we've already (in the .ctor) excluded the case
                 // where it *cannot* be disposable
-                if (type.IsValueType)
+                if (Helpers.IsValueType(type))
                 {
                     ctx.LoadAddress(local, type);
                     switch (ctx.MetadataVersion)
@@ -1302,7 +1372,7 @@ namespace ProtoBuf.Compiler
                 case ProtoTypeCode.Single: Emit(OpCodes.Ldelem_R4); break;
                 case ProtoTypeCode.Double: Emit(OpCodes.Ldelem_R8); break;
                 default:
-                    if (type.IsValueType)
+                    if (Helpers.IsValueType(type))
                     {
                         il.Emit(OpCodes.Ldelema, type);
                         il.Emit(OpCodes.Ldobj, type);
@@ -1444,7 +1514,7 @@ namespace ProtoBuf.Compiler
 
         internal bool AllowInternal(PropertyInfo property)
         {
-            return NonPublic ? true : InternalsVisible(property.DeclaringType.Assembly);
+            return NonPublic ? true : InternalsVisible(Helpers.GetAssembly(property.DeclaringType));
         }
     }
 }

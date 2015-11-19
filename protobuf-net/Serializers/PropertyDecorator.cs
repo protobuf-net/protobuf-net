@@ -48,7 +48,7 @@ namespace ProtoBuf.Serializers
         }
         static MethodInfo GetShadowSetter(TypeModel model, PropertyInfo property)
         {
-#if WINRT || DNXCORE50
+#if WINRT || COREFX
             MethodInfo method = Helpers.GetInstanceMethod(property.DeclaringType.GetTypeInfo(), "Set" + property.Name, new Type[] { property.PropertyType });
 #else
             
@@ -102,7 +102,7 @@ namespace ProtoBuf.Serializers
 
             bool writeValue;
             SanityCheck(ctx.Model, property, Tail, out writeValue, ctx.NonPublic, ctx.AllowInternal(property));
-            if (ExpectedType.IsValueType && valueFrom == null)
+            if (Helpers.IsValueType(ExpectedType) && valueFrom == null)
             {
                 throw new InvalidOperationException("Attempt to mutate struct on the head of the stack; changes would be lost");
             }
@@ -124,7 +124,7 @@ namespace ProtoBuf.Serializers
                         ctx.StoreValue(newVal); // stack is empty
 
                         Compiler.CodeLabel allDone = new Compiler.CodeLabel(); // <=== default structs
-                        if (!propertyType.IsValueType)
+                        if (!Helpers.IsValueType(propertyType))
                         { // if the tail returns a null, intepret that as *no assign*
                             allDone = ctx.DefineLabel();
                             ctx.LoadValue(newVal); // stack is: new-value
@@ -141,7 +141,7 @@ namespace ProtoBuf.Serializers
                         {
                             ctx.EmitCall(shadowSetter); // empty
                         }
-                        if (!propertyType.IsValueType)
+                        if (!Helpers.IsValueType(propertyType))
                         {
                             ctx.MarkLabel(allDone);
                         }

@@ -19,7 +19,7 @@ namespace ProtoBuf.Serializers
 
         static Type ResolveIReadOnlyCollection(Type declaredType, Type t)
         {
-#if WINRT || DNXCORE50
+#if WINRT || COREFX
             foreach (Type intImplBasic in declaredType.GetTypeInfo().ImplementedInterfaces)
             {
                 TypeInfo intImpl = intImplBasic.GetTypeInfo();
@@ -53,7 +53,7 @@ namespace ProtoBuf.Serializers
         {
             builderFactory = add = addRange = finish = null;
             if (model == null || declaredType == null) return false;
-#if WINRT || DNXCORE50
+#if WINRT || COREFX
             TypeInfo declaredTypeInfo = declaredType.GetTypeInfo();
 #else
             Type declaredTypeInfo = declaredType;
@@ -62,7 +62,7 @@ namespace ProtoBuf.Serializers
             // try to detect immutable collections; firstly, they are all generic, and all implement IReadOnlyCollection<T> for some T
             if(!declaredTypeInfo.IsGenericType) return false;
 
-#if WINRT || DNXCORE50
+#if WINRT || COREFX
             Type[] typeArgs = declaredTypeInfo.GenericTypeArguments, effectiveType;
 #else
             Type[] typeArgs = declaredTypeInfo.GetGenericArguments(), effectiveType;
@@ -203,13 +203,18 @@ namespace ProtoBuf.Serializers
                 if(AppendToCollection)
                 {
                     Compiler.CodeLabel done = ctx.DefineLabel();
-                    if(!ExpectedType.IsValueType)
+                    if(!Helpers.IsValueType(ExpectedType))
                     {
                         ctx.LoadValue(oldList);
                         ctx.BranchIfFalse(done, false); // old value null; nothing to add
                     }
-                    PropertyInfo prop = Helpers.GetProperty(ExpectedType, "Length", false);
-                    if(prop == null) prop = Helpers.GetProperty(ExpectedType, "Count", false);
+#if COREFX
+                    TypeInfo typeInfo = ExpectedType.GetTypeInfo();
+#else
+                    Type typeInfo = ExpectedType;
+#endif
+                    PropertyInfo prop = Helpers.GetProperty(typeInfo, "Length", false);
+                    if(prop == null) prop = Helpers.GetProperty(typeInfo, "Count", false);
 #if !NO_GENERICS
                     if (prop == null) prop = Helpers.GetProperty(ResolveIReadOnlyCollection(ExpectedType, Tail.ExpectedType), "Count", false);
 #endif
@@ -274,6 +279,6 @@ namespace ProtoBuf.Serializers
             }
         }
 #endif
-    }
+                }
 }
 #endif

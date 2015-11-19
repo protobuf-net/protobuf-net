@@ -163,7 +163,7 @@ namespace ProtoBuf
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, instance);
-                writer.WriteBase64(ms.GetBuffer(), 0, (int)ms.Length);
+                writer.WriteBase64(Helpers.GetBuffer(ms), 0, (int)ms.Length);
             }
         }
         /// <summary>
