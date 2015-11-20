@@ -9,7 +9,7 @@
     "test": "xunit.runner.dnx"
   },
   "compilationOptions": {
-    "define": [ "XUNIT", "NO_INTERNAL_CONTEXT", "NO_NHIBERNATE" ],
+    "define": [ "XUNIT", "NO_INTERNAL_CONTEXT", "NO_NHIBERNATE", "FEAT_COMPILER" ],
     "strongName": true,
     "keyFile": "../ProtoBuf.snk"
   },

@@ -157,7 +157,12 @@ namespace ProtoBuf
         internal static MemberInfo GetInstanceMember(TypeInfo declaringType, string name)
         {
             var members = declaringType.AsType().GetMember(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-            return members.Length == 1 ? members[0] : null;
+            switch(members.Length)
+            {
+                case 0: return null;
+                case 1: return members[0];
+                default: throw new AmbiguousMatchException(name);
+            }
         }
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name)
         {

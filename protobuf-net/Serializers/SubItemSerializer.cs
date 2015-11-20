@@ -101,7 +101,8 @@ namespace ProtoBuf.Serializers
                     else { ctx.CopyValue(); }
                 }
                 ctx.LoadReaderWriter();
-                ctx.EmitCall(Helpers.GetStaticMethod(rwType, "StartSubItem"));
+                ctx.EmitCall(Helpers.GetStaticMethod(rwType, "StartSubItem",
+                    read ? new Type[] { rwType } : new Type[] { typeof(object), rwType }));
                 ctx.StoreValue(token);
 
                 // note: value already on the stack
@@ -111,9 +112,8 @@ namespace ProtoBuf.Serializers
                 // but we expect Read to return the "type" type)
                 if (read && type != method.ReturnType) ctx.Cast(this.type);
                 ctx.LoadValue(token);
-                
                 ctx.LoadReaderWriter();
-                ctx.EmitCall(Helpers.GetStaticMethod(rwType, "EndSubItem"));
+                ctx.EmitCall(Helpers.GetStaticMethod(rwType, "EndSubItem", new Type[] { typeof(SubItemToken), rwType }));
             }            
             return true;
 #endif
