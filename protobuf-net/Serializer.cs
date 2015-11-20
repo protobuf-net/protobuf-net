@@ -82,7 +82,7 @@ namespace ProtoBuf
 		/// <param name="type">The type to be created.</param>
 		/// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
 		/// <returns>A new, initialized instance.</returns>
-		public static object Deserialize(Type type, Stream source)
+		public static object Deserialize(System.Type type, Stream source)
 		{
 			return RuntimeTypeModel.Default.Deserialize(source, null, type);
 		}

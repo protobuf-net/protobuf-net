@@ -111,10 +111,5 @@ namespace ProtoBuf.unittest.Serializers
                 Assert.AreEqual(expectedHex, s);
             }
         }
-
-        internal static void Test(string v1, Func<object, object> p, string v2)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
