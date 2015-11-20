@@ -46,10 +46,12 @@ namespace ProtoBuf.unittest.Meta
             meta.Add(8, "IListInt32Untyped", typeof(int), null);
 
             model.CompileInPlace();
+#if !COREFX
             model.Compile("EmitModelWithEverything", "EmitModelWithEverything.dll");
 
             PEVerify.Verify("EmitModelWithEverything.dll");
-            
+#endif
+
         }
 
         [Test]
@@ -428,9 +430,10 @@ namespace ProtoBuf.unittest.Meta
                 //.Add(4, "BasicList")
                 ;
             model.CompileInPlace();
-
+#if !COREFX
             model.Compile("PEVerifyArraysAndLists","PEVerifyArraysAndLists.dll");
             PEVerify.Verify("PEVerifyArraysAndLists.dll");
+#endif
         }
 
 
@@ -439,6 +442,7 @@ namespace ProtoBuf.unittest.Meta
     [TestFixture]
     public class PackedLists
     {
+#if !COREFX
         [Test]
         public void CanCompile()
         {
@@ -446,6 +450,7 @@ namespace ProtoBuf.unittest.Meta
             model.Compile("PEVerifyPackedLists", "PEVerifyPackedLists.dll");
             PEVerify.Verify("PEVerifyPackedLists.dll");
         }
+#endif
         [Test]
         public void TestNullRoundTrip()
         {
@@ -581,6 +586,7 @@ namespace ProtoBuf.unittest.Meta
     [TestFixture]
     public class PackedArrays
     {
+#if !COREFX
         [Test]
         public void CanCompile()
         {
@@ -588,6 +594,7 @@ namespace ProtoBuf.unittest.Meta
             model.Compile("PEVerifyPackedArrays", "PEVerifyPackedArrays.dll");
             PEVerify.Verify("PEVerifyPackedArrays.dll");
         }
+#endif
 
 
         [Test]

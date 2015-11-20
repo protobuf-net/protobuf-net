@@ -78,10 +78,10 @@ namespace ProtoBuf.unittest.Serializers
             var clone = (TypeWithPair)model.DeepClone(orig);
             Assert.AreEqual("abc", clone.Pair.Key, "Runtime");
             Assert.AreEqual(123.45M, clone.Pair.Value, "Runtime");
-
+#if !COREFX
             model.Compile("TypeWithPairTest", "TypeWithPairTest.dll");
             PEVerify.Verify("TypeWithPairTest.dll");
-
+#endif
             model.CompileInPlace();
             clone = (TypeWithPair)model.DeepClone(orig);
             Assert.AreEqual("abc", clone.Pair.Key, "CompileInPlace");
@@ -101,9 +101,10 @@ namespace ProtoBuf.unittest.Serializers
             Assert.AreEqual(1, clone.Data.Count);
             Assert.AreEqual(123.45M, clone.Data["abc"], "Runtime");
 
+#if !COREFX
             model.Compile("TypeWithDictionaryTest", "TypeWithDictionaryTest.dll");
             PEVerify.Verify("TypeWithDictionaryTest.dll");
-
+#endif
             model.CompileInPlace();
             clone = (TypeWithDictionary)model.DeepClone(orig);
             Assert.AreEqual(1, clone.Data.Count);
@@ -171,9 +172,10 @@ namespace ProtoBuf.unittest.Serializers
             Assert.AreEqual(1, clone.Data.Count);
             Assert.AreEqual(123.45M, clone.Data["abc"], "Runtime");
 
+#if !COREFX
             model.Compile("TypeWithIDictionary", "TypeWithIDictionary.dll");
             PEVerify.Verify("TypeWithIDictionary.dll");
-
+#endif
             model.CompileInPlace();
             clone = (TypeWithIDictionary)model.DeepClone(orig);
             Assert.AreEqual(1, clone.Data.Count);

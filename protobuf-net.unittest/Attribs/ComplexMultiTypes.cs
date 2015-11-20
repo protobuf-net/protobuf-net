@@ -118,13 +118,14 @@ namespace ProtoBuf.unittest.Attribs
             Assert.AreEqual(1, result.Id, message + ":Id");
             Assert.AreEqual(0, result.Components.Count, message + ":Count");
         }
-
+#if !COREFX
         [Test]
         public void CanCompileModel()
         {
             BuildModel().Compile("ComplexMultiTypes", "ComplexMultiTypes.dll");
             PEVerify.Verify("ComplexMultiTypes.dll");
         }
+#endif
 
         [Test]
         public void RoundtripEntityDtoWithItems()

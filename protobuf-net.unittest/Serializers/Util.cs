@@ -73,6 +73,7 @@ namespace ProtoBuf.unittest.Serializers
 
             Assert.AreEqual(hex, GetHex(raw));
 
+#if !COREFX
             TypeModel compiled = model.Compile("compiled", "compiled.dll");
             PEVerify.Verify("compiled.dll");
             using (MemoryStream ms = new MemoryStream())
@@ -81,7 +82,7 @@ namespace ProtoBuf.unittest.Serializers
                 raw = ms.ToArray();
             }
             Assert.AreEqual(hex, GetHex(raw));
-
+#endif
         }
 #if !NO_INTERNAL_CONTEXT
         public static void Test<T>(T value, Func<IProtoSerializer, IProtoSerializer> ctor, string expectedHex)

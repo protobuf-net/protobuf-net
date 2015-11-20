@@ -910,7 +910,8 @@ namespace ProtoBuf.Meta
         /// <returns>An instance of the newly created compiled type-model</returns>
         public TypeModel Compile()
         {
-            return Compile(null, null);
+            CompilerOptions options = new CompilerOptions();
+            return Compile(options);
         }
         static ILGenerator Override(TypeBuilder type, string name)
         {
@@ -1008,9 +1009,16 @@ namespace ProtoBuf.Meta
             /// The name of the TypeModel class to create
             /// </summary>
             public string TypeName { get { return typeName; } set { typeName = value; } }
+
+#if COREFX
+            internal const string NoPersistence = "Assembly persistence not supported on this runtime";
+#endif
             /// <summary>
             /// The path for the new dll
             /// </summary>
+#if COREFX
+            [Obsolete(NoPersistence)]
+#endif
             public string OutputPath { get { return outputPath; } set { outputPath = value; } }
             /// <summary>
             /// The runtime version for the generated assembly
@@ -1058,6 +1066,8 @@ namespace ProtoBuf.Meta
             /// </summary>
             Internal
         }
+
+#if !COREFX
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
         /// (the serialization dll still requires protobuf-net for support services).
@@ -1073,7 +1083,7 @@ namespace ProtoBuf.Meta
             options.OutputPath = path;
             return Compile(options);
         }
-
+#endif
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
         /// (the serialization dll still requires protobuf-net for support services).
@@ -1084,7 +1094,9 @@ namespace ProtoBuf.Meta
         {
             if (options == null) throw new ArgumentNullException("options");
             string typeName = options.TypeName;
+#pragma warning disable 0618
             string path = options.OutputPath;
+#pragma warning restore 0618
             BuildAllSerializers();
             Freeze();
             bool save = !Helpers.IsNullOrEmpty(path);
@@ -1179,7 +1191,7 @@ namespace ProtoBuf.Meta
             if (!Helpers.IsNullOrEmpty(path))
             {
 #if COREFX
-                throw new NotSupportedException("Assembly persistence not supported on this runtime");
+                throw new NotSupportedException(CompilerOptions.NoPersistence);
 #else
                 asm.Save(path);
                 Helpers.DebugWriteLine("Wrote dll:" + path);
@@ -1374,7 +1386,7 @@ namespace ProtoBuf.Meta
                 knownTypesLookupType = MapType(typeof(System.Collections.Generic.Dictionary<System.Type, int>), false);
 #endif
 
-#if ! COREFX
+#if !COREFX
                 if (knownTypesLookupType == null)
                 {
                     knownTypesLookupType = MapType(typeof(Hashtable), true);
@@ -1702,7 +1714,7 @@ namespace ProtoBuf.Meta
             //}
 
             // note that this is used by some of the unit tests
-        internal bool IsPrepared(Type type)
+            internal bool IsPrepared(Type type)
         {
             MetaType meta = FindWithoutAdd(type);
             return meta != null && meta.IsPrepared();

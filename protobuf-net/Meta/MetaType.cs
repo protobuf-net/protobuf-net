@@ -655,7 +655,11 @@ namespace ProtoBuf.Meta
 #if WINRT || COREFX
             System.Collections.Generic.IEnumerable<MemberInfo> foundList;
             if(isEnum) {
+#if COREFX
+                foundList = type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+#else
                 foundList = type.GetRuntimeFields();
+#endif
             }
             else
             {
@@ -664,15 +668,20 @@ namespace ProtoBuf.Meta
                     MethodInfo getter = Helpers.GetGetMethod(prop, false, false);
                     if(getter != null && !getter.IsStatic) list.Add(prop);
                 }
+#if COREFX
+                foreach (FieldInfo fld in type.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) list.Add(fld);
+                foreach (MethodInfo mthd in type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)) list.Add(mthd);
+#else
                 foreach(FieldInfo fld in type.GetRuntimeFields()) if(fld.IsPublic && !fld.IsStatic) list.Add(fld);
                 foreach(MethodInfo mthd in type.GetRuntimeMethods()) if(mthd.IsPublic && !mthd.IsStatic) list.Add(mthd);
+#endif
                 foundList = list;
             }
 #else
             MemberInfo[] foundList = type.GetMembers(isEnum ? BindingFlags.Public | BindingFlags.Static
                 : BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 #endif
-            foreach (MemberInfo member in foundList)
+                foreach (MemberInfo member in foundList)
             {
                 if (member.DeclaringType != type) continue;
                 if (member.IsDefined(model.MapType(typeof(ProtoIgnoreAttribute)), true)) continue;

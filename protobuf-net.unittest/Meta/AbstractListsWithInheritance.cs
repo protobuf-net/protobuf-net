@@ -36,12 +36,15 @@ namespace ProtoBuf.unittest.Meta
                 .Add(4, "AbstractAList", null, typeof(AList));
             return model;
         }
+
+#if !COREFX
         [Test]
         public void CanBuildAndCompileModel()
         {
             BuildModel().Compile("AbstractListsWithInheritance", "AbstractListsWithInheritance.dll");
             PEVerify.Verify("AbstractListsWithInheritance.dll");
         }
+#endif
 
         [Test]
         public void TestIntermediateListType()

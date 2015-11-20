@@ -293,8 +293,9 @@ namespace FX11
             RuntimeTypeModel orderModel = TypeModel.Create();
             orderModel.Add(typeof(OrderHeader), true);
             orderModel.Add(typeof(OrderDetail), true);
+#if !COREFX
             orderModel.Compile("OrderSerializer", "OrderSerializer.dll");
-
+#endif
             RuntimeTypeModel model = BuildMeta();
             Customer cust1 = new Customer();
             CustomerStruct cust2 = new CustomerStruct();
@@ -314,11 +315,12 @@ namespace FX11
 #endif
 #if FEAT_COMPILER
 
-           TypeModel compiled = model.Compile("CustomerModel", "CustomerModel.dll");
-           //PEVerify.Verify("CustomerModel.dll");
-           compiled = model.Compile("CustomerModel", "CustomerModel.dll");
+#if !COREFX
+            TypeModel compiled = model.Compile("CustomerModel", "CustomerModel.dll");
+            //PEVerify.Verify("CustomerModel.dll");
            WriteCustomer(compiled, "Compiled - class", cust2);
            WriteCustomer(compiled, "Compiled - struct", cust2);
+#endif
             /*
             CustomerModel serializer = new CustomerModel();
             using (MemoryStream ms = new MemoryStream())

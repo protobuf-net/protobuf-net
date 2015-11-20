@@ -319,7 +319,10 @@ namespace ProtoBuf
         public static ProtoTypeCode GetTypeCode(System.Type type)
         {
 #if WINRT || COREFX
-
+            if(IsEnum(type))
+            {
+                type = Enum.GetUnderlyingType(type);
+            }
             int idx = Array.IndexOf<Type>(knownTypes, type);
             if (idx >= 0) return knownCodes[idx];
             return type == null ? ProtoTypeCode.Empty : ProtoTypeCode.Unknown;
