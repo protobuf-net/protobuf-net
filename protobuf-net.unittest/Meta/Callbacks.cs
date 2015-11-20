@@ -54,10 +54,9 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = BuildModel();
             model.CompileInPlace();
-#if !COREFX
+
             model.Compile("Callbacks", "Callbacks.dll");
             PEVerify.Verify("Callbacks.dll");
-#endif
         }
         [Test]
         public void TestCallbacksAtMultipleInheritanceLevels()

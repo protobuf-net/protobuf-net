@@ -4,9 +4,20 @@ using ProtoBuf.Meta;
 using ProtoBuf.unittest.Meta;
 
 
+#if COREFX
+namespace ProtoBuf
+{
+    public static class TestFakeExtensions
+    {
+        public static TypeModel Compile(this RuntimeTypeModel model, string x, string y)
+        {
+            return model.Compile(); // use an in-memory compile instead
+        }
+    }
+}
+#endif
+
 #if XUNIT
-
-
 namespace NUnit.Framework
 {
     public class TestFixtureAttribute : Attribute { }
@@ -24,7 +35,7 @@ namespace NUnit.Framework
     public class ExpectedExceptionAttribute : Attribute {
         public ExpectedExceptionAttribute(Type type) { }
     }
-    static class Assert
+    public static class Assert
     {
         public static void IsTrue(bool condition, string message = null)
         {

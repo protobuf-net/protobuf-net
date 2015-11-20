@@ -107,7 +107,7 @@ namespace ProtoBuf.unittest.Attribs
             Assert.AreEqual(toPoint, newTo - oldTo, message + ": Surrogate to Point");
             Assert.AreEqual(fromPoint, newFrom - oldFrom, message + ": Point to Surrogate");
         }
-#if !COREFX
+
         [Test]
         public void VerifyPointWithSurrogate()
         {
@@ -128,7 +128,7 @@ namespace ProtoBuf.unittest.Attribs
                 Assert.AreEqual("Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x", ex.Message);
             }
         }
-#endif
+
         [Test]
         public void RoundTripPointWithSurrogate()
         {

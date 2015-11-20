@@ -60,7 +60,7 @@ namespace ProtoBuf.unittest.Meta
             model.CompileInPlace();
             TestGuids(model, 1000);
         }
-#if !COREFX
+
         [Test]
         public void TestRoundTripRandomCompile()
         {
@@ -68,7 +68,7 @@ namespace ProtoBuf.unittest.Meta
             PEVerify.Verify("TestRoundTripRandomCompile.dll");
             TestGuids(model, 1000);
         }
-#endif
+
         static void TestGuids(TypeModel model, int count)
         {
             Random rand = new Random();

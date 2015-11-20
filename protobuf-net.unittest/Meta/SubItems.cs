@@ -53,14 +53,13 @@ namespace ProtoBuf.unittest.Meta
             Assert.IsInstanceOfType(typeof(OuterVal), model.Deserialize(Stream.Null, null, typeof(OuterVal)));
             Assert.IsInstanceOfType(typeof(InnerRef), model.Deserialize(Stream.Null, null, typeof(InnerRef)));
             Assert.IsInstanceOfType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
-#if !COREFX
+
             var compiled = model.Compile("SubItems","SubItems.dll");
             PEVerify.Verify("SubItems.dll");
             Assert.IsInstanceOfType(typeof(OuterRef), compiled.Deserialize(Stream.Null, null, typeof(OuterRef)));
             Assert.IsInstanceOfType(typeof(OuterVal), compiled.Deserialize(Stream.Null, null, typeof(OuterVal)));
             Assert.IsInstanceOfType(typeof(InnerRef), compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
             Assert.IsInstanceOfType(typeof(InnerVal), compiled.Deserialize(Stream.Null, null, typeof(InnerVal)));
-#endif
         }
 
 
@@ -169,7 +168,6 @@ namespace ProtoBuf.unittest.Meta
             model.CompileInPlace();
             var clone2 = (TypeWithNulls)model.DeepClone(obj);
 
-#if !COREFX
             TypeModel compiled = model.Compile("TestTypeWithNullableProps", "TestTypeWithNullableProps.dll");
             PEVerify.Verify("TestTypeWithNullableProps.dll");
             var clone3 = (TypeWithNulls)compiled.DeepClone(obj);
@@ -181,7 +179,6 @@ namespace ProtoBuf.unittest.Meta
 
             Assert.AreEqual(123, clone3.First);
             Assert.AreEqual(456.789M, clone3.Second);
-#endif
         }
 
         [ProtoContract]
