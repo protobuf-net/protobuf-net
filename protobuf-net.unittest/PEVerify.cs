@@ -23,6 +23,11 @@ namespace ProtoBuf.unittest
 #if !COREFX
             // note; PEVerify can be found %ProgramFiles%\Microsoft SDKs\Windows\v6.0A\bin
             const string exePath = "PEVerify.exe";
+            if (!File.Exists(exePath))
+            {
+                Console.WriteLine("PEVerify not found");
+                return;
+            }
             ProcessStartInfo psi = new ProcessStartInfo(exePath, path);
             psi.CreateNoWindow = true;
 

@@ -1,4 +1,4 @@
-﻿//#define SINGLETEST
+﻿// #define SINGLETEST
 using System;
 using ProtoBuf.Meta;
 using ProtoBuf.unittest.Meta;
