@@ -207,7 +207,7 @@ namespace ProtoBuf
         }
         internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name, Type[] types)
         {
-            return GetInstanceMethod(declaringType.AsType(), name);
+            return GetInstanceMethod(declaringType.AsType(), name, types);
         }
 #else
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name)
