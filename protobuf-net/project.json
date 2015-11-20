@@ -52,7 +52,7 @@
     "dotnet5.4": {
       "compilationOptions": {
         "allowUnsafe": true,
-        "define": [ "FEAT_COMPILER", "PLAT_XMLSERIALIZER", "COREFX" ]
+        "define": [ "FEAT_COMPILER", "PLAT_XMLSERIALIZER", "PLAT_BINARYFORMATTER", "COREFX" ]
       },
       "dependencies": {
         "Microsoft.CSharp": "4.0.1-*",
@@ -63,7 +63,8 @@
         "System.Reflection.Emit.ILGeneration": "4.0.1-*",
         "System.Reflection.Emit.Lightweight": "4.0.1-*",
         "System.Reflection.TypeExtensions": "4.1.0-*",
-        "System.Xml.XmlSerializer": "4.0.11-*"
+        "System.Xml.XmlSerializer": "4.0.11-*",
+        "System.Runtime.Serialization.Primitives": "4.0.11-*"
       }
     }
   }
