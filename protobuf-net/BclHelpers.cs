@@ -47,20 +47,23 @@ namespace ProtoBuf
 
 
 #if COREFX // this is inspired by DCS: https://github.com/dotnet/corefx/blob/c02d33b18398199f6acc17d375dab154e9a1df66/src/System.Private.DataContractSerialization/src/System/Runtime/Serialization/XmlFormatReaderGenerator.cs#L854-L894
-        static MethodInfo getUninitializedObject;
-        static bool getUninitializedObjectInitialized;
+        static Func<Type, object> getUninitializedObject;
         static internal object TryGetUninitializedObjectWithFormatterServices(Type type)
         {
-            if (!getUninitializedObjectInitialized)
+            if (getUninitializedObject == null)
             {
-                var formatterServiceType = typeof(string).GetTypeInfo().Assembly.GetType("System.Runtime.Serialization.FormatterServices");
-                if (formatterServiceType != null)
-                {
-                    getUninitializedObject = formatterServiceType.GetMethod("GetUninitializedObject", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
+                try {
+                    var formatterServiceType = typeof(string).GetTypeInfo().Assembly.GetType("System.Runtime.Serialization.FormatterServices");
+                    MethodInfo method = formatterServiceType?.GetMethod("GetUninitializedObject", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
+                    if (method != null)
+                    {
+                        getUninitializedObject = (Func<Type, object>)method.CreateDelegate(typeof(Func<Type, object>));
+                    }
                 }
-                getUninitializedObjectInitialized = true;
+                catch  { /* best efforts only */ }
+                if(getUninitializedObject == null) getUninitializedObject = x => null;
             }
-            return getUninitializedObject?.Invoke(null, new object[] { type });
+            return getUninitializedObject(type);
         }
 #endif
 
