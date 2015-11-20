@@ -1,15 +1,8 @@
-﻿using System;
+﻿//#define SINGLETEST
+using System;
 using ProtoBuf.Meta;
 using ProtoBuf.unittest.Meta;
-#if NO_INTERNAL_CONTEXT
-namespace ProtoBuf.unittest.Serializers
-{
-    static partial class Util
-    {
 
-    }
-}
-#endif
 
 #if XUNIT
 
@@ -17,10 +10,17 @@ namespace ProtoBuf.unittest.Serializers
 namespace NUnit.Framework
 {
     public class TestFixtureAttribute : Attribute { }
-
+#if SINGLETEST
+    public class ActiveTestAttribute : Xunit.FactAttribute { }
+    public class TestAttribute : Attribute { }
+#else
+    [Obsolete("add: #define SINGLETEST")]
+    public class ActiveTestAttribute : Attribute { }
     public class TestAttribute : Xunit.FactAttribute { }
+#endif
 
     // note: this doesn't *work*; it requires code changes
+    [Obsolete("Requires code change")]
     public class ExpectedExceptionAttribute : Attribute {
         public ExpectedExceptionAttribute(Type type) { }
     }
@@ -49,7 +49,7 @@ namespace NUnit.Framework
 
         internal static void AreNotSame(object expected, object actual, string message = null)
         {
-            Xunit.Assert.Same(expected, actual);
+            Xunit.Assert.NotSame(expected, actual);
         }
 
         internal static void Fail(string message = null)

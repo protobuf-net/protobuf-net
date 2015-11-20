@@ -8,3 +8,4 @@ TestFiles/
 Tools/PEVerify.*
 packages/
 project.lock.json
+Tests.Dnx/*.dll

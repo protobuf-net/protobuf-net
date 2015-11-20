@@ -335,40 +335,59 @@ namespace ProtoBuf.unittest.Meta
 
             public List<byte[]> Blobs{ get; set; }
         }
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void JaggedListShouldThrow()
         {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(NastyType), true).Add(1, "JaggedList");
-            model.CompileInPlace();
+            try {
+                var model = RuntimeTypeModel.Create();
+                model.Add(typeof(NastyType), true).Add(1, "JaggedList");
+                model.CompileInPlace();
+                Assert.Fail();
+            } catch(NotSupportedException) {  }
         }
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void ListOfArrayShouldThrow()
         {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(NastyType), true).Add(1, "ListOfArray");
-            model.CompileInPlace();
+            try {
+                var model = RuntimeTypeModel.Create();
+                model.Add(typeof(NastyType), true).Add(1, "ListOfArray");
+                model.CompileInPlace();
+                Assert.Fail();
+            }
+            catch (NotSupportedException) { }
         }
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void MultiDimArrayShouldThrow()
         {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(NastyType), true).Add(1, "MultiDimArray");
-            model.CompileInPlace();
+            try {
+                var model = RuntimeTypeModel.Create();
+                model.Add(typeof(NastyType), true).Add(1, "MultiDimArray");
+                model.CompileInPlace();
+                Assert.Fail();
+            }
+            catch (NotSupportedException) { }
         }
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void JaggedArrayShouldThrow()
         {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(NastyType), true).Add(1, "JaggedArray");
-            model.CompileInPlace();
+            try {
+                var model = RuntimeTypeModel.Create();
+                model.Add(typeof(NastyType), true).Add(1, "JaggedArray");
+                model.CompileInPlace();
+                Assert.Fail();
+            }
+            catch (NotSupportedException) { }
         }
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void ArrayOfListShouldThrow()
         {
-            var model = RuntimeTypeModel.Create();
-            model.Add(typeof(NastyType), true).Add(1, "ArrayOfList");
-            model.CompileInPlace();
+            try {
+                var model = RuntimeTypeModel.Create();
+                model.Add(typeof(NastyType), true).Add(1, "ArrayOfList");
+                model.CompileInPlace();
+                    Assert.Fail();
+            }
+            catch (NotSupportedException) { }
         }
         [Test]
         public void BasicListIsFine()

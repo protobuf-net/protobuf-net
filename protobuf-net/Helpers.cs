@@ -156,61 +156,53 @@ namespace ProtoBuf
 #if WINRT || COREFX
         internal static MemberInfo GetInstanceMember(TypeInfo declaringType, string name)
         {
-            PropertyInfo prop = declaringType.GetDeclaredProperty(name);
-            MethodInfo method;
-            if (prop != null && (method = Helpers.GetGetMethod(prop, true, true)) != null && !method.IsStatic) return prop;
-
-            FieldInfo field = declaringType.GetDeclaredField(name);
-            if (field != null && !field.IsStatic) return field;
-
-            return null;
+            var members = declaringType.AsType().GetMember(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+            return members.Length == 1 ? members[0] : null;
         }
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name)
         {
-            return GetInstanceMethod(declaringType.GetTypeInfo(), name);
-        }
-        internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name)
-        {
-            foreach (MethodInfo method in declaringType.DeclaredMethods)
+            foreach (MethodInfo method in declaringType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                if (!method.IsStatic && method.Name == name)
-                {
-                    return method;
-                }
+                if (method.Name == name) return method;
             }
             return null;
         }
+        internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name)
+        {
+            return GetInstanceMethod(declaringType.AsType(), name); ;
+        }
         internal static MethodInfo GetStaticMethod(Type declaringType, string name)
         {
-            return GetStaticMethod(declaringType.GetTypeInfo(), name);
+            foreach (MethodInfo method in declaringType.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (method.Name == name) return method;
+            }
+            return null;
         }
 
         internal static MethodInfo GetStaticMethod(TypeInfo declaringType, string name)
         {
-            foreach (MethodInfo method in declaringType.DeclaredMethods)
+            return GetStaticMethod(declaringType.AsType(), name);
+        }
+        internal static MethodInfo GetStaticMethod(Type declaringType, string name, Type[] parameterTypes)
+        {
+            foreach(MethodInfo method in declaringType.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
             {
-                if (method.IsStatic && method.Name == name)
-                {
-                    return method;
-                }
+                if (method.Name == name && IsMatch(method.GetParameters(), parameterTypes)) return method;
             }
             return null;
         }
-        internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
+        internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] parameterTypes)
         {
-            return GetInstanceMethod(declaringType.GetTypeInfo(), name, types);
+            foreach (MethodInfo method in declaringType.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (method.Name == name && IsMatch(method.GetParameters(), parameterTypes)) return method;
+            }
+            return null;
         }
         internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name, Type[] types)
         {
-            if (types == null) types = EmptyTypes;
-            foreach (MethodInfo method in declaringType.DeclaredMethods)
-            {
-                if (!method.IsStatic && method.Name == name)
-                {
-                    if(IsMatch(method.GetParameters(), types)) return method;
-                }
-            }
-            return null;
+            return GetInstanceMethod(declaringType.AsType(), name);
         }
 #else
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name)
@@ -220,6 +212,10 @@ namespace ProtoBuf
         internal static MethodInfo GetStaticMethod(Type declaringType, string name)
         {
             return declaringType.GetMethod(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+        }
+        internal static MethodInfo GetStaticMethod(Type declaringType, string name, Type[] parameterTypes)
+        {
+           return declaringType.GetMethod(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, parameterTypes, null);
         }
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
         {

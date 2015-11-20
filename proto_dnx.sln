@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24606.1
+VisualStudioVersion = 14.0.24709.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "protobuf_net", "protobuf-net\protobuf_net.xproj", "{78359FF6-546B-4940-894F-C0B27D7CEEFB}"
 EndProject
@@ -11,6 +11,59 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		global.json = global.json
 		NuGet.Config = NuGet.Config
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "unittest", "unittest", "{2CA03836-E899-4E97-BD0C-BBB31F12CB2E}"
+	ProjectSection(SolutionItems) = preProject
+		protobuf-net.unittest\FX11.cs = protobuf-net.unittest\FX11.cs
+		protobuf-net.unittest\PEVerify.cs = protobuf-net.unittest\PEVerify.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Meta", "Meta", "{75F18274-CE92-46B5-B417-2336725B7410}"
+	ProjectSection(SolutionItems) = preProject
+		protobuf-net.unittest\Meta\AbstractListsWithInheritance.cs = protobuf-net.unittest\Meta\AbstractListsWithInheritance.cs
+		protobuf-net.unittest\Meta\Basic.cs = protobuf-net.unittest\Meta\Basic.cs
+		protobuf-net.unittest\Meta\Callbacks.cs = protobuf-net.unittest\Meta\Callbacks.cs
+		protobuf-net.unittest\Meta\Enums.cs = protobuf-net.unittest\Meta\Enums.cs
+		protobuf-net.unittest\Meta\Guids.cs = protobuf-net.unittest\Meta\Guids.cs
+		protobuf-net.unittest\Meta\Inheritance.cs = protobuf-net.unittest\Meta\Inheritance.cs
+		protobuf-net.unittest\Meta\Interfaces.cs = protobuf-net.unittest\Meta\Interfaces.cs
+		protobuf-net.unittest\Meta\Lists.cs = protobuf-net.unittest\Meta\Lists.cs
+		protobuf-net.unittest\Meta\LockContention.cs = protobuf-net.unittest\Meta\LockContention.cs
+		protobuf-net.unittest\Meta\PocoStruct.cs = protobuf-net.unittest\Meta\PocoStruct.cs
+		protobuf-net.unittest\Meta\Struct.cs = protobuf-net.unittest\Meta\Struct.cs
+		protobuf-net.unittest\Meta\SubItems.cs = protobuf-net.unittest\Meta\SubItems.cs
+		protobuf-net.unittest\Meta\ThreadRace.cs = protobuf-net.unittest\Meta\ThreadRace.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Issues", "Issues", "{4A8F9BB9-A0A5-438D-A385-E076659D3AEB}"
+	ProjectSection(SolutionItems) = preProject
+		protobuf-net.unittest\Issues\SO8933251.cs = protobuf-net.unittest\Issues\SO8933251.cs
+		protobuf-net.unittest\Issues\TurkishL.cs = protobuf-net.unittest\Issues\TurkishL.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Attribs", "Attribs", "{19031929-7E15-4063-AC2D-85AD83C59549}"
+	ProjectSection(SolutionItems) = preProject
+		protobuf-net.unittest\Attribs\Basic.cs = protobuf-net.unittest\Attribs\Basic.cs
+		protobuf-net.unittest\Attribs\ComplexMultiTypes.cs = protobuf-net.unittest\Attribs\ComplexMultiTypes.cs
+		protobuf-net.unittest\Attribs\MultiTypes.cs = protobuf-net.unittest\Attribs\MultiTypes.cs
+		protobuf-net.unittest\Attribs\PointStruct.cs = protobuf-net.unittest\Attribs\PointStruct.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Serializers", "Serializers", "{CBA373BE-75E5-4246-B795-D0E3F64684B7}"
+	ProjectSection(SolutionItems) = preProject
+		protobuf-net.unittest\Serializers\DateTimeTests.cs = protobuf-net.unittest\Serializers\DateTimeTests.cs
+		protobuf-net.unittest\Serializers\KeyValuePairTests.cs = protobuf-net.unittest\Serializers\KeyValuePairTests.cs
+		protobuf-net.unittest\Serializers\NilSerializer.cs = protobuf-net.unittest\Serializers\NilSerializer.cs
+		protobuf-net.unittest\Serializers\SubItems.cs = protobuf-net.unittest\Serializers\SubItems.cs
+		protobuf-net.unittest\Serializers\Tag.cs = protobuf-net.unittest\Serializers\Tag.cs
+		protobuf-net.unittest\Serializers\Util.cs = protobuf-net.unittest\Serializers\Util.cs
+		protobuf-net.unittest\Serializers\Writer.cs = protobuf-net.unittest\Serializers\Writer.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThirdParty", "ThirdParty", "{59288511-676B-412B-9A8D-3AAA3676E375}"
+	ProjectSection(SolutionItems) = preProject
+		protobuf-net.unittest\ThirdParty\NHibernateProxies.cs = protobuf-net.unittest\ThirdParty\NHibernateProxies.cs
 	EndProjectSection
 EndProject
 Global
@@ -30,5 +83,12 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{75F18274-CE92-46B5-B417-2336725B7410} = {2CA03836-E899-4E97-BD0C-BBB31F12CB2E}
+		{4A8F9BB9-A0A5-438D-A385-E076659D3AEB} = {2CA03836-E899-4E97-BD0C-BBB31F12CB2E}
+		{19031929-7E15-4063-AC2D-85AD83C59549} = {2CA03836-E899-4E97-BD0C-BBB31F12CB2E}
+		{CBA373BE-75E5-4246-B795-D0E3F64684B7} = {2CA03836-E899-4E97-BD0C-BBB31F12CB2E}
+		{59288511-676B-412B-9A8D-3AAA3676E375} = {2CA03836-E899-4E97-BD0C-BBB31F12CB2E}
 	EndGlobalSection
 EndGlobal
