@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_CODEGEN
+using System;
 using System.Diagnostics;
 using google.protobuf;
 using NUnit.Framework;
@@ -82,3 +83,4 @@ namespace Examples.ProtoGen
         }
     }
 }
+#endif

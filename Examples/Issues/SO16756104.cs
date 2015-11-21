@@ -11,25 +11,34 @@ namespace Examples.Issues
     [TestFixture]
     public class SO16756104
     {
-        [Test, ExpectedException(typeof(NullReferenceException))]
+        [Test]
         public void TestNullableDoubleList()
         {
-            var list = new List<double?> { 1, null, 2 };
-            Serializer.DeepClone(list);
+            Program.ExpectFailure<NullReferenceException>(() =>
+            {
+                var list = new List<double?> { 1, null, 2 };
+                Serializer.DeepClone(list);
+            });
         }
 
-        [Test, ExpectedException(typeof(NullReferenceException))]
+        [Test]
         public void TestNullableInt32List()
         {
-            var list = new List<int?> { 1, null, 2 };
-            Serializer.DeepClone(list);
+            Program.ExpectFailure<NullReferenceException>(() =>
+            {
+                var list = new List<int?> { 1, null, 2 };
+                Serializer.DeepClone(list);
+            });
         }
 
-        [Test, ExpectedException(typeof(NullReferenceException))]
+        [Test]
         public void TestNullableStringList()
         {
-            var list = new List<string> { "abc", null, "def" };
-            Serializer.DeepClone(list);
+            Program.ExpectFailure<NullReferenceException>(() =>
+            {
+                var list = new List<string> { "abc", null, "def" };
+                Serializer.DeepClone(list);
+            });
         }
     }
 }

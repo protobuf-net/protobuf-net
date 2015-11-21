@@ -17,7 +17,7 @@ namespace Examples.Issues.DetectMissing
         {
             
             var obj = new TestUser {uid = 0}; // explicitly set
-            Assert.AreEqual(0, obj.uid, "uid wasn't zero");
+            Assert.AreEqual((uint)0, obj.uid, "uid wasn't zero");
             Assert.IsTrue(obj.uidSpecified, "uid wasn't specified");
 
             var model = TypeModel.Create();
@@ -38,7 +38,7 @@ namespace Examples.Issues.DetectMissing
             Assert.Greater(ms.Length, 0, caption + ": Nothing was serialized");
 
             var clone = (TestUser) model.DeepClone(obj);
-            Assert.AreEqual(0, clone.uid, caption + ": uid wasn't zero");
+            Assert.AreEqual((uint)0, clone.uid, caption + ": uid wasn't zero");
             Assert.IsTrue(clone.uidSpecified, caption + ": uid wasn't specified");
         }
     }

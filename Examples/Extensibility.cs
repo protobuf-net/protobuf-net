@@ -275,16 +275,22 @@ namespace Examples
             Assert.AreEqual(SOME_VALUE, big.SomeFloat, "deserialize");
         }
 
-        [Test, ExpectedException(typeof(ArgumentException))]
+        [Test]
         public void TestReadShouldUsePropertySmaller()
         {
-            TestReadShouldUseProperty<SmallerObject>();
+            Program.ExpectFailure<ArgumentException>(() =>
+            {
+                TestReadShouldUseProperty<SmallerObject>();
+            });
         }
 
-        [Test, ExpectedException(typeof(ArgumentException))]
+        [Test]
         public void TestReadShouldUsePropertyInterfaceBased()
         {
-            TestReadShouldUseProperty<InterfaceBased>();
+            Program.ExpectFailure<ArgumentException>(() =>
+            {
+                TestReadShouldUseProperty<InterfaceBased>();
+            });
         }
 
         static void TestReadShouldUseProperty<T>() where T : IExtTest, IExtensible, new()
@@ -294,16 +300,22 @@ namespace Examples
             Assert.AreEqual("hi", hi);
         }
 
-        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        [Test]
         public void TestReadInvalidTagSmaller()
         {
-            TestReadInvalidTag<SmallerObject>();
+            Program.ExpectFailure<ArgumentOutOfRangeException>(() =>
+            {
+                TestReadInvalidTag<SmallerObject>();
+            });
         }
 
-        [Test, ExpectedException(typeof(ArgumentOutOfRangeException))]
+        [Test]
         public void TestReadInvalidTagInterfaceBased()
         {
-            TestReadInvalidTag<InterfaceBased>();
+            Program.ExpectFailure<ArgumentOutOfRangeException>(() =>
+            {
+                TestReadInvalidTag<InterfaceBased>();
+            });
         }
 
         static void TestReadInvalidTag<T>() where T : IExtTest, IExtensible, new()
@@ -311,15 +323,21 @@ namespace Examples
             T obj = new T {Bof = "hi"};
             string hi = Extensible.GetValue<string>(obj, 0);
         }
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Test]
         public void TestReadNullSmaller()
         {
-            TestReadNull<SmallerObject>();
+            Program.ExpectFailure<ArgumentNullException>(() =>
+            {
+                TestReadNull<SmallerObject>();
+            });
         }
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Test]
         public void TestReadNullInterfaceBased()
         {
-            TestReadNull<InterfaceBased>();
+            Program.ExpectFailure<ArgumentNullException>(() =>
+            {
+                TestReadNull<InterfaceBased>();
+            });
         }
 
         static void TestReadNull<T>() where T : IExtTest, IExtensible, new()
@@ -327,15 +345,21 @@ namespace Examples
             string hi = Extensible.GetValue<string>(null, 1);
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Test]
         public void TestWriteNullSmaller()
         {
-            TestWriteNull<SmallerObject>();
+            Program.ExpectFailure<ArgumentNullException>(() =>
+            {
+                TestWriteNull<SmallerObject>();
+            });
         }
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Test]
         public void TestWriteNullInterfaceBased()
         {
-            TestWriteNull<InterfaceBased>();
+            Program.ExpectFailure<ArgumentNullException>(() =>
+            {
+                TestWriteNull<InterfaceBased>();
+            });
         }
         static void TestWriteNull<T>() where T : IExtTest, IExtensible, new()
         {

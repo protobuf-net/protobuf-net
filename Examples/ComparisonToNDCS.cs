@@ -27,6 +27,7 @@ namespace Examples
             }
             return list;
         }
+#if !NO_WCF
         [Test]
         public void CompareBasicTypeForBandwidth()
         {
@@ -44,9 +45,10 @@ namespace Examples
                 ndcs = ms.Length;
                 //Debug.WriteLine(ndcs);
             }
-            Assert.That(0, Is.LessThan(1)); // double check! (at least one test API has this reversed)
-            Assert.That(pb, Is.LessThan(ndcs / 5));
+            Assert.Less(0, 1); // double check! (at least one test API has this reversed)
+            Assert.Less(pb, ndcs / 5);
         }
+#endif
         [DataContract]
         public class BasicDto
         {

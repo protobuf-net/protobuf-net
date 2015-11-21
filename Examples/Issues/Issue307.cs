@@ -2,7 +2,9 @@
 using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
+#if !NO_WCF
 using ProtoBuf.ServiceModel;
+#endif
 
 namespace Examples.Issues
 {
@@ -21,6 +23,7 @@ namespace Examples.Issues
             [ProtoMember(1)]
             public Foo Foo { get; set; }
         }
+#if !NO_WCF
         [Test]
         public void TestRoundTripWrappedEnum()
         {
@@ -44,5 +47,6 @@ namespace Examples.Issues
             Assert.AreEqual(Foo.B, clone);
 
         }
+#endif
     }
 }

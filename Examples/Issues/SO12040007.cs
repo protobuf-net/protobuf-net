@@ -130,8 +130,9 @@ namespace Examples.Issues
             Assert.IsTrue(model.CanSerialize(typeof(string)));
             Assert.IsTrue(model.CanSerialize(typeof(DateTime)));
             Assert.IsTrue(model.CanSerialize(typeof(DateTime?)));
-
+#if !COREFX
             Assert.IsFalse(model.CanSerialize(typeof(System.Windows.Media.Color)));
+#endif
             Assert.IsFalse(model.CanSerialize(typeof(DateTimeOffset)));
             Assert.IsFalse(model.CanSerialize(typeof(Action)));
         }
@@ -148,8 +149,9 @@ namespace Examples.Issues
             Assert.IsTrue(model.CanSerialize(typeof(string[])), "string");
             Assert.IsTrue(model.CanSerialize(typeof(DateTime[])), "DateTime");
             Assert.IsTrue(model.CanSerialize(typeof(DateTime?[])), "DateTime?");
-
+#if !COREFX
             Assert.IsFalse(model.CanSerialize(typeof(System.Windows.Media.Color[])), "Color");
+#endif
             Assert.IsFalse(model.CanSerialize(typeof(DateTimeOffset[])), "DateTimeOffset");
             Assert.IsFalse(model.CanSerialize(typeof(Action[])), "Action");
         }
@@ -165,8 +167,9 @@ namespace Examples.Issues
             Assert.IsFalse(model.CanSerialize(typeof(string[][])));
             Assert.IsFalse(model.CanSerialize(typeof(DateTime[][])));
             Assert.IsFalse(model.CanSerialize(typeof(DateTime?[][])));
-
+#if !COREFX
             Assert.IsFalse(model.CanSerialize(typeof(System.Windows.Media.Color[][])));
+#endif
             Assert.IsFalse(model.CanSerialize(typeof(DateTimeOffset[][])));
             Assert.IsFalse(model.CanSerialize(typeof(Action[][])));
         }
@@ -182,8 +185,9 @@ namespace Examples.Issues
             Assert.IsFalse(model.CanSerialize(typeof(string[,])));
             Assert.IsFalse(model.CanSerialize(typeof(DateTime[,])));
             Assert.IsFalse(model.CanSerialize(typeof(DateTime?[,])));
-
+#if !COREFX
             Assert.IsFalse(model.CanSerialize(typeof(System.Windows.Media.Color[,])));
+#endif
             Assert.IsFalse(model.CanSerialize(typeof(DateTimeOffset[,])));
             Assert.IsFalse(model.CanSerialize(typeof(Action[,])));
         }

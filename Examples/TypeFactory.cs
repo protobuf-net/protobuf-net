@@ -7,6 +7,7 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 
 namespace Examples
 {

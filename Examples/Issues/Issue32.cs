@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿#if !NO_CODEGEN
+using System.IO;
 using NUnit.Framework;
 using Examples.ProtoGen;
 
@@ -19,3 +20,4 @@ namespace Examples.Issues
         }
     }
 }
+#endif

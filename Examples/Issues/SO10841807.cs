@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_WCF
+using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
 using ProtoBuf.ServiceModel;
@@ -17,3 +18,4 @@ namespace Examples.Issues
         }
     }
 }
+#endif

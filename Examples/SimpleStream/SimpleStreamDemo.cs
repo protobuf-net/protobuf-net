@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_WCF
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -248,7 +249,7 @@ namespace Examples.SimpleStream
             SomeEnumEntity dee = new SomeEnumEntity { Enum = SomeEnum.Foo };
             Assert.IsTrue(Program.CheckBytes(dee, 0x10, 0x03));
         }
-        [Test, ExpectedException(ExceptionType = typeof(ProtoException))]
+        [Test, ExpectedException(typeof(ProtoException))]
         public void TestSerializeUndefinedEnum()
         {
             SomeEnumEntity dee = new SomeEnumEntity { Enum = 0 };
@@ -292,7 +293,7 @@ namespace Examples.SimpleStream
         {
             public int X { get; set; }
         }
-        [Test, ExpectedException(ExceptionType = typeof(InvalidOperationException))]
+        [Test, ExpectedException(typeof(InvalidOperationException))]
         public void TestNotAContract()
         {
             NotAContract nac = new NotAContract { X = 4 };
@@ -633,3 +634,4 @@ namespace Examples.SimpleStream
     }
 
 }
+#endif

@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture, Ignore("not sure we want to support this")]
+    [TestFixture]
     public class Issue70 {
 
         [ProtoContract]
@@ -16,7 +16,7 @@ namespace Examples.Issues
             public int Bar { get; set; } // test prop
         }
 
-        [Test]
+        [IgnoreTest("not sure we want to support this")]
         public void SerializeWithLengthPrefixShouldWorkWithBase128()
         {
             var original = new Strange { Foo = "abc", Bar = 123 };
@@ -35,7 +35,7 @@ namespace Examples.Issues
                 Assert.AreEqual(original.Bar, clone.Bar, "Bar");
             }
         }
-        [Test]
+        [IgnoreTest("not sure we want to support this")]
         public void SerializeWithLengthPrefixShouldWorkWithFixed32()
         {
             var original = new Strange { Foo = "abc", Bar = 123 };

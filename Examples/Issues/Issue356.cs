@@ -8,7 +8,7 @@ namespace test
     using System.Xml.Serialization;
     using NUnit.Framework;
     using ProtoBuf;
-
+    using Examples;
     [XmlType]
     public class SimpleObject : IEquatable<SimpleObject>
     {
@@ -49,36 +49,39 @@ namespace test
     [TestFixture]
     public class TestIncorrectStream
     {
-        [Test, ExpectedException(typeof(ProtoException), ExpectedMessage = "Unexpected end-group in source data; this usually means the source data is corrupt")]
+        [Test]
         public void TestDeserializationFromXml()
         {
-            SimpleObject original = new SimpleObject();
-            original.ToDefaults();
+            Program.ExpectFailure<ProtoException>(() =>
+            {
+                SimpleObject original = new SimpleObject();
+                original.ToDefaults();
 
-            // assert that Equals routine works
-            Assert.That(original.Equals(original));
+                // assert that Equals routine works
+                Assert.Equals(original, original);
 
-            // serialize to XML text
-            StringBuilder sb = new StringBuilder();
-            XmlWriter writer = XmlWriter.Create(sb);
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(SimpleObject));
-            xmlSerializer.Serialize(writer, original);
-            Console.WriteLine(sb.ToString());
+                // serialize to XML text
+                StringBuilder sb = new StringBuilder();
+                XmlWriter writer = XmlWriter.Create(sb);
+                XmlSerializer xmlSerializer = new XmlSerializer(typeof(SimpleObject));
+                xmlSerializer.Serialize(writer, original);
+                Console.WriteLine(sb.ToString());
 
-            // use XML text as input stream for XML deserialization
-            byte[] bytes = Encoding.Unicode.GetBytes(sb.ToString());
-            Assert.That(bytes.Length > 0);
-            MemoryStream ms = new MemoryStream(bytes);
-            SimpleObject fromXml = (SimpleObject)xmlSerializer.Deserialize(ms);
-            Assert.That(original.Equals(fromXml));
+                // use XML text as input stream for XML deserialization
+                byte[] bytes = Encoding.Unicode.GetBytes(sb.ToString());
+                Assert.Greater(bytes.Length, 0);
+                MemoryStream ms = new MemoryStream(bytes);
+                SimpleObject fromXml = (SimpleObject)xmlSerializer.Deserialize(ms);
+                Assert.Equals(original, fromXml);
 
-            // rewind the stream and deserialize using Protobuf
-            ms.Seek(0L, SeekOrigin.Begin);
-            SimpleObject fromProtobuf = Serializer.Deserialize<SimpleObject>(ms);
+                // rewind the stream and deserialize using Protobuf
+                ms.Seek(0L, SeekOrigin.Begin);
+                SimpleObject fromProtobuf = Serializer.Deserialize<SimpleObject>(ms);
 
-            // either deserialization from XML works or
-            // it should not give an object instance (either return null or throw Exception)
-            Assert.That(fromProtobuf == null || original.Equals(fromProtobuf), "equiv objects");
+                // either deserialization from XML works or
+                // it should not give an object instance (either return null or throw Exception)
+                Assert.IsTrue(fromProtobuf == null || original.Equals(fromProtobuf), "equiv objects");
+            }, "Unexpected end-group in source data; this usually means the source data is corrupt");
         }
     }
 }

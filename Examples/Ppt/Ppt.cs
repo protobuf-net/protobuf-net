@@ -16,14 +16,14 @@ namespace Examples.Ppt
         [DataMember(Name="c", Order=3, IsRequired=false)]
         public Test1 C {get;set;}
     }
-
+#if !COREFX
     [ServiceContract]
     public interface ISearchService
     {
         [OperationContract]
         SearchResponse Search(SearchRequest request); 
     }
-    
+#endif
     public class SearchRequest {}
     public class SearchResponse { }
   

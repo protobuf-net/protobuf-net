@@ -171,7 +171,7 @@ namespace TestMediaBrowser
             Assert.IsNull(other.TVDBSeriesId);
         }*/
 
-        [Test, Ignore("This works differently by design; perhaps reverse order?")]
+        [IgnoreTest("This works differently by design; perhaps reverse order?")]
         public void TestMerging()
         {
             var source = new MisterNullable(11);
@@ -299,7 +299,7 @@ namespace TestMediaBrowser
             {
                 list.Add(new DummyPersistanceObject() { Bar1 = i, Bar2 = "hello" });
             }
-
+#if !COREFX
             TimeAction("Standard serialization", () =>
             {
                 using (MemoryStream ms = new MemoryStream())
@@ -311,7 +311,7 @@ namespace TestMediaBrowser
                     list = (List<DummyPersistanceObject>)bf.Deserialize(ms);
                 }
             });
-
+#endif
             GC.Collect();
             /*
             TimeAction("Manual Serialization", () =>

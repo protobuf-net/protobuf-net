@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿#if !COREFX
+using System.Reflection;
 using NUnit.Framework;
 using System;
 using ProtoBuf;
@@ -44,3 +45,4 @@ namespace Examples.Issues
         }
     }
 }
+#endif

@@ -3,7 +3,7 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 using System.Threading;
-
+using System.Reflection;
 namespace Examples.Issues
 {
     [TestFixture]

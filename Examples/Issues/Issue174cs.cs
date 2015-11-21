@@ -12,17 +12,20 @@ namespace Examples.Issues
     [TestFixture]
     public class Issue174cs
     {
-        [Test, ExpectedException(ExpectedMessage = "Dynamic type is not a contract-type: Boolean")]
+        [Test]
         public void TestDynamic()
         {
-            var myVal = new TestProto { Value = true };
-            byte[] serialized;
-            using (var ms = new MemoryStream())
+            Program.ExpectFailure<Exception>(() =>
             {
-                Serializer.Serialize(ms, myVal);
-                serialized = ms.ToArray();
-            }
-            Assert.That(serialized, Is.Not.Null);
+                var myVal = new TestProto { Value = true };
+                byte[] serialized;
+                using (var ms = new MemoryStream())
+                {
+                    Serializer.Serialize(ms, myVal);
+                    serialized = ms.ToArray();
+                }
+                Assert.IsNotNull(serialized);
+            }, "Dynamic type is not a contract-type: Boolean");
         }
 
         [ProtoContract]

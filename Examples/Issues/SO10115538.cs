@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_WCF
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -364,3 +365,4 @@ namespace Examples.Issues
         }
 
 }
+#endif

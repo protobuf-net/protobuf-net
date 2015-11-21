@@ -11,17 +11,23 @@ namespace Examples.Issues
     [TestFixture]
     public class SO11564914
     {
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Are you mixing protobuf-net and protobuf-csharp-port? See http://stackoverflow.com/q/11564914; type: Examples.Issues.SO11564914+BlockHeader")]
+        [Test]
         public void SerializeFromProtobufCSharpPortShouldGiveUsefulMessage()
         {
-            var obj = new BlockHeader();
-            Serializer.Serialize(Stream.Null, obj);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                var obj = new BlockHeader();
+                Serializer.Serialize(Stream.Null, obj);
+            }, "Are you mixing protobuf-net and protobuf-csharp-port? See http://stackoverflow.com/q/11564914; type: Examples.Issues.SO11564914+BlockHeader");
         }
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Are you mixing protobuf-net and protobuf-csharp-port? See http://stackoverflow.com/q/11564914; type: Examples.Issues.SO11564914+BlockHeader")]
+        [Test]
         public void DeserializeFromProtobufCSharpPortShouldGiveUsefulMessage()
         {
-            var obj = new BlockHeader();
-            Serializer.Deserialize<BlockHeader>(Stream.Null);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                var obj = new BlockHeader();
+                Serializer.Deserialize<BlockHeader>(Stream.Null);
+            }, "Are you mixing protobuf-net and protobuf-csharp-port? See http://stackoverflow.com/q/11564914; type: Examples.Issues.SO11564914+BlockHeader");
         }
 
         public sealed partial class BlockHeader : GeneratedMessage<BlockHeader, BlockHeader.Builder>

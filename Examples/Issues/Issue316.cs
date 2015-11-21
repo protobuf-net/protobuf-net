@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿#if !COREFX
+using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -84,3 +85,4 @@ message BinarySerializationSurrogate_MyException {
     }
     }
 }
+#endif

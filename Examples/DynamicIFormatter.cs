@@ -10,7 +10,10 @@ using NUnit.Framework;
 
 namespace Examples
 {
-    public sealed class DynamicIFormatter : IFormatter
+    public sealed class DynamicIFormatter
+#if !COREFX
+        : IFormatter
+#endif
     {
         private readonly TypeModel model;
         public DynamicIFormatter(TypeModel model)
@@ -35,8 +38,10 @@ namespace Examples
             public object Value { get; set; }
         }
         public StreamingContext Context { get; set; }
+#if !COREFX
         SerializationBinder IFormatter.Binder { get; set; }
         ISurrogateSelector IFormatter.SurrogateSelector { get; set; }
+#endif
     }
     [TestFixture]
     public class TestDynamicFormatter

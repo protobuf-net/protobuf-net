@@ -33,7 +33,11 @@ namespace Examples.Issues
         [Test]
         public void Execute()
         {
+#if COREFX
+            var assembly = typeof(Serializer).GetTypeInfo().Assembly;
+#else
             var assembly = Assembly.LoadFile(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "protobuf-net.dll"));
+#endif
             var derived = new Derived()
             {
                 BaseFirstProperty = "BaseFirst",

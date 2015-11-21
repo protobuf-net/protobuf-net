@@ -179,7 +179,7 @@ namespace Examples
             model.Compile("TestViaXmlProtoSet", "TestViaXmlProtoSet.dll");
             PEVerify.AssertValid("TestViaXmlProtoSet.dll");
         }
-
+#if !COREFX
         [Test]
         public void TestComponentModelNotSet()
         {
@@ -210,5 +210,6 @@ namespace Examples
             Assert.IsFalse(dm.FooSpecified, "Foo");
             Assert.IsFalse(dm.BarSpecified, "Bar");
         }
+#endif
     }
 }

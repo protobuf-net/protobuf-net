@@ -19,11 +19,13 @@ namespace Examples
             public A A { get; set; }
         }
         [Test]
-        [ExpectedException(typeof(InvalidOperationException), ExpectedMessage="Unexpected sub-type: Examples.Inheritance+B")]
         public void UnknownSubtypeMessage()
         {
-            var c = new C { A = new B() };
-            Serializer.DeepClone(c);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                var c = new C { A = new B() };
+                Serializer.DeepClone(c);
+            }, "Unexpected sub-type: Examples.Inheritance+B");
         }
 
         [Test]

@@ -72,6 +72,7 @@ namespace Examples.Issues
                 // Do nothing
             }
 
+#if !COREFX
             // NOTE: For whatever reason, this class will not correctly deserialize without this method, even though
             // the base class, Dictionary, has the SerializableAttribute. It's protected so only the framework can access it.
             protected ProtoDictionary(SerializationInfo info, StreamingContext context)
@@ -79,6 +80,7 @@ namespace Examples.Issues
             {
 
             }
+#endif
         }
         [ProtoContract]
         [ProtoInclude(1, typeof(ProtoObject<string>))]

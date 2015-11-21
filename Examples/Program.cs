@@ -6,37 +6,55 @@ using DAL;
 using Examples.SimpleStream;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using System.Reflection;
+using NUnit.Framework;
 
 namespace Examples
 {
-    class Program
+    public static class Program
     {
+#if COREFX
+        public static bool _IsValueType(this Type type)
+        {
+            return type.GetTypeInfo().IsValueType;
+        }
+#else
+        public static bool _IsValueType(this Type type)
+        {
+            return type.IsValueType;
+        }
+#endif
+
         static void Main() {
+#if !COREFX
             Console.WriteLine("CLR: " + Environment.Version);
+
             new NWindTests().PerfTestDb();
+#endif
         }
-        static void Main2() {
-            SimpleStreamDemo demo = new SimpleStreamDemo();
-            //const int COUNT = 1000000;
-            const bool RUN_LEGACY = true;
-            //demo.PerfTestSimple(COUNT, RUN_LEGACY);
-            //demo.PerfTestString(COUNT, RUN_LEGACY);
-            //demo.PerfTestEmbedded(COUNT, RUN_LEGACY);
-            //demo.PerfTestEnum(COUNT, true);
-            //demo.PerfTestArray(COUNT, true);
 
-            const int NWIND_COUNT = 1000;
-            DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>(RuntimeTypeModel.Default);
-            Console.WriteLine("Sub-object format: {0}", DAL.Database.SubObjectFormat);
-            SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, false, null);
+        //static void Main2() {
+        //    SimpleStreamDemo demo = new SimpleStreamDemo();
+        //    //const int COUNT = 1000000;
+        //    const bool RUN_LEGACY = true;
+        //    //demo.PerfTestSimple(COUNT, RUN_LEGACY);
+        //    //demo.PerfTestString(COUNT, RUN_LEGACY);
+        //    //demo.PerfTestEmbedded(COUNT, RUN_LEGACY);
+        //    //demo.PerfTestEnum(COUNT, true);
+        //    //demo.PerfTestArray(COUNT, true);
 
-            DatabaseCompat compat = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompat>(RuntimeTypeModel.Default);
-            SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, RUN_LEGACY, false, RUN_LEGACY, true, false, true, null);
+        //    const int NWIND_COUNT = 1000;
+        //    DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>(RuntimeTypeModel.Default);
+        //    Console.WriteLine("Sub-object format: {0}", DAL.Database.SubObjectFormat);
+        //    SimpleStreamDemo.LoadTestItem(db, NWIND_COUNT, NWIND_COUNT, false, false, false, true, false, false, null);
 
-            DatabaseCompatRem compatRem = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompatRem>(RuntimeTypeModel.Default);
-            SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, false, false, false, null);
+        //    DatabaseCompat compat = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompat>(RuntimeTypeModel.Default);
+        //    SimpleStreamDemo.LoadTestItem(compat, NWIND_COUNT, NWIND_COUNT, RUN_LEGACY, false, RUN_LEGACY, true, false, true, null);
+
+        //    DatabaseCompatRem compatRem = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompatRem>(RuntimeTypeModel.Default);
+        //    SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, false, false, false, null);
             
-        }
+        //}
 
         public static string GetByteString(byte[] buffer)
         {
@@ -76,6 +94,7 @@ namespace Examples
                 return equal;
             }
         }
+
         public static bool CheckBytes<T>(T item, params byte[] expected)
         {
             return CheckBytes<T>(item, null, expected);
@@ -99,5 +118,32 @@ namespace Examples
             return true;
         }
 
+        public static void ExpectFailure<TException>(Action action, string message = null)
+            where TException : Exception
+        {
+            try
+            {
+                action();
+                Assert.Fail("expected " + typeof(TException).Name);
+            } catch(Exception ex)
+            {
+                Assert.IsInstanceOfType(typeof(TException), ex);
+                if (message != null) Assert.AreEqual(message, ex.Message);
+            }
+        }
+        public static void ExpectFailure<TException>(Action action, Func<TException, bool> check)
+            where TException : Exception
+        {
+            try
+            {
+                action();
+                Assert.Fail();
+            }
+            catch (Exception ex)
+            {
+                Assert.IsInstanceOfType(typeof(TException), ex);
+                Assert.IsTrue(check((TException)ex));
+            }
+        }
     }
 }

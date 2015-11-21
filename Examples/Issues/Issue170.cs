@@ -14,11 +14,14 @@ namespace Examples.Issues
             var arr = new[] { "aaa","bbb" };
             Assert.IsTrue(Serializer.DeepClone(arr).SequenceEqual(arr));
         }
-        [Test, ExpectedException(typeof(NullReferenceException))]
+        [Test]
         public void ArrayWithNullContentShouldThrow()
         {
-            var arr = new[] { "aaa", null, "bbb" };
-            var arr2 = Serializer.DeepClone(arr);
+            Program.ExpectFailure<NullReferenceException>(() =>
+            {
+                var arr = new[] { "aaa", null, "bbb" };
+                var arr2 = Serializer.DeepClone(arr);
+            });
         }
     }
 }

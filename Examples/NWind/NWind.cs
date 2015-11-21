@@ -1,11 +1,14 @@
 ﻿using System;
+using ProtoBuf;
+using System.Runtime.Serialization;
+#if !COREFX
+
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.IO;
 using System.Linq;
-using System.Runtime.Serialization;
+
 using NUnit.Framework;
-using ProtoBuf;
 using ProtoSharp.Core;
 using Serializer = ProtoBuf.Serializer;
 using Examples;
@@ -28,13 +31,14 @@ using ProtoBuf.Meta;
         
     }
 }*/
+#endif
 namespace DAL
 {
     [ProtoContract, DataContract, Serializable]
     public class Database
     {
         public const DataFormat SubObjectFormat = DataFormat.Default;
-
+#if !COREFX
         [ProtoMember(1, DataFormat=Database.SubObjectFormat), Tag(1), DataMember(Order=1)]
         public List<Order> Orders { get; private set; }
 
@@ -42,7 +46,9 @@ namespace DAL
         {
             Orders = new List<Order>();
         }
+#endif
     }
+#if !COREFX
     [TestFixture]
     public class NWindTests
     {
@@ -156,6 +162,7 @@ namespace DAL
                 fs.Close();
             }
         }
+
         static Database ReadFromDatabase(NorthwindDataContext ctx) {
             Database db = new Database();
         
@@ -167,4 +174,6 @@ namespace DAL
             return db;            
         }
     }
+#endif
 }
+

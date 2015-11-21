@@ -2,6 +2,7 @@
 using System.IO;
 using NUnit.Framework;
 using ProtoBuf;
+using Examples;
 
 namespace Issue41
 {
@@ -48,16 +49,21 @@ namespace Issue41
     [TestFixture]
     public class Issue41Rig
     {
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void Issue41TestOriginalSubClassShouldComplainAboutDuplicateTags()
         {
-            Serializer.Serialize<B_Orig>(Stream.Null, new B_Orig());
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                Serializer.Serialize<B_Orig>(Stream.Null, new B_Orig());
+            });
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void Issue41TestOriginalBaseClassShouldComplainAboutDuplicateTags()
         {
-            Serializer.Serialize<A_Orig>(Stream.Null, new A_Orig());
+            Program.ExpectFailure<InvalidOperationException>(() => { 
+                Serializer.Serialize<A_Orig>(Stream.Null, new A_Orig());
+            });
         }
 
         [Test]

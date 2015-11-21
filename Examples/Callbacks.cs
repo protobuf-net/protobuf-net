@@ -221,13 +221,13 @@ namespace Examples
                 mode = ":" + mode;
                 TCreate cs = new TCreate();
                 cs.Bar = "abc";
-                string ctorExpected = typeof (TCreate).IsValueType ? null : "ctor";
+                string ctorExpected = typeof (TCreate)._IsValueType() ? null : "ctor";
                 Assert.IsNotNull(cs, "orig" + mode);
                 Assert.AreEqual(ctorExpected, cs.History, "orig before" + mode);
                 Assert.AreEqual("abc", cs.Bar, "orig before" + mode);
 
                 TCreate clone = (TCreate) model.DeepClone(cs);
-                if (!typeof (TCreate).IsValueType)
+                if (!typeof (TCreate)._IsValueType())
                 {
                     Assert.AreEqual(ctorExpected + ";OnSerializing;OnSerialized", cs.History, "orig after" + mode);
                 }
@@ -239,7 +239,7 @@ namespace Examples
                 Assert.AreEqual("abc", clone.Bar, "clone after" + mode);
 
                 T clone2 = (T) model.DeepClone(cs);
-                if (!typeof (TCreate).IsValueType)
+                if (!typeof (TCreate)._IsValueType())
                 {
                     Assert.AreEqual(ctorExpected + ";OnSerializing;OnSerialized;OnSerializing;OnSerialized", cs.History,
                                     "orig after" + mode);
@@ -308,10 +308,13 @@ namespace Examples
             Test<TestInheritedImplementedAtChild, TestInheritedImplementedAtChildDerived>();
         }
 
-        [Test, ExpectedException(typeof(ProtoException), ExpectedMessage = "Duplicate ProtoBuf.ProtoBeforeSerializationAttribute callbacks on Examples.Callbacks+DuplicateCallbacks")]
+        [Test]
         public void TestDuplicateCallbacks()
         {
-            Serializer.Serialize(Stream.Null, new DuplicateCallbacks());
+            Program.ExpectFailure<ProtoException>(() =>
+            {
+                Serializer.Serialize(Stream.Null, new DuplicateCallbacks());
+            }, "Duplicate ProtoBuf.ProtoBeforeSerializationAttribute callbacks on Examples.Callbacks+DuplicateCallbacks");
         }
 
         [Test]

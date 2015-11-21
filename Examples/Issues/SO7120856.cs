@@ -37,7 +37,10 @@ namespace Examples.Issues
         }
         [Serializable]
         [DataContract]
-        public struct MyValueTypeViaFields : ISerializable
+        public struct MyValueTypeViaFields
+#if !COREFX
+            : ISerializable
+#endif
         {
             [DataMember(Order = 1)]
             private readonly int _x;
@@ -50,7 +53,7 @@ namespace Examples.Issues
                 _x = x;
                 _z = z;
             }
-
+#if !COREFX
             // this constructor is used for deserialization
             public MyValueTypeViaFields(SerializationInfo info, StreamingContext text)
                 : this()
@@ -58,6 +61,7 @@ namespace Examples.Issues
                 _x = info.GetInt32("X");
                 _z = info.GetInt32("Z");
             }
+#endif
 
             public int X
             {
@@ -102,13 +106,14 @@ namespace Examples.Issues
                 }
             }
 
+#if !COREFX
             // this method is called during serialization
             public void GetObjectData(SerializationInfo info, StreamingContext context)
             {
                 info.AddValue("X", X);
                 info.AddValue("Z", Z);
             }
-
+#endif
             public override string ToString()
             {
                 return string.Format("[{0}, {1}]", X, Z);
@@ -116,7 +121,10 @@ namespace Examples.Issues
         }
 
         [Serializable]
-        public struct MyValueTypeAsTuple : ISerializable
+        public struct MyValueTypeAsTuple
+#if !COREFX
+            : ISerializable
+#endif
         {
             private readonly int _x;
             private readonly int _z;
@@ -127,7 +135,7 @@ namespace Examples.Issues
                 _x = x;
                 _z = z;
             }
-
+#if !COREFX
             // this constructor is used for deserialization
             public MyValueTypeAsTuple(SerializationInfo info, StreamingContext text)
                 : this()
@@ -135,7 +143,7 @@ namespace Examples.Issues
                 _x = info.GetInt32("X");
                 _z = info.GetInt32("Z");
             }
-
+#endif
             [DataMember(Order = 1)]
             public int X
             {
@@ -181,13 +189,14 @@ namespace Examples.Issues
                 }
             }
 
+#if !COREFX
             // this method is called during serialization
             public void GetObjectData(SerializationInfo info, StreamingContext context)
             {
                 info.AddValue("X", X);
                 info.AddValue("Z", Z);
             }
-
+#endif
             public override string ToString()
             {
                 return string.Format("[{0}, {1}]", X, Z);

@@ -7,7 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
+#if !COREFX
 using System.Web.Script.Serialization;
+#endif
 using System.Xml.Serialization;
 
 namespace Examples.Issues
@@ -67,19 +69,23 @@ namespace Examples.Issues
                 Assert.AreEqual(1, clone.Bars.Count());
             }
         }
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void XmlSerializer_DoesntSupportNakedEnumerables()
         {
-            var ser = new XmlSerializer(typeof(FooEnumerable));
-            using (var ms = new MemoryStream())
+            Program.ExpectFailure<InvalidOperationException>(() =>
             {
-                ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
-                ms.Position = 0;
-                var clone = (FooEnumerable)ser.Deserialize(ms);
-                Assert.IsNotNull(clone.Bars);
-                Assert.AreEqual(1, clone.Bars.Count());
-            }
+                var ser = new XmlSerializer(typeof(FooEnumerable));
+                using (var ms = new MemoryStream())
+                {
+                    ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
+                    ms.Position = 0;
+                    var clone = (FooEnumerable)ser.Deserialize(ms);
+                    Assert.IsNotNull(clone.Bars);
+                    Assert.AreEqual(1, clone.Bars.Count());
+                }
+            });
         }
+#if !COREFX
         [Test]
         public void JavaScriptSerializer_DoesSupportNakedEnumerables()
         {
@@ -93,6 +99,7 @@ namespace Examples.Issues
                 Assert.AreEqual(1, clone.Bars.Count());
             }
         }
+#endif
 
         [Test]
         public void ProtobufNet_DoesSupportNakedEnumerables()

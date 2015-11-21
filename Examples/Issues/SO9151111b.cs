@@ -71,14 +71,19 @@ namespace Proto
         {
             Dictionary<Type, List<Type>> repo = new Dictionary<Type, List<Type>>();
 
-            foreach (var type in this.GetDCTypes("Types"))
+            foreach (var lValue in this.GetDCTypes("Types"))
             {
+#if COREFX
+                var type = lValue.GetTypeInfo();
+#else
+                var type = lValue;
+#endif
 
                 if (type.IsGenericTypeDefinition == false)
                 {
                     Console.WriteLine("{0}: Processing: {1} ({2})", label, type.Name, type.IsGenericTypeDefinition);
-                    var meta = this._modal.Add(type, false)
-                                 .Add(this.GetDMProperties(type).Select(p => p.Name)
+                    var meta = this._modal.Add(lValue, false)
+                                 .Add(this.GetDMProperties(lValue).Select(p => p.Name)
                                  .ToArray());
 
                     this.setCallbacks(meta);
@@ -93,7 +98,7 @@ namespace Proto
                             repo.Add(type.BaseType, childs);
                         }
 
-                        childs.Add(type);
+                        childs.Add(lValue);
                     }
 
 
@@ -162,9 +167,20 @@ namespace Proto
 
         private IEnumerable<Type> GetDCTypes(string assemblyName)
         {
-            foreach (var type in typeof(SO9151111_b).Assembly.GetTypes().Where(t => t.Namespace == "Types"))
+#if COREFX
+            var assembly = typeof(SO9151111_b).GetTypeInfo().Assembly;
+#else
+            var assembly = typeof(SO9398578).Assembly;
+#endif
+
+            foreach (var type in assembly.GetTypes().Where(t => t.Namespace == "Types"))
             {
-                if (type.IsDefined(typeof(DataContractAttribute), false))
+#if COREFX
+                var tmp = type.GetTypeInfo();
+#else
+                var tmp = type;
+#endif
+                if (tmp.IsDefined(typeof(DataContractAttribute), false))
                     yield return type;
             }
         }

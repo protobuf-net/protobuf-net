@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !NO_ENYIM
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -67,3 +68,4 @@ namespace Examples
         }
     }
 }
+#endif

@@ -29,16 +29,22 @@ namespace Examples.Issues
         [ProtoContract]
         public class ChildC : ParentC { }
 
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+NoRelationship")]
+        [Test]
         public void SerializeTypeWithNoMarkersShouldFail()
         {
-            var obj = new NoRelationship();
-            Serializer.Serialize(Stream.Null, obj);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                var obj = new NoRelationship();
+                Serializer.Serialize(Stream.Null, obj);
+            }, "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+NoRelationship");
         }
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+NoRelationship")]
+        [Test]
         public void DeserializeTypeWithNoMarkersShouldFail()
         {
-            Serializer.Deserialize<NoRelationship>(Stream.Null);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                Serializer.Deserialize<NoRelationship>(Stream.Null);
+            }, "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+NoRelationship");
         }
 
         [Test]
@@ -53,16 +59,22 @@ namespace Examples.Issues
             Assert.AreEqual(typeof(ParentA), Serializer.Deserialize<ParentA>(Stream.Null).GetType());
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+ChildA")]
+        [Test]
         public void SerializeUnmarkedChildShouldFail()
         {
-            var obj = new ChildA();
-            Serializer.Serialize(Stream.Null, obj);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                var obj = new ChildA();
+                Serializer.Serialize(Stream.Null, obj);
+            }, "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+ChildA");
         }
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+ChildA")]
+        [Test]
         public void DeserializeUnmarkedChildShouldFail()
         {
-            Serializer.Deserialize<ChildA>(Stream.Null);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                Serializer.Deserialize<ChildA>(Stream.Null);
+            }, "Type is not expected, and no contract can be inferred: Examples.Issues.SO6505590+ChildA");
         }
 
 

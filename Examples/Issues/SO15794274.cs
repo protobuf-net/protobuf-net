@@ -11,10 +11,10 @@ namespace Examples.Issues
     [TestFixture]
     public class SO15794274
     {
-        [Test, Ignore("this looks really painful; have tried sharded cache - cripples perf")]
+        [IgnoreTest("this looks really painful; have tried sharded cache - cripples perf")]
         public void Execute()
         {
-            Assert.IsTrue(Environment.Is64BitProcess, "x64");
+            Assert.AreEqual(8, IntPtr.Size);
 
             int numberOfTrees = 250;
             int nodesPrTree = 200000;

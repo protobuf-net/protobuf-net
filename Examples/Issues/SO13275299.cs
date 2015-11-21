@@ -1,4 +1,5 @@
-﻿using NUnit.Framework;
+﻿#if !COREFX
+using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
@@ -87,3 +88,4 @@ namespace Examples.Issues
 
 
 }
+#endif

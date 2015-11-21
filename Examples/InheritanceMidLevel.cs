@@ -54,17 +54,23 @@ namespace Examples
             CheckChild(test.Child, clone.Child);
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestRoot()
         {
-            IMLTestRoot test = new IMLTestRoot {Root = CreateChild()},
-                        clone = Serializer.DeepClone(test);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                IMLTestRoot test = new IMLTestRoot { Root = CreateChild() },
+                            clone = Serializer.DeepClone(test);
+            });
         }
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestRoots()
         {
-            IMLTestRoots test = new IMLTestRoots { Roots = {CreateChild()} },
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                IMLTestRoots test = new IMLTestRoots { Roots = { CreateChild() } },
                         clone = Serializer.DeepClone(test);
+            });
         }
 
         [Test]
@@ -163,18 +169,23 @@ namespace Examples
             Assert.AreEqual(1, clone.Length);
             CheckParent(parents[0], clone[0]);
         }
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestCloneAsRootArray()
         {
-            IMLRoot[] roots = { CreateChild() };
-            var clone = Serializer.DeepClone(roots);
-
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                IMLRoot[] roots = { CreateChild() };
+                var clone = Serializer.DeepClone(roots);
+            });
         }
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Test]
         public void TestCloneAsRootList()
         {
-            var roots = new List<IMLRoot> { CreateChild() };
-            var clone = Serializer.DeepClone(roots);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                var roots = new List<IMLRoot> { CreateChild() };
+                var clone = Serializer.DeepClone(roots);
+            });
         }
 
 

@@ -130,11 +130,14 @@ namespace Examples
 
             Assert.AreEqual(new TimeSpan(4, 0, 0), ts.HowLong);
         }
-        [Test, ExpectedException(typeof(ProtoException))]
+        [Test]
         public void TestInvalidTimeUnit() {
-            TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
+            Program.ExpectFailure<ProtoException>(() =>
+            {
+                TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
                     0x08, 0x08, // tag 1; value: 4 (zigzag)
                     0x10, 0x4A); // tag 2; unit: invalid
+            });
         }
         [Test]
         public void TestValidMinMax()
@@ -151,12 +154,15 @@ namespace Examples
 
             Assert.AreEqual(TimeSpan.MinValue, ts.HowLong);
         }
-        [Test, ExpectedException(typeof(ProtoException))]
+        [Test]
         public void TestInvalidMinMax()
         {
-            TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
-                    0x08, 0x03, // tag 1; invalid
-                    0x10, 0x0F); // tag 2; min/max
+            Program.ExpectFailure<ProtoException>(() =>
+            {
+                TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
+                        0x08, 0x03, // tag 1; invalid
+                        0x10, 0x0F); // tag 2; min/max
+            });
         }
 
         static DateTime TestDateTime(DateTime value, out int len) {

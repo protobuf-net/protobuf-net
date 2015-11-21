@@ -81,9 +81,9 @@ namespace Examples.Issues
                     stream.Position = 0;
                     clone = (Web2PdfTest) model.Deserialize(stream, null, typeof (Web2PdfTest));
                 }
-                if (clone.Prop1 != web2PdfTestEntity.Prop1) throw new DataException("Prop1");
-                if (clone.Prop2 != web2PdfTestEntity.Prop2) throw new DataException("Prop2");
-                if (clone.Prop3 != web2PdfTestEntity.Prop3) throw new DataException("Prop3");
+                if (clone.Prop1 != web2PdfTestEntity.Prop1) throw new InvalidDataException("Prop1");
+                if (clone.Prop2 != web2PdfTestEntity.Prop2) throw new InvalidDataException("Prop2");
+                if (clone.Prop3 != web2PdfTestEntity.Prop3) throw new InvalidDataException("Prop3");
                 Interlocked.Increment(ref success);
             } catch (Exception ex)
             {

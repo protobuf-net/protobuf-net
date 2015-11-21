@@ -149,32 +149,52 @@ namespace Examples
             }
         }
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void TestMultidimArray()
         {
-            MultiDim md = new MultiDim { Values = new int[1, 2] { { 3, 4 } } };
-            Serializer.DeepClone(md);
+            try {
+                MultiDim md = new MultiDim { Values = new int[1, 2] { { 3, 4 } } };
+                Serializer.DeepClone(md);
+                Assert.Fail();
+            }
+            catch (NotSupportedException) { }
         }
 
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void TestArrayArray()
         {
-            Serializer.DeepClone(new ArrayArray());
+            try {
+                Serializer.DeepClone(new ArrayArray());
+                Assert.Fail();
+            }
+            catch (NotSupportedException) { }
         }
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void TestArrayList()
         {
-            Serializer.DeepClone(new ArrayList());
+            try {
+                Serializer.DeepClone(new ArrayList());
+                Assert.Fail();
+            }
+            catch (NotSupportedException) { }
         }
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void TestListArray()
         {
-            Serializer.DeepClone(new ListArray());
+            try {
+                Serializer.DeepClone(new ListArray());
+                Assert.Fail();
+            }
+            catch (NotSupportedException) { }
         }
-        [Test, ExpectedException(typeof(NotSupportedException))]
+        [Test]
         public void TestListList()
         {
-            Serializer.DeepClone(new ListList());
+            try {
+                Serializer.DeepClone(new ListList());
+                Assert.Fail();
+            }
+            catch (NotSupportedException) { }
         }
 
 
@@ -221,13 +241,18 @@ namespace Examples
             VerifyNodeTree(parent);
         }
 
-        [Test, ExpectedException(typeof(ProtoException))]
+        [Test]
         public void TestDuplicateRecursive()
         {
-            Node child = new Node { Key = 17 };
-            Node parent = new Node { Nodes = new[] { child, child, child } };
-            child.Nodes = new[] { parent };
-            VerifyNodeTree(parent);
+            try
+            {
+                Node child = new Node { Key = 17 };
+                Node parent = new Node { Nodes = new[] { child, child, child } };
+                child.Nodes = new[] { parent };
+                VerifyNodeTree(parent);
+                Assert.Fail();
+            }
+            catch (ProtoException) { }
         }
 
         [Test]

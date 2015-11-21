@@ -12,22 +12,22 @@ namespace Examples
     [TestFixture]
     public class ProtoGeneration
     {
-        [Test]
-        public void GetProtoTest1()
-        {
-            var model = TypeModel.Create();
-            model.UseImplicitZeroDefaults = false;
+//        [Test]
+//        public void GetProtoTest1()
+//        {
+//            var model = TypeModel.Create();
+//            model.UseImplicitZeroDefaults = false;
 
-            string proto = model.GetSchema(typeof(Test1));
+//            string proto = model.GetSchema(typeof(Test1));
 
-            Assert.AreEqual(
-@"package Examples.SimpleStream;
+//            Assert.AreEqual(
+//@"package Examples.SimpleStream;
 
-message Test1 {
-   required int32 a = 1;
-}
-", proto);
-        }
+//message Test1 {
+//   required int32 a = 1;
+//}
+//", proto);
+//        }
 
         [Test]
         public void GetProtoTest2()
@@ -236,13 +236,16 @@ message KeyValuePair_String_Cat {
         [ProtoContract] public class Cat : Animal {}
 
 
-        [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = @"The type specified is not a contract-type
-Parameter name: type")]
+        [Test]
         public void ProtoForNonContractTypeShouldThrowException()
         {
-            var model = TypeModel.Create();
-            model.AutoAddMissingTypes = false;
-            model.GetSchema(typeof(ProtoGenerationTypes.BrokenProto.Type2));
+            Program.ExpectFailure<ArgumentException>(() =>
+            {
+                var model = TypeModel.Create();
+                model.AutoAddMissingTypes = false;
+                model.GetSchema(typeof(ProtoGenerationTypes.BrokenProto.Type2));
+            }, @"The type specified is not a contract-type
+Parameter name: type");
         }
 
         [Test]

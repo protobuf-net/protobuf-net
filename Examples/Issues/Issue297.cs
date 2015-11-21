@@ -45,8 +45,7 @@ namespace Examples.Issues
             Assert.AreEqual(3, children[1].Value);
         }
 
-        [TestFixtureSetUp]
-        public void Init()
+        static Issue297()
         {
             RuntimeTypeModel.Default.Add(typeof(Node<int>), true).AddSubType(4, typeof(Node<int>.RootNode));
             RuntimeTypeModel.Default.Add(typeof(Node<MyDto>), true).AddSubType(4, typeof(Node<MyDto>.RootNode));
@@ -85,36 +84,39 @@ namespace Examples.Issues
             Assert.AreEqual(3, children[1].Value.Value);
         }
 
-        [Test, ExpectedException(typeof(NotSupportedException), ExpectedMessage = "Nested or jagged lists and arrays are not supported"), Ignore("Needs attention")]
+        [IgnoreTest("Needs attention")]
         public void TestListMyDTO()
         {
-            Node<List<MyDto>> tree = new Node<List<MyDto>>.RootNode("abc", new List<MyDto> { new MyDto { Value = 1 }}), clone;
-            var children = tree.getChildren();
-            children.Add(new Node<List<MyDto>>("abc/def", new List<MyDto> { new MyDto { Value = 2 } }));
-            children.Add(new Node<List<MyDto>>("abc/ghi", new List<MyDto> { new MyDto { Value = 3 } }));
-            Assert.AreEqual(2, tree.getChildren().Count);
-
-            using (var ms = new MemoryStream())
+            Program.ExpectFailure<NullReferenceException>(() =>
             {
-                Serializer.Serialize(ms, tree);
-                Assert.Greater(1, 0); // I always get these args the wrong way around, so always check!
-                Assert.Greater(ms.Length, 0, "stream length");
-                ms.Position = 0;
-                clone = Serializer.Deserialize<Node<List<MyDto>>>(ms);
-            }
+                Node<List<MyDto>> tree = new Node<List<MyDto>>.RootNode("abc", new List<MyDto> { new MyDto { Value = 1 } }), clone;
+                var children = tree.getChildren();
+                children.Add(new Node<List<MyDto>>("abc/def", new List<MyDto> { new MyDto { Value = 2 } }));
+                children.Add(new Node<List<MyDto>>("abc/ghi", new List<MyDto> { new MyDto { Value = 3 } }));
+                Assert.AreEqual(2, tree.getChildren().Count);
 
-            Assert.AreEqual("abc", clone.Key);
-            Assert.AreEqual(1, clone.Value.Single().Value);
-            children = clone.getChildren();
-            Assert.AreEqual(2, children.Count);
+                using (var ms = new MemoryStream())
+                {
+                    Serializer.Serialize(ms, tree);
+                    Assert.Greater(1, 0); // I always get these args the wrong way around, so always check!
+                    Assert.Greater(ms.Length, 0, "stream length");
+                    ms.Position = 0;
+                    clone = Serializer.Deserialize<Node<List<MyDto>>>(ms);
+                }
 
-            Assert.IsFalse(children[0].HasChildren);
-            Assert.AreEqual("abc/def", children[0].Key);
-            Assert.AreEqual(2, children[0].Value.Single().Value);
+                Assert.AreEqual("abc", clone.Key);
+                Assert.AreEqual(1, clone.Value.Single().Value);
+                children = clone.getChildren();
+                Assert.AreEqual(2, children.Count);
 
-            Assert.IsFalse(children[1].HasChildren);
-            Assert.AreEqual("abc/ghi", children[1].Key);
-            Assert.AreEqual(3, children[1].Value.Single().Value);
+                Assert.IsFalse(children[0].HasChildren);
+                Assert.AreEqual("abc/def", children[0].Key);
+                Assert.AreEqual(2, children[0].Value.Single().Value);
+
+                Assert.IsFalse(children[1].HasChildren);
+                Assert.AreEqual("abc/ghi", children[1].Key);
+                Assert.AreEqual(3, children[1].Value.Single().Value);
+            }, "Nested or jagged lists and arrays are not supported");
         }
 
         [Test]
@@ -194,7 +196,7 @@ namespace Examples.Issues
             private bool Add(Node<T> theNewChild)
             {
                 if (Contains(theNewChild))
-                    throw new DuplicateKeyException(string.Format("Duplicate key: '{0}'", theNewChild.key));
+                    throw new ArgumentException(string.Format("Duplicate key: '{0}'", theNewChild.key));
 
                 if (!IsParentOf(theNewChild))
                     return false;

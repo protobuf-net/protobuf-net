@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.24709.0
+VisualStudioVersion = 14.0.24606.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "protobuf_net", "protobuf-net\protobuf_net.xproj", "{78359FF6-546B-4940-894F-C0B27D7CEEFB}"
 EndProject
@@ -66,6 +66,77 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThirdParty", "ThirdParty", 
 		protobuf-net.unittest\ThirdParty\NHibernateProxies.cs = protobuf-net.unittest\ThirdParty\NHibernateProxies.cs
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{C158F10D-3577-47FA-94BC-AB085DFFAFD2}"
+	ProjectSection(SolutionItems) = preProject
+		Examples\Arrays.cs = Examples\Arrays.cs
+		Examples\AutoFields.cs = Examples\AutoFields.cs
+		Examples\AutoTuple.cs = Examples\AutoTuple.cs
+		Examples\Callbacks.cs = Examples\Callbacks.cs
+		Examples\ComparisonToNDCS.cs = Examples\ComparisonToNDCS.cs
+		Examples\DataMemberOffset.cs = Examples\DataMemberOffset.cs
+		Examples\DetectMissing.cs = Examples\DetectMissing.cs
+		Examples\DictionaryTests.cs = Examples\DictionaryTests.cs
+		Examples\DynamicIFormatter.cs = Examples\DynamicIFormatter.cs
+		Examples\EnumTests.cs = Examples\EnumTests.cs
+		Examples\Examples.csproj = Examples\Examples.csproj
+		Examples\ExtendedTimeTests.cs = Examples\ExtendedTimeTests.cs
+		Examples\Extensibility.cs = Examples\Extensibility.cs
+		Examples\Fields.cs = Examples\Fields.cs
+		Examples\GuidTests.cs = Examples\GuidTests.cs
+		Examples\ImmutableCollections.cs = Examples\ImmutableCollections.cs
+		Examples\Inheritance.cs = Examples\Inheritance.cs
+		Examples\InheritanceMidLevel.cs = Examples\InheritanceMidLevel.cs
+		Examples\InternerTests.cs = Examples\InternerTests.cs
+		Examples\ItemsWithLengthPrefix.cs = Examples\ItemsWithLengthPrefix.cs
+		Examples\ListAsInterfaceTests.cs = Examples\ListAsInterfaceTests.cs
+		Examples\ListsWithInheritance.cs = Examples\ListsWithInheritance.cs
+		Examples\ListTests.cs = Examples\ListTests.cs
+		Examples\memcached.cs = Examples\memcached.cs
+		Examples\MultiTypesWithLengthPrefix.cs = Examples\MultiTypesWithLengthPrefix.cs
+		Examples\NetObjectOptions.cs = Examples\NetObjectOptions.cs
+		Examples\NonGeneric.cs = Examples\NonGeneric.cs
+		Examples\NonPublic_Compile.cs = Examples\NonPublic_Compile.cs
+		Examples\NonSeekableStreams.cs = Examples\NonSeekableStreams.cs
+		Examples\OldProgram.cs = Examples\OldProgram.cs
+		Examples\OptionalData.cs = Examples\OptionalData.cs
+		Examples\packages.config = Examples\packages.config
+		Examples\Parseable.cs = Examples\Parseable.cs
+		Examples\PartialClasses.cs = Examples\PartialClasses.cs
+		Examples\person.cs = Examples\person.cs
+		Examples\PEVerify.cs = Examples\PEVerify.cs
+		Examples\Pipeline.cs = Examples\Pipeline.cs
+		Examples\Primatives.cs = Examples\Primatives.cs
+		Examples\PrimativeSerializationTests.cs = Examples\PrimativeSerializationTests.cs
+		Examples\Program.cs = Examples\Program.cs
+		Examples\ProtoGeneration.cs = Examples\ProtoGeneration.cs
+		Examples\Recursion.cs = Examples\Recursion.cs
+		Examples\Remoting.cs = Examples\Remoting.cs
+		Examples\Rpc.cs = Examples\Rpc.cs
+		Examples\RpcTest.cs = Examples\RpcTest.cs
+		Examples\ShadowSetters.cs = Examples\ShadowSetters.cs
+		Examples\StupidlyComplexModel.cs = Examples\StupidlyComplexModel.cs
+		Examples\TagInference.cs = Examples\TagInference.cs
+		Examples\TraceError.cs = Examples\TraceError.cs
+		Examples\Tuples.cs = Examples\Tuples.cs
+		Examples\Type.cs = Examples\Type.cs
+		Examples\TypeFactory.cs = Examples\TypeFactory.cs
+		Examples\UnwrappedOuters.cs = Examples\UnwrappedOuters.cs
+		Examples\ValueWrapper.cs = Examples\ValueWrapper.cs
+		Examples\WcfProtoBridge.cs = Examples\WcfProtoBridge.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DesignIdeas", "DesignIdeas", "{5BA84B84-FCCB-427C-BDEF-1FEE09341E69}"
+	ProjectSection(SolutionItems) = preProject
+		Examples\DesignIdeas\Inheritance.cs = Examples\DesignIdeas\Inheritance.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NWind", "NWind", "{3B4E7411-567A-4378-8378-087676FBDB6B}"
+	ProjectSection(SolutionItems) = preProject
+		Examples\NWind\CompatDb.cs = Examples\NWind\CompatDb.cs
+		Examples\NWind\DataContext.cs = Examples\NWind\DataContext.cs
+		Examples\NWind\NWind.cs = Examples\NWind\NWind.cs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -90,5 +161,7 @@ Global
 		{19031929-7E15-4063-AC2D-85AD83C59549} = {2CA03836-E899-4E97-BD0C-BBB31F12CB2E}
 		{CBA373BE-75E5-4246-B795-D0E3F64684B7} = {2CA03836-E899-4E97-BD0C-BBB31F12CB2E}
 		{59288511-676B-412B-9A8D-3AAA3676E375} = {2CA03836-E899-4E97-BD0C-BBB31F12CB2E}
+		{5BA84B84-FCCB-427C-BDEF-1FEE09341E69} = {C158F10D-3577-47FA-94BC-AB085DFFAFD2}
+		{3B4E7411-567A-4378-8378-087676FBDB6B} = {C158F10D-3577-47FA-94BC-AB085DFFAFD2}
 	EndGlobalSection
 EndGlobal

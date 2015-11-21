@@ -47,24 +47,26 @@ namespace Examples.Issues
     [TestFixture]
     public class Issue185
     {
-        [Test, ExpectedException(typeof(ArgumentException), ExpectedMessage = @"The supplied default implementation cannot be created: Examples.Issues.O
-Parameter name: constructType")]
+        [Test]
         public void ExecuteWithConstructType()
         {
-            var m = RuntimeTypeModel.Create();
-            m.AutoCompile = false;
-            m.Add(typeof(C), false).SetSurrogate(typeof(CS));
-            m.Add(typeof(O), false).SetSurrogate(typeof(OS));
-            m.Add(typeof(I), false).ConstructType = typeof(O);
+            Program.ExpectFailure<ArgumentException>(() =>
+            {
+                var m = RuntimeTypeModel.Create();
+                m.AutoCompile = false;
+                m.Add(typeof(C), false).SetSurrogate(typeof(CS));
+                m.Add(typeof(O), false).SetSurrogate(typeof(OS));
+                m.Add(typeof(I), false).ConstructType = typeof(O);
 
-            var c = new C();
-            c.PopulateRun();
+                var c = new C();
+                c.PopulateRun();
 
-            Test(m, c, "Runtime");
-            m.CompileInPlace();
-            Test(m, c, "CompileInPlace");
-            Test(m.Compile(), c, "Compile");
-
+                Test(m, c, "Runtime");
+                m.CompileInPlace();
+                Test(m, c, "CompileInPlace");
+                Test(m.Compile(), c, "Compile");
+            }, @"The supplied default implementation cannot be created: Examples.Issues.O
+Parameter name: constructType");
         }
         static void Test(TypeModel model, C c, string caption)
         {

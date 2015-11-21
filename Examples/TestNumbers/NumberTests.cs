@@ -183,16 +183,22 @@ namespace Examples.TestNumbers
             Assert.AreEqual(4294967295, tc.Foo);
         }
 
-        [Test, ExpectedException(typeof(EndOfStreamException))]
+        [Test]
         public void TestEOF()
         {
-            Program.Build<ZigZagInt32>(0x08); // but no payload for field 1
+            Program.ExpectFailure<EndOfStreamException>(() =>
+            {
+                Program.Build<ZigZagInt32>(0x08); // but no payload for field 1
+            });
         }
 
-        [Test, ExpectedException(typeof(OverflowException))]
+        [Test]
         public void TestOverflow()
         {
-            Program.Build<ZigZagInt32>(0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
+            Program.ExpectFailure<OverflowException>(() =>
+            {
+                Program.Build<ZigZagInt32>(0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
+            });
         }
 
         [Test]

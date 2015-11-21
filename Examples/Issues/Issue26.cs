@@ -46,11 +46,14 @@ namespace Examples.Issues
             Assert.AreEqual(4, clone.Stations[1].Ticket);
         }
 
-        [Test, ExpectedException(typeof(ProtoException), ExpectedMessage = "No parameterless constructor found for WithoutParameterlessCtor", MatchType=MessageMatch.Exact)]
+        [Test]
         public void CheckMeaningfulErrorIfNoParameterlessCtor()
         {
-            WithoutParameterlessCtor obj = new WithoutParameterlessCtor(123);
-            Serializer.DeepClone(obj);
+            Program.ExpectFailure<ProtoException>(() =>
+            {
+                WithoutParameterlessCtor obj = new WithoutParameterlessCtor(123);
+                Serializer.DeepClone(obj);
+            }, "No parameterless constructor found for WithoutParameterlessCtor");
         }
 
         [Test]

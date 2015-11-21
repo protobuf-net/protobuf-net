@@ -4,6 +4,7 @@ using System;
 using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using Examples;
 
 namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
 {
@@ -37,7 +38,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
     }
 
     [TestFixture]
-    public class ArrayOfBaseClassTests : AssertionHelper
+    public class ArrayOfBaseClassTests
     {
         [Test] // needs dynamic handling of list itself
         public void TestObjectArrayContainerClass()
@@ -46,20 +47,20 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
             var container = new ObjectArrayContainerClass();
             container.ObjectArray = this.CreateArray();
             var cloned = (ObjectArrayContainerClass)model.DeepClone(container);
-            Expect(cloned.ObjectArray, Is.Not.Null);
+            Assert.IsNotNull(cloned.ObjectArray);
 
             foreach (var obj in cloned.ObjectArray)
             {
-                Expect(obj as Base, Is.Not.Null);
+                Assert.IsNotNull(obj as Base);
             }
 
-            Expect(cloned.ObjectArray[1] as Derived, Is.Not.Null);
+            Assert.IsNotNull(cloned.ObjectArray[1] as Derived);
             
             // this would be nice...
             //Expect(cloned.ObjectArray.GetType(), Is.EqualTo(typeof(Base[])));
 
             // but this is what we currently **expect**
-            Expect(cloned.ObjectArray.GetType(), Is.EqualTo(typeof(object[])));
+            Assert.AreEqual(typeof(object[]), cloned.ObjectArray.GetType());
         }
 
         [Test]
@@ -96,23 +97,26 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
             }
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Conflicting item/add type")]// needs dynamic handling of list itself
+        [Test]// needs dynamic handling of list itself
         public void TestBaseClassArrayContainerClass()
         {
-            var model = CreateModel();
-            var container = new BaseClassArrayContainerClass();
-            container.BaseArray = this.CreateArray();
-            var cloned = (BaseClassArrayContainerClass)model.DeepClone(container);
-            Expect(cloned.BaseArray, Is.Not.Null);
-
-            foreach (var obj in cloned.BaseArray)
+            Program.ExpectFailure<InvalidOperationException>(() =>
             {
-                Expect(obj as Base, Is.Not.Null);
-            }
-            Expect(cloned.BaseArray[1] as Derived, Is.Not.Null);
+                var model = CreateModel();
+                var container = new BaseClassArrayContainerClass();
+                container.BaseArray = this.CreateArray();
+                var cloned = (BaseClassArrayContainerClass)model.DeepClone(container);
+                Assert.IsNotNull(cloned.BaseArray);
 
-            // this would be nice...
-            Expect(cloned.BaseArray.GetType(), Is.EqualTo(typeof(Base[])), "array type");
+                foreach (var obj in cloned.BaseArray)
+                {
+                    Assert.IsNotNull(obj as Base);
+                }
+                Assert.IsNotNull(cloned.BaseArray[1] as Derived);
+
+                // this would be nice...
+                Assert.AreEqual(typeof(Base[]), cloned.BaseArray.GetType(), "array type");
+            }, "Conflicting item/add type");
         }
 
         RuntimeTypeModel CreateModel()

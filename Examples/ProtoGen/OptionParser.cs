@@ -1,4 +1,4 @@
-﻿
+﻿#if !NO_CODEGEN
 using NUnit.Framework;
 using ProtoBuf.CodeGenerator;
 using System;
@@ -186,3 +186,4 @@ namespace Examples.ProtoGen
         }
     }
 }
+#endif

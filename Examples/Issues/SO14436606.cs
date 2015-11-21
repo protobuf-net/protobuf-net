@@ -224,12 +224,15 @@ namespace Examples.Issues
             Assert.AreSame(clone.Items[0], clone.Items[1]);
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "AsReference cannot be used with value-types; please see http://stackoverflow.com/q/14436606/")]
+        [Test]
         public void AreObjectReferencesSameAfterDeserialization()
         {
-            var model = TypeModel.Create();
-            model.AutoCompile = false;
-            ExecuteAllModes(model);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                var model = TypeModel.Create();
+                model.AutoCompile = false;
+                ExecuteAllModes(model);
+            }, "AsReference cannot be used with value-types; please see http://stackoverflow.com/q/14436606/");
         }
 
         static B CreateB()

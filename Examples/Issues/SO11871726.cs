@@ -14,13 +14,15 @@ namespace Examples.Issues
             var model = TypeModel.Create();
             Assert.IsInstanceOfType(typeof(Foo), model.DeepClone(new Foo()));
         }
-        [Test, ExpectedException(typeof(InvalidOperationException),
-            ExpectedMessage = "Type is not expected, and no contract can be inferred: Examples.Issues.SO11871726+Foo")]
+        [Test]
         public void ExecuteWithAutoAddProtoContractTypesOnlyShouldFail()
         {
-            var model = TypeModel.Create();
-            model.AutoAddProtoContractTypesOnly = true;
-            Assert.IsInstanceOfType(typeof(Foo), model.DeepClone(new Foo()));
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                var model = TypeModel.Create();
+                model.AutoAddProtoContractTypesOnly = true;
+                Assert.IsInstanceOfType(typeof(Foo), model.DeepClone(new Foo()));
+            }, "Type is not expected, and no contract can be inferred: Examples.Issues.SO11871726+Foo");
         }
 
         [DataContract]

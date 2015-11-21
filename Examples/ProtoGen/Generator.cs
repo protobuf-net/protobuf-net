@@ -1,4 +1,4 @@
-﻿
+﻿#if !NO_CODEGEN
 using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
@@ -317,3 +317,4 @@ namespace Examples.ProtoGen
         }
     }
 }
+#endif

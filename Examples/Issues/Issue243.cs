@@ -40,24 +40,33 @@ namespace Examples.Issues
             model.Add(typeof(NullableSequences), true);
             return model;
         }
-        [Test, ExpectedException(typeof(NullReferenceException))]
+        [Test]
         public void ExecuteWithNullRuntime()
         {
-            var model = GetModel();
-            RunTestNull(model, "Runtime");
+            Program.ExpectFailure<NullReferenceException>(() =>
+            {
+                var model = GetModel();
+                RunTestNull(model, "Runtime");
+            });
         }
-        [Test, ExpectedException(typeof(NullReferenceException))]
+        [Test]
         public void ExecuteWithNullCompileInPlace()
         {
-            var model = GetModel();
-            model.CompileInPlace();
-            RunTestNull(model, "CompileInPlace");
+            Program.ExpectFailure<NullReferenceException>(() =>
+            {
+                var model = GetModel();
+                model.CompileInPlace();
+                RunTestNull(model, "CompileInPlace");
+            });
         }
-        [Test, ExpectedException(typeof(NullReferenceException))]
+        [Test]
         public void ExecuteWithNullCompile()
         {
-            var model = GetModel();
-            RunTestNull(model.Compile(), "Compile");
+            Program.ExpectFailure<NullReferenceException>(() =>
+            {
+                var model = GetModel();
+                RunTestNull(model.Compile(), "Compile");
+            });
         }
         [Test]
         public void CompilesCleanly()

@@ -9,7 +9,7 @@
     "test": "xunit.runner.dnx"
   },
   "compilationOptions": {
-    "define": [ "XUNIT", "NO_INTERNAL_CONTEXT", "NO_NHIBERNATE", "FEAT_COMPILER" ],
+    "define": [ "XUNIT", "NO_INTERNAL_CONTEXT", "NO_NHIBERNATE", "FEAT_COMPILER", "NO_ENYIM", "NO_CODEGEN", "NO_WCF", "IMPORT_TESTS" ],
     "strongName": true,
     "keyFile": "../ProtoBuf.snk"
   },
@@ -21,12 +21,28 @@
   "compile": [
     "../protobuf-net.unittest/**/*.cs",
     "../FX11/*.cs",
-    "../SampleDTO/*.cs"
+    "../SampleDTO/*.cs",
+    "../Examples/**/*.cs"
+  ],
+  "exclude": [
+    "*.dll",
+    "AssemblyInfo.cs",
+    "Settings.Designer.cs"
   ],
   "frameworks": {
     "dnx451": {
       "frameworkAssemblies": {
-        "System.Runtime.Serialization": "4.0.0.0"
+        "System.Runtime.Serialization": "4.0.0.0",
+        "System.Data": "4.0.0.0",
+        "System.Data.Linq": "4.0.0.0",
+        "System.ServiceModel": "4.0.0.0",
+        "System.Drawing": "4.0.0.0",
+        "System.Web.Extensions": "4.0.0.0",
+        "PresentationCore": "4.0.0.0",
+        "WindowsBase": "4.0.0.0"
+      },
+      "dependencies": {
+        "System.Collections.Immutable": "1.1.38-*"
       }
     },
     "dnxcore50": {
@@ -40,7 +56,12 @@
         "System.Runtime": "4.0.21-*",
         "System.Threading": "4.0.11-*",
         "System.Runtime.Serialization.Primitives": "4.0.11-*",
-        "System.Runtime.Serialization.Xml": "4.0.11-*"
+        "System.Runtime.Serialization.Xml": "4.0.11-*",
+        "System.Data.SqlClient": "4.0.0-*",
+        "System.Data.Common": "4.0.1-*",
+        "System.Collections.Immutable": "1.1.38-*",
+        "System.ComponentModel": "4.0.1-*",
+        "System.Threading.Tasks.Parallel": "4.0.1-*"
       }
     }
   }

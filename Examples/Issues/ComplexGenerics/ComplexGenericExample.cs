@@ -1,4 +1,5 @@
-﻿namespace Examples.Issues.ComplexGenerics
+﻿#if !COREFX
+namespace Examples.Issues.ComplexGenerics
 {
 /* Written in response to a question about how to handle multiple "packet" subclasses;
  * may as well keep it as a test...
@@ -157,3 +158,4 @@
     {
     }
 }
+#endif

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿#if !NO_WCF
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -76,3 +77,4 @@ namespace Examples
     }
 }
 //#endif
+#endif

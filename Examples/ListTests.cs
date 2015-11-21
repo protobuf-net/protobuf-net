@@ -534,10 +534,13 @@ namespace Examples
             CheckLists(arr, clone);
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Only simple data-types can use packed encoding")]
+        [Test]
         public void TestPackedArrayString()
         {
-            Serializer.DeepClone(new ArrayOfString());
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                Serializer.DeepClone(new ArrayOfString());
+            }, "Only simple data-types can use packed encoding");
         }
         [ProtoContract]
         class ArrayOfString
@@ -545,10 +548,13 @@ namespace Examples
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
             public string[] Items { get; set; }
         }
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Only simple data-types can use packed encoding")]
+        [Test]
         public void TestPackedListDateTime()
         {
-            Serializer.DeepClone(new ListOfDateTime());
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                Serializer.DeepClone(new ListOfDateTime());
+            }, "Only simple data-types can use packed encoding");
         }
         [ProtoContract]
         class ListOfDateTime
@@ -556,10 +562,12 @@ namespace Examples
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
             public List<DateTime> Items { get; set; }
         }
-        [Test, ExpectedException(typeof(InvalidOperationException), ExpectedMessage = "Only simple data-types can use packed encoding")]
+        [Test]
         public void TestPackedCustomOfSubMessage()
         {
+            Program.ExpectFailure<InvalidOperationException>(() => { 
             Serializer.DeepClone(new CustomOfSubMessage());
+                }, "Only simple data-types can use packed encoding");
         }
 
         [ProtoContract]

@@ -20,22 +20,31 @@ namespace Examples.Issues
             public List<SomeType>[] List { get; set; }
         }
         // the important thing is that this error is identical to the one from SerializeWrappedDeepList
-        [Test, ExpectedException(typeof(NotSupportedException), ExpectedMessage = "Nested or jagged lists and arrays are not supported")]
+        [Test]
         public void SerializeDeepList()
         {
-            var list = new List<SomeType>[] { new List<SomeType> { new SomeType() }, new List<SomeType> { new SomeType() } };
-            Serializer.Serialize(Stream.Null, list);
+            Program.ExpectFailure<NotSupportedException>(() =>
+            {
+                var list = new List<SomeType>[] { new List<SomeType> { new SomeType() }, new List<SomeType> { new SomeType() } };
+                Serializer.Serialize(Stream.Null, list);
+            }, "Nested or jagged lists and arrays are not supported");
         }
-        [Test, ExpectedException(typeof(NotSupportedException), ExpectedMessage = "Nested or jagged lists and arrays are not supported")]
+        [Test]
         public void DeserializeDeepList()
         {
-            Serializer.Deserialize<List<SomeType>[]>(Stream.Null);
+            Program.ExpectFailure<NotSupportedException>(() =>
+            {
+                Serializer.Deserialize<List<SomeType>[]>(Stream.Null);
+            }, "Nested or jagged lists and arrays are not supported");
         }
-        [Test, ExpectedException(typeof(NotSupportedException), ExpectedMessage = "Nested or jagged lists and arrays are not supported")]
+        [Test]
         public void SerializeWrappedDeepList()
         {
-            var wrapped = new Wrapper();
-            var clone = Serializer.DeepClone(wrapped);
+            Program.ExpectFailure<NotSupportedException>(() =>
+            {
+                var wrapped = new Wrapper();
+                var clone = Serializer.DeepClone(wrapped);
+            }, "Nested or jagged lists and arrays are not supported");
         }
 
     }
