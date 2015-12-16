@@ -7,8 +7,19 @@ using NUnit.Framework;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
+#if !XUNIT
+namespace NUnit.Framework
+{
+    public sealed class IgnoreTestAttribute : IgnoreAttribute
+    {
+        public IgnoreTestAttribute(string reason) : base(reason) { }
+    }
+}
+#endif
+
 namespace Examples.Issues
 {
+
     [TestFixture]
     public class Issue297
     {
