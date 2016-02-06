@@ -272,7 +272,7 @@ namespace ProtoBuf
         /// (use the <see cref="ListItemTag"/> tag to emulate the implicit behavior
         /// when serializing a list/array). When a tag is
         /// specified, any records with different tags are silently omitted. The
-        /// tag is ignored. The tag is ignores for fixed-length prefixes.
+        /// tag is ignored. The tag is ignored for fixed-length prefixes.
         /// </summary>
         /// <typeparam name="T">The type of object to deserialize.</typeparam>
         /// <param name="source">The binary stream containing the serialized records.</param>
