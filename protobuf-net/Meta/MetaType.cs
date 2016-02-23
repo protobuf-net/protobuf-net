@@ -1444,7 +1444,7 @@ namespace ProtoBuf.Meta
             {
                 if (type.GetArrayRank() != 1)
                 {
-                    throw new NotSupportedException("Multi-dimension arrays are supported");
+                    throw new NotSupportedException("Multi-dimensional arrays are not supported");
                 }
                 itemType = type.GetElementType();
                 if (itemType == model.MapType(typeof(byte)))
