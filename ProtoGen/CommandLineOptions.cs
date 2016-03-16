@@ -55,6 +55,7 @@ namespace ProtoBuf.CodeGenerator
         private string template = TemplateCSharp, outPath = "", defaultNamespace;
         private bool showLogo = true, showHelp, writeErrorsToFile;
         private readonly List<string> inPaths = new List<string>();
+		private readonly List<string> importPaths = new List<string>();
         private readonly List<string> args = new List<string>();
 
         private int messageCount;
@@ -64,10 +65,11 @@ namespace ProtoBuf.CodeGenerator
         public string DefaultNamespace { get { return defaultNamespace; } set { defaultNamespace = value; } }
         public bool ShowLogo { get { return showLogo; } set { showLogo = value; } }
         public string OutPath { get { return outPath; } set { outPath = value; } }
-        public bool ShowHelp { get { return showHelp; } set { showHelp = value; } }
+		public bool ShowHelp { get { return showHelp; } set { showHelp = value; } }
         private readonly XsltArgumentList xsltOptions = new XsltArgumentList();
         public XsltArgumentList XsltOptions { get { return xsltOptions; } }
         public List<string> InPaths { get { return inPaths; } }
+		public List<string> ImportPaths { get { return importPaths; } }
         public List<string> Arguments { get { return args; } }
 
         private readonly TextWriter messageOutput;
@@ -114,6 +116,10 @@ namespace ProtoBuf.CodeGenerator
                 {
                     options.InPaths.Add(arg.Substring(3).Trim());
                 }
+				else if (arg.StartsWith("-import:"))
+				{
+					options.ImportPaths.Add(arg.Substring(8).Trim());
+				}
                 else if (arg == "-writeErrors")
                 {
                     options.WriteErrorsToFile = true;
@@ -131,6 +137,13 @@ namespace ProtoBuf.CodeGenerator
             {
                 options.ShowHelp = (string) options.XsltOptions.GetParam("help", "") != "true";
             }
+			if (options.ImportPaths.Count != 0) 
+			{
+				foreach (string importPath in options.ImportPaths) 
+				{
+					options.Arguments.Add("--proto_path=" + importPath);
+				}
+			}
             return options;
 
         }
