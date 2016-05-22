@@ -2,66 +2,54 @@
   "version": "1.0.0-*",
   "description": "Tests.Dnx Class Library",
   "authors": [ "marc" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
-  "commands": {
-    "test": "xunit.runner.dnx"
-  },
-  "compilationOptions": {
+  "buildOptions": {
     "define": [ "XUNIT", "NO_INTERNAL_CONTEXT", "NO_NHIBERNATE", "FEAT_COMPILER", "NO_ENYIM", "NO_CODEGEN", "NO_WCF", "IMPORT_TESTS" ],
     "strongName": true,
-    "keyFile": "../ProtoBuf.snk"
+    "keyFile": "../ProtoBuf.snk",
+    "compile": {
+      "include": [
+        "../protobuf-net.unittest/**/*.cs",
+        "../FX11/*.cs",
+        "../SampleDTO/*.cs",
+        "../Examples/**/*.cs"
+      ],
+      "exclude": [
+        "*AssemblyInfo.cs",
+        "Settings.Designer.cs"
+      ]
+    }
   },
-  "dependencies": {
-    "protobuf-net": { "target": "project" },
-    "xunit": "2.1.0",
-    "xunit.runner.dnx": "2.1.0-*"
-  },
-  "compile": [
-    "../protobuf-net.unittest/**/*.cs",
-    "../FX11/*.cs",
-    "../SampleDTO/*.cs",
-    "../Examples/**/*.cs"
-  ],
-  "exclude": [
-    "*.dll",
-    "AssemblyInfo.cs",
-    "Settings.Designer.cs"
-  ],
+  "testRunner": "xunit",
   "frameworks": {
-    "dnx451": {
-      "frameworkAssemblies": {
-        "System.Runtime.Serialization": "4.0.0.0",
-        "System.Data": "4.0.0.0",
-        "System.Data.Linq": "4.0.0.0",
-        "System.ServiceModel": "4.0.0.0",
-        "System.Drawing": "4.0.0.0",
-        "System.Web.Extensions": "4.0.0.0",
-        "PresentationCore": "4.0.0.0",
-        "WindowsBase": "4.0.0.0"
-      },
-      "dependencies": {
-        "System.Collections.Immutable": "1.1.38-*"
-      }
-    },
-    "dnxcore50": {
-      "compilationOptions": {
+    "netcoreapp1.0": {
+      "imports": [ "dnxcore50", "portable-net45+win8" ],
+      "buildOptions": {
         "define": [ "COREFX" ]
       },
       "dependencies": {
-        "Microsoft.CSharp": "4.0.1-*",
-        "System.Collections": "4.0.11-*",
-        "System.Linq": "4.0.1-*",
-        "System.Runtime": "4.0.21-*",
-        "System.Threading": "4.0.11-*",
-        "System.Runtime.Serialization.Primitives": "4.0.11-*",
-        "System.Runtime.Serialization.Xml": "4.0.11-*",
-        "System.Data.SqlClient": "4.0.0-*",
-        "System.Data.Common": "4.0.1-*",
-        "System.Collections.Immutable": "1.1.38-*",
-        "System.ComponentModel": "4.0.1-*",
-        "System.Threading.Tasks.Parallel": "4.0.1-*"
+        "Microsoft.NETCore.App": {
+          "version": "1.0.0-rc2-3002702",
+          "type": "platform"
+        },
+        "protobuf-net": {
+          "target": "project",
+          "version": "2.1.0-alpha-2"
+        },
+        "System.Collections": "4.0.11-rc2-24027",
+        "System.Collections.NonGeneric": "4.0.1-rc2-24027",
+        "System.Linq": "4.1.0-rc2-24027",
+        "System.Runtime": "4.1.0-rc2-24027",
+        "System.Threading": "4.0.11-rc2-24027",
+        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-24027",
+        "System.Runtime.Serialization.Xml": "4.1.1-rc2-24027",
+        "System.Data.SqlClient": "4.1.0-rc2-24027",
+        "System.Data.Common": "4.0.1-rc2-24027",
+        "System.Diagnostics.TraceSource": "4.0.0-rc2-24027",
+        "System.Collections.Immutable": "1.2.0-rc2-24027",
+        "System.ComponentModel": "4.0.1-rc2-24027",
+        "System.Threading.Tasks.Parallel": "4.0.1-rc2-24027",
+        "xunit": "2.1.0",
+        "dotnet-test-xunit": "1.0.0-rc2-*"
       }
     }
   }

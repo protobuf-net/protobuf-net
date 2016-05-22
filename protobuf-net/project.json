@@ -1,22 +1,28 @@
 ﻿{
-  "version": "2.1.0-alpha",
+  "packOptions": {
+    "summary": "Provides simple access to fast and efficient \"Protocol Buffers\" serialization from .NET applications",
+    "owners": [ "Marc Gravell" ],
+    "tags": [ "binary", "serialization", "protocol", "buffers", "protobuf", "deserialization" ],
+    "projectUrl": "https://github.com/mgravell/protobuf-net",
+    "licenseUrl": "https://raw.githubusercontent.com/mgravell/protobuf-net/master/Licence.txt",
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/mgravell/protobuf-net"
+    }
+  },
+  "version": "2.1.0-alpha-2",
   "description": "Protocol Buffers is the name of the binary serialization format used by Google for much of their data communications. It is designed to be: small in size - efficient data storage (far smaller than xml) cheap to process - both at the client and server platform independent - portable between different programming architectures extensible - to add new data to old messages. protobuf-net is a .NET implementation of this, allowing you to serialize your .NET objects efficiently and easily. It is compatible with most of the .NET family, including .NET 2.0/3.0/3.5/4.0, .NET CF 2.0/3.5, Mono 2.x, Silverlight, etc.",
   "authors": [ "Marc Gravell" ],
-  "owners": [ "Marc Gravell" ],
-  "summary": "Provides simple access to fast and efficient \"Protocol Buffers\" serialization from .NET applications",
-  "tags": [ "binary", "serialization", "protocol", "buffers", "protobuf", "deserialization" ],
-  "projectUrl": "https://github.com/mgravell/protobuf-net",
-  "licenseUrl": "https://raw.githubusercontent.com/mgravell/protobuf-net/master/Licence.txt",
   "dependencies": {
   },
-  "compilationOptions": {
+  "buildOptions": {
     "keyFile": "../ProtoBuf.snk",
     "strongName": true,
     "warningsAsErrors": true
   },
   "frameworks": {
     "net40": {
-      "compilationOptions": {
+      "buildOptions": {
         "allowUnsafe": true,
         "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
       },
@@ -25,46 +31,29 @@
       }
     },
     "net45": {
-      "compilationOptions": {
+      "buildOptions": {
         "allowUnsafe": true,
         "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
       },
       "frameworkAssemblies": {
-        "System.Xml": "4.0.0.0"
-      },
-      "dependencies": {
-        "System.Reflection.Emit": "4.0.1-*"
+        "System.Xml": "4.0.0.0",
+        "System.Reflection.Emit": "4.0.0.0" 
       }
     },
-    "dnx451": {
-      "compilationOptions": {
-        "allowUnsafe": true,
-        "languageVersion": "csharp2",
-        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
-      },
-      "frameworkAssemblies": {
-        "System.Xml": "4.0.0.0"
-      },
-      "dependencies": {
-        "System.Reflection.Emit": "4.0.1-*"
-      }
-    },
-    "dotnet5.4": {
-      "compilationOptions": {
+    "netstandard1.5": {
+      "buildOptions": {
         "allowUnsafe": true,
         "define": [ "FEAT_COMPILER", "PLAT_XMLSERIALIZER", "PLAT_BINARYFORMATTER", "COREFX" ]
       },
       "dependencies": {
-        "Microsoft.CSharp": "4.0.1-*",
-        "System.Diagnostics.Tools": "4.0.1-*",
-        "System.IO": "4.0.11-*",
-        "System.Text.Encoding": "4.0.11-*",
-        "System.Reflection.Emit": "4.0.1-*",
-        "System.Reflection.Emit.ILGeneration": "4.0.1-*",
-        "System.Reflection.Emit.Lightweight": "4.0.1-*",
-        "System.Reflection.TypeExtensions": "4.1.0-*",
-        "System.Xml.XmlSerializer": "4.0.11-*",
-        "System.Runtime.Serialization.Primitives": "4.0.11-*"
+        "NETStandard.Library": "1.5.0-rc2-24027",
+        "Microsoft.CSharp": "4.0.1-rc2-24027",
+        "System.Reflection.Emit": "4.0.1-rc2-24027",
+        "System.Reflection.Emit.ILGeneration": "4.0.1-rc2-24027",
+        "System.Reflection.Emit.Lightweight": "4.0.1-rc2-24027",
+        "System.Reflection.TypeExtensions": "4.1.0-rc2-24027",
+        "System.Xml.XmlSerializer": "4.0.11-rc2-24027",
+        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-24027"
       }
     }
   }
