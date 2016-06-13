@@ -47,7 +47,7 @@ namespace ProtoBuf.CodeGenerator
             }
             catch (Exception ex)
             {
-                Console.Error.Write(ex.Message);
+                Console.Error.WriteLine(ex);
                 return 1;
             }
         }
