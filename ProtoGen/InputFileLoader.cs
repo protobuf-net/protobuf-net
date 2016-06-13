@@ -54,8 +54,34 @@ namespace ProtoBuf.CodeGenerator
             }
             return Path.Combine(Path.GetDirectoryName(loaderPath), path);   
         }
+
+		public static bool IsUnix
+		{
+			get
+			{
+				int p = (int)System.Environment.OSVersion.Platform;
+				return (p == 4 || p == 6 || p == 128);
+			}
+		}
+
         public static string GetProtocPath(out string folder)
         {
+			if (IsUnix)
+			{
+				const string
+					kLocalLocation = "/usr/local/bin/protoc",
+					kGlobalLocation = "/usr/bin/protoc";
+
+				folder = null;
+
+				if (File.Exists (kLocalLocation))
+				{
+					return kLocalLocation;
+				}
+
+				return kGlobalLocation;
+			}
+
             const string Name = "protoc.exe";
             string lazyPath = InputFileLoader.CombinePathFromAppRoot(Name);
             if (File.Exists(lazyPath))
