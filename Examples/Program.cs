@@ -127,7 +127,10 @@ namespace Examples
                 Assert.Fail("expected " + typeof(TException).Name);
             } catch(Exception ex)
             {
-                Assert.IsInstanceOfType(typeof(TException), ex);
+                if (!(ex is TException))
+                {
+                    Assert.IsInstanceOfType(typeof(TException), ex);
+                }
                 if (message != null) Assert.AreEqual(message, ex.Message);
             }
         }

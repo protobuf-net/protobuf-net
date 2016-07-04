@@ -21,7 +21,7 @@
         "../Examples/Issues/MissingBaseTypes.cs",
         "../Examples/Issues/SurrogateForObjectUsage.cs",
         //"../Examples/Issues/SO*.cs",
-        //"../Examples/Issues/Issue*.cs",
+        "../Examples/Issues/Issue*.cs",
         "../Examples/NWind/**/*.cs",
         "../Examples/Ppt/**/*.cs",
         "../Examples/Properties/**/*.cs",

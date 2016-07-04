@@ -59,7 +59,7 @@ namespace Examples.Issues
                 var model = TypeModel.Create();
                 model.Add(typeof(IList<int>), false).SetSurrogate(typeof(InnocentType));
                 model.CompileInPlace();
-            }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
+            }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
         }
         [Test]
         public void ListAsSurrogate()
@@ -69,7 +69,7 @@ namespace Examples.Issues
                 var model = TypeModel.Create();
                 model.Add(typeof(IMobileObject), false).SetSurrogate(typeof(MobileList<int>));
                 model.CompileInPlace();
-            }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
+            }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
         }
 
 

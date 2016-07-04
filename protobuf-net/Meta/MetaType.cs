@@ -1791,8 +1791,8 @@ namespace ProtoBuf.Meta
                         if(field.IsStatic && field.IsLiteral)
                         {
                             object enumVal;
-#if WINRT || PORTABLE || CF || FX11 || COREFX
-                            enumVal = field.GetValue(null);
+#if WINRT || PORTABLE || CF || FX11
+                            enumVal = Convert.ChangeType(field.GetValue(null), Enum.GetUnderlyingType(field.FieldType));
 #else
                             enumVal = field.GetRawConstantValue();
 #endif
