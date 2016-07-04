@@ -11,14 +11,11 @@ namespace Examples.Issues
     public class Issue184
     {
         [Test]
-        public void CannotCreateUsableEnumerableMetaType()
+        public void CanCreateUsableEnumerableMetaType()
         {
-            Program.ExpectFailure<ArgumentException>(() =>
-            {
-                var model = TypeModel.Create();
-                model.Add(typeof(IEnumerable<int>), false);
-                model.CompileInPlace();
-            }, "IEnumerable[<T>] data cannot be used as a meta-type unless an Add method can be resolved");
+            var model = TypeModel.Create();
+            model.Add(typeof(IEnumerable<int>), false);
+            model.CompileInPlace();
         }
         [Test]
         public void CantCreateMetaTypeForInbuilt()

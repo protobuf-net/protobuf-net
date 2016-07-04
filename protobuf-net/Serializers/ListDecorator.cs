@@ -491,51 +491,60 @@ namespace ProtoBuf.Serializers
         }
         public override object Read(object value, ProtoReader source)
         {
-            int field = source.FieldNumber;
-            object origValue = value;
-            if (value == null) value = Activator.CreateInstance(concreteType);
-            bool isList = IsList && !SuppressIList;
-            if (packedWireType != WireType.None && source.WireType == WireType.String)
+            try
             {
-                SubItemToken token = ProtoReader.StartSubItem(source);
-                if (isList)
+                int field = source.FieldNumber;
+                object origValue = value;
+                if (value == null) value = Activator.CreateInstance(concreteType);
+                bool isList = IsList && !SuppressIList;
+                if (packedWireType != WireType.None && source.WireType == WireType.String)
                 {
-                    IList list = (IList)value;
-                    while (ProtoReader.HasSubValue(packedWireType, source))
+                    SubItemToken token = ProtoReader.StartSubItem(source);
+                    if (isList)
                     {
-                        list.Add(Tail.Read(null, source));
+                        IList list = (IList)value;
+                        while (ProtoReader.HasSubValue(packedWireType, source))
+                        {
+                            list.Add(Tail.Read(null, source));
+                        }
                     }
-                }
-                else {
-                    object[] args = new object[1];
-                    while (ProtoReader.HasSubValue(packedWireType, source))
+                    else
                     {
-                        args[0] = Tail.Read(null, source);
-                        add.Invoke(value, args);
+                        object[] args = new object[1];
+                        while (ProtoReader.HasSubValue(packedWireType, source))
+                        {
+                            args[0] = Tail.Read(null, source);
+                            add.Invoke(value, args);
+                        }
                     }
-                }
-                ProtoReader.EndSubItem(token, source);
-            }
-            else { 
-                if (isList)
-                {
-                    IList list = (IList)value;
-                    do
-                    {
-                        list.Add(Tail.Read(null, source));
-                    } while (source.TryReadFieldHeader(field));
+                    ProtoReader.EndSubItem(token, source);
                 }
                 else
                 {
-                    object[] args = new object[1];
-                    do
+                    if (isList)
                     {
-                        args[0] = Tail.Read(null, source);
-                        add.Invoke(value, args);
-                    } while (source.TryReadFieldHeader(field));
+                        IList list = (IList)value;
+                        do
+                        {
+                            list.Add(Tail.Read(null, source));
+                        } while (source.TryReadFieldHeader(field));
+                    }
+                    else
+                    {
+                        object[] args = new object[1];
+                        do
+                        {
+                            args[0] = Tail.Read(null, source);
+                            add.Invoke(value, args);
+                        } while (source.TryReadFieldHeader(field));
+                    }
                 }
+                return origValue == value ? null : value;
+            } catch(TargetInvocationException tie)
+            {
+                if (tie.InnerException != null) throw tie.InnerException;
+                throw;
             }
-            return origValue == value ? null : value;
         }
 #endif
 
