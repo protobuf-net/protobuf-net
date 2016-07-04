@@ -8,9 +8,23 @@
     "keyFile": "../ProtoBuf.snk",
     "compile": {
       "include": [
-        "../FX11/*.cs"
-        ,"../protobuf-net.unittest/**/*.cs"
-        ,"../SampleDTO/*.cs"
+        "../FX11/*.cs",
+        "../protobuf-net.unittest/**/*.cs",
+        "../SampleDTO/*.cs",
+        "../Examples/DesignIdeas/**/*.cs",
+        //"../Examples/Issues/**/*.cs",
+        "../Examples/NWind/**/*.cs",
+        "../Examples/Ppt/**/*.cs",
+        //"../Examples/Properties/**/*.cs",
+        "../Examples/ProtoGen/**/*.cs",
+        "../Examples/Remoting/**/*.cs",
+        "../Examples/Rpc/**/*.cs",
+        "../Examples/ServiceModel/**/*.cs",
+        "../Examples/SimpleStream/**/*.cs",
+        "../Examples/TestNumbers/**/*.cs",
+
+        "../Examples/PEVerify.cs",
+        "../Examples/Program.cs"
         //,"../Examples/**/*.cs"
       ],
       "exclude": [

@@ -9,3 +9,10 @@ Tools/PEVerify.*
 packages/
 project.lock.json
 Tests.Dnx/*.dll
+Tests.Dnx/*.bin
+Tests.Dnx/*.dat
+Tests.Dnx/*.dump
+Tests.Dnx/Data.protobuf
+Tests.Dnx/big.file
+Tests.Dnx/sandbox.txt
+Tests.Dnx/protoTest.txt
