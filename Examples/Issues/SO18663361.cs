@@ -38,25 +38,52 @@ namespace Examples.Issues
         [Test]
         public void ExecuteFloat2()
         {
-            var obj = new CreditMarketDataEntry_Float { EntryPrice = 123.45F };
-            var clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(123.45F, clone.EntryPrice);
+            Program.ExpectFailure<Exception>(() =>
+            {
+                var obj = new CreditMarketDataEntry_Float { EntryPrice = 123.45F };
+                var clone = Serializer.DeepClone(obj);
+                Assert.AreEqual(123.45F, clone.EntryPrice);
+            }, ex =>
+            {
+                if (ex is InvalidOperationException && ex.InnerException != null) ex = ex.InnerException;
+
+                return ex is NotSupportedException
+                    && ex.Message == "IExtensible is not supported in structs or classes with inheritance";
+            });
         }
 
         [Test]
         public void ExecuteDouble2()
         {
-            var obj = new CreditMarketDataEntry_Double { EntryPrice = 123.45 };
-            var clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(123.45, clone.EntryPrice);
+            Program.ExpectFailure<Exception>(() =>
+            {
+                var obj = new CreditMarketDataEntry_Double { EntryPrice = 123.45 };
+                var clone = Serializer.DeepClone(obj);
+                Assert.AreEqual(123.45, clone.EntryPrice);
+            }, ex =>
+            {
+                if (ex is InvalidOperationException && ex.InnerException != null) ex = ex.InnerException;
+
+                return ex is NotSupportedException
+                    && ex.Message == "IExtensible is not supported in structs or classes with inheritance";
+            });
         }
 
         [Test]
         public void ExecuteDecimal2()
         {
-            var obj = new CreditMarketDataEntry_Decimal { EntryPrice = 123.45M };
-            var clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(123.45M, clone.EntryPrice);
+            Program.ExpectFailure<Exception>(() =>
+            {
+                var obj = new CreditMarketDataEntry_Decimal { EntryPrice = 123.45M };
+                var clone = Serializer.DeepClone(obj);
+                Assert.AreEqual(123.45M, clone.EntryPrice);
+            }, ex =>
+            {
+                if (ex is InvalidOperationException && ex.InnerException != null) ex = ex.InnerException;
+
+                return ex is NotSupportedException
+                    && ex.Message == "IExtensible is not supported in structs or classes with inheritance";
+            });
         }
 
         [global::System.Serializable, global::ProtoBuf.ProtoContract(Name = @"MarketDataEntry")]

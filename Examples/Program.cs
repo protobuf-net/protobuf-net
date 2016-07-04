@@ -144,7 +144,10 @@ namespace Examples
             }
             catch (Exception ex)
             {
-                Assert.IsInstanceOfType(typeof(TException), ex);
+                if (!(ex is TException))
+                {
+                    Assert.IsInstanceOfType(typeof(TException), ex);
+                }                
                 Assert.IsTrue(check((TException)ex));
             }
         }

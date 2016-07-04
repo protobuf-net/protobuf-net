@@ -103,6 +103,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
             Program.ExpectFailure<InvalidOperationException>(() =>
             {
                 var model = CreateModel();
+                model.AutoCompile = true;
                 var container = new BaseClassArrayContainerClass();
                 container.BaseArray = this.CreateArray();
                 var cloned = (BaseClassArrayContainerClass)model.DeepClone(container);

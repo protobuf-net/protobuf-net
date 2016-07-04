@@ -20,7 +20,7 @@
         "../Examples/Issues/MB.cs",
         "../Examples/Issues/MissingBaseTypes.cs",
         "../Examples/Issues/SurrogateForObjectUsage.cs",
-        //"../Examples/Issues/SO*.cs",
+        "../Examples/Issues/SO*.cs",
         "../Examples/Issues/Issue*.cs",
         "../Examples/NWind/**/*.cs",
         "../Examples/Ppt/**/*.cs",

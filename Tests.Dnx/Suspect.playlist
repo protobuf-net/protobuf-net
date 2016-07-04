@@ -1,0 +1,1 @@
+<Playlist Version="1.0"><Add Test="Examples.Issues.SO16838287.ExecuteCompileInPlace" /><Add Test="Examples.Issues.SO13162642.Execute" /><Add Test="Examples.Issues.SO18650486.Execute" /><Add Test="Examples.Issues.SO16838287.ExecuteCompile" /><Add Test="Examples.Issues.SO16838287.ExecuteRuntime" /><Add Test="Examples.Issues.SO13162642.ExecuteWorkaround" /></Playlist>

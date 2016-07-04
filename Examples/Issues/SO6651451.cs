@@ -59,38 +59,41 @@ namespace Examples.Issues
             }
         }
         [Test]
-        public void RunTest() {
+        public void RunTest()
+        {
+            Program.ExpectFailure<InvalidOperationException>(() => { 
+            //Serialization Logic:
+            RuntimeTypeModel.Default[typeof(SerializeClass)].SetSurrogate(typeof(SerializeClassSurrogate));
 
-                //Serialization Logic:
-                RuntimeTypeModel.Default[typeof(SerializeClass)].SetSurrogate(typeof(SerializeClassSurrogate));
+            var myDictionaryItem = new SerializeDictionaryItem();
+            myDictionaryItem.MyField = "ABC";
 
-                var myDictionaryItem = new SerializeDictionaryItem();
-                myDictionaryItem.MyField = "ABC";
+            SerializeClass m = new SerializeClass() { MyDictionary = new Dictionary<string, SerializeDictionaryItem>() };
+            m.MyDictionary.Add("def", myDictionaryItem);
+            m.MyDictionary.Add("abc", myDictionaryItem);
 
-                SerializeClass m = new SerializeClass() {MyDictionary = new Dictionary<string, SerializeDictionaryItem>()};
-                m.MyDictionary.Add("def", myDictionaryItem);
-                m.MyDictionary.Add("abc", myDictionaryItem);
+            m.MyList = new List<SerializeDictionaryItem>();
+            m.MyList.Add(myDictionaryItem);
+            m.MyList.Add(myDictionaryItem);
 
-                m.MyList = new List<SerializeDictionaryItem>();
-                m.MyList.Add(myDictionaryItem);
-                m.MyList.Add(myDictionaryItem);
+            Assert.AreSame(m.MyDictionary["def"], m.MyDictionary["abc"]);
+            Assert.AreSame(m.MyList[0], m.MyList[1]);
 
-                Assert.AreSame(m.MyDictionary["def"], m.MyDictionary["abc"]);
-                Assert.AreSame(m.MyList[0], m.MyList[1]);
+            byte[] buffer;
+            using (var writer = new MemoryStream())
+            {
+                Serializer.Serialize(writer, m);
+                buffer = writer.ToArray();
+            }
 
-                byte[] buffer;
-                using (var writer = new MemoryStream())
-                {
-                    Serializer.Serialize(writer, m);
-                    buffer = writer.ToArray();
-                }
-
-                using(var reader = new MemoryStream(buffer))
-                {
-                    var deserialized = Serializer.Deserialize<SerializeClass>(reader);
-                    Assert.AreSame(deserialized.MyDictionary["def"], deserialized.MyDictionary["abc"]);
-                    Assert.AreSame(deserialized.MyList[0], deserialized.MyList[1]);
-                }
+            using (var reader = new MemoryStream(buffer))
+            {
+                var deserialized = Serializer.Deserialize<SerializeClass>(reader);
+                Assert.AreSame(deserialized.MyDictionary["def"], deserialized.MyDictionary["abc"]);
+                Assert.AreSame(deserialized.MyList[0], deserialized.MyList[1]);
+            }
+            }, "AsReference cannot be used with value-types; please see http://stackoverflow.com/q/14436606/");
         }
+
     }
 }

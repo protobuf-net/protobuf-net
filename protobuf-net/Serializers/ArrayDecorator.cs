@@ -34,7 +34,8 @@ namespace ProtoBuf.Serializers
             Type underlyingItemType = supportNull ? itemType : (Helpers.GetUnderlyingType(itemType) ?? itemType);
 #endif
 
-            Helpers.DebugAssert(underlyingItemType == Tail.ExpectedType, "invalid tail");
+            Helpers.DebugAssert(underlyingItemType == Tail.ExpectedType
+                || (Tail.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType)), "invalid tail");
             Helpers.DebugAssert(Tail.ExpectedType != model.MapType(typeof(byte)), "Should have used BlobSerializer");
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
             if (!ListDecorator.CanPack(packedWireType))

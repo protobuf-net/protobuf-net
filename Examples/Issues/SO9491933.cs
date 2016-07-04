@@ -68,29 +68,32 @@ namespace Examples.Issues
         [Test]
         public void TestProtoBuf2()
         {
-            IList<A> list = new List<A>
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                IList<A> list = new List<A>
             {
                 new A {Property1 = 1, Property2 = 1, Property3 = 200, Property4 = "Test1", Property5 = DateTime.Now},
                 new B {Property1 = 2, Property2 = 2, Property3 = 400, Property4 = "Test2", Property5 = DateTime.Now, Property6 = "yyyy"},
                 new A {Property1 = 3, Property2 = 3, Property3 = 600, Property4 = "Test3", Property5 = new Decimal(200)},
             };
-            using (var file = new FileStream("list.bin", FileMode.Create))
-            {
-                Serializer.Serialize(file, list);
-            }
+                using (var file = new FileStream("list.bin", FileMode.Create))
+                {
+                    Serializer.Serialize(file, list);
+                }
 
-            IList<A> list2;
-            using (var file = File.OpenRead("list.bin"))
-            {
-                list2 = Serializer.Deserialize<IList<A>>(file);
-            }
+                IList<A> list2;
+                using (var file = File.OpenRead("list.bin"))
+                {
+                    list2 = Serializer.Deserialize<IList<A>>(file);
+                }
 
-            Assert.AreEqual(list.Count, list2.Count);
+                Assert.AreEqual(list.Count, list2.Count);
 
-            for (int i = 0; i < list.Count; i++)
-            {
-                Assert.AreEqual(list[i], list2[i]);
-            }
+                for (int i = 0; i < list.Count; i++)
+                {
+                    Assert.AreEqual(list[i], list2[i]);
+                }
+            }, "Dynamic type is not a contract-type: DateTime");
         }
 
     }

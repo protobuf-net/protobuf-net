@@ -348,7 +348,9 @@ namespace ProtoBuf.Meta
 #else
                     Type underlyingItemType = SupportNull ? itemType : Helpers.GetUnderlyingType(itemType) ?? itemType;
 #endif
-                    Helpers.DebugAssert(underlyingItemType == ser.ExpectedType, "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
+                    Helpers.DebugAssert(underlyingItemType == ser.ExpectedType
+                        || (ser.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType))
+                        , "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
                     if (memberType.IsArray)
                     {
                         ser = new ArrayDecorator(model, ser, fieldNumber, IsPacked, wireType, memberType, OverwriteList, SupportNull);

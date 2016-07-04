@@ -16,8 +16,9 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<ProtoException>(() =>
             {
-                var input = File.ReadAllBytes("protobuf-net.dll");
-                var stream = new MemoryStream(input);
+                var bytes = new byte[1024];
+                new Random(123456).NextBytes(bytes);
+                var stream = new MemoryStream(bytes);
                 stream.Seek(0, SeekOrigin.Begin);
                 Assert.Greater(3, 0); // I always double-check the param order
                 Assert.Greater(stream.Length, 0);
@@ -29,8 +30,9 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<ProtoException>(() =>
             {
-                var input = File.ReadAllBytes("protobuf-net.dll");
-                var stream = new MemoryStream(input);
+                var bytes = new byte[1024];
+                new Random(123456).NextBytes(bytes);
+                var stream = new MemoryStream(bytes);
                 stream.Seek(0, SeekOrigin.Begin);
                 Assert.Greater(3, 0); // I always double-check the param order
                 Assert.Greater(stream.Length, 0);
@@ -42,8 +44,9 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<ProtoException>(() =>
             {
-                var input = File.ReadAllBytes("protobuf-net.dll");
-                var stream = new MemoryStream(input);
+                var bytes = new byte[1024];
+                new Random(123456).NextBytes(bytes);
+                var stream = new MemoryStream(bytes);                
                 stream.Seek(0, SeekOrigin.Begin);
                 Assert.Greater(3, 0); // I always double-check the param order
                 Assert.Greater(stream.Length, 0);
