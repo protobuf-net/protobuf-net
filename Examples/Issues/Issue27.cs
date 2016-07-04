@@ -1,7 +1,7 @@
 ﻿using System.Runtime.Serialization;
 using NUnit.Framework;
 using ProtoBuf;
-
+using System.IO;
 
 namespace Examples.Issues
 {
@@ -32,6 +32,7 @@ namespace Examples.Issues
             Foo foo = new Foo { Pair = new KeyPair<int, string>(1, "abc") };
             Assert.AreEqual(1, foo.Pair.Key1, "Key1 - orig");
             Assert.AreEqual("abc", foo.Pair.Key2, "Key2 - orig");
+
             var clone = Serializer.DeepClone(foo);
             Assert.AreEqual(1, clone.Pair.Key1, "Key1 - clone");
             Assert.AreEqual("abc", clone.Pair.Key2, "Key2 - clone");

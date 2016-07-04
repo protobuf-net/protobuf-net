@@ -1,12 +1,9 @@
-﻿using System;
+﻿using NUnit.Framework;
+using ProtoBuf;
+using ProtoBuf.Meta;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Runtime.Serialization;
-using ProtoBuf.Meta;
-using System.IO;
-using ProtoBuf;
-using NUnit.Framework;
 
 namespace Examples.Issues
 {
@@ -14,11 +11,14 @@ namespace Examples.Issues
     public class Issue184
     {
         [Test]
-        public void CanCreateUsableEnumerableMetaType()
+        public void CannotCreateUsableEnumerableMetaType()
         {
-            var model = TypeModel.Create();
-            model.Add(typeof(IEnumerable<int>), false);
-            model.CompileInPlace();
+            Program.ExpectFailure<ArgumentException>(() =>
+            {
+                var model = TypeModel.Create();
+                model.Add(typeof(IEnumerable<int>), false);
+                model.CompileInPlace();
+            }, "IEnumerable[<T>] data cannot be used as a meta-type unless an Add method can be resolved");
         }
         [Test]
         public void CantCreateMetaTypeForInbuilt()

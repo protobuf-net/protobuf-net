@@ -82,12 +82,16 @@ namespace Examples.Issues
         public void TestCompile_PEVerify_DerivedFirst()
         {
             var model = CreateModel(false);
-            model.Compile("Issue331_DerivedFirst", "Issue331_DerivedFirst.dll");
+            var ser = model.Compile("Issue331_DerivedFirst", "Issue331_DerivedFirst.dll");
+            CheckModel(ser);
+
+#if !COREFX
             PEVerify.AssertValid("Issue331_DerivedFirst.dll");
             var type = Type.GetType("Issue331_DerivedFirst, Issue331_DerivedFirst");
             Assert.IsNotNull(type, "resolve type");
             var ser = (TypeModel)Activator.CreateInstance(type);
             CheckModel(ser);
+#endif
         }
 
         [Test]
@@ -118,12 +122,16 @@ namespace Examples.Issues
         public void TestCompile_PEVerify_BaseFirst()
         {
             var model = CreateModel(true);
-            model.Compile("Issue331_BaseFirst", "Issue331_BaseFirst.dll");
+            var ser = model.Compile("Issue331_BaseFirst", "Issue331_BaseFirst.dll");
+            CheckModel(ser);
+
+#if !COREFX
             PEVerify.AssertValid("Issue331_BaseFirst.dll");
             var type = Type.GetType("Issue331_BaseFirst, Issue331_BaseFirst");
             Assert.IsNotNull(type, "resolve type");
-            var ser = (TypeModel)Activator.CreateInstance(type);
+            ser = (TypeModel)Activator.CreateInstance(type);
             CheckModel(ser);
+#endif
         }
 
         static void CheckModel(TypeModel model)
