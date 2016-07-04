@@ -23,7 +23,6 @@ namespace Examples.Issues
                 var dtos = Serializer.DeserializeItems<DTO>(f, ProtoBuf.PrefixStyle.Base128, 1);
                 Console.WriteLine(dtos.Count());
             }
-            Console.Read();
         }
 
         [Test]
@@ -43,7 +42,6 @@ namespace Examples.Issues
                 var dtos = Serializer.DeserializeItems<DTO>(f, ProtoBuf.PrefixStyle.Base128, 1);
                 Console.WriteLine(dtos.Count());
             }
-            Console.Read();
         }
 
         static IEnumerable<DTO> GenerateData(int count)
