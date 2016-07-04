@@ -10,7 +10,7 @@
       "include": [
         "../FX11/*.cs"
         ,"../protobuf-net.unittest/**/*.cs"
-        ,"../SampleDTO/*.cs",
+        ,"../SampleDTO/*.cs"
         //,"../Examples/**/*.cs"
       ],
       "exclude": [
