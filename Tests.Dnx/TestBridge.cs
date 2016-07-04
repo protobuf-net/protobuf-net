@@ -1,9 +1,7 @@
 ﻿// #define SINGLETEST
 using System;
 using ProtoBuf.Meta;
-using ProtoBuf.unittest.Meta;
 using System.Collections.Generic;
-using Examples.Issues;
 
 #if COREFX
 namespace System

@@ -11,7 +11,7 @@ namespace ProtoBuf.unittest.Meta
     {
         [DataContract, KnownType(typeof(B))]
         public abstract class A {
-            protected A() { TraceData += "ctor;"; }
+            protected A() { TraceData += "A.ctor;"; }
             public void ResetTraceData() { TraceData = null; }
             public string TraceData {get;protected set;}
             private int aValue;
@@ -26,6 +26,7 @@ namespace ProtoBuf.unittest.Meta
         }
         [DataContract, KnownType(typeof(C))]
         public class B : A {
+            public B() { TraceData += "B.ctor;"; }
             private int bValue;
             [DataMember(Order = 1)]
             public int BValue {
@@ -39,6 +40,7 @@ namespace ProtoBuf.unittest.Meta
         }
         [DataContract]
         public sealed class C : B {
+            public C() { TraceData += "C.ctor;"; }
             private int cValue;
             [DataMember(Order = 1)]public int CValue {
                 get { TraceData += "get;"; return cValue; }

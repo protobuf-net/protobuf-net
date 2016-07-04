@@ -10,7 +10,7 @@
       "url": "https://github.com/mgravell/protobuf-net"
     }
   },
-  "version": "2.1.0-alpha-2",
+  "version": "2.1.0-alpha-3",
   "description": "Protocol Buffers is the name of the binary serialization format used by Google for much of their data communications. It is designed to be: small in size - efficient data storage (far smaller than xml) cheap to process - both at the client and server platform independent - portable between different programming architectures extensible - to add new data to old messages. protobuf-net is a .NET implementation of this, allowing you to serialize your .NET objects efficiently and easily. It is compatible with most of the .NET family, including .NET 2.0/3.0/3.5/4.0, .NET CF 2.0/3.5, Mono 2.x, Silverlight, etc.",
   "authors": [ "Marc Gravell" ],
   "dependencies": {
@@ -46,14 +46,14 @@
         "define": [ "FEAT_COMPILER", "PLAT_XMLSERIALIZER", "PLAT_BINARYFORMATTER", "COREFX" ]
       },
       "dependencies": {
-        "NETStandard.Library": "1.5.0-rc2-24027",
-        "Microsoft.CSharp": "4.0.1-rc2-24027",
-        "System.Reflection.Emit": "4.0.1-rc2-24027",
-        "System.Reflection.Emit.ILGeneration": "4.0.1-rc2-24027",
-        "System.Reflection.Emit.Lightweight": "4.0.1-rc2-24027",
-        "System.Reflection.TypeExtensions": "4.1.0-rc2-24027",
-        "System.Xml.XmlSerializer": "4.0.11-rc2-24027",
-        "System.Runtime.Serialization.Primitives": "4.1.1-rc2-24027"
+        "NETStandard.Library": "1.6.0",
+        "Microsoft.CSharp": "4.0.1",
+        "System.Reflection.Emit": "4.0.1",
+        "System.Reflection.Emit.ILGeneration": "4.0.1",
+        "System.Reflection.Emit.Lightweight": "4.0.1",
+        "System.Reflection.TypeExtensions": "4.1.0",
+        "System.Xml.XmlSerializer": "4.0.11",
+        "System.Runtime.Serialization.Primitives": "4.1.1"
       }
     }
   }

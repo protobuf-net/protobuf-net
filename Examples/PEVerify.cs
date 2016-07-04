@@ -8,8 +8,11 @@ namespace Examples
     {
         public static bool AssertValid(string path)
         {
-            // note; PEVerify can be found %ProgramFiles%\Microsoft SDKs\Windows\v6.0A\bin
-            const string exePath = "PEVerify.exe";
+#if COREFX
+            return true;
+#else
+            // note; PEVerify can be found %ProgramFiles(x86)%\Microsoft SDKs\Windows\v6.0A\bin
+            const string exePath = @"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v6.0A\bin\PEVerify.exe";
             using (Process proc = Process.Start(exePath, path))
             {
                 if (proc.WaitForExit(10000))
@@ -23,6 +26,7 @@ namespace Examples
                     throw new TimeoutException();
                 }
             }
+#endif
         }
     }
 }
