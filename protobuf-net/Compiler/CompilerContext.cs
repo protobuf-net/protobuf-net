@@ -41,12 +41,23 @@ namespace ProtoBuf.Compiler
             CodeLabel result = new CodeLabel(il.DefineLabel(), nextLabel++);
             return result;
         }
+        [System.Diagnostics.Conditional("DEBUG_COMPILE")]
+        private void TraceCompile(string value)
+        {
+#if DEBUG_COMPILE
+            if (!string.IsNullOrWhiteSpace(value))
+            {
+                using (System.IO.StreamWriter sw = System.IO.File.AppendText("TraceCompile.txt"))
+                {
+                    sw.WriteLine(value);
+                }
+            }
+#endif
+        }
         internal void MarkLabel(CodeLabel label)
         {
             il.MarkLabel(label.Value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine("#: " + label.Index);
-#endif
+            TraceCompile("#: " + label.Index);
         }
 
 #if !(FX11 || FEAT_IKVM)
@@ -164,16 +175,12 @@ namespace ProtoBuf.Compiler
             else if (Helpers.IsValueType(type))
             {
                 il.Emit(OpCodes.Box, type);
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Box + ": " + type);
-#endif
+                TraceCompile(OpCodes.Box + ": " + type);
             }
             else
             {
                 il.Emit(OpCodes.Castclass, MapType(typeof(object)));
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Castclass + ": " + type);
-#endif
+                TraceCompile(OpCodes.Castclass + ": " + type);
             }
         }
 
@@ -188,19 +195,15 @@ namespace ProtoBuf.Compiler
                     case ILVersion.Net1:
                         il.Emit(OpCodes.Unbox, type);
                         il.Emit(OpCodes.Ldobj, type);
-#if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(OpCodes.Unbox + ": " + type);
-                        Helpers.DebugWriteLine(OpCodes.Ldobj + ": " + type);
-#endif
+                        TraceCompile(OpCodes.Unbox + ": " + type);
+                        TraceCompile(OpCodes.Ldobj + ": " + type);
                         break;
                     default:
 #if FX11
                         throw new NotSupportedException();
 #else
                         il.Emit(OpCodes.Unbox_Any, type);
-#if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(OpCodes.Unbox_Any + ": " + type);
-#endif
+                        TraceCompile(OpCodes.Unbox_Any + ": " + type);
                         break;
 #endif
                 }
@@ -208,9 +211,7 @@ namespace ProtoBuf.Compiler
             else
             {
                 il.Emit(OpCodes.Castclass, type);
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Castclass + ": " + type);
-#endif
+                TraceCompile(OpCodes.Castclass + ": " + type);
             }
         }
         private readonly bool isStatic;
@@ -258,7 +259,7 @@ namespace ProtoBuf.Compiler
         public Local InputValue { get { return inputValue; } }
 #if !(SILVERLIGHT || PHONE8)
         private readonly string assemblyName;
-        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType)
+        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType, string traceName)
         {
             if (il == null) throw new ArgumentNullException("il");
             if (methodPairs == null) throw new ArgumentNullException("methodPairs");
@@ -273,6 +274,7 @@ namespace ProtoBuf.Compiler
             this.model = model;
             this.metadataVersion = metadataVersion;
             if (inputType != null) this.inputValue = new Local(null, inputType);
+            TraceCompile(">> " + traceName);
         }
 #endif
 #if !(FX11 || FEAT_IKVM)
@@ -313,6 +315,7 @@ namespace ProtoBuf.Compiler
                 .IsInterface ? typeof(object) : associatedType, true);
             this.il = method.GetILGenerator();
             if (inputType != null) this.inputValue = new Local(null, inputType);
+            TraceCompile(">> " + method.Name);
         }
 
 #endif
@@ -321,9 +324,7 @@ namespace ProtoBuf.Compiler
         private void Emit(OpCode opcode)
         {
             il.Emit(opcode);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(opcode.ToString());
-#endif
+            TraceCompile(opcode.ToString());
         }
         public void LoadValue(string value)
         {
@@ -334,31 +335,23 @@ namespace ProtoBuf.Compiler
             else
             {
                 il.Emit(OpCodes.Ldstr, value);
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Ldstr + ": " + value);
-#endif
+                TraceCompile(OpCodes.Ldstr + ": " + value);
             }
         }
         public void LoadValue(float value)
         {
             il.Emit(OpCodes.Ldc_R4, value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Ldc_R4 + ": " + value);
-#endif
+            TraceCompile(OpCodes.Ldc_R4 + ": " + value);
         }
         public void LoadValue(double value)
         {
             il.Emit(OpCodes.Ldc_R8, value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Ldc_R8 + ": " + value);
-#endif
+            TraceCompile(OpCodes.Ldc_R8 + ": " + value);
         }
         public void LoadValue(long value)
         {
             il.Emit(OpCodes.Ldc_I8, value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Ldc_I8 + ": " + value);
-#endif
+            TraceCompile(OpCodes.Ldc_I8 + ": " + value);
         }
         public void LoadValue(int value)
         {
@@ -378,16 +371,12 @@ namespace ProtoBuf.Compiler
                     if (value >= -128 && value <= 127)
                     {
                         il.Emit(OpCodes.Ldc_I4_S, (sbyte)value);
-#if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(OpCodes.Ldc_I4_S + ": " + value);
-#endif
+                        TraceCompile(OpCodes.Ldc_I4_S + ": " + value);
                     }
                     else
                     {
                         il.Emit(OpCodes.Ldc_I4, value);
-#if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(OpCodes.Ldc_I4 + ": " + value);
-#endif
+                        TraceCompile(OpCodes.Ldc_I4 + ": " + value);
                     }
                     break;
 
@@ -408,9 +397,7 @@ namespace ProtoBuf.Compiler
                 }
             }
             LocalBuilder result = il.DeclareLocal(type);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine("$ " + result + ": " + type);
-#endif
+            TraceCompile("$ " + result + ": " + type);
             return result;
         }
         //
@@ -437,9 +424,7 @@ namespace ProtoBuf.Compiler
             {
                 byte b = isStatic ? (byte) 0 : (byte)1;
                 il.Emit(OpCodes.Starg_S, b);
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Starg_S + ": $" + b);
-#endif                
+                TraceCompile(OpCodes.Starg_S + ": $" + b);
             }
             else
             {
@@ -454,9 +439,7 @@ namespace ProtoBuf.Compiler
 #endif
                         OpCode code = UseShortForm(local) ? OpCodes.Stloc_S : OpCodes.Stloc;
                         il.Emit(code, local.Value);
-#if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(code + ": $" + local.Value);
-#endif
+                        TraceCompile(code + ": $" + local.Value);
 #if !FX11
                         break;
                 }
@@ -483,9 +466,7 @@ namespace ProtoBuf.Compiler
 #endif             
                         OpCode code = UseShortForm(local) ? OpCodes.Ldloc_S :  OpCodes.Ldloc;
                         il.Emit(code, local.Value);
-#if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(code + ": $" + local.Value);
-#endif
+                        TraceCompile(code + ": $" + local.Value);
 #if !FX11
                         break;
                 }
@@ -556,15 +537,26 @@ namespace ProtoBuf.Compiler
             LoadReaderWriter();
             EmitCall(method);
         }
-        public void EmitCall(MethodInfo method)
+        public void EmitCall(MethodInfo method) { EmitCall(method, null); }
+        public void EmitCall(MethodInfo method, Type targetType)
         {
             Helpers.DebugAssert(method != null);
             CheckAccessibility(method);
-            OpCode opcode = (method.IsStatic || Helpers.IsValueType(method.DeclaringType)) ? OpCodes.Call : OpCodes.Callvirt;
+            OpCode opcode;
+            if (method.IsStatic || Helpers.IsValueType(method.DeclaringType))
+            {
+                opcode = OpCodes.Call; 
+            }
+            else
+            {
+                opcode = OpCodes.Callvirt;
+                if (targetType != null && Helpers.IsValueType(targetType) && !Helpers.IsValueType(method.DeclaringType))
+                {
+                    // Constrain(targetType);
+                }
+            }
             il.EmitCall(opcode, method, null);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(opcode + ": " + method + " on " + method.DeclaringType);
-#endif
+            TraceCompile(opcode + ": " + method + " on " + method.DeclaringType + (targetType == null ? "" : (" via " + targetType)));
         }
         /// <summary>
         /// Pushes a null reference onto the stack. Note that this should only
@@ -664,9 +656,7 @@ namespace ProtoBuf.Compiler
             if (ctor == null) throw new ArgumentNullException("ctor");
             CheckAccessibility(ctor);
             il.Emit(OpCodes.Newobj, ctor);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Newobj + ": " + ctor.DeclaringType);
-#endif
+            TraceCompile(OpCodes.Newobj + ": " + ctor.DeclaringType);
         }
 
         public void EmitCtor(Type type, params Type[] parameterTypes)
@@ -676,9 +666,7 @@ namespace ProtoBuf.Compiler
             if (Helpers.IsValueType(type) && parameterTypes.Length == 0)
             {
                 il.Emit(OpCodes.Initobj, type);
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Initobj + ": " + type);
-#endif
+                TraceCompile(OpCodes.Initobj + ": " + type);
             }
             else
             {
@@ -890,9 +878,7 @@ namespace ProtoBuf.Compiler
             CheckAccessibility(field);
             OpCode code = field.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld;
             il.Emit(code, field);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(code + ": " + field + " on " + field.DeclaringType);
-#endif
+            TraceCompile(code + ": " + field + " on " + field.DeclaringType);
         }
 #if FEAT_IKVM
         public void StoreValue(System.Reflection.FieldInfo field)
@@ -917,9 +903,7 @@ namespace ProtoBuf.Compiler
             CheckAccessibility(field);
             OpCode code = field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld;
             il.Emit(code, field);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(code + ": " + field + " on " + field.DeclaringType);
-#endif
+            TraceCompile(code + ": " + field + " on " + field.DeclaringType);
         }
         public void LoadValue(PropertyInfo property)
         {
@@ -982,17 +966,13 @@ namespace ProtoBuf.Compiler
                 if (local == this.InputValue)
                 {
                     il.Emit(OpCodes.Ldarga_S, (isStatic ? (byte)0 : (byte)1));
-#if DEBUG_COMPILE
-                    Helpers.DebugWriteLine(OpCodes.Ldarga_S + ": $" + (isStatic ? 0 : 1));
-#endif
+                    TraceCompile(OpCodes.Ldarga_S + ": $" + (isStatic ? 0 : 1));
                 }
                 else
                 {
                     OpCode code = UseShortForm(local) ? OpCodes.Ldloca_S : OpCodes.Ldloca;
                     il.Emit(code, local.Value);
-#if DEBUG_COMPILE
-                    Helpers.DebugWriteLine(code + ": $" + local.Value);
-#endif
+                    TraceCompile(code + ": $" + local.Value);
                 }
 
             }
@@ -1005,17 +985,13 @@ namespace ProtoBuf.Compiler
         {
             OpCode code = @short ? OpCodes.Br_S : OpCodes.Br;
             il.Emit(code, label.Value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(code + ": " + label.Index);
-#endif
+            TraceCompile(code + ": " + label.Index);
         }
         internal void BranchIfFalse(CodeLabel label, bool @short)
         {
             OpCode code = @short ? OpCodes.Brfalse_S :  OpCodes.Brfalse;
             il.Emit(code, label.Value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(code + ": " + label.Index);
-#endif
+            TraceCompile(code + ": " + label.Index);
         }
 
 
@@ -1023,17 +999,13 @@ namespace ProtoBuf.Compiler
         {
             OpCode code = @short ? OpCodes.Brtrue_S : OpCodes.Brtrue;
             il.Emit(code, label.Value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(code + ": " + label.Index);
-#endif
+            TraceCompile(code + ": " + label.Index);
         }
         internal void BranchIfEqual(CodeLabel label, bool @short)
         {
             OpCode code = @short ? OpCodes.Beq_S : OpCodes.Beq;
             il.Emit(code, label.Value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(code + ": " + label.Index);
-#endif
+            TraceCompile(code + ": " + label.Index);
         }
         //internal void TestEqual()
         //{
@@ -1050,18 +1022,14 @@ namespace ProtoBuf.Compiler
         {
             OpCode code = @short ? OpCodes.Bgt_S : OpCodes.Bgt;
             il.Emit(code, label.Value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(code + ": " + label.Index);
-#endif
+            TraceCompile(code + ": " + label.Index);
         }
 
         internal void BranchIfLess(CodeLabel label, bool @short)
         {
             OpCode code = @short ? OpCodes.Blt_S : OpCodes.Blt;
             il.Emit(code, label.Value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(code + ": " + label.Index);
-#endif
+            TraceCompile(code + ": " + label.Index);
         }
 
         internal void DiscardValue()
@@ -1088,9 +1056,7 @@ namespace ProtoBuf.Compiler
                 {
                     labels[i] = jumpTable[i].Value;
                 }
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Switch.ToString());
-#endif
+                TraceCompile(OpCodes.Switch.ToString());
                 il.Emit(OpCodes.Switch, labels);
             }
             else
@@ -1112,9 +1078,7 @@ namespace ProtoBuf.Compiler
                     LoadValue(val);
                     LoadValue(MAX_JUMPS);
                     Emit(OpCodes.Div);
-#if DEBUG_COMPILE
-                Helpers.DebugWriteLine(OpCodes.Switch.ToString());
-#endif
+                    TraceCompile(OpCodes.Switch.ToString());
                     il.Emit(OpCodes.Switch, blockLabels);
                     Branch(endOfSwitch, false);
 
@@ -1138,9 +1102,7 @@ namespace ProtoBuf.Compiler
                             LoadValue(subtract);
                             Emit(OpCodes.Sub);
                         }
-#if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(OpCodes.Switch.ToString());
-#endif
+                        TraceCompile(OpCodes.Switch.ToString());
                         il.Emit(OpCodes.Switch, innerLabels);
                         if (count != 0)
                         { // force default to the very bottom
@@ -1156,60 +1118,46 @@ namespace ProtoBuf.Compiler
         internal void EndFinally()
         {
             il.EndExceptionBlock();
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine("EndExceptionBlock");
-#endif
+            TraceCompile("EndExceptionBlock");
         }
 
         internal void BeginFinally()
         {
             il.BeginFinallyBlock();
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine("BeginFinallyBlock");
-#endif
+            TraceCompile("BeginFinallyBlock");
         }
 
         internal void EndTry(CodeLabel label, bool @short)
         {
             OpCode code = @short ? OpCodes.Leave_S : OpCodes.Leave;
             il.Emit(code, label.Value);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(code + ": " + label.Index);
-#endif
+            TraceCompile(code + ": " + label.Index);
         }
 
         internal CodeLabel BeginTry()
         {
             CodeLabel label = new CodeLabel(il.BeginExceptionBlock(), nextLabel++);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine("BeginExceptionBlock: " + label.Index);
-#endif
+            TraceCompile("BeginExceptionBlock: " + label.Index);
             return label;
         }
 #if !FX11
         internal void Constrain(Type type)
         {
             il.Emit(OpCodes.Constrained, type);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Constrained + ": " + type);
-#endif
+            TraceCompile(OpCodes.Constrained + ": " + type);
         }
 #endif
 
         internal void TryCast(Type type)
         {
             il.Emit(OpCodes.Isinst, type);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Isinst + ": " + type);
-#endif
+            TraceCompile(OpCodes.Isinst + ": " + type);
         }
 
         internal void Cast(Type type)
         {
             il.Emit(OpCodes.Castclass, type);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Castclass + ": " + type);
-#endif
+            TraceCompile(OpCodes.Castclass + ": " + type);
         }
         public IDisposable Using(Local local)
         {
@@ -1344,10 +1292,7 @@ namespace ProtoBuf.Compiler
         {
             LoadValue(length);
             il.Emit(OpCodes.Newarr, elementType);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Newarr + ": " + elementType);
-#endif
-
+            TraceCompile(OpCodes.Newarr + ": " + elementType);
         }
 
         internal void LoadArrayValue(Local arr, Local i)
@@ -1376,10 +1321,8 @@ namespace ProtoBuf.Compiler
                     {
                         il.Emit(OpCodes.Ldelema, type);
                         il.Emit(OpCodes.Ldobj, type);
-#if DEBUG_COMPILE
-                        Helpers.DebugWriteLine(OpCodes.Ldelema + ": " + type);
-                        Helpers.DebugWriteLine(OpCodes.Ldobj + ": " + type);
-#endif
+                        TraceCompile(OpCodes.Ldelema + ": " + type);
+                        TraceCompile(OpCodes.Ldobj + ": " + type);
                     }
                     else
                     {
@@ -1396,9 +1339,7 @@ namespace ProtoBuf.Compiler
         internal void LoadValue(Type type)
         {
             il.Emit(OpCodes.Ldtoken, type);
-#if DEBUG_COMPILE
-            Helpers.DebugWriteLine(OpCodes.Ldtoken + ": " + type);
-#endif
+            TraceCompile(OpCodes.Ldtoken + ": " + type);
             EmitCall(MapType(typeof(System.Type)).GetMethod("GetTypeFromHandle"));
         }
 

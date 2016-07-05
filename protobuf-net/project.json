@@ -1,4 +1,4 @@
-﻿{
+{
   "packOptions": {
     "summary": "Provides simple access to fast and efficient \"Protocol Buffers\" serialization from .NET applications",
     "owners": [ "Marc Gravell" ],

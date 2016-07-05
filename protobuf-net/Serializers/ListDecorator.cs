@@ -239,7 +239,11 @@ namespace ProtoBuf.Serializers
         private static void EmitReadAndAddItem(Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add, bool castListForAdd)
         {
             ctx.LoadAddress(list, list.Type); // needs to be the reference in case the list is value-type (static-call)
-            if (castListForAdd) ctx.Cast(add.DeclaringType);
+            if (castListForAdd) ctx.Cast(add.DeclaringType);
+            //if (castListForAdd && !Helpers.IsValueType(list.Type))
+            //{
+            //    ctx.Cast(add.DeclaringType);
+            //}
             Type itemType = tail.ExpectedType;
             bool tailReturnsValue = tail.ReturnsValue;
             if (tail.RequiresOldValue)
@@ -301,7 +305,7 @@ namespace ProtoBuf.Serializers
                     throw new InvalidOperationException("Conflicting item/add type");
                 }
             }
-            ctx.EmitCall(add);
+            ctx.EmitCall(add, list.Type);
             if (add.ReturnType != ctx.MapType(typeof(void)))
             {
                 ctx.DiscardValue();
@@ -428,7 +432,7 @@ namespace ProtoBuf.Serializers
                     }
 
                     ctx.LoadAddress(list, ExpectedType);
-                    ctx.EmitCall(getEnumerator);
+                    ctx.EmitCall(getEnumerator, ExpectedType);
                     ctx.StoreValue(iter);
                     using (ctx.Using(iter))
                     {
@@ -438,7 +442,7 @@ namespace ProtoBuf.Serializers
                         ctx.MarkLabel(body);
 
                         ctx.LoadAddress(iter, enumeratorType);
-                        ctx.EmitCall(current);
+                        ctx.EmitCall(current, enumeratorType);
                         Type itemType = Tail.ExpectedType;
                         if (itemType != ctx.MapType(typeof(object)) && current.ReturnType == ctx.MapType(typeof(object)))
                         {
@@ -448,7 +452,7 @@ namespace ProtoBuf.Serializers
 
                         ctx.MarkLabel(@next);
                         ctx.LoadAddress(iter, enumeratorType);
-                        ctx.EmitCall(moveNext);
+                        ctx.EmitCall(moveNext, enumeratorType);
                         ctx.BranchIfTrue(body, false);
                     }
 
