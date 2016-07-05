@@ -18,7 +18,8 @@ namespace Examples.Issues
             });
         }
         // TODO: fix this
-        [Test(Skip = "This is very very broken; come back to it")]
+        [ActiveTest]
+        [Test]
         public void ExecuteCompileInPlace()
         {
             var model = GetModel();
@@ -27,7 +28,8 @@ namespace Examples.Issues
             Execute(model, 1, 0, 18, "CompileInPlace");
         }
         // TODO: fix this
-        [Test(Skip = "This is very very broken; come back to it")]
+        [ActiveTest]
+        [Test]
         public void ExecuteCompile()
         {
             var model = GetModel();

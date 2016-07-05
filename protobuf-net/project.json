@@ -37,7 +37,17 @@
       },
       "frameworkAssemblies": {
         "System.Xml": "4.0.0.0",
-        "System.Reflection.Emit": "4.0.0.0" 
+        "System.Reflection.Emit": "4.0.0.0"
+      }
+    },
+    "net451": {
+      "buildOptions": {
+        "allowUnsafe": true,
+        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
+      },
+      "frameworkAssemblies": {
+        "System.Xml": "4.0.0.0",
+        "System.Reflection.Emit": "4.0.0.0"
       }
     },
     "netstandard1.5": {

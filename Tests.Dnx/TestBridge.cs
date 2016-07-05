@@ -1,9 +1,9 @@
-﻿// #define SINGLETEST
+﻿#define SINGLETEST
 using System;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
 
-#if COREFX
+#if XUNITBRIDGE
 namespace System
 {
     namespace ServiceModel
@@ -14,6 +14,7 @@ namespace System
     {
         class Dummy { }
     }
+#if COREFX
     namespace ComponentModel
     {
         public class BrowsableAttribute : Attribute
@@ -23,6 +24,7 @@ namespace System
     }
     public class SerializableAttribute : Attribute { }
     public class NonSerializedAttribute : Attribute { }
+
     namespace IO
     {
         public static class TestFakeExtensions
@@ -37,6 +39,7 @@ namespace System
             }
         }
     }
+
     namespace Data.Linq
     {
         public enum ChangeAction
@@ -77,6 +80,7 @@ namespace System
             OnInsert
         }
     }
+#endif
 }
 
 namespace ProtoBuf
@@ -105,7 +109,10 @@ namespace NUnit.Framework
     public class TestFixtureAttribute : Attribute { }
 #if SINGLETEST
     public class ActiveTestAttribute : Xunit.FactAttribute { }
-    public class TestAttribute : Attribute { }
+    public class TestAttribute : Attribute
+    {
+            public string Skip { get; set; }
+    }
 #else
     [Obsolete("add: #define SINGLETEST")]
     public class ActiveTestAttribute : Attribute { }

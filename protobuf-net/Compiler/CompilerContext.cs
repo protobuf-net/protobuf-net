@@ -1,5 +1,5 @@
 ﻿#if FEAT_COMPILER
-//#define DEBUG_COMPILE
+#define DEBUG_COMPILE
 using System;
 using System.Threading;
 using ProtoBuf.Meta;

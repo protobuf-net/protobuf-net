@@ -3,7 +3,7 @@
   "description": "Tests.Dnx Class Library",
   "authors": [ "marc" ],
   "buildOptions": {
-    "define": [ "XUNIT", "NO_INTERNAL_CONTEXT", "NO_NHIBERNATE", "FEAT_COMPILER", "NO_ENYIM", "NO_CODEGEN", "NO_WCF", "IMPORT_TESTS" ],
+    "define": [ "XUNITBRIDGE", "XUNIT", "NO_INTERNAL_CONTEXT", "NO_NHIBERNATE", "FEAT_COMPILER", "NO_ENYIM", "NO_CODEGEN", "NO_WCF", "IMPORT_TESTS" ],
     "strongName": true,
     "keyFile": "../ProtoBuf.snk",
     "compile": {
@@ -19,8 +19,28 @@
       ]
     }
   },
+  "dependencies": {
+    "protobuf-net": {
+      "target": "project",
+      "version": "2.1.0-alpha-3"
+    },
+    "xunit": "2.2.0-beta2-build3300",
+    "dotnet-test-xunit": "2.2.0-preview2-build1029"
+  },
   "testRunner": "xunit",
   "frameworks": {
+    "net451": {
+      "frameworkAssemblies": {
+        "System.Runtime.Serialization": "4.0.0.0",
+        "System.Data.Linq": "4.0.0.0",
+        "System.ServiceModel": "4.0.0.0",
+        "System.Drawing": "4.0.0.0",
+        "System.Data": "4.0.0.0",
+        "System.Web.Extensions": "4.0.0.0",
+        "PresentationCore": "4.0.0.0",
+        "WindowsBase": "4.0.0.0"
+      }
+    },
     "netcoreapp1.0": {
       "imports": [ "dnxcore50", "portable-net45+win8" ],
       "buildOptions": {
@@ -30,10 +50,6 @@
         "Microsoft.NETCore.App": {
           "version": "1.0.0",
           "type": "platform"
-        },
-        "protobuf-net": {
-          "target": "project",
-          "version": "2.1.0-alpha-3"
         },
         "System.Collections": "4.0.11",
         "System.Collections.NonGeneric": "4.0.1",
@@ -47,9 +63,7 @@
         "System.Diagnostics.TraceSource": "4.0.0",
         "System.Collections.Immutable": "1.2.0",
         "System.ComponentModel": "4.0.1",
-        "System.Threading.Tasks.Parallel": "4.0.1",
-        "xunit": "2.1.0",
-        "dotnet-test-xunit": "1.0.0-rc2-build10025"
+        "System.Threading.Tasks.Parallel": "4.0.1"
       }
     }
   }

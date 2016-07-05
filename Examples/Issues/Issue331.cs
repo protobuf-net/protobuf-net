@@ -89,7 +89,7 @@ namespace Examples.Issues
             PEVerify.AssertValid("Issue331_DerivedFirst.dll");
             var type = Type.GetType("Issue331_DerivedFirst, Issue331_DerivedFirst");
             Assert.IsNotNull(type, "resolve type");
-            var ser = (TypeModel)Activator.CreateInstance(type);
+            ser = (TypeModel)Activator.CreateInstance(type);
             CheckModel(ser);
 #endif
         }
