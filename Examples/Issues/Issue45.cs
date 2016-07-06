@@ -3,6 +3,7 @@ using System.Reflection;
 using NUnit.Framework;
 using System;
 using ProtoBuf;
+using System.IO;
 
 namespace Examples.Issues
 {
@@ -12,7 +13,13 @@ namespace Examples.Issues
         [Test]
         public void TestLateLoad()
         {
-            Assembly assembly = Assembly.LoadFrom("LateLoaded.dll");
+            const string dllPath = "LateLoaded.dll";
+            if(!File.Exists(dllPath))
+            {
+                Console.WriteLine("Late-load dll not found {0}; test inconclusive", dllPath);
+                return;
+            }
+            Assembly assembly = Assembly.LoadFrom(dllPath);
             Type type = assembly.GetType("LateLoaded.Foo");
             Assert.IsNotNull(type, "Resolve type");
 

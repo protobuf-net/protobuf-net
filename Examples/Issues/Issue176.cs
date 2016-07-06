@@ -21,7 +21,7 @@ namespace Examples.Issues
         public void TestOrderLineGetDeserializedAndAttachedToOrder()
         {
 
-            byte[] fileBytes = File.ReadAllBytes(@"NWind\nwind.proto.bin");
+            byte[] fileBytes = File.ReadAllBytes(NWindTests.GetNWindBinPath());
 
             RuntimeTypeModel ordersModel = TypeModel.Create();
             ordersModel.AutoCompile = false;

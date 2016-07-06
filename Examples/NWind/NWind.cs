@@ -52,11 +52,20 @@ namespace DAL
     [TestFixture]
     public class NWindTests
     {
+        static readonly string[] nwindPaths = { @"NWind\nwind.proto.bin", @"Tools\nwind.proto.bin", @"nwind.proto.bin" };
+        public static string GetNWindBinPath()
+        {
+            for (int i = 0; i < nwindPaths.Length; i++)
+            {
+                if (File.Exists(nwindPaths[i])) return nwindPaths[i];
+            }
+            throw new FileNotFoundException("Unable to locate nwind.proto.bin under " + Directory.GetCurrentDirectory());
+        }
         public static T LoadDatabaseFromFile<T>(TypeModel model)
             where T : class,new()
         {
             // otherwise...
-            using (Stream fs = File.OpenRead(@"NWind\nwind.proto.bin"))
+            using (Stream fs = File.OpenRead(NWindTests.GetNWindBinPath()))
             {
                 return (T)model.Deserialize(fs, null, typeof(T));
             }
@@ -95,7 +104,7 @@ namespace DAL
         [Test]
         public void PerfTestDb()
         {
-            byte[] blob = File.ReadAllBytes(@"NWind\nwind.proto.bin");
+            byte[] blob = File.ReadAllBytes(NWindTests.GetNWindBinPath());
             using (MemoryStream ms = new MemoryStream(blob))
             {
                 var model = TypeModel.Create();

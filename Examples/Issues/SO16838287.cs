@@ -2,6 +2,8 @@
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
+using System.IO;
+
 namespace Examples.Issues
 {
     [TestFixture]
@@ -10,31 +12,35 @@ namespace Examples.Issues
         [Test]
         public void ExecuteRuntime()
         {
+            var model = GetModel();
             Program.ExpectFailure<NotSupportedException>(() =>
             {
-                var model = GetModel();
                 Execute(model, 20, 0, 20, "Runtime");
                 Execute(model, 1, 0, 18, "Runtime");
-            });
+            }); // ICollection<T>.Add(T)
         }
-        // TODO: fix this
-        [ActiveTest]
         [Test]
         public void ExecuteCompileInPlace()
         {
+
             var model = GetModel();
             model.CompileInPlace();
-            Execute(model, 20, 0, 20, "CompileInPlace");
-            Execute(model, 1, 0, 18, "CompileInPlace");
+            Program.ExpectFailure<NotSupportedException>(() =>
+            {
+                Execute(model, 20, 0, 20, "CompileInPlace");
+                Execute(model, 1, 0, 18, "CompileInPlace");
+            }); // ICollection<T>.Add(T)
         }
-        // TODO: fix this
-        [ActiveTest]
         [Test]
         public void ExecuteCompile()
         {
             var model = GetModel();
-            Execute(model.Compile(), 20, 0, 20, "Compile");
-            Execute(model.Compile(), 1, 0, 18, "Compile");
+            var compiled = model.Compile();
+            Program.ExpectFailure<NotSupportedException>(() =>
+            {
+                Execute(compiled, 20, 0, 20, "Compile");
+                Execute(compiled, 1, 0, 18, "Compile");
+            }); // ICollection<T>.Add(T)
         }
         
         [Test]

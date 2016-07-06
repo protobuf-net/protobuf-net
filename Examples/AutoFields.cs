@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using ProtoBuf;
 using NUnit.Framework;
+using System.Reflection;
+using ProtoBuf.Meta;
 
 namespace Examples
 {
@@ -104,6 +106,24 @@ namespace Examples
         }
 
         [Test]
+        public void CanDetectNonSerializedAttribute()
+        {
+            const bool inherit = false;
+            var field = typeof(ImplicitFieldPOCO).GetField(nameof(ImplicitFieldPOCO.H_nonSerialized));
+#if COREFX
+            Attribute[] all = System.Linq.Enumerable.ToArray(field.GetCustomAttributes(inherit));
+#else
+            Attribute[] all = field.GetCustomAttributes(inherit).Cast<Attribute>().ToArray();
+#endif
+            bool hasNonSerialized = all.Any(x => x.GetType().FullName == "System.NonSerializedAttribute");
+
+#if COREFX
+            Assert.IsFalse(hasNonSerialized); // just can't detect it currently; isn't spoofed as an attribute, and the metadata "notserialized" flag isn't available
+#else
+            Assert.IsTrue(hasNonSerialized); // we can detect it in regular .net, though
+#endif
+        }
+        [Test]
         public void TestAllFields()
         {
             ImplicitFieldPOCO foo = new ImplicitFieldPOCO
@@ -130,15 +150,26 @@ namespace Examples
             Assert.AreEqual(101, bar.E_private, "E: post");
             Assert.AreEqual(0, bar.F_ignoreDirect, "F: post");
             Assert.AreEqual(0, bar.G_ignoreIndirect, "G: post");
+#if COREFX
+            Assert.AreEqual(104, bar.H_nonSerialized, "H: post");
+#else
             Assert.AreEqual(0, bar.H_nonSerialized, "H: post");
+#endif
             Assert.AreEqual(105, bar.X_explicitField, "X: post");
             Assert.AreEqual(106, bar.Z_explicitProperty, "Z: post");
 
             ImplicitFieldPOCOEquiv equiv = Serializer.ChangeType<ImplicitFieldPOCO, ImplicitFieldPOCOEquiv>(foo);
+#if COREFX // change in H being serialized/not moves everything around
+            Assert.AreEqual(100, equiv.D, "D: equiv");
+            Assert.AreEqual(104, equiv.E, "E: equiv");
+            Assert.AreEqual(105, equiv.X, "X: equiv");
+            Assert.AreEqual(106, equiv.Z, "Z: equiv");
+#else
             Assert.AreEqual(100, equiv.D, "D: equiv");
             Assert.AreEqual(101, equiv.E, "E: equiv");
             Assert.AreEqual(105, equiv.X, "X: equiv");
             Assert.AreEqual(106, equiv.Z, "Z: equiv");
+#endif
 
 
         }

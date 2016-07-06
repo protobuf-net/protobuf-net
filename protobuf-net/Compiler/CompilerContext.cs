@@ -1,5 +1,5 @@
 ﻿#if FEAT_COMPILER
-#define DEBUG_COMPILE
+//#define DEBUG_COMPILE
 using System;
 using System.Threading;
 using ProtoBuf.Meta;
@@ -41,13 +41,22 @@ namespace ProtoBuf.Compiler
             CodeLabel result = new CodeLabel(il.DefineLabel(), nextLabel++);
             return result;
         }
+#if DEBUG_COMPILE
+        static readonly string traceCompilePath;
+        static CompilerContext()
+        {
+            traceCompilePath = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(),
+                "TraceCompile.txt");
+            Console.WriteLine("DEBUG_COMPILE enabled; writing to " + traceCompilePath);
+        }
+#endif
         [System.Diagnostics.Conditional("DEBUG_COMPILE")]
         private void TraceCompile(string value)
         {
 #if DEBUG_COMPILE
             if (!string.IsNullOrWhiteSpace(value))
             {
-                using (System.IO.StreamWriter sw = System.IO.File.AppendText("TraceCompile.txt"))
+                using (System.IO.StreamWriter sw = System.IO.File.AppendText(traceCompilePath))
                 {
                     sw.WriteLine(value);
                 }
@@ -552,7 +561,7 @@ namespace ProtoBuf.Compiler
                 opcode = OpCodes.Callvirt;
                 if (targetType != null && Helpers.IsValueType(targetType) && !Helpers.IsValueType(method.DeclaringType))
                 {
-                    // Constrain(targetType);
+                    Constrain(targetType);
                 }
             }
             il.EmitCall(opcode, method, null);
@@ -1140,13 +1149,17 @@ namespace ProtoBuf.Compiler
             TraceCompile("BeginExceptionBlock: " + label.Index);
             return label;
         }
-#if !FX11
+
         internal void Constrain(Type type)
         {
+#if FX11
+            throw new NotSupportedException("This operation requires a constrained call, which is not available on this platform");
+#else
             il.Emit(OpCodes.Constrained, type);
             TraceCompile(OpCodes.Constrained + ": " + type);
-        }
 #endif
+        }
+
 
         internal void TryCast(Type type)
         {

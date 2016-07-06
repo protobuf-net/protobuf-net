@@ -17,7 +17,8 @@
         "*AssemblyInfo.cs",
         "Settings.Designer.cs"
       ]
-    }
+    },
+    "copyToOutput": [ "../Tools/nwind.proto.bin" ]
   },
   "dependencies": {
     "protobuf-net": {

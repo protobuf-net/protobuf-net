@@ -132,14 +132,14 @@ namespace ProtoBuf.Serializers
             bool returnList = ReturnList;
             
             using (Compiler.Local list = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : new Compiler.Local(ctx, declaredType))
-            using (Compiler.Local origlist = (returnList && AppendToCollection) ? new Compiler.Local(ctx, ExpectedType) : null)
+            using (Compiler.Local origlist = (returnList && AppendToCollection && !Helpers.IsValueType(ExpectedType)) ? new Compiler.Local(ctx, ExpectedType) : null)
             {
                 if (!AppendToCollection)
                 { // always new
                     ctx.LoadNullRef();
                     ctx.StoreValue(list);
                 }
-                else if (returnList)
+                else if (returnList && origlist != null)
                 { // need a copy
                     ctx.LoadValue(list);
                     ctx.StoreValue(origlist);
@@ -159,7 +159,7 @@ namespace ProtoBuf.Serializers
 
                 if (returnList)
                 {
-                    if (AppendToCollection)
+                    if (AppendToCollection && origlist != null)
                     {
                         // remember ^^^^ we had a spare copy of the list on the stack; now we'll compare
                         ctx.LoadValue(origlist);

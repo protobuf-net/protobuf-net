@@ -10,6 +10,19 @@ namespace ProtoBuf.unittest
 {
     static class PEVerify
     {
+#if !COREFX
+        static readonly string exePath;
+        static readonly bool unavailable;
+        static PEVerify()
+        {
+            exePath = Environment.ExpandEnvironmentVariables(@"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.1 Tools\PEVerify.exe");
+            if (!File.Exists(exePath))
+            {
+                Console.Error.WriteLine("PEVerify not found at " + exePath);
+                unavailable = true;
+            }
+        }
+#endif
         public static void Verify(string path)
         {
             Verify(path, 0, true);
@@ -21,16 +34,13 @@ namespace ProtoBuf.unittest
         public static void Verify(string path, int exitCode, bool deleteOnSuccess)
         {
 #if !COREFX
-            // note; PEVerify can be found %ProgramFiles(x86)%\Microsoft SDKs\Windows\v6.0A\bin
-            const string exePath = "PEVerify.exe";
-            if (!File.Exists(exePath))
+            if (unavailable) return;
+            if (!File.Exists(path))
             {
-                Console.WriteLine("PEVerify not found");
-                return;
+                throw new FileNotFoundException(path);
             }
             ProcessStartInfo psi = new ProcessStartInfo(exePath, path);
             psi.CreateNoWindow = true;
-
             psi.WindowStyle = ProcessWindowStyle.Hidden;
             using (Process proc = Process.Start(psi))
             {

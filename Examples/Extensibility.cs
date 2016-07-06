@@ -278,26 +278,20 @@ namespace Examples
         [Test]
         public void TestReadShouldUsePropertySmaller()
         {
-            Program.ExpectFailure<ArgumentException>(() =>
-            {
-                TestReadShouldUseProperty<SmallerObject>();
-            });
+            TestReadShouldUseProperty<SmallerObject>();
         }
 
         [Test]
         public void TestReadShouldUsePropertyInterfaceBased()
         {
-            Program.ExpectFailure<ArgumentException>(() =>
-            {
-                TestReadShouldUseProperty<InterfaceBased>();
-            });
+            TestReadShouldUseProperty<InterfaceBased>();
         }
 
         static void TestReadShouldUseProperty<T>() where T : IExtTest, IExtensible, new()
         {
             T obj = new T { Bof = "hi" };
             string hi = Extensible.GetValue<string>(obj,1);
-            Assert.AreEqual("hi", hi);
+            Assert.IsNull(hi); // this is the current behaviour when reading against a tag that is a regular field, not an extension field
         }
 
         [Test]

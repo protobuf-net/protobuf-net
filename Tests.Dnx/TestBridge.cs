@@ -1,4 +1,4 @@
-﻿#define SINGLETEST
+﻿//#define SINGLETEST
 using System;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
@@ -118,7 +118,7 @@ namespace NUnit.Framework
     public class ActiveTestAttribute : Attribute { }
     public class TestAttribute : Xunit.FactAttribute { }
 #endif
-    public class IgnoreTestAttribute : Xunit.FactAttribute
+    public class IgnoreTestAttribute : TestAttribute
     {
         public IgnoreTestAttribute(string message)
         {
