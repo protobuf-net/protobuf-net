@@ -1,5 +1,6 @@
 {
   "title": "protobuf-net",
+  "copyright": "Marc Gravell",
   "packOptions": {
     "summary": "Provides simple access to fast and efficient \"Protocol Buffers\" serialization from .NET applications",
     "owners": [ "Marc Gravell" ],
@@ -11,7 +12,7 @@
       "url": "https://github.com/mgravell/protobuf-net"
     }
   },
-  "version": "2.1.0-alpha-4",
+  "version": "2.1.0-alpha-5",
   "description": "Protocol Buffers is the name of the binary serialization format used by Google for much of their data communications. It is designed to be: small in size - efficient data storage (far smaller than xml) cheap to process - both at the client and server platform independent - portable between different programming architectures extensible - to add new data to old messages. protobuf-net is a .NET implementation of this, allowing you to serialize your .NET objects efficiently and easily. It is compatible with most of the .NET family, including .NET 2.0/3.0/3.5/4.0, .NET CF 2.0/3.5, Mono 2.x, Silverlight, etc.",
   "authors": [ "Marc Gravell" ],
   "dependencies": {
