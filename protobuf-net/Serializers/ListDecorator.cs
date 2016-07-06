@@ -240,10 +240,6 @@ namespace ProtoBuf.Serializers
         {
             ctx.LoadAddress(list, list.Type); // needs to be the reference in case the list is value-type (static-call)
             if (castListForAdd) ctx.Cast(add.DeclaringType);
-            //if (castListForAdd && !Helpers.IsValueType(list.Type))
-            //{
-            //    ctx.Cast(add.DeclaringType);
-            //}
             Type itemType = tail.ExpectedType;
             bool tailReturnsValue = tail.ReturnsValue;
             if (tail.RequiresOldValue)
