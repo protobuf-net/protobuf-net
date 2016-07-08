@@ -862,10 +862,11 @@ namespace ProtoBuf.Meta
                 case 0:
                     return null;
                 case 1:
+                    if ((Type)candidates[0] == listType) return null; // recursive
                     return (Type)candidates[0];
                 case 2:
-                    if (CheckDictionaryAccessors(model, (Type)candidates[0], (Type)candidates[1])) return (Type)candidates[0];
-                    if (CheckDictionaryAccessors(model, (Type)candidates[1], (Type)candidates[0])) return (Type)candidates[1];
+                    if ((Type)candidates[0] != listType && CheckDictionaryAccessors(model, (Type)candidates[0], (Type)candidates[1])) return (Type)candidates[0];
+                    if ((Type)candidates[1] != listType && CheckDictionaryAccessors(model, (Type)candidates[1], (Type)candidates[0])) return (Type)candidates[1];
                     break;
             }
 

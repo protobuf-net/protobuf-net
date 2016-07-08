@@ -164,6 +164,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Issues", "Issues", "{1B28C8
 		Examples\Issues\DeserializeExtensible.cs = Examples\Issues\DeserializeExtensible.cs
 		Examples\Issues\Issue124.cs = Examples\Issues\Issue124.cs
 		Examples\Issues\Issue152.cs = Examples\Issues\Issue152.cs
+		Examples\Issues\Issue167.cs = Examples\Issues\Issue167.cs
 		Examples\Issues\Issue170.cs = Examples\Issues\Issue170.cs
 		Examples\Issues\Issue174cs.cs = Examples\Issues\Issue174cs.cs
 		Examples\Issues\Issue176.cs = Examples\Issues\Issue176.cs

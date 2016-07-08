@@ -4,9 +4,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Examples.Issues
 {
@@ -17,10 +14,16 @@ namespace Examples.Issues
         public void Execute()
         {
             var test = new Problematic();
-
-            using (var memStream = new MemoryStream())
+            try
             {
-                Serializer.Serialize<Problematic>(memStream, test); //causes stackoverflow exception.
+                using (var memStream = new MemoryStream())
+                {
+                    Serializer.Serialize<Problematic>(memStream, test); //causes stackoverflow exception.
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
