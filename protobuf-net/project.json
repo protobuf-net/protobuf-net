@@ -23,6 +23,24 @@
     "warningsAsErrors": true
   },
   "frameworks": {
+    "net20": {
+      "buildOptions": {
+        "allowUnsafe": true,
+        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
+      },
+      "frameworkAssemblies": {
+        "System.Xml": "2.0.0.0"
+      }
+    },
+    "net35": {
+      "buildOptions": {
+        "allowUnsafe": true,
+        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
+      },
+      "frameworkAssemblies": {
+        "System.Xml": ""
+      }
+    },
     "net40": {
       "buildOptions": {
         "allowUnsafe": true,
