@@ -38,10 +38,10 @@
         "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER", "FEAT_SERVICEMODEL" ]
       },
       "frameworkAssemblies": {
-        "System.Xml": "",
-        "System.ServiceModel": "",
-        "System.Configuration": "",
-        "System.Runtime.Serialization": ""
+        "System.Xml": "2.0.0.0",
+        "System.ServiceModel": "3.0.0.0",
+        "System.Configuration": "2.0.0.0",
+        "System.Runtime.Serialization": "3.0.0.0"
       }
     },
     "net40": {
