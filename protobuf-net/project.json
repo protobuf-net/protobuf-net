@@ -44,28 +44,37 @@
     "net40": {
       "buildOptions": {
         "allowUnsafe": true,
-        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
+        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER", "FEAT_SERVICEMODEL" ]
       },
       "frameworkAssemblies": {
-        "System.Xml": "4.0.0.0"
+        "System.Xml": "4.0.0.0",
+        "System.ServiceModel": "4.0.0.0",
+        "System.Configuration": "4.0.0.0",
+        "System.Runtime.Serialization": "4.0.0.0"
       }
     },
     "net45": {
       "buildOptions": {
         "allowUnsafe": true,
-        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
+        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER", "FEAT_SERVICEMODEL" ]
       },
       "frameworkAssemblies": {
-        "System.Xml": "4.0.0.0"
+        "System.Xml": "4.0.0.0",
+        "System.ServiceModel": "4.0.0.0",
+        "System.Configuration": "4.0.0.0",
+        "System.Runtime.Serialization": "4.0.0.0"
       }
     },
     "net451": {
       "buildOptions": {
         "allowUnsafe": true,
-        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
+        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER", "FEAT_SERVICEMODEL" ]
       },
       "frameworkAssemblies": {
-        "System.Xml": "4.0.0.0"
+        "System.Xml": "4.0.0.0",
+        "System.ServiceModel": "4.0.0.0",
+        "System.Configuration": "4.0.0.0",
+        "System.Runtime.Serialization": "4.0.0.0"
       }
     },
     "netstandard1.3": {

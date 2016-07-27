@@ -18,9 +18,9 @@ namespace ProtoBuf.ServiceModel
         private readonly Type type;
         internal XmlProtoSerializer(TypeModel model, int key, Type type, bool isList)
         {
-            if (model == null) throw new ArgumentNullException("model");
-            if (key < 0) throw new ArgumentOutOfRangeException("key");
-            if (type == null) throw new ArgumentOutOfRangeException("type");
+            if (model == null) throw new ArgumentNullException(nameof(model));
+            if (key < 0) throw new ArgumentOutOfRangeException(nameof(key));
+            if (type == null) throw new ArgumentOutOfRangeException(nameof(type));
             this.model = model;
             this.key = key;
             this.isList = isList;
@@ -33,8 +33,8 @@ namespace ProtoBuf.ServiceModel
         /// <returns>A new serializer instance if the type is recognised by the model; null otherwise</returns>
         public static XmlProtoSerializer TryCreate(TypeModel model, Type type)
         {
-            if (model == null) throw new ArgumentNullException("model");
-            if (type == null) throw new ArgumentNullException("type");
+            if (model == null) throw new ArgumentNullException(nameof(model));
+            if (type == null) throw new ArgumentNullException(nameof(type));
 
             bool isList;
             int key = GetKey(model, ref type, out isList);
@@ -49,14 +49,14 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public XmlProtoSerializer(TypeModel model, Type type)
         {
-            if (model == null) throw new ArgumentNullException("model");
-            if (type == null) throw new ArgumentNullException("type");
+            if (model == null) throw new ArgumentNullException(nameof(model));
+            if (type == null) throw new ArgumentNullException(nameof(type));
 
             key = GetKey(model, ref type, out isList);
             this.model = model;
             this.type = type;
             this.isEnum = Helpers.IsEnum(type);
-            if (key < 0) throw new ArgumentOutOfRangeException("type", "Type not recognised by the model: " + type.FullName);
+            if (key < 0) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
         }
         static int GetKey(TypeModel model, ref Type type, out bool isList)
         {
@@ -89,7 +89,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override void WriteEndObject(System.Xml.XmlDictionaryWriter writer)
         {
-            if (writer == null) throw new ArgumentNullException("writer");
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
             writer.WriteEndElement();
         }
         /// <summary>
@@ -97,7 +97,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override void WriteStartObject(System.Xml.XmlDictionaryWriter writer, object graph)
         {
-            if (writer == null) throw new ArgumentNullException("writer");
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
             writer.WriteStartElement(PROTO_ELEMENT);
         }
         private const string PROTO_ELEMENT = "proto";
@@ -106,7 +106,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override void WriteObjectContent(System.Xml.XmlDictionaryWriter writer, object graph)
         {
-            if (writer == null) throw new ArgumentNullException("writer");
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
             if (graph == null)
             {
                 writer.WriteAttributeString("nil", "true");
@@ -137,7 +137,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override bool IsStartObject(System.Xml.XmlDictionaryReader reader)
         {
-            if (reader == null) throw new ArgumentNullException("reader");
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
             reader.MoveToContent();
             return reader.NodeType == System.Xml.XmlNodeType.Element && reader.Name == PROTO_ELEMENT;
         }
@@ -147,7 +147,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public override object ReadObject(System.Xml.XmlDictionaryReader reader, bool verifyObjectName)
         {
-            if (reader == null) throw new ArgumentNullException("reader");
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
             reader.MoveToContent();
             bool isSelfClosed = reader.IsEmptyElement, isNil = reader.GetAttribute("nil") == "true";
             reader.ReadStartElement(PROTO_ELEMENT);
