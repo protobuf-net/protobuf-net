@@ -35,10 +35,13 @@
     "net35": {
       "buildOptions": {
         "allowUnsafe": true,
-        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER" ]
+        "define": [ "FEAT_COMPILER", "PLAT_BINARYFORMATTER", "PLAT_XMLSERIALIZER", "FEAT_SERVICEMODEL" ]
       },
       "frameworkAssemblies": {
-        "System.Xml": ""
+        "System.Xml": "",
+        "System.ServiceModel": "",
+        "System.Configuration": "",
+        "System.Runtime.Serialization": ""
       }
     },
     "net40": {
