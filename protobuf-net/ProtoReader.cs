@@ -119,7 +119,11 @@ namespace ProtoBuf
             source = null;
             model = null;
             BufferPool.ReleaseBufferToPool(ref ioBuffer);
-            if(stringInterner != null) stringInterner.Clear();
+            if (stringInterner != null)
+            {
+                stringInterner.Clear();
+                stringInterner = null;
+            }
             if(netCache != null) netCache.Clear();
         }
         internal int TryReadUInt32VariantWithoutMoving(bool trimNegative, out uint value)
@@ -459,7 +463,7 @@ namespace ProtoBuf
         }
 #else
         private System.Collections.Generic.Dictionary<string,string> stringInterner;
-                private string Intern(string value)
+        private string Intern(string value)
         {
             if (value == null) return null;
             if (value.Length == 0) return "";
