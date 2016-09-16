@@ -139,7 +139,7 @@ namespace ProtoBuf.Meta
         {
             if (baseType == null) throw new ArgumentNullException("baseType");
             if (this.baseType == baseType) return;
-            if (this.baseType != null) throw new InvalidOperationException("A type can only participate in one inheritance hierarchy");
+            if (this.baseType != null) throw new InvalidOperationException(string.Format("Type {0} can only participate in one inheritance hierarchy", this.baseType.Type.FullName));
 
             MetaType type = baseType;
             while (type != null)
