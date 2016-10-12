@@ -688,11 +688,24 @@ namespace ProtoBuf.Meta
                 if((property = member as PropertyInfo) != null)
                 {
                     if (isEnum) continue; // wasn't expecting any props!
-
+                    MemberInfo backingField = null;
+                    if (!property.CanWrite)
+                    {
+                        // roslyn automatically implemented properties, in particular for get-only properties: <{Name}>k__BackingField;
+                        var backingFieldName = $"<{property.Name}>k__BackingField";
+                        foreach (var fieldMemeber in foundList)
+                        {
+                            if ((fieldMemeber as FieldInfo != null) && fieldMemeber.Name == backingFieldName)
+                            {
+                                backingField = fieldMemeber;
+                                break;
+                            }
+                        }
+                    }
                     effectiveType = property.PropertyType;
                     isPublic = Helpers.GetGetMethod(property, false, false) != null;
                     isField = false;
-                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType);
+                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, backingField);
                 } else if ((field = member as FieldInfo) != null)
                 {
                     effectiveType = field.FieldType;
@@ -752,7 +765,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private static void ApplyDefaultBehaviour_AddMembers(TypeModel model, AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, BasicList members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType)
+        private static void ApplyDefaultBehaviour_AddMembers(TypeModel model, AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, BasicList members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, MemberInfo backingMember = null)
         {
             switch (implicitMode)
             {
@@ -772,7 +785,7 @@ namespace ProtoBuf.Meta
 #endif
             if (effectiveType != null)
             {
-                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(model, member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName);
+                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(model, member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, backingMember);
                 if (normalizedAttribute != null) members.Add(normalizedAttribute);
             }
         }
@@ -937,7 +950,7 @@ namespace ProtoBuf.Meta
             return (value & required) == required;
         }
         
-        private static ProtoMemberAttribute NormalizeProtoMember(TypeModel model, MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName)
+        private static ProtoMemberAttribute NormalizeProtoMember(TypeModel model, MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName, MemberInfo backingMember = null)
         {
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
             int fieldNumber = int.MinValue, minAcceptFieldNumber = inferByTagName ? -1 : 1;
@@ -1076,7 +1089,7 @@ namespace ProtoBuf.Meta
             result.OverwriteList = overwriteList;
             result.IsRequired = isRequired;
             result.Name = Helpers.IsNullOrEmpty(name) ? member.Name : name;
-            result.Member = member;
+            result.Member = backingMember ?? member;
             result.TagIsPinned = tagIsPinned;
             return result;
         }
@@ -1422,7 +1435,17 @@ namespace ProtoBuf.Meta
             }
 #endif
             ResolveListTypes(model, miType, ref itemType, ref defaultType);
-            ValueMember newField = new ValueMember(model, type, fieldNumber, mi, miType, itemType, defaultType, DataFormat.Default, defaultValue);
+
+            MemberInfo backingField = null;
+            if ((mi as PropertyInfo)?.CanWrite == false)
+            {
+                var backingMembers = type.GetMember($"<{((PropertyInfo)mi).Name}>k__BackingField", Helpers.IsEnum(type) ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                if (backingMembers!= null && backingMembers.Length == 1 && (backingMembers[0] as FieldInfo) != null)
+                    backingField = backingMembers[0];
+            }
+            ValueMember newField = new ValueMember(model, type, fieldNumber, backingField ?? mi, miType, itemType, defaultType, DataFormat.Default, defaultValue);
+            if (backingField != null)
+                newField.SetName(mi.Name);
             Add(newField);
             return newField;
         }
