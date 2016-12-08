@@ -56,11 +56,11 @@ namespace ProtoBuf.Serializers
                 {
                     if (finalType.IsArray)
                     {
-                        serializer = new ArrayDecorator(model, tail, i + 1, false, wireType, finalType, false, false);
+                        serializer = new ArrayDecorator(model, tail, i + 1, false, wireType, finalType, false, false, false);
                     }
                     else
                     {
-                        serializer = ListDecorator.Create(model, finalType, defaultType, tail, i + 1, false, wireType, true, false, false);
+                        serializer = ListDecorator.Create(model, finalType, defaultType, tail, i + 1, false, wireType, true, false, false, false);
                     }
                 }
                 tails[i] = serializer;

@@ -38,7 +38,8 @@ namespace ProtoBuf.Meta
            OPTIONS_UseImplicitZeroDefaults = 32,
            OPTIONS_AllowParseableTypes = 64,
            OPTIONS_AutoAddProtoContractTypesOnly = 128,
-           OPTIONS_IncludeDateTimeKind = 256;
+           OPTIONS_IncludeDateTimeKind = 256,
+           OPTIONS_DontThrowNullReference = 512;
         private bool GetOption(ushort option)
         {
             return (options & option) == option;
@@ -111,7 +112,14 @@ namespace ProtoBuf.Meta
             get { return GetOption(OPTIONS_IncludeDateTimeKind); }
             set { SetOption(OPTIONS_IncludeDateTimeKind, value); }
         }
-
+        /// <summary>
+        /// Global switch that determines whether to throw <c>NullRefeneceException</c> on null items in collections when SupportNull is false.
+        /// </summary>
+        public bool DontThrowNullReference
+        {
+            get { return GetOption(OPTIONS_DontThrowNullReference); }
+            set { SetOption(OPTIONS_DontThrowNullReference, value); }
+        }
         /// <summary>
         /// Should the <c>Kind</c> be included on date/time values?
         /// </summary>

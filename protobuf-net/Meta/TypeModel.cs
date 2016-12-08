@@ -771,6 +771,11 @@ namespace ProtoBuf.Meta
                         add = Helpers.GetInstanceMethod(interfaceType, "TryAdd", types);
                         if (add != null) break;
                     }
+                    if (interfaceType.Name == "ICollection`1" && interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition().FullName == "System.Collections.Generic.ICollection`1")
+                    {
+                        add = Helpers.GetInstanceMethod(interfaceType, "Add", types);
+                        if (add != null) break;
+                    }
                 }
             }
 #endif

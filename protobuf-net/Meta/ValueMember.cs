@@ -353,11 +353,11 @@ namespace ProtoBuf.Meta
                         , "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
                     if (memberType.IsArray)
                     {
-                        ser = new ArrayDecorator(model, ser, fieldNumber, IsPacked, wireType, memberType, OverwriteList, SupportNull);
+                        ser = new ArrayDecorator(model, ser, fieldNumber, IsPacked, wireType, memberType, OverwriteList, SupportNull, model.DontThrowNullReference);
                     }
                     else
                     {
-                        ser = ListDecorator.Create(model, memberType, defaultType, ser, fieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(model, member), OverwriteList, SupportNull);
+                        ser = ListDecorator.Create(model, memberType, defaultType, ser, fieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(model, member), OverwriteList, SupportNull, model.DontThrowNullReference);
                     }
                 }
                 else if (defaultValue != null && !IsRequired && getSpecified == null)

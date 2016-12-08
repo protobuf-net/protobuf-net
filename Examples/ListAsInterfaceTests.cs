@@ -24,6 +24,12 @@ namespace Examples
     {
         IList<string> Data { get; }
     }
+    [ProtoContract]
+    class DataWithNullableIList
+    {
+        [ProtoMember(1)]
+        public IList<int?> Data { get; set; }
+    }
 
     [TestFixture]
     public class ListAsInterfaceTests
@@ -49,6 +55,87 @@ namespace Examples
             Assert.AreNotSame(data, clone);
             Assert.AreEqual(1, clone.Count);
             Assert.AreEqual("abc", clone[0]);
+        }
+
+        [Test]
+        public void TestNullableIListWithoutData()
+        {
+            var original = new DataWithNullableIList();
+            var clone = Serializer.DeepClone(original);
+            Assert.IsNotNull(clone);
+        }
+
+        [Test]
+        public void TestNullableIListWithData()
+        {
+            var original = new DataWithNullableIList { Data = new List<int?> { 4 } };
+            var clone = Serializer.DeepClone(original);
+            Assert.IsNotNull(clone);
+            Assert.AreNotSame(original, clone);
+            Assert.IsNotNull(clone.Data);
+            Assert.AreEqual(1, clone.Data.Count);
+            Assert.AreEqual(4, clone.Data[0]);
+        }
+
+        [Test]
+        public void TestNullableIListWithNullData()
+        {
+            try
+            {
+                var original = new DataWithNullableIList { Data = new List<int?> { null, 4 } };
+                Serializer.DeepClone(original);
+                Assert.Fail();
+            }
+            catch (NullReferenceException) { /* expected */ }
+        }
+
+        [Test]
+        public void TestNullableIListWithNullDataDontThrow()
+        {
+            var model = ProtoBuf.Meta.RuntimeTypeModel.Create();
+            model.DontThrowNullReference = true;
+
+            var original = new DataWithNullableIList { Data = new List<int?> { null, 4 } };
+            var clone = (DataWithNullableIList)model.DeepClone(original);
+            Assert.IsNotNull(clone);
+            Assert.AreNotSame(original, clone);
+            Assert.IsNotNull(clone.Data);
+            Assert.AreEqual(1, clone.Data.Count);
+            Assert.AreEqual(4, clone.Data[0]);
+        }
+
+        [Test]
+        public void TestNullableIListWithNullDataSupportNull()
+        {
+            var model = ProtoBuf.Meta.RuntimeTypeModel.Create();
+            model.Add(typeof(DataWithNullableIList), true)[1].SupportNull = true;
+
+            var original = new DataWithNullableIList { Data = new List<int?> { null, 4 } };
+            var clone = (DataWithNullableIList)model.DeepClone(original);
+            Assert.IsNotNull(clone);
+            Assert.AreNotSame(original, clone);
+            Assert.IsNotNull(clone.Data);
+            Assert.AreEqual(2, clone.Data.Count);
+            Assert.AreEqual(null, clone.Data[0]);
+            Assert.AreEqual(4, clone.Data[1]);
+        }
+
+
+        [Test]
+        public void TestNullableIListWithNullDataSupportNullDontThrow()
+        {
+            var model = ProtoBuf.Meta.RuntimeTypeModel.Create();
+            model.DontThrowNullReference = true;
+            model.Add(typeof(DataWithNullableIList), true)[1].SupportNull = true;
+
+            var original = new DataWithNullableIList { Data = new List<int?> { null, 4 } };
+            var clone = (DataWithNullableIList)model.DeepClone(original);
+            Assert.IsNotNull(clone);
+            Assert.AreNotSame(original, clone);
+            Assert.IsNotNull(clone.Data);
+            Assert.AreEqual(2, clone.Data.Count);
+            Assert.AreEqual(null, clone.Data[0]);
+            Assert.AreEqual(4, clone.Data[1]);
         }
 
         static void TestList<T>(T original) where T : class, IDataWithList

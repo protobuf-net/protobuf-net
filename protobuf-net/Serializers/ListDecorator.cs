@@ -34,7 +34,8 @@ namespace ProtoBuf.Serializers
                            OPTIONS_WritePacked = 4,
                            OPTIONS_ReturnList = 8,
                            OPTIONS_OverwriteList = 16,
-                           OPTIONS_SupportNull = 32;
+                           OPTIONS_SupportNull = 32,
+                           OPTIONS_DontThrowNullReference = 64;
 
         private readonly Type declaredType, concreteType;
 
@@ -47,30 +48,32 @@ namespace ProtoBuf.Serializers
         private bool WritePacked { get { return (options & OPTIONS_WritePacked) != 0; } }
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
         private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
+        private bool DontThrowNullReference { get { return (options & OPTIONS_DontThrowNullReference) != 0; } }
         protected readonly WireType packedWireType;
 
 
-        internal static ListDecorator Create(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
+        internal static ListDecorator Create(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull, bool dontThrowNullReference)
         {
 #if !NO_GENERICS
             MethodInfo builderFactory, add, addRange, finish;
             if (returnList && ImmutableCollectionDecorator.IdentifyImmutable(model, declaredType, out builderFactory, out add, out addRange, out finish))
             {
                 return new ImmutableCollectionDecorator(
-                    model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull,
+                    model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull, dontThrowNullReference,
                     builderFactory, add, addRange, finish);
             }
 
 #endif
-            return new ListDecorator(model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull);
+            return new ListDecorator(model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull, dontThrowNullReference);
         }
 
-        protected ListDecorator(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
+        protected ListDecorator(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull, bool dontThrowNullReference)
             : base(tail)
         {
             if (returnList) options |= OPTIONS_ReturnList;
             if (overwriteList) options |= OPTIONS_OverwriteList;
             if (supportNull) options |= OPTIONS_SupportNull;
+            if (dontThrowNullReference) options |= OPTIONS_DontThrowNullReference;
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
             if (!CanPack(packedWireType))
             {
@@ -479,10 +482,17 @@ namespace ProtoBuf.Serializers
                 token = new SubItemToken(); // default
             }
             bool checkForNull = !SupportNull;
+            bool throwNullReference = !DontThrowNullReference;
             foreach (object subItem in (IEnumerable)value)
             {
-                if (checkForNull && subItem == null) { throw new NullReferenceException(); }
-                Tail.Write(subItem, dest);
+                if (checkForNull && subItem == null)
+                {
+                    if (throwNullReference) throw new NullReferenceException();
+                }
+                else
+                {
+                    Tail.Write(subItem, dest);
+                }
             }
             if (writePacked)
             {

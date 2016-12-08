@@ -19,10 +19,11 @@ namespace ProtoBuf.Serializers
         private const byte
                    OPTIONS_WritePacked = 1,
                    OPTIONS_OverwriteList = 2,
-                   OPTIONS_SupportNull = 4;
+                   OPTIONS_SupportNull = 4,
+                   OPTIONS_DontThrowNullReference = 8;
         private readonly byte options;
         private readonly WireType packedWireType;
-        public ArrayDecorator(TypeModel model, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList, bool supportNull)
+        public ArrayDecorator(TypeModel model, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList, bool supportNull, bool dontThrowNullReference)
             : base(tail)
         {
             Helpers.DebugAssert(arrayType != null, "arrayType should be non-null");
@@ -48,6 +49,7 @@ namespace ProtoBuf.Serializers
             if (writePacked) options |= OPTIONS_WritePacked;
             if (overwriteList) options |= OPTIONS_OverwriteList;
             if (supportNull) options |= OPTIONS_SupportNull;
+            if (dontThrowNullReference) options |= OPTIONS_DontThrowNullReference;
             this.arrayType = arrayType;
         }
         readonly Type arrayType, itemType; // this is, for example, typeof(int[])
@@ -133,6 +135,7 @@ namespace ProtoBuf.Serializers
             get { return (options & OPTIONS_OverwriteList) == 0; }
         }
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
+        private bool DontThrowNullReference { get { return (options & OPTIONS_DontThrowNullReference) != 0; } }
 
 #if !FEAT_IKVM
         public override void Write(object value, ProtoWriter dest)
@@ -152,11 +155,18 @@ namespace ProtoBuf.Serializers
                 token = new SubItemToken(); // default
             }
             bool checkForNull = !SupportNull;
+            bool throwNullReference = !DontThrowNullReference;
             for (int i = 0; i < len; i++)
             {
                 object obj = arr[i];
-                if (checkForNull && obj == null) { throw new NullReferenceException(); }
-                Tail.Write(obj, dest);
+                if (checkForNull && obj == null)
+                {
+                    if (throwNullReference) throw new NullReferenceException();
+                }
+                else
+                {
+                    Tail.Write(obj, dest);
+                }
             }
             if (writePacked)
             {
