@@ -1,5 +1,6 @@
 ﻿#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
 using System.ServiceModel.Description;
+using System.ServiceModel.Dispatcher;
 
 namespace ProtoBuf.ServiceModel
 {
@@ -35,7 +36,7 @@ namespace ProtoBuf.ServiceModel
     /// </summary>
     public class ProtoEndpointBehavior : IEndpointBehavior
     {
-#region IEndpointBehavior Members
+        #region IEndpointBehavior Members
 
         void IEndpointBehavior.AddBindingParameters(ServiceEndpoint endpoint, System.ServiceModel.Channels.BindingParameterCollection bindingParameters)
         {
@@ -43,42 +44,54 @@ namespace ProtoBuf.ServiceModel
 
         void IEndpointBehavior.ApplyClientBehavior(ServiceEndpoint endpoint, System.ServiceModel.Dispatcher.ClientRuntime clientRuntime)
         {
-            ReplaceDataContractSerializerOperationBehavior(endpoint);
+            ReplaceDataContractSerializerOperationBehavior(endpoint, clientRuntime);
         }
 
         void IEndpointBehavior.ApplyDispatchBehavior(ServiceEndpoint endpoint, System.ServiceModel.Dispatcher.EndpointDispatcher endpointDispatcher)
         {
-            ReplaceDataContractSerializerOperationBehavior(endpoint);
+            ReplaceDataContractSerializerOperationBehavior(endpoint, endpointDispatcher);
         }
 
         void IEndpointBehavior.Validate(ServiceEndpoint endpoint)
         {
         }
 
-        private static void ReplaceDataContractSerializerOperationBehavior(ServiceEndpoint serviceEndpoint)
+        #endregion
+
+        private static void ReplaceDataContractSerializerOperationBehavior(ServiceEndpoint serviceEndpoint, ClientRuntime clientRuntime)
         {
-            foreach (OperationDescription operationDescription in serviceEndpoint.Contract.Operations)
-            {
-                ReplaceDataContractSerializerOperationBehavior(operationDescription);
-            }
+            foreach (OperationDescription description in serviceEndpoint.Contract.Operations)
+                ReplaceDataContractSerializerOperationBehavior(description, clientRuntime);
         }
 
-
-        private static void ReplaceDataContractSerializerOperationBehavior(OperationDescription description)
+        private static void ReplaceDataContractSerializerOperationBehavior(OperationDescription description, ClientRuntime clientRuntime)
         {
             DataContractSerializerOperationBehavior dcsOperationBehavior = description.Behaviors.Find<DataContractSerializerOperationBehavior>();
-            if (dcsOperationBehavior != null)
-            {
-                description.Behaviors.Remove(dcsOperationBehavior);
+            if (dcsOperationBehavior == null)
+                return;
 
-                ProtoOperationBehavior newBehavior = new ProtoOperationBehavior(description);
-                newBehavior.MaxItemsInObjectGraph = dcsOperationBehavior.MaxItemsInObjectGraph;
-                description.Behaviors.Add(newBehavior);
-            }
+            ProtoOperationBehavior protoBehavior = new ProtoOperationBehavior(description);
+            protoBehavior.MaxItemsInObjectGraph = dcsOperationBehavior.MaxItemsInObjectGraph;
+            ((IOperationBehavior)protoBehavior).ApplyClientBehavior(description, clientRuntime.Operations[description.Name]);
         }
 
+        private static void ReplaceDataContractSerializerOperationBehavior(ServiceEndpoint serviceEndpoint, System.ServiceModel.Dispatcher.EndpointDispatcher endpointDispatcher)
+        {
+            foreach (OperationDescription description in serviceEndpoint.Contract.Operations)
+                ReplaceDataContractSerializerOperationBehavior(description, endpointDispatcher);
+        }
 
-        #endregion
+        private static void ReplaceDataContractSerializerOperationBehavior(OperationDescription description, System.ServiceModel.Dispatcher.EndpointDispatcher endpointDispatcher)
+        {
+            DataContractSerializerOperationBehavior dcsOperationBehavior = description.Behaviors.Find<DataContractSerializerOperationBehavior>();
+            if (dcsOperationBehavior == null)
+                return;
+
+            ProtoOperationBehavior protoBehavior = new ProtoOperationBehavior(description);
+            protoBehavior.MaxItemsInObjectGraph = dcsOperationBehavior.MaxItemsInObjectGraph;
+            ((IOperationBehavior)protoBehavior).ApplyDispatchBehavior(description, endpointDispatcher.DispatchRuntime.Operations[description.Name]);
+        }
+
     }
 
 }
