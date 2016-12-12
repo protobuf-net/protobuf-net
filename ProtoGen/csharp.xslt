@@ -389,9 +389,12 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
   <xsl:template match="FieldDescriptorProto[label='LABEL_REQUIRED']">
     <xsl:variable name="type"><xsl:apply-templates select="." mode="type"/></xsl:variable>
     <xsl:variable name="format"><xsl:apply-templates select="." mode="format"/></xsl:variable>
+    <xsl:variable name="defaultValue"><xsl:apply-templates select="." mode="defaultValue"/></xsl:variable>
     <xsl:variable name="field"><xsl:apply-templates select="." mode="field"/></xsl:variable>
-    private <xsl:value-of select="concat($type, ' ', $field)"/>;
+    private <xsl:value-of select="concat($type, ' ', $field)"/>><xsl:if test="$defaultValue"> = <xsl:value-of select="$defaultValue"/></xsl:if>;
     [<xsl:apply-templates select="." mode="checkDeprecated"/>global::ProtoBuf.ProtoMember(<xsl:value-of select="number"/>, IsRequired = true, Name=@"<xsl:value-of select="name"/>", DataFormat = global::ProtoBuf.DataFormat.<xsl:value-of select="$format"/>)]<!--
+    --><xsl:if test="$defaultValue">
+    [global::System.ComponentModel.DefaultValue(<xsl:value-of select="$defaultValue"/>)]</xsl:if><!--
     --><xsl:if test="$optionXml">
     [global::System.Xml.Serialization.XmlElement(@"<xsl:value-of select="name"/>", Order = <xsl:value-of select="number"/>)]
     </xsl:if><xsl:if test="$optionDataContract">
@@ -401,6 +404,7 @@ namespace <xsl:value-of select="translate($namespace,':-/\','__..')"/>
       <xsl:with-param name="propType" select="$type"/>
       <xsl:with-param name="name"><xsl:call-template name="pascal"/></xsl:with-param>
       <xsl:with-param name="field" select="$field"/>
+      <xsl:with-param name="defaultValue" select="$defaultValue"/>
     </xsl:call-template>    
   </xsl:template>
 
