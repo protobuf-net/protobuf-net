@@ -371,6 +371,10 @@ namespace ProtoBuf.Meta
                     }
                 }
                 bytesRead += reader.Position;
+
+		if(reader.Position != len)
+		    return null;
+
                 haveObject = true;
                 return value;
             }
