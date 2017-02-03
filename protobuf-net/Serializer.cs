@@ -302,6 +302,20 @@ namespace ProtoBuf
         /// Creates a new instance from a protocol-buffer stream that has a length-prefix
         /// on data (to assist with network IO).
         /// </summary>
+        /// <param name="T">The type to be created.</param>
+        /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
+        /// <param name="style">How to encode the length prefix.</param>
+        /// <returns>A new, initialized instance.</returns>
+		public static object DeserializeWithLengthPrefix(Type type, Stream source, PrefixStyle style)
+		{
+		  RuntimeTypeModel model = RuntimeTypeModel.Default;
+		  return model.DeserializeWithLengthPrefix(source, null, model.MapType(type), style, 0);
+		}
+
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream that has a length-prefix
+        /// on data (to assist with network IO).
+        /// </summary>
         /// <typeparam name="T">The type to be created.</typeparam>
         /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
         /// <param name="style">How to encode the length prefix.</param>
@@ -312,6 +326,21 @@ namespace ProtoBuf
             RuntimeTypeModel model = RuntimeTypeModel.Default;
             return (T)model.DeserializeWithLengthPrefix(source, null, model.MapType(typeof(T)), style, fieldNumber);
         }
+
+        /// <summary>
+        /// Creates a new instance from a protocol-buffer stream that has a length-prefix
+        /// on data (to assist with network IO).
+        /// </summary>
+        /// <param name="T">The type to be created.</param>
+        /// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
+        /// <param name="style">How to encode the length prefix.</param>
+        /// <param name="fieldNumber">The expected tag of the item (only used with base-128 prefix style).</param>
+        /// <returns>A new, initialized instance.</returns>
+		public static object DeserializeWithLengthPrefix(Type type, Stream source, PrefixStyle style, int fieldNumber)
+		{
+		  RuntimeTypeModel model = RuntimeTypeModel.Default;
+		  return model.DeserializeWithLengthPrefix(source, null, model.MapType(type), style, fieldNumber);
+		}
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance, using length-prefixed
