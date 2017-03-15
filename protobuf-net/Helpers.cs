@@ -220,7 +220,15 @@ namespace ProtoBuf
         }
         internal static MethodInfo GetStaticMethod(Type declaringType, string name, Type[] parameterTypes)
         {
-           return declaringType.GetMethod(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, parameterTypes, null);
+#if PORTABLE
+            foreach (MethodInfo method in declaringType.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (method.Name == name && IsMatch(method.GetParameters(), parameterTypes)) return method;
+            }
+            return null;
+#else
+            return declaringType.GetMethod(name, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic, null, parameterTypes, null);
+#endif
         }
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] types)
         {
@@ -236,7 +244,7 @@ namespace ProtoBuf
         }
 #endif
 
-        internal static bool IsSubclassOf(Type type, Type baseClass)
+            internal static bool IsSubclassOf(Type type, Type baseClass)
         {
 #if WINRT || COREFX
             return type.GetTypeInfo().IsSubclassOf(baseClass);
@@ -470,7 +478,7 @@ namespace ProtoBuf
             return true;
         }
 #endif
-#if WINRT || COREFX
+#if WINRT || COREFX || PORTABLE
         private static bool IsMatch(ParameterInfo[] parameters, Type[] parameterTypes)
         {
             if (parameterTypes == null) parameterTypes = EmptyTypes;
@@ -481,6 +489,8 @@ namespace ProtoBuf
             }
             return true;
         }
+#endif
+#if WINRT || COREFX
         internal static ConstructorInfo GetConstructor(Type type, Type[] parameterTypes, bool nonPublic)
         {
             return GetConstructor(type.GetTypeInfo(), parameterTypes, nonPublic);
@@ -628,6 +638,8 @@ namespace ProtoBuf
             {
                 return segment.Array;
             }
+#elif PORTABLE
+            return ms.ToArray();
 #else
             return ms.GetBuffer();
 #endif

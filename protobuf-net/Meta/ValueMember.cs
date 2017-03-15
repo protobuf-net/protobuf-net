@@ -349,7 +349,7 @@ namespace ProtoBuf.Meta
                     Type underlyingItemType = SupportNull ? itemType : Helpers.GetUnderlyingType(itemType) ?? itemType;
 #endif
                     Helpers.DebugAssert(underlyingItemType == ser.ExpectedType
-                        || (ser.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType))
+                        || (ser.ExpectedType == model.MapType(typeof(object)) && !Helpers.IsValueType(underlyingItemType))
                         , "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
                     if (memberType.IsArray)
                     {

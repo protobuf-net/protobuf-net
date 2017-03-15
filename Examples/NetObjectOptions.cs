@@ -221,7 +221,8 @@ namespace Examples
             [ProtoMember(1, DynamicType = true)]
             public object Value { get; set; }
         }
-        [Test(Skip = "unsupported scenario")] // this is failing currently; needs to handle base-type via dynamictype
+        [IgnoreTest("unsupported scenario")]
+        [Test] // this is failing currently; needs to handle base-type via dynamictype
         public void TestUnknownDerivedType()
         {
             var obj = new Wrapper { Value = new Derived { Bar = 123, Foo = "abc" } };
