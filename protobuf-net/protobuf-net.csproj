@@ -20,7 +20,7 @@
     <FileVersion>2.2.0.0</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Version>2.2.0</Version>
-    
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\protobuf-net.xml</DocumentationFile>
     <!-- this is how we will configure the builds relatively cleanly -->
     <ImportLibs>net</ImportLibs>
     <FeatureCompiler>true</FeatureCompiler>
@@ -52,12 +52,6 @@
   <PropertyGroup Condition="'$(PlatformBinaryFormatter)' == 'true'">
     <DefineConstants>$(DefineConstants);PLAT_BINARYFORMATTER</DefineConstants>    
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net40|AnyCPU'">
-    <DocumentationFile>bin\Debug\net40\.xml</DocumentationFile>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net40|AnyCPU'">
-    <DocumentationFile>bin\Release\net40\.xml</DocumentationFile>
-  </PropertyGroup>  
   <ItemGroup Condition="'$(ImportLibs)' == 'net'">
     <Reference Include="System" />
   </ItemGroup>
