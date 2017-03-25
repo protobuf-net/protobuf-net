@@ -5,15 +5,15 @@
     <LibImport>net</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp1.1'">
-    <DefineConstants>NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netstandard1.3'">
-    <DefineConstants>NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net452'">
-    <DefineConstants>NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.2.0" />

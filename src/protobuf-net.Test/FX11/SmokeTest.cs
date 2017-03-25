@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
@@ -9,15 +9,15 @@ namespace Tests.Dnx
 
     public class SmokeTest
     {
-        [Test]
+        [Fact]
         public void ExpectPass()
         {
             var foo = new Foo { Id = 1234567 };
             var clone = Serializer.DeepClone(foo);
-            Assert.AreEqual(1234567, clone.Id);
+            Assert.Equal(1234567, clone.Id);
         }
 
-        [Test]
+        [Fact]
         public void CanCompile()
         {
             var model = TypeModel.Create();
@@ -26,7 +26,7 @@ namespace Tests.Dnx
 
             var foo = new Foo { Id = 1234567 };
             var clone = (Foo)compiled.DeepClone(foo);
-            Assert.AreEqual(1234567, clone.Id);
+            Assert.Equal(1234567, clone.Id);
         }
         [ProtoContract]
         public class Foo
