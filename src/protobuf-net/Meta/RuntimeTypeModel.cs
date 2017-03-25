@@ -1193,7 +1193,14 @@ namespace ProtoBuf.Meta
 #if COREFX
                 throw new NotSupportedException(CompilerOptions.NoPersistence);
 #else
-                asm.Save(path);
+                try
+                {
+                    asm.Save(path);
+                } catch(IOException ex)
+                {
+                    // advertise the file info
+                    throw new IOException(path + ", " + ex.Message, ex);
+                }
                 Helpers.DebugWriteLine("Wrote dll:" + path);
 #endif
             }

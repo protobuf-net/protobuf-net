@@ -297,6 +297,20 @@ namespace FX11
             RuntimeTypeModel orderModel = TypeModel.Create();
             orderModel.Add(typeof(OrderHeader), true);
             orderModel.Add(typeof(OrderDetail), true);
+
+
+            if(File.Exists("OrderSerializer.dll"))
+            {
+                try { File.Delete("OrderSerializer.dll"); }
+                catch {
+                    Console.WriteLine("Oops, OrderSerializer.dll is locked; try looking in process explorer (sysinternals)");
+                    for(int i = 30; i != 0; i--)
+                    {
+                        Console.WriteLine(i);
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                }
+            }
             orderModel.Compile("OrderSerializer", "OrderSerializer.dll");
             RuntimeTypeModel model = BuildMeta();
             Customer cust1 = new Customer();
@@ -319,8 +333,9 @@ namespace FX11
 
 #if !COREFX
             TypeModel compiled = model.Compile("CustomerModel", "CustomerModel.dll");
+            if (File.Exists("CustomerModel.dll")) File.Delete("CustomerModel.dll");
             //PEVerify.Verify("CustomerModel.dll");
-           WriteCustomer(compiled, "Compiled - class", cust2);
+            WriteCustomer(compiled, "Compiled - class", cust2);
            WriteCustomer(compiled, "Compiled - struct", cust2);
 #endif
             /*

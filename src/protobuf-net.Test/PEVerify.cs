@@ -11,7 +11,7 @@ namespace ProtoBuf.unittest
     static class PEVerify
     {
 #if COREFX
-        public static ProtoBuf.Meta.TypeModel Compile(this ProtoBuf.Meta.RuntimeTypeModel model, string typename, string file)
+        public static ProtoBuf.Meta.TypeModel Compile(this ProtoBuf.Meta.RuntimeTypeModel model, string name, string path)
         {
             // dummy to avoid lots of test hackery for dll compilation tests
             model.CompileInPlace();
@@ -22,7 +22,7 @@ namespace ProtoBuf.unittest
         static readonly bool unavailable;
         static PEVerify()
         {
-            exePath = Environment.ExpandEnvironmentVariables(@"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.1 Tools\PEVerify.exe");
+            exePath = Environment.ExpandEnvironmentVariables(@"%ProgramFiles(x86)%\Microsoft SDKs\Windows\v10.0A\bin\NETFX 4.6.2 Tools\PEVerify.exe");
             if (!File.Exists(exePath))
             {
                 Console.Error.WriteLine("PEVerify not found at " + exePath);
