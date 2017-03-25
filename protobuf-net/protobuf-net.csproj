@@ -3,25 +3,13 @@
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <Authors>Marc Gravell</Authors>
-    <PackageTags>binary;serialization;protobuf;$(PackageBaseTags)</PackageTags>
-    <TargetFrameworks>net20;net35;net40;netstandard1.3</TargetFrameworks>
-    <AssemblyOriginatorKeyFile>../ProtoBuf.snk</AssemblyOriginatorKeyFile>
+    <PackageTags>$(PackageBaseTags)</PackageTags>
+    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants> <!-- new build tools spit these out -->
-    <Copyright>See https://github.com/mgravell/protobuf-net</Copyright>
-    <PackageLicenseUrl>https://github.com/mgravell/protobuf-net/blob/master/Licence.txt</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/mgravell/protobuf-net</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/mgravell/protobuf-net</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-    <Product>protobuf-net ($(TargetFramework))</Product>
-    <PackageReleaseNotes>https://github.com/mgravell/protobuf-net/blob/master/docs/releasenotes.md</PackageReleaseNotes>
-    <AssemblyVersion>2.2.0.0</AssemblyVersion>
-    <FileVersion>2.2.0.0</FileVersion>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Version>2.2.0</Version>
-    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\protobuf-net.xml</DocumentationFile>
+    
     <!-- this is how we will configure the builds relatively cleanly -->
     <ImportLibs>net</ImportLibs>
     <FeatureCompiler>true</FeatureCompiler>

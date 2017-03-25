@@ -1,0 +1,32 @@
+<Project>
+  <PropertyGroup>
+    <VersionPrefix>2.2.0</VersionPrefix>
+    <RootNamespace>ProtoBuf</RootNamespace>
+    <Authors>Marc Gravell</Authors>
+    <OutputType>Library</OutputType>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>../ProtoBuf.snk</AssemblyOriginatorKeyFile>
+    <GenerateDocumentationFile Condition="'$(Configuration)'=='Release'">true</GenerateDocumentationFile>
+    <Copyright>See https://github.com/mgravell/protobuf-net</Copyright>
+    <PackageLicenseUrl>https://github.com/mgravell/protobuf-net/blob/master/Licence.txt</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/mgravell/protobuf-net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/mgravell/protobuf-net</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Product>protobuf-net ($(TargetFramework))</Product>
+    <PackageReleaseNotes>http://mgravell.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
+    
+    <PackageBaseTags>binary;serialization;protobuf;</PackageBaseTags>
+    
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>embedded</DebugType>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <IncludeSymbols>false</IncludeSymbols>
+    <IsTestProject>$(MSBuildProjectName.Contains('Test'))</IsTestProject>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="SourceLink.Create.GitHub" Version="2.0.2" PrivateAssets="All" /> 
+    <DotNetCliToolReference Include="dotnet-sourcelink" Version="2.0.2" />
+    <DotNetCliToolReference Include="dotnet-sourcelink-git" Version="2.0.2" />
+  </ItemGroup>
+</Project>
