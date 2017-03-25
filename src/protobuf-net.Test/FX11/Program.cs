@@ -286,6 +286,22 @@ namespace FX11
             }
             return product1;
         }
+        static void PurgeWithGusto(string path)
+        {
+            if (File.Exists(path))
+            {
+                try { File.Delete(path); }
+                catch
+                {
+                    Console.WriteLine("Oops, " + path + " is locked; try looking in process explorer (sysinternals)");
+                    for (int i = 30; i != 0; i--)
+                    {
+                        Console.WriteLine(i);
+                        System.Threading.Thread.Sleep(1000);
+                    }
+                }
+            }
+        }
         [Fact]
         public void Execute()
         {
@@ -299,19 +315,9 @@ namespace FX11
             orderModel.Add(typeof(OrderDetail), true);
 
 
-            if(File.Exists("OrderSerializer.dll"))
-            {
-                try { File.Delete("OrderSerializer.dll"); }
-                catch {
-                    Console.WriteLine("Oops, OrderSerializer.dll is locked; try looking in process explorer (sysinternals)");
-                    for(int i = 30; i != 0; i--)
-                    {
-                        Console.WriteLine(i);
-                        System.Threading.Thread.Sleep(1000);
-                    }
-                }
-            }
+            PurgeWithGusto("OrderSerializer.dll");
             orderModel.Compile("OrderSerializer", "OrderSerializer.dll");
+            PEVerify.Verify("OrderSerializer.dll");
             RuntimeTypeModel model = BuildMeta();
             Customer cust1 = new Customer();
             CustomerStruct cust2 = new CustomerStruct();
@@ -332,11 +338,11 @@ namespace FX11
 #if FEAT_COMPILER
 
 #if !COREFX
+            PurgeWithGusto("CustomerModel.dll");
             TypeModel compiled = model.Compile("CustomerModel", "CustomerModel.dll");
-            if (File.Exists("CustomerModel.dll")) File.Delete("CustomerModel.dll");
-            //PEVerify.Verify("CustomerModel.dll");
+            PEVerify.Verify("CustomerModel.dll");
             WriteCustomer(compiled, "Compiled - class", cust2);
-           WriteCustomer(compiled, "Compiled - struct", cust2);
+            WriteCustomer(compiled, "Compiled - struct", cust2);
 #endif
             /*
             CustomerModel serializer = new CustomerModel();

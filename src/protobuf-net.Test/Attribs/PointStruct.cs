@@ -122,7 +122,7 @@ namespace ProtoBuf.unittest.Attribs
             try {
                 var model = BuildModel();
                 model.Compile("PointDirect", "PointDirect.dll");
-                //PEVerify.Verify("PointDirect.dll", 1); // expect failure due to field access
+                PEVerify.Verify("PointDirect.dll", 1); // expect failure due to field access
             } catch(InvalidOperationException ex)
             {
                 Assert.Equal("Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x", ex.Message);

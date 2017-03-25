@@ -54,12 +54,12 @@ namespace ProtoBuf.unittest
                 if (proc.WaitForExit(10000))
                 {
                     Assert.Equal(exitCode, proc.ExitCode); //, path);
-                    if (deleteOnSuccess) File.Delete(path);
+                    if (deleteOnSuccess) try { File.Delete(path); } catch { }
                 }
                 else
                 {
                     proc.Kill();
-                    throw new TimeoutException();
+                    throw new TimeoutException("PEVerify " + path);
                 }
             }
 #endif
