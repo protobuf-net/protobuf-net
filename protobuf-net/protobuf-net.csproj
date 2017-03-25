@@ -5,7 +5,7 @@
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
     <Authors>Marc Gravell</Authors>
     <PackageTags>binary;serialization;protobuf;$(PackageBaseTags)</PackageTags>
-    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>net20;net35;net40;netstandard1.3</TargetFrameworks>
     <AssemblyOriginatorKeyFile>../ProtoBuf.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
