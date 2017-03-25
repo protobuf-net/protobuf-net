@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net", "protobuf-net\protobuf-net.csproj", "{3044FAAC-6DCC-44AA-ADAF-26152FF46922}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Test", "protobuf-net.Test\protobuf-net.Test.csproj", "{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{3044FAAC-6DCC-44AA-ADAF-26152FF46922}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3044FAAC-6DCC-44AA-ADAF-26152FF46922}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3044FAAC-6DCC-44AA-ADAF-26152FF46922}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
