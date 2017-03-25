@@ -7,6 +7,7 @@ usage: protogen -i:{infile2} [-i:{infile2}] [-o:{outfile}] [-t:{template}] [-p:{
 -q: Quiet; suppresses header
 -d: Include all dependencies of the input files in the set so the set is self-contained.
 -ns: Default namespace; used in code generation when no package is specified
+-import: Specify the directory in which to search for imports.  May be specified multiple times.
 
 Examples:
 
@@ -14,3 +15,4 @@ protogen -i:input.proto -o:output.cs
 protogen -i:input.proto -o:output.xml -t:xml
 protogen -i:input.proto -o:output.cs -p:datacontract -q
 protogen -i:input.proto -o:output.cs -p:observable=true
+protogen -i:input.proto -o:output.cs -import:common
