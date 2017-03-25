@@ -5,7 +5,6 @@
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
     <PackageTags>$(PackageBaseTags)</PackageTags>
     <TargetFrameworks>net40;netstandard1.3</TargetFrameworks>
-    <SignAssembly>true</SignAssembly>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants> <!-- new build tools spit these out -->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
