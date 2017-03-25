@@ -13,7 +13,7 @@
     <RepositoryUrl>https://github.com/mgravell/protobuf-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Product>protobuf-net ($(TargetFramework))</Product>
-    <PackageReleaseNotes>http://mgravell.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
+    <PackageReleaseNotes>https://mgravell.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
     
     <PackageTags>binary;serialization;protobuf</PackageTags>
     
