@@ -6,12 +6,14 @@ using System.Runtime.CompilerServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
+#if !EMIT_ASSEMBLY_INFO
+[assembly: AssemblyCompany("Marc Gravell")]
+[assembly: AssemblyProduct("protobuf-net")]
 [assembly: AssemblyTitle("protobuf-net")]
 [assembly: AssemblyDescription("Protocol Buffers for .NET")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Marc Gravell")]
-[assembly: AssemblyProduct("protobuf-net")]
 [assembly: AssemblyCopyright("See http://code.google.com/p/protobuf-net/")]
+#endif
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -37,9 +39,11 @@ using System.Runtime.CompilerServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
+#if !EMIT_ASSEMBLY_INFO
 [assembly: AssemblyVersion("2.0.0.668")]
 #if !CF
 [assembly: AssemblyFileVersion("2.0.0.668")]
+#endif
 #endif
 #if !FX11
 #if XUNIT

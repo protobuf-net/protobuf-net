@@ -1,1 +1,0 @@
-@packages\NuGet.CommandLine.2.0.40000\tools\NuGet.exe push %1
