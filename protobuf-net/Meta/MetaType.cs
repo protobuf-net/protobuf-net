@@ -1476,12 +1476,22 @@ namespace ProtoBuf.Meta
             // check for nested data (not allowed)
             if (itemType != null)
             {
-                Type nestedItemType = null, nestedDefaultType = null;
-                ResolveListTypes(model, itemType, ref nestedItemType, ref nestedDefaultType);
-                if (nestedItemType != null)
+                bool shouldIgnoreListHandling = false;
+                foreach (ProtoContractAttribute protoContractAttribute in itemType.GetCustomAttributes(typeof(ProtoContractAttribute), false))
                 {
-                    throw TypeModel.CreateNestedListsNotSupported();
+                    shouldIgnoreListHandling = protoContractAttribute.IgnoreListHandling;
                 }
+
+                if (!shouldIgnoreListHandling)
+                {
+                    Type nestedItemType = null, nestedDefaultType = null;
+                    ResolveListTypes(model, itemType, ref nestedItemType, ref nestedDefaultType);
+                    if (nestedItemType != null)
+                    {
+                        throw TypeModel.CreateNestedListsNotSupported();
+                    }
+                }
+                
             }
 
             if (itemType != null && defaultType == null)
