@@ -15,6 +15,7 @@
     <PackageProjectUrl>https://github.com/mgravell/protobuf-net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/mgravell/protobuf-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
+    <Product>protobuf-net ($(TargetFramework))</Product>
     <PackageReleaseNotes>https://github.com/mgravell/protobuf-net/blob/master/docs/releasenotes.md</PackageReleaseNotes>
     <AssemblyVersion>2.2.0.0</AssemblyVersion>
     <FileVersion>2.2.0.0</FileVersion>
