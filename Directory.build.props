@@ -15,7 +15,7 @@
     <Product>protobuf-net ($(TargetFramework))</Product>
     <PackageReleaseNotes>http://mgravell.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
     
-    <PackageBaseTags>binary;serialization;protobuf;</PackageBaseTags>
+    <PackageTags>binary;serialization;protobuf</PackageTags>
     
     <DebugSymbols>true</DebugSymbols>
     <DebugType>embedded</DebugType>
