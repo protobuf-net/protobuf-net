@@ -13,11 +13,11 @@ namespace ProtoBuf.unittest.Perf.Issue103Types
 namespace ProtoBuf.unittest.Perf
 {
     using Issue103Types;
-    using NUnit.Framework;
+    using Xunit;
     using System.Diagnostics;
 using ProtoBuf.Meta;
     using System.IO;
-    [TestFixture]
+    
     public class Issue103
     {
         static RuntimeTypeModel CreateModel()
@@ -28,7 +28,7 @@ using ProtoBuf.Meta;
             model.Add(typeof(ContainedType), true);
             return model;
         }
-        [Test]
+        [Fact]
         public void TestPerf()
         {
             TypeA typeA = new TypeA();
@@ -86,7 +86,7 @@ using ProtoBuf.Meta;
             model.Serialize(ms, typeB);
             ms.Position = 0;
             TypeB clone = (TypeB)model.Deserialize(ms, null, typeof(TypeB));
-            Assert.AreEqual(typeB.containedType.Count, clone.containedType.Count);
+            Assert.Equal(typeB.containedType.Count, clone.containedType.Count);
 
             Stopwatch typeBSer = Stopwatch.StartNew();
             for (int i = 0; i < loop; i++)

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using ProtoBuf.Serializers;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using ProtoBuf.Compiler;
 
@@ -44,12 +44,12 @@ namespace ProtoBuf.unittest.Serializers
                     reported = ProtoWriter.GetPosition(writer);
                 }
                 data = ms.ToArray();
-                Assert.AreEqual(reported, data.Length, message + ":reported/actual");
+                Assert.Equal(reported, data.Length); //, message + ":reported/actual");
             }
-            Assert.AreEqual(expected.Length, data.Length, message + ":Length");
+            Assert.Equal(expected.Length, data.Length); //, message + ":Length");
             for (int i = 0; i < data.Length; i++)
             {
-                Assert.AreEqual(expected[i], data[i], message + ":" + i);
+                Assert.Equal(expected[i], data[i]); //, message + ":" + i);
             }
         }
 #endif
@@ -62,7 +62,7 @@ namespace ProtoBuf.unittest.Serializers
                 raw = ms.ToArray();
             }
 
-            Assert.AreEqual(hex, GetHex(raw));
+            Assert.Equal(hex, GetHex(raw));
 
             model.CompileInPlace();
             using (MemoryStream ms = new MemoryStream())
@@ -71,7 +71,7 @@ namespace ProtoBuf.unittest.Serializers
                 raw = ms.ToArray();
             }
 
-            Assert.AreEqual(hex, GetHex(raw));
+            Assert.Equal(hex, GetHex(raw));
 
             TypeModel compiled = model.Compile("compiled", "compiled.dll");
             PEVerify.Verify("compiled.dll");
@@ -80,7 +80,7 @@ namespace ProtoBuf.unittest.Serializers
                 compiled.Serialize(ms, value);
                 raw = ms.ToArray();
             }
-            Assert.AreEqual(hex, GetHex(raw));
+            Assert.Equal(hex, GetHex(raw));
         }
 #if !NO_INTERNAL_CONTEXT
         public static void Test<T>(T value, Func<IProtoSerializer, IProtoSerializer> ctor, string expectedHex)
@@ -107,7 +107,7 @@ namespace ProtoBuf.unittest.Serializers
                     action(pw);
                 }
                 string s = GetHex(ms.ToArray());               
-                Assert.AreEqual(expectedHex, s);
+                Assert.Equal(expectedHex, s);
             }
         }
     }

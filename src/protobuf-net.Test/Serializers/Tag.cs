@@ -3,14 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Serializers;
 namespace ProtoBuf.unittest.Serializers
 {
-    [TestFixture]
+    
     public class Tag
     {
-        [Test]
+        [Fact]
         public void TestBasicTags()
         {
 

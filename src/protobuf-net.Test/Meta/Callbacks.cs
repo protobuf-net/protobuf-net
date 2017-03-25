@@ -1,12 +1,12 @@
 ﻿using System.IO;
 using System.Runtime.Serialization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+    
     public class Callbacks
     {
         [DataContract, KnownType(typeof(B))]
@@ -51,7 +51,7 @@ namespace ProtoBuf.unittest.Meta
             [OnDeserializing] public new void OnDeserializing(StreamingContext ctx) { TraceData += "C.OnDeserializing;";}
             [OnDeserialized] public new void OnDeserialized(StreamingContext ctx) { TraceData += "C.OnDeserialized;";}
         }
-        [Test]
+        [Fact]
         public void CanCompileModel()
         {
             var model = BuildModel();
@@ -61,7 +61,7 @@ namespace ProtoBuf.unittest.Meta
             PEVerify.Verify("Callbacks.dll");
         }
 
-        [Test]
+        [Fact]
         public void TestCallbacksAtMultipleInheritanceLevels()
         {
             C dcsOrig, dcsClone, pbClone, pbOrig;
@@ -71,32 +71,32 @@ namespace ProtoBuf.unittest.Meta
                 ms.Position = 0;
                 dcsClone = (C)ser.ReadObject(ms);
             }
-            Assert.AreEqual(dcsOrig.AValue, dcsClone.AValue);
-            Assert.AreEqual(dcsOrig.BValue, dcsClone.BValue);
-            Assert.AreEqual(dcsOrig.CValue, dcsClone.CValue);
+            Assert.Equal(dcsOrig.AValue, dcsClone.AValue);
+            Assert.Equal(dcsOrig.BValue, dcsClone.BValue);
+            Assert.Equal(dcsOrig.CValue, dcsClone.CValue);
 
             var model = BuildModel();
             pbClone = (C) model.DeepClone((pbOrig = CreateC()));
-            Assert.AreEqual(pbOrig.AValue, pbClone.AValue, "Runtime");
-            Assert.AreEqual(pbOrig.BValue, pbClone.BValue, "Runtime");
-            Assert.AreEqual(pbOrig.CValue, pbClone.CValue, "Runtime");
-            Assert.AreEqual(dcsOrig.TraceData, pbOrig.TraceData, "Runtime");
-            Assert.AreEqual(dcsClone.TraceData, pbClone.TraceData, "Runtime");
+            Assert.Equal(pbOrig.AValue, pbClone.AValue); //, "Runtime");
+            Assert.Equal(pbOrig.BValue, pbClone.BValue); //, "Runtime");
+            Assert.Equal(pbOrig.CValue, pbClone.CValue); //, "Runtime");
+            Assert.Equal(dcsOrig.TraceData, pbOrig.TraceData); //, "Runtime");
+            Assert.Equal(dcsClone.TraceData, pbClone.TraceData); //, "Runtime");
 
             model.CompileInPlace();
             pbClone = (C)model.DeepClone((pbOrig = CreateC()));
-            Assert.AreEqual(pbOrig.AValue, pbClone.AValue, "CompileInPlace");
-            Assert.AreEqual(pbOrig.BValue, pbClone.BValue, "CompileInPlace");
-            Assert.AreEqual(pbOrig.CValue, pbClone.CValue, "CompileInPlace");
-            Assert.AreEqual(dcsOrig.TraceData, pbOrig.TraceData, "CompileInPlace");
-            Assert.AreEqual(dcsClone.TraceData, pbClone.TraceData, "CompileInPlace");
+            Assert.Equal(pbOrig.AValue, pbClone.AValue); //, "CompileInPlace");
+            Assert.Equal(pbOrig.BValue, pbClone.BValue); //, "CompileInPlace");
+            Assert.Equal(pbOrig.CValue, pbClone.CValue); //, "CompileInPlace");
+            Assert.Equal(dcsOrig.TraceData, pbOrig.TraceData); //, "CompileInPlace");
+            Assert.Equal(dcsClone.TraceData, pbClone.TraceData); //, "CompileInPlace");
 
             pbClone = (C)model.Compile().DeepClone((pbOrig = CreateC()));
-            Assert.AreEqual(pbOrig.AValue, pbClone.AValue, "CompileFully");
-            Assert.AreEqual(pbOrig.BValue, pbClone.BValue, "CompileFully");
-            Assert.AreEqual(pbOrig.CValue, pbClone.CValue, "CompileFully");
-            Assert.AreEqual(dcsOrig.TraceData, pbOrig.TraceData, "CompileFully");
-            Assert.AreEqual(dcsClone.TraceData, pbClone.TraceData, "CompileFully");
+            Assert.Equal(pbOrig.AValue, pbClone.AValue); //, "CompileFully");
+            Assert.Equal(pbOrig.BValue, pbClone.BValue); //, "CompileFully");
+            Assert.Equal(pbOrig.CValue, pbClone.CValue); //, "CompileFully");
+            Assert.Equal(dcsOrig.TraceData, pbOrig.TraceData); //, "CompileFully");
+            Assert.Equal(dcsClone.TraceData, pbClone.TraceData); //, "CompileFully");
         }
 
         static C CreateC() {

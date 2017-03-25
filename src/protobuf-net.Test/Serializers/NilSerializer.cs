@@ -3,15 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using ProtoBuf.Compiler;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.unittest.Serializers;
 
 namespace ProtoBuf.Serializers
 {
-    [TestFixture]
+    
     public class NilTests
     {
-        [Test]
+        [Fact]
         public void NilShouldAddNothing() {
             Util.Test("123", nil => nil, "");
         }

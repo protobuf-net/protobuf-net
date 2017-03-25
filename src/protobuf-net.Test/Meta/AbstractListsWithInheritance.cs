@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+    
     public class AbstractListsWithInheritance
     {
 
@@ -37,14 +37,14 @@ namespace ProtoBuf.unittest.Meta
             return model;
         }
 
-        [Test]
+        [Fact]
         public void CanBuildAndCompileModel()
         {
             BuildModel().Compile("AbstractListsWithInheritance", "AbstractListsWithInheritance.dll");
             PEVerify.Verify("AbstractListsWithInheritance.dll");
         }
 
-        [Test]
+        [Fact]
         public void TestIntermediateListType()
         {
             var model = BuildModel();
@@ -68,7 +68,7 @@ namespace ProtoBuf.unittest.Meta
             VerifyWrapperVerifyIntermediateResult(clone, "Compile");
         }
 
-        [Test]
+        [Fact]
         public void TestIntermediateAbstractListType()
         {
             var model = BuildModel();
@@ -94,37 +94,37 @@ namespace ProtoBuf.unittest.Meta
 
         void VerifyWrapperVerifyIntermediateResult(Wrapper wrapper, string message)
         {
-            Assert.IsNotNull(wrapper, message + " wrapper");
-            Assert.IsNull(wrapper.BaseList, message + " BaseList");
-            Assert.IsNull(wrapper.CList, message + " CList");
-            Assert.IsNull(wrapper.AbstractAList, message + " AbstractAList");
-            Assert.IsNotNull(wrapper.AList, message + " AList");
-            Assert.AreEqual(2, wrapper.AList.Count);
-            Assert.AreEqual(typeof(ConcreteA), wrapper.AList[0].GetType());
-            Assert.AreEqual(12, wrapper.AList[0].A);
-            Assert.AreEqual(34, wrapper.AList[0].BaseProp);
-            Assert.AreEqual(typeof(ConcreteC), wrapper.AList[1].GetType());
-            Assert.AreEqual(56, wrapper.AList[1].A);
-            Assert.AreEqual(78, wrapper.AList[1].BaseProp);
-            Assert.AreEqual(90, ((ConcreteC)wrapper.AList[1]).C);
+            Assert.NotNull(wrapper); //, message + " wrapper");
+            Assert.Null(wrapper.BaseList); //, message + " BaseList");
+            Assert.Null(wrapper.CList); //, message + " CList");
+            Assert.Null(wrapper.AbstractAList); //, message + " AbstractAList");
+            Assert.NotNull(wrapper.AList); //, message + " AList");
+            Assert.Equal(2, wrapper.AList.Count);
+            Assert.Equal(typeof(ConcreteA), wrapper.AList[0].GetType());
+            Assert.Equal(12, wrapper.AList[0].A);
+            Assert.Equal(34, wrapper.AList[0].BaseProp);
+            Assert.Equal(typeof(ConcreteC), wrapper.AList[1].GetType());
+            Assert.Equal(56, wrapper.AList[1].A);
+            Assert.Equal(78, wrapper.AList[1].BaseProp);
+            Assert.Equal(90, ((ConcreteC)wrapper.AList[1]).C);
         }
 
         void VerifyWrapperVerifyAbstractIntermediateResult(Wrapper wrapper, string message)
         {
-            Assert.IsNotNull(wrapper, message + " wrapper");
-            Assert.IsNull(wrapper.BaseList, message + " BaseList");
-            Assert.IsNull(wrapper.CList, message + " CList");
-            Assert.IsNull(wrapper.AList, message + " AList");
-            Assert.IsNotNull(wrapper.AbstractAList, message + " AbstractAList");
-            Assert.AreEqual(typeof(AList), wrapper.AbstractAList.GetType(), message + " AbstractAList");
-            Assert.AreEqual(2, wrapper.AbstractAList.Count);
-            Assert.AreEqual(typeof(ConcreteA), wrapper.AbstractAList[0].GetType());
-            Assert.AreEqual(12, wrapper.AbstractAList[0].A);
-            Assert.AreEqual(34, wrapper.AbstractAList[0].BaseProp);
-            Assert.AreEqual(typeof(ConcreteC), wrapper.AbstractAList[1].GetType());
-            Assert.AreEqual(56, wrapper.AbstractAList[1].A);
-            Assert.AreEqual(78, wrapper.AbstractAList[1].BaseProp);
-            Assert.AreEqual(90, ((ConcreteC)wrapper.AbstractAList[1]).C);
+            Assert.NotNull(wrapper); //, message + " wrapper");
+            Assert.Null(wrapper.BaseList); //, message + " BaseList");
+            Assert.Null(wrapper.CList); //, message + " CList");
+            Assert.Null(wrapper.AList); //, message + " AList");
+            Assert.NotNull(wrapper.AbstractAList); //, message + " AbstractAList");
+            Assert.Equal(typeof(AList), wrapper.AbstractAList.GetType()); //, message + " AbstractAList");
+            Assert.Equal(2, wrapper.AbstractAList.Count);
+            Assert.Equal(typeof(ConcreteA), wrapper.AbstractAList[0].GetType());
+            Assert.Equal(12, wrapper.AbstractAList[0].A);
+            Assert.Equal(34, wrapper.AbstractAList[0].BaseProp);
+            Assert.Equal(typeof(ConcreteC), wrapper.AbstractAList[1].GetType());
+            Assert.Equal(56, wrapper.AbstractAList[1].A);
+            Assert.Equal(78, wrapper.AbstractAList[1].BaseProp);
+            Assert.Equal(90, ((ConcreteC)wrapper.AbstractAList[1]).C);
         }
     }
 }

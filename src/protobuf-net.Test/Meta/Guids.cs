@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.Diagnostics;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+    
     public class Guids
     {
         public class Data {
@@ -22,7 +22,7 @@ namespace ProtoBuf.unittest.Meta
                 .Add(2, "SomeTailData");
             return model;
         }
-        [Test]
+        [Fact]
         public void TestRoundTripEmpty()
         {
             var model = BuildModel();
@@ -35,7 +35,7 @@ namespace ProtoBuf.unittest.Meta
         }
 
         
-        [Test]
+        [Fact]
         public void TestRoundTripObviousBytes()
         {
             var expected = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 };
@@ -47,13 +47,13 @@ namespace ProtoBuf.unittest.Meta
             TestGuid(model, data); 
             TestGuid(model.Compile(), data);
         }
-        [Test]
+        [Fact]
         public void TestRoundTripRandomRuntime()
         {
             var model = BuildModel();
             TestGuids(model, 1000);
         }
-        [Test]
+        [Fact]
         public void TestRoundTripRandomCompileInPlace()
         {
             var model = BuildModel();
@@ -61,7 +61,7 @@ namespace ProtoBuf.unittest.Meta
             TestGuids(model, 1000);
         }
 
-        [Test]
+        [Fact]
         public void TestRoundTripRandomCompile()
         {
             var model = BuildModel().Compile("TestRoundTripRandomCompile", "TestRoundTripRandomCompile.dll");
@@ -79,18 +79,20 @@ namespace ProtoBuf.unittest.Meta
                 rand.NextBytes(buffer);
                 Data data = new Data { Value = new Guid(buffer), SomeTailData = (char)rand.Next(1, ushort.MaxValue) };
                 Data clone = (Data)model.DeepClone(data);
-                Assert.IsNotNull(clone);
-                Assert.AreEqual(data.Value, clone.Value);
-                Assert.AreEqual(data.SomeTailData, clone.SomeTailData);
+                Assert.NotNull(clone);
+                Assert.Equal(data.Value, clone.Value);
+                Assert.Equal(data.SomeTailData, clone.SomeTailData);
             }
             watch.Stop();
+#if !COREFX
             Trace.WriteLine(watch.ElapsedMilliseconds);
+#endif
         }
         static void TestGuid(TypeModel model, Data data)
         {
             Data clone = (Data)model.DeepClone(data);
-            Assert.AreEqual(data.Value, clone.Value);
-            Assert.AreEqual(data.SomeTailData, clone.SomeTailData);
+            Assert.Equal(data.Value, clone.Value);
+            Assert.Equal(data.SomeTailData, clone.SomeTailData);
         }
     }
 }

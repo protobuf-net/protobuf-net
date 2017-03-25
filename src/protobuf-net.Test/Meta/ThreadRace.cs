@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using System.Threading;
 using ProtoBuf.Meta;
 using System.IO;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+    
     public class ThreadRace
     {///the purpose here is to investigate thread-race issues with the initial reflection / compilation of a type, which has been
      ///an observed issue. We are only looking at implicit models here, as explicit models have much more controlled lives (caveat developer, etc)
@@ -36,7 +36,7 @@ namespace ProtoBuf.unittest.Meta
             [ProtoMember(2)]public string B { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void DestructionTestModelInitialisation()
         {
             // we run this a few (100) times because threading isn't reliable ;p
@@ -97,15 +97,15 @@ namespace ProtoBuf.unittest.Meta
                 for (int j = 0; j < threads.Length; j++) threads[j].Start();
                 for (int j = 0; j < threads.Length; j++) threads[j].Join();
 
-                Assert.IsNull(firstException);
-                Assert.AreEqual(0, Interlocked.CompareExchange(ref failures, 0, 0));
+                Assert.Null(firstException);
+                Assert.Equal(0, Interlocked.CompareExchange(ref failures, 0, 0));
 
             }
         }
 
 
 
-        [Test]
+        [Fact]
         public void DestructionTestDictionary()
         {
             byte[] raw;
@@ -155,8 +155,8 @@ namespace ProtoBuf.unittest.Meta
                 for (int j = 0; j < threads.Length; j++) threads[j].Start();
                 for (int j = 0; j < threads.Length; j++) threads[j].Join();
 
-                Assert.IsNull(firstException);
-                Assert.AreEqual(0, Interlocked.CompareExchange(ref failures, 0, 0));
+                Assert.Null(firstException);
+                Assert.Equal(0, Interlocked.CompareExchange(ref failures, 0, 0));
 
             }
         }
@@ -197,7 +197,7 @@ namespace ProtoBuf.unittest.Meta
         [ProtoContract, ProtoInclude(1, typeof(Y9))]public class Y8 : Y7 { }
         [ProtoContract]public class Y9 : Y8 { }
 
-        [Test]
+        [Fact]
         public void TestDeserializeModelFromRoot()
         {
             byte[] raw;
@@ -244,13 +244,13 @@ namespace ProtoBuf.unittest.Meta
                 for (int j = 0; j < threads.Length; j++) threads[j].Start();
                 for (int j = 0; j < threads.Length; j++) threads[j].Join();
 
-                Assert.IsNull(firstException);
-                Assert.AreEqual(0, Interlocked.CompareExchange(ref failures, 0, 0));
+                Assert.Null(firstException);
+                Assert.Equal(0, Interlocked.CompareExchange(ref failures, 0, 0));
 
             }
         }
 
-        [Test]
+        [Fact]
         public void TestSerializeModelFromRoot()
         {
             byte[] raw;
@@ -297,8 +297,8 @@ namespace ProtoBuf.unittest.Meta
                 for (int j = 0; j < threads.Length; j++) threads[j].Start();
                 for (int j = 0; j < threads.Length; j++) threads[j].Join();
 
-                Assert.IsNull(firstException);
-                Assert.AreEqual(0, Interlocked.CompareExchange(ref failures, 0, 0));
+                Assert.Null(firstException);
+                Assert.Equal(0, Interlocked.CompareExchange(ref failures, 0, 0));
 
             }
         }
@@ -310,7 +310,7 @@ namespace ProtoBuf.unittest.Meta
         }
 
 
-        [Test]
+        [Fact]
         public void TestSerializeModelFromLeaf()
         {
             var objs = new object[] {
@@ -367,8 +367,8 @@ namespace ProtoBuf.unittest.Meta
                 for (int j = 0; j < threads.Length; j++) threads[j].Start(j % objs.Length);
                 for (int j = 0; j < threads.Length; j++) threads[j].Join();
 
-                Assert.IsNull(firstException);
-                Assert.AreEqual(0, Interlocked.CompareExchange(ref failures, 0, 0));
+                Assert.Null(firstException);
+                Assert.Equal(0, Interlocked.CompareExchange(ref failures, 0, 0));
 
             }
         }

@@ -1,9 +1,9 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+    
     public class Interfaces
     {
         public class SomeClass
@@ -23,7 +23,7 @@ namespace ProtoBuf.unittest.Meta
                 set { foo = value; }
             }
         }
-        [Test]
+        [Fact]
         public void ExposeInterfaceWithDefaultImplementation()
         {
             var model = TypeModel.Create();
@@ -35,7 +35,7 @@ namespace ProtoBuf.unittest.Meta
             orig.SomeProperty = new SomeClass2();
             orig.SomeProperty.Foo = 123;
             var clone = (SomeClass)model.DeepClone(orig);
-            Assert.AreEqual(123, clone.SomeProperty.Foo);
+            Assert.Equal(123, clone.SomeProperty.Foo);
         }
        
 

@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.IO;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+    
     public class SubItems
     {
         static RuntimeTypeModel CreateModel()
@@ -33,38 +33,38 @@ namespace ProtoBuf.unittest.Meta
             return model;
         }
 
-        [Test]
+        [Fact]
         public void BuildModel()
         {
-            Assert.IsNotNull(CreateModel());
+            Assert.NotNull(CreateModel());
         }
 
-        [Test]
+        [Fact]
         public void TestCanDeserialierAllFromEmptyStream()
         {
             var model = CreateModel();
-            Assert.IsInstanceOfType(typeof(OuterRef), model.Deserialize(Stream.Null, null, typeof(OuterRef)));
-            Assert.IsInstanceOfType(typeof(OuterVal), model.Deserialize(Stream.Null, null, typeof(OuterVal)));
-            Assert.IsInstanceOfType(typeof(InnerRef), model.Deserialize(Stream.Null, null, typeof(InnerRef)));
-            Assert.IsInstanceOfType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
+            Assert.IsType(typeof(OuterRef), model.Deserialize(Stream.Null, null, typeof(OuterRef)));
+            Assert.IsType(typeof(OuterVal), model.Deserialize(Stream.Null, null, typeof(OuterVal)));
+            Assert.IsType(typeof(InnerRef), model.Deserialize(Stream.Null, null, typeof(InnerRef)));
+            Assert.IsType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
 
             model.CompileInPlace();
-            Assert.IsInstanceOfType(typeof(OuterRef), model.Deserialize(Stream.Null, null, typeof(OuterRef)));
-            Assert.IsInstanceOfType(typeof(OuterVal), model.Deserialize(Stream.Null, null, typeof(OuterVal)));
-            Assert.IsInstanceOfType(typeof(InnerRef), model.Deserialize(Stream.Null, null, typeof(InnerRef)));
-            Assert.IsInstanceOfType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
+            Assert.IsType(typeof(OuterRef), model.Deserialize(Stream.Null, null, typeof(OuterRef)));
+            Assert.IsType(typeof(OuterVal), model.Deserialize(Stream.Null, null, typeof(OuterVal)));
+            Assert.IsType(typeof(InnerRef), model.Deserialize(Stream.Null, null, typeof(InnerRef)));
+            Assert.IsType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
 
             var compiled = model.Compile("SubItems","SubItems.dll");
             PEVerify.Verify("SubItems.dll");
-            Assert.IsInstanceOfType(typeof(OuterRef), compiled.Deserialize(Stream.Null, null, typeof(OuterRef)));
-            Assert.IsInstanceOfType(typeof(OuterVal), compiled.Deserialize(Stream.Null, null, typeof(OuterVal)));
-            Assert.IsInstanceOfType(typeof(InnerRef), compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
-            Assert.IsInstanceOfType(typeof(InnerVal), compiled.Deserialize(Stream.Null, null, typeof(InnerVal)));
+            Assert.IsType(typeof(OuterRef), compiled.Deserialize(Stream.Null, null, typeof(OuterRef)));
+            Assert.IsType(typeof(OuterVal), compiled.Deserialize(Stream.Null, null, typeof(OuterVal)));
+            Assert.IsType(typeof(InnerRef), compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
+            Assert.IsType(typeof(InnerVal), compiled.Deserialize(Stream.Null, null, typeof(InnerVal)));
         }
 
 
 
-        [Test]
+        [Fact]
         public void TestRoundTripOuterRef()
         {
             OuterRef outer = new OuterRef
@@ -75,29 +75,29 @@ namespace ProtoBuf.unittest.Meta
             
             var model = CreateModel();
             clone = (OuterRef)model.DeepClone(outer);
-            Assert.AreNotSame(outer, clone);
-            Assert.AreEqual(123, clone.InnerRef.Int32);
-            Assert.AreEqual("abc", clone.InnerRef.String);
-            Assert.AreEqual(456, clone.InnerVal.Int32);
-            Assert.AreEqual("def", clone.InnerVal.String);
+            Assert.NotSame(outer, clone);
+            Assert.Equal(123, clone.InnerRef.Int32);
+            Assert.Equal("abc", clone.InnerRef.String);
+            Assert.Equal(456, clone.InnerVal.Int32);
+            Assert.Equal("def", clone.InnerVal.String);
 
             model.CompileInPlace();
             clone = (OuterRef)model.DeepClone(outer);
-            Assert.AreNotSame(outer, clone);
-            Assert.AreEqual(123, clone.InnerRef.Int32);
-            Assert.AreEqual("abc", clone.InnerRef.String);
-            Assert.AreEqual(456, clone.InnerVal.Int32);
-            Assert.AreEqual("def", clone.InnerVal.String);
+            Assert.NotSame(outer, clone);
+            Assert.Equal(123, clone.InnerRef.Int32);
+            Assert.Equal("abc", clone.InnerRef.String);
+            Assert.Equal(456, clone.InnerVal.Int32);
+            Assert.Equal("def", clone.InnerVal.String);
 
             clone = (OuterRef)model.Compile().DeepClone(outer);
-            Assert.AreNotSame(outer, clone);
-            Assert.AreEqual(123, clone.InnerRef.Int32);
-            Assert.AreEqual("abc", clone.InnerRef.String);
-            Assert.AreEqual(456, clone.InnerVal.Int32);
-            Assert.AreEqual("def", clone.InnerVal.String);
+            Assert.NotSame(outer, clone);
+            Assert.Equal(123, clone.InnerRef.Int32);
+            Assert.Equal("abc", clone.InnerRef.String);
+            Assert.Equal(456, clone.InnerVal.Int32);
+            Assert.Equal("def", clone.InnerVal.String);
         }
 
-        [Test]
+        [Fact]
         public void TestRoundTripOuterVal()
         {
             OuterVal outer = new OuterVal
@@ -108,27 +108,27 @@ namespace ProtoBuf.unittest.Meta
 
             var model = CreateModel();
             clone = (OuterVal)model.DeepClone(outer);
-            Assert.AreNotSame(outer, clone);
-            Assert.AreEqual(123, clone.InnerRef.Int32);
-            Assert.AreEqual("abc", clone.InnerRef.String);
-            Assert.AreEqual(456, clone.InnerVal.Int32);
-            Assert.AreEqual("def", clone.InnerVal.String);
+            Assert.NotSame(outer, clone);
+            Assert.Equal(123, clone.InnerRef.Int32);
+            Assert.Equal("abc", clone.InnerRef.String);
+            Assert.Equal(456, clone.InnerVal.Int32);
+            Assert.Equal("def", clone.InnerVal.String);
             
             model.CompileInPlace();
             clone = (OuterVal)model.DeepClone(outer);
             
-            Assert.AreNotSame(outer, clone);
-            Assert.AreEqual(123, clone.InnerRef.Int32);
-            Assert.AreEqual("abc", clone.InnerRef.String);
-            Assert.AreEqual(456, clone.InnerVal.Int32);
-            Assert.AreEqual("def", clone.InnerVal.String);
+            Assert.NotSame(outer, clone);
+            Assert.Equal(123, clone.InnerRef.Int32);
+            Assert.Equal("abc", clone.InnerRef.String);
+            Assert.Equal(456, clone.InnerVal.Int32);
+            Assert.Equal("def", clone.InnerVal.String);
             
             clone = (OuterVal)model.Compile().DeepClone(outer);
-            Assert.AreNotSame(outer, clone);
-            Assert.AreEqual(123, clone.InnerRef.Int32);
-            Assert.AreEqual("abc", clone.InnerRef.String);
-            Assert.AreEqual(456, clone.InnerVal.Int32);
-            Assert.AreEqual("def", clone.InnerVal.String);
+            Assert.NotSame(outer, clone);
+            Assert.Equal(123, clone.InnerRef.Int32);
+            Assert.Equal("abc", clone.InnerRef.String);
+            Assert.Equal(456, clone.InnerVal.Int32);
+            Assert.Equal("def", clone.InnerVal.String);
         }
 
         public class OuterRef
@@ -157,7 +157,7 @@ namespace ProtoBuf.unittest.Meta
             public string String { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void TestTypeWithNullableProps()
         {
             var model = TypeModel.Create();
@@ -171,14 +171,14 @@ namespace ProtoBuf.unittest.Meta
             TypeModel compiled = model.Compile("TestTypeWithNullableProps", "TestTypeWithNullableProps.dll");
             PEVerify.Verify("TestTypeWithNullableProps.dll");
             var clone3 = (TypeWithNulls)compiled.DeepClone(obj);
-            Assert.AreEqual(123, clone1.First);
-            Assert.AreEqual(456.789M, clone1.Second);
+            Assert.Equal(123, clone1.First);
+            Assert.Equal(456.789M, clone1.Second);
 
-            Assert.AreEqual(123, clone2.First);
-            Assert.AreEqual(456.789M, clone2.Second);
+            Assert.Equal(123, clone2.First);
+            Assert.Equal(456.789M, clone2.Second);
 
-            Assert.AreEqual(123, clone3.First);
-            Assert.AreEqual(456.789M, clone3.Second);
+            Assert.Equal(123, clone3.First);
+            Assert.Equal(456.789M, clone3.Second);
         }
 
         [ProtoContract]

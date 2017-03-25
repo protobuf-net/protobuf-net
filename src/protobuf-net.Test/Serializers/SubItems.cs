@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using System.IO;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.unittest.Serializers
 {
-    [TestFixture]
+    
     public class SubItems
     {
-        [Test]
+        [Fact]
         public void TestWriteSubItemWithShortBlob() {
             Util.Test(pw =>
             {

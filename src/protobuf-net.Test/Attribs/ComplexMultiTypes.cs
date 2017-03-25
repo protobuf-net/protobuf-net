@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.IO;
 using ProtoBuf.unittest.Meta;
 
 namespace ProtoBuf.unittest.Attribs
 {
-    [TestFixture]
+    
     public class ComplexMultiTypes
     {
         #region DTO
@@ -94,7 +94,7 @@ namespace ProtoBuf.unittest.Attribs
 
         }
 
-        [Test]
+        [Fact]
         public void RoundtripEmptyEntityDto()
         {
             var model = BuildModel();
@@ -114,19 +114,19 @@ namespace ProtoBuf.unittest.Attribs
             memstream.Seek(0, SeekOrigin.Begin);
             var result = (EntityDTO)model.Deserialize(memstream, null, typeof(EntityDTO));
 
-            Assert.AreEqual(typeof(EntityDTO), result.GetType(), message + ":type");
-            Assert.AreEqual(1, result.Id, message + ":Id");
-            Assert.AreEqual(0, result.Components.Count, message + ":Count");
+            Assert.Equal(typeof(EntityDTO), result.GetType()); //, message + ":type");
+            Assert.Equal(1, result.Id); //, message + ":Id");
+            Assert.Equal(0, result.Components.Count); //, message + ":Count");
         }
 
-        [Test]
+        [Fact]
         public void CanCompileModel()
         {
             BuildModel().Compile("ComplexMultiTypes", "ComplexMultiTypes.dll");
             PEVerify.Verify("ComplexMultiTypes.dll");
         }
 
-        [Test]
+        [Fact]
         public void RoundtripEntityDtoWithItems()
         {
             var model = BuildModel();
@@ -150,11 +150,11 @@ namespace ProtoBuf.unittest.Attribs
             memstream2.Seek(0, SeekOrigin.Begin);
             var result2 = (EntityDTO)model.Deserialize(memstream2, null, typeof(EntityDTO));
 
-            Assert.AreEqual(1, result2.Id, message + ":Id");
-            Assert.AreEqual(2, result2.Components.Count, message + ":Count");
+            Assert.Equal(1, result2.Id); //, message + ":Id");
+            Assert.Equal(2, result2.Components.Count); //, message + ":Count");
             // These two tests are lame and will not be used for long
-            Assert.AreEqual(typeof(HealthDTO), result2.Components.First().GetType(), message + ":First");
-            Assert.AreEqual(typeof(PhysicalLocationDTO), result2.Components.Last().GetType(), message + ":Last");
+            Assert.Equal(typeof(HealthDTO), result2.Components.First().GetType()); //, message + ":First");
+            Assert.Equal(typeof(PhysicalLocationDTO), result2.Components.Last().GetType()); //, message + ":Last");
         }
     }
 }

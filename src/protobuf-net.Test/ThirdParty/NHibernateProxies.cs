@@ -1,39 +1,41 @@
 ﻿#if !NO_NHIBERNATE
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using NUnit.Framework;
 using NHibernate.Proxy;
 using ProtoBuf.Meta;
+using System;
 using System.IO;
+using Xunit;
+using NHibernate.Engine;
 
 namespace ProtoBuf.unittest.ThirdParty
 {
-    [TestFixture]
+
     public class NHibernateProxies
     {
         public class FooWrapper
         {
             public Foo Foo { get; set; }
         }
-        public class Foo {
+        public class Foo
+        {
             public virtual int Id { get; set; }
             public virtual string Name { get; set; }
         }
         public class FooProxy : Foo, INHibernateProxy, ILazyInitializer
         {
-            public override int Id {
+            public override int Id
+            {
                 get { return wrapped.Id; }
                 set { wrapped.Id = value; }
             }
-            public override string Name {
+            public override string Name
+            {
                 get { return wrapped.Name; }
                 set { wrapped.Name = value; }
             }
             private readonly Foo wrapped;
-            public FooProxy(Foo wrapped) { this.wrapped = wrapped;}
-            ILazyInitializer INHibernateProxy.HibernateLazyInitializer {
+            public FooProxy(Foo wrapped) { this.wrapped = wrapped; }
+            ILazyInitializer INHibernateProxy.HibernateLazyInitializer
+            {
                 get { return this; }
             }
 
@@ -98,6 +100,10 @@ namespace ProtoBuf.unittest.ThirdParty
                 throw new NotImplementedException();
             }
 
+            public void SetSession(ISessionImplementor s) { }
+
+            public void UnsetSession() { }
+
             bool ILazyInitializer.Unwrap
             {
                 get
@@ -109,6 +115,10 @@ namespace ProtoBuf.unittest.ThirdParty
                     throw new NotImplementedException();
                 }
             }
+
+            bool ILazyInitializer.IsReadOnlySettingAvailable => true;
+
+            bool ILazyInitializer.ReadOnly { get; set; }
 
             #endregion
         }
@@ -122,57 +132,75 @@ namespace ProtoBuf.unittest.ThirdParty
         }
 
         class Bar : Foo { }
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Fact]
         public void AttemptToSerializeUnknownSubtypeShouldFail_Runtime()
         {
-            var model = BuildModel();
-            model.Serialize(Stream.Null, new Bar());
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var model = BuildModel();
+                model.Serialize(Stream.Null, new Bar());
+            });
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Fact]
         public void AttemptToSerializeUnknownSubtypeShouldFail_CompileInPlace()
         {
-            var model = BuildModel();
-            model.CompileInPlace();
-            model.Serialize(Stream.Null, new Bar());
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var model = BuildModel();
+                model.CompileInPlace();
+                model.Serialize(Stream.Null, new Bar());
+            });
         }
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Fact]
         public void AttemptToSerializeUnknownSubtypeShouldFail_Compile()
         {
-            var model = BuildModel().Compile();
-            model.Serialize(Stream.Null, new Bar());
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var model = BuildModel().Compile();
+                model.Serialize(Stream.Null, new Bar());
+            });
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Fact]
         public void AttemptToSerializeWrapperUnknownSubtypeShouldFail_Runtime()
         {
-            var model = BuildModel();
-            model.Serialize(Stream.Null, new FooWrapper { Foo = new Bar() });
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var model = BuildModel();
+                model.Serialize(Stream.Null, new FooWrapper { Foo = new Bar() });
+            });
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Fact]
         public void AttemptToSerializeWrapperUnknownSubtypeShouldFail_CompileInPlace()
         {
-            var model = BuildModel();
-            model.CompileInPlace();
-            model.Serialize(Stream.Null, new FooWrapper { Foo = new Bar() });
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var model = BuildModel();
+                model.CompileInPlace();
+                model.Serialize(Stream.Null, new FooWrapper { Foo = new Bar() });
+            });
         }
 
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Fact]
         public void AttemptToSerializeWrapperUnknownSubtypeShouldFail_Compile()
         {
-            var model = BuildModel().Compile();
-            model.Serialize(Stream.Null, new FooWrapper { Foo = new Bar() });
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var model = BuildModel().Compile();
+                model.Serialize(Stream.Null, new FooWrapper { Foo = new Bar() });
+            });
         }
 
-        [Test]
+        [Fact]
         public void CanRoundTripProxyToRegular()
         {
             var model = BuildModel();
 
             Foo foo = new Foo { Id = 1234, Name = "abcd" }, proxy = new FooProxy(foo), clone;
-            Assert.IsNotNull(foo);
-            Assert.IsNotNull(proxy);
+            Assert.NotNull(foo);
+            Assert.NotNull(proxy);
 
             clone = (Foo)model.DeepClone(foo);
             CompareFoo(foo, clone, "Runtime/Foo");
@@ -195,11 +223,11 @@ namespace ProtoBuf.unittest.ThirdParty
 
         private static void CompareFoo(Foo original, Foo clone, string message)
         {
-            Assert.IsNotNull(clone, message);
-            Assert.AreNotSame(original, clone);
-            Assert.AreEqual(original.Id, clone.Id, message + ": Id");
-            Assert.AreEqual(original.Name, clone.Name, message + ": Name");
-            Assert.AreEqual(typeof(Foo), clone.GetType(), message);
+            Assert.NotNull(clone); //, message);
+            Assert.NotSame(original, clone);
+            Assert.Equal(original.Id, clone.Id); //, message + ": Id");
+            Assert.Equal(original.Name, clone.Name); //, message + ": Name");
+            Assert.Equal(typeof(Foo), clone.GetType()); //, message);
         }
     }
 }

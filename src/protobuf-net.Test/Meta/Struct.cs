@@ -1,13 +1,7 @@
 ﻿#if !NO_INTERNAL_CONTEXT
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using NUnit.Framework;
-using ProtoBuf.Serializers;
-using ProtoBuf.unittest.Serializers;
-using ProtoBuf.Compiler;
 using System.IO;
+using Xunit;
+using System.Reflection;
 namespace ProtoBuf.unittest.Meta
 {
     public struct CustomerStruct
@@ -16,10 +10,10 @@ namespace ProtoBuf.unittest.Meta
         public int Id { get { return id; } set { id = value; } }
         public string Name;
     }
-    [TestFixture]
+    
     public class TestCustomerStruct
     {
-        [Test]
+        [Fact]
         public void RunStructDesrializerForEmptyStream()
         {
             var model = ProtoBuf.Meta.TypeModel.Create();
@@ -33,17 +27,17 @@ namespace ProtoBuf.unittest.Meta
 
             using (var reader = new ProtoReader(Stream.Null, null, null))
             {
-                Assert.IsInstanceOfType(typeof(CustomerStruct), deser(null, reader));
+                Assert.IsType(typeof(CustomerStruct), deser(null, reader));
             }
             using (var reader = new ProtoReader(Stream.Null, null, null))
             {
                 CustomerStruct before = new CustomerStruct { Id = 123, Name = "abc" };
                 CustomerStruct after = (CustomerStruct)deser(before, reader);
-                Assert.AreEqual(before.Id, after.Id);
-                Assert.AreEqual(before.Name, after.Name);
+                Assert.Equal(before.Id, after.Id);
+                Assert.Equal(before.Name, after.Name);
             }
         }
-        [Test]
+        [Fact]
         public void GenerateTypeSerializer()
         {
             var model = ProtoBuf.Meta.TypeModel.Create();
@@ -67,10 +61,10 @@ namespace ProtoBuf.unittest.Meta
                 using (ProtoReader reader = new ProtoReader(ms, null, null))
                 {
                     CustomerStruct? cst = (CustomerStruct?)deser(null, reader);
-                    Assert.IsTrue(cst.HasValue);
+                    Assert.True(cst.HasValue);
                     CustomerStruct cs2 = cst.Value;
-                    Assert.AreEqual(cs1.Id, cs2.Id);
-                    Assert.AreEqual(cs1.Name, cs2.Name);
+                    Assert.Equal(cs1.Id, cs2.Id);
+                    Assert.Equal(cs1.Name, cs2.Name);
                 }
             }
         }

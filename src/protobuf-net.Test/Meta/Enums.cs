@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.ComponentModel;
 using System.IO;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+    
     public class Enums
     {
         public enum I8 : sbyte { A, B, C }
@@ -49,7 +49,7 @@ namespace ProtoBuf.unittest.Meta
             return model;
         }
 
-        [Test]
+        [Fact]
         public void CanCompileEnumsAsPassthru()
         {
             var model = BuildModel(true);
@@ -57,7 +57,7 @@ namespace ProtoBuf.unittest.Meta
             PEVerify.Verify("AllTheEnumsPassThru.dll");
         }
 
-        [Test]
+        [Fact]
         public void CanCompileEnumsAsMapped()
         {
             var model = BuildModel(false);
@@ -65,7 +65,7 @@ namespace ProtoBuf.unittest.Meta
             PEVerify.Verify("AllTheEnumsMapped.dll");
         }
 
-        [Test]
+        [Fact]
         public void CanRoundTripAsPassthru()
         {
             var model = BuildModel(true);
@@ -88,7 +88,7 @@ namespace ProtoBuf.unittest.Meta
             clone = (AllTheEnums)model.Compile().DeepClone(ate);
             CompareAgainstClone(ate, clone, "Compile");
         }
-        [Test]
+        [Fact]
         public void CanRoundTripAsMapped()
         {
             var model = BuildModel(false);
@@ -117,17 +117,17 @@ namespace ProtoBuf.unittest.Meta
         }
         static void CompareAgainstClone(AllTheEnums original, AllTheEnums clone, string caption)
         {
-            Assert.IsNotNull(original, caption + " (original)");
-            Assert.IsNotNull(clone, caption + " (clone)");
-            Assert.AreNotSame(original, clone, caption);
-            Assert.AreEqual(original.I8, clone.I8, caption);
-            Assert.AreEqual(original.U8, clone.U8, caption);
-            Assert.AreEqual(original.I16, clone.I16, caption);
-            Assert.AreEqual(original.U16, clone.U16, caption);
-            Assert.AreEqual(original.I32, clone.I32, caption);
-            Assert.AreEqual(original.U32, clone.U32, caption);
-            Assert.AreEqual(original.I64, clone.I64, caption);
-            Assert.AreEqual(original.U64, clone.U64, caption);
+            Assert.NotNull(original); //, caption + " (original)");
+            Assert.NotNull(clone); //, caption + " (clone)");
+            Assert.NotSame(original, clone); //, caption);
+            Assert.Equal(original.I8, clone.I8); //, caption);
+            Assert.Equal(original.U8, clone.U8); //, caption);
+            Assert.Equal(original.I16, clone.I16); //, caption);
+            Assert.Equal(original.U16, clone.U16); //, caption);
+            Assert.Equal(original.I32, clone.I32); //, caption);
+            Assert.Equal(original.U32, clone.U32); //, caption);
+            Assert.Equal(original.I64, clone.I64); //, caption);
+            Assert.Equal(original.U64, clone.U64); //, caption);
         }
 
         [ProtoContract]
@@ -164,7 +164,7 @@ namespace ProtoBuf.unittest.Meta
             return model;
         }
 
-        [Test]
+        [Fact]
         public void RemappingCanCompile()
         {
             var model = CreateRemappingModel();
@@ -181,7 +181,7 @@ namespace ProtoBuf.unittest.Meta
                 return (TTo)model.Deserialize(ms, null, typeof (TTo));
             }
         }
-        [Test]
+        [Fact]
         public void RemapValuesMakeSense()
         {
             var model = BuildModel(true);
@@ -189,14 +189,14 @@ namespace ProtoBuf.unittest.Meta
             var orig = new MappedValuesA {Value = EnumA.Z};
 
             var clone = ChangeType<MappedValuesB>(model, orig);
-            Assert.AreEqual(EnumB.X, clone.Value, "Runtime");
+            Assert.Equal(EnumB.X, clone.Value); //, "Runtime");
 
             model.CompileInPlace();
             clone = ChangeType<MappedValuesB>(model, orig);
-            Assert.AreEqual(EnumB.X, clone.Value, "CompileInPlace");
+            Assert.Equal(EnumB.X, clone.Value); //, "CompileInPlace");
 
             clone = ChangeType<MappedValuesB>(model.Compile(), orig);
-            Assert.AreEqual(EnumB.X, clone.Value, "Compile");
+            Assert.Equal(EnumB.X, clone.Value); //, "Compile");
         }
     }
 }

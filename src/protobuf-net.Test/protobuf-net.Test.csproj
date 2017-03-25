@@ -1,17 +1,38 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard1.3;net40</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks> <!-- ;netstandard1.3 -->
+    <LibImport>net</LibImport>
   </PropertyGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
-    <PackageReference Include="xunit">
-      <Version>2.2.0</Version>
-    </PackageReference>
+  <PropertyGroup Condition="$(TargetFramework)=='netcoreapp1.1'">
+    <DefineConstants>NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+    <LibImport>core</LibImport>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework)=='netstandard1.3'">
+    <DefineConstants>NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+    <LibImport>core</LibImport>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework)=='net452'">
+    <DefineConstants>NO_INTERNAL_CONTEXT</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.2.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
   </ItemGroup>
-
+  <ItemGroup Condition="$(TargetFramework)=='net452'">
+    <PackageReference Include="NHibernate" Version="4.1.1.4000" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(LibImport)'=='core'">
+    <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
+    <PackageReference Include="System.Threading" Version="4.3.0" />
+    <PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+    <PackageReference Include="System.Threading.ThreadPool" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
+  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
   </ItemGroup>
-
 </Project>

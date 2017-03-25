@@ -1,13 +1,13 @@
 ﻿using System.IO;
 using System.Threading;
-using NUnit.Framework;
+using Xunit;
 
 namespace ProtoBuf.unittest.Attribs
 {
-    [TestFixture]
+    
     public class TurkishL
     {
-        [Test]
+        [Fact]
         public void FakeTupleTest()
         {
 #if !COREFX

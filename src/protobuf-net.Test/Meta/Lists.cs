@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 using System.Collections;
 using ProtoBuf.Meta;
 using System.Diagnostics;
@@ -9,7 +9,7 @@ using System;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+    
     public class PocoListTests
     {
         public class TypeWithLists
@@ -30,7 +30,7 @@ namespace ProtoBuf.unittest.Meta
 
         
 
-        [Test]
+        [Fact]
         public void EmitModelWithEverything()
         {
             var model = TypeModel.Create();
@@ -53,51 +53,51 @@ namespace ProtoBuf.unittest.Meta
 
         }
 
-        [Test]
+        [Fact]
         public void AddOnTypedListShouldResolveCorrectly_String()
         {
             var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(1, "ListString");
-            Assert.AreEqual(typeof(TypeWithLists), model[typeof(TypeWithLists)][1].ParentType, "ParentType");
-            Assert.AreEqual(typeof(string), model[typeof(TypeWithLists)][1].ItemType, "ItemType");
-            Assert.AreEqual(typeof(List<string>), model[typeof(TypeWithLists)][1].MemberType, "MemberType");
-            Assert.AreEqual(typeof(List<string>), model[typeof(TypeWithLists)][1].DefaultType, "DefaultType");
+            Assert.Equal(typeof(TypeWithLists), model[typeof(TypeWithLists)][1].ParentType); //, "ParentType");
+            Assert.Equal(typeof(string), model[typeof(TypeWithLists)][1].ItemType); //, "ItemType");
+            Assert.Equal(typeof(List<string>), model[typeof(TypeWithLists)][1].MemberType); //, "MemberType");
+            Assert.Equal(typeof(List<string>), model[typeof(TypeWithLists)][1].DefaultType); //, "DefaultType");
         }
 
-        [Test]
+        [Fact]
         public void AddOnTypedListShouldResolveCorrectly_Int32()
         {
             var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(1, "ListInt32");
-            Assert.AreEqual(typeof(TypeWithLists), model[typeof(TypeWithLists)][1].ParentType, "ParentType");
-            Assert.AreEqual(typeof(int), model[typeof(TypeWithLists)][1].ItemType, "ItemType");
-            Assert.AreEqual(typeof(List<int>), model[typeof(TypeWithLists)][1].MemberType, "MemberType");
-            Assert.AreEqual(typeof(List<int>), model[typeof(TypeWithLists)][1].DefaultType, "DefaultType");
+            Assert.Equal(typeof(TypeWithLists), model[typeof(TypeWithLists)][1].ParentType); //, "ParentType");
+            Assert.Equal(typeof(int), model[typeof(TypeWithLists)][1].ItemType); //, "ItemType");
+            Assert.Equal(typeof(List<int>), model[typeof(TypeWithLists)][1].MemberType); //, "MemberType");
+            Assert.Equal(typeof(List<int>), model[typeof(TypeWithLists)][1].DefaultType); //, "DefaultType");
         }
 
-        [Test]
+        [Fact]
         public void AddOnTypedIListShouldResolveCorrectly_String()
         {
             var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(2, "IListStringTyped");
-            Assert.AreEqual(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType, "ParentType");
-            Assert.AreEqual(typeof(string), model[typeof(TypeWithLists)][2].ItemType, "ItemType");
-            Assert.AreEqual(typeof(IList<string>), model[typeof(TypeWithLists)][2].MemberType, "MemberType");
-            Assert.AreEqual(typeof(List<string>), model[typeof(TypeWithLists)][2].DefaultType, "DefaultType");
+            Assert.Equal(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType); //, "ParentType");
+            Assert.Equal(typeof(string), model[typeof(TypeWithLists)][2].ItemType); //, "ItemType");
+            Assert.Equal(typeof(IList<string>), model[typeof(TypeWithLists)][2].MemberType); //, "MemberType");
+            Assert.Equal(typeof(List<string>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
         }
 
-        [Test]
+        [Fact]
         public void AddOnTypedIListShouldResolveCorrectly_Int32()
         {
             var model = TypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(2, "IListInt32Typed");
-            Assert.AreEqual(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType, "ParentType");
-            Assert.AreEqual(typeof(int), model[typeof(TypeWithLists)][2].ItemType, "ItemType");
-            Assert.AreEqual(typeof(IList<int>), model[typeof(TypeWithLists)][2].MemberType, "MemberType");
-            Assert.AreEqual(typeof(List<int>), model[typeof(TypeWithLists)][2].DefaultType, "DefaultType");
+            Assert.Equal(typeof(TypeWithLists), model[typeof(TypeWithLists)][2].ParentType); //, "ParentType");
+            Assert.Equal(typeof(int), model[typeof(TypeWithLists)][2].ItemType); //, "ItemType");
+            Assert.Equal(typeof(IList<int>), model[typeof(TypeWithLists)][2].MemberType); //, "MemberType");
+            Assert.Equal(typeof(List<int>), model[typeof(TypeWithLists)][2].DefaultType); //, "DefaultType");
         }
 
-        [Test]
+        [Fact]
         public void RoundTripTypedList_String()
         {
             var model = TypeModel.Create();
@@ -108,23 +108,23 @@ namespace ProtoBuf.unittest.Meta
             obj.ListString.Add("def");
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ListString);
-            Assert.IsTrue(obj.ListString.SequenceEqual(clone.ListString));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ListString);
+            Assert.True(obj.ListString.SequenceEqual(clone.ListString));
 
             model.CompileInPlace();
             clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ListString);
-            Assert.IsTrue(obj.ListString.SequenceEqual(clone.ListString));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ListString);
+            Assert.True(obj.ListString.SequenceEqual(clone.ListString));
 
             clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ListString);
-            Assert.IsTrue(obj.ListString.SequenceEqual(clone.ListString));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ListString);
+            Assert.True(obj.ListString.SequenceEqual(clone.ListString));
         }
 
-        [Test]
+        [Fact]
         public void RoundTripTypedIList_String()
         {
             var model = TypeModel.Create();
@@ -135,24 +135,24 @@ namespace ProtoBuf.unittest.Meta
             obj.IListStringTyped.Add("def");
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListStringTyped);
-            Assert.IsTrue(obj.IListStringTyped.SequenceEqual(clone.IListStringTyped));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListStringTyped);
+            Assert.True(obj.IListStringTyped.SequenceEqual(clone.IListStringTyped));
 
             model.CompileInPlace();
             clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListStringTyped);
-            Assert.IsTrue(obj.IListStringTyped.SequenceEqual(clone.IListStringTyped));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListStringTyped);
+            Assert.True(obj.IListStringTyped.SequenceEqual(clone.IListStringTyped));
 
             clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListStringTyped);
-            Assert.IsTrue(obj.IListStringTyped.SequenceEqual(clone.IListStringTyped));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListStringTyped);
+            Assert.True(obj.IListStringTyped.SequenceEqual(clone.IListStringTyped));
         }
 
 
-        [Test]
+        [Fact]
         public void RoundTripArrayList_String()
         {
             var model = TypeModel.Create();
@@ -163,23 +163,23 @@ namespace ProtoBuf.unittest.Meta
             obj.ArrayListString.Add("def");
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ArrayListString);
-            Assert.IsTrue(obj.ArrayListString.Cast<string>().SequenceEqual(clone.ArrayListString.Cast<string>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ArrayListString);
+            Assert.True(obj.ArrayListString.Cast<string>().SequenceEqual(clone.ArrayListString.Cast<string>()));
 
             model.CompileInPlace();
             clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ArrayListString);
-            Assert.IsTrue(obj.ArrayListString.Cast<string>().SequenceEqual(clone.ArrayListString.Cast<string>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ArrayListString);
+            Assert.True(obj.ArrayListString.Cast<string>().SequenceEqual(clone.ArrayListString.Cast<string>()));
 
             clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ArrayListString);
-            Assert.IsTrue(obj.ArrayListString.Cast<string>().SequenceEqual(clone.ArrayListString.Cast<string>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ArrayListString);
+            Assert.True(obj.ArrayListString.Cast<string>().SequenceEqual(clone.ArrayListString.Cast<string>()));
         }
 
-        [Test]
+        [Fact]
         public void RoundTripIList_String()
         {
             var model = TypeModel.Create();
@@ -190,23 +190,23 @@ namespace ProtoBuf.unittest.Meta
             obj.IListStringUntyped.Add("def");
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListStringUntyped);
-            Assert.IsTrue(obj.IListStringUntyped.Cast<string>().SequenceEqual(clone.IListStringUntyped.Cast<string>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListStringUntyped);
+            Assert.True(obj.IListStringUntyped.Cast<string>().SequenceEqual(clone.IListStringUntyped.Cast<string>()));
 
             model.CompileInPlace();
             clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListStringUntyped);
-            Assert.IsTrue(obj.IListStringUntyped.Cast<string>().SequenceEqual(clone.IListStringUntyped.Cast<string>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListStringUntyped);
+            Assert.True(obj.IListStringUntyped.Cast<string>().SequenceEqual(clone.IListStringUntyped.Cast<string>()));
 
             clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListStringUntyped);
-            Assert.IsTrue(obj.IListStringUntyped.Cast<string>().SequenceEqual(clone.IListStringUntyped.Cast<string>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListStringUntyped);
+            Assert.True(obj.IListStringUntyped.Cast<string>().SequenceEqual(clone.IListStringUntyped.Cast<string>()));
         }
 
-        [Test]
+        [Fact]
         public void RoundTripTypedList_Int32()
         {
             var model = TypeModel.Create();
@@ -217,23 +217,23 @@ namespace ProtoBuf.unittest.Meta
             obj.ListInt32.Add(456);
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ListInt32);
-            Assert.IsTrue(obj.ListInt32.SequenceEqual(clone.ListInt32));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ListInt32);
+            Assert.True(obj.ListInt32.SequenceEqual(clone.ListInt32));
 
             model.CompileInPlace();
             clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ListInt32);
-            Assert.IsTrue(obj.ListInt32.SequenceEqual(clone.ListInt32));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ListInt32);
+            Assert.True(obj.ListInt32.SequenceEqual(clone.ListInt32));
 
             clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ListInt32);
-            Assert.IsTrue(obj.ListInt32.SequenceEqual(clone.ListInt32));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ListInt32);
+            Assert.True(obj.ListInt32.SequenceEqual(clone.ListInt32));
         }
 
-        [Test]
+        [Fact]
         public void RoundTripTypedIList_Int32()
         {
             var model = TypeModel.Create();
@@ -244,24 +244,24 @@ namespace ProtoBuf.unittest.Meta
             obj.IListInt32Typed.Add(456);
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListInt32Typed);
-            Assert.IsTrue(obj.IListInt32Typed.SequenceEqual(clone.IListInt32Typed));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListInt32Typed);
+            Assert.True(obj.IListInt32Typed.SequenceEqual(clone.IListInt32Typed));
 
             model.CompileInPlace();
             clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListInt32Typed);
-            Assert.IsTrue(obj.IListInt32Typed.SequenceEqual(clone.IListInt32Typed));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListInt32Typed);
+            Assert.True(obj.IListInt32Typed.SequenceEqual(clone.IListInt32Typed));
 
             clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListInt32Typed);
-            Assert.IsTrue(obj.IListInt32Typed.SequenceEqual(clone.IListInt32Typed));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListInt32Typed);
+            Assert.True(obj.IListInt32Typed.SequenceEqual(clone.IListInt32Typed));
         }
 
 
-        [Test]
+        [Fact]
         public void RoundTripArrayList_Int32()
         {
             var model = TypeModel.Create();
@@ -272,23 +272,23 @@ namespace ProtoBuf.unittest.Meta
             obj.ArrayListInt32.Add(456);
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ArrayListInt32);
-            Assert.IsTrue(obj.ArrayListInt32.Cast<int>().SequenceEqual(clone.ArrayListInt32.Cast<int>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ArrayListInt32);
+            Assert.True(obj.ArrayListInt32.Cast<int>().SequenceEqual(clone.ArrayListInt32.Cast<int>()));
 
             model.CompileInPlace();
             clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ArrayListInt32);
-            Assert.IsTrue(obj.ArrayListInt32.Cast<int>().SequenceEqual(clone.ArrayListInt32.Cast<int>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ArrayListInt32);
+            Assert.True(obj.ArrayListInt32.Cast<int>().SequenceEqual(clone.ArrayListInt32.Cast<int>()));
 
             clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.ArrayListInt32);
-            Assert.IsTrue(obj.ArrayListInt32.Cast<int>().SequenceEqual(clone.ArrayListInt32.Cast<int>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.ArrayListInt32);
+            Assert.True(obj.ArrayListInt32.Cast<int>().SequenceEqual(clone.ArrayListInt32.Cast<int>()));
         }
 
-        [Test]
+        [Fact]
         public void RoundTripIList_Int32()
         {
             var model = TypeModel.Create();
@@ -299,20 +299,20 @@ namespace ProtoBuf.unittest.Meta
             obj.IListInt32Untyped.Add(456);
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListInt32Untyped);
-            Assert.IsTrue(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListInt32Untyped);
+            Assert.True(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
 
             model.CompileInPlace();
             clone = (TypeWithLists)model.DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListInt32Untyped);
-            Assert.IsTrue(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListInt32Untyped);
+            Assert.True(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
 
             clone = (TypeWithLists)model.Compile().DeepClone(obj);
-            Assert.IsNotNull(clone);
-            Assert.IsNotNull(clone.IListInt32Untyped);
-            Assert.IsTrue(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
+            Assert.NotNull(clone);
+            Assert.NotNull(clone.IListInt32Untyped);
+            Assert.True(obj.IListInt32Untyped.Cast<int>().SequenceEqual(clone.IListInt32Untyped.Cast<int>()));
         }
 
         public class NastyType
@@ -336,89 +336,89 @@ namespace ProtoBuf.unittest.Meta
 
             public List<byte[]> Blobs{ get; set; }
         }
-        [Test]
+        [Fact]
         public void JaggedListShouldThrow()
         {
             try {
                 var model = RuntimeTypeModel.Create();
                 model.Add(typeof(NastyType), true).Add(1, "JaggedList");
                 model.CompileInPlace();
-                Assert.Fail();
+                Assert.Equal(42, 0); // fail
             } catch(NotSupportedException) {  }
         }
-        [Test]
+        [Fact]
         public void ListOfArrayShouldThrow()
         {
             try {
                 var model = RuntimeTypeModel.Create();
                 model.Add(typeof(NastyType), true).Add(1, "ListOfArray");
                 model.CompileInPlace();
-                Assert.Fail();
+                Assert.Equal(42, 0); // fail
             }
             catch (NotSupportedException) { }
         }
-        [Test]
+        [Fact]
         public void MultiDimArrayShouldThrow()
         {
             try {
                 var model = RuntimeTypeModel.Create();
                 model.Add(typeof(NastyType), true).Add(1, "MultiDimArray");
                 model.CompileInPlace();
-                Assert.Fail();
+                Assert.Equal(42, 0); // fail
             }
             catch (NotSupportedException) { }
         }
-        [Test]
+        [Fact]
         public void JaggedArrayShouldThrow()
         {
             try {
                 var model = RuntimeTypeModel.Create();
                 model.Add(typeof(NastyType), true).Add(1, "JaggedArray");
                 model.CompileInPlace();
-                Assert.Fail();
+                Assert.Equal(42, 0); // fail
             }
             catch (NotSupportedException) { }
         }
-        [Test]
+        [Fact]
         public void ArrayOfListShouldThrow()
         {
             try {
                 var model = RuntimeTypeModel.Create();
                 model.Add(typeof(NastyType), true).Add(1, "ArrayOfList");
                 model.CompileInPlace();
-                    Assert.Fail();
+                    Assert.Equal(42, 0); // fail
             }
             catch (NotSupportedException) { }
         }
-        [Test]
+        [Fact]
         public void BasicListIsFine()
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(NastyType), true).Add(1, "BasicList");
             model.CompileInPlace();
         }
-        [Test]
+        [Fact]
         public void BasicArrayIsFine()
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(NastyType), true).Add(1, "BasicArray");
             model.CompileInPlace();
         }
-        [Test]
+        [Fact]
         public void BlobIsFine()
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(NastyType), true).Add(1, "Blob");
             model.CompileInPlace();
         }
-        [Test]
+        [Fact]
         public void BlobsAreFine()
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(NastyType), true).Add(1, "Blobs");
             model.CompileInPlace();
         }
-        [Test]
+        [Fact]
         public void PEVerifyArraysAndLists()
         {
             var model = RuntimeTypeModel.Create();
@@ -437,10 +437,10 @@ namespace ProtoBuf.unittest.Meta
 
     }
 
-    [TestFixture]
+    
     public class PackedLists
     {
-        [Test]
+        [Fact]
         public void CanCompile()
         {
             var model = CreateModel();
@@ -448,7 +448,7 @@ namespace ProtoBuf.unittest.Meta
             PEVerify.Verify("PEVerifyPackedLists.dll");
         }
 
-        [Test]
+        [Fact]
         public void TestNullRoundTrip()
         {
             var model = CreateModel();
@@ -457,26 +457,26 @@ namespace ProtoBuf.unittest.Meta
             int len;
 
             var clone = RoundTrip(model, orig, "Runtime", out len);
-            Assert.AreEqual(0, len, "Runtime");
-            Assert.IsNull(clone.ListDouble);
-            Assert.IsNull(clone.ListInt32);
-            Assert.IsNull(clone.ListSingle);
+            Assert.Equal(0, len); //, "Runtime");
+            Assert.Null(clone.ListDouble);
+            Assert.Null(clone.ListInt32);
+            Assert.Null(clone.ListSingle);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.AreEqual(0, len, "CompileInPlace");
-            Assert.IsNull(clone.ListDouble);
-            Assert.IsNull(clone.ListInt32);
-            Assert.IsNull(clone.ListSingle);
+            Assert.Equal(0, len); //, "CompileInPlace");
+            Assert.Null(clone.ListDouble);
+            Assert.Null(clone.ListInt32);
+            Assert.Null(clone.ListSingle);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.AreEqual(0, len, "Compile");
-            Assert.IsNull(clone.ListDouble);
-            Assert.IsNull(clone.ListInt32);
-            Assert.IsNull(clone.ListSingle);
+            Assert.Equal(0, len); //, "Compile");
+            Assert.Null(clone.ListDouble);
+            Assert.Null(clone.ListInt32);
+            Assert.Null(clone.ListSingle);
         }
 
-        [Test]
+        [Fact]
         public void TestEmptyRoundTrip()
         {
             var model = CreateModel();
@@ -485,41 +485,41 @@ namespace ProtoBuf.unittest.Meta
             int len;
 
             var clone = RoundTrip(model, orig, "Runtime", out len);
-            Assert.AreEqual(6, len, "Runtime");
-            Assert.AreEqual(0, clone.ListDouble.Count);
-            Assert.AreEqual(0, clone.ListInt32.Count);
-            Assert.AreEqual(0, clone.ListSingle.Count);
+            Assert.Equal(6, len); //, "Runtime");
+            Assert.Equal(0, clone.ListDouble.Count);
+            Assert.Equal(0, clone.ListInt32.Count);
+            Assert.Equal(0, clone.ListSingle.Count);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.AreEqual(6, len, "CompileInPlace");
-            Assert.AreEqual(0, clone.ListDouble.Count);
-            Assert.AreEqual(0, clone.ListInt32.Count);
-            Assert.AreEqual(0, clone.ListSingle.Count);
+            Assert.Equal(6, len); //, "CompileInPlace");
+            Assert.Equal(0, clone.ListDouble.Count);
+            Assert.Equal(0, clone.ListInt32.Count);
+            Assert.Equal(0, clone.ListSingle.Count);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.AreEqual(6, len, "Compile");
-            Assert.AreEqual(0, clone.ListDouble.Count);
-            Assert.AreEqual(0, clone.ListInt32.Count);
-            Assert.AreEqual(0, clone.ListSingle.Count);
+            Assert.Equal(6, len); //, "Compile");
+            Assert.Equal(0, clone.ListDouble.Count);
+            Assert.Equal(0, clone.ListInt32.Count);
+            Assert.Equal(0, clone.ListSingle.Count);
         }
         static void CheckExpectedListContents(PackedData data, string text)
         {
-            Assert.IsNotNull(data, text);
-            Assert.AreEqual(3, data.ListInt32.Count, text);
-            Assert.AreEqual(3, data.ListInt32[0], text);
-            Assert.AreEqual(5, data.ListInt32[1], text);
-            Assert.AreEqual(7, data.ListInt32[2], text);
-            Assert.AreEqual(3, data.ListSingle.Count, text);
-            Assert.AreEqual(3F, data.ListSingle[0], text);
-            Assert.AreEqual(5F, data.ListSingle[1], text);
-            Assert.AreEqual(7F, data.ListSingle[2], text);
-            Assert.AreEqual(3, data.ListDouble.Count, text);
-            Assert.AreEqual(3D, data.ListDouble[0], text);
-            Assert.AreEqual(5D, data.ListDouble[1], text);
-            Assert.AreEqual(7D, data.ListDouble[2], text);
+            Assert.NotNull(data); //, text);
+            Assert.Equal(3, data.ListInt32.Count); //, text);
+            Assert.Equal(3, data.ListInt32[0]); //, text);
+            Assert.Equal(5, data.ListInt32[1]); //, text);
+            Assert.Equal(7, data.ListInt32[2]); //, text);
+            Assert.Equal(3, data.ListSingle.Count); //, text);
+            Assert.Equal(3F, data.ListSingle[0]); //, text);
+            Assert.Equal(5F, data.ListSingle[1]); //, text);
+            Assert.Equal(7F, data.ListSingle[2]); //, text);
+            Assert.Equal(3, data.ListDouble.Count); //, text);
+            Assert.Equal(3D, data.ListDouble[0]); //, text);
+            Assert.Equal(5D, data.ListDouble[1]); //, text);
+            Assert.Equal(7D, data.ListDouble[2]); //, text);
         }
-        [Test]
+        [Fact]
         public void TestThreeItemsRoundTrip()
         {
             var model = CreateModel();
@@ -530,19 +530,19 @@ namespace ProtoBuf.unittest.Meta
 
             var clone = RoundTrip(model, orig, "Runtime", out len);
             const int expectedLen = (1 + 1 + 1 + 1 + 1) + (1 + 1 + 4 + 4 + 4) + (1 + 1 + 8 + 8 + 8);
-            Assert.AreEqual(expectedLen, len, "Runtime");
-            Assert.IsNotNull(clone);
+            Assert.Equal(expectedLen, len); //, "Runtime");
+            Assert.NotNull(clone);
             CheckExpectedListContents(clone, "Runtime");
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.AreEqual(expectedLen, len, "CompileInPlace");
-            Assert.IsNotNull(clone);
+            Assert.Equal(expectedLen, len); //, "CompileInPlace");
+            Assert.NotNull(clone);
             CheckExpectedListContents(clone, "CompileInPlace");
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.AreEqual(expectedLen, len, "Compile");
-            Assert.IsNotNull(clone);
+            Assert.Equal(expectedLen, len); //, "Compile");
+            Assert.NotNull(clone);
             CheckExpectedListContents(clone, "Compile");
         }
         static PackedData RoundTrip(TypeModel model, PackedData orig, string scenario, out int length)
@@ -580,10 +580,10 @@ namespace ProtoBuf.unittest.Meta
         }
     }
 
-    [TestFixture]
+    
     public class PackedArrays
     {
-        [Test]
+        [Fact]
         public void CanCompile()
         {
             var model = CreateModel();
@@ -591,7 +591,7 @@ namespace ProtoBuf.unittest.Meta
             PEVerify.Verify("PEVerifyPackedArrays.dll");
         }
 
-        [Test]
+        [Fact]
         public void TestEmptyRoundTrip()
         {
             var model = CreateModel();
@@ -600,25 +600,25 @@ namespace ProtoBuf.unittest.Meta
             int len;
 
             var clone = RoundTrip(model, orig, "Runtime", out len);
-            Assert.AreEqual(6, len, "Runtime");
-            Assert.AreEqual(0, clone.ArrayDouble.Length);
-            Assert.AreEqual(0, clone.ArrayInt32.Length);
-            Assert.AreEqual(0, clone.ArraySingle.Length);
+            Assert.Equal(6, len); //, "Runtime");
+            Assert.Equal(0, clone.ArrayDouble.Length);
+            Assert.Equal(0, clone.ArrayInt32.Length);
+            Assert.Equal(0, clone.ArraySingle.Length);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.AreEqual(6, len, "CompileInPlace");
-            Assert.AreEqual(0, clone.ArrayDouble.Length);
-            Assert.AreEqual(0, clone.ArrayInt32.Length);
-            Assert.AreEqual(0, clone.ArraySingle.Length);
+            Assert.Equal(6, len); //, "CompileInPlace");
+            Assert.Equal(0, clone.ArrayDouble.Length);
+            Assert.Equal(0, clone.ArrayInt32.Length);
+            Assert.Equal(0, clone.ArraySingle.Length);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.AreEqual(6, len, "Compile");
-            Assert.AreEqual(0, clone.ArrayDouble.Length);
-            Assert.AreEqual(0, clone.ArrayInt32.Length);
-            Assert.AreEqual(0, clone.ArraySingle.Length);
+            Assert.Equal(6, len); //, "Compile");
+            Assert.Equal(0, clone.ArrayDouble.Length);
+            Assert.Equal(0, clone.ArrayInt32.Length);
+            Assert.Equal(0, clone.ArraySingle.Length);
         }
-        [Test]
+        [Fact]
         public void TestNullRoundTrip()
         {
             var model = CreateModel();
@@ -627,41 +627,41 @@ namespace ProtoBuf.unittest.Meta
             int len;
 
             var clone = RoundTrip(model, orig, "Runtime", out len);
-            Assert.AreEqual(0, len, "Runtime");
-            Assert.IsNull(clone.ArrayDouble);
-            Assert.IsNull(clone.ArrayInt32);
-            Assert.IsNull(clone.ArraySingle);
+            Assert.Equal(0, len); //, "Runtime");
+            Assert.Null(clone.ArrayDouble);
+            Assert.Null(clone.ArrayInt32);
+            Assert.Null(clone.ArraySingle);
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.AreEqual(0, len, "CompileInPlace");
-            Assert.IsNull(clone.ArrayDouble);
-            Assert.IsNull(clone.ArrayInt32);
-            Assert.IsNull(clone.ArraySingle);
+            Assert.Equal(0, len); //, "CompileInPlace");
+            Assert.Null(clone.ArrayDouble);
+            Assert.Null(clone.ArrayInt32);
+            Assert.Null(clone.ArraySingle);
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.AreEqual(0, len, "Compile");
-            Assert.IsNull(clone.ArrayDouble);
-            Assert.IsNull(clone.ArrayInt32);
-            Assert.IsNull(clone.ArraySingle);
+            Assert.Equal(0, len); //, "Compile");
+            Assert.Null(clone.ArrayDouble);
+            Assert.Null(clone.ArrayInt32);
+            Assert.Null(clone.ArraySingle);
         }
         static void CheckExpectedListContents(PackedData data, string text)
         {
-            Assert.IsNotNull(data, text);
-            Assert.AreEqual(3, data.ArrayInt32.Length, text);
-            Assert.AreEqual(3, data.ArrayInt32[0], text);
-            Assert.AreEqual(5, data.ArrayInt32[1], text);
-            Assert.AreEqual(7, data.ArrayInt32[2], text);
-            Assert.AreEqual(3, data.ArraySingle.Length, text);
-            Assert.AreEqual(3F, data.ArraySingle[0], text);
-            Assert.AreEqual(5F, data.ArraySingle[1], text);
-            Assert.AreEqual(7F, data.ArraySingle[2], text);
-            Assert.AreEqual(3, data.ArrayDouble.Length, text);
-            Assert.AreEqual(3D, data.ArrayDouble[0], text);
-            Assert.AreEqual(5D, data.ArrayDouble[1], text);
-            Assert.AreEqual(7D, data.ArrayDouble[2], text);
+            Assert.NotNull(data); //, text);
+            Assert.Equal(3, data.ArrayInt32.Length); //, text);
+            Assert.Equal(3, data.ArrayInt32[0]); //, text);
+            Assert.Equal(5, data.ArrayInt32[1]); //, text);
+            Assert.Equal(7, data.ArrayInt32[2]); //, text);
+            Assert.Equal(3, data.ArraySingle.Length); //, text);
+            Assert.Equal(3F, data.ArraySingle[0]); //, text);
+            Assert.Equal(5F, data.ArraySingle[1]); //, text);
+            Assert.Equal(7F, data.ArraySingle[2]); //, text);
+            Assert.Equal(3, data.ArrayDouble.Length); //, text);
+            Assert.Equal(3D, data.ArrayDouble[0]); //, text);
+            Assert.Equal(5D, data.ArrayDouble[1]); //, text);
+            Assert.Equal(7D, data.ArrayDouble[2]); //, text);
         }
-        [Test]
+        [Fact]
         public void TestThreeItemsRoundTrip()
         {
             var model = CreateModel();
@@ -672,19 +672,19 @@ namespace ProtoBuf.unittest.Meta
 
             var clone = RoundTrip(model, orig, "Runtime", out len);
             const int expectedLen = (1 + 1 + 1 + 1 + 1) + (1 + 1 + 4 + 4 + 4) + (1 + 1 + 8 + 8 + 8);
-            Assert.AreEqual(expectedLen, len, "Runtime");
-            Assert.IsNotNull(clone);
+            Assert.Equal(expectedLen, len); //, "Runtime");
+            Assert.NotNull(clone);
             CheckExpectedListContents(clone, "Runtime");
 
             model.CompileInPlace();
             clone = RoundTrip(model, orig, "CompileInPlace", out len);
-            Assert.AreEqual(expectedLen, len, "CompileInPlace");
-            Assert.IsNotNull(clone);
+            Assert.Equal(expectedLen, len); //, "CompileInPlace");
+            Assert.NotNull(clone);
             CheckExpectedListContents(clone, "CompileInPlace");
 
             clone = RoundTrip(model.Compile(), orig, "Compile", out len);
-            Assert.AreEqual(expectedLen, len, "Compile");
-            Assert.IsNotNull(clone);
+            Assert.Equal(expectedLen, len); //, "Compile");
+            Assert.NotNull(clone);
             CheckExpectedListContents(clone, "Compile");
         }
         static PackedData RoundTrip(TypeModel model, PackedData orig, string scenario, out int length)

@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.Threading;
 using ProtoBuf.unittest.Meta;
 
 namespace ProtoBuf.unittest.Attribs
 {
-    [TestFixture]
+    
     public class PointStructTests
     {
 
@@ -62,10 +62,10 @@ namespace ProtoBuf.unittest.Attribs
             var model = TypeModel.Create();
             var mt = model.Add(typeof(Point), true);
             var fields = mt.GetFields();
-            Assert.AreEqual(2, fields.Length);
+            Assert.Equal(2, fields.Length);
             return model;
         }
-        [Test]
+        [Fact]
         public void RoundTripPoint()
         {
             Point point = new Point(26, 13);
@@ -76,24 +76,24 @@ namespace ProtoBuf.unittest.Attribs
             model.CompileInPlace();
             ClonePoint(model, point, "CompileInPlace");
         }
-        [Test]
+        [Fact]
         public void FullyCompileWithPrivateField_KnownToFail()
         {
             try {
                 var model = BuildModel();
                 Point point = new Point(26, 13);
                 ClonePoint(model.Compile(), point, "Compile");
-                Assert.Fail();
+                Assert.Equal(42, 0); // fail
             } catch (InvalidOperationException ex)
             {
-                Assert.AreEqual("Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x", ex.Message);
+                Assert.Equal("Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x", ex.Message);
             }
         }
         static void ClonePoint(TypeModel model, Point original, string message)
         {
             Point clone = (Point)model.DeepClone(original);
-            Assert.AreEqual(original.X, clone.X, message + ": X");
-            Assert.AreEqual(original.Y, clone.Y, message + ": Y");
+            Assert.Equal(original.X, clone.X); //, message + ": X");
+            Assert.Equal(original.Y, clone.Y); //, message + ": Y");
         }
 
         static void ClonePointCountingConversions(TypeModel model, Point original, string message,
@@ -102,13 +102,13 @@ namespace ProtoBuf.unittest.Attribs
             int oldTo = PointSurrogate.ToPoint, oldFrom = PointSurrogate.FromPoint;
             Point clone = (Point)model.DeepClone(original);
             int newTo = PointSurrogate.ToPoint, newFrom = PointSurrogate.FromPoint;
-            Assert.AreEqual(original.X, clone.X, message + ": X");
-            Assert.AreEqual(original.Y, clone.Y, message + ": Y");
-            Assert.AreEqual(toPoint, newTo - oldTo, message + ": Surrogate to Point");
-            Assert.AreEqual(fromPoint, newFrom - oldFrom, message + ": Point to Surrogate");
+            Assert.Equal(original.X, clone.X); //, message + ": X");
+            Assert.Equal(original.Y, clone.Y); //, message + ": Y");
+            Assert.Equal(toPoint, newTo - oldTo); //, message + ": Surrogate to Point");
+            Assert.Equal(fromPoint, newFrom - oldFrom); //, message + ": Point to Surrogate");
         }
 
-        [Test]
+        [Fact]
         public void VerifyPointWithSurrogate()
         {
             var model = BuildModelWithSurrogate();
@@ -116,7 +116,7 @@ namespace ProtoBuf.unittest.Attribs
             PEVerify.Verify("PointWithSurrogate.dll");
         }
 
-        [Test]
+        [Fact]
         public void VerifyPointDirect()
         {
             try {
@@ -125,11 +125,11 @@ namespace ProtoBuf.unittest.Attribs
                 //PEVerify.Verify("PointDirect.dll", 1); // expect failure due to field access
             } catch(InvalidOperationException ex)
             {
-                Assert.AreEqual("Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x", ex.Message);
+                Assert.Equal("Non-public member cannot be used with full dll compilation: ProtoBuf.unittest.Attribs.PointStructTests+Point.x", ex.Message);
             }
         }
 
-        [Test]
+        [Fact]
         public void RoundTripPointWithSurrogate()
         {
             Point point = new Point(26, 13);

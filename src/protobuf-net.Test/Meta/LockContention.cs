@@ -1,21 +1,17 @@
 ﻿#if !NO_INTERNAL_CONTEXT
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using NUnit.Framework;
-using NUnit.Framework.SyntaxHelpers;
 using ProtoBuf.Meta;
+using System;
 using System.Diagnostics;
+using System.IO;
+using System.Threading;
+using Xunit;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+
     public class LockContention
     {
-        [Test]
+        [Fact]
         public void DeliberatelyCausedContentionShouldShow()
         {
             var model = RuntimeTypeModel.Create();
@@ -42,17 +38,17 @@ namespace ProtoBuf.unittest.Meta
             try
             {
                 model[typeof (ThreadRace.A)].CompileInPlace();
-                Assert.Fail("Should have timed out");
+                Assert.Equal("oops", "Should have timed out");
             } catch (TimeoutException)
             {
                 Debug.WriteLine("Expected timeout occurred");
             }
             mainComplete.Set();
             if (!workerComplete.WaitOne(5000)) throw new TimeoutException();
-            Assert.IsNotNull(eek);
+            Assert.NotNull(eek);
         }
 
-        [Test]
+        [Fact]
         public void SingleModelShouldNotContent()
         {
             var model = RuntimeTypeModel.Create();
@@ -62,12 +58,12 @@ namespace ProtoBuf.unittest.Meta
                                                  Interlocked.Increment(ref eekCount);
             };
             model[typeof(ThreadRace.A)].CompileInPlace();
-            Assert.IsNull(eek);
-            Assert.AreEqual(0, Interlocked.CompareExchange(ref eekCount, 0, 0));
+            Assert.Null(eek);
+            Assert.Equal(0, Interlocked.CompareExchange(ref eekCount, 0, 0));
         }
 
 
-        [Test]
+        [Fact]
         public void MultipleDeserializeCallsShouldNotContend()
         {
             var data = new ThreadRace.Y9();
@@ -76,7 +72,7 @@ namespace ProtoBuf.unittest.Meta
             {
                 RuntimeTypeModel.Create().Serialize(ms, data);
                 raw = ms.ToArray();
-                Assert.Greater(raw.Length, 0);
+                Assert.True(raw.Length > 0);
             }
 
             const int threads = 10, loop = 500;
@@ -110,7 +106,7 @@ namespace ProtoBuf.unittest.Meta
                                 }
                                 ThreadRace.A a =
                                     (ThreadRace.A)model.Deserialize(ms, null, typeof(ThreadRace.A));
-                                Assert.IsInstanceOfType(typeof(ThreadRace.Y9), a);
+                                Assert.IsType(typeof(ThreadRace.Y9), a);
                             }
 
                         }
@@ -126,9 +122,9 @@ namespace ProtoBuf.unittest.Meta
                 {
                     if (!thd.Join(4000)) throw new TimeoutException();
                 }
-                Assert.AreEqual(0, Interlocked.CompareExchange(ref error, 0, 0));
-                Assert.IsNull(eek);
-                Assert.AreEqual(0, Interlocked.CompareExchange(ref eekCount, 0, 0));
+                Assert.Equal(0, Interlocked.CompareExchange(ref error, 0, 0));
+                Assert.Null(eek);
+                Assert.Equal(0, Interlocked.CompareExchange(ref eekCount, 0, 0));
             }
         }
     }

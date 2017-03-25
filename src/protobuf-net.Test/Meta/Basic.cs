@@ -1,13 +1,13 @@
 ﻿using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using ProtoBuf.unittest.Serializers;
 
 namespace ProtoBuf.unittest.Meta
 {
 
-    [TestFixture]
+    
     public class Basic
     {
         public class Customer
@@ -25,16 +25,16 @@ namespace ProtoBuf.unittest.Meta
         }
 
         
-        [Test]
+        [Fact]
         public void CanInitializeExplicitMeta()
         {
             var meta = Customer.BuildMeta();
-            Assert.IsNotNull(meta);
+            Assert.NotNull(meta);
             var types = meta.GetTypes().Cast<MetaType>();
-            Assert.AreEqual(typeof(Customer), types.Single().Type);
+            Assert.Equal(typeof(Customer), types.Single().Type);
         }
 
-        [Test]
+        [Fact]
         public void WriteBasicRuntime()
         {
             var meta = Customer.BuildMeta();
@@ -48,7 +48,7 @@ namespace ProtoBuf.unittest.Meta
             Util.TestModel(meta, cust, "087B1203616263");
         }
 
-        [Test]
+        [Fact]
         public void WriteRoundTripRuntime()
         {
             var meta = Customer.BuildMeta();
@@ -57,14 +57,13 @@ namespace ProtoBuf.unittest.Meta
             using (var ms = new MemoryStream())
             {
                 meta.Serialize(ms, cust);
-                Assert.Greater(1, 0, "check arg order API");
-                Assert.Greater(ms.Length, 0, "no data written");
+                Assert.NotEqual(0, ms.Length); //, "no data written");
                 ms.Position = 0;
                 Customer clone = (Customer)meta.Deserialize(ms, null, typeof(Customer));
-                Assert.AreNotSame(cust, clone);
-                Assert.IsNotNull(clone, "clone was not materialized");
-                Assert.AreEqual(cust.Id, clone.Id);
-                Assert.AreEqual(cust.Name, clone.Name);
+                Assert.NotSame(cust, clone);
+                Assert.NotNull(clone); //, "clone was not materialized");
+                Assert.Equal(cust.Id, clone.Id);
+                Assert.Equal(cust.Name, clone.Name);
             }
         }
         

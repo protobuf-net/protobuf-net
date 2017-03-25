@@ -1,5 +1,5 @@
 ﻿using System;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.IO;
 using ProtoBuf.unittest.Meta;
@@ -7,25 +7,25 @@ using ProtoBuf.unittest.Meta;
 namespace ProtoBuf.unittest.Serializers
 {
 
-    [TestFixture]
+    
     public class DateTimeTests
     {
         public class TypeWithDateTime
         {
             public DateTime When { get; set; }
         }
-        [Test]
+        [Fact]
         public void TestDateTimeRuntime()
         {
             var model = CreateModel();
 
             var obj = new TypeWithDateTime { When = DateTime.Today };
             TypeWithDateTime clone = (TypeWithDateTime) model.DeepClone(obj);
-            Assert.AreEqual(obj.When, clone.When);
+            Assert.Equal(obj.When, clone.When);
         }
 
 
-        [Test]
+        [Fact]
         public void TestDateTimeInPlace()
         {
             var model = CreateModel();
@@ -34,17 +34,17 @@ namespace ProtoBuf.unittest.Serializers
             
             TypeWithDateTime clone = (TypeWithDateTime)model.DeepClone(obj);
             
-            Assert.AreEqual(obj.When, clone.When);
+            Assert.Equal(obj.When, clone.When);
         }
 
-        [Test]
+        [Fact]
         public void TestDateTimeCanCompileFully()
         {
             var model = CreateModel().Compile("TestDateTimeCanCompileFully", "TestDateTimeCanCompileFully.dll");
             PEVerify.Verify("TestDateTimeCanCompileFully.dll");
         }
 
-        [Test]
+        [Fact]
         public void TestDateTimeCompiled()
         {
             var model = CreateModel().Compile();
@@ -52,7 +52,7 @@ namespace ProtoBuf.unittest.Serializers
             var obj = new TypeWithDateTime { When = DateTime.Today };
 
             TypeWithDateTime clone = (TypeWithDateTime)model.DeepClone(obj);            
-            Assert.AreEqual(obj.When, clone.When);
+            Assert.Equal(obj.When, clone.When);
         }
 
 

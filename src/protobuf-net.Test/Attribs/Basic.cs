@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.unittest.Attribs
 {
-    [TestFixture]
+    
     public class Basic
     {
         [ProtoContract]
@@ -23,7 +23,7 @@ namespace ProtoBuf.unittest.Attribs
             public int NotExpected { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void CheckThatBasicAttributesAreRespected()
         {
             var model = RuntimeTypeModel.Create();
@@ -31,10 +31,10 @@ namespace ProtoBuf.unittest.Attribs
             BasicContract obj = new BasicContract { Expected = 123, Ignored = 456, NotExpected = 789 },
                 clone = (BasicContract)model.DeepClone(obj);
 
-            Assert.AreNotSame(obj, clone);
-            Assert.AreEqual(123, clone.Expected);
-            Assert.AreEqual(0, clone.Ignored);
-            Assert.AreEqual(0, clone.NotExpected);
+            Assert.NotSame(obj, clone);
+            Assert.Equal(123, clone.Expected);
+            Assert.Equal(0, clone.Ignored);
+            Assert.Equal(0, clone.NotExpected);
 
  
         }

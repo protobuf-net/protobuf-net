@@ -3,14 +3,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using System.Diagnostics;
 
 namespace ProtoBuf.unittest
 {
     static class PEVerify
     {
-#if !COREFX
+#if COREFX
+        public static ProtoBuf.Meta.TypeModel Compile(this ProtoBuf.Meta.RuntimeTypeModel model, string typename, string file)
+        {
+            // dummy to avoid lots of test hackery for dll compilation tests
+            model.CompileInPlace();
+            return model;
+        }
+#else
         static readonly string exePath;
         static readonly bool unavailable;
         static PEVerify()
@@ -46,8 +53,8 @@ namespace ProtoBuf.unittest
             {
                 if (proc.WaitForExit(10000))
                 {
-                    Assert.AreEqual(exitCode, proc.ExitCode, path);
-                    if(deleteOnSuccess) File.Delete(path);
+                    Assert.Equal(exitCode, proc.ExitCode); //, path);
+                    if (deleteOnSuccess) File.Delete(path);
                 }
                 else
                 {

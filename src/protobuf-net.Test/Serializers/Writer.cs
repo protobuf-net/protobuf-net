@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 
 namespace ProtoBuf.unittest.Serializers
 {
-    [TestFixture]
+    
     public class Writer
     {
-        [Test]
+        [Fact]
         public void TestString_abc()
         {
             Util.Test(pw =>
@@ -18,7 +18,7 @@ namespace ProtoBuf.unittest.Serializers
                 ProtoWriter.WriteString("abc", pw);
             }, "0A03616263");
         }
-        [Test]
+        [Fact]
         public void TestVariantInt32()
         {
             for (int i = 0; i < 128; i++)

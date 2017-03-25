@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.unittest.Meta
 {
-    [TestFixture]
+    
     public class PocoClass
     {
         public class Company
@@ -20,7 +20,7 @@ namespace ProtoBuf.unittest.Meta
             public string EmployeeName {get;set;}
             public string Designation {get;set;}
         }
-        [Test]
+        [Fact]
         public void CanSerializeCompany()
         {
             var model = TypeModel.Create();
@@ -40,13 +40,13 @@ namespace ProtoBuf.unittest.Meta
                 Console.WriteLine("Bytes: " + ms.Length);
                 clone = (Company) model.Deserialize(ms, null, typeof(Company));
             }
-            Assert.AreEqual(3, clone.Employees.Count);
-            Assert.AreEqual("Boss", clone.Employees[0].Designation);
-            Assert.AreEqual("Alex", clone.Employees[2].EmployeeName);
+            Assert.Equal(3, clone.Employees.Count);
+            Assert.Equal("Boss", clone.Employees[0].Designation);
+            Assert.Equal("Alex", clone.Employees[2].EmployeeName);
         }
     }
 
-    [TestFixture]
+    
     public class PocoStruct
     {
         public struct Company
@@ -60,7 +60,7 @@ namespace ProtoBuf.unittest.Meta
             public string EmployeeName { get; set; }
             public string Designation { get; set; }
         }
-        [Test]
+        [Fact]
         public void CanSerializeCompany()
         {
             var model = TypeModel.Create();
@@ -82,9 +82,9 @@ namespace ProtoBuf.unittest.Meta
                 Console.WriteLine("Bytes: " + ms.Length);
                 clone = (Company)model.Deserialize(ms, null, typeof(Company));
             }
-            Assert.AreEqual(3, clone.Employees.Count);
-            Assert.AreEqual("Boss", clone.Employees[0].Designation);
-            Assert.AreEqual("Alex", clone.Employees[2].EmployeeName);
+            Assert.Equal(3, clone.Employees.Count);
+            Assert.Equal("Boss", clone.Employees[0].Designation);
+            Assert.Equal("Alex", clone.Employees[2].EmployeeName);
         }
     }
 }

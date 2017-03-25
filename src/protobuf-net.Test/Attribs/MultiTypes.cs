@@ -2,24 +2,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using System.IO;
 using ProtoBuf.unittest.Serializers;
 
 namespace ProtoBuf.unittest
 {
-    [TestFixture]
+    
     public class MultiTypeLookupTests
     {
-        [Test]
+        [Fact]
         public void TestInt32RoundTrip()
         {
             var orig = PropertyValue.Create("abc", 123);
             var intClone = Serializer.DeepClone(orig);
-            Assert.AreEqual("abc", intClone.Name);
-            Assert.AreEqual(123, intClone.Value);
+            Assert.Equal("abc", intClone.Name);
+            Assert.Equal(123, intClone.Value);
         }
-        [Test]
+        [Fact]
         public void TestStringSerialize()
         {
             var prop = PropertyValue.Create("abc", "def");
@@ -30,7 +30,7 @@ namespace ProtoBuf.unittest
                 hex = Util.GetHex(ms.ToArray());
             }
             
-            Assert.AreEqual(
+            Assert.Equal(
                 "32" // field 6, string
               + "05" // 5 bytes
                 + "0A" // field 1, string
@@ -41,20 +41,20 @@ namespace ProtoBuf.unittest
                 + "616263" // "abc"
                 ,hex);
         }
-        [Test]
+        [Fact]
         public void TestStringRoundTrip()
         {
             var stringClone = Serializer.DeepClone(
                 PropertyValue.Create("abc", "def"));
-            Assert.AreEqual("abc", stringClone.Name);
-            Assert.AreEqual("def", stringClone.Value);
+            Assert.Equal("abc", stringClone.Name);
+            Assert.Equal("def", stringClone.Value);
 
             Serializer.PrepareSerializer<PropertyValue>();
 
             stringClone = Serializer.DeepClone(
                 PropertyValue.Create("abc", "def"));
-            Assert.AreEqual("abc", stringClone.Name);
-            Assert.AreEqual("def", stringClone.Value);
+            Assert.Equal("abc", stringClone.Name);
+            Assert.Equal("def", stringClone.Value);
         }
 
 
