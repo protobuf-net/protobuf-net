@@ -115,7 +115,7 @@ namespace ProtoBuf.Serializers
                     return map[i].TypedValue;
                 }
             }
-            source.ThrowEnumException(ExpectedType, wireValue);
+            //source.ThrowEnumException(ExpectedType, wireValue);
             return null; // to make compiler happy
         }
         public void Write(object value, ProtoWriter dest)
