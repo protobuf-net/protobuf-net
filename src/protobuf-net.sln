@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net", "protobuf-ne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Test", "protobuf-net.Test\protobuf-net.Test.csproj", "{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XUnitTestProject1", "XUnitTestProject1\XUnitTestProject1.csproj", "{93F5076E-24D7-46D1-89F5-CEDA22F13460}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Release|Any CPU.Build.0 = Release|Any CPU
-		{93F5076E-24D7-46D1-89F5-CEDA22F13460}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{93F5076E-24D7-46D1-89F5-CEDA22F13460}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{93F5076E-24D7-46D1-89F5-CEDA22F13460}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{93F5076E-24D7-46D1-89F5-CEDA22F13460}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks> <!-- ;netstandard1.3 -->
+    <TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks>
     <LibImport>net</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp1.1'">
@@ -22,6 +22,9 @@
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net452'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(ImportLibs)' == 'net'">
+    <Reference Include="System" />
   </ItemGroup>
   <ItemGroup Condition="'$(LibImport)'=='core'">
     <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
