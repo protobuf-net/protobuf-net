@@ -929,6 +929,9 @@ namespace ProtoBuf
         }
         public void ReadBytes(byte[] buffer, int offset, int count, bool resetWireType)
         {
+            //TODO: remove double copy once the io-buffer is exhausted; read directly into output
+            // leaving the io-buffer alone
+
             Assert(WireType.String);
             if (resetWireType) wireType = WireType.None;
             position += count; // assume success

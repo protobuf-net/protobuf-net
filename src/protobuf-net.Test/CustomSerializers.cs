@@ -97,22 +97,36 @@ namespace ProtoBuf.Tests
                 // if no allocator, use naked arrays
                 newValue = allocator == null ? new ArraySegment<byte>(new byte[len]) : allocator.Allocate(context, len);
 
+                bool adjacent = false;
                 if (oldValue.Count != 0)
                 {
-                    // copy any pre-existing data into the new piece
-                    Buffer.BlockCopy(oldValue.Array, oldValue.Offset, newValue.Array, newValue.Offset, oldValue.Count);
+                    adjacent = newValue.Array == oldValue.Array &&
+                        newValue.Offset == (oldValue.Offset + oldValue.Count);
+
+                    if (!adjacent)
+                    {
+                        // copy any pre-existing data into the new piece
+                        Buffer.BlockCopy(oldValue.Array, oldValue.Offset, newValue.Array, newValue.Offset, oldValue.Count);
+                    }
                 }
 
                 // read the new data
                 reader.ReadBytes(newValue.Array, newValue.Offset + oldValue.Count, len, true);
-
-                // release the old data
-                if (oldValue.Count != 0)
+                if (adjacent)
                 {
-                    allocator?.Release(context, oldValue);
+                    // compact the two buffers into one
+                    oldValue = new ArraySegment<byte>(oldValue.Array, oldValue.Offset, oldValue.Count + newValue.Count);
                 }
-                // update the ref to signal the change
-                oldValue = newValue;
+                else
+                {
+                    // release the old data
+                    if (oldValue.Count != 0)
+                    {
+                        allocator?.Release(context, oldValue);
+                    }
+                    // update the ref to signal the change
+                    oldValue = newValue;
+                }
             }
             catch
             {
