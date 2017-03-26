@@ -586,6 +586,7 @@ namespace ProtoBuf.Meta
 #else
             var assembly = type.Assembly;
 #endif
+            RegisterAll(assembly); // always include self
             if (probedAssemblies == null) probedAssemblies = new BasicList();
             else if (probedAssemblies.Contains(assembly)) return;
 
@@ -660,56 +661,19 @@ namespace ProtoBuf.Meta
                             var t = iType.GetGenericArguments()[0];
 #endif
                             // so: "type" implements ISerializer<t>
-                            RegisterSerializer(type, t, psa.WireType);
-                            break;
+                            var found = (MetaType)types[FindOrAddAuto(t, false, false, true)];
+                            if(found != null)
+                            {
+                                found.CustomSerializer = new CustomSerializer(type, psa.IsMessage, psa.WireType);
+                            }
+                            break; // only consider one interface match per origin type
                         }
                     }
-
-                    break;
                 }
                 catch { }
             }
         }
-        public void RegisterSerializer(Type serializerType, Type targetType, WireType wireType)
-        {
-            if (serializerType == null) throw new ArgumentNullException(nameof(serializerType));
-            if (targetType == null) throw new ArgumentNullException(nameof(targetType));
-            
-            var found = (PerTypeSerializers)perTypeSerializers[targetType];
-            if(found == null)
-            {
-                lock(perTypeSerializers)
-                { // double-checked
-                    found = (PerTypeSerializers)perTypeSerializers[targetType];
-                    if(found == null)
-                    {
-                        perTypeSerializers[targetType] = found = new PerTypeSerializers();
-                    }
-                }
-            }
-            switch(wireType)
-            {
-                case WireType.StartGroup: found.group = serializerType; break;
-                case WireType.String: found.message = serializerType; break;
-            }
-        }
-        public Type GetSerializerType(Type target, WireType wireType)
-        {
-            if (target == null) return null;
-            var found = (PerTypeSerializers)perTypeSerializers[target];
-            if (found == null) return null;
-            switch(wireType)
-            {
-                case WireType.StartGroup: return found.group;
-                case WireType.String: return found.message;
-            }
-            return null;
-        }
-        Hashtable perTypeSerializers = new Hashtable();
-        private sealed class PerTypeSerializers
-        {
-            public Type message, group;
-        }
+
         private MetaType RecogniseCommonTypes(Type type)
         {
 //#if !NO_GENERICS
@@ -868,6 +832,7 @@ namespace ProtoBuf.Meta
                 if (typeIndex >= 0)
                 {
                     MetaType mt = (MetaType)types[typeIndex];
+                    var custom = mt.CustomSerializer;
                     if (getBaseKey)
                     {
                         mt = MetaType.GetRootType(mt);

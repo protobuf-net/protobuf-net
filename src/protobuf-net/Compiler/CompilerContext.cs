@@ -963,9 +963,9 @@ namespace ProtoBuf.Compiler
             LoadAddress(local, MapType(type));
         }
 #endif
-        internal void LoadAddress(Local local, Type type)
+        internal void LoadAddress(Local local, Type type, bool evenForReferenceType = false)
         {
-            if (Helpers.IsValueType(type))
+            if (evenForReferenceType || Helpers.IsValueType(type))
             {
                 if (local == null)
                 {

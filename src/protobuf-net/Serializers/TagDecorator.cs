@@ -13,7 +13,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class TagDecorator : ProtoDecoratorBase, IProtoTypeSerializer
+    class TagDecorator : ProtoDecoratorBase, IProtoTypeSerializer
     {
 
         public bool HasCallbacks(TypeModel.CallbackType callbackType)

@@ -1662,6 +1662,25 @@ namespace ProtoBuf.Meta
             return null;
         }
 
+        [Obsolete("Not intended for external usage")]
+        public object GetSerializerInstance(Type type)
+        {
+            if (type == null) return null;
+            var obj = customSerializers[type];
+            if(obj == null)
+            {
+                lock(customSerializers)
+                {
+                    obj = customSerializers[type];
+                    if (obj == null)
+                    {
+                        customSerializers[type] = obj = Activator.CreateInstance(type);
+                    }
+                }
+            }
+            return obj;
+        }
+        Hashtable customSerializers = new Hashtable();
     }
 
 }

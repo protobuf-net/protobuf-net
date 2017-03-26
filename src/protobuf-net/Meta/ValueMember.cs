@@ -318,27 +318,43 @@ namespace ProtoBuf.Meta
             {
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 WireType wireType;
-                Type finalType = itemType == null ? memberType : itemType;
-                IProtoSerializer ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType, OverwriteList, true);
-                if (ser == null)
+                var custom = model.FindWithoutAdd(memberType)?.CustomSerializer;
+                IProtoSerializer ser;
+                Type itemType;
+                if (custom != null)
                 {
-                    throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
-                }
-
-                // apply tags
-                if (itemType != null && SupportNull)
-                {
-                    if(IsPacked)
-                    {
-                        throw new NotSupportedException("Packed encodings cannot support null values");
-                    }
-                    ser = new TagDecorator(NullDecorator.Tag, wireType, IsStrict, ser);
-                    ser = new NullDecorator(model, ser);
-                    ser = new TagDecorator(fieldNumber, WireType.StartGroup, false, ser);
+                    wireType = custom.WireType;
+                    ser = (IProtoTypeSerializer)Activator.CreateInstance(
+                        typeof(CustomSerializer<>).MakeGenericType(memberType),
+                        new object[] { custom.Type });
+                    ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
+                    itemType = null;
                 }
                 else
                 {
-                    ser = new TagDecorator(fieldNumber, wireType, IsStrict, ser);
+                    itemType = this.itemType;
+                    Type finalType = itemType == null ? memberType : itemType;
+                    ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, asReference, dynamicType, OverwriteList, true);
+                    if (ser == null)
+                    {
+                        throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
+                    }
+
+                    // apply tags
+                    if (itemType != null && SupportNull)
+                    {
+                        if (IsPacked)
+                        {
+                            throw new NotSupportedException("Packed encodings cannot support null values");
+                        }
+                        ser = new TagDecorator(NullDecorator.Tag, wireType, IsStrict, ser);
+                        ser = new NullDecorator(model, ser);
+                        ser = new TagDecorator(fieldNumber, WireType.StartGroup, false, ser);
+                    }
+                    else
+                    {
+                        ser = new TagDecorator(fieldNumber, wireType, IsStrict, ser);
+                    }
                 }
                 // apply lists if appropriate
                 if (itemType != null)

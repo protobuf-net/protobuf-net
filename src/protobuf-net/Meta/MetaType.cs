@@ -72,8 +72,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IncludeSerializerMethod
         {   // negated to minimize common-case / initializer
-            get { return !HasFlag(OPTIONS_PrivateOnApi); }
-            set { SetFlag(OPTIONS_PrivateOnApi, !value, true); }
+            get { return !HasFlag(TypeFlags.PrivateOnApi); }
+            set { SetFlag(TypeFlags.PrivateOnApi, !value, true); }
         }
 
         /// <summary>
@@ -81,8 +81,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool AsReferenceDefault
         { 
-            get { return HasFlag(OPTIONS_AsReferenceDefault); }
-            set { SetFlag(OPTIONS_AsReferenceDefault, value, true); }
+            get { return HasFlag(TypeFlags.AsReferenceDefault); }
+            set { SetFlag(TypeFlags.AsReferenceDefault, value, true); }
         }
 
         private BasicList subTypes;
@@ -359,7 +359,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal void ThrowIfFrozen()
         {
-            if ((flags & OPTIONS_Frozen)!=0) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated for " + type.FullName);
+            if ((flags & TypeFlags.Frozen)!=0) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated for " + type.FullName);
         }
         //internal void Freeze() { flags |= OPTIONS_Frozen; }
 
@@ -380,7 +380,7 @@ namespace ProtoBuf.Meta
                         if (serializer == null)
                         { // double-check, but our main purpse with this lock is to ensure thread-safety with
                             // serializers needing to wait until another thread has finished adding the properties
-                            SetFlag(OPTIONS_Frozen, true, false);
+                            SetFlag(TypeFlags.Frozen, true, false);
                             serializer = BuildSerializer();
 #if FEAT_COMPILER && !FX11
                             if (model.AutoCompile) CompileInPlace();
@@ -405,6 +405,21 @@ namespace ProtoBuf.Meta
         }
         private IProtoTypeSerializer BuildSerializer()
         {
+            var custom = CustomSerializer;
+            if(custom != null)
+            {
+                var ser = (IProtoTypeSerializer)Activator.CreateInstance(
+                    typeof(CustomSerializer<>).MakeGenericType(Type),
+                    new object[] { custom.Type });
+                if(!custom.IsMessage)
+                {
+                    // spoof a type with field 1 as the inner value
+                    ser = new TypeSerializer(model, Type, new int[] { ProtoBuf.Serializer.ListItemTag },
+                        new[] { new TagDecorator(ProtoBuf.Serializer.ListItemTag, custom.WireType, false, ser) },
+                        null, true, true, null, Type, null); 
+                }
+                return ser;
+            }
             if (Helpers.IsEnum(type))
             {
                 return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(type, GetEnumMap()));
@@ -438,7 +453,6 @@ namespace ProtoBuf.Meta
                 if(ctor == null) throw new InvalidOperationException();
                 return new TupleSerializer(model, ctor, mapping);
             }
-            
 
             fields.Trim();
             int fieldCount = fields.Count;
@@ -536,7 +550,7 @@ namespace ProtoBuf.Meta
             AttributeFamily family = GetContractFamily(model, type, typeAttribs);
             if(family == AttributeFamily.AutoTuple)
             {
-                SetFlag(OPTIONS_AutoTuple, true, true);
+                SetFlag(TypeFlags.AutoTuple, true, true);
             }
             bool isEnum = !EnumPassthru && Helpers.IsEnum(type);
             if(family ==  AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
@@ -1267,8 +1281,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool UseConstructor
         { // negated to have defaults as flat zero
-            get { return !HasFlag(OPTIONS_SkipConstructor); }
-            set { SetFlag(OPTIONS_SkipConstructor, !value, true); }
+            get { return !HasFlag(TypeFlags.SkipConstructor); }
+            set { SetFlag(TypeFlags.SkipConstructor, !value, true); }
         }
         /// <summary>
         /// The concrete type to create when a new instance of this type is needed; this may be useful when dealing
@@ -1634,7 +1648,7 @@ namespace ProtoBuf.Meta
 
         internal EnumSerializer.EnumPair[] GetEnumMap()
         {
-            if (HasFlag(OPTIONS_EnumPassThru)) return null;
+            if (HasFlag(TypeFlags.EnumPassThru)) return null;
             EnumSerializer.EnumPair[] result = new EnumSerializer.EnumPair[fields.Count];
             for (int i = 0; i < result.Length; i++)
             {
@@ -1653,8 +1667,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool EnumPassthru
         {
-            get { return HasFlag(OPTIONS_EnumPassThru); }
-            set { SetFlag(OPTIONS_EnumPassThru, value, true); }
+            get { return HasFlag(TypeFlags.EnumPassThru); }
+            set { SetFlag(TypeFlags.EnumPassThru, value, true); }
         }
 
         /// <summary>
@@ -1663,29 +1677,32 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IgnoreListHandling
         {
-            get { return HasFlag(OPTIONS_IgnoreListHandling); }
-            set { SetFlag(OPTIONS_IgnoreListHandling, value, true); }
+            get { return HasFlag(TypeFlags.IgnoreListHandling); }
+            set { SetFlag(TypeFlags.IgnoreListHandling, value, true); }
         }
 
         internal bool Pending
         {
-            get { return HasFlag(OPTIONS_Pending); }
-            set { SetFlag(OPTIONS_Pending, value, false); }
+            get { return HasFlag(TypeFlags.Pending); }
+            set { SetFlag(TypeFlags.Pending, value, false); }
         }
 
-        private const byte
-            OPTIONS_Pending = 1,
-            OPTIONS_EnumPassThru = 2,
-            OPTIONS_Frozen = 4,
-            OPTIONS_PrivateOnApi = 8,
-            OPTIONS_SkipConstructor = 16,
-            OPTIONS_AsReferenceDefault = 32,
-            OPTIONS_AutoTuple = 64,
-            OPTIONS_IgnoreListHandling = 128;
-
-        private volatile byte flags;
-        private bool HasFlag(byte flag) { return (flags & flag) == flag; }
-        private void SetFlag(byte flag, bool value, bool throwIfFrozen)
+        [Flags]
+        private enum TypeFlags : byte
+        {
+            None = 0,
+            Pending = 1,
+            EnumPassThru = 2,
+            Frozen = 4,
+            PrivateOnApi = 8,
+            SkipConstructor = 16,
+            AsReferenceDefault = 32,
+            AutoTuple = 64,
+            IgnoreListHandling = 128
+        }
+        private volatile TypeFlags flags;
+        private bool HasFlag(TypeFlags flag) { return (flags & flag) == flag; }
+        private void SetFlag(TypeFlags flag, bool value, bool throwIfFrozen)
         {
             if (throwIfFrozen && HasFlag(flag) != value)
             {
@@ -1694,7 +1711,7 @@ namespace ProtoBuf.Meta
             if (value)
                 flags |= flag;
             else
-                flags = (byte)(flags & ~flag);
+                flags = (flags & ~flag);
         }
 
         internal static MetaType GetRootType(MetaType source)
@@ -1739,8 +1756,23 @@ namespace ProtoBuf.Meta
         }
         internal bool IsAutoTuple
         {
-            get { return HasFlag(OPTIONS_AutoTuple); }
+            get { return HasFlag(TypeFlags.AutoTuple); }
         }
+
+        private CustomSerializer customSerializer;
+        public CustomSerializer CustomSerializer
+        {
+            get { return customSerializer; }
+            set
+            {
+                if(customSerializer != value)
+                {
+                    ThrowIfFrozen();
+                    customSerializer = value;
+                }
+            }
+        }
+
         internal void WriteSchema(System.Text.StringBuilder builder, int indent, ref bool requiresBclImport)
         {
             if (surrogate != null) return; // nothing to write

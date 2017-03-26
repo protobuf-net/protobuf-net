@@ -213,7 +213,7 @@ namespace ProtoBuf
 
 #if !CF && !PORTABLE // CF lacks the ability to get a robust reference-based hash-code, so we'll do it the harder way instead
         private System.Collections.Generic.Dictionary<object, int> objectKeys;
-        private sealed class ReferenceComparer : System.Collections.Generic.IEqualityComparer<object>
+        internal sealed class ReferenceComparer : System.Collections.Generic.IEqualityComparer<object>
         {
             public readonly static ReferenceComparer Default = new ReferenceComparer();
             private ReferenceComparer() {}
