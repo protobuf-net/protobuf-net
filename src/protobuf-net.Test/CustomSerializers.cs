@@ -1,13 +1,24 @@
-﻿using ProtoBuf.Meta;
+﻿using ProtoBuf;
+using ProtoBuf.Meta;
 using System;
 using System.IO;
 using System.Text;
 using Xunit;
 
+[assembly: ProtoRegisterAll("protobuf-net.Test")]
+
 namespace ProtoBuf.Tests
 {
     public class CustomSerializers
     {
+        [Fact]
+        public void ProbeWorks()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.Add(typeof(HazArraySegments), true);
+            var type = model.GetSerializerType(typeof(ArraySegment<byte>), WireType.String);
+            Assert.Equal(typeof(ArraySegmentBytesSerializer), type);
+        }
         [Fact]
         public void ArraySegmentStuffJustWorks()
         {
@@ -79,6 +90,7 @@ namespace ProtoBuf.Tests
     /// concept: the *serializer* is discovered automagically, or via assistance attributes (in this case,
     /// it should probably be purely automatic registration, based on probing the assembly that defines HazArraySegments)
     /// </summary>
+    [ProtoSerializer]
     public class ArraySegmentBytesSerializer : ISerializer<ArraySegment<byte>>
     {
         public WireType WireType => WireType.String;

@@ -524,6 +524,7 @@ namespace ProtoBuf.Meta
         }
         internal void ApplyDefaultBehaviour()
         {
+            model.ApplyAssemblyLevelSettings(Type);
             Type baseType = GetBaseType(this);
             if (baseType != null && model.FindWithoutAdd(baseType) == null
                 && GetContractFamily(model, baseType, null) != MetaType.AttributeFamily.None)

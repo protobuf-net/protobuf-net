@@ -578,6 +578,138 @@ namespace ProtoBuf.Meta
             return key;
         }
 
+        internal void ApplyAssemblyLevelSettings(Type type)
+        {
+            if (type == null) return;
+#if COREFX
+            var assembly = type.GetTypeInfo().Assembly;
+#else
+            var assembly = type.Assembly;
+#endif
+            if (probedAssemblies == null) probedAssemblies = new BasicList();
+            else if (probedAssemblies.Contains(assembly)) return;
+
+            probedAssemblies.Add(assembly);
+            
+            var attribs = AttributeMap.Create(this, assembly);
+            for (int i = 0; i < attribs.Length; i++)
+            {
+                try
+                {
+                    var attrib = attribs[i];
+                    switch (attrib.AttributeType.FullName)
+                    {
+                        case "ProtoBuf.ProtoRegisterAllAttribute":
+                            object tmp;
+                            if(attrib.TryGet("AssemblyName", out tmp))
+                            {
+                                string assemblyName = (string)tmp;
+                                if(!string.IsNullOrEmpty(assemblyName))
+                                {
+                                    var targetAssembly = GetAssembly(assemblyName);
+                                    if(targetAssembly != null)
+                                    {
+                                        RegisterAll(targetAssembly);
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                }
+                catch { } // lots of things can go crazy here
+
+            }
+
+        }
+        BasicList probedAssemblies, registeredAssemblies;
+        private void RegisterAll(Assembly assembly)
+        {
+            if (assembly == null) return;
+            if (registeredAssemblies == null) registeredAssemblies = new BasicList();
+            else if (registeredAssemblies.Contains(assembly)) return;
+
+            registeredAssemblies.Add(assembly);
+            foreach(var type in assembly.GetTypes())
+            {
+                try
+                {
+#if COREFX
+                    var typeInfo = type.GetTypeInfo();
+                    if(!typeInfo.IsClass || typeInfo.IsAbstract) continue;
+                    var psa = (ProtoSerializerAttribute)typeInfo.GetCustomAttribute(typeof(ProtoSerializerAttribute), false);
+#else
+                    if (!type.IsClass || type.IsAbstract) continue;
+                    var psa = (ProtoSerializerAttribute)Attribute.GetCustomAttribute(type, typeof(ProtoSerializerAttribute), false);
+#endif
+                    if (psa == null) continue;
+
+                
+                    foreach(var iType in type.GetInterfaces())
+                    {
+#if COREFX
+                        var iInfo = iType.GetTypeInfo();
+#else
+                        var iInfo = iType;
+#endif
+                        if(iInfo.IsGenericType && iInfo.Name.Contains("ISerializer")
+                            && iInfo.GetGenericTypeDefinition() == typeof(ISerializer<>))
+                        {
+#if COREFX
+                            var t = iType.GenericTypeArguments[0];
+#else
+                            var t = iType.GetGenericArguments()[0];
+#endif
+                            // so: "type" implements ISerializer<t>
+                            RegisterSerializer(type, t, psa.WireType);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                catch { }
+            }
+        }
+        public void RegisterSerializer(Type serializerType, Type targetType, WireType wireType)
+        {
+            if (serializerType == null) throw new ArgumentNullException(nameof(serializerType));
+            if (targetType == null) throw new ArgumentNullException(nameof(targetType));
+            
+            var found = (PerTypeSerializers)perTypeSerializers[targetType];
+            if(found == null)
+            {
+                lock(perTypeSerializers)
+                { // double-checked
+                    found = (PerTypeSerializers)perTypeSerializers[targetType];
+                    if(found == null)
+                    {
+                        perTypeSerializers[targetType] = found = new PerTypeSerializers();
+                    }
+                }
+            }
+            switch(wireType)
+            {
+                case WireType.StartGroup: found.group = serializerType; break;
+                case WireType.String: found.message = serializerType; break;
+            }
+        }
+        public Type GetSerializerType(Type target, WireType wireType)
+        {
+            if (target == null) return null;
+            var found = (PerTypeSerializers)perTypeSerializers[target];
+            if (found == null) return null;
+            switch(wireType)
+            {
+                case WireType.StartGroup: return found.group;
+                case WireType.String: return found.message;
+            }
+            return null;
+        }
+        Hashtable perTypeSerializers = new Hashtable();
+        private sealed class PerTypeSerializers
+        {
+            public Type message, group;
+        }
         private MetaType RecogniseCommonTypes(Type type)
         {
 //#if !NO_GENERICS
@@ -1937,8 +2069,12 @@ namespace ProtoBuf.Meta
             }
         }
 
-      
+
 #if FEAT_IKVM
+        internal override Assembly GetAssembly(string name)
+        {
+            return universe.Something(name);
+        }
         internal override Type GetType(string fullName, Assembly context)
         {
             if (context != null)

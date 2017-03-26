@@ -1614,6 +1614,16 @@ namespace ProtoBuf.Meta
         }
 #endif
 
+        internal virtual Assembly GetAssembly(string name)
+        {
+#if FEAT_IKVM
+            throw new NotImplementedException();
+#elif COREFX
+            return Assembly.Load(new AssemblyName(name));
+#else
+            return Assembly.Load(name);
+#endif
+        }
         internal virtual Type GetType(string fullName, Assembly context)
         {
 #if FEAT_IKVM
