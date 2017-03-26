@@ -10,6 +10,50 @@ namespace ProtoBuf
         private bool frozen;
         internal void Freeze() { frozen = true;}
         private void ThrowIfFrozen() { if (frozen) throw new InvalidOperationException("The serialization-context cannot be changed once it is in use"); }
+
+
+        class AllocatorNode
+        {
+            public AllocatorNode Tail { get; }
+            public object Allocator { get; }
+            public AllocatorNode(AllocatorNode tail, object allocator)
+            {
+                Tail = tail;
+                Allocator = allocator;
+            }
+        }
+        // we don't expect many allocators; linked list is fine
+        AllocatorNode allocatorRoot;
+        /// <summary>
+        /// Register an allocator for a particular type
+        /// </summary>
+        public void SetAllocator<T>(IAllocator<T> allocator)
+        {
+            if (allocator == null)
+            {
+                throw new ArgumentNullException(nameof(allocator));
+            }
+            ThrowIfFrozen();
+            if(GetAllocator<T>() != null)
+            {
+                throw new InvalidOperationException("An allocator is already registered for " + typeof(T).FullName);
+            }
+            allocatorRoot = new AllocatorNode(allocatorRoot, allocator);
+        }
+        /// <summary>
+        /// Query the allocator registered for a particular type
+        /// </summary>
+        public IAllocator<T> GetAllocator<T>()
+        {
+            var node = allocatorRoot;
+            while(node != null)
+            {
+                if (node.Allocator is IAllocator<T>) return (IAllocator<T>)node.Allocator;
+                node = node.Tail;
+            }
+            return null;
+        }
+
         private object context;
         /// <summary>
         /// Gets or sets a user-defined object containing additional information about this serialization/deserialization operation.

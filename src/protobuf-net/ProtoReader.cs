@@ -882,6 +882,14 @@ namespace ProtoBuf
         }
 
         private static readonly byte[] EmptyBlob = new byte[0];
+
+        public int ReadLengthPrefix()
+        {
+            Assert(WireType.String);
+            int len = (int)ReadUInt32Variant(false);
+            if (len == 0) wireType = WireType.None; // nothing to consume
+            return len;
+        }
         /// <summary>
         /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
         /// </summary>
@@ -891,9 +899,11 @@ namespace ProtoBuf
             switch (reader.wireType)
             {
                 case WireType.String:
-                    int len = (int)reader.ReadUInt32Variant(false);
-                    reader.wireType = WireType.None;
-                    if (len == 0) return value == null ? EmptyBlob : value;
+                    int len = reader.ReadLengthPrefix();
+                    if (len == 0)
+                    {
+                        return value == null ? EmptyBlob : value;
+                    }
                     int offset;
                     if (value == null || value.Length == 0)
                     {
@@ -909,28 +919,7 @@ namespace ProtoBuf
                     }
                     // value is now sized with the final length, and (if necessary)
                     // contains the old data up to "offset"
-                    reader.position += len; // assume success
-                    while (len > reader.available)
-                    {
-                        if (reader.available > 0)
-                        {
-                            // copy what we *do* have
-                            Helpers.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, reader.available);
-                            len -= reader.available;
-                            offset += reader.available;
-                            reader.ioIndex = reader.available = 0; // we've drained the buffer
-                        }
-                        //  now refill the buffer (without overflowing it)
-                        int count = len > reader.ioBuffer.Length ? reader.ioBuffer.Length : len;
-                        if (count > 0) reader.Ensure(count, true);
-                    }
-                    // at this point, we know that len <= available
-                    if (len > 0)
-                    {   // still need data, but we have enough buffered
-                        Helpers.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, len);
-                        reader.ioIndex += len;
-                        reader.available -= len;
-                    }
+                    reader.ReadBytes(value, offset, len, true);
                     return value;
                 case WireType.Variant:
                     return new byte[0];
@@ -938,7 +927,33 @@ namespace ProtoBuf
                     throw reader.CreateWireTypeException();
             }
         }
-
+        public void ReadBytes(byte[] buffer, int offset, int count, bool resetWireType)
+        {
+            Assert(WireType.String);
+            if (resetWireType) wireType = WireType.None;
+            position += count; // assume success
+            while (count > available)
+            {
+                if (available > 0)
+                {
+                    // copy what we *do* have
+                    Helpers.BlockCopy(ioBuffer, ioIndex, buffer, offset, available);
+                    count -= available;
+                    offset += available;
+                    ioIndex = available = 0; // we've drained the buffer
+                }
+                //  now refill the buffer (without overflowing it)
+                int nextChunkSize = count > ioBuffer.Length ? ioBuffer.Length : count;
+                if (nextChunkSize > 0) Ensure(nextChunkSize, true);
+            }
+            // at this point, we know that len <= available
+            if (count > 0)
+            {   // still need data, but we have enough buffered
+                Helpers.BlockCopy(ioBuffer, ioIndex, buffer, offset, count);
+                ioIndex += count;
+                available -= count;
+            }
+        }
         //static byte[] ReadBytes(Stream stream, int length)
         //{
         //    if (stream == null) throw new ArgumentNullException("stream");
