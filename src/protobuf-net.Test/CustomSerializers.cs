@@ -91,7 +91,8 @@ namespace ProtoBuf.Tests
                     Assert.Equal(20, allocator.Allocated);
                     using (var ms = new MemoryStream())
                     {
-                        var ctx = new SerializationContext();
+                        var ctx = new SerializationContext(); // we could re-use this ser-ctx between many seralize/deserialize
+                                                              // calls that share a lifetime, if we want
                         ctx.SetAllocator(allocator);
                         model.Serialize(ms, obj, ctx);
                         ms.Position = 0;
