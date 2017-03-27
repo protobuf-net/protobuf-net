@@ -83,12 +83,25 @@ namespace ProtoBuf.Tests
                 {
                     Assert.Equal(0, allocator.CountBytesHeld());
 
-                    string s = "these are some words";
-                    var obj = new HazArraySegments { Id = 123, Payload = allocator.Allocate(Encoding.UTF8.GetByteCount(s)) };
-                    Encoding.UTF8.GetBytes(s, 0, s.Length, obj.Payload.Array, obj.Payload.Offset);
-                    Assert.Equal(20, obj.Payload.Count);
+                    // dummy data to serialize
+                    const string s1 = "these are some words", s2 = "as are these";
+                    var obj = new HazArraySegments {
+                        Id = 123,
+                        Payload = allocator.Allocate(Encoding.UTF8.GetByteCount(s1)),
+                        AnotherPayload = allocator.Allocate(Encoding.UTF8.GetByteCount(s2)),
+                    };
+                    Encoding.UTF8.GetBytes(s1, 0, s1.Length, obj.Payload.Array, obj.Payload.Offset);
+                    Encoding.UTF8.GetBytes(s2, 0, s2.Length, obj.AnotherPayload.Array, obj.AnotherPayload.Offset);
+
+                    // check what we've allocated *before* serialization (just for the dummy data)
                     Assert.Equal(0, obj.Payload.Offset);
-                    Assert.Equal(20, allocator.Allocated);
+                    Assert.Equal(20, obj.Payload.Count);
+                    Assert.Equal(20, obj.AnotherPayload.Offset);
+                    Assert.Equal(12, obj.AnotherPayload.Count);
+                    Assert.Equal(32, allocator.Allocated);
+                    Assert.Equal(1024, allocator.CountBytesHeld());
+
+                    // be serializin'
                     using (var ms = new MemoryStream())
                     {
                         var ctx = new SerializationContext(); // we could re-use this ser-ctx between many seralize/deserialize
@@ -98,11 +111,15 @@ namespace ProtoBuf.Tests
                         ms.Position = 0;
                         var clone = (HazArraySegments)model.Deserialize(ms, null, typeof(HazArraySegments), ctx);
 
+                        Assert.Equal(32, clone.Payload.Offset);
                         Assert.Equal(20, clone.Payload.Count);
-                        Assert.Equal(20, clone.Payload.Offset);
-                        Assert.Equal(40, allocator.Allocated);
-                        string t = Encoding.UTF8.GetString(clone.Payload.Array, clone.Payload.Offset, clone.Payload.Count);
-                        Assert.Equal(s, t);
+                        Assert.Equal(52, clone.AnotherPayload.Offset);
+                        Assert.Equal(12, clone.AnotherPayload.Count);
+                        Assert.Equal(64, allocator.Allocated);
+                        Assert.Equal(1024, allocator.CountBytesHeld());
+
+                        Assert.Equal(s1, Encoding.UTF8.GetString(clone.Payload.Array, clone.Payload.Offset, clone.Payload.Count));
+                        Assert.Equal(s2, Encoding.UTF8.GetString(clone.AnotherPayload.Array, clone.AnotherPayload.Offset, clone.AnotherPayload.Count));
                     }
 
                     Assert.Equal(1024, allocator.CountBytesHeld()); // allocator is taking a page
@@ -143,6 +160,9 @@ namespace ProtoBuf.Tests
         public int Id { get; set; }
         [ProtoMember(2)]
         public ArraySegment<byte> Payload { get; set; }
+
+        [ProtoMember(3)]
+        public ArraySegment<byte> AnotherPayload { get; set; }
     }
     public class TypeWithCustomSerializer
     {
