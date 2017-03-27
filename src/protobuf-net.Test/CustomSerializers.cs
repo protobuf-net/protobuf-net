@@ -314,7 +314,7 @@ namespace ProtoBuf.Tests
     public class ArraySegmentBytesSerializer : ISerializer<ArraySegment<byte>>
     {
         public WireType WireType => WireType.String;
-        public void Read(ProtoReader reader, ref ArraySegment<byte> oldValue)
+        public void Read(ProtoReader reader, ref ArraySegment<byte> value)
         {
             int len = reader.ReadLengthPrefix();
             if (len == 0)
@@ -327,39 +327,25 @@ namespace ProtoBuf.Tests
             var newValue = default(ArraySegment<byte>);
             try
             {
-                // if no allocator, use naked arrays
-                newValue = allocator == null ? new ArraySegment<byte>(new byte[len]) : allocator.Allocate(context, len);
+                // use the allocator if present, else use naked arrays
+                newValue = allocator == null ? new ArraySegment<byte>(new byte[len + value.Count]) : allocator.Allocate(context, len + value.Count);
 
-                bool adjacent = false;
-                if (oldValue.Count != 0)
+                if (value.Count != 0)
                 {
-                    adjacent = newValue.Array == oldValue.Array &&
-                        newValue.Offset == (oldValue.Offset + oldValue.Count);
-
-                    if (!adjacent)
-                    {
-                        // copy any pre-existing data into the new piece
-                        Buffer.BlockCopy(oldValue.Array, oldValue.Offset, newValue.Array, newValue.Offset, oldValue.Count);
-                    }
+                    // copy any pre-existing data into the new piece
+                    Buffer.BlockCopy(value.Array, value.Offset, newValue.Array, newValue.Offset, value.Count);
                 }
 
                 // read the new data
-                reader.ReadBytes(newValue.Array, newValue.Offset + oldValue.Count, len, true);
-                if (adjacent)
+                reader.ReadBytes(newValue.Array, newValue.Offset + value.Count, len, true);
+
+                // release the old data
+                if (value.Count != 0)
                 {
-                    // compact the two buffers into one
-                    oldValue = new ArraySegment<byte>(oldValue.Array, oldValue.Offset, oldValue.Count + newValue.Count);
+                    allocator?.Release(context, value);
                 }
-                else
-                {
-                    // release the old data
-                    if (oldValue.Count != 0)
-                    {
-                        allocator?.Release(context, oldValue);
-                    }
-                    // update the ref to signal the change
-                    oldValue = newValue;
-                }
+                // update the ref to signal the change
+                value = newValue;
             }
             catch
             {
