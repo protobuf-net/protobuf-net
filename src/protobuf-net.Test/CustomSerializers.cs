@@ -1,6 +1,7 @@
 ﻿using ProtoBuf.Meta;
 using ProtoBuf.unittest;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using Xunit;
@@ -70,27 +71,44 @@ namespace ProtoBuf.Tests
         }
         private void ArraySegmentStuffJustWorks(TypeModel model, string mode)
         {
-            var bufferPool = new ArraySegmentBufferPool(1024 << 3);
-
-            string s = "these are some words";
-            var obj = new HazArraySegments { Id = 123, Payload = bufferPool.Allocate(Encoding.UTF8.GetByteCount(s)) };
-            Encoding.UTF8.GetBytes(s, 0, s.Length, obj.Payload.Array, obj.Payload.Offset);
-            Assert.Equal(20, obj.Payload.Count);
-            Assert.Equal(0, obj.Payload.Offset);
-            Assert.Equal(20, bufferPool.Allocated);
-            using (var ms = new MemoryStream())
+            // the backing buffer would be long lived and shared between contexts
+            var pool = new SingleSlabBufferPool(1024, 8); // 8k
+            
+            for (int i = 0; i < 5; i++)
             {
-                var ctx = new SerializationContext();
-                ctx.SetAllocator(bufferPool);
-                model.Serialize(ms, obj, ctx);
-                ms.Position = 0;
-                var clone = (HazArraySegments)model.Deserialize(ms, null, typeof(HazArraySegments), ctx);
+                Assert.Equal(8 * 1024, pool.CountBytesAvailable());
 
-                Assert.Equal(20, clone.Payload.Count);
-                Assert.Equal(20, clone.Payload.Offset);
-                Assert.Equal(40, bufferPool.Allocated);
-                string t = Encoding.UTF8.GetString(clone.Payload.Array, clone.Payload.Offset, clone.Payload.Count);
-                Assert.Equal(s, t);
+                // the allocator also defines the lifetime of the pooled memory
+                using (var allocator = new SingleSlabBufferPoolAllocator(pool))
+                {
+                    Assert.Equal(0, allocator.CountBytesHeld());
+
+                    string s = "these are some words";
+                    var obj = new HazArraySegments { Id = 123, Payload = allocator.Allocate(Encoding.UTF8.GetByteCount(s)) };
+                    Encoding.UTF8.GetBytes(s, 0, s.Length, obj.Payload.Array, obj.Payload.Offset);
+                    Assert.Equal(20, obj.Payload.Count);
+                    Assert.Equal(0, obj.Payload.Offset);
+                    Assert.Equal(20, allocator.Allocated);
+                    using (var ms = new MemoryStream())
+                    {
+                        var ctx = new SerializationContext();
+                        ctx.SetAllocator(allocator);
+                        model.Serialize(ms, obj, ctx);
+                        ms.Position = 0;
+                        var clone = (HazArraySegments)model.Deserialize(ms, null, typeof(HazArraySegments), ctx);
+
+                        Assert.Equal(20, clone.Payload.Count);
+                        Assert.Equal(20, clone.Payload.Offset);
+                        Assert.Equal(40, allocator.Allocated);
+                        string t = Encoding.UTF8.GetString(clone.Payload.Array, clone.Payload.Offset, clone.Payload.Count);
+                        Assert.Equal(s, t);
+                    }
+
+                    Assert.Equal(1024, allocator.CountBytesHeld()); // allocator is taking a page
+                    Assert.Equal(7168, pool.CountBytesAvailable());
+
+                }
+                Assert.Equal(8 * 1024, pool.CountBytesAvailable()); // page is back in the pool
             }
         }
 
@@ -170,33 +188,122 @@ namespace ProtoBuf.Tests
     }
 
     /// <summary>
+    /// Allocates large pages of data and hands out pieces to consumers; this is an
+    /// absurdly over-simplified example of a much more complex problem
+    /// </summary>
+    class SingleSlabBufferPool
+    {
+        Queue<ArraySegment<byte>> freePages; // a bad way of implementing it!
+        public int CountBytesAvailable()
+        {
+            int free = 0;
+            lock(freePages)
+            {
+                foreach (var item in freePages)
+                    free += item.Count;
+            }
+            return free;
+        }
+        public SingleSlabBufferPool(int pageSize, int pages)
+        {
+            PageSize = pageSize;
+            var slab = new byte[pageSize * pages]; // only one slab in this; yeah, it is a stupid example
+            freePages = new Queue<ArraySegment<byte>>(pages);
+            int offset = 0;
+            for (int i = 0; i < pages; i++)
+            {
+                freePages.Enqueue(new ArraySegment<byte>(slab, offset, pageSize));
+                offset += pageSize;
+            }
+        }
+        public int PageSize { get; }
+        public ArraySegment<byte> GetPage()
+        {
+            lock (freePages)
+            {
+                if (freePages.Count == 0) throw new OutOfMemoryException();
+                return freePages.Dequeue();
+            }
+        }
+        public void ReturnPage(ArraySegment<byte> page)
+        {
+            // we'll just blindly trust that this was ours, meh
+            lock(freePages)
+            {
+                freePages.Enqueue(page);
+            }
+        }
+    }
+    /// <summary>
     /// concept: the *allocator* is not auto-discovered and is tied to the serialization-context;
     /// as such, the backing store can either per per-instance on the allocator, or can be
     /// via the .Context property
     /// </summary>
-    class ArraySegmentBufferPool : IAllocator<ArraySegment<byte>>
+    class SingleSlabBufferPoolAllocator : IAllocator<ArraySegment<byte>>
     {   // absurdly simplified
-        public int Allocated => offset;
+        private SingleSlabBufferPool pool;
+        int bytesLeftInCurrentPage;
+        List<ArraySegment<byte>> pages;
 
-        byte[] page;
-        int offset;
-        public ArraySegmentBufferPool(int length)
+        public SingleSlabBufferPoolAllocator(SingleSlabBufferPool pool)
         {
-            page = new byte[length];
-            offset = 0;
+            this.pool = pool;
+        }
+        public int Allocated { get; private set; }
+        public int CountBytesHeld()
+        {
+            var pages = this.pages;
+            int held = 0;
+            if(pages != null)
+            {
+                foreach(var page in pages) held += page.Count;
+            }
+            return held;
         }
 
         public ArraySegment<byte> Allocate(int length)
         {
-            if ((offset + length) > page.Length) throw new OutOfMemoryException();
-            var result = new ArraySegment<byte>(page, offset, length);
-            offset += length;
+            if (length <= 0) return default(ArraySegment<byte>);
+            var pool = this.pool;
+            if (pool == null) throw new ObjectDisposedException(nameof(SingleSlabBufferPoolAllocator));
+
+            if (length > pool.PageSize) throw new OutOfMemoryException(); // TODO: consider options here
+            if (bytesLeftInCurrentPage < length)
+            {
+                // going to need a new page
+                if (pages == null) pages = new List<ArraySegment<byte>>();
+                var newPage = pool.GetPage();
+                bytesLeftInCurrentPage = newPage.Count;
+                pages.Add(newPage);
+            }
+
+            var page = pages[pages.Count - 1];
+            var offset = page.Count - bytesLeftInCurrentPage;
+            var result = new ArraySegment<byte>(page.Array, offset, length);
+            bytesLeftInCurrentPage -= length;
+            Allocated += length;
             return result;
         }
         ArraySegment<byte> IAllocator<ArraySegment<byte>>.Allocate(SerializationContext context, int length)
             => Allocate(length);
 
-        void IAllocator<ArraySegment<byte>>.Release(SerializationContext context, ArraySegment<byte> value) { }
+        void IAllocator<ArraySegment<byte>>.Release(SerializationContext context, ArraySegment<byte> value)
+        {
+            // ignore; we're fine
+        }
+        void IDisposable.Dispose()
+        {
+            var pages = this.pages;
+            var pool = this.pool;
+            this.pool = null; // detach from the pool
+            if (pages != null && pool != null)
+            {
+                foreach (var page in pages)
+                {
+                    pool.ReturnPage(page);
+                }
+            }
+        }
     }
 
     /// <summary>
