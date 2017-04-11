@@ -1,4 +1,4 @@
-﻿#if !NO_NHIBERNATE
+﻿#if NHIBERNATE
 using NHibernate.Proxy;
 using ProtoBuf.Meta;
 using System;

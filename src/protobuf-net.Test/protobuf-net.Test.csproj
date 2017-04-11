@@ -1,28 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.1;net46</TargetFrameworks>
     <LibImport>net</LibImport>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp1.1'">
-    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netstandard1.3'">
-    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='net452'">
-    <DefineConstants>FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT</DefineConstants>
+  <PropertyGroup Condition="$(TargetFramework)=='net46'">
+    <DefineConstants>FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT;NHIBERNATE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="CodeGeneration.Roslyn.BuildTime" Version="0.3.9" />
     <PackageReference Include="xunit" Version="2.2.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.3.0" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='net452'">
+  <ItemGroup Condition="$(TargetFramework)=='net46'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
   </ItemGroup>
   <ItemGroup Condition="'$(ImportLibs)' == 'net'">
@@ -38,6 +39,7 @@
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\protobuf-net.CodeGen\protobuf-net.CodeGen.csproj" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
   </ItemGroup>
   <ItemGroup>
