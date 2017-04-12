@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.5</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
     <CoreFxVersion>4.3.0</CoreFxVersion>
     <SystemMemoryVersion>4.4.0-preview1-25210-01</SystemMemoryVersion>
     <CoreFxLabVersion>0.1.0-e170411-3</CoreFxLabVersion>

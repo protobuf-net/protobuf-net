@@ -8,40 +8,113 @@ using System.Buffers;
 
 public class SimpleUsage
 {
-    [Xunit.Fact]
-    public async Task CanRead()
-    {  // see example in: https://developers.google.com/protocol-buffers/docs/encoding
-        using (var factory = new PipeFactory())
+    // note: pretty much everything here should be ValueTask<T> throughout
+    static void Main()
+    {
+        try
         {
-            var pipe = factory.Create();
-            await WritePayloadAsync(pipe, "12 07 74 65 73 74 69 6e 67");
-
-
-            var obj = await DeserializeTest2Async(pipe.Reader);
+            Console.WriteLine("Running...");
+            new SimpleUsage().RunGoogleTests().Wait();
+        }
+        catch(Exception ex)
+        {
+            Console.Error.WriteLine(ex.Message);
         }
     }
-    // note: should be ValueTask<T> throughout
-    async Task<Test2> DeserializeTest2Async(
-        IPipeReader reader, Test2 value = default(Test2))
+    // see example in: https://developers.google.com/protocol-buffers/docs/encoding
+    
+    public async Task RunGoogleTests()
+    {
+        await RunTest1();
+        await RunTest2();
+
+    }
+
+    [Xunit.Fact]
+    public Task RunTest1()
+    {
+        return RunTest("08 96 01", reader => Deserialize<Test1>(reader, DeserializeTest1Async));
+    }
+
+    // note: this code would be spat out my the roslyn generator API
+    async Task<Test1> DeserializeTest1Async(
+        AsyncProtoReader reader, Test1 value = default(Test1))
+    {
+        await Console.Out.WriteLineAsync("Reading fields...");
+        while (await reader.ReadNextFieldAsync())
+        {
+            await Console.Out.WriteLineAsync($"Reading field {reader.FieldNumber}...");
+            switch (reader.FieldNumber)
+            {
+                case 1:
+                    (value ?? Create(ref value)).A = await reader.ReadInt32Async();
+                    break;
+                default:
+                    await reader.SkipFieldAsync();
+                    break;
+            }
+            await Console.Out.WriteLineAsync($"Reading next field...");
+        }
+        return value ?? Create(ref value);
+    }
+
+    class Test1
+    {
+        public int A;
+        public override string ToString() => $"A: {A}";
+    }
+
+    [Xunit.Fact]
+    public Task RunTest2()
+    {
+        return RunTest("12 07 74 65 73 74 69 6e 67", reader => Deserialize<Test2>(reader, DeserializeTest2Async));
+    }
+
+    static async Task Deserialize<T>(IPipeReader reader, Func<AsyncProtoReader, T, Task<T>> deserializer) where T : class, new()
     {
         // may be other AsyncProtoReader - over Stream, perhaps
         using (AsyncProtoReader protoReader = new PipeReader(reader))
         {
-            while (await protoReader.ReadNextFieldAsync())
-            {
-                switch (protoReader.FieldNumber)
-                {
-                    case 2:
-                        (value ?? Create(ref value)).B = await protoReader.ReadStringAsync();
-                        break;
-                    default:
-                        await protoReader.SkipFieldAsync();
-                        break;
-                }
-            }
-            return value ?? Create(ref value);
+            var obj = await deserializer(protoReader, null);
+            await Console.Out.WriteLineAsync(obj?.ToString() ?? "null");
         }
+    }
 
+    private async static Task RunTest(string hex, Func<IPipeReader, Task> test)
+    {
+        using (var factory = new PipeFactory())
+        {
+            var pipe = factory.Create();
+            await AppendPayloadAsync(pipe, hex);
+            pipe.Writer.Complete(); // simulate EOF
+
+            await Console.Out.WriteLineAsync("Pipe loaded; deserializing");
+
+            await test(pipe.Reader);
+        }
+    }
+
+    
+    // note: this code would be spat out my the roslyn generator API
+    async Task<Test2> DeserializeTest2Async(
+        AsyncProtoReader reader, Test2 value = default(Test2))
+    {
+        await Console.Out.WriteLineAsync("Reading fields...");
+        while (await reader.ReadNextFieldAsync())
+        {
+            await Console.Out.WriteLineAsync($"Reading field {reader.FieldNumber}...");
+            switch (reader.FieldNumber)
+            {
+                case 2:
+                    (value ?? Create(ref value)).B = await reader.ReadStringAsync();
+                    break;
+                default:
+                    await reader.SkipFieldAsync();
+                    break;
+            }
+            await Console.Out.WriteLineAsync($"Reading next field...");
+        }
+        return value ?? Create(ref value);
     }
     static T Create<T>(ref T obj) where T : class, new()
          => obj ?? (obj = new T());
@@ -50,6 +123,7 @@ public class SimpleUsage
     class Test2
     {
         public string B { get; set; }
+        public override string ToString() => $"B: {B}";
     }
     abstract class AsyncProtoReader : IDisposable
     {
@@ -73,40 +147,46 @@ public class SimpleUsage
             }
         }
         public abstract Task<string> ReadStringAsync();
+        public virtual async Task<int> ReadInt32Async()
+        {
+            var val = await TryReadVarintInt32Async();
+            if (val == null) throw new EndOfStreamException();
+            return val.GetValueOrDefault();
+        }
         protected abstract Task<int?> TryReadVarintInt32Async();
     }
 
     sealed class PipeReader : AsyncProtoReader
     {
         private IPipeReader _reader;
+        private readonly bool _closePipe;
+        private bool _isReading;
         ReadableBuffer _available;
-        public PipeReader(IPipeReader reader)
+        public PipeReader(IPipeReader reader, bool closePipe = true)
         {
-            this._reader = reader;
+            _reader = reader;
+            _closePipe = closePipe;
         }
 
         public override async Task<string> ReadStringAsync()
         {
             var lenOrNull = await TryReadVarintInt32Async();
-            if(lenOrNull == null)
+            if (lenOrNull == null)
             {
                 throw new EndOfStreamException();
             }
             int len = lenOrNull.GetValueOrDefault();
-            if(len == 0)
+            await Console.Out.WriteLineAsync($"String length: {len}");
+            if (len == 0)
             {
                 return "";
             }
             while (_available.Length < len)
             {
-                _reader.Advance(_available.Start, _available.End);
-                var read = await _reader.ReadAsync();
-                if (read.IsCompleted)
-                {
-                    throw new EndOfStreamException();
-                }
+                if(!await RequestMoreDataAsync()) throw new EndOfStreamException();
             }
             var s = _available.Slice(0, len).GetUtf8String();
+            await Console.Out.WriteLineAsync($"Read string: {s}");
             _available = _available.Slice(len);
             return s;
         }
@@ -114,9 +194,10 @@ public class SimpleUsage
         {
             int value = 0;
             int consumed = 0, shift = 0;
-            if(buffer.IsSingleSpan)
+            Console.WriteLine($"Parsing varint from {buffer.Length} bytes...");
+            if (buffer.IsSingleSpan)
             {
-                if(ReadVarint(buffer.First.Span, ref value, ref consumed, ref shift))
+                if (ReadVarint(buffer.First.Span, ref value, ref consumed, ref shift))
                 {
                     buffer = buffer.Slice(consumed);
                     return value;
@@ -124,9 +205,9 @@ public class SimpleUsage
             }
             else
             {
-                foreach(var segment in buffer)
+                foreach (var segment in buffer)
                 {
-                    if(ReadVarint(segment.Span, ref value, ref consumed, ref shift))
+                    if (ReadVarint(segment.Span, ref value, ref consumed, ref shift))
                     {
                         buffer = buffer.Slice(consumed);
                         return value;
@@ -149,7 +230,7 @@ public class SimpleUsage
                         int val = *head++;
                         value |= (val & 127) << shift;
                         shift += 7;
-                        if((val & 128) == 0)
+                        if ((val & 128) == 0)
                         {
                             return true;
                         }
@@ -160,34 +241,70 @@ public class SimpleUsage
         }
 
         const int MaxBytesForVarint = 10;
-        protected override async Task<int?> TryReadVarintInt32Async()
+
+
+        private async Task<bool> RequestMoreDataAsync()
         {
-            
-            int? value;
-            while (!(value = TryReadVarintInt32(ref _available)).HasValue && _available.Length < MaxBytesForVarint)
+            // TODO: add length limit here by slicing the returned data
+            int oldLen = _available.Length;
+            ReadResult read;
+            do
             {
                 _reader.Advance(_available.Start, _available.End);
-                var read = await _reader.ReadAsync();
-                if (read.IsCompleted)
+                _available = default(ReadableBuffer);
+
+                _isReading = true;
+                read = await _reader.ReadAsync();
+                _isReading = false;
+
+                if(read.IsCancelled)
                 {
-                    if (_available.Length == 0)
-                    {
-                        return null;
-                    }
-                    throw new EndOfStreamException();
+                    throw new ObjectDisposedException(GetType().Name);
                 }
-                _available = read.Buffer;
             }
-            return value.GetValueOrDefault();
+            while (_available.Length <= oldLen && !read.IsCompleted);
+            _available = read.Buffer;
+
+            return _available.Length > oldLen;
+        }
+        protected override async Task<int?> TryReadVarintInt32Async()
+        {
+            do
+            {
+                int? value = TryReadVarintInt32(ref _available);
+                if (value != null) return value.GetValueOrDefault();
+            }
+            while (await RequestMoreDataAsync());
+            if (_available.Length == 0) return null;
+            throw new EndOfStreamException();
         }
 
         public override void Dispose()
         {
+            var reader = _reader;
+            var available = _available;
             _reader = null;
+            _available = default(ReadableBuffer);
+            if(reader != null)
+            {
+                if (_isReading)
+                {
+                    reader.CancelPendingRead();
+                }
+                else
+                {
+                    reader.Advance(available.Start, available.End);
+                }
+                
+                if (_closePipe)
+                {
+                    reader.Complete();
+                }
+            }
         }
     }
 
-    private Task WritePayloadAsync(IPipe pipe, string hex)
+    private static Task AppendPayloadAsync(IPipe pipe, string hex)
     {
         hex = hex.Replace('-', ' ').Replace(" ", "").Trim();
         var len = hex.Length / 2;
