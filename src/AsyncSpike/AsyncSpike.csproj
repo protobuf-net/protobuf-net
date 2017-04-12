@@ -16,6 +16,7 @@
   <ItemGroup>
     <!-- could make this more granular to respect the options, but no need yet -->
     <PackageReference Include="System.Buffers" Version="$(CoreFxVersion)" />
+    <PackageReference Include="System.ValueTuple" Version="$(CoreFxVersion)" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="$(CoreFxVersion)" />
     <PackageReference Include="System.Memory" Version="$(SystemMemoryVersion)" />
     <PackageReference Include="System.Buffers.Primitives" Version="$(CoreFxLabVersion)" />
