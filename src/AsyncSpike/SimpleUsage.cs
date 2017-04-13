@@ -347,7 +347,7 @@ public class SimpleUsage
         private static (int value, int consumed) TryPeekVarintInt32(ref ReadableBuffer buffer)
         {
             Trace($"Parsing varint from {buffer.Length} bytes...");
-            return buffer.IsSingleSpan
+            return (buffer.IsSingleSpan || buffer.First.Length >= MaxBytesForVarint)
                 ? TryPeekVarintSingleSpan(buffer.First.Span)
                 : TryPeekVarintMultiSpan(ref buffer);
         }
