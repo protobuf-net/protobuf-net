@@ -7,10 +7,6 @@
     <SystemMemoryVersion>4.4.0-preview1-25210-01</SystemMemoryVersion>
     <CoreFxLabVersion>0.1.0-e170411-3</CoreFxLabVersion>
     <RoslynVersion>2.3.0-rdonly-ref-61607-04</RoslynVersion>
-    
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
