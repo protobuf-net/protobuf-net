@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 
 public class SimpleUsage
 {
-    // note: pretty much everything here should be ValueTask<T> throughout
     static void Main()
     {
         try
@@ -37,13 +36,13 @@ public class SimpleUsage
     }
 
     [Xunit.Fact]
-    public Task RunTest1()
+    public async Task RunTest1()
     {
-        return RunTest("08 96 01", reader => Deserialize<Test1>(reader, DeserializeTest1Async));
+        await RunTest("08 96 01", reader => Deserialize<Test1>(reader, DeserializeTest1Async));
     }
 
     // note: this code would be spat out my the roslyn generator API
-    async Task<Test1> DeserializeTest1Async(
+    async ValueTask<Test1> DeserializeTest1Async(
         AsyncProtoReader reader, Test1 value = default(Test1))
     {
         await Console.Out.WriteLineAsync("Reading fields...");
@@ -71,27 +70,28 @@ public class SimpleUsage
     }
 
     [Xunit.Fact]
-    public Task RunTest2()
+    public async Task RunTest2()
     {
-        return RunTest("12 07 74 65 73 74 69 6e 67", reader => Deserialize<Test2>(reader, DeserializeTest2Async));
+        await RunTest("12 07 74 65 73 74 69 6e 67", reader => Deserialize<Test2>(reader, DeserializeTest2Async));
     }
 
-    static async Task Deserialize<T>(IPipeReader reader, Func<AsyncProtoReader, T, Task<T>> deserializer) where T : class, new()
+    static async ValueTask<bool> Deserialize<T>(IPipeReader reader, Func<AsyncProtoReader, T, ValueTask<T>> deserializer) where T : class, new()
     {
         // may be other AsyncProtoReader - over Stream, perhaps
         using (AsyncProtoReader protoReader = new PipeReader(reader))
         {
             var obj = await deserializer(protoReader, null);
             await Console.Out.WriteLineAsync(obj?.ToString() ?? "null");
+            return obj != null;
         }
     }
 
 
     [Xunit.Fact]
-    public Task RunTest3()
+    public async Task RunTest3()
     {
         // note I've suffixed with another dummy "1" field to test the end sub-object code
-        return RunTest("1a 03 08 96 01 08 96 01", reader => Deserialize<Test3>(reader, DeserializeTest3Async));
+        await RunTest("1a 03 08 96 01 08 96 01", reader => Deserialize<Test3>(reader, DeserializeTest3Async));
     }
 
     class Test3
@@ -100,7 +100,7 @@ public class SimpleUsage
         public override string ToString() => $"C: {C}";
     }
 
-    private async static Task RunTest(string hex, Func<IPipeReader, Task> test)
+    private async static ValueTask<bool> RunTest(string hex, Func<IPipeReader, ValueTask<bool>> test)
     {
         using (var factory = new PipeFactory())
         {
@@ -110,13 +110,13 @@ public class SimpleUsage
 
             await Console.Out.WriteLineAsync("Pipe loaded; deserializing");
 
-            await test(pipe.Reader);
+            return await test(pipe.Reader);
         }
     }
 
 
     // note: this code would be spat out my the roslyn generator API
-    async Task<Test2> DeserializeTest2Async(
+    async ValueTask<Test2> DeserializeTest2Async(
         AsyncProtoReader reader, Test2 value = default(Test2))
     {
         await Console.Out.WriteLineAsync("Reading fields...");
@@ -137,7 +137,7 @@ public class SimpleUsage
         return value ?? Create(ref value);
     }
 
-    async Task<Test3> DeserializeTest3Async(
+    async ValueTask<Test3> DeserializeTest3Async(
         AsyncProtoReader reader, Test3 value = default(Test3))
     {
         await Console.Out.WriteLineAsync("Reading fields...");
@@ -225,13 +225,13 @@ public class SimpleUsage
         protected abstract void RemoveDataConstraint();
         public virtual void Dispose() { }
 
-        public virtual async Task SkipFieldAsync()
+        public virtual async ValueTask<bool> SkipFieldAsync()
         {
             switch(WireType)
             {
                 case WireType.Varint:
                     await ReadInt32Async(); // drop the result on te floor
-                    break;
+                    return true;
                 default:
                     throw new NotImplementedException();
             }
@@ -242,7 +242,7 @@ public class SimpleUsage
 
         protected AsyncProtoReader(long length = long.MaxValue) { _end = length; }
         public WireType WireType => (WireType)(_fieldHeader & 7);
-        public async Task<bool> ReadNextFieldAsync()
+        public async ValueTask<bool> ReadNextFieldAsync()
         {
             var next = await TryReadVarintInt32Async();
             if (next == null)
@@ -259,7 +259,7 @@ public class SimpleUsage
         public long Position => _position;
         long _position, _end;
         protected long End => _end;
-        public async Task<SubObjectToken> ReadSubObjectAsync()
+        public async ValueTask<SubObjectToken> ReadSubObjectAsync()
         {
             switch (WireType)
             {
@@ -284,14 +284,14 @@ public class SimpleUsage
             }
         }
 
-        public abstract Task<string> ReadStringAsync();
-        public virtual async Task<int> ReadInt32Async()
+        public abstract ValueTask<string> ReadStringAsync();
+        public virtual async ValueTask<int> ReadInt32Async()
         {
             var val = await TryReadVarintInt32Async();
             if (val == null) throw new EndOfStreamException();
             return val.GetValueOrDefault();
         }
-        protected abstract Task<int?> TryReadVarintInt32Async();
+        protected abstract ValueTask<int?> TryReadVarintInt32Async();
 
 
     }
@@ -307,7 +307,7 @@ public class SimpleUsage
             _reader = reader;
             _closePipe = closePipe;
         }
-        public override async Task<string> ReadStringAsync()
+        public override async ValueTask<string> ReadStringAsync()
         {
             var lenOrNull = await TryReadVarintInt32Async();
             if (lenOrNull == null)
@@ -402,7 +402,7 @@ public class SimpleUsage
         const int MaxBytesForVarint = 10;
 
 
-        private async Task<bool> RequestMoreDataAsync()
+        private async ValueTask<bool> RequestMoreDataAsync()
         {
             if (Position >= End)
             {
@@ -457,7 +457,7 @@ public class SimpleUsage
                 Console.Out.WriteLine($"Data constraint imposed; {_available.Length} bytes available (was {wasForConsoleMessage})");
             }
         }
-        protected override async Task<int?> TryReadVarintInt32Async()
+        protected override async ValueTask<int?> TryReadVarintInt32Async()
         {
             do
             {
