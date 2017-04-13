@@ -1,9 +1,15 @@
-﻿
+﻿#if DEBUG
+#define VERBOSE
+#endif
+
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Pipelines;
 using System.IO.Pipelines.Text.Primitives;
 using System.Threading.Tasks;
+
+
 
 public class SimpleUsage
 {
@@ -40,15 +46,22 @@ public class SimpleUsage
     {
         await RunTest("08 96 01", reader => Deserialize<Test1>(reader, DeserializeTest1Async));
     }
+    [Conditional("VERBOSE")]
+    static void Trace(string message)
+    {
+#if VERBOSE
+        Console.WriteLine(message);
+#endif
+    }
 
     // note: this code would be spat out my the roslyn generator API
     async ValueTask<Test1> DeserializeTest1Async(
         AsyncProtoReader reader, Test1 value = default(Test1))
     {
-        await Console.Out.WriteLineAsync("Reading fields...");
+        Trace("Reading fields...");
         while (await reader.ReadNextFieldAsync())
         {
-            await Console.Out.WriteLineAsync($"Reading field {reader.FieldNumber}...");
+            Trace($"Reading field {reader.FieldNumber}...");
             switch (reader.FieldNumber)
             {
                 case 1:
@@ -58,7 +71,7 @@ public class SimpleUsage
                     await reader.SkipFieldAsync();
                     break;
             }
-            await Console.Out.WriteLineAsync($"Reading next field...");
+            Trace($"Reading next field...");
         }
         return value ?? Create(ref value);
     }
@@ -108,7 +121,7 @@ public class SimpleUsage
             await AppendPayloadAsync(pipe, hex);
             pipe.Writer.Complete(); // simulate EOF
 
-            await Console.Out.WriteLineAsync("Pipe loaded; deserializing");
+            Trace("Pipe loaded; deserializing");
 
             return await test(pipe.Reader);
         }
@@ -119,10 +132,10 @@ public class SimpleUsage
     async ValueTask<Test2> DeserializeTest2Async(
         AsyncProtoReader reader, Test2 value = default(Test2))
     {
-        await Console.Out.WriteLineAsync("Reading fields...");
+        Trace("Reading fields...");
         while (await reader.ReadNextFieldAsync())
         {
-            await Console.Out.WriteLineAsync($"Reading field {reader.FieldNumber}...");
+            Trace($"Reading field {reader.FieldNumber}...");
             switch (reader.FieldNumber)
             {
                 case 2:
@@ -132,7 +145,7 @@ public class SimpleUsage
                     await reader.SkipFieldAsync();
                     break;
             }
-            await Console.Out.WriteLineAsync($"Reading next field...");
+            Trace($"Reading next field...");
         }
         return value ?? Create(ref value);
     }
@@ -140,22 +153,22 @@ public class SimpleUsage
     async ValueTask<Test3> DeserializeTest3Async(
         AsyncProtoReader reader, Test3 value = default(Test3))
     {
-        await Console.Out.WriteLineAsync("Reading fields...");
+        Trace("Reading fields...");
         while (await reader.ReadNextFieldAsync())
         {
-            await Console.Out.WriteLineAsync($"Reading field {reader.FieldNumber}...");
+            Trace($"Reading field {reader.FieldNumber}...");
             switch (reader.FieldNumber)
             {
                 case 3:
-                    var token = await reader.ReadSubObjectAsync();
+                    var token = await reader.BeginSubObjectAsync();
                     (value ?? Create(ref value)).C = await DeserializeTest1Async(reader, value?.C);
-                    reader.EndSubObject(token);
+                    reader.EndSubObject(ref token);
                     break;
                 default:
                     await reader.SkipFieldAsync();
                     break;
             }
-            await Console.Out.WriteLineAsync($"Reading next field...");
+            Trace($"Reading next field...");
         }
         return value ?? Create(ref value);
     }
@@ -259,7 +272,7 @@ public class SimpleUsage
         public long Position => _position;
         long _position, _end;
         protected long End => _end;
-        public async ValueTask<SubObjectToken> ReadSubObjectAsync()
+        public async ValueTask<SubObjectToken> BeginSubObjectAsync()
         {
             switch (WireType)
             {
@@ -272,7 +285,7 @@ public class SimpleUsage
                     throw new InvalidOperationException();
             }
         }
-        public void EndSubObject(SubObjectToken token)
+        public void EndSubObject(ref SubObjectToken token)
         {
             if (token.End != _end) throw new InvalidOperationException("Sub-object ended in wrong order");
             if (token.End != _position) throw new InvalidOperationException("Sub-object not fully consumed");
@@ -282,6 +295,7 @@ public class SimpleUsage
             {
                 ApplyDataConstraint();
             }
+            token = default(SubObjectToken);
         }
 
         public abstract ValueTask<string> ReadStringAsync();
@@ -315,7 +329,7 @@ public class SimpleUsage
                 throw new EndOfStreamException();
             }
             int len = lenOrNull.GetValueOrDefault();
-            await Console.Out.WriteLineAsync($"String length: {len}");
+            Trace($"String length: {len}");
             if (len == 0)
             {
                 return "";
@@ -325,14 +339,14 @@ public class SimpleUsage
                 if (!await RequestMoreDataAsync()) throw new EndOfStreamException();
             }
             var s = _available.Slice(0, len).GetUtf8String();
-            await Console.Out.WriteLineAsync($"Read string: {s}");
+            Trace($"Read string: {s}");
             _available = _available.Slice(len);
             Advance(len);
             return s;
         }
         private static (int value, int consumed) TryPeekVarintInt32(ref ReadableBuffer buffer)
         {
-            Console.WriteLine($"Parsing varint from {buffer.Length} bytes...");
+            Trace($"Parsing varint from {buffer.Length} bytes...");
             return buffer.IsSingleSpan
                 ? TryPeekVarintSingleSpan(buffer.First.Span)
                 : TryPeekVarintMultiSpan(ref buffer);
@@ -406,7 +420,7 @@ public class SimpleUsage
         {
             if (Position >= End)
             {
-                await Console.Out.WriteLineAsync("Refusing more data to sub-object");
+                Trace("Refusing more data to sub-object");
                 return false;
             }
 
@@ -444,7 +458,7 @@ public class SimpleUsage
                 int wasForConsoleMessage = _available.Length;
                 // change back to the original right hand boundary
                 _available = _originalAsReceived.Slice(_available.Start);
-                Console.Out.WriteLine($"Data constraint removed; {_available.Length} bytes available (was {wasForConsoleMessage})");
+                Trace($"Data constraint removed; {_available.Length} bytes available (was {wasForConsoleMessage})");
             }
         }
         protected override void ApplyDataConstraint()
@@ -454,7 +468,7 @@ public class SimpleUsage
                 int wasForConsoleMessage = _available.Length;
                 int allow = checked((int)(End - Position));
                 _available = _available.Slice(0, allow);
-                Console.Out.WriteLine($"Data constraint imposed; {_available.Length} bytes available (was {wasForConsoleMessage})");
+                Trace($"Data constraint imposed; {_available.Length} bytes available (was {wasForConsoleMessage})");
             }
         }
         protected override async ValueTask<int?> TryReadVarintInt32Async()
