@@ -414,77 +414,76 @@ public class SimpleUsage : IDisposable
 
         protected override ValueTask<int> WriteStringWithLengthPrefix(string value)
         {
-            // magic cutoff here is *must be less than* 32 bytes - and conveniently 31 is "11111", so test via binary;
-            // max 4 bytes per char per RFC3629; 4 * 32 128, which would be *just too big* to guarantee the length prefix fits
-            // in one byte; but: for up to 31 chars we can write the value to offset 1, then write the actual length in afterwards
-            // into offset 0
-            int bytes = (value.Length & ~31) == 0
-                ?  WriteShortStringWithLengthPrefix(value)
-                : WriteLongStringWithLengthPrefix(value);
+            // can write up to 127 characters (if ASCII) in a single-byte prefix - and conveniently
+            // 127 is handy for binary testing
+            int bytes = ((value.Length & ~127) == 0) ? TryWriteShortStringWithLengthPrefix(value) : 0;
+            if(bytes == 0)
+            {
+                bytes = WriteLongStringWithLengthPrefix(value);
+            }
             return new ValueTask<int>(bytes);
         }
-        unsafe int WriteShortStringWithLengthPrefix(string value)
+        int TryWriteShortStringWithLengthPrefix(string value)
         {
             // to encode without checking bytes, need 4 times length, plus 1 - the sneaky way
-            _output.Ensure((value.Length << 2) | 1);
+            _output.Ensure(Math.Min(128, value.Length << 2) | 1);
             var span = _output.Buffer.Span;
-            int bytesWritten;
-            bool success = Encoder.TryEncode(value, span.Slice(1), out bytesWritten);
-            Debug.Assert(success);
-            Debug.Assert(bytesWritten <= 127);
-            span[0] = (byte)bytesWritten++;
-            _output.Advance(bytesWritten);
-            Trace($"Wrote '{value}' in {bytesWritten} bytes (including length prefix) without checking length first");
-            return bytesWritten;
+            int bytesWritten;            
+            if(Encoder.TryEncode(value, span.Slice(1, Math.Max(127, span.Length - 1)), out bytesWritten))
+            {
+                Debug.Assert(bytesWritten <= 127);
+                span[0] = (byte)bytesWritten++; // note the post-increment here to account for the prefix byte
+                _output.Advance(bytesWritten);
+                Trace($"Wrote '{value}' in {bytesWritten} bytes (including length prefix) without checking length first");
+                return bytesWritten;
+            }            
+            return 0; // failure
         }
-        unsafe int WriteLongStringWithLengthPrefix(string value)
+        int WriteLongStringWithLengthPrefix(string value)
         {
             int payloadBytes = Encoding.GetByteCount(value);
             _output.Ensure(5);
-            int headerBytes = WriteVarintUInt32(_output.Buffer.Span, (uint)payloadBytes);
+            int headerBytes = WriteVarintUInt32(_output.Buffer.Span, (uint)payloadBytes), bytesWritten;
             _output.Advance(headerBytes);
 
             if(payloadBytes <= _output.Buffer.Length)
             {
                 // already enough space in the output buffer - just write it
-                int bytesWritten;
                 bool success = Encoder.TryEncode(value, _output.Buffer.Span, out bytesWritten);
                 Debug.Assert(success);
-                Debug.Assert(bytesWritten == payloadBytes);
-                _output.Advance(payloadBytes);
                 Trace($"Wrote '{value}' in {bytesWritten} bytes into available buffer space");
             }
             else
             {
-                fixed (char* c = value)
-                {
-                    var utf16 = new ReadOnlySpan<char>(c, value.Length);
-#if DEBUG
-                    int totalBytesWritten = 0;
-#endif
-                    do
-                    {
-                        _output.Ensure(Math.Min(utf16.Length << 2, 128)); // ask for a humble amount, but prepare to be amazed
-
-                        int bytesWritten, charsConsumed;
-                        Encoder.TryEncode(utf16, _output.Buffer.Span, out charsConsumed, out bytesWritten);
-                        utf16 = utf16.Slice(charsConsumed);
-                        _output.Advance(bytesWritten);
-
-                        Trace($"Wrote {charsConsumed} chars of long string in {bytesWritten} bytes");
-#if DEBUG
-                        totalBytesWritten += bytesWritten;
-#endif
-                    } while (utf16.Length != 0);
-#if DEBUG
-                    Debug.Assert(totalBytesWritten == payloadBytes);
-#endif
-
-                }
+                bytesWritten = WriteLongString(value, ref _output);
             }
+            Debug.Assert(bytesWritten == payloadBytes);
+            _output.Advance(payloadBytes);
+
             return headerBytes + payloadBytes;
         }
+        static unsafe int WriteLongString(string value, ref WritableBuffer output)
+        {
+            fixed (char* c = value)
+            {
+                var utf16 = new ReadOnlySpan<char>(c, value.Length);
+                int totalBytesWritten = 0;
+                do
+                {
+                    output.Ensure(Math.Min(utf16.Length << 2, 128)); // ask for a humble amount, but prepare to be amazed
 
+                    int bytesWritten, charsConsumed;
+                    // note: not expecting success here (except for the last one)
+                    Encoder.TryEncode(utf16, output.Buffer.Span, out charsConsumed, out bytesWritten);
+                    utf16 = utf16.Slice(charsConsumed);
+                    output.Advance(bytesWritten);
+
+                    Trace($"Wrote {charsConsumed} chars of long string in {bytesWritten} bytes");
+                    totalBytesWritten += bytesWritten;
+                } while (utf16.Length != 0);
+                return totalBytesWritten;
+            }
+        }
 
         protected override ValueTask<int> WriteBytes(ReadOnlySpan<byte> bytes)
         {
@@ -492,7 +491,7 @@ public class SimpleUsage : IDisposable
             return new ValueTask<int>(bytes.Length);
         }
 
-        protected unsafe override ValueTask<int> WriteVarintUInt32Async(uint value)
+        protected override ValueTask<int> WriteVarintUInt32Async(uint value)
         {
             _output.Ensure(5);
             int len = WriteVarintUInt32(_output.Buffer.Span, value);
@@ -500,7 +499,7 @@ public class SimpleUsage : IDisposable
             Trace($"Wrote {value} in {len} bytes");
             return new ValueTask<int>(len);
         }
-        protected unsafe override ValueTask<int> WriteVarintUInt64Async(ulong value)
+        protected override ValueTask<int> WriteVarintUInt64Async(ulong value)
         {
             _output.Ensure(10);
             int len = WriteVarintUInt64(_output.Buffer.Span, value);
