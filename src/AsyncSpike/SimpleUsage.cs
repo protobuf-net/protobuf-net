@@ -29,7 +29,14 @@ public class SimpleUsage : IDisposable
         }
         catch (Exception ex)
         {
-            Console.Error.WriteLine(ex.Message);
+            while (ex != null)
+            {
+                Console.Error.WriteLine(ex.Message);
+                Console.Error.WriteLine(ex.StackTrace);
+                Console.Error.WriteLine();
+                ex = ex.InnerException;
+            }
+            
         }
     }
     // see example in: https://developers.google.com/protocol-buffers/docs/encoding
@@ -46,12 +53,17 @@ public class SimpleUsage : IDisposable
         await Console.Out.WriteLineAsync(nameof(ReadTest3));
         await ReadTest3();
 
+        await Console.Out.WriteLineAsync();
         await Console.Out.WriteLineAsync(nameof(WriteTest1));
         await WriteTest1();
 
         await Console.Out.WriteLineAsync();
         await Console.Out.WriteLineAsync(nameof(WriteTest2));
         await WriteTest2();
+
+        await Console.Out.WriteLineAsync();
+        await Console.Out.WriteLineAsync(nameof(WriteTest3));
+        await WriteTest3();
 
     }
 
@@ -60,6 +72,39 @@ public class SimpleUsage : IDisposable
 
     [Xunit.Fact]
     public Task WriteTest1() => WriteTest(new Test1 { A = 150 }, "08 96 01", SerializeTest1Async);
+
+    [Xunit.Fact]
+    public Task ReadTest2() => ReadTest<Test2>("12 07 74 65 73 74 69 6e 67", DeserializeTest2Async, "B: testing");
+
+    [Xunit.Fact]
+    public Task WriteTest2() => WriteTest(new Test2 { B = "testing" }, "12 07 74 65 73 74 69 6e 67", SerializeTest2Async);
+
+
+    // note I've suffixed with another dummy "1" field to test the end sub-object code
+    [Xunit.Fact]
+    public Task ReadTest3() => ReadTest<Test3>("1a 03 08 96 01 08 96 01", DeserializeTest3Async, "C: [A: 150]");
+
+    [Xunit.Fact]
+    public Task WriteTest3() => WriteTest(new Test3 { C = new Test1 { A = 150 } }, "1a 03 08 96 01", SerializeTest3Async);
+
+    class Test1
+    {
+        public int A;
+        public override string ToString() => $"A: {A}";
+    }
+
+    class Test2
+    {
+        public string B { get; set; }
+        public override string ToString() => $"B: {B}";
+    }
+
+    class Test3
+    {
+        public Test1 C { get; set; }
+        public override string ToString() => $"C: [{C}]";
+    }
+
 
     [Conditional("VERBOSE")]
     static void Trace(string message)
@@ -96,7 +141,7 @@ public class SimpleUsage : IDisposable
         long bytes = 0;
         if (value != null)
         {
-            Trace("Writing fields...");
+            Trace($"Writing {nameof(Test1)} fields...");
             bytes += await writer.WriteVarintInt32Async(1, value.A);
         }
         return bytes;
@@ -106,33 +151,21 @@ public class SimpleUsage : IDisposable
         long bytes = 0;
         if (value != null)
         {
-            Trace("Writing fields...");
+            Trace($"Writing {nameof(Test2)} fields...");
             bytes += await writer.WriteStringAsync(2, value.B);
         }
         return bytes;
     }
 
-    class Test1
+    async ValueTask<long> SerializeTest3Async(AsyncProtoWriter writer, Test3 value)
     {
-        public int A;
-        public override string ToString() => $"A: {A}";
-    }
-
-    [Xunit.Fact]
-    public Task ReadTest2() => ReadTest<Test2>("12 07 74 65 73 74 69 6e 67", DeserializeTest2Async, "B: testing");
-
-    [Xunit.Fact]
-    public Task WriteTest2() => WriteTest(new Test2 { B = "testing"}, "12 07 74 65 73 74 69 6e 67", SerializeTest2Async);
-
-
-    // note I've suffixed with another dummy "1" field to test the end sub-object code
-    [Xunit.Fact]
-    public Task ReadTest3() => ReadTest<Test3>("1a 03 08 96 01 08 96 01", DeserializeTest3Async, "C: [A: 150]");
-
-    class Test3
-    {
-        public Test1 C { get; set; }
-        public override string ToString() => $"C: [{C}]";
+        long bytes = 0;
+        if (value != null)
+        {
+            Trace($"Writing {nameof(Test3)} fields...");
+            bytes += await writer.WriteSubObject(3, value.C, (α, β) => SerializeTest1Async(α, β));
+        }
+        return bytes;
     }
 
     private async Task ReadTest<T>(string hex, Func<AsyncProtoReader, T, ValueTask<T>> deserializer, string expected)
@@ -154,14 +187,22 @@ public class SimpleUsage : IDisposable
 
     private async Task WriteTest<T>(T value, string expected, Func<AsyncProtoWriter, T, ValueTask<long>> serializer)
     {
-        var pipe = _factory.Create();
-        using (AsyncProtoWriter writer = new PipeWriter(pipe.Writer))
+        string actual;
+        if (value == null)
         {
-            await serializer(writer, value);
-            await writer.FlushAsync();
+            actual = "";
         }
-        var buffer = await pipe.Reader.ReadToEndAsync();
-        var actual = NormalizeHex(BitConverter.ToString(buffer.ToArray()));
+        else
+        {
+            var pipe = _factory.Create();
+            using (AsyncProtoWriter writer = new PipeWriter(pipe.Writer))
+            {
+                await serializer(writer, value);
+                await writer.FlushAsync(true);
+            }
+            var buffer = await pipe.Reader.ReadToEndAsync();
+            actual = NormalizeHex(BitConverter.ToString(buffer.ToArray()));
+        }
         expected = NormalizeHex(expected);
         Assert.Equal(expected, actual);
     }
@@ -213,11 +254,6 @@ public class SimpleUsage : IDisposable
 
     static T Create<T>(ref T obj) where T : class, new() => obj ?? (obj = new T());
 
-    class Test2
-    {
-        public string B { get; set; }
-        public override string ToString() => $"B: {B}";
-    }
     public struct SubObjectToken
     {
         internal SubObjectToken(long oldEnd, long end)
@@ -347,7 +383,7 @@ public class SimpleUsage : IDisposable
     }
     abstract class AsyncProtoWriter : IDisposable
     {
-        public virtual ValueTask<bool> FlushAsync() => new ValueTask<bool>(false);
+        public virtual ValueTask<bool> FlushAsync(bool final) => new ValueTask<bool>(false);
         public virtual void Dispose() { }
         public async ValueTask<int> WriteVarintInt32Async(int fieldNumber, int value) =>
             await WriteFieldHeader(fieldNumber, WireType.Varint) + await WriteVarintUInt64Async((ulong)(long)value);
@@ -387,7 +423,69 @@ public class SimpleUsage : IDisposable
 
         protected virtual ValueTask<int> WriteVarintUInt32Async(uint value) => WriteVarintUInt64Async(value);
         protected abstract ValueTask<int> WriteVarintUInt64Async(ulong value);
+
+        internal virtual async ValueTask<long> WriteSubObject<T>(int fieldNumber, T value, Func<AsyncProtoWriter, T, ValueTask<long>> serializer)
+        {
+            if (value == null) return 0;
+            long payloadLength = await serializer(Null, value);
+            long prefixLength = await WriteFieldHeader(fieldNumber, WireType.String)
+                + await WriteVarintUInt64Async((ulong)payloadLength);
+            var bytesWritten = await serializer(this, value);
+            Debug.Assert(bytesWritten == payloadLength, "Payload length mismatch in WriteSubObject");
+
+            return prefixLength + payloadLength;
+        }
+
+        /// <summary>
+        /// Provides an AsyncProtoWriter that computes lengths without requiring backing storage
+        /// </summary>
+        public static readonly AsyncProtoWriter Null = new NullWriter();
+        sealed class NullWriter : AsyncProtoWriter
+        {
+            protected override ValueTask<int> WriteBytes(ReadOnlySpan<byte> bytes) => new ValueTask<int>(bytes.Length);
+
+            protected override ValueTask<int> WriteStringWithLengthPrefix(string value)
+            {
+                int bytes = Encoding.GetByteCount(value);
+                return new ValueTask<int>(GetVarintLength((uint)bytes) + bytes);
+            }
+            static int GetVarintLength(uint value)
+            {
+                int count = 0;
+                do
+                {
+                    count++;
+                    value >>= 7;
+                }
+                while (value != 0);
+                return count;
+            }
+            static int GetVarintLength(ulong value)
+            {
+                int count = 0;
+                do
+                {
+                    count++;
+                    value >>= 7;
+                }
+                while (value != 0);
+                return count;
+            }
+            protected override ValueTask<int> WriteVarintUInt32Async(uint value)
+                => new ValueTask<int>(GetVarintLength(value));
+
+            protected override ValueTask<int> WriteVarintUInt64Async(ulong value)
+                => new ValueTask<int>(GetVarintLength(value));
+
+            internal async override ValueTask<long> WriteSubObject<T>(int fieldNumber, T value, Func<AsyncProtoWriter, T, ValueTask<long>> serializer)
+            {
+                if (value == null) return 0;
+                long len = await serializer(this, value);
+                return GetVarintLength((uint)(fieldNumber << 3)) + GetVarintLength((ulong)len) + len;
+            }
+        }
     }
+    
     sealed class PipeWriter : AsyncProtoWriter
     {
         private IPipeWriter _writer;
@@ -401,14 +499,21 @@ public class SimpleUsage : IDisposable
             _output = writer.Alloc();
         }
 
-        public override async ValueTask<bool> FlushAsync()
+        public override async ValueTask<bool> FlushAsync(bool final)
         {
             if (_isFlushing) throw new InvalidOperationException("already flushing");
             _isFlushing = true;
             Trace("Flushing...");
-            await _output.FlushAsync();
+            var tmp = _output;
+            _output = default(WritableBuffer);
+            await tmp.FlushAsync();
             Trace("Flushed");
             _isFlushing = false;
+
+            if(!final)
+            {
+                _output = _writer.Alloc();
+            }
             return true;
         }
 
@@ -431,7 +536,7 @@ public class SimpleUsage : IDisposable
             int bytesWritten;            
             if(Encoder.TryEncode(value, span.Slice(1, Math.Max(127, span.Length - 1)), out bytesWritten))
             {
-                Debug.Assert(bytesWritten <= 127);
+                Debug.Assert(bytesWritten <= 127, "Too many bytes written in TryWriteShortStringWithLengthPrefix");
                 span[0] = (byte)bytesWritten++; // note the post-increment here to account for the prefix byte
                 _output.Advance(bytesWritten);
                 Trace($"Wrote '{value}' in {bytesWritten} bytes (including length prefix) without checking length first");
@@ -450,14 +555,14 @@ public class SimpleUsage : IDisposable
             {
                 // already enough space in the output buffer - just write it
                 bool success = Encoder.TryEncode(value, _output.Buffer.Span, out bytesWritten);
-                Debug.Assert(success);
+                Debug.Assert(success, "TryEncode failed in WriteLongStringWithLengthPrefix");
                 Trace($"Wrote '{value}' in {bytesWritten} bytes into available buffer space");
             }
             else
             {
                 bytesWritten = WriteLongString(value, ref _output);
             }
-            Debug.Assert(bytesWritten == payloadBytes);
+            Debug.Assert(bytesWritten == payloadBytes, "Payload length mismatch in WriteLongStringWithLengthPrefix");
             _output.Advance(payloadBytes);
 
             return headerBytes + payloadBytes;
@@ -509,7 +614,7 @@ public class SimpleUsage : IDisposable
         }
         private static unsafe int WriteVarintUInt32(Span<byte> span, uint value)
         {
-            Debug.Assert(span.Length >= 5);
+            Debug.Assert(span.Length >= 5, "Span too short in WriteVarintUInt32");
 
             const uint SEVENBITS = (uint)0x7F;
             const byte CONTINUE = (byte)0x80;
@@ -538,7 +643,7 @@ public class SimpleUsage : IDisposable
         }
         private static unsafe int WriteVarintUInt64(Span<byte> span, ulong value)
         {
-            Debug.Assert(span.Length >= 10);
+            Debug.Assert(span.Length >= 10, "Span too short in WriteVarintUInt64");
 
             const ulong SEVENBITS = (uint)0x7F;
             const byte CONTINUE = (byte)0x80;
@@ -566,17 +671,20 @@ public class SimpleUsage : IDisposable
         }
         public override void Dispose()
         {
-            var tmp = _writer;
+            var writer = _writer;
+            var output = _output;
             _writer = null;
-            if(tmp != null)
+            _output = default(WritableBuffer);
+            if(writer != null)
             {
                 if(_isFlushing)
                 {
-                    tmp.CancelPendingFlush();
+                    writer.CancelPendingFlush();
                 }
+                try { output.Commit(); } catch { /* swallow */ }
                 if (_closePipe)
                 {
-                    tmp.Complete();
+                    writer.Complete();
                 }
             }            
         }

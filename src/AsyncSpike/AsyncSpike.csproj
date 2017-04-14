@@ -10,7 +10,6 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <!-- could make this more granular to respect the options, but no need yet -->
     <PackageReference Include="System.Buffers" Version="$(CoreFxVersion)" />
     <PackageReference Include="System.ValueTuple" Version="$(CoreFxVersion)" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="$(CoreFxVersion)" />
@@ -21,6 +20,6 @@
     <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="15.0.0" />
     <PackageReference Include="xunit" Version="2.2.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
-    <PackageReference Include="Microsoft.Net.Compilers" Version="$(RoslynVersion)" PrivateAssets="All" />
+    <!--<PackageReference Include="Microsoft.Net.Compilers" Version="$(RoslynVersion)" PrivateAssets="All" />-->
   </ItemGroup>
 </Project>
