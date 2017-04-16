@@ -14,6 +14,7 @@ namespace TheAwaitingGame
             Console.WriteLine(summary);
         }
     }
+    [MemoryDiagnoser]
     public class Benchmarker
     {
         static OrderBook _book;
