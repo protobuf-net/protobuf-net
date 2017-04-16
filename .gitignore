@@ -1,5 +1,6 @@
 .vs
 artifacts
+BenchmarkDotNet.Artifacts/
 bin
 obj
 *.user

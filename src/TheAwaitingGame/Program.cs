@@ -54,6 +54,9 @@ namespace TheAwaitingGame
 
         [Benchmark]
         public ValueTask<decimal> ValueTaskAsync() =>  _book.GetTotalWorthValueTaskAsync(REPEATS_PER_ITEM);
+
+        [Benchmark]
+        public ValueTask<decimal> HandCrankedAsync() => _book.GetTotalWorthHandCrankedAsync(REPEATS_PER_ITEM);
     }
     class OrderBook
     {
@@ -86,6 +89,37 @@ namespace TheAwaitingGame
             }
             return total;
         }
+        public ValueTask<decimal> GetTotalWorthHandCrankedAsync(int repeats)
+        {
+            decimal total = 0;
+            while (repeats-- > 0)
+            {
+                var iter = Orders.GetEnumerator();
+                while (iter.MoveNext())
+                {
+                    var task = iter.Current.GetOrderWorthHandCrankedAsync();
+                    if (!task.IsCompleted) return ContinueAsync(total, task, repeats, iter);
+                    total += task.Result;
+                }
+            }
+            return new ValueTask<decimal>(total);
+        }
+
+        private async ValueTask<decimal> ContinueAsync(decimal total, ValueTask<decimal> pending, int repeats, List<Order>.Enumerator iter)
+        {
+            total += await pending;
+            do
+            {
+                while (iter.MoveNext())
+                {
+                    pending = iter.Current.GetOrderWorthHandCrankedAsync();
+                    if (!pending.IsCompleted) return await ContinueAsync(total, pending, repeats, iter);
+                    total += pending.Result;
+                }
+                iter = Orders.GetEnumerator();
+            } while (repeats-- > 0);
+            return total;
+        }
     }
     class Order
     {
@@ -109,6 +143,33 @@ namespace TheAwaitingGame
             foreach (var line in Lines) total += await line.GetLineWorthValueTaskAsync();
             return total;
         }
+
+        public ValueTask<decimal> GetOrderWorthHandCrankedAsync()
+        {
+            decimal total = 0;
+            using (var iter = Lines.GetEnumerator())
+            {
+                while(iter.MoveNext())
+                {
+                    var task = iter.Current.GetLineWorthHandCrankedAsync();
+                    if (!task.IsCompleted) return ContinueAsync(total, task, iter);
+                    total += task.Result;
+                }
+            }
+            return new ValueTask<decimal>(total);
+        }
+
+        async ValueTask<decimal> ContinueAsync(decimal total, ValueTask<decimal> pending, List<OrderLine>.Enumerator iter)
+        {
+            total += await pending;
+            while (iter.MoveNext())
+            {
+                pending = iter.Current.GetLineWorthHandCrankedAsync();
+                if (!pending.IsCompleted) return await ContinueAsync(total, pending, iter);
+                total += pending.Result;
+            }
+            return total;
+        }
     }
     public class OrderLine
     {
@@ -117,5 +178,6 @@ namespace TheAwaitingGame
         public decimal GetLineWorth() => Quantity * UnitPrice;
         public Task<decimal> GetLineWorthTaskAsync() => Task.FromResult(Quantity * UnitPrice);
         public ValueTask<decimal> GetLineWorthValueTaskAsync() => new ValueTask<decimal>(Quantity * UnitPrice);
+        public ValueTask<decimal> GetLineWorthHandCrankedAsync() => new ValueTask<decimal>(Quantity * UnitPrice);
     }
 }
