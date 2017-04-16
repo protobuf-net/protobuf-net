@@ -36,7 +36,7 @@ public class SimpleUsage : IDisposable
                 Console.Error.WriteLine();
                 ex = ex.InnerException;
             }
-            
+
         }
     }
     // see example in: https://developers.google.com/protocol-buffers/docs/encoding
@@ -170,13 +170,29 @@ public class SimpleUsage : IDisposable
 
     private async Task ReadTest<T>(string hex, Func<AsyncProtoReader, T, ValueTask<T>> deserializer, string expected)
     {
+        await ReadTestPipe<T>(hex, deserializer, expected);
+        await ReadTestSpan<T>(hex, deserializer, expected);
+    }
+    private async Task ReadTestPipe<T>(string hex, Func<AsyncProtoReader, T, ValueTask<T>> deserializer, string expected)
+    {
         var pipe = _factory.Create();
         await AppendPayloadAsync(pipe, hex);
         pipe.Writer.Complete(); // simulate EOF
 
-        Trace("Pipe loaded; deserializing");
-
-        using (AsyncProtoReader reader = new PipeReader(pipe.Reader))
+        Trace("deserializing via PipeReader...");
+        using (var reader = AsyncProtoReader.Create(pipe.Reader))
+        {
+            var obj = await deserializer(reader, default(T));
+            string actual = obj?.ToString();
+            Trace(actual);
+            Assert.Equal(expected, actual);
+        }
+    }
+    private async Task ReadTestSpan<T>(string hex, Func<AsyncProtoReader, T, ValueTask<T>> deserializer, string expected)
+    {
+        var blob = ParseBlob(hex);
+        Trace("deserializing via SpanReader...");
+        using (var reader = AsyncProtoReader.Create(blob))
         {
             var obj = await deserializer(reader, default(T));
             string actual = obj?.ToString();
@@ -306,13 +322,17 @@ public class SimpleUsage : IDisposable
     }
     public abstract class AsyncProtoReader : IDisposable
     {
+        protected static readonly TextEncoder Encoder = TextEncoder.Utf8;
         protected abstract void ApplyDataConstraint();
         protected abstract void RemoveDataConstraint();
         public virtual void Dispose() { }
 
+        public static AsyncProtoReader Create(ReadOnlySpan<byte> span) => new SpanReader(span);
+        public static AsyncProtoReader Create(IPipeReader pipe, bool closePipe = true, long bytes = long.MaxValue) => new PipeReader(pipe, closePipe, bytes);
+
         public virtual async ValueTask<bool> SkipFieldAsync()
         {
-            switch(WireType)
+            switch (WireType)
             {
                 case WireType.Varint:
                     await ReadInt32Async(); // drop the result on te floor
@@ -370,8 +390,7 @@ public class SimpleUsage : IDisposable
             token = default(SubObjectToken);
         }
 
-        public abstract ValueTask<string> ReadStringAsync();
-        public virtual async ValueTask<int> ReadInt32Async()
+        public async ValueTask<int> ReadInt32Async()
         {
             var val = await TryReadVarintInt32Async();
             if (val == null) throw new EndOfStreamException();
@@ -379,7 +398,18 @@ public class SimpleUsage : IDisposable
         }
         protected abstract ValueTask<int?> TryReadVarintInt32Async();
 
-
+        public async ValueTask<string> ReadStringAsync()
+        {
+            var lenOrNull = await TryReadVarintInt32Async();
+            if (lenOrNull == null)
+            {
+                throw new EndOfStreamException();
+            }
+            int len = lenOrNull.GetValueOrDefault();
+            Trace($"String length: {len}");
+            return len == 0 ? "" : await ReadStringAsync(len);
+        }
+        protected abstract ValueTask<string> ReadStringAsync(int bytes);
     }
     abstract class AsyncProtoWriter : IDisposable
     {
@@ -387,8 +417,6 @@ public class SimpleUsage : IDisposable
         public virtual void Dispose() { }
         public async ValueTask<int> WriteVarintInt32Async(int fieldNumber, int value) =>
             await WriteFieldHeader(fieldNumber, WireType.Varint) + await WriteVarintUInt64Async((ulong)(long)value);
-
-        
 
         private ValueTask<int> WriteFieldHeader(int fieldNumber, WireType wireType) => WriteVarintUInt32Async((uint)((fieldNumber << 3) | (int)wireType));
 
@@ -410,7 +438,7 @@ public class SimpleUsage : IDisposable
         public async ValueTask<int> WriteBytesAsync(int fieldNumber, ReadOnlySpan<byte> value)
         {
             int bytes = await WriteFieldHeader(fieldNumber, WireType.String) + await WriteVarintUInt32Async((uint)value.Length);
-            if(value.Length != 0) bytes += await WriteBytes(value);
+            if (value.Length != 0) bytes += await WriteBytes(value);
             return bytes;
         }
 
@@ -485,7 +513,7 @@ public class SimpleUsage : IDisposable
             }
         }
     }
-    
+
     sealed class PipeWriter : AsyncProtoWriter
     {
         private IPipeWriter _writer;
@@ -510,7 +538,7 @@ public class SimpleUsage : IDisposable
             Trace("Flushed");
             _isFlushing = false;
 
-            if(!final)
+            if (!final)
             {
                 _output = _writer.Alloc();
             }
@@ -522,7 +550,7 @@ public class SimpleUsage : IDisposable
             // can write up to 127 characters (if ASCII) in a single-byte prefix - and conveniently
             // 127 is handy for binary testing
             int bytes = ((value.Length & ~127) == 0) ? TryWriteShortStringWithLengthPrefix(value) : 0;
-            if(bytes == 0)
+            if (bytes == 0)
             {
                 bytes = WriteLongStringWithLengthPrefix(value);
             }
@@ -533,15 +561,15 @@ public class SimpleUsage : IDisposable
             // to encode without checking bytes, need 4 times length, plus 1 - the sneaky way
             _output.Ensure(Math.Min(128, value.Length << 2) | 1);
             var span = _output.Buffer.Span;
-            int bytesWritten;            
-            if(Encoder.TryEncode(value, span.Slice(1, Math.Max(127, span.Length - 1)), out bytesWritten))
+            int bytesWritten;
+            if (Encoder.TryEncode(value, span.Slice(1, Math.Max(127, span.Length - 1)), out bytesWritten))
             {
                 Debug.Assert(bytesWritten <= 127, "Too many bytes written in TryWriteShortStringWithLengthPrefix");
                 span[0] = (byte)bytesWritten++; // note the post-increment here to account for the prefix byte
                 _output.Advance(bytesWritten);
                 Trace($"Wrote '{value}' in {bytesWritten} bytes (including length prefix) without checking length first");
                 return bytesWritten;
-            }            
+            }
             return 0; // failure
         }
         int WriteLongStringWithLengthPrefix(string value)
@@ -551,7 +579,7 @@ public class SimpleUsage : IDisposable
             int headerBytes = WriteVarintUInt32(_output.Buffer.Span, (uint)payloadBytes), bytesWritten;
             _output.Advance(headerBytes);
 
-            if(payloadBytes <= _output.Buffer.Length)
+            if (payloadBytes <= _output.Buffer.Length)
             {
                 // already enough space in the output buffer - just write it
                 bool success = Encoder.TryEncode(value, _output.Buffer.Span, out bytesWritten);
@@ -675,9 +703,9 @@ public class SimpleUsage : IDisposable
             var output = _output;
             _writer = null;
             _output = default(WritableBuffer);
-            if(writer != null)
+            if (writer != null)
             {
-                if(_isFlushing)
+                if (_isFlushing)
                 {
                     writer.CancelPendingFlush();
                 }
@@ -686,41 +714,69 @@ public class SimpleUsage : IDisposable
                 {
                     writer.Complete();
                 }
-            }            
+            }
         }
     }
-    sealed class PipeReader : AsyncProtoReader
+    internal sealed class SpanReader : AsyncProtoReader
+    {
+        private ReadOnlySpan<byte> _active, _original;
+        internal SpanReader(ReadOnlySpan<byte> span) : base(span.Length)
+        {
+            _active = _original = span;
+        }
+        protected override ValueTask<string> ReadStringAsync(int bytes)
+        {
+            bool result = Encoder.TryDecode(_active.Slice(0, bytes), out string text, out int consumed);
+            Debug.Assert(result, "TryDecode failed");
+            Debug.Assert(consumed == bytes, "TryDecode used wrong count");
+            _active = _active.Slice(bytes);
+            Advance(bytes);
+            return new ValueTask<string>(text);
+        }
+        protected override ValueTask<int?> TryReadVarintInt32Async()
+        {
+            var result = PipeReader.TryPeekVarintSingleSpan(_active);
+            if (result.consumed == 0)
+            {
+                return new ValueTask<int?>((int?)null);
+            }
+            _active = _active.Slice(result.consumed);
+            Advance(result.consumed);
+            return new ValueTask<int?>(result.value);
+        }
+        protected override void ApplyDataConstraint()
+        {
+            if (End != long.MaxValue)
+            {
+                _active = _original.Slice((int)Position, (int)(End - Position));
+            }
+        }
+        protected override void RemoveDataConstraint()
+        {
+            _active = _original.Slice((int)Position);
+        }
+    }
+    internal sealed class PipeReader : AsyncProtoReader
     {
         private IPipeReader _reader;
         private readonly bool _closePipe;
         private volatile bool _isReading;
         ReadableBuffer _available, _originalAsReceived;
-        public PipeReader(IPipeReader reader, bool closePipe = true)
+        internal PipeReader(IPipeReader reader, bool closePipe, long bytes) : base(bytes)
         {
             _reader = reader;
             _closePipe = closePipe;
         }
-        public override async ValueTask<string> ReadStringAsync()
+        protected override async ValueTask<string> ReadStringAsync(int bytes)
         {
-            var lenOrNull = await TryReadVarintInt32Async();
-            if (lenOrNull == null)
-            {
-                throw new EndOfStreamException();
-            }
-            int len = lenOrNull.GetValueOrDefault();
-            Trace($"String length: {len}");
-            if (len == 0)
-            {
-                return "";
-            }
-            while (_available.Length < len)
+            while (_available.Length < bytes)
             {
                 if (!await RequestMoreDataAsync()) throw new EndOfStreamException();
             }
-            var s = _available.Slice(0, len).GetUtf8String();
+            var s = _available.Slice(0, bytes).GetUtf8String();
             Trace($"Read string: {s}");
-            _available = _available.Slice(len);
-            Advance(len);
+            _available = _available.Slice(bytes);
+            Advance(bytes);
             return s;
         }
         private static (int value, int consumed) TryPeekVarintInt32(ref ReadableBuffer buffer)
@@ -730,7 +786,7 @@ public class SimpleUsage : IDisposable
                 ? TryPeekVarintSingleSpan(buffer.First.Span)
                 : TryPeekVarintMultiSpan(ref buffer);
         }
-        private static unsafe (int value, int consumed) TryPeekVarintSingleSpan(Span<byte> span)
+        internal static unsafe (int value, int consumed) TryPeekVarintSingleSpan(ReadOnlySpan<byte> span)
         {
             int len = span.Length;
             if (len == 0) return (0, 0);
@@ -844,8 +900,8 @@ public class SimpleUsage : IDisposable
         {
             if (End != long.MaxValue && checked(Position + _available.Length) > End)
             {
-                int wasForConsoleMessage = _available.Length;
                 int allow = checked((int)(End - Position));
+                int wasForConsoleMessage = _available.Length;
                 _available = _available.Slice(0, allow);
                 Trace($"Data constraint imposed; {_available.Length} bytes available (was {wasForConsoleMessage})");
             }
@@ -894,7 +950,7 @@ public class SimpleUsage : IDisposable
     }
     static string NormalizeHex(string hex) => hex.Replace('-', ' ').Replace(" ", "").Trim().ToUpperInvariant();
 
-    private static Task AppendPayloadAsync(IPipe pipe, string hex)
+    private static byte[] ParseBlob(string hex)
     {
         hex = NormalizeHex(hex);
         var len = hex.Length / 2;
@@ -903,6 +959,11 @@ public class SimpleUsage : IDisposable
         {
             blob[i] = Convert.ToByte(hex.Substring(2 * i, 2), 16);
         }
+        return blob;
+    }
+    private static Task AppendPayloadAsync(IPipe pipe, string hex)
+    {
+        var blob = ParseBlob(hex);
         return pipe.Writer.WriteAsync(blob);
     }
 }
