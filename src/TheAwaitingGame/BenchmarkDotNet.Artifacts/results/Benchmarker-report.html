@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>Benchmarker</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.10.3.0, OS=Microsoft Windows 10.0.15063
+Processor=Intel(R) Core(TM) i7-7700HQ CPU 2.80GHz, ProcessorCount=8
+Frequency=2742190 Hz, Resolution=364.6720 ns, Timer=TSC
+dotnet cli version=1.0.2
+  [Host]     : .NET Core 4.6.25009.03, 64bit RyuJIT
+  DefaultJob : .NET Core 4.6.25009.03, 64bit RyuJIT
+</code></pre>
+<pre><code></code></pre>
+
+<table>
+<thead><tr><th>  Method</th><th>Mean</th><th>StdDev</th>
+</tr>
+</thead><tbody><tr><td>    Sync</td><td>3.0318 ms</td><td>0.0373 ms</td>
+</tr><tr><td>TaskAsync</td><td>4.5325 ms</td><td>0.0726 ms</td>
+</tr><tr><td>ValueTaskAsync</td><td>6.4374 ms</td><td>0.0426 ms</td>
+</tr></tbody></table>
+</body>
+</html>

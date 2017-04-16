@@ -1,0 +1,4 @@
+Method,Job,AnalyzeLaunchVariance,EvaluateOverhead,MaxStdErrRelative,MinInvokeCount,MinIterationTime,RemoveOutliers,Affinity,Jit,Platform,Runtime,AllowVeryLargeObjects,Concurrent,CpuGroups,Force,RetainVm,Server,Clock,EngineFactory,Toolchain,InvocationCount,IterationTime,LaunchCount,RunStrategy,TargetCount,UnrollFactor,WarmupCount,Mean,StdDev
+Sync,Default,False,Default,Default,Default,Default,Default,255,RyuJit,X64,Core,False,True,False,True,False,False,Default,Default,Default,1,Default,Default,Default,Default,16,Default,3.0318 ms,0.0373 ms
+TaskAsync,Default,False,Default,Default,Default,Default,Default,255,RyuJit,X64,Core,False,True,False,True,False,False,Default,Default,Default,1,Default,Default,Default,Default,16,Default,4.5325 ms,0.0726 ms
+ValueTaskAsync,Default,False,Default,Default,Default,Default,Default,255,RyuJit,X64,Core,False,True,False,True,False,False,Default,Default,Default,1,Default,Default,Default,Default,16,Default,6.4374 ms,0.0426 ms

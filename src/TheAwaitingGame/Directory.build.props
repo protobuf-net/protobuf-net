@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <SignAssembly>false</SignAssembly>
+    <AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
+  </PropertyGroup>
+</Project>
