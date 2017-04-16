@@ -203,6 +203,40 @@ public class SimpleUsage : IDisposable
 
     private async Task WriteTest<T>(T value, string expected, Func<AsyncProtoWriter, T, ValueTask<long>> serializer)
     {
+        long len = await WriteTestPipe(value, expected, serializer);
+        await WriteTestSpan(len, value, expected, serializer);
+    }
+    private async ValueTask<long> WriteTestPipe<T>(T value, string expected, Func<AsyncProtoWriter, T, ValueTask<long>> serializer)
+    {
+        long bytes;
+        string actual;
+        if (value == null)
+        {
+            bytes = 0;
+            actual = "";
+        }
+        else
+        {
+            var pipe = _factory.Create();
+            using (var writer = AsyncProtoWriter.Create(pipe.Writer))
+            {
+                bytes = await serializer(writer, value);
+                Trace($"Serialized to pipe in {bytes} bytes");
+                await writer.FlushAsync(true);
+            }
+            var buffer = await pipe.Reader.ReadToEndAsync();
+            actual = NormalizeHex(BitConverter.ToString(buffer.ToArray()));
+        }
+        expected = NormalizeHex(expected);
+        Assert.Equal(expected, actual);
+        return bytes;
+    }
+    private async Task WriteTestSpan<T>(long bytes, T value, string expected, Func<AsyncProtoWriter, T, ValueTask<long>> serializer)
+    {
+        long nullBytes = await serializer(AsyncProtoWriter.Null, value);
+        Trace($"Serialized to nil-writer in {nullBytes} bytes");
+        Assert.Equal(bytes, nullBytes);
+
         string actual;
         if (value == null)
         {
@@ -210,14 +244,16 @@ public class SimpleUsage : IDisposable
         }
         else
         {
-            var pipe = _factory.Create();
-            using (AsyncProtoWriter writer = new PipeWriter(pipe.Writer))
+            var blob = new byte[bytes];
+            Trace($"Allocated span of length {blob.Length}");
+            using (var writer = AsyncProtoWriter.Create(blob))
             {
-                await serializer(writer, value);
+                long newBytes = await serializer(writer, value);
+                Trace($"Serialized to span in {newBytes} bytes");
+                Assert.Equal(bytes, newBytes);
                 await writer.FlushAsync(true);
             }
-            var buffer = await pipe.Reader.ReadToEndAsync();
-            actual = NormalizeHex(BitConverter.ToString(buffer.ToArray()));
+            actual = NormalizeHex(BitConverter.ToString(blob));
         }
         expected = NormalizeHex(expected);
         Assert.Equal(expected, actual);
@@ -411,7 +447,7 @@ public class SimpleUsage : IDisposable
         }
         protected abstract ValueTask<string> ReadStringAsync(int bytes);
     }
-    abstract class AsyncProtoWriter : IDisposable
+    public abstract class AsyncProtoWriter : IDisposable
     {
         public virtual ValueTask<bool> FlushAsync(bool final) => new ValueTask<bool>(false);
         public virtual void Dispose() { }
@@ -430,7 +466,7 @@ public class SimpleUsage : IDisposable
         {
             if (value == null) return 0;
             return await WriteFieldHeader(fieldNumber, WireType.String)
-                + value.Length == 0 ? await WriteVarintUInt32Async(0) : await WriteStringWithLengthPrefix(value);
+                + (value.Length == 0 ? await WriteVarintUInt32Async(0) : await WriteStringWithLengthPrefix(value));
         }
         protected static readonly Encoding Encoding = Encoding.UTF8;
         protected static TextEncoder Encoder = TextEncoder.Utf8;
@@ -463,6 +499,10 @@ public class SimpleUsage : IDisposable
 
             return prefixLength + payloadLength;
         }
+
+        public static AsyncProtoWriter Create(IPipeWriter writer, bool closePipe = true) => new PipeWriter(writer, closePipe);
+
+        public static AsyncProtoWriter Create(Span<byte> span) => new SpanWriter(span);
 
         /// <summary>
         /// Provides an AsyncProtoWriter that computes lengths without requiring backing storage
@@ -514,13 +554,13 @@ public class SimpleUsage : IDisposable
         }
     }
 
-    sealed class PipeWriter : AsyncProtoWriter
+    internal sealed class PipeWriter : AsyncProtoWriter
     {
         private IPipeWriter _writer;
         private WritableBuffer _output;
         private readonly bool _closePipe;
         private volatile bool _isFlushing;
-        public PipeWriter(IPipeWriter writer, bool closePipe = true)
+        internal PipeWriter(IPipeWriter writer, bool closePipe = true)
         {
             _writer = writer;
             _closePipe = closePipe;
@@ -562,7 +602,7 @@ public class SimpleUsage : IDisposable
             _output.Ensure(Math.Min(128, value.Length << 2) | 1);
             var span = _output.Buffer.Span;
             int bytesWritten;
-            if (Encoder.TryEncode(value, span.Slice(1, Math.Max(127, span.Length - 1)), out bytesWritten))
+            if (Encoder.TryEncode(value, span.Slice(1, Math.Min(127, span.Length - 1)), out bytesWritten))
             {
                 Debug.Assert(bytesWritten <= 127, "Too many bytes written in TryWriteShortStringWithLengthPrefix");
                 span[0] = (byte)bytesWritten++; // note the post-increment here to account for the prefix byte
@@ -640,62 +680,33 @@ public class SimpleUsage : IDisposable
             Trace($"Wrote {value} in {len} bytes");
             return new ValueTask<int>(len);
         }
-        private static unsafe int WriteVarintUInt32(Span<byte> span, uint value)
+        internal static int WriteVarintUInt32(Span<byte> span, uint value)
         {
-            Debug.Assert(span.Length >= 5, "Span too short in WriteVarintUInt32");
+            const uint SEVENBITS = 0x7F, CONTINUE = 0x80;
 
-            const uint SEVENBITS = (uint)0x7F;
-            const byte CONTINUE = (byte)0x80;
-            if ((value & ~SEVENBITS) == 0)
+            // least significant group first
+            int offset = 0;
+            while ((value & ~SEVENBITS) != 0)
             {
-                span[0] = (byte)value;
-                return 1;
-            }
-
-            fixed (byte* spanPtr = &span.DangerousGetPinnableReference())
-            {
-                var ptr = spanPtr;
-                // least significant group first
-                *ptr = (byte)(value & SEVENBITS);
+                span[offset++] = (byte)((value & SEVENBITS) | CONTINUE);
                 value >>= 7;
-                int count = 1;
-                do
-                {
-                    *ptr |= CONTINUE;
-                    *(++ptr) = (byte)(value & SEVENBITS);
-                    value >>= 7;
-                    count++;
-                } while (value != 0);
-                return count;
             }
+            span[offset++] = (byte)value;
+            return offset;
         }
-        private static unsafe int WriteVarintUInt64(Span<byte> span, ulong value)
+        internal static int WriteVarintUInt64(Span<byte> span, ulong value)
         {
-            Debug.Assert(span.Length >= 10, "Span too short in WriteVarintUInt64");
+            const ulong SEVENBITS = 0x7F, CONTINUE = 0x80;
 
-            const ulong SEVENBITS = (uint)0x7F;
-            const byte CONTINUE = (byte)0x80;
-            if ((value & ~SEVENBITS) == 0)
+            // least significant group first
+            int offset = 0;
+            while((value & ~SEVENBITS) != 0)
             {
-                span[0] = (byte)value;
-                return 1;
-            }
-            fixed (byte* spanPtr = &span.DangerousGetPinnableReference())
-            {
-                var ptr = spanPtr;
-                // least significant group first
-                *ptr = (byte)(value & SEVENBITS);
+                span[offset++] = (byte)((value & SEVENBITS) | CONTINUE);
                 value >>= 7;
-                int count = 1;
-                do
-                {
-                    *ptr |= CONTINUE;
-                    *(++ptr) = (byte)(value & SEVENBITS);
-                    value >>= 7;
-                    count++;
-                } while (value != 0);
-                return count;
             }
+            span[offset++] = (byte)value;
+            return offset;
         }
         public override void Dispose()
         {
@@ -715,6 +726,80 @@ public class SimpleUsage : IDisposable
                     writer.Complete();
                 }
             }
+        }
+    }
+    internal sealed class SpanWriter : AsyncProtoWriter
+    {
+        private Span<byte> _span;
+        internal SpanWriter(Span<byte> span)
+        {
+            _span = span;
+        }
+
+        protected override ValueTask<int> WriteBytes(ReadOnlySpan<byte> bytes)
+        {
+            bytes.CopyTo(_span);
+            Trace($"Wrote {bytes} raw bytes ({_span.Length - bytes.Length} remain)");
+            _span = _span.Slice(bytes.Length);
+            return new ValueTask<int>(bytes.Length);
+        }
+
+        protected override ValueTask<int> WriteVarintUInt64Async(ulong value)
+        {
+            int bytes = PipeWriter.WriteVarintUInt64(_span, value);
+            Trace($"Wrote {value} as varint in {bytes} bytes ({_span.Length - bytes} remain)");
+            _span = _span.Slice(bytes);
+            return new ValueTask<int>(bytes);
+        }
+        protected override ValueTask<int> WriteVarintUInt32Async(uint value)
+        {
+            int bytes = PipeWriter.WriteVarintUInt32(_span, value);
+            Trace($"Wrote {value} as varint in {bytes} bytes ({_span.Length - bytes} remain)");
+            _span = _span.Slice(bytes);
+            return new ValueTask<int>(bytes);
+        }
+       
+        protected override ValueTask<int> WriteStringWithLengthPrefix(string value)
+        {
+            // can write up to 127 characters (if ASCII) in a single-byte prefix - and conveniently
+            // 127 is handy for binary testing
+            int bytes = ((value.Length & ~127) == 0) ? TryWriteShortStringWithLengthPrefix(value) : 0;
+            if (bytes == 0)
+            {
+                bytes = WriteLongStringWithLengthPrefix(value);
+            }
+            return new ValueTask<int>(bytes);
+        }
+        int TryWriteShortStringWithLengthPrefix(string value)
+        {
+            // to encode without checking bytes, need 4 times length, plus 1 - the sneaky way
+            int bytesWritten;
+            if (Encoder.TryEncode(value, _span.Slice(1, Math.Min(127, _span.Length - 1)), out bytesWritten))
+            {
+                Debug.Assert(bytesWritten <= 127, "Too many bytes written in TryWriteShortStringWithLengthPrefix");
+                _span[0] = (byte)bytesWritten++; // note the post-increment here to account for the prefix byte
+                Trace($"Wrote '{value}' in {bytesWritten} bytes (including length prefix) without checking length first ({_span.Length - bytesWritten} remain)");
+                _span = _span.Slice(bytesWritten);
+                return bytesWritten;
+            }
+            return 0; // failure
+        }
+        int WriteLongStringWithLengthPrefix(string value)
+        {
+            int payloadBytes = Encoding.GetByteCount(value);
+            int headerBytes = PipeWriter.WriteVarintUInt32(_span, (uint)payloadBytes), bytesWritten;
+            Trace($"Wrote '{value}' header in {headerBytes} bytes into available buffer space ({_span.Length - headerBytes} remain)");
+            _span = _span.Slice(headerBytes);
+
+            // we should already have enough space in the output buffer - just write it
+            bool success = Encoder.TryEncode(value, _span, out bytesWritten);
+            if(!success) throw new InvalidOperationException("Span range would be exceeded");
+            Trace($"Wrote '{value}' payload in {payloadBytes} bytes into available buffer space ({_span.Length - payloadBytes} remain)");
+            Debug.Assert(bytesWritten == payloadBytes, "Payload length mismatch in WriteLongStringWithLengthPrefix");
+            
+            _span = _span.Slice(payloadBytes);
+
+            return headerBytes + payloadBytes;
         }
     }
     internal sealed class SpanReader : AsyncProtoReader
