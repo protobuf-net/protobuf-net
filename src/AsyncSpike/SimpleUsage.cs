@@ -3,10 +3,13 @@
 #endif
 
 using System;
+using System.Binary;
+using System.Buffers;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipelines;
 using System.IO.Pipelines.Text.Primitives;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Utf8;
 using System.Threading.Tasks;
@@ -358,10 +361,56 @@ public class SimpleUsage : IDisposable
     }
     public abstract class AsyncProtoReader : IDisposable
     {
+        public static readonly AsyncProtoReader Null = new NullReader();
+
+        private class NullReader : AsyncProtoReader
+        {
+            protected override ValueTask<int?> TryReadVarintInt32Async() => new ValueTask<int?>((int?)null);
+
+            protected override ValueTask<string> ReadStringAsync(int bytes) => throw new EndOfStreamException();
+
+            protected override ValueTask<byte[]> ReadBytesAsync(int bytes) => throw new EndOfStreamException();
+            protected override ValueTask<uint> ReadFixedUInt32Async() => throw new EndOfStreamException();
+            protected override ValueTask<ulong> ReadFixedUInt64Async() => throw new EndOfStreamException();
+            protected override void ApplyDataConstraint() { }
+            protected override void RemoveDataConstraint() { }
+        }
         protected static readonly TextEncoder Encoder = TextEncoder.Utf8;
         protected abstract void ApplyDataConstraint();
         protected abstract void RemoveDataConstraint();
         public virtual void Dispose() { }
+
+
+        public async ValueTask<float> ReadSingleAsync()
+        {
+            switch(WireType)
+            {
+                case WireType.Fixed32:
+                    return ToSingle(await ReadFixedUInt32Async());
+                case WireType.Fixed64:
+                    return (float)ToDouble(await ReadFixedUInt64Async());
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+        public async ValueTask<double> ReadDoubleAsync()
+        {
+            switch (WireType)
+            {
+                case WireType.Fixed32:
+                    return (double)ToSingle(await ReadFixedUInt32Async());
+                case WireType.Fixed64:
+                    return ToDouble(await ReadFixedUInt64Async());
+                default:
+                    throw new InvalidOperationException();
+            }
+        }
+
+        private static unsafe float ToSingle(uint value) => *(float*)(&value);
+        private static unsafe double ToDouble(ulong value) => *(double*)(&value);
+
+        protected abstract ValueTask<uint> ReadFixedUInt32Async();
+        protected abstract ValueTask<ulong> ReadFixedUInt64Async();
 
         public static AsyncProtoReader Create(ReadOnlySpan<byte> span) => new SpanReader(span);
         public static AsyncProtoReader Create(IPipeReader pipe, bool closePipe = true, long bytes = long.MaxValue) => new PipeReader(pipe, closePipe, bytes);
@@ -428,14 +477,42 @@ public class SimpleUsage : IDisposable
 
         public async ValueTask<int> ReadInt32Async()
         {
-            var val = await TryReadVarintInt32Async();
-            if (val == null) throw new EndOfStreamException();
-            return val.GetValueOrDefault();
+            switch (WireType)
+            {
+                case WireType.Varint:
+                    var val = await TryReadVarintInt32Async();
+                    if (val == null) throw new EndOfStreamException();
+                    return val.GetValueOrDefault();
+                case WireType.Fixed32:
+                    return (int)await ReadFixedUInt32Async();
+                case WireType.Fixed64:
+                    long val64 = (long)await ReadFixedUInt64Async();
+                    return checked((int)val64);
+                default:
+                    throw new InvalidOperationException();
+            }            
         }
+
+        public async ValueTask<byte[]> ReadBytesAsync()
+        {
+            if (WireType != WireType.String) throw new InvalidOperationException();
+            var lenOrNull = await TryReadVarintInt32Async();
+            if (lenOrNull == null)
+            {
+                throw new EndOfStreamException();
+            }
+            int len = lenOrNull.GetValueOrDefault();
+            Trace($"String length: {len}");
+            return len == 0 ? EmptyBytes : await ReadBytesAsync(len);
+        }
+        static readonly byte[] EmptyBytes = new byte[0];
+        public async ValueTask<bool> ReadBooleanAsync() => (await ReadInt32Async()) != 0;
+        protected abstract ValueTask<byte[]> ReadBytesAsync(int bytes);
         protected abstract ValueTask<int?> TryReadVarintInt32Async();
 
         public async ValueTask<string> ReadStringAsync()
         {
+            if (WireType != WireType.String) throw new InvalidOperationException();
             var lenOrNull = await TryReadVarintInt32Async();
             if (lenOrNull == null)
             {
@@ -453,6 +530,10 @@ public class SimpleUsage : IDisposable
         public virtual void Dispose() { }
         public async ValueTask<int> WriteVarintInt32Async(int fieldNumber, int value) =>
             await WriteFieldHeader(fieldNumber, WireType.Varint) + await WriteVarintUInt64Async((ulong)(long)value);
+
+
+        public virtual ValueTask<int> WriteBoolean(int fieldNumber, bool value)
+            => WriteVarintInt32Async(fieldNumber, value ? 1 : 0);
 
         private ValueTask<int> WriteFieldHeader(int fieldNumber, WireType wireType) => WriteVarintUInt32Async((uint)((fieldNumber << 3) | (int)wireType));
 
@@ -517,6 +598,10 @@ public class SimpleUsage : IDisposable
                 int bytes = Encoding.GetByteCount(value);
                 return new ValueTask<int>(GetVarintLength((uint)bytes) + bytes);
             }
+
+            public override ValueTask<int> WriteBoolean(int fieldNumber, bool value)
+                => new ValueTask<int>(GetVarintLength((uint)(fieldNumber << 3)) + 1);
+
             static int GetVarintLength(uint value)
             {
                 int count = 0;
@@ -809,6 +894,26 @@ public class SimpleUsage : IDisposable
         {
             _active = _original = span;
         }
+        protected override async ValueTask<uint> ReadFixedUInt32Async()
+        {
+            var val = _active.ReadLittleEndian<uint>();
+            _active = _active.Slice(4);
+            Advance(4);
+            return val;
+        }
+        protected override async ValueTask<ulong> ReadFixedUInt64Async()
+        {
+            var val = _active.ReadLittleEndian<uint>();
+            _active = _active.Slice(8);
+            Advance(8);
+            return val;
+        }
+        protected override ValueTask<byte[]> ReadBytesAsync(int bytes)
+        {
+            var arr = _active.Slice(0, bytes).ToArray();
+            _active = _active.Slice(bytes);
+            return new ValueTask<byte[]>(arr);
+        }
         protected override ValueTask<string> ReadStringAsync(int bytes)
         {
             bool result = Encoder.TryDecode(_active.Slice(0, bytes), out string text, out int consumed);
@@ -852,12 +957,41 @@ public class SimpleUsage : IDisposable
             _reader = reader;
             _closePipe = closePipe;
         }
-        protected override async ValueTask<string> ReadStringAsync(int bytes)
+        private async ValueTask<bool> EnsureBufferedAsync(int bytes)
         {
             while (_available.Length < bytes)
             {
                 if (!await RequestMoreDataAsync()) throw new EndOfStreamException();
             }
+            return true;
+        }
+        protected override async ValueTask<uint> ReadFixedUInt32Async()
+        {
+            await EnsureBufferedAsync(4);
+            var val = _available.ReadLittleEndian<uint>();
+            _available = _available.Slice(4);
+            Advance(4);
+            return val;
+        }
+        protected override async ValueTask<ulong> ReadFixedUInt64Async()
+        {
+            await EnsureBufferedAsync(8);
+            var val = _available.ReadLittleEndian<ulong>();
+            _available = _available.Slice(8);
+            Advance(8);
+            return val;
+        }
+        protected async override ValueTask<byte[]> ReadBytesAsync(int bytes)
+        {
+            await EnsureBufferedAsync(bytes);
+            var arr = _available.Slice(0, bytes).ToArray();
+            _available = _available.Slice(bytes);
+            Advance(bytes);
+            return arr;
+        }
+        protected override async ValueTask<string> ReadStringAsync(int bytes)
+        {
+            await EnsureBufferedAsync(bytes);
             var s = _available.Slice(0, bytes).GetUtf8String();
             Trace($"Read string: {s}");
             _available = _available.Slice(bytes);
