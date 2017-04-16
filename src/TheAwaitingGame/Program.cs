@@ -49,20 +49,10 @@ namespace TheAwaitingGame
         public decimal Sync() => _book.GetTotalWorth(REPEATS_PER_ITEM);
 
         [Benchmark]
-        public decimal TaskAsync()
-        {
-            var awaiter = _book.GetTotalWorthTaskAsync(REPEATS_PER_ITEM).GetAwaiter();
-            if (!awaiter.IsCompleted) throw new InvalidOperationException("should have been completed");
-            return awaiter.GetResult();
-        }
+        public Task<decimal> TaskAsync() => _book.GetTotalWorthTaskAsync(REPEATS_PER_ITEM);
 
         [Benchmark]
-        public decimal ValueTaskAsync()
-        {
-            var awaiter = _book.GetTotalWorthValueTaskAsync(REPEATS_PER_ITEM).GetAwaiter();
-            if (!awaiter.IsCompleted) throw new InvalidOperationException("should have been completed");
-            return awaiter.GetResult();
-        }
+        public ValueTask<decimal> ValueTaskAsync() =>  _book.GetTotalWorthValueTaskAsync(REPEATS_PER_ITEM);
     }
     class OrderBook
     {
