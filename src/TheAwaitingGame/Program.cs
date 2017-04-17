@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using MemoryDiagnoser = BenchmarkDotNet.Diagnosers.MemoryDiagnoser;
+using BenchmarkDotNet.Validators;
+using BenchmarkDotNet.Columns;
 
 namespace TheAwaitingGame
 {
@@ -21,7 +23,9 @@ namespace TheAwaitingGame
 
             var customConfig = ManualConfig
                 .Create(DefaultConfig.Instance) // copies all exporters, loggers and basic stuff
+                .With(JitOptimizationsValidator.FailOnError) // Fail if not release mode
                 .With(MemoryDiagnoser.Default) // use memory diagnoser
+                .With(StatisticColumn.OperationsPerSecond) // add ops/s
                 .With(Job.Default.With(gcMode));
 
 #if NET462
@@ -66,19 +70,19 @@ namespace TheAwaitingGame
         }
 
         const int REPEATS_PER_ITEM = 250;
-        [Benchmark]
+        [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
         public decimal Sync() => _book.GetTotalWorth(REPEATS_PER_ITEM);
 
-        [Benchmark]
+        [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
         public Task<decimal> TaskAsync() => _book.GetTotalWorthTaskAsync(REPEATS_PER_ITEM);
 
-        [Benchmark]
+        [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
         public ValueTask<decimal> ValueTaskAsync() => _book.GetTotalWorthValueTaskAsync(REPEATS_PER_ITEM);
 
-        [Benchmark]
+        [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
         public ValueTask<decimal> HandCrankedAsync() => _book.GetTotalWorthHandCrankedAsync(REPEATS_PER_ITEM);
 
-        [Benchmark]
+        [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
         public ValueTask<decimal> AssertCompletedAsync() => _book.GetTotalWorthAssertCompletedAsync(REPEATS_PER_ITEM);
     }
 
@@ -136,32 +140,48 @@ namespace TheAwaitingGame
         public ValueTask<decimal> GetTotalWorthHandCrankedAsync(int repeats)
         {
             decimal total = 0;
+
+            var orders = Orders;
+            var count = orders.Count;
+            var currentTask = default(ValueTask<decimal>);
+
             while (repeats-- > 0)
             {
-                var iter = Orders.GetEnumerator();
-                while (iter.MoveNext())
+
+                var i = 0;
+                for (; i < count; i++)
                 {
-                    var task = iter.Current.GetOrderWorthHandCrankedAsync();
-                    if (!task.IsCompleted) return ContinueAsync(total, task, repeats, iter);
-                    total += task.Result;
+                    currentTask = orders[i].GetOrderWorthHandCrankedAsync();
+                    if (!currentTask.IsCompleted) break;
+                    total += currentTask.Result;
+                }
+
+                if (i < count)
+                {
+                    return ContinueAsync(total, currentTask, repeats, i);
                 }
             }
             return new ValueTask<decimal>(total);
         }
-
-        private async ValueTask<decimal> ContinueAsync(decimal total, ValueTask<decimal> pending, int repeats, List<Order>.Enumerator iter)
+        private async ValueTask<decimal> ContinueAsync(decimal total, ValueTask<decimal> currentTask, int repeats, int i)
         {
-            total += await pending;
-            do
+            total += await currentTask;
+
+            var orders = Orders;
+            while (repeats-- > 0)
             {
-                while (iter.MoveNext())
+                var count = orders.Count;
+                i = 0;
+                for (; i < count; i++)
                 {
-                    pending = iter.Current.GetOrderWorthHandCrankedAsync();
-                    if (!pending.IsCompleted) return await ContinueAsync(total, pending, repeats, iter);
-                    total += pending.Result;
+                    currentTask = orders[i].GetOrderWorthHandCrankedAsync();
+                    if (currentTask.IsCompleted)
+                        total += currentTask.Result;
+                    else
+                        total += await currentTask;
                 }
-                iter = Orders.GetEnumerator();
-            } while (repeats-- > 0);
+            }
+
             return total;
         }
     }
@@ -198,27 +218,38 @@ namespace TheAwaitingGame
         public ValueTask<decimal> GetOrderWorthHandCrankedAsync()
         {
             decimal total = 0;
-            using (var iter = Lines.GetEnumerator())
+
+            var currentTask = default(ValueTask<decimal>);
+            var lines = Lines;
+            var count = lines.Count;
+
+            var i = 0;
+            for (; i < count; i++)
             {
-                while (iter.MoveNext())
-                {
-                    var task = iter.Current.GetLineWorthHandCrankedAsync();
-                    if (!task.IsCompleted) return ContinueAsync(total, task, iter);
-                    total += task.Result;
-                }
+                currentTask = lines[i].GetLineWorthValueTaskAsync();
+                if (!currentTask.IsCompleted) break;
+                total += currentTask.Result;
             }
+
+            if (i < count) return ContinueAsync(total, currentTask, i);
             return new ValueTask<decimal>(total);
         }
 
-        async ValueTask<decimal> ContinueAsync(decimal total, ValueTask<decimal> pending, List<OrderLine>.Enumerator iter)
+        async ValueTask<decimal> ContinueAsync(decimal total, ValueTask<decimal> currentTask, int i)
         {
-            total += await pending;
-            while (iter.MoveNext())
+            total += await currentTask;
+
+            var count = Lines.Count;
+
+            for (; i < count; i++)
             {
-                pending = iter.Current.GetLineWorthHandCrankedAsync();
-                if (!pending.IsCompleted) return await ContinueAsync(total, pending, iter);
-                total += pending.Result;
+                currentTask = Lines[i].GetLineWorthValueTaskAsync();
+                if (currentTask.IsCompleted)
+                    total += currentTask.Result;
+                else
+                    total += await currentTask;
             }
+
             return total;
         }
     }
@@ -228,9 +259,8 @@ namespace TheAwaitingGame
         public decimal UnitPrice { get; set; }
         public decimal GetLineWorth() => Quantity * UnitPrice;
         public Task<decimal> GetLineWorthTaskAsync() => Task.FromResult(Quantity * UnitPrice);
-        public ValueTask<decimal> GetLineWorthValueTaskAsync() => new ValueTask<decimal>(Quantity * UnitPrice);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)] // it fails to inline by default due to "Native estimate for function size exceeds threshold."
-        public ValueTask<decimal> GetLineWorthHandCrankedAsync() => new ValueTask<decimal>(Quantity * UnitPrice);
+        public ValueTask<decimal> GetLineWorthValueTaskAsync() => new ValueTask<decimal>(Quantity * UnitPrice);
     }
 }
