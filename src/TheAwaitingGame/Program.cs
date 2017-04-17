@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Jobs;
 using MemoryDiagnoser = BenchmarkDotNet.Diagnosers.MemoryDiagnoser;
+using BenchmarkDotNet.Validators;
+using BenchmarkDotNet.Columns;
 
 namespace TheAwaitingGame
 {
@@ -21,7 +23,9 @@ namespace TheAwaitingGame
 
             var customConfig = ManualConfig
                 .Create(DefaultConfig.Instance) // copies all exporters, loggers and basic stuff
+                .With(JitOptimizationsValidator.FailOnError) // Fail if not release mode
                 .With(MemoryDiagnoser.Default) // use memory diagnoser
+                .With(StatisticColumn.OperationsPerSecond) // add ops/s
                 .With(Job.Default.With(gcMode));
 
 #if NET462
