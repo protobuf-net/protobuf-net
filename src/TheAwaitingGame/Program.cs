@@ -86,6 +86,9 @@ namespace TheAwaitingGame
         public ValueTask<decimal> ValueTaskWrappedAsync() => _book.GetTotalWorthValueTaskCheckedWrappedAsync(REPEATS_PER_ITEM);
 
         [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
+        public ValueTask<decimal> ValueTaskDecimalReferenceAsync() => _book.GetTotalWorthValueTaskCheckedDecimalReferenceAsync(REPEATS_PER_ITEM);
+
+        [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
         public ValueTask<decimal> ValueTaskCheckedAsync() => _book.GetTotalWorthValueTaskCheckedAsync(REPEATS_PER_ITEM);
 
         [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
@@ -172,6 +175,19 @@ namespace TheAwaitingGame
                 {
                     var task = order.GetOrderWorthValueTaskCheckedAsync();
                     total += await task.AsTask();
+                }
+            }
+            return total;
+        }
+        public async ValueTask<decimal> GetTotalWorthValueTaskCheckedDecimalReferenceAsync(int repeats)
+        {
+            decimal total = 0;
+            while (repeats-- > 0)
+            {
+                foreach (var order in Orders)
+                {
+                    var task = order.GetOrderWorthAssertCompletedDecimalReferenceAsync();
+                    total += (task.IsCompleted) ? task.Result.Value : (await task).Value;
                 }
             }
             return total;
@@ -272,6 +288,18 @@ namespace TheAwaitingGame
             return total;
         }
 
+        public async ValueTask<DecimalReference> GetOrderWorthAssertCompletedDecimalReferenceAsync()
+        {
+            decimal total = 0;
+            foreach (var line in Lines)
+            {
+                var task = line.GetLineWorthValueTaskDecimalReferenceAsync();
+                total += (task.IsCompleted) ? task.Result.Value : (await task).Value;
+            }
+            return new DecimalReference(total);
+        }
+
+
         public ValueTask<decimal> GetOrderWorthAssertCompletedAsync()
         {
             decimal total = 0;
@@ -326,5 +354,16 @@ namespace TheAwaitingGame
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)] // it fails to inline by default due to "Native estimate for function size exceeds threshold."
         public ValueTask<decimal> GetLineWorthValueTaskAsync() => new ValueTask<decimal>(Quantity * UnitPrice);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ValueTask<DecimalReference> GetLineWorthValueTaskDecimalReferenceAsync() => new ValueTask<DecimalReference>(new DecimalReference(Quantity * UnitPrice));
+    }
+    public class DecimalReference
+    {
+        public decimal Value;
+        public DecimalReference(decimal value)
+        {
+            Value = value;
+        }
     }
 }
