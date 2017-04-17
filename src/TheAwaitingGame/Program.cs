@@ -57,6 +57,21 @@ namespace TheAwaitingGame
 
         [Benchmark]
         public ValueTask<decimal> HandCrankedAsync() => _book.GetTotalWorthHandCrankedAsync(REPEATS_PER_ITEM);
+
+        [Benchmark]
+        public ValueTask<decimal> AssertCompletedAsync() => _book.GetTotalWorthAssertCompletedAsync(REPEATS_PER_ITEM);
+    }
+
+    public static class ValueTaskExtensions
+    {
+        public static T AssertCompleted<T>(this ValueTask<T> task)
+        {
+            if(!task.IsCompleted)
+            {
+                throw new InvalidOperationException();
+            }
+            return task.Result;
+        }
     }
     class OrderBook
     {
@@ -88,6 +103,15 @@ namespace TheAwaitingGame
                 foreach (var order in Orders) total += await order.GetOrderWorthValueTaskAsync();
             }
             return total;
+        }
+        public ValueTask<decimal> GetTotalWorthAssertCompletedAsync(int repeats)
+        {
+            decimal total = 0;
+            while (repeats-- > 0)
+            {
+                foreach (var order in Orders) total += order.GetOrderWorthAssertCompletedAsync().AssertCompleted();
+            }
+            return new ValueTask<decimal>(total);
         }
         public ValueTask<decimal> GetTotalWorthHandCrankedAsync(int repeats)
         {
@@ -142,6 +166,13 @@ namespace TheAwaitingGame
             decimal total = 0;
             foreach (var line in Lines) total += await line.GetLineWorthValueTaskAsync();
             return total;
+        }
+
+        public ValueTask<decimal> GetOrderWorthAssertCompletedAsync()
+        {
+            decimal total = 0;
+            foreach (var line in Lines) total += line.GetLineWorthValueTaskAsync().AssertCompleted();
+            return new ValueTask<decimal>(total);
         }
 
         public ValueTask<decimal> GetOrderWorthHandCrankedAsync()
