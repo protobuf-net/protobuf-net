@@ -83,6 +83,9 @@ namespace TheAwaitingGame
         public ValueTask<decimal> ValueTaskAsync() => _book.GetTotalWorthValueTaskAsync(REPEATS_PER_ITEM);
 
         [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
+        public ValueTask<decimal> ValueTaskWrappedAsync() => _book.GetTotalWorthValueTaskCheckedWrappedAsync(REPEATS_PER_ITEM);
+
+        [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
         public ValueTask<decimal> ValueTaskCheckedAsync() => _book.GetTotalWorthValueTaskCheckedAsync(REPEATS_PER_ITEM);
 
         [Benchmark(OperationsPerInvoke = REPEATS_PER_ITEM)]
@@ -156,6 +159,19 @@ namespace TheAwaitingGame
                 {
                     var task = order.GetOrderWorthValueTaskCheckedAsync();
                     total += (task.IsCompleted) ? task.Result : await task;
+                }
+            }
+            return total;
+        }
+        public async ValueTask<decimal> GetTotalWorthValueTaskCheckedWrappedAsync(int repeats)
+        {
+            decimal total = 0;
+            while (repeats-- > 0)
+            {
+                foreach (var order in Orders)
+                {
+                    var task = order.GetOrderWorthValueTaskCheckedAsync();
+                    total += await task.AsTask();
                 }
             }
             return total;
