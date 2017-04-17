@@ -1,8 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using BenchmarkDotNet.Running;
 using BenchmarkDotNet.Attributes;
 using System.Threading.Tasks;
+using BenchmarkDotNet.Configs;
+using BenchmarkDotNet.Jobs;
+using MemoryDiagnoser = BenchmarkDotNet.Diagnosers.MemoryDiagnoser;
 
 namespace TheAwaitingGame
 {
@@ -10,11 +14,27 @@ namespace TheAwaitingGame
     {
         static void Main()
         {
-            var summary = BenchmarkRunner.Run<Benchmarker>();
+            // tell BenchmarkDotNet not to force GC.Collect after benchmark iteration 
+            // (single iteration contains of multiple (usually millions) of invocations)
+            // it can influence the allocation-heavy Task<T> benchmarks
+            var gcMode = new GcMode { Force = false };
+
+            var customConfig = ManualConfig
+                .Create(DefaultConfig.Instance) // copies all exporters, loggers and basic stuff
+                .With(MemoryDiagnoser.Default) // use memory diagnoser
+                .With(Job.Default.With(gcMode));
+
+#if NET462
+            // enable the Inlining Diagnoser to find out what does not get inlined
+            // uncomment it first, it produces a lot of output
+            //customConfig = customConfig.With(new BenchmarkDotNet.Diagnostics.Windows.InliningDiagnoser(logFailuresOnly: true, filterByNamespace: true));
+#endif
+
+            var summary = BenchmarkRunner.Run<Benchmarker>(customConfig);
             Console.WriteLine(summary);
         }
     }
-    [MemoryDiagnoser]
+
     public class Benchmarker
     {
         static OrderBook _book;
@@ -28,7 +48,7 @@ namespace TheAwaitingGame
             var rand = new Random(12345);
 
             var book = new OrderBook();
-            for(int i = 0; i < 50; i++)
+            for (int i = 0; i < 50; i++)
             {
                 var order = new Order();
                 int lines = rand.Next(1, 10);
@@ -37,7 +57,7 @@ namespace TheAwaitingGame
                     order.Lines.Add(new OrderLine
                     {
                         Quantity = rand.Next(1, 20),
-                        UnitPrice = 0.01M * rand.Next(1,5000)
+                        UnitPrice = 0.01M * rand.Next(1, 5000)
                     });
                 }
                 book.Orders.Add(order);
@@ -53,7 +73,7 @@ namespace TheAwaitingGame
         public Task<decimal> TaskAsync() => _book.GetTotalWorthTaskAsync(REPEATS_PER_ITEM);
 
         [Benchmark]
-        public ValueTask<decimal> ValueTaskAsync() =>  _book.GetTotalWorthValueTaskAsync(REPEATS_PER_ITEM);
+        public ValueTask<decimal> ValueTaskAsync() => _book.GetTotalWorthValueTaskAsync(REPEATS_PER_ITEM);
 
         [Benchmark]
         public ValueTask<decimal> HandCrankedAsync() => _book.GetTotalWorthHandCrankedAsync(REPEATS_PER_ITEM);
@@ -180,7 +200,7 @@ namespace TheAwaitingGame
             decimal total = 0;
             using (var iter = Lines.GetEnumerator())
             {
-                while(iter.MoveNext())
+                while (iter.MoveNext())
                 {
                     var task = iter.Current.GetLineWorthHandCrankedAsync();
                     if (!task.IsCompleted) return ContinueAsync(total, task, iter);
@@ -209,6 +229,8 @@ namespace TheAwaitingGame
         public decimal GetLineWorth() => Quantity * UnitPrice;
         public Task<decimal> GetLineWorthTaskAsync() => Task.FromResult(Quantity * UnitPrice);
         public ValueTask<decimal> GetLineWorthValueTaskAsync() => new ValueTask<decimal>(Quantity * UnitPrice);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] // it fails to inline by default due to "Native estimate for function size exceeds threshold."
         public ValueTask<decimal> GetLineWorthHandCrankedAsync() => new ValueTask<decimal>(Quantity * UnitPrice);
     }
 }
