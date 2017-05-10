@@ -25,7 +25,8 @@ namespace ProtoBuf
         Stream source;
         byte[] ioBuffer;
         TypeModel model;
-        int fieldNumber, depth, dataRemaining, ioIndex, position, available, blockEnd;
+        int fieldNumber, depth, ioIndex, available;
+        long position64, blockEnd64, dataRemaining64;
         WireType wireType;
         bool isFixedLength, internStrings;
         private NetObjectCache netCache;
@@ -54,12 +55,13 @@ namespace ProtoBuf
         /// <param name="context">Additional context about this serialization operation</param>
         public ProtoReader(Stream source, TypeModel model, SerializationContext context) 
         {
+            
             Init(this, source, model, context, TO_EOF);
         }
 
-        internal const int TO_EOF = -1;
-        
-        
+        internal const long TO_EOF = -1;
+
+
         /// <summary>
         /// Gets / sets a flag indicating whether strings should be checked for repetition; if
         /// true, any repeated UTF-8 byte sequence will result in the same String instance, rather
@@ -79,8 +81,19 @@ namespace ProtoBuf
         {
             Init(this, source, model, context, length);
         }
+        /// <summary>
+        /// Creates a new reader against a stream
+        /// </summary>
+        /// <param name="source">The source stream</param>
+        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+        /// <param name="context">Additional context about this serialization operation</param>
+        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+        public ProtoReader(Stream source, TypeModel model, SerializationContext context, long length)
+        {
+            Init(this, source, model, context, length);
+        }
 
-        private static void Init(ProtoReader reader, Stream source, TypeModel model, SerializationContext context, int length)
+        private static void Init(ProtoReader reader, Stream source, TypeModel model, SerializationContext context, long length)
         {
             if (source == null) throw new ArgumentNullException("source");
             if (!source.CanRead) throw new ArgumentException("Cannot read from stream", "source");
@@ -89,13 +102,14 @@ namespace ProtoBuf
             reader.model = model;
             bool isFixedLength = length >= 0;
             reader.isFixedLength = isFixedLength;
-            reader.dataRemaining = isFixedLength ? length : 0;
+            reader.dataRemaining64 = isFixedLength ? length : 0;
 
             if (context == null) { context = SerializationContext.Default; }
             else { context.Freeze(); }
             reader.context = context;
-            reader.position = reader.available = reader.depth = reader.fieldNumber = reader.ioIndex = 0;
-            reader.blockEnd = int.MaxValue;
+            reader.position64 = 0;
+            reader.available = reader.depth = reader.fieldNumber = reader.ioIndex = 0;
+            reader.blockEnd64 = int.MaxValue;
             reader.internStrings = true;
             reader.wireType = WireType.None;
             reader.trapCount = 1;
@@ -176,7 +190,7 @@ namespace ProtoBuf
             {
                 ioIndex += read;
                 available -= read;
-                position += read;
+                position64 += read;
                 return value;
             }
             throw EoF(this);
@@ -188,7 +202,7 @@ namespace ProtoBuf
             {
                 ioIndex += read;
                 available -= read;
-                position += read;
+                position64 += read;
                 return true;
             }
             return false;
@@ -204,7 +218,7 @@ namespace ProtoBuf
                     return ReadUInt32Variant(false);
                 case WireType.Fixed32:
                     if (available < 4) Ensure(4, true);
-                    position += 4;
+                    position64 += 4;
                     available -= 4;
                     return ((uint)ioBuffer[ioIndex++])
                         | (((uint)ioBuffer[ioIndex++]) << 8)
@@ -222,7 +236,13 @@ namespace ProtoBuf
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
         /// in the underlying stream, if multiple readers are used on the same stream)
         /// </summary>
-        public int Position { get { return position; } }
+        public int Position { get { return checked((int)position64); } }
+
+        /// <summary>
+        /// Returns the position of the current reader (note that this is not necessarily the same as the position
+        /// in the underlying stream, if multiple readers are used on the same stream)
+        /// </summary>
+        public long LongPosition { get { return position64; } }
         internal void Ensure(int count, bool strict)
         {
             Helpers.DebugAssert(available <= count, "Asking for data without checking first");
@@ -300,7 +320,7 @@ namespace ProtoBuf
                     return (int)ReadUInt32Variant(true);
                 case WireType.Fixed32:
                     if (available < 4) Ensure(4, true);
-                    position += 4;
+                    position64 += 4;
                     available -= 4;
                     return ((int)ioBuffer[ioIndex++])
                         | (((int)ioBuffer[ioIndex++]) << 8)
@@ -341,7 +361,7 @@ namespace ProtoBuf
                     return ReadInt32();
                 case WireType.Fixed64:
                     if (available < 8) Ensure(8, true);
-                    position += 8;
+                    position64 += 8;
                     available -= 8;
 
                     return ((long)ioBuffer[ioIndex++])
@@ -430,7 +450,7 @@ namespace ProtoBuf
             {
                 ioIndex += read;
                 available -= read;
-                position += read;
+                position64 += read;
                 return value;
             }
             throw EoF(this);
@@ -511,7 +531,7 @@ namespace ProtoBuf
 #endif
                 if (internStrings) { s = Intern(s); }
                 available -= bytes;
-                position += bytes;
+                position64 += bytes;
                 ioIndex += bytes;
                 return s;
             }
@@ -1347,7 +1367,7 @@ namespace ProtoBuf
 
 #region RECYCLER
 
-        internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, int len)
+        internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, long len)
         {
             ProtoReader reader = GetRecycled();
             if (reader == null)

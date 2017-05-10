@@ -3,7 +3,7 @@
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net20;net35;net40;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks><!--net20;net35;-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants> <!-- new build tools spit these out -->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
