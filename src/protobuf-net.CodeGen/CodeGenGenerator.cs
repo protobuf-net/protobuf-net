@@ -21,21 +21,40 @@ namespace ProtoBuf.CodeGen
             var results = SyntaxFactory.List<MemberDeclarationSyntax>();
             // Our generator is applied to any class that our attribute is applied to.
             var applyToClass = (ClassDeclarationSyntax)applyTo;
+            var applyToTypeName = SyntaxFactory.IdentifierName(applyToClass.Identifier);
             var serializer = SyntaxFactory.ClassDeclaration(applyToClass.Identifier + "Serializer");
-            var iSerializertype = compilation.GetTypeByMetadataName(typeof(ISerializer<>).FullName);
             var model = compilation.GetSemanticModel(applyTo.SyntaxTree);
 
-            var typeArgs = SyntaxFactory.TypeArgumentList(
-                    SyntaxFactory.SeparatedList(new TypeSyntax[] { SyntaxFactory.IdentifierName(applyToClass.Identifier) }));
+            var fullSerializerInterfaceName =
+                SyntaxFactory.QualifiedName(
+                    SyntaxFactory.AliasQualifiedName(SyntaxFactory.IdentifierName("global"), SyntaxFactory.IdentifierName(nameof(ProtoBuf))),
+                    SyntaxFactory.GenericName(SyntaxFactory.Identifier(compilation.GetTypeByMetadataName(typeof(ISerializer<>).FullName).Name),
+                        SyntaxFactory.TypeArgumentList(
+                            SyntaxFactory.SingletonSeparatedList<TypeSyntax>(applyToTypeName))));
 
-            serializer = serializer.AddBaseListTypes(SyntaxFactory.SimpleBaseType(
-                SyntaxFactory.GenericName(SyntaxFactory.Identifier(iSerializertype.Name), typeArgs)));
+            serializer = serializer.AddBaseListTypes(SyntaxFactory.SimpleBaseType(fullSerializerInterfaceName));
 
-            var read = SyntaxFactory.MethodDeclaration(SyntaxFactory.IdentifierName("void"), "Read");
-            read = read.AddParameterListParameters(SyntaxFactory.Parameter(
-                default(SyntaxList<AttributeListSyntax>), SyntaxFactory. default(SyntaxTokenList), SyntaxFactory.IdentifierName("ProtoReader"), SyntaxFactory.Identifier("reader"), null));
-            read = read.WithBody(SyntaxFactory.Block());
-            serializer = serializer.AddMembers(read);
+            var readerIdentifier = SyntaxFactory.Identifier("reader");
+            var writerIdentifier = SyntaxFactory.Identifier("writer");
+            var valueIdentifier = SyntaxFactory.Identifier("value");
+            var read = SyntaxFactory
+                .MethodDeclaration(SyntaxFactory.IdentifierName("void"), nameof(ISerializer<object>.Read))
+                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
+                // .WithExplicitInterfaceSpecifier(SyntaxFactory.ExplicitInterfaceSpecifier(fullSerializerInterfaceName))
+                .AddParameterListParameters(
+                    SyntaxFactory.Parameter(default(SyntaxList<AttributeListSyntax>), default(SyntaxTokenList), SyntaxFactory.ParseTypeName($"global::{nameof(ProtoBuf)}.{nameof(ProtoReader)}"), readerIdentifier, null),
+                    SyntaxFactory.Parameter(default(SyntaxList<AttributeListSyntax>), SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.RefKeyword)), applyToTypeName, valueIdentifier, null)
+                ).WithBody(SyntaxFactory.Block());
+
+            var write = SyntaxFactory
+                .MethodDeclaration(SyntaxFactory.IdentifierName("void"), nameof(ISerializer<object>.Write))
+                .WithModifiers(SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.PublicKeyword)))
+                // .WithExplicitInterfaceSpecifier(SyntaxFactory.ExplicitInterfaceSpecifier(fullSerializerInterfaceName))
+                .AddParameterListParameters(
+                    SyntaxFactory.Parameter(default(SyntaxList<AttributeListSyntax>), default(SyntaxTokenList), SyntaxFactory.ParseTypeName($"global::{nameof(ProtoBuf)}.{nameof(ProtoWriter)}"), writerIdentifier, null),
+                    SyntaxFactory.Parameter(default(SyntaxList<AttributeListSyntax>), SyntaxFactory.TokenList(SyntaxFactory.Token(SyntaxKind.RefKeyword)), applyToTypeName, valueIdentifier, null)
+                ).WithBody(SyntaxFactory.Block());
+            serializer = serializer.AddMembers(read, write);
 
             results = results.Add(serializer);
 
