@@ -623,23 +623,23 @@ namespace ProtoBuf
         public static void EndSubItem(SubItemToken token, ProtoReader reader)
         {
             if (reader == null) throw new ArgumentNullException("reader");
-            int value = token.value;
+            long value64 = token.value64;
             switch (reader.wireType)
             {
                 case WireType.EndGroup:
-                    if (value >= 0) throw AddErrorData(new ArgumentException("token"), reader);
-                    if (-value != reader.fieldNumber) throw reader.CreateException("Wrong group was ended"); // wrong group ended!
+                    if (value64 >= 0) throw AddErrorData(new ArgumentException("token"), reader);
+                    if (-(int)value64 != reader.fieldNumber) throw reader.CreateException("Wrong group was ended"); // wrong group ended!
                     reader.wireType = WireType.None; // this releases ReadFieldHeader
                     reader.depth--;
                     break;
                 // case WireType.None: // TODO reinstate once reads reset the wire-type
                 default:
-                    if (value < reader.position) throw reader.CreateException("Sub-message not read entirely");
-                    if (reader.blockEnd != reader.position && reader.blockEnd != int.MaxValue)
+                    if (value64 < reader.position64) throw reader.CreateException("Sub-message not read entirely");
+                    if (reader.blockEnd64 != reader.position64 && reader.blockEnd64 != int.MaxValue)
                     {
                         throw reader.CreateException("Sub-message not read correctly");
                     }
-                    reader.blockEnd = value;
+                    reader.blockEnd64 = value64;
                     reader.depth--;
                     break;
                 /*default:
@@ -661,10 +661,10 @@ namespace ProtoBuf
                     reader.depth++;
                     return new SubItemToken(-reader.fieldNumber);
                 case WireType.String:
-                    int len = (int)reader.ReadUInt32Variant(false);
+                    int len = (int)reader.ReadUInt64Variant(false);
                     if (len < 0) throw AddErrorData(new InvalidOperationException(), reader);
                     int lastEnd = reader.blockEnd;
-                    reader.blockEnd = reader.position + len;
+                    reader.blockEnd64 = reader.position64 + len;
                     reader.depth++;
                     return new SubItemToken(lastEnd);
                 default:
@@ -983,10 +983,9 @@ namespace ProtoBuf
         /// reader to be created.
         /// </summary>
         public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber)
-        {
-            int bytesRead;
-            return ReadLengthPrefix(source, expectHeader, style, out fieldNumber, out bytesRead);
-        }
+#pragma warning disable 0618 // "32-bit"
+            => ReadLengthPrefix(source, expectHeader, style, out fieldNumber, out int bytesRead);
+#pragma warning restore 0618
         /// <summary>
         /// Reads a little-endian encoded integer. An exception is thrown if the data is not all available.
         /// </summary>
@@ -1012,10 +1011,9 @@ namespace ProtoBuf
         /// </summary>
         public static int DirectReadVarintInt32(Stream source)
         {
-            uint val;
-            int bytes = TryReadUInt32Variant(source, out val);
+            int bytes = TryReadUInt64Variant(source, out ulong val);
             if (bytes <= 0) throw EoF(null);
-            return (int) val;
+            return checked((int)val);
         }
         /// <summary>
         /// Reads a string (of a given lenth, in bytes) directly from the source into a pre-existing buffer. An exception is thrown if the data is not all available.
@@ -1054,21 +1052,36 @@ namespace ProtoBuf
         /// Reads the length-prefix of a message from a stream without buffering additional data, allowing a fixed-length
         /// reader to be created.
         /// </summary>
+        [Obsolete("32-bit")]
         public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber, out int bytesRead)
+        {
+            if(style == PrefixStyle.None)
+            {
+                bytesRead = fieldNumber = 0;
+                return int.MaxValue; // avoid the long.maxvalu causing overflow
+            }
+            long len64 = ReadLongLengthPrefix(source, expectHeader, style, out fieldNumber, out bytesRead);
+            return checked((int)len64);
+        }
+        /// <summary>
+        /// Reads the length-prefix of a message from a stream without buffering additional data, allowing a fixed-length
+        /// reader to be created.
+        /// </summary>
+        public static long ReadLongLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber, out int bytesRead)
         {
             fieldNumber = 0;
             switch (style)
             {
                 case PrefixStyle.None:
                     bytesRead = 0;
-                    return int.MaxValue;
+                    return long.MaxValue;
                 case PrefixStyle.Base128:
-                    uint val;
+                    ulong val;
                     int tmpBytesRead;
                     bytesRead = 0;
                     if (expectHeader)
                     {
-                        tmpBytesRead = ProtoReader.TryReadUInt32Variant(source, out val);
+                        tmpBytesRead = ProtoReader.TryReadUInt64Variant(source, out val);
                         bytesRead += tmpBytesRead;
                         if (tmpBytesRead > 0)
                         {
@@ -1077,13 +1090,13 @@ namespace ProtoBuf
                                 throw new InvalidOperationException();
                             }
                             fieldNumber = (int)(val >> 3);
-                            tmpBytesRead = ProtoReader.TryReadUInt32Variant(source, out val);
+                            tmpBytesRead = ProtoReader.TryReadUInt64Variant(source, out val);
                             bytesRead += tmpBytesRead;
                             if (bytesRead == 0)
                             { // got a header, but no length
                                 throw EoF(null);
                             }
-                            return (int)val;
+                            return (long)val;
                         }
                         else
                         { // no header
@@ -1092,9 +1105,9 @@ namespace ProtoBuf
                         }
                     }
                     // check for a length
-                    tmpBytesRead = ProtoReader.TryReadUInt32Variant(source, out val);
+                    tmpBytesRead = ProtoReader.TryReadUInt64Variant(source, out val);
                     bytesRead += tmpBytesRead;
-                    return bytesRead < 0 ? -1 : (int)val;
+                    return bytesRead < 0 ? -1 : (long)val;
 
                 case PrefixStyle.Fixed32:
                     {
@@ -1129,39 +1142,35 @@ namespace ProtoBuf
             }
         }
         /// <returns>The number of bytes consumed; 0 if no data available</returns>
-        private static int TryReadUInt32Variant(Stream source, out uint value)
+        private static int TryReadUInt64Variant(Stream source, out ulong value)
         {
             value = 0;
             int b = source.ReadByte();
             if (b < 0) { return 0; }
             value = (uint)b;
             if ((value & 0x80) == 0) { return 1; }
-            value &= 0x7F;
 
+            int bytesRead = 1, shift = 7;
+            while(bytesRead < 9)
+            {
+                b = source.ReadByte();
+                if (b < 0) throw EoF(null);
+                value |= ((uint)b & 0x7F) << shift;
+                shift += 7;
+
+                if ((b & 0x80) == 0) return ++bytesRead;
+            }
             b = source.ReadByte();
             if (b < 0) throw EoF(null);
-            value |= ((uint)b & 0x7F) << 7;
-            if ((b & 0x80) == 0) return 2;
-
-            b = source.ReadByte();
-            if (b < 0) throw EoF(null);
-            value |= ((uint)b & 0x7F) << 14;
-            if ((b & 0x80) == 0) return 3;
-
-            b = source.ReadByte();
-            if (b < 0) throw EoF(null);
-            value |= ((uint)b & 0x7F) << 21;
-            if ((b & 0x80) == 0) return 4;
-
-            b = source.ReadByte();
-            if (b < 0) throw EoF(null);
-            value |= (uint)b << 28; // can only use 4 bits from this chunk
-            if ((b & 0xF0) == 0) return 5;
-
+            if((b & 1) == 0) // only use 1 bit from the last byte
+            {
+                value |= ((uint)b & 0x7F) << shift;
+                return ++bytesRead;
+            }
             throw new OverflowException();
         }
 
-        internal static void Seek(Stream source, int count, byte[] buffer)
+        internal static void Seek(Stream source, long count, byte[] buffer)
         {
             if (source.CanSeek)
             {
@@ -1175,7 +1184,7 @@ namespace ProtoBuf
                 {
                     count -= bytesRead;
                 }
-                while (count > 0 && (bytesRead = source.Read(buffer, 0, count)) > 0)
+                while (count > 0 && (bytesRead = source.Read(buffer, 0, (int)count)) > 0)
                 {
                     count -= bytesRead;
                 }
@@ -1190,7 +1199,7 @@ namespace ProtoBuf
                     {
                         count -= bytesRead;
                     }
-                    while (count > 0 && (bytesRead = source.Read(buffer, 0, count)) > 0)
+                    while (count > 0 && (bytesRead = source.Read(buffer, 0, (int)count)) > 0)
                     {
                         count -= bytesRead;
                     }
@@ -1365,8 +1374,11 @@ namespace ProtoBuf
             }
         }
 
-#region RECYCLER
+        #region RECYCLER
 
+        [Obsolete("32-bit")]
+        internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, int len)
+            => Create(source, model, context, (long)len);
         internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, long len)
         {
             ProtoReader reader = GetRecycled();

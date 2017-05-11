@@ -368,7 +368,7 @@ namespace ProtoBuf
         {
             if (writer == null) throw new ArgumentNullException("writer");
             if (writer.wireType != WireType.None) { throw CreateException(writer); }
-            int value = token.value;
+            int value = (int)token.value64;
             if (writer.depth <= 0) throw CreateException(writer);
             if (writer.depth-- > RecursionCheckDepth)
             {

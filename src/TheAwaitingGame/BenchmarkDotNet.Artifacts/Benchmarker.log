@@ -1,0 +1,1613 @@
+// ***** BenchmarkRunner: Start   *****
+// Found benchmarks:
+//   Benchmarker.Sync: Job-RZXVEI(Force=False)
+//   Benchmarker.TaskAsync: Job-RZXVEI(Force=False)
+//   Benchmarker.TaskCheckedAsync: Job-RZXVEI(Force=False)
+//   Benchmarker.ValueTaskAsync: Job-RZXVEI(Force=False)
+//   Benchmarker.ValueTaskWrappedAsync: Job-RZXVEI(Force=False)
+//   Benchmarker.ValueTaskDecimalReferenceAsync: Job-RZXVEI(Force=False)
+//   Benchmarker.ValueTaskCheckedAsync: Job-RZXVEI(Force=False)
+//   Benchmarker.HandCrankedAsync: Job-RZXVEI(Force=False)
+//   Benchmarker.AssertCompletedAsync: Job-RZXVEI(Force=False)
+//   Benchmarker.TaskDoubleAsync: Job-RZXVEI(Force=False)
+//   Benchmarker.ValueTaskDoubleAsync: Job-RZXVEI(Force=False)
+
+// Validating benchmarks:
+// **************************
+// Benchmark: Benchmarker.Sync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 3.93s
+// dotnet build took 4.13s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-NGRZFH(Force=False)
+
+Pilot 1: 4000 op, 82313101.8 ns, 20.5783 us/op
+Pilot 2: 8000 op, 162061463.33 ns, 20.2577 us/op
+Pilot 3: 16000 op, 323538356.96 ns, 20.2211 us/op
+
+IdleWarmup 1: 16000 op, 5834.76 ns, 0.3647 ns/op
+IdleWarmup 2: 16000 op, 729.34 ns, 0.0456 ns/op
+IdleWarmup 3: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleWarmup 4: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleWarmup 5: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleWarmup 6: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleWarmup 7: 16000 op, 364.67 ns, 0.0228 ns/op
+
+IdleTarget 1: 16000 op, 1094.02 ns, 0.0684 ns/op
+IdleTarget 2: 16000 op, 1458.69 ns, 0.0912 ns/op
+IdleTarget 3: 16000 op, 1094.02 ns, 0.0684 ns/op
+IdleTarget 4: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 5: 16000 op, 729.34 ns, 0.0456 ns/op
+IdleTarget 6: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 7: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 8: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 9: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 10: 16000 op, 729.34 ns, 0.0456 ns/op
+IdleTarget 11: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 12: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 13: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 14: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 15: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 16: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 17: 16000 op, 0 ns, 0.0000 ns/op
+IdleTarget 18: 16000 op, 729.34 ns, 0.0456 ns/op
+IdleTarget 19: 16000 op, 364.67 ns, 0.0228 ns/op
+IdleTarget 20: 16000 op, 364.67 ns, 0.0228 ns/op
+
+MainWarmup 1: 16000 op, 327380908.97 ns, 20.4613 us/op
+MainWarmup 2: 16000 op, 323015416.89 ns, 20.1885 us/op
+MainWarmup 3: 16000 op, 323429684.62 ns, 20.2144 us/op
+MainWarmup 4: 16000 op, 325235541.84 ns, 20.3272 us/op
+MainWarmup 5: 16000 op, 320785081.11 ns, 20.0491 us/op
+MainWarmup 6: 16000 op, 320987474.24 ns, 20.0617 us/op
+MainWarmup 7: 16000 op, 325386516.17 ns, 20.3367 us/op
+MainWarmup 8: 16000 op, 322572340.04 ns, 20.1608 us/op
+
+MainTarget 1: 16000 op, 321971360.1 ns, 20.1232 us/op
+MainTarget 2: 16000 op, 323568989.43 ns, 20.2231 us/op
+MainTarget 3: 16000 op, 322750300.13 ns, 20.1719 us/op
+MainTarget 4: 16000 op, 322037001.11 ns, 20.1273 us/op
+MainTarget 5: 16000 op, 331672007.9 ns, 20.7295 us/op
+MainTarget 6: 16000 op, 322179587.98 ns, 20.1362 us/op
+MainTarget 7: 16000 op, 322783485.3 ns, 20.1740 us/op
+MainTarget 8: 16000 op, 326812749.53 ns, 20.4258 us/op
+MainTarget 9: 16000 op, 322422095.06 ns, 20.1514 us/op
+MainTarget 10: 16000 op, 322181776.01 ns, 20.1364 us/op
+MainTarget 11: 16000 op, 324390960.79 ns, 20.2744 us/op
+MainTarget 12: 16000 op, 324795382.37 ns, 20.2997 us/op
+MainTarget 13: 16000 op, 323908134.67 ns, 20.2443 us/op
+MainTarget 14: 16000 op, 324273536.31 ns, 20.2671 us/op
+MainTarget 15: 16000 op, 326074288.12 ns, 20.3796 us/op
+
+Result 1: 16000 op, 321970831.32 ns, 20.1232 us/op
+Result 2: 16000 op, 323568460.66 ns, 20.2230 us/op
+Result 3: 16000 op, 322749771.35 ns, 20.1719 us/op
+Result 4: 16000 op, 322036472.34 ns, 20.1273 us/op
+Result 5: 16000 op, 322179059.2 ns, 20.1362 us/op
+Result 6: 16000 op, 322782956.53 ns, 20.1739 us/op
+Result 7: 16000 op, 326812220.75 ns, 20.4258 us/op
+Result 8: 16000 op, 322421566.28 ns, 20.1513 us/op
+Result 9: 16000 op, 322181247.24 ns, 20.1363 us/op
+Result 10: 16000 op, 324390432.02 ns, 20.2744 us/op
+Result 11: 16000 op, 324794853.6 ns, 20.2997 us/op
+Result 12: 16000 op, 323907605.9 ns, 20.2442 us/op
+Result 13: 16000 op, 324273007.54 ns, 20.2671 us/op
+Result 14: 16000 op, 326073759.35 ns, 20.3796 us/op
+GC:  0 0 0 0 240000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-MBPWJM(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 16000 op, 319023531.57 ns, 19.9390 us/op
+Result 2: 16000 op, 323071029.41 ns, 20.1919 us/op
+Result 3: 16000 op, 319051976.01 ns, 19.9407 us/op
+Result 4: 16000 op, 320176260.71 ns, 20.0110 us/op
+Result 5: 16000 op, 321867610.83 ns, 20.1167 us/op
+Result 6: 16000 op, 320329787.75 ns, 20.0206 us/op
+Result 7: 16000 op, 319266403.32 ns, 19.9542 us/op
+Result 8: 16000 op, 322322721.86 ns, 20.1452 us/op
+Result 9: 16000 op, 320181366.12 ns, 20.0113 us/op
+Result 10: 16000 op, 319346266.56 ns, 19.9591 us/op
+Result 11: 16000 op, 320446482.88 ns, 20.0279 us/op
+Result 12: 16000 op, 320368443.01 ns, 20.0230 us/op
+Result 13: 16000 op, 320380841.87 ns, 20.0238 us/op
+Result 14: 16000 op, 319380181.08 ns, 19.9613 us/op
+Result 15: 16000 op, 321536123.71 ns, 20.0960 us/op
+GC:  0 0 0 31744 240000
+
+
+Mean = 20.2238 us, StdErr = 0.0258 us (0.13%); N = 14, StdDev = 0.0964 us
+Min = 20.1232 us, Q1 = 20.1363 us, Median = 20.1985 us, Q3 = 20.2744 us, Max = 20.4258 us
+IQR = 0.1381 us, LowerFence = 19.9292 us, UpperFence = 20.4815 us
+ConfidenceInterval = [20.1151 us; 20.3326 us] (CI 99.9%)
+Skewness = 0.7, Kurtosis = 2.18
+
+
+// **************************
+// Benchmark: Benchmarker.TaskAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.41s
+// dotnet build took 4.09s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-FNKBAB(Force=False)
+
+Pilot 1: 4000 op, 123323054.44 ns, 30.8308 us/op
+Pilot 2: 8000 op, 243562439.92 ns, 30.4453 us/op
+
+IdleWarmup 1: 8000 op, 5834.76 ns, 0.7293 ns/op
+IdleWarmup 2: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleWarmup 3: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleWarmup 4: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleWarmup 5: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleWarmup 6: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleWarmup 7: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleWarmup 8: 8000 op, 1094.02 ns, 0.1368 ns/op
+
+IdleTarget 1: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 2: 8000 op, 4376.07 ns, 0.5470 ns/op
+IdleTarget 3: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 4: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 5: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 6: 8000 op, 2917.38 ns, 0.3647 ns/op
+IdleTarget 7: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 8: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 9: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 10: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 11: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 12: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 13: 8000 op, 364.67 ns, 0.0456 ns/op
+IdleTarget 14: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 15: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 16: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 17: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 18: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 19: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 20: 8000 op, 729.34 ns, 0.0912 ns/op
+
+MainWarmup 1: 8000 op, 258765628.03 ns, 32.3457 us/op
+MainWarmup 2: 8000 op, 244340285.93 ns, 30.5425 us/op
+MainWarmup 3: 8000 op, 240393437.65 ns, 30.0492 us/op
+MainWarmup 4: 8000 op, 246294564.78 ns, 30.7868 us/op
+MainWarmup 5: 8000 op, 242282075.48 ns, 30.2853 us/op
+MainWarmup 6: 8000 op, 242005653.88 ns, 30.2507 us/op
+MainWarmup 7: 8000 op, 243794006.83 ns, 30.4743 us/op
+MainWarmup 8: 8000 op, 241717562.76 ns, 30.2147 us/op
+
+MainTarget 1: 8000 op, 250595509.86 ns, 31.3244 us/op
+MainTarget 2: 8000 op, 245566678.87 ns, 30.6958 us/op
+MainTarget 3: 8000 op, 249843920.26 ns, 31.2305 us/op
+MainTarget 4: 8000 op, 244729391.27 ns, 30.5912 us/op
+MainTarget 5: 8000 op, 242920981.35 ns, 30.3651 us/op
+MainTarget 6: 8000 op, 246534883.82 ns, 30.8169 us/op
+MainTarget 7: 8000 op, 244223226.12 ns, 30.5279 us/op
+MainTarget 8: 8000 op, 242939214.96 ns, 30.3674 us/op
+MainTarget 9: 8000 op, 243073049.7 ns, 30.3841 us/op
+MainTarget 10: 8000 op, 246519202.91 ns, 30.8149 us/op
+MainTarget 11: 8000 op, 244248753.19 ns, 30.5311 us/op
+MainTarget 12: 8000 op, 242430132.43 ns, 30.3038 us/op
+MainTarget 13: 8000 op, 243156924.32 ns, 30.3946 us/op
+MainTarget 14: 8000 op, 245099533.66 ns, 30.6374 us/op
+MainTarget 15: 8000 op, 244044536.7 ns, 30.5056 us/op
+
+Result 1: 8000 op, 250594251.74 ns, 31.3243 us/op
+Result 2: 8000 op, 245565420.75 ns, 30.6957 us/op
+Result 3: 8000 op, 249842662.14 ns, 31.2303 us/op
+Result 4: 8000 op, 244728133.15 ns, 30.5910 us/op
+Result 5: 8000 op, 242919723.23 ns, 30.3650 us/op
+Result 6: 8000 op, 246533625.7 ns, 30.8167 us/op
+Result 7: 8000 op, 244221968.01 ns, 30.5277 us/op
+Result 8: 8000 op, 242937956.84 ns, 30.3672 us/op
+Result 9: 8000 op, 243071791.58 ns, 30.3840 us/op
+Result 10: 8000 op, 246517944.79 ns, 30.8147 us/op
+Result 11: 8000 op, 244247495.07 ns, 30.5309 us/op
+Result 12: 8000 op, 242428874.31 ns, 30.3036 us/op
+Result 13: 8000 op, 243155666.21 ns, 30.3945 us/op
+Result 14: 8000 op, 245098275.54 ns, 30.6373 us/op
+Result 15: 8000 op, 244043278.58 ns, 30.5054 us/op
+GC:  928 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-OIKZTQ(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 246076600.15 ns, 30.7596 us/op
+Result 2: 8000 op, 248341944.46 ns, 31.0427 us/op
+Result 3: 8000 op, 245214514.83 ns, 30.6518 us/op
+Result 4: 8000 op, 248284690.91 ns, 31.0356 us/op
+Result 5: 8000 op, 245891346.62 ns, 30.7364 us/op
+Result 6: 8000 op, 247865682.44 ns, 30.9832 us/op
+Result 7: 8000 op, 247932782.14 ns, 30.9916 us/op
+Result 8: 8000 op, 245380805.4 ns, 30.6726 us/op
+Result 9: 8000 op, 244999358.18 ns, 30.6249 us/op
+Result 10: 8000 op, 247301169.72 ns, 30.9126 us/op
+Result 11: 8000 op, 246023357.99 ns, 30.7529 us/op
+Result 12: 8000 op, 248012645.38 ns, 31.0016 us/op
+Result 13: 8000 op, 248574605.39 ns, 31.0718 us/op
+Result 14: 8000 op, 248064064.17 ns, 31.0080 us/op
+Result 15: 8000 op, 246175426.34 ns, 30.7719 us/op
+GC:  927 0 0 2909939520 120000
+
+
+Mean = 30.6326 us, StdErr = 0.0791 us (0.26%); N = 15, StdDev = 0.3065 us
+Min = 30.3036 us, Q1 = 30.3840 us, Median = 30.5309 us, Q3 = 30.8147 us, Max = 31.3243 us
+IQR = 0.4308 us, LowerFence = 29.7378 us, UpperFence = 31.4609 us
+ConfidenceInterval = [30.3049 us; 30.9602 us] (CI 99.9%)
+Skewness = 1.04, Kurtosis = 2.93
+
+
+// **************************
+// Benchmark: Benchmarker.TaskCheckedAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.43s
+// dotnet build took 4.11s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-AIIHXL(Force=False)
+
+Pilot 1: 4000 op, 126797287.42 ns, 31.6993 us/op
+Pilot 2: 8000 op, 246285083.3 ns, 30.7856 us/op
+
+IdleWarmup 1: 8000 op, 5834.76 ns, 0.7293 ns/op
+IdleWarmup 2: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleWarmup 3: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleWarmup 4: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleWarmup 5: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleWarmup 6: 8000 op, 5470.08 ns, 0.6838 ns/op
+IdleWarmup 7: 8000 op, 729.34 ns, 0.0912 ns/op
+
+IdleTarget 1: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 2: 8000 op, 3282.05 ns, 0.4103 ns/op
+IdleTarget 3: 8000 op, 4011.4 ns, 0.5014 ns/op
+IdleTarget 4: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 5: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 6: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 7: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleTarget 8: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 9: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 10: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 11: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 12: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 13: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 14: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 15: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 16: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 17: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 18: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 19: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 20: 8000 op, 729.34 ns, 0.0912 ns/op
+
+MainWarmup 1: 8000 op, 260634208.89 ns, 32.5793 us/op
+MainWarmup 2: 8000 op, 242887796.17 ns, 30.3610 us/op
+MainWarmup 3: 8000 op, 241075374.85 ns, 30.1344 us/op
+MainWarmup 4: 8000 op, 248012900.65 ns, 31.0016 us/op
+MainWarmup 5: 8000 op, 243199955.66 ns, 30.4000 us/op
+MainWarmup 6: 8000 op, 241311317.82 ns, 30.1639 us/op
+MainWarmup 7: 8000 op, 241807272.15 ns, 30.2259 us/op
+MainWarmup 8: 8000 op, 245767613.31 ns, 30.7210 us/op
+MainWarmup 9: 8000 op, 241995807.73 ns, 30.2495 us/op
+
+MainTarget 1: 8000 op, 242331670.91 ns, 30.2915 us/op
+MainTarget 2: 8000 op, 238808571.84 ns, 29.8511 us/op
+MainTarget 3: 8000 op, 239791363.68 ns, 29.9739 us/op
+MainTarget 4: 8000 op, 240758839.29 ns, 30.0949 us/op
+MainTarget 5: 8000 op, 242084787.77 ns, 30.2606 us/op
+MainTarget 6: 8000 op, 240629380.63 ns, 30.0787 us/op
+MainTarget 7: 8000 op, 238211603.29 ns, 29.7765 us/op
+MainTarget 8: 8000 op, 240410941.92 ns, 30.0514 us/op
+MainTarget 9: 8000 op, 239203876.61 ns, 29.9005 us/op
+MainTarget 10: 8000 op, 239055090.31 ns, 29.8819 us/op
+MainTarget 11: 8000 op, 237976389.66 ns, 29.7470 us/op
+MainTarget 12: 8000 op, 242480457.21 ns, 30.3101 us/op
+MainTarget 13: 8000 op, 240905072.88 ns, 30.1131 us/op
+MainTarget 14: 8000 op, 238809301.19 ns, 29.8512 us/op
+MainTarget 15: 8000 op, 239263682.87 ns, 29.9080 us/op
+
+Result 1: 8000 op, 242330285.16 ns, 30.2913 us/op
+Result 2: 8000 op, 238807186.09 ns, 29.8509 us/op
+Result 3: 8000 op, 239789977.93 ns, 29.9737 us/op
+Result 4: 8000 op, 240757453.54 ns, 30.0947 us/op
+Result 5: 8000 op, 242083402.01 ns, 30.2604 us/op
+Result 6: 8000 op, 240627994.87 ns, 30.0785 us/op
+Result 7: 8000 op, 238210217.53 ns, 29.7763 us/op
+Result 8: 8000 op, 240409556.16 ns, 30.0512 us/op
+Result 9: 8000 op, 239202490.86 ns, 29.9003 us/op
+Result 10: 8000 op, 239053704.56 ns, 29.8817 us/op
+Result 11: 8000 op, 237975003.9 ns, 29.7469 us/op
+Result 12: 8000 op, 242479071.46 ns, 30.3099 us/op
+Result 13: 8000 op, 240903687.13 ns, 30.1130 us/op
+Result 14: 8000 op, 238807915.43 ns, 29.8510 us/op
+Result 15: 8000 op, 239262297.11 ns, 29.9078 us/op
+GC:  928 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-RPAZCU(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 240962636.41 ns, 30.1203 us/op
+Result 2: 8000 op, 238305998.71 ns, 29.7882 us/op
+Result 3: 8000 op, 242091297.17 ns, 30.2614 us/op
+Result 4: 8000 op, 239296448.68 ns, 29.9121 us/op
+Result 5: 8000 op, 239880653.7 ns, 29.9851 us/op
+Result 6: 8000 op, 240063719.19 ns, 30.0080 us/op
+Result 7: 8000 op, 242383035.01 ns, 30.2979 us/op
+Result 8: 8000 op, 238215195.31 ns, 29.7769 us/op
+Result 9: 8000 op, 238069691.06 ns, 29.7587 us/op
+Result 10: 8000 op, 245481655.52 ns, 30.6852 us/op
+Result 11: 8000 op, 241037394.23 ns, 30.1297 us/op
+Result 12: 8000 op, 239901440.02 ns, 29.9877 us/op
+Result 13: 8000 op, 238936517.12 ns, 29.8671 us/op
+Result 14: 8000 op, 239234819.06 ns, 29.9044 us/op
+GC:  927 0 0 2909939520 120000
+
+
+Mean = 30.0058 us, StdErr = 0.0473 us (0.16%); N = 15, StdDev = 0.1833 us
+Min = 29.7469 us, Q1 = 29.8510 us, Median = 29.9737 us, Q3 = 30.1130 us, Max = 30.3099 us
+IQR = 0.2620 us, LowerFence = 29.4580 us, UpperFence = 30.5059 us
+ConfidenceInterval = [29.8099 us; 30.2018 us] (CI 99.9%)
+Skewness = 0.32, Kurtosis = 1.68
+
+
+// **************************
+// Benchmark: Benchmarker.ValueTaskAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.49s
+// dotnet build took 4.12s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-SKXLCS(Force=False)
+
+Pilot 1: 4000 op, 141419187.89 ns, 35.3548 us/op
+Pilot 2: 8000 op, 282417908.62 ns, 35.3022 us/op
+
+IdleWarmup 1: 8000 op, 6928.77 ns, 0.8661 ns/op
+IdleWarmup 2: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleWarmup 3: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 4: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 5: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 6: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 7: 8000 op, 1458.69 ns, 0.1823 ns/op
+
+IdleTarget 1: 8000 op, 7293.45 ns, 0.9117 ns/op
+IdleTarget 2: 8000 op, 3646.72 ns, 0.4558 ns/op
+IdleTarget 3: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 4: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 5: 8000 op, 7658.12 ns, 0.9573 ns/op
+IdleTarget 6: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 7: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 8: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 9: 8000 op, 5105.41 ns, 0.6382 ns/op
+IdleTarget 10: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 11: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 12: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 13: 8000 op, 4740.74 ns, 0.5926 ns/op
+IdleTarget 14: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 15: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 16: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 17: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 18: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleTarget 19: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 20: 8000 op, 1458.69 ns, 0.1823 ns/op
+
+MainWarmup 1: 8000 op, 288190306.43 ns, 36.0238 us/op
+MainWarmup 2: 8000 op, 285066158.85 ns, 35.6333 us/op
+MainWarmup 3: 8000 op, 283092552.37 ns, 35.3866 us/op
+MainWarmup 4: 8000 op, 280761567.04 ns, 35.0952 us/op
+MainWarmup 5: 8000 op, 281987959.98 ns, 35.2485 us/op
+MainWarmup 6: 8000 op, 288948460.13 ns, 36.1186 us/op
+MainWarmup 7: 8000 op, 281053669.55 ns, 35.1317 us/op
+MainWarmup 8: 8000 op, 280655812.07 ns, 35.0820 us/op
+MainWarmup 9: 8000 op, 285107366.82 ns, 35.6384 us/op
+MainWarmup 10: 8000 op, 281062786.36 ns, 35.1328 us/op
+
+MainTarget 1: 8000 op, 283372620.7 ns, 35.4216 us/op
+MainTarget 2: 8000 op, 280435185.33 ns, 35.0544 us/op
+MainTarget 3: 8000 op, 283851800.1 ns, 35.4815 us/op
+MainTarget 4: 8000 op, 284582603.38 ns, 35.5728 us/op
+MainTarget 5: 8000 op, 282635253.31 ns, 35.3294 us/op
+MainTarget 6: 8000 op, 284710238.69 ns, 35.5888 us/op
+MainTarget 7: 8000 op, 281564940.11 ns, 35.1956 us/op
+MainTarget 8: 8000 op, 287777132.71 ns, 35.9721 us/op
+MainTarget 9: 8000 op, 278289818.2 ns, 34.7862 us/op
+MainTarget 10: 8000 op, 281674706.48 ns, 35.2093 us/op
+MainTarget 11: 8000 op, 279290478.99 ns, 34.9113 us/op
+MainTarget 12: 8000 op, 278731071.68 ns, 34.8414 us/op
+MainTarget 13: 8000 op, 277560473.61 ns, 34.6951 us/op
+MainTarget 14: 8000 op, 280842524.29 ns, 35.1053 us/op
+MainTarget 15: 8000 op, 278675641.5 ns, 34.8345 us/op
+
+Result 1: 8000 op, 283370013.29 ns, 35.4213 us/op
+Result 2: 8000 op, 280432577.93 ns, 35.0541 us/op
+Result 3: 8000 op, 283849192.69 ns, 35.4811 us/op
+Result 4: 8000 op, 284579995.97 ns, 35.5725 us/op
+Result 5: 8000 op, 282632645.9 ns, 35.3291 us/op
+Result 6: 8000 op, 284707631.28 ns, 35.5885 us/op
+Result 7: 8000 op, 281562332.71 ns, 35.1953 us/op
+Result 8: 8000 op, 287774525.31 ns, 35.9718 us/op
+Result 9: 8000 op, 278287210.8 ns, 34.7859 us/op
+Result 10: 8000 op, 281672099.07 ns, 35.2090 us/op
+Result 11: 8000 op, 279287871.58 ns, 34.9110 us/op
+Result 12: 8000 op, 278728464.28 ns, 34.8411 us/op
+Result 13: 8000 op, 277557866.2 ns, 34.6947 us/op
+Result 14: 8000 op, 280839916.88 ns, 35.1050 us/op
+Result 15: 8000 op, 278673034.09 ns, 34.8341 us/op
+GC:  0 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-OWBOJM(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 278081389.75 ns, 34.7602 us/op
+Result 2: 8000 op, 277512500.97 ns, 34.6891 us/op
+Result 3: 8000 op, 281194597.16 ns, 35.1493 us/op
+Result 4: 8000 op, 277502654.81 ns, 34.6878 us/op
+Result 5: 8000 op, 278858871.09 ns, 34.8574 us/op
+Result 6: 8000 op, 278652101.9 ns, 34.8315 us/op
+Result 7: 8000 op, 278922324.07 ns, 34.8653 us/op
+Result 8: 8000 op, 277480045.13 ns, 34.6850 us/op
+Result 9: 8000 op, 278596307.04 ns, 34.8245 us/op
+Result 10: 8000 op, 279820876.61 ns, 34.9776 us/op
+Result 11: 8000 op, 277706141.96 ns, 34.7133 us/op
+Result 12: 8000 op, 280090004.77 ns, 35.0113 us/op
+Result 13: 8000 op, 278379327.02 ns, 34.7974 us/op
+Result 14: 8000 op, 281134061.56 ns, 35.1418 us/op
+Result 15: 8000 op, 277644877.01 ns, 34.7056 us/op
+GC:  0 0 0 23576 120000
+
+
+Mean = 35.1996 us, StdErr = 0.0934 us (0.27%); N = 15, StdDev = 0.3619 us
+Min = 34.6947 us, Q1 = 34.8411 us, Median = 35.1953 us, Q3 = 35.4811 us, Max = 35.9718 us
+IQR = 0.6401 us, LowerFence = 33.8809 us, UpperFence = 36.4413 us
+ConfidenceInterval = [34.8128 us; 35.5865 us] (CI 99.9%)
+Skewness = 0.4, Kurtosis = 2.11
+
+
+// **************************
+// Benchmark: Benchmarker.ValueTaskWrappedAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.52s
+// dotnet build took 4.43s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-TVGKTS(Force=False)
+
+Pilot 1: 4000 op, 155368267.97 ns, 38.8421 us/op
+Pilot 2: 8000 op, 299915250.16 ns, 37.4894 us/op
+
+IdleWarmup 1: 8000 op, 11304.84 ns, 1.4131 ns/op
+IdleWarmup 2: 8000 op, 3282.05 ns, 0.4103 ns/op
+IdleWarmup 3: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 4: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 5: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleWarmup 6: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 7: 8000 op, 1458.69 ns, 0.1823 ns/op
+
+IdleTarget 1: 8000 op, 3646.72 ns, 0.4558 ns/op
+IdleTarget 2: 8000 op, 4011.4 ns, 0.5014 ns/op
+IdleTarget 3: 8000 op, 2917.38 ns, 0.3647 ns/op
+IdleTarget 4: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 5: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 6: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 7: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 8: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 9: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 10: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 11: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 12: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 13: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 14: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 15: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 16: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 17: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 18: 8000 op, 3282.05 ns, 0.4103 ns/op
+IdleTarget 19: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 20: 8000 op, 1458.69 ns, 0.1823 ns/op
+
+MainWarmup 1: 8000 op, 276611596.29 ns, 34.5764 us/op
+MainWarmup 2: 8000 op, 280335265.12 ns, 35.0419 us/op
+MainWarmup 3: 8000 op, 271133489.02 ns, 33.8917 us/op
+MainWarmup 4: 8000 op, 272026571.48 ns, 34.0033 us/op
+MainWarmup 5: 8000 op, 265156145.38 ns, 33.1445 us/op
+MainWarmup 6: 8000 op, 274383083.87 ns, 34.2979 us/op
+
+MainTarget 1: 8000 op, 263973877.79 ns, 32.9967 us/op
+MainTarget 2: 8000 op, 262321912.28 ns, 32.7902 us/op
+MainTarget 3: 8000 op, 263812327.97 ns, 32.9765 us/op
+MainTarget 4: 8000 op, 273983767.71 ns, 34.2480 us/op
+MainTarget 5: 8000 op, 266232658.01 ns, 33.2791 us/op
+MainTarget 6: 8000 op, 264936612.66 ns, 33.1171 us/op
+MainTarget 7: 8000 op, 267888634.91 ns, 33.4861 us/op
+MainTarget 8: 8000 op, 275112428.47 ns, 34.3891 us/op
+MainTarget 9: 8000 op, 266946686.37 ns, 33.3683 us/op
+MainTarget 10: 8000 op, 266167017 ns, 33.2709 us/op
+MainTarget 11: 8000 op, 267020714.85 ns, 33.3776 us/op
+MainTarget 12: 8000 op, 269771437.99 ns, 33.7214 us/op
+MainTarget 13: 8000 op, 265427096.9 ns, 33.1784 us/op
+MainTarget 14: 8000 op, 263524966.19 ns, 32.9406 us/op
+MainTarget 15: 8000 op, 266683392.97 ns, 33.3354 us/op
+
+Result 1: 8000 op, 263971780.93 ns, 32.9965 us/op
+Result 2: 8000 op, 262319815.42 ns, 32.7900 us/op
+Result 3: 8000 op, 263810231.1 ns, 32.9763 us/op
+Result 4: 8000 op, 266230561.14 ns, 33.2788 us/op
+Result 5: 8000 op, 264934515.8 ns, 33.1168 us/op
+Result 6: 8000 op, 267886538.05 ns, 33.4858 us/op
+Result 7: 8000 op, 266944589.5 ns, 33.3681 us/op
+Result 8: 8000 op, 266164920.13 ns, 33.2706 us/op
+Result 9: 8000 op, 267018617.98 ns, 33.3773 us/op
+Result 10: 8000 op, 269769341.12 ns, 33.7212 us/op
+Result 11: 8000 op, 265425000.04 ns, 33.1781 us/op
+Result 12: 8000 op, 263522869.33 ns, 32.9404 us/op
+Result 13: 8000 op, 266681296.1 ns, 33.3352 us/op
+GC:  153 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-CXKRTY(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 297369086.72 ns, 37.1711 us/op
+Result 2: 8000 op, 287401863.47 ns, 35.9252 us/op
+Result 3: 8000 op, 285839607.34 ns, 35.7300 us/op
+Result 4: 8000 op, 287137840.72 ns, 35.8922 us/op
+Result 5: 8000 op, 284423949.48 ns, 35.5530 us/op
+Result 6: 8000 op, 284313453.77 ns, 35.5392 us/op
+Result 7: 8000 op, 284531892.48 ns, 35.5665 us/op
+Result 8: 8000 op, 286386980.46 ns, 35.7984 us/op
+Result 9: 8000 op, 280952633.87 ns, 35.1191 us/op
+Result 10: 8000 op, 278715004.65 ns, 34.8394 us/op
+Result 11: 8000 op, 282877738.94 ns, 35.3597 us/op
+Result 12: 8000 op, 276814332.63 ns, 34.6018 us/op
+Result 13: 8000 op, 278679631.44 ns, 34.8350 us/op
+Result 14: 8000 op, 278947665.58 ns, 34.8685 us/op
+Result 15: 8000 op, 280925283.45 ns, 35.1157 us/op
+GC:  152 1 0 478615168 120000
+
+
+Mean = 33.2181 us, StdErr = 0.0704 us (0.21%); N = 13, StdDev = 0.2537 us
+Min = 32.7900 us, Q1 = 32.9864 us, Median = 33.2706 us, Q3 = 33.3727 us, Max = 33.7212 us
+IQR = 0.3863 us, LowerFence = 32.4069 us, UpperFence = 33.9522 us
+ConfidenceInterval = [32.9142 us; 33.5219 us] (CI 99.9%)
+Skewness = 0.14, Kurtosis = 2.15
+
+
+// **************************
+// Benchmark: Benchmarker.ValueTaskDecimalReferenceAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.69s
+// dotnet build took 4.31s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-AHAUSB(Force=False)
+
+Pilot 1: 4000 op, 127406654.83 ns, 31.8517 us/op
+Pilot 2: 8000 op, 238531420.89 ns, 29.8164 us/op
+
+IdleWarmup 1: 8000 op, 6928.77 ns, 0.8661 ns/op
+IdleWarmup 2: 8000 op, 2917.38 ns, 0.3647 ns/op
+IdleWarmup 3: 8000 op, 3646.72 ns, 0.4558 ns/op
+IdleWarmup 4: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 5: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 6: 8000 op, 1458.69 ns, 0.1823 ns/op
+
+IdleTarget 1: 8000 op, 3282.05 ns, 0.4103 ns/op
+IdleTarget 2: 8000 op, 5105.41 ns, 0.6382 ns/op
+IdleTarget 3: 8000 op, 2917.38 ns, 0.3647 ns/op
+IdleTarget 4: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 5: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 6: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 7: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 8: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 9: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 10: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 11: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 12: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 13: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 14: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 15: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 16: 8000 op, 2917.38 ns, 0.3647 ns/op
+IdleTarget 17: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 18: 8000 op, 3646.72 ns, 0.4558 ns/op
+IdleTarget 19: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleTarget 20: 8000 op, 4740.74 ns, 0.5926 ns/op
+
+MainWarmup 1: 8000 op, 253845834.06 ns, 31.7307 us/op
+MainWarmup 2: 8000 op, 239456959.19 ns, 29.9321 us/op
+MainWarmup 3: 8000 op, 243544206.31 ns, 30.4430 us/op
+MainWarmup 4: 8000 op, 239966041.72 ns, 29.9958 us/op
+MainWarmup 5: 8000 op, 245674257.2 ns, 30.7093 us/op
+MainWarmup 6: 8000 op, 239760001.87 ns, 29.9700 us/op
+
+MainTarget 1: 8000 op, 237614999.41 ns, 29.7019 us/op
+MainTarget 2: 8000 op, 239741038.91 ns, 29.9676 us/op
+MainTarget 3: 8000 op, 249156512.97 ns, 31.1446 us/op
+MainTarget 4: 8000 op, 240414223.97 ns, 30.0518 us/op
+MainTarget 5: 8000 op, 241305847.74 ns, 30.1632 us/op
+MainTarget 6: 8000 op, 236457529.53 ns, 29.5572 us/op
+MainTarget 7: 8000 op, 236327706.2 ns, 29.5410 us/op
+MainTarget 8: 8000 op, 249847566.98 ns, 31.2309 us/op
+MainTarget 9: 8000 op, 237366292.9 ns, 29.6708 us/op
+MainTarget 10: 8000 op, 245934633.22 ns, 30.7418 us/op
+MainTarget 11: 8000 op, 239933950.55 ns, 29.9917 us/op
+MainTarget 12: 8000 op, 238624047.66 ns, 29.8280 us/op
+MainTarget 13: 8000 op, 241475785.03 ns, 30.1845 us/op
+MainTarget 14: 8000 op, 236997973.88 ns, 29.6247 us/op
+MainTarget 15: 8000 op, 250300854.65 ns, 31.2876 us/op
+
+Result 1: 8000 op, 237612774.91 ns, 29.7016 us/op
+Result 2: 8000 op, 239738814.41 ns, 29.9674 us/op
+Result 3: 8000 op, 249154288.47 ns, 31.1443 us/op
+Result 4: 8000 op, 240411999.47 ns, 30.0515 us/op
+Result 5: 8000 op, 241303623.24 ns, 30.1630 us/op
+Result 6: 8000 op, 236455305.03 ns, 29.5569 us/op
+Result 7: 8000 op, 236325481.7 ns, 29.5407 us/op
+Result 8: 8000 op, 249845342.48 ns, 31.2307 us/op
+Result 9: 8000 op, 237364068.4 ns, 29.6705 us/op
+Result 10: 8000 op, 245932408.72 ns, 30.7416 us/op
+Result 11: 8000 op, 239931726.05 ns, 29.9915 us/op
+Result 12: 8000 op, 238621823.16 ns, 29.8277 us/op
+Result 13: 8000 op, 241473560.53 ns, 30.1842 us/op
+Result 14: 8000 op, 236995749.38 ns, 29.6245 us/op
+Result 15: 8000 op, 250298630.14 ns, 31.2873 us/op
+GC:  371 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-PCAIGS(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 239137907.39 ns, 29.8922 us/op
+Result 2: 8000 op, 240684117.94 ns, 30.0855 us/op
+Result 3: 8000 op, 248233928.53 ns, 31.0292 us/op
+Result 4: 8000 op, 237223377.83 ns, 29.6529 us/op
+Result 5: 8000 op, 238374283.6 ns, 29.7968 us/op
+Result 6: 8000 op, 235529475 ns, 29.4412 us/op
+Result 7: 8000 op, 235568130.27 ns, 29.4460 us/op
+Result 8: 8000 op, 241629713.21 ns, 30.2037 us/op
+Result 9: 8000 op, 237396597.17 ns, 29.6746 us/op
+Result 10: 8000 op, 239448608.19 ns, 29.9311 us/op
+Result 11: 8000 op, 240215514.03 ns, 30.0269 us/op
+Result 12: 8000 op, 240984243.24 ns, 30.1230 us/op
+Result 13: 8000 op, 251187409.47 ns, 31.3984 us/op
+Result 14: 8000 op, 243333826.86 ns, 30.4167 us/op
+GC:  371 0 0 1163959088 120000
+
+
+Mean = 30.1789 us, StdErr = 0.1602 us (0.53%); N = 15, StdDev = 0.6205 us
+Min = 29.5407 us, Q1 = 29.6705 us, Median = 29.9915 us, Q3 = 30.7416 us, Max = 31.2873 us
+IQR = 1.0710 us, LowerFence = 28.0639 us, UpperFence = 32.3481 us
+ConfidenceInterval = [29.5155 us; 30.8423 us] (CI 99.9%)
+Skewness = 0.73, Kurtosis = 1.91
+
+
+// **************************
+// Benchmark: Benchmarker.ValueTaskCheckedAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.57s
+// dotnet build took 4.26s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-HJPWNT(Force=False)
+
+Pilot 1: 4000 op, 128896341.17 ns, 32.2241 us/op
+Pilot 2: 8000 op, 257639519.97 ns, 32.2049 us/op
+
+IdleWarmup 1: 8000 op, 5470.08 ns, 0.6838 ns/op
+IdleWarmup 2: 8000 op, 4011.4 ns, 0.5014 ns/op
+IdleWarmup 3: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleWarmup 4: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 5: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleWarmup 6: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleWarmup 7: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleWarmup 8: 8000 op, 6199.43 ns, 0.7749 ns/op
+
+IdleTarget 1: 8000 op, 2917.38 ns, 0.3647 ns/op
+IdleTarget 2: 8000 op, 4011.4 ns, 0.5014 ns/op
+IdleTarget 3: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 4: 8000 op, 8022.79 ns, 1.0028 ns/op
+IdleTarget 5: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 6: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 7: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 8: 8000 op, 6199.43 ns, 0.7749 ns/op
+IdleTarget 9: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 10: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 11: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 12: 8000 op, 5470.08 ns, 0.6838 ns/op
+IdleTarget 13: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 14: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 15: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 16: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 17: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 18: 8000 op, 3282.05 ns, 0.4103 ns/op
+IdleTarget 19: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 20: 8000 op, 1823.36 ns, 0.2279 ns/op
+
+MainWarmup 1: 8000 op, 258414813.28 ns, 32.3019 us/op
+MainWarmup 2: 8000 op, 258578915.81 ns, 32.3224 us/op
+MainWarmup 3: 8000 op, 269845831.14 ns, 33.7307 us/op
+MainWarmup 4: 8000 op, 267830287.35 ns, 33.4788 us/op
+MainWarmup 5: 8000 op, 272627551.43 ns, 34.0784 us/op
+MainWarmup 6: 8000 op, 257247497.25 ns, 32.1559 us/op
+
+MainTarget 1: 8000 op, 260906619.09 ns, 32.6133 us/op
+MainTarget 2: 8000 op, 261424818.43 ns, 32.6781 us/op
+MainTarget 3: 8000 op, 259008864.45 ns, 32.3761 us/op
+MainTarget 4: 8000 op, 258537343.17 ns, 32.3172 us/op
+MainTarget 5: 8000 op, 262297114.57 ns, 32.7871 us/op
+MainTarget 6: 8000 op, 261574698.74 ns, 32.6968 us/op
+MainTarget 7: 8000 op, 273062605.48 ns, 34.1328 us/op
+MainTarget 8: 8000 op, 262195006.32 ns, 32.7744 us/op
+MainTarget 9: 8000 op, 263874322.26 ns, 32.9843 us/op
+MainTarget 10: 8000 op, 261400020.71 ns, 32.6750 us/op
+MainTarget 11: 8000 op, 257935633.88 ns, 32.2420 us/op
+MainTarget 12: 8000 op, 269786024.88 ns, 33.7233 us/op
+MainTarget 13: 8000 op, 256149104.29 ns, 32.0186 us/op
+MainTarget 14: 8000 op, 256404010.23 ns, 32.0505 us/op
+MainTarget 15: 8000 op, 260245468.22 ns, 32.5307 us/op
+
+Result 1: 8000 op, 260903811.12 ns, 32.6130 us/op
+Result 2: 8000 op, 261422010.45 ns, 32.6778 us/op
+Result 3: 8000 op, 259006056.48 ns, 32.3758 us/op
+Result 4: 8000 op, 258534535.2 ns, 32.3168 us/op
+Result 5: 8000 op, 262294306.59 ns, 32.7868 us/op
+Result 6: 8000 op, 261571890.77 ns, 32.6965 us/op
+Result 7: 8000 op, 262192198.35 ns, 32.7740 us/op
+Result 8: 8000 op, 263871514.28 ns, 32.9839 us/op
+Result 9: 8000 op, 261397212.74 ns, 32.6747 us/op
+Result 10: 8000 op, 257932825.9 ns, 32.2416 us/op
+Result 11: 8000 op, 256146296.32 ns, 32.0183 us/op
+Result 12: 8000 op, 256401202.25 ns, 32.0502 us/op
+Result 13: 8000 op, 260242660.24 ns, 32.5303 us/op
+GC:  0 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-EVBXJW(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 255231406.45 ns, 31.9039 us/op
+Result 2: 8000 op, 254688409.4 ns, 31.8361 us/op
+Result 3: 8000 op, 254467417.99 ns, 31.8084 us/op
+Result 4: 8000 op, 254535976.38 ns, 31.8170 us/op
+Result 5: 8000 op, 253600591.94 ns, 31.7001 us/op
+Result 6: 8000 op, 254357651.63 ns, 31.7947 us/op
+Result 7: 8000 op, 254830996.27 ns, 31.8539 us/op
+Result 8: 8000 op, 255249275.4 ns, 31.9062 us/op
+Result 9: 8000 op, 253241754.39 ns, 31.6552 us/op
+Result 10: 8000 op, 255310905.01 ns, 31.9139 us/op
+Result 11: 8000 op, 255740124.31 ns, 31.9675 us/op
+Result 12: 8000 op, 253292079.17 ns, 31.6615 us/op
+Result 13: 8000 op, 253158973.78 ns, 31.6449 us/op
+Result 14: 8000 op, 254125720.05 ns, 31.7657 us/op
+Result 15: 8000 op, 255683600.1 ns, 31.9605 us/op
+GC:  0 0 0 23576 120000
+
+
+Mean = 32.5184 us, StdErr = 0.0821 us (0.25%); N = 13, StdDev = 0.2960 us
+Min = 32.0183 us, Q1 = 32.2792 us, Median = 32.6130 us, Q3 = 32.7353 us, Max = 32.9839 us
+IQR = 0.4560 us, LowerFence = 31.5951 us, UpperFence = 33.4193 us
+ConfidenceInterval = [32.1639 us; 32.8729 us] (CI 99.9%)
+Skewness = -0.32, Kurtosis = 1.78
+
+
+// **************************
+// Benchmark: Benchmarker.HandCrankedAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.43s
+// dotnet build took 4.14s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-UGXVSJ(Force=False)
+
+Pilot 1: 4000 op, 103976095 ns, 25.9940 us/op
+Pilot 2: 8000 op, 205123791.66 ns, 25.6405 us/op
+
+IdleWarmup 1: 8000 op, 5470.08 ns, 0.6838 ns/op
+IdleWarmup 2: 8000 op, 3282.05 ns, 0.4103 ns/op
+IdleWarmup 3: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 4: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 5: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 6: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 7: 8000 op, 1458.69 ns, 0.1823 ns/op
+
+IdleTarget 1: 8000 op, 9116.81 ns, 1.1396 ns/op
+IdleTarget 2: 8000 op, 4376.07 ns, 0.5470 ns/op
+IdleTarget 3: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleTarget 4: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 5: 8000 op, 7658.12 ns, 0.9573 ns/op
+IdleTarget 6: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 7: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 8: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 9: 8000 op, 5105.41 ns, 0.6382 ns/op
+IdleTarget 10: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 11: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 12: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 13: 8000 op, 5105.41 ns, 0.6382 ns/op
+IdleTarget 14: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 15: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 16: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 17: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 18: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 19: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 20: 8000 op, 1458.69 ns, 0.1823 ns/op
+
+MainWarmup 1: 8000 op, 210708383.23 ns, 26.3385 us/op
+MainWarmup 2: 8000 op, 206003381.24 ns, 25.7504 us/op
+MainWarmup 3: 8000 op, 207417945.09 ns, 25.9272 us/op
+MainWarmup 4: 8000 op, 205155518.15 ns, 25.6444 us/op
+MainWarmup 5: 8000 op, 208564839.46 ns, 26.0706 us/op
+MainWarmup 6: 8000 op, 205441421.23 ns, 25.6802 us/op
+
+MainTarget 1: 8000 op, 206125546.46 ns, 25.7657 us/op
+MainTarget 2: 8000 op, 208349318.14 ns, 26.0437 us/op
+MainTarget 3: 8000 op, 205259449.75 ns, 25.6574 us/op
+MainTarget 4: 8000 op, 204838982.59 ns, 25.6049 us/op
+MainTarget 5: 8000 op, 205418082.2 ns, 25.6773 us/op
+MainTarget 6: 8000 op, 208910184.13 ns, 26.1138 us/op
+MainTarget 7: 8000 op, 208067426.45 ns, 26.0084 us/op
+MainTarget 8: 8000 op, 206307517.94 ns, 25.7884 us/op
+MainTarget 9: 8000 op, 208327802.47 ns, 26.0410 us/op
+MainTarget 10: 8000 op, 206331586.31 ns, 25.7914 us/op
+MainTarget 11: 8000 op, 209924702.46 ns, 26.2406 us/op
+MainTarget 12: 8000 op, 207711870.96 ns, 25.9640 us/op
+MainTarget 13: 8000 op, 205772908.35 ns, 25.7216 us/op
+MainTarget 14: 8000 op, 205679552.24 ns, 25.7099 us/op
+MainTarget 15: 8000 op, 206446822.76 ns, 25.8059 us/op
+
+Result 1: 8000 op, 206122793.19 ns, 25.7653 us/op
+Result 2: 8000 op, 208346564.86 ns, 26.0433 us/op
+Result 3: 8000 op, 205256696.48 ns, 25.6571 us/op
+Result 4: 8000 op, 204836229.32 ns, 25.6045 us/op
+Result 5: 8000 op, 205415328.93 ns, 25.6769 us/op
+Result 6: 8000 op, 208907430.85 ns, 26.1134 us/op
+Result 7: 8000 op, 208064673.17 ns, 26.0081 us/op
+Result 8: 8000 op, 206304764.66 ns, 25.7881 us/op
+Result 9: 8000 op, 208325049.19 ns, 26.0406 us/op
+Result 10: 8000 op, 206328833.03 ns, 25.7911 us/op
+Result 11: 8000 op, 209921949.19 ns, 26.2402 us/op
+Result 12: 8000 op, 207709117.68 ns, 25.9636 us/op
+Result 13: 8000 op, 205770155.07 ns, 25.7213 us/op
+Result 14: 8000 op, 205676798.96 ns, 25.7096 us/op
+Result 15: 8000 op, 206444069.48 ns, 25.8055 us/op
+GC:  0 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-KGSJKU(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 209872390.22 ns, 26.2340 us/op
+Result 2: 8000 op, 206544026.16 ns, 25.8180 us/op
+Result 3: 8000 op, 204644448.16 ns, 25.5806 us/op
+Result 4: 8000 op, 204859240.14 ns, 25.6074 us/op
+Result 5: 8000 op, 205114875.42 ns, 25.6394 us/op
+Result 6: 8000 op, 207251855.09 ns, 25.9065 us/op
+Result 7: 8000 op, 208400208.15 ns, 26.0500 us/op
+Result 8: 8000 op, 204615639.04 ns, 25.5770 us/op
+Result 9: 8000 op, 205183069.14 ns, 25.6479 us/op
+Result 10: 8000 op, 204660129.06 ns, 25.5825 us/op
+Result 11: 8000 op, 207554168.42 ns, 25.9443 us/op
+Result 12: 8000 op, 206812789.64 ns, 25.8516 us/op
+Result 13: 8000 op, 204916858.36 ns, 25.6146 us/op
+Result 14: 8000 op, 207108538.87 ns, 25.8886 us/op
+Result 15: 8000 op, 204693314.24 ns, 25.5867 us/op
+GC:  0 0 0 23576 120000
+
+
+Mean = 25.8619 us, StdErr = 0.0493 us (0.19%); N = 15, StdDev = 0.1911 us
+Min = 25.6045 us, Q1 = 25.7096 us, Median = 25.7911 us, Q3 = 26.0406 us, Max = 26.2402 us
+IQR = 0.3310 us, LowerFence = 25.2131 us, UpperFence = 26.5372 us
+ConfidenceInterval = [25.6576 us; 26.0662 us] (CI 99.9%)
+Skewness = 0.44, Kurtosis = 1.78
+
+
+// **************************
+// Benchmark: Benchmarker.AssertCompletedAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.44s
+// dotnet build took 4.06s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-EKIWPL(Force=False)
+
+Pilot 1: 4000 op, 113622406.63 ns, 28.4056 us/op
+Pilot 2: 8000 op, 225059696.86 ns, 28.1325 us/op
+
+IdleWarmup 1: 8000 op, 8752.14 ns, 1.0940 ns/op
+IdleWarmup 2: 8000 op, 4011.4 ns, 0.5014 ns/op
+IdleWarmup 3: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleWarmup 4: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleWarmup 5: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleWarmup 6: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleWarmup 7: 8000 op, 2188.03 ns, 0.2735 ns/op
+
+IdleTarget 1: 8000 op, 10210.82 ns, 1.2764 ns/op
+IdleTarget 2: 8000 op, 4740.74 ns, 0.5926 ns/op
+IdleTarget 3: 8000 op, 3282.05 ns, 0.4103 ns/op
+IdleTarget 4: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleTarget 5: 8000 op, 9846.15 ns, 1.2308 ns/op
+IdleTarget 6: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleTarget 7: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 8: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 9: 8000 op, 6564.1 ns, 0.8205 ns/op
+IdleTarget 10: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 11: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 12: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 13: 8000 op, 6199.43 ns, 0.7749 ns/op
+IdleTarget 14: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 15: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 16: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 17: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 18: 8000 op, 4376.07 ns, 0.5470 ns/op
+IdleTarget 19: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 20: 8000 op, 2188.03 ns, 0.2735 ns/op
+
+MainWarmup 1: 8000 op, 231750339.51 ns, 28.9688 us/op
+MainWarmup 2: 8000 op, 223637110.22 ns, 27.9546 us/op
+MainWarmup 3: 8000 op, 223900403.62 ns, 27.9876 us/op
+MainWarmup 4: 8000 op, 229944846.96 ns, 28.7431 us/op
+MainWarmup 5: 8000 op, 224864597.18 ns, 28.1081 us/op
+MainWarmup 6: 8000 op, 224409121.48 ns, 28.0511 us/op
+MainWarmup 7: 8000 op, 223389497.73 ns, 27.9237 us/op
+MainWarmup 8: 8000 op, 224995879.2 ns, 28.1245 us/op
+MainWarmup 9: 8000 op, 224242466.23 ns, 28.0303 us/op
+
+MainTarget 1: 8000 op, 224874078.66 ns, 28.1093 us/op
+MainTarget 2: 8000 op, 222043492.28 ns, 27.7554 us/op
+MainTarget 3: 8000 op, 222225099.08 ns, 27.7781 us/op
+MainTarget 4: 8000 op, 224407298.11 ns, 28.0509 us/op
+MainTarget 5: 8000 op, 224680802.34 ns, 28.0851 us/op
+MainTarget 6: 8000 op, 222285999.36 ns, 27.7857 us/op
+MainTarget 7: 8000 op, 222136483.71 ns, 27.7671 us/op
+MainTarget 8: 8000 op, 223537919.35 ns, 27.9422 us/op
+MainTarget 9: 8000 op, 223349383.78 ns, 27.9187 us/op
+MainTarget 10: 8000 op, 225083765.23 ns, 28.1355 us/op
+MainTarget 11: 8000 op, 222270683.12 ns, 27.7838 us/op
+MainTarget 12: 8000 op, 222280529.27 ns, 27.7851 us/op
+MainTarget 13: 8000 op, 224471115.77 ns, 28.0589 us/op
+MainTarget 14: 8000 op, 222959549.09 ns, 27.8699 us/op
+MainTarget 15: 8000 op, 223582774.05 ns, 27.9478 us/op
+
+Result 1: 8000 op, 224870577.8 ns, 28.1088 us/op
+Result 2: 8000 op, 222039991.42 ns, 27.7550 us/op
+Result 3: 8000 op, 222221598.23 ns, 27.7777 us/op
+Result 4: 8000 op, 224403797.26 ns, 28.0505 us/op
+Result 5: 8000 op, 224677301.48 ns, 28.0847 us/op
+Result 6: 8000 op, 222282498.5 ns, 27.7853 us/op
+Result 7: 8000 op, 222132982.86 ns, 27.7666 us/op
+Result 8: 8000 op, 223534418.5 ns, 27.9418 us/op
+Result 9: 8000 op, 223345882.92 ns, 27.9182 us/op
+Result 10: 8000 op, 225080264.37 ns, 28.1350 us/op
+Result 11: 8000 op, 222267182.26 ns, 27.7834 us/op
+Result 12: 8000 op, 222277028.42 ns, 27.7846 us/op
+Result 13: 8000 op, 224467614.91 ns, 28.0585 us/op
+Result 14: 8000 op, 222956048.24 ns, 27.8695 us/op
+Result 15: 8000 op, 223579273.19 ns, 27.9474 us/op
+GC:  0 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-YCKJEE(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 227253729.5 ns, 28.4067 us/op
+Result 2: 8000 op, 223277342.76 ns, 27.9097 us/op
+Result 3: 8000 op, 223127462.45 ns, 27.8909 us/op
+Result 4: 8000 op, 225428179.98 ns, 28.1785 us/op
+Result 5: 8000 op, 226511256.7 ns, 28.3139 us/op
+Result 6: 8000 op, 222886414.06 ns, 27.8608 us/op
+Result 7: 8000 op, 221677160.72 ns, 27.7096 us/op
+Result 8: 8000 op, 224443929.45 ns, 28.0555 us/op
+Result 9: 8000 op, 221965616.51 ns, 27.7457 us/op
+Result 10: 8000 op, 224307542.01 ns, 28.0384 us/op
+Result 11: 8000 op, 221949570.93 ns, 27.7437 us/op
+Result 12: 8000 op, 223255827.1 ns, 27.9070 us/op
+Result 13: 8000 op, 221733320.25 ns, 27.7167 us/op
+Result 14: 8000 op, 223329490.9 ns, 27.9162 us/op
+Result 15: 8000 op, 223383462.4 ns, 27.9229 us/op
+GC:  0 0 0 23576 120000
+
+
+Mean = 27.9178 us, StdErr = 0.0362 us (0.13%); N = 15, StdDev = 0.1402 us
+Min = 27.7550 us, Q1 = 27.7834 us, Median = 27.9182 us, Q3 = 28.0585 us, Max = 28.1350 us
+IQR = 0.2751 us, LowerFence = 27.3708 us, UpperFence = 28.4710 us
+ConfidenceInterval = [27.7680 us; 28.0676 us] (CI 99.9%)
+Skewness = 0.22, Kurtosis = 1.31
+
+
+// **************************
+// Benchmark: Benchmarker.TaskDoubleAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.44s
+// dotnet build took 4.04s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-RGBGHD(Force=False)
+
+Pilot 1: 4000 op, 103227787.45 ns, 25.8069 us/op
+Pilot 2: 8000 op, 209470685.45 ns, 26.1838 us/op
+
+IdleWarmup 1: 8000 op, 5470.08 ns, 0.6838 ns/op
+IdleWarmup 2: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 3: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleWarmup 4: 8000 op, 364.67 ns, 0.0456 ns/op
+IdleWarmup 5: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleWarmup 6: 8000 op, 364.67 ns, 0.0456 ns/op
+IdleWarmup 7: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleWarmup 8: 8000 op, 364.67 ns, 0.0456 ns/op
+
+IdleTarget 1: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 2: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleTarget 3: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 4: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 5: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 6: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 7: 8000 op, 364.67 ns, 0.0456 ns/op
+IdleTarget 8: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 9: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 10: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 11: 8000 op, 364.67 ns, 0.0456 ns/op
+IdleTarget 12: 8000 op, 364.67 ns, 0.0456 ns/op
+IdleTarget 13: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 14: 8000 op, 364.67 ns, 0.0456 ns/op
+IdleTarget 15: 8000 op, 364.67 ns, 0.0456 ns/op
+IdleTarget 16: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 17: 8000 op, 364.67 ns, 0.0456 ns/op
+IdleTarget 18: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 19: 8000 op, 729.34 ns, 0.0912 ns/op
+IdleTarget 20: 8000 op, 729.34 ns, 0.0912 ns/op
+
+MainWarmup 1: 8000 op, 216685362.2 ns, 27.0857 us/op
+MainWarmup 2: 8000 op, 207409922.3 ns, 25.9262 us/op
+MainWarmup 3: 8000 op, 207172520.63 ns, 25.8966 us/op
+MainWarmup 4: 8000 op, 207099950.84 ns, 25.8875 us/op
+MainWarmup 5: 8000 op, 213691037.96 ns, 26.7114 us/op
+MainWarmup 6: 8000 op, 208939357.91 ns, 26.1174 us/op
+MainWarmup 7: 8000 op, 210328030.03 ns, 26.2910 us/op
+MainWarmup 8: 8000 op, 211574844.61 ns, 26.4469 us/op
+MainWarmup 9: 8000 op, 208021477.74 ns, 26.0027 us/op
+
+MainTarget 1: 8000 op, 209372223.93 ns, 26.1715 us/op
+MainTarget 2: 8000 op, 208040076.03 ns, 26.0050 us/op
+MainTarget 3: 8000 op, 210155540.03 ns, 26.2694 us/op
+MainTarget 4: 8000 op, 210450559.92 ns, 26.3063 us/op
+MainTarget 5: 8000 op, 210233579.9 ns, 26.2792 us/op
+MainTarget 6: 8000 op, 207752349.58 ns, 25.9690 us/op
+MainTarget 7: 8000 op, 211830479.89 ns, 26.4788 us/op
+MainTarget 8: 8000 op, 212468291.74 ns, 26.5585 us/op
+MainTarget 9: 8000 op, 207440190.1 ns, 25.9300 us/op
+MainTarget 10: 8000 op, 207685614.55 ns, 25.9607 us/op
+MainTarget 11: 8000 op, 207067859.68 ns, 25.8835 us/op
+MainTarget 12: 8000 op, 207098856.83 ns, 25.8874 us/op
+MainTarget 13: 8000 op, 208687004.68 ns, 26.0859 us/op
+MainTarget 14: 8000 op, 206076315.7 ns, 25.7595 us/op
+MainTarget 15: 8000 op, 207324588.98 ns, 25.9156 us/op
+
+Result 1: 8000 op, 209371421.65 ns, 26.1714 us/op
+Result 2: 8000 op, 208039273.75 ns, 26.0049 us/op
+Result 3: 8000 op, 210154737.75 ns, 26.2693 us/op
+Result 4: 8000 op, 210449757.64 ns, 26.3062 us/op
+Result 5: 8000 op, 210232777.62 ns, 26.2791 us/op
+Result 6: 8000 op, 207751547.3 ns, 25.9689 us/op
+Result 7: 8000 op, 211829677.62 ns, 26.4787 us/op
+Result 8: 8000 op, 212467489.46 ns, 26.5584 us/op
+Result 9: 8000 op, 207439387.82 ns, 25.9299 us/op
+Result 10: 8000 op, 207684812.27 ns, 25.9606 us/op
+Result 11: 8000 op, 207067057.4 ns, 25.8834 us/op
+Result 12: 8000 op, 207098054.55 ns, 25.8873 us/op
+Result 13: 8000 op, 208686202.4 ns, 26.0858 us/op
+Result 14: 8000 op, 206075513.42 ns, 25.7594 us/op
+Result 15: 8000 op, 207323786.7 ns, 25.9155 us/op
+GC:  835 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-JOFBNE(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 205250770.55 ns, 25.6563 us/op
+Result 2: 8000 op, 205421801.86 ns, 25.6777 us/op
+Result 3: 8000 op, 205307659.43 ns, 25.6635 us/op
+Result 4: 8000 op, 206417357.23 ns, 25.8022 us/op
+Result 5: 8000 op, 207226200.39 ns, 25.9033 us/op
+Result 6: 8000 op, 205475408.69 ns, 25.6844 us/op
+Result 7: 8000 op, 205188411.59 ns, 25.6486 us/op
+Result 8: 8000 op, 205450610.97 ns, 25.6813 us/op
+Result 9: 8000 op, 206439602.24 ns, 25.8050 us/op
+Result 10: 8000 op, 206307590.87 ns, 25.7884 us/op
+Result 11: 8000 op, 205000970.03 ns, 25.6251 us/op
+Result 12: 8000 op, 205421437.19 ns, 25.6777 us/op
+Result 13: 8000 op, 206252525.36 ns, 25.7816 us/op
+GC:  834 0 0 2618940456 120000
+
+
+Mean = 26.0973 us, StdErr = 0.0609 us (0.23%); N = 15, StdDev = 0.2359 us
+Min = 25.7594 us, Q1 = 25.9155 us, Median = 26.0049 us, Q3 = 26.2791 us, Max = 26.5584 us
+IQR = 0.3636 us, LowerFence = 25.3700 us, UpperFence = 26.8245 us
+ConfidenceInterval = [25.8451 us; 26.3494 us] (CI 99.9%)
+Skewness = 0.51, Kurtosis = 1.94
+
+
+// **************************
+// Benchmark: Benchmarker.ValueTaskDoubleAsync: Job-RZXVEI(Force=False)
+// *** Generate *** 
+// Result = Success
+// BinariesDirectoryPath = C:\code\protobuf-net\src\TheAwaitingGame\bin\Release\netcoreapp1.1\BDN.Generated\bin\Release\netcoreapp1.1
+
+// *** Build ***
+// dotnet restore took 2.42s
+// dotnet build took 4.09s
+// Result = Success
+
+// *** Execute ***
+// Launch: 1 / 1
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-IPUJLI(Force=False)
+
+Pilot 1: 4000 op, 117459123.88 ns, 29.3648 us/op
+Pilot 2: 8000 op, 227659810.34 ns, 28.4575 us/op
+
+IdleWarmup 1: 8000 op, 6564.1 ns, 0.8205 ns/op
+IdleWarmup 2: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleWarmup 3: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleWarmup 4: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleWarmup 5: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleWarmup 6: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleWarmup 7: 8000 op, 1094.02 ns, 0.1368 ns/op
+
+IdleTarget 1: 8000 op, 2552.71 ns, 0.3191 ns/op
+IdleTarget 2: 8000 op, 3282.05 ns, 0.4103 ns/op
+IdleTarget 3: 8000 op, 2188.03 ns, 0.2735 ns/op
+IdleTarget 4: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 5: 8000 op, 1823.36 ns, 0.2279 ns/op
+IdleTarget 6: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 7: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 8: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 9: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 10: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 11: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 12: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 13: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 14: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 15: 8000 op, 1458.69 ns, 0.1823 ns/op
+IdleTarget 16: 8000 op, 1094.02 ns, 0.1368 ns/op
+IdleTarget 17: 8000 op, 1458.69 ns, 0.1823 ns/op
+
+MainWarmup 1: 8000 op, 228876721.8 ns, 28.6096 us/op
+MainWarmup 2: 8000 op, 226346990.07 ns, 28.2934 us/op
+MainWarmup 3: 8000 op, 232360071.59 ns, 29.0450 us/op
+MainWarmup 4: 8000 op, 242772924.39 ns, 30.3466 us/op
+MainWarmup 5: 8000 op, 228063502.58 ns, 28.5079 us/op
+MainWarmup 6: 8000 op, 227499719.2 ns, 28.4375 us/op
+MainWarmup 7: 8000 op, 230127547.78 ns, 28.7659 us/op
+MainWarmup 8: 8000 op, 230168391.08 ns, 28.7710 us/op
+MainWarmup 9: 8000 op, 227732744.8 ns, 28.4666 us/op
+
+MainTarget 1: 8000 op, 230159638.95 ns, 28.7700 us/op
+MainTarget 2: 8000 op, 233944937.4 ns, 29.2431 us/op
+MainTarget 3: 8000 op, 229879935.29 ns, 28.7350 us/op
+MainTarget 4: 8000 op, 227696642.24 ns, 28.4621 us/op
+MainTarget 5: 8000 op, 232264162.78 ns, 29.0330 us/op
+MainTarget 6: 8000 op, 227240801.87 ns, 28.4051 us/op
+MainTarget 7: 8000 op, 230101291.38 ns, 28.7627 us/op
+MainTarget 8: 8000 op, 231753986.23 ns, 28.9692 us/op
+MainTarget 9: 8000 op, 227860744.78 ns, 28.4826 us/op
+MainTarget 10: 8000 op, 227139058.3 ns, 28.3924 us/op
+MainTarget 11: 8000 op, 230740561.92 ns, 28.8426 us/op
+MainTarget 12: 8000 op, 232988401.96 ns, 29.1236 us/op
+MainTarget 13: 8000 op, 228659377.11 ns, 28.5824 us/op
+MainTarget 14: 8000 op, 227577759.07 ns, 28.4472 us/op
+MainTarget 15: 8000 op, 227535457.09 ns, 28.4419 us/op
+
+Result 1: 8000 op, 230158180.26 ns, 28.7698 us/op
+Result 2: 8000 op, 233943478.71 ns, 29.2429 us/op
+Result 3: 8000 op, 229878476.6 ns, 28.7348 us/op
+Result 4: 8000 op, 227695183.55 ns, 28.4619 us/op
+Result 5: 8000 op, 232262704.09 ns, 29.0328 us/op
+Result 6: 8000 op, 227239343.18 ns, 28.4049 us/op
+Result 7: 8000 op, 230099832.69 ns, 28.7625 us/op
+Result 8: 8000 op, 231752527.54 ns, 28.9691 us/op
+Result 9: 8000 op, 227859286.09 ns, 28.4824 us/op
+Result 10: 8000 op, 227137599.61 ns, 28.3922 us/op
+Result 11: 8000 op, 230739103.23 ns, 28.8424 us/op
+Result 12: 8000 op, 232986943.27 ns, 29.1234 us/op
+Result 13: 8000 op, 228657918.42 ns, 28.5822 us/op
+Result 14: 8000 op, 227576300.38 ns, 28.4470 us/op
+Result 15: 8000 op, 227533998.4 ns, 28.4417 us/op
+GC:  0 0 0 0 120000
+
+
+// Run, Diagnostic
+// BeforeAnythingElse
+
+// Benchmark Process Environment Information:
+// Runtime=.NET Core 4.6.25009.03, 64bit RyuJIT
+// GC=Concurrent Workstation
+// Job: Job-PKGJQB(Force=False)
+
+// AfterSetup
+// BeforeMainRun
+// BeforeCleanup
+Result 1: 8000 op, 227101278.25 ns, 28.3877 us/op
+Result 2: 8000 op, 226709984.87 ns, 28.3387 us/op
+Result 3: 8000 op, 230928149.35 ns, 28.8660 us/op
+Result 4: 8000 op, 226936446.37 ns, 28.3671 us/op
+Result 5: 8000 op, 229134690.98 ns, 28.6418 us/op
+Result 6: 8000 op, 227009016.16 ns, 28.3761 us/op
+Result 7: 8000 op, 229706497.15 ns, 28.7133 us/op
+Result 8: 8000 op, 230825311.76 ns, 28.8532 us/op
+Result 9: 8000 op, 227877665.57 ns, 28.4847 us/op
+Result 10: 8000 op, 226442680.08 ns, 28.3053 us/op
+Result 11: 8000 op, 229087283.59 ns, 28.6359 us/op
+Result 12: 8000 op, 228486668.31 ns, 28.5608 us/op
+Result 13: 8000 op, 231382531.03 ns, 28.9228 us/op
+Result 14: 8000 op, 235459567.32 ns, 29.4324 us/op
+Result 15: 8000 op, 225753084.76 ns, 28.2191 us/op
+GC:  0 0 0 7240 120000
+
+
+Mean = 28.7127 us, StdErr = 0.0729 us (0.25%); N = 15, StdDev = 0.2823 us
+Min = 28.3922 us, Q1 = 28.4470 us, Median = 28.7348 us, Q3 = 28.9691 us, Max = 29.2429 us
+IQR = 0.5220 us, LowerFence = 27.6640 us, UpperFence = 29.7521 us
+ConfidenceInterval = [28.4109 us; 29.0144 us] (CI 99.9%)
+Skewness = 0.41, Kurtosis = 1.68
+
+
+// ***** BenchmarkRunner: Finish  *****
+
+// * Export *
+  BenchmarkDotNet.Artifacts\results\Benchmarker-report.csv
+  BenchmarkDotNet.Artifacts\results\Benchmarker-report-github.md
+  BenchmarkDotNet.Artifacts\results\Benchmarker-report.html
+
+// * Detailed results *
+Benchmarker.Sync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 20.2238 us, StdErr = 0.0258 us (0.13%); N = 14, StdDev = 0.0964 us
+Min = 20.1232 us, Q1 = 20.1363 us, Median = 20.1985 us, Q3 = 20.2744 us, Max = 20.4258 us
+IQR = 0.1381 us, LowerFence = 19.9292 us, UpperFence = 20.4815 us
+ConfidenceInterval = [20.1151 us; 20.3326 us] (CI 99.9%)
+Skewness = 0.7, Kurtosis = 2.18
+
+
+Benchmarker.TaskAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 30.6326 us, StdErr = 0.0791 us (0.26%); N = 15, StdDev = 0.3065 us
+Min = 30.3036 us, Q1 = 30.3840 us, Median = 30.5309 us, Q3 = 30.8147 us, Max = 31.3243 us
+IQR = 0.4308 us, LowerFence = 29.7378 us, UpperFence = 31.4609 us
+ConfidenceInterval = [30.3049 us; 30.9602 us] (CI 99.9%)
+Skewness = 1.04, Kurtosis = 2.93
+
+
+Benchmarker.TaskCheckedAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 30.0058 us, StdErr = 0.0473 us (0.16%); N = 15, StdDev = 0.1833 us
+Min = 29.7469 us, Q1 = 29.8510 us, Median = 29.9737 us, Q3 = 30.1130 us, Max = 30.3099 us
+IQR = 0.2620 us, LowerFence = 29.4580 us, UpperFence = 30.5059 us
+ConfidenceInterval = [29.8099 us; 30.2018 us] (CI 99.9%)
+Skewness = 0.32, Kurtosis = 1.68
+
+
+Benchmarker.ValueTaskAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 35.1996 us, StdErr = 0.0934 us (0.27%); N = 15, StdDev = 0.3619 us
+Min = 34.6947 us, Q1 = 34.8411 us, Median = 35.1953 us, Q3 = 35.4811 us, Max = 35.9718 us
+IQR = 0.6401 us, LowerFence = 33.8809 us, UpperFence = 36.4413 us
+ConfidenceInterval = [34.8128 us; 35.5865 us] (CI 99.9%)
+Skewness = 0.4, Kurtosis = 2.11
+
+
+Benchmarker.ValueTaskWrappedAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 33.2181 us, StdErr = 0.0704 us (0.21%); N = 13, StdDev = 0.2537 us
+Min = 32.7900 us, Q1 = 32.9864 us, Median = 33.2706 us, Q3 = 33.3727 us, Max = 33.7212 us
+IQR = 0.3863 us, LowerFence = 32.4069 us, UpperFence = 33.9522 us
+ConfidenceInterval = [32.9142 us; 33.5219 us] (CI 99.9%)
+Skewness = 0.14, Kurtosis = 2.15
+
+
+Benchmarker.ValueTaskDecimalReferenceAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 30.1789 us, StdErr = 0.1602 us (0.53%); N = 15, StdDev = 0.6205 us
+Min = 29.5407 us, Q1 = 29.6705 us, Median = 29.9915 us, Q3 = 30.7416 us, Max = 31.2873 us
+IQR = 1.0710 us, LowerFence = 28.0639 us, UpperFence = 32.3481 us
+ConfidenceInterval = [29.5155 us; 30.8423 us] (CI 99.9%)
+Skewness = 0.73, Kurtosis = 1.91
+
+
+Benchmarker.ValueTaskCheckedAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 32.5184 us, StdErr = 0.0821 us (0.25%); N = 13, StdDev = 0.2960 us
+Min = 32.0183 us, Q1 = 32.2792 us, Median = 32.6130 us, Q3 = 32.7353 us, Max = 32.9839 us
+IQR = 0.4560 us, LowerFence = 31.5951 us, UpperFence = 33.4193 us
+ConfidenceInterval = [32.1639 us; 32.8729 us] (CI 99.9%)
+Skewness = -0.32, Kurtosis = 1.78
+
+
+Benchmarker.HandCrankedAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 25.8619 us, StdErr = 0.0493 us (0.19%); N = 15, StdDev = 0.1911 us
+Min = 25.6045 us, Q1 = 25.7096 us, Median = 25.7911 us, Q3 = 26.0406 us, Max = 26.2402 us
+IQR = 0.3310 us, LowerFence = 25.2131 us, UpperFence = 26.5372 us
+ConfidenceInterval = [25.6576 us; 26.0662 us] (CI 99.9%)
+Skewness = 0.44, Kurtosis = 1.78
+
+
+Benchmarker.AssertCompletedAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 27.9178 us, StdErr = 0.0362 us (0.13%); N = 15, StdDev = 0.1402 us
+Min = 27.7550 us, Q1 = 27.7834 us, Median = 27.9182 us, Q3 = 28.0585 us, Max = 28.1350 us
+IQR = 0.2751 us, LowerFence = 27.3708 us, UpperFence = 28.4710 us
+ConfidenceInterval = [27.7680 us; 28.0676 us] (CI 99.9%)
+Skewness = 0.22, Kurtosis = 1.31
+
+
+Benchmarker.TaskDoubleAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 26.0973 us, StdErr = 0.0609 us (0.23%); N = 15, StdDev = 0.2359 us
+Min = 25.7594 us, Q1 = 25.9155 us, Median = 26.0049 us, Q3 = 26.2791 us, Max = 26.5584 us
+IQR = 0.3636 us, LowerFence = 25.3700 us, UpperFence = 26.8245 us
+ConfidenceInterval = [25.8451 us; 26.3494 us] (CI 99.9%)
+Skewness = 0.51, Kurtosis = 1.94
+
+
+Benchmarker.ValueTaskDoubleAsync: Job-RZXVEI(Force=False)
+Runtime = .NET Core 4.6.25009.03, 64bit RyuJIT; GC = Concurrent Workstation
+Mean = 28.7127 us, StdErr = 0.0729 us (0.25%); N = 15, StdDev = 0.2823 us
+Min = 28.3922 us, Q1 = 28.4470 us, Median = 28.7348 us, Q3 = 28.9691 us, Max = 29.2429 us
+IQR = 0.5220 us, LowerFence = 27.6640 us, UpperFence = 29.7521 us
+ConfidenceInterval = [28.4109 us; 29.0144 us] (CI 99.9%)
+Skewness = 0.41, Kurtosis = 1.68
+
+
+Total time: 00:03:39 (219.54 sec)
+
+// * Summary *
+
+BenchmarkDotNet=v0.10.3.111-nightly, OS=Windows 10.0.15063
+Processor=Intel(R) Core(TM) i7-7700HQ CPU 2.80GHz, ProcessorCount=8
+Frequency=2742188 Hz, Resolution=364.6723 ns, Timer=TSC
+dotnet cli version=1.0.2
+  [Host]     : .NET Core 4.6.25009.03, 64bit RyuJIT
+  Job-RZXVEI : .NET Core 4.6.25009.03, 64bit RyuJIT
+
+Force=False  
+
+                         Method |       Mean |    StdDev |     Op/s |  Gen 0 |  Gen 1 | Allocated |
+------------------------------- |-----------:|----------:|---------:|-------:|-------:|----------:|
+                           Sync | 20.2238 us | 0.0964 us | 49446.57 |      - |      - |      0 kB |
+                      TaskAsync | 30.6326 us | 0.3065 us |    32645 | 7.7250 |      - |  24.25 kB |
+               TaskCheckedAsync | 30.0058 us | 0.1833 us | 33326.85 | 7.7250 |      - |  24.25 kB |
+                 ValueTaskAsync | 35.1996 us | 0.3619 us | 28409.39 |      - |      - |      0 kB |
+          ValueTaskWrappedAsync | 33.2181 us | 0.2537 us | 30104.09 | 1.2667 | 0.0083 |   3.99 kB |
+ ValueTaskDecimalReferenceAsync | 30.1789 us | 0.6205 us | 33135.76 | 3.0917 |      - |    9.7 kB |
+          ValueTaskCheckedAsync | 32.5184 us | 0.2960 us | 30751.79 |      - |      - |      0 kB |
+               HandCrankedAsync | 25.8619 us | 0.1911 us | 38666.89 |      - |      - |      0 kB |
+           AssertCompletedAsync | 27.9178 us | 0.1402 us | 35819.44 |      - |      - |      0 kB |
+                TaskDoubleAsync | 26.0973 us | 0.2359 us |  38318.2 | 6.9500 |      - |  21.83 kB |
+           ValueTaskDoubleAsync | 28.7127 us | 0.2823 us | 34827.83 |      - |      - |      0 kB |
+
+// * Hints *
+Outliers
+  Benchmarker.Sync: Force=False                  -> 1 outlier  was  removed
+  Benchmarker.ValueTaskWrappedAsync: Force=False -> 2 outliers were removed
+  Benchmarker.ValueTaskCheckedAsync: Force=False -> 2 outliers were removed
+
+// * Legends *
+  Mean      : Arithmetic mean of all measurements
+  StdDev    : Standard deviation of all measurements
+  Op/s      : Operation per second
+  Gen 0     : GC Generation 0 collects per 1k Operations
+  Gen 1     : GC Generation 1 collects per 1k Operations
+  Allocated : Allocated memory per single operation
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
+ ValueTaskAsync | 37.9602 us | 0.0692 us | 26343.35 |      - |      0 kB |
+          ValueTaskWrappedAsync | 36.0224 us | 0.2335 us |  27760.5 | 1.3917 |    4.4 kB |
+ ValueTaskDecimalReferenceAsync | 31.1779 us | 0.1226 us | 32073.96 | 3.0917 |   9.73 kB |
+          ValueTaskCheckedAsync | 34.9260 us | 0.1944 us | 28631.95 |      - |      0 kB |
+               HandCrankedAsync | 25.7685 us | 0.0751 us | 38807.07 |      - |      0 kB |
+           AssertCompletedAsync | 28.1167 us | 0.0524 us | 35566.02 |      - |      0 kB |
+                TaskDoubleAsync | 33.7460 us | 0.1128 us | 29633.16 | 7.7250 |  24.32 kB |
+           ValueTaskDoubleAsync | 32.0475 us | 0.3408 us | 31203.66 |      - |      0 kB |
+
+// * Hints *
+Outliers
+  Benchmarker.Sync: Force=False                  -> 2 outliers were removed
+  Benchmarker.ValueTaskWrappedAsync: Force=False -> 1 outlier  was  removed
+  Benchmarker.AssertCompletedAsync: Force=False  -> 1 outlier  was  removed
+  Benchmarker.ValueTaskDoubleAsync: Force=False  -> 2 outliers were removed
+
+// * Legends *
+  Mean      : Arithmetic mean of all measurements
+  StdDev    : Standard deviation of all measurements
+  Op/s      : Operation per second
+  Gen 0     : GC Generation 0 collects per 1k Operations
+  Allocated : Allocated memory per single operation
+
+// * Diagnostic Output - MemoryDiagnoser *
+
+
+// ***** BenchmarkRunner: End *****
