@@ -381,7 +381,7 @@ namespace ProtoBuf.Meta
                         TypeModel.ThrowUnexpectedType(type); // throws
                     }
                 }
-                bytesRead += reader.Position;
+                bytesRead += reader.LongPosition;
                 haveObject = true;
                 return value;
             }

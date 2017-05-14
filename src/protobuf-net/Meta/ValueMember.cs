@@ -507,7 +507,13 @@ namespace ProtoBuf.Meta
                     defaultWireType = GetDateTimeWireType(dataFormat);
                     return new TimeSpanSerializer(model);
                 case ProtoTypeCode.Guid:
-                    defaultWireType = WireType.String;
+                    defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
+#if DEBUG
+                    if(model != null && model.ForwardsOnly)
+                    {   // kind of hacky, but make guids always use groups in forwards-only mode (debug only)
+                        defaultWireType = WireType.StartGroup;
+                    }
+#endif
                     return new GuidSerializer(model);
                 case ProtoTypeCode.Uri:
                     defaultWireType = WireType.String;
@@ -528,13 +534,22 @@ namespace ProtoBuf.Meta
             if (allowComplexTypes && model != null)
             {
                 int key = model.GetKey(type, false, true);
+                MetaType meta = null;
+                if (key >= 0)
+                {
+                    meta = model[type];
+                    if(dataFormat == DataFormat.Default && meta.IsGroup)
+                    {
+                        dataFormat = DataFormat.Group;
+                    }
+                }
+
                 if (asReference || dynamicType)
                 {
-                    defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     BclHelpers.NetObjectOptions options = BclHelpers.NetObjectOptions.None;
                     if (asReference) options |= BclHelpers.NetObjectOptions.AsReference;
                     if (dynamicType) options |= BclHelpers.NetObjectOptions.DynamicType;
-                    if (key >= 0)
+                    if (meta != null)
                     { // exists
                         if (asReference && Helpers.IsValueType(type))
                         {
@@ -550,16 +565,17 @@ namespace ProtoBuf.Meta
                             }
                             throw new InvalidOperationException(message);
                         }
-                        MetaType meta = model[type];
+                        
                         if (asReference && meta.IsAutoTuple) options |= BclHelpers.NetObjectOptions.LateSet;                        
                         if (meta.UseConstructor) options |= BclHelpers.NetObjectOptions.UseConstructor;
                     }
+                    defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return new NetObjectSerializer(model, type, key, options);
                 }
                 if (key >= 0)
                 {
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return new SubItemSerializer(type, key, model[type], true);
+                    return new SubItemSerializer(type, key, meta, true);
                 }
             }
             defaultWireType = WireType.None;

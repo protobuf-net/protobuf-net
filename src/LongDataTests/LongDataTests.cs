@@ -67,9 +67,11 @@ namespace LongDataTests
                 obj.Items.Add(new MyModelInner { Id = i, SomeString = "a long string that will be repeated lots and lots of times in the output data" });
             return obj;
         }
-        [Fact]
+        [Fact(Skip="long running")]
         public void CanSerializeLongData()
         {
+
+
             Console.WriteLine($"PID: {Process.GetCurrentProcess().Id}");
             const string path = "large.data";
             var watch = Stopwatch.StartNew();
