@@ -54,13 +54,9 @@ namespace LongDataTests
             public override int GetHashCode()
             {
                 int hash = -12323424;
-                hash = (hash * -17) + (LengthPrefix?.GetHashCode() ?? 0);
                 hash = (hash * -17) + (Group?.GetHashCode() ?? 0);
                 return hash;
             }
-            [ProtoMember(1, DataFormat = DataFormat.Default)]
-            public MyModelOuter LengthPrefix { get; set; }
-
             [ProtoMember(2, DataFormat = DataFormat.Group)]
             public MyModelOuter Group { get; set; }
         }
@@ -76,29 +72,21 @@ namespace LongDataTests
         {
             Console.WriteLine($"PID: {Process.GetCurrentProcess().Id}");
             const string path = "large.data";
-            Console.WriteLine("Creating model...");
-            const int APPROX_COUNT = 20000000, CHUNKS = 10, CHUNKSIZE = APPROX_COUNT / CHUNKS, COUNT = CHUNKS * CHUNKSIZE;
+            var watch = Stopwatch.StartNew();
+            const int COUNT = 50000000;
+
+            Console.WriteLine($"Creating model with {COUNT} items...");
             var outer = CreateOuterModel(COUNT);
-            var model = new MyModelWrapper { Group = outer, LengthPrefix = outer };
+            watch.Stop();
+            Console.WriteLine($"Created in {watch.ElapsedMilliseconds}ms");
+
+            var model = new MyModelWrapper { Group = outer };
             int oldHash = model.GetHashCode();
             using (var file = File.Create(path))
             {
-                Console.Write("Serializing in pieces");
-                var watch = Stopwatch.StartNew();
-                for (int i = 0; i < CHUNKS; i++)
-                {
-                    var x = new MyModelOuter();
-                    x.Items.AddRange(outer.Items.Skip(i * CHUNKS).Take(CHUNKSIZE));
-                    Serializer.Serialize(file, new MyModelWrapper { LengthPrefix = x });
-                    Console.Write('.');
-                }
-                for (int i = 0; i < CHUNKS; i++)
-                {
-                    var x = new MyModelOuter();
-                    x.Items.AddRange(outer.Items.Skip(i * CHUNKS).Take(CHUNKSIZE));
-                    Serializer.Serialize(file, new MyModelWrapper { Group = x });
-                    Console.Write('.');
-                }
+                Console.Write("Serializing...");
+                watch = Stopwatch.StartNew();
+                Serializer.Serialize(file, model);
                 watch.Stop();
                 Console.WriteLine();
                 Console.WriteLine($"Wrote: {COUNT} in {file.Length >> 20} MiB ({file.Length / COUNT} each), {watch.ElapsedMilliseconds}ms");
@@ -107,50 +95,24 @@ namespace LongDataTests
             using (var file = File.OpenRead(path))
             {
                 Console.WriteLine($"Verifying {file.Length >> 20} MiB...");
-                var watch = Stopwatch.StartNew();
+                watch = Stopwatch.StartNew();
                 using (var reader = new ProtoReader(file, null, null))
                 {
                     int i = -1;
                     try
                     {
-                        for (int c = 0; c < CHUNKS; c++)
+                        Assert.Equal(2, reader.ReadFieldHeader());
+                        Assert.Equal(WireType.StartGroup, reader.WireType);
+                        var tok = ProtoReader.StartSubItem(reader);
+
+                        for (i = 0; i < COUNT; i++)
                         {
                             Assert.Equal(1, reader.ReadFieldHeader());
                             Assert.Equal(WireType.String, reader.WireType);
-                            var tok = ProtoReader.StartSubItem(reader);
-
-                            for (i = 0; i < CHUNKSIZE; i++)
-                            {
-                                Assert.Equal(1, reader.ReadFieldHeader());
-                                Assert.Equal(WireType.String, reader.WireType);
-                                reader.SkipField();
-                            }
-                            Assert.False(reader.ReadFieldHeader() > 0);
-                            ProtoReader.EndSubItem(tok, reader);
+                            reader.SkipField();
                         }
-                    }
-                    catch
-                    {
-                        Console.WriteLine($"field 1, {i} of {COUNT}, @ {reader.LongPosition}");
-                        throw;
-                    }
-                    try
-                    {
-                        for (int c = 0; c < CHUNKS; c++)
-                        {
-                            Assert.Equal(2, reader.ReadFieldHeader());
-                            Assert.Equal(WireType.StartGroup, reader.WireType);
-                            var tok = ProtoReader.StartSubItem(reader);
-
-                            for (i = 0; i < CHUNKSIZE; i++)
-                            {
-                                Assert.Equal(1, reader.ReadFieldHeader());
-                                Assert.Equal(WireType.String, reader.WireType);
-                                reader.SkipField();
-                            }
-                            Assert.False(reader.ReadFieldHeader() > 0);
-                            ProtoReader.EndSubItem(tok, reader);
-                        }
+                        Assert.False(reader.ReadFieldHeader() > 0);
+                        ProtoReader.EndSubItem(tok, reader);
                     }
                     catch
                     {
@@ -164,7 +126,7 @@ namespace LongDataTests
             using (var file = File.OpenRead(path))
             {
                 Console.WriteLine($"Deserializing {file.Length >> 20} MiB");
-                var watch = Stopwatch.StartNew();
+                watch = Stopwatch.StartNew();
                 var clone = Serializer.Deserialize<MyModelWrapper>(file);
                 watch.Stop();
                 var newHash = clone.GetHashCode();
