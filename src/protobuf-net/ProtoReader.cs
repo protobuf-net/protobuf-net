@@ -109,7 +109,7 @@ namespace ProtoBuf
             reader.context = context;
             reader.position64 = 0;
             reader.available = reader.depth = reader.fieldNumber = reader.ioIndex = 0;
-            reader.blockEnd64 = int.MaxValue;
+            reader.blockEnd64 = long.MaxValue;
             reader.internStrings = true;
             reader.wireType = WireType.None;
             reader.trapCount = 1;
@@ -262,7 +262,7 @@ namespace ProtoBuf
             int canRead = ioBuffer.Length - writePos;
             if (isFixedLength)
             {   // throttle it if needed
-                if (dataRemaining < canRead) canRead = dataRemaining;
+                if (dataRemaining64 < canRead) canRead = (int)dataRemaining64;
             }
             while (count > 0 && canRead > 0 && (bytesRead = source.Read(ioBuffer, writePos, canRead)) > 0)
             {
@@ -270,7 +270,7 @@ namespace ProtoBuf
                 count -= bytesRead;
                 canRead -= bytesRead;
                 writePos += bytesRead;
-                if (isFixedLength) { dataRemaining -= bytesRead; }
+                if (isFixedLength) { dataRemaining64 -= bytesRead; }
             }
             if (strict && count > 0)
             {
@@ -634,8 +634,8 @@ namespace ProtoBuf
                     break;
                 // case WireType.None: // TODO reinstate once reads reset the wire-type
                 default:
-                    if (value64 < reader.position64) throw reader.CreateException("Sub-message not read entirely");
-                    if (reader.blockEnd64 != reader.position64 && reader.blockEnd64 != int.MaxValue)
+                    if (value64 < reader.position64) throw reader.CreateException($"Sub-message not read entirely; expected {value64}, was {reader.position64}");
+                    if (reader.blockEnd64 != reader.position64 && reader.blockEnd64 != long.MaxValue)
                     {
                         throw reader.CreateException("Sub-message not read correctly");
                     }
@@ -659,11 +659,11 @@ namespace ProtoBuf
                 case WireType.StartGroup:
                     reader.wireType = WireType.None; // to prevent glitches from double-calling
                     reader.depth++;
-                    return new SubItemToken(-reader.fieldNumber);
+                    return new SubItemToken((long)(-reader.fieldNumber));
                 case WireType.String:
-                    int len = (int)reader.ReadUInt64Variant(false);
+                    long len = (long)reader.ReadUInt64Variant();
                     if (len < 0) throw AddErrorData(new InvalidOperationException(), reader);
-                    int lastEnd = reader.blockEnd;
+                    long lastEnd = reader.blockEnd64;
                     reader.blockEnd64 = reader.position64 + len;
                     reader.depth++;
                     return new SubItemToken(lastEnd);
@@ -681,7 +681,7 @@ namespace ProtoBuf
             // at the end of a group the caller must call EndSubItem to release the
             // reader (which moves the status to Error, since ReadFieldHeader must
             // then be called)
-            if (blockEnd <= position || wireType == WireType.EndGroup) { return 0; }
+            if (blockEnd64 <= position64 || wireType == WireType.EndGroup) { return 0; }
             uint tag;
             if (TryReadUInt32Variant(out tag) && tag != 0)
             {
@@ -708,7 +708,7 @@ namespace ProtoBuf
         public bool TryReadFieldHeader(int field)
         {
             // check for virtual end of stream
-            if (blockEnd <= position || wireType == WireType.EndGroup) { return false; }
+            if (blockEnd64 <= position64 || wireType == WireType.EndGroup) { return false; }
             uint tag;
             int read = TryReadUInt32VariantWithoutMoving(false, out tag);
             WireType tmpWireType; // need to catch this to exclude (early) any "end group" tokens
@@ -717,7 +717,7 @@ namespace ProtoBuf
             {
                 wireType = tmpWireType;
                 fieldNumber = field;
-                position += read;
+                position64 += read;
                 ioIndex += read;
                 available -= read;
                 return true;
@@ -772,32 +772,32 @@ namespace ProtoBuf
                     if(available < 4) Ensure(4, true);
                     available -= 4;
                     ioIndex += 4;
-                    position += 4;
+                    position64 += 4;
                     return;
                 case WireType.Fixed64:
                     if (available < 8) Ensure(8, true);
                     available -= 8;
                     ioIndex += 8;
-                    position += 8;
+                    position64 += 8;
                     return;
                 case WireType.String:
-                    int len = (int)ReadUInt32Variant(false);
+                    long len = (long)ReadUInt64Variant();
                     if (len <= available)
                     { // just jump it!
-                        available -= len;
-                        ioIndex += len;
-                        position += len;
+                        available -= (int)len;
+                        ioIndex += (int)len;
+                        position64 += len;
                         return;
                     }
                     // everything remaining in the buffer is garbage
-                    position += len; // assumes success, but if it fails we're screwed anyway
+                    position64 += len; // assumes success, but if it fails we're screwed anyway
                     len -= available; // discount anything we've got to-hand
                     ioIndex = available = 0; // note that we have no data in the buffer
                     if (isFixedLength)
                     {
-                        if (len > dataRemaining) throw EoF(this);
+                        if (len > dataRemaining64) throw EoF(this);
                         // else assume we're going to be OK
-                        dataRemaining -= len;
+                        dataRemaining64 -= len;
                     }
                     ProtoReader.Seek(source, len, ioBuffer);
                     return;
@@ -836,7 +836,7 @@ namespace ProtoBuf
                     return ReadUInt32();
                 case WireType.Fixed64:
                     if (available < 8) Ensure(8, true);
-                    position += 8;
+                    position64 += 8;
                     available -= 8;
 
                     return ((ulong)ioBuffer[ioIndex++])
@@ -929,7 +929,7 @@ namespace ProtoBuf
                     }
                     // value is now sized with the final length, and (if necessary)
                     // contains the old data up to "offset"
-                    reader.position += len; // assume success
+                    reader.position64 += len; // assume success
                     while (len > reader.available)
                     {
                         if (reader.available > 0)
@@ -1058,7 +1058,7 @@ namespace ProtoBuf
             if(style == PrefixStyle.None)
             {
                 bytesRead = fieldNumber = 0;
-                return int.MaxValue; // avoid the long.maxvalu causing overflow
+                return int.MaxValue; // avoid the long.maxvalue causing overflow
             }
             long len64 = ReadLongLengthPrefix(source, expectHeader, style, out fieldNumber, out bytesRead);
             return checked((int)len64);
@@ -1217,7 +1217,7 @@ namespace ProtoBuf
             if (exception != null && source != null && !exception.Data.Contains("protoSource"))
             {
                 exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
-                    source.fieldNumber, source.wireType, source.position, source.depth));
+                    source.fieldNumber, source.wireType, source.position64, source.depth));
             }
 #endif
             return exception;
@@ -1290,7 +1290,7 @@ namespace ProtoBuf
         {
             if (source == null) throw new ArgumentNullException("source");
             // check for virtual end of stream
-            if (source.blockEnd <= source.position || wireType == WireType.EndGroup) { return false; }
+            if (source.blockEnd64 <= source.position64 || wireType == WireType.EndGroup) { return false; }
             source.wireType = wireType;
             return true;
         }
@@ -1348,7 +1348,7 @@ namespace ProtoBuf
         {
             if (isFixedLength)
             {
-                if (dataRemaining != 0) throw new ProtoException("Incorrect number of bytes consumed");
+                if (dataRemaining64 != 0) throw new ProtoException("Incorrect number of bytes consumed");
             }
             else
             {

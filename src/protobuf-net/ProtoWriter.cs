@@ -328,7 +328,7 @@ namespace ProtoBuf
             {
                 case WireType.StartGroup:
                     writer.wireType = WireType.None;
-                    return new SubItemToken(-writer.fieldNumber);
+                    return new SubItemToken((long)(-writer.fieldNumber));
                 case WireType.String:
 #if DEBUG
                     if(writer.model != null && writer.model.ForwardsOnly)
@@ -340,13 +340,13 @@ namespace ProtoBuf
                     DemandSpace(32, writer); // make some space in anticipation...
                     writer.flushLock++;
                     writer.position++;
-                    return new SubItemToken(writer.ioIndex++); // leave 1 space (optimistic) for length
+                    return new SubItemToken((long)(writer.ioIndex++)); // leave 1 space (optimistic) for length
                 case WireType.Fixed32:
                     {
                         if (!allowFixed) throw CreateException(writer);
                         DemandSpace(32, writer); // make some space in anticipation...
                         writer.flushLock++;
-                        SubItemToken token = new SubItemToken(writer.ioIndex);
+                        SubItemToken token = new SubItemToken((long)writer.ioIndex);
                         ProtoWriter.IncrementedAndReset(4, writer); // leave 4 space (rigid) for length
                         return token;
                     }

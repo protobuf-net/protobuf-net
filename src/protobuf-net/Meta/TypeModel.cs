@@ -279,10 +279,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
-        {
-            int bytesRead;
-            return DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out bytesRead);
-        }
+            => DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out long bytesRead);
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
@@ -362,7 +359,7 @@ namespace ProtoBuf.Meta
 
                 if (skip)
                 {
-                    if (len == int.MaxValue) throw new InvalidOperationException();
+                    if (len == long.MaxValue) throw new InvalidOperationException();
                     ProtoReader.Seek(source, len, null);
                     bytesRead += len;
                 }
@@ -656,10 +653,24 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
+        [Obsolete("32-bit")]
         public object Deserialize(Stream source, object value, System.Type type, int length)
-        {
-            return Deserialize(source, value, type, length, null);
-        }
+            => Deserialize(source, value, type, length, null);
+        
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <param name="type">The type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="length">The number of bytes to consume.</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        [Obsolete("32-bit")]
+        public object Deserialize(Stream source, object value, System.Type type, long length)
+            => Deserialize(source, value, type, length, null);
+
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
         /// </summary>
@@ -671,7 +682,22 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
+        [Obsolete("32-bit")]
         public object Deserialize(Stream source, object value, System.Type type, int length, SerializationContext context)
+            => Deserialize(source, value, type, length == int.MaxValue ? long.MaxValue : (long)value);
+
+        /// <summary>
+        /// Applies a protocol-buffer stream to an existing instance (which may be null).
+        /// </summary>
+        /// <param name="type">The type (including inheritance) to consider.</param>
+        /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
+        /// <param name="length">The number of bytes to consume (or -1 to read to the end of the stream).</param>
+        /// <returns>The updated instance; this may be different to the instance argument if
+        /// either the original instance was null, or the stream defines a known sub-type of the
+        /// original instance.</returns>
+        /// <param name="context">Additional information about this serialization operation.</param>
+        public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
         {
 #if FEAT_IKVM
             throw new NotSupportedException();
@@ -1597,7 +1623,7 @@ namespace ProtoBuf.Meta
 #if FEAT_IKVM
                 throw new NotSupportedException();
 #else
-                return model.Deserialize(source, null, type, -1, Context);
+                return model.Deserialize(source, null, type, (long)-1, Context);
 #endif
             }
 
