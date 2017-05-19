@@ -3,6 +3,10 @@ protobuf-net is a contract based serializer for .NET code, that happens to write
 
 [![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/protobuf-net/donate)
 
+[Release Notes](http://mgravell.github.io/protobuf-net/releasenotes)
+
+---
+
 Supported Runtimes :
 - .NET Framework 4.0+
 - .NET Standard 1.3+
