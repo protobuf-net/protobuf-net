@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.26403.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net", "protobuf-net\protobuf-net.csproj", "{3044FAAC-6DCC-44AA-ADAF-26152FF46922}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Test", "protobuf-net.Test\protobuf-net.Test.csproj", "{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LongDataTests", "LongDataTests\LongDataTests.csproj", "{B4F91AD6-37FE-45AF-A3AC-D26452C1FF18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63AF7CED-8346-41F2-A5B1-A4BD65C8B593}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4F91AD6-37FE-45AF-A3AC-D26452C1FF18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4F91AD6-37FE-45AF-A3AC-D26452C1FF18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4F91AD6-37FE-45AF-A3AC-D26452C1FF18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4F91AD6-37FE-45AF-A3AC-D26452C1FF18}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

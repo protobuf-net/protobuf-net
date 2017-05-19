@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace ProtoBuf
 {
     /// <summary>
@@ -7,9 +9,9 @@ namespace ProtoBuf
     /// </summary>
     public struct SubItemToken
     {
-        internal readonly int value;
-        internal SubItemToken(int value) {
-            this.value = value;
-        }
+        internal readonly long value64;
+        [Obsolete("32-bit", true)]
+        internal SubItemToken(int value) => value64 = value;
+        internal SubItemToken(long value) => value64 = value;
     }
 }

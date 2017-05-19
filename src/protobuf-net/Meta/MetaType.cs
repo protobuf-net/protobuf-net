@@ -631,6 +631,7 @@ namespace ProtoBuf.Meta
                         if (item.TryGet("IgnoreListHandling", out tmp)) IgnoreListHandling = (bool) tmp;
                         if (item.TryGet("AsReferenceDefault", out tmp)) AsReferenceDefault = (bool) tmp;
                         if (item.TryGet("ImplicitFirstTag", out tmp) && (int) tmp > 0) implicitFirstTag = (int) tmp;
+                        if (item.TryGet("IsGroup", out tmp)) IsGroup = (bool)tmp;
                     }
                 }
 
@@ -1672,7 +1673,7 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_Pending, value, false); }
         }
 
-        private const byte
+        private const ushort
             OPTIONS_Pending = 1,
             OPTIONS_EnumPassThru = 2,
             OPTIONS_Frozen = 4,
@@ -1680,11 +1681,12 @@ namespace ProtoBuf.Meta
             OPTIONS_SkipConstructor = 16,
             OPTIONS_AsReferenceDefault = 32,
             OPTIONS_AutoTuple = 64,
-            OPTIONS_IgnoreListHandling = 128;
+            OPTIONS_IgnoreListHandling = 128,
+            OPTIONS_IsGroup = 256;
 
-        private volatile byte flags;
-        private bool HasFlag(byte flag) { return (flags & flag) == flag; }
-        private void SetFlag(byte flag, bool value, bool throwIfFrozen)
+        private volatile ushort flags;
+        private bool HasFlag(ushort flag) { return (flags & flag) == flag; }
+        private void SetFlag(ushort flag, bool value, bool throwIfFrozen)
         {
             if (throwIfFrozen && HasFlag(flag) != value)
             {
@@ -1693,7 +1695,7 @@ namespace ProtoBuf.Meta
             if (value)
                 flags |= flag;
             else
-                flags = (byte)(flags & ~flag);
+                flags = (ushort)(flags & ~flag);
         }
 
         internal static MetaType GetRootType(MetaType source)
@@ -1740,6 +1742,16 @@ namespace ProtoBuf.Meta
         {
             get { return HasFlag(OPTIONS_AutoTuple); }
         }
+
+        /// <summary>
+        /// Indicates whether this type should always be treated as a "group" (rather than a string-prefixed sub-message)
+        /// </summary>
+        public bool IsGroup
+        {
+            get { return HasFlag(OPTIONS_IsGroup); }
+            set { SetFlag(OPTIONS_IsGroup, value, true); }
+        }
+
         internal void WriteSchema(System.Text.StringBuilder builder, int indent, ref bool requiresBclImport)
         {
             if (surrogate != null) return; // nothing to write

@@ -122,16 +122,28 @@ namespace ProtoBuf
             }
         }
 
-        private bool HasFlag(byte flag) { return (flags & flag) == flag; }
-        private void SetFlag(byte flag, bool value)
+        /// <summary>
+        /// Indicates whether this type should always be treated as a "group" (rather than a string-prefixed sub-message)
+        /// </summary>
+        public bool IsGroup
         {
-            if (value) flags |= flag;
-            else flags = (byte)(flags & ~flag);
+            get { return HasFlag(OPTIONS_IsGroup); }
+            set
+            {
+                SetFlag(OPTIONS_IsGroup, value);
+            }
         }
 
-        private byte flags;
+        private bool HasFlag(ushort flag) { return (flags & flag) == flag; }
+        private void SetFlag(ushort flag, bool value)
+        {
+            if (value) flags |= flag;
+            else flags = (ushort)(flags & ~flag);
+        }
 
-        private const byte
+        private ushort flags;
+
+        private const ushort
             OPTIONS_InferTagFromName = 1,
             OPTIONS_InferTagFromNameHasValue = 2,
             OPTIONS_UseProtoMembersOnly = 4,
@@ -139,7 +151,8 @@ namespace ProtoBuf
             OPTIONS_IgnoreListHandling = 16,
             OPTIONS_AsReferenceDefault = 32,
             OPTIONS_EnumPassthru = 64,
-            OPTIONS_EnumPassthruHasValue = 128;
+            OPTIONS_EnumPassthruHasValue = 128,
+            OPTIONS_IsGroup = 256;
 
         /// <summary>
         /// Applies only to enums (not to DTO classes themselves); gets or sets a value indicating that an enum should be treated directly as an int/short/etc, rather

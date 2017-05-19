@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks>
     <LibImport>net</LibImport>
   </PropertyGroup>

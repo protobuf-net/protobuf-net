@@ -62,7 +62,9 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local i = new ProtoBuf.Compiler.Local(ctx, ctx.MapType(typeof(int))))
             {
                 bool writePacked = (options & OPTIONS_WritePacked) != 0;
-                using (Compiler.Local token = writePacked ? new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))) : null)
+                bool fixedLengthPacked = writePacked && CanUsePackedPrefix();
+
+                using (Compiler.Local token = (writePacked && !fixedLengthPacked) ? new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))) : null)
                 {
                     Type mappedWriter = ctx.MapType(typeof (ProtoWriter));
                     if (writePacked)
@@ -72,11 +74,21 @@ namespace ProtoBuf.Serializers
                         ctx.LoadReaderWriter();
                         ctx.EmitCall(mappedWriter.GetMethod("WriteFieldHeader"));
 
-                        ctx.LoadValue(arr);
-                        ctx.LoadReaderWriter();
-                        ctx.EmitCall(mappedWriter.GetMethod("StartSubItem"));
-                        ctx.StoreValue(token);
-
+                        if(fixedLengthPacked)
+                        {
+                            // write directly - no need for buffering
+                            ctx.LoadLength(arr, false);
+                            ctx.LoadValue((int)packedWireType);
+                            ctx.LoadReaderWriter();
+                            ctx.EmitCall(mappedWriter.GetMethod("WritePackedPrefix"));
+                        }
+                        else
+                        {
+                            ctx.LoadValue(arr);
+                            ctx.LoadReaderWriter();
+                            ctx.EmitCall(mappedWriter.GetMethod("StartSubItem"));
+                            ctx.StoreValue(token);
+                        }
                         ctx.LoadValue(fieldNumber);
                         ctx.LoadReaderWriter();
                         ctx.EmitCall(mappedWriter.GetMethod("SetPackedField"));
@@ -85,12 +97,37 @@ namespace ProtoBuf.Serializers
 
                     if (writePacked)
                     {
-                        ctx.LoadValue(token);
-                        ctx.LoadReaderWriter();
-                        ctx.EmitCall(mappedWriter.GetMethod("EndSubItem"));
+                        if (fixedLengthPacked)
+                        {
+                            ctx.LoadValue(fieldNumber);
+                            ctx.LoadReaderWriter();
+                            ctx.EmitCall(mappedWriter.GetMethod("ClearPackedField"));
+                        }
+                        else
+                        {
+                            ctx.LoadValue(token);
+                            ctx.LoadReaderWriter();
+                            ctx.EmitCall(mappedWriter.GetMethod("EndSubItem"));
+                        }
                     }
                 }
             }
+        }
+
+        private bool CanUsePackedPrefix() => CanUsePackedPrefix(packedWireType, itemType);
+        internal static bool CanUsePackedPrefix(WireType packedWireType,  Type itemType)
+        {
+            // needs to be a suitably simple type *and* be definitely not nullable
+            switch(packedWireType)
+            {
+                case WireType.Fixed32:
+                case WireType.Fixed64:
+                    break;
+                default:
+                    return false; // nope
+            }
+            if (!Helpers.IsValueType(itemType)) return false;
+            return Helpers.GetUnderlyingType(itemType) == null;
         }
 
         private void EmitWriteArrayLoop(Compiler.CompilerContext ctx, Compiler.Local i, Compiler.Local arr)
@@ -141,10 +178,21 @@ namespace ProtoBuf.Serializers
             int len = arr.Count;
             SubItemToken token;
             bool writePacked = (options & OPTIONS_WritePacked) != 0;
+            bool fixedLengthPacked = writePacked && CanUsePackedPrefix();
+
             if (writePacked)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
-                token = ProtoWriter.StartSubItem(value, dest);
+
+                if (fixedLengthPacked)
+                {
+                    ProtoWriter.WritePackedPrefix(arr.Count, packedWireType, dest);
+                    token = new SubItemToken(); // default
+                }
+                else
+                {
+                    token = ProtoWriter.StartSubItem(value, dest);
+                }
                 ProtoWriter.SetPackedField(fieldNumber, dest);
             }
             else
@@ -160,7 +208,14 @@ namespace ProtoBuf.Serializers
             }
             if (writePacked)
             {
-                ProtoWriter.EndSubItem(token, dest);
+                if (fixedLengthPacked)
+                {
+                    ProtoWriter.ClearPackedField(fieldNumber, dest);
+                }
+                else
+                {
+                    ProtoWriter.EndSubItem(token, dest);
+                }
             }            
         }
         public override object Read(object value, ProtoReader source)

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='utf-8' />
+<title>Benchmarker</title>
+
+<style type="text/css">
+	table { border-collapse: collapse; display: block; width: 100%; overflow: auto; }
+	td, th { padding: 6px 13px; border: 1px solid #ddd; }
+	tr { background-color: #fff; border-top: 1px solid #ccc; }
+	tr:nth-child(even) { background: #f8f8f8; }
+</style>
+</head>
+<body>
+<pre><code>
+BenchmarkDotNet=v0.10.3.111-nightly, OS=Windows 10.0.15063
+Processor=Intel(R) Core(TM) i7-7700HQ CPU 2.80GHz, ProcessorCount=8
+Frequency=2742188 Hz, Resolution=364.6723 ns, Timer=TSC
+dotnet cli version=1.0.2
+  [Host]     : .NET Core 4.6.25009.03, 64bit RyuJIT
+  Job-RZXVEI : .NET Core 4.6.25009.03, 64bit RyuJIT
+</code></pre>
+<pre><code>Force=False  
+</code></pre>
+
+<table>
+<thead><tr><th>                  Method</th><th>Mean</th><th>StdDev</th><th>Op/s</th><th>Gen 0</th><th>Gen 1</th><th>Allocated</th>
+</tr>
+</thead><tbody><tr><td>                    Sync</td><td>20.2238 us</td><td>0.0964 us</td><td>49446.57</td><td>-</td><td>-</td><td>0 kB</td>
+</tr><tr><td>               TaskAsync</td><td>30.6326 us</td><td>0.3065 us</td><td>32645</td><td>7.7250</td><td>-</td><td>24.25 kB</td>
+</tr><tr><td>        TaskCheckedAsync</td><td>30.0058 us</td><td>0.1833 us</td><td>33326.85</td><td>7.7250</td><td>-</td><td>24.25 kB</td>
+</tr><tr><td>          ValueTaskAsync</td><td>35.1996 us</td><td>0.3619 us</td><td>28409.39</td><td>-</td><td>-</td><td>0 kB</td>
+</tr><tr><td>   ValueTaskWrappedAsync</td><td>33.2181 us</td><td>0.2537 us</td><td>30104.09</td><td>1.2667</td><td>0.0083</td><td>3.99 kB</td>
+</tr><tr><td>ValueTaskDecimalReferenceAsync</td><td>30.1789 us</td><td>0.6205 us</td><td>33135.76</td><td>3.0917</td><td>-</td><td>9.7 kB</td>
+</tr><tr><td>   ValueTaskCheckedAsync</td><td>32.5184 us</td><td>0.2960 us</td><td>30751.79</td><td>-</td><td>-</td><td>0 kB</td>
+</tr><tr><td>        HandCrankedAsync</td><td>25.8619 us</td><td>0.1911 us</td><td>38666.89</td><td>-</td><td>-</td><td>0 kB</td>
+</tr><tr><td>    AssertCompletedAsync</td><td>27.9178 us</td><td>0.1402 us</td><td>35819.44</td><td>-</td><td>-</td><td>0 kB</td>
+</tr><tr><td>         TaskDoubleAsync</td><td>26.0973 us</td><td>0.2359 us</td><td>38318.2</td><td>6.9500</td><td>-</td><td>21.83 kB</td>
+</tr><tr><td>    ValueTaskDoubleAsync</td><td>28.7127 us</td><td>0.2823 us</td><td>34827.83</td><td>-</td><td>-</td><td>0 kB</td>
+</tr></tbody></table>
+</body>
+</html>
