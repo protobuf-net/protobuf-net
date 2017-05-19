@@ -10,13 +10,14 @@ see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017
 
 - proto2/proto3 DSL processing tools to make a resurgance 
 
-## v2.2 (unreleased)
+## v2.2.0
 
 - enable 64-bit processing *within constraints* that no single sub-graph can exceed 2GiB; this is assisted by...
 - new `IsGroup` property on `[ProtoContract(...)]` that indicates that a type should alsways be treated as a group (rather than per-member)
 - support get-only properties (#188)
 - support `ValueTuple<...>`
 - fix bug with cyclic types resolving as lists (#167)
+- optimized encoding of packed fixed-length primitives (in particular, arrays)
 
 (see also: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html))
 
