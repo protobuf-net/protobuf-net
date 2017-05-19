@@ -4,18 +4,19 @@ protobuf-net is a contract based serializer for .NET code, that happens to write
 [![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/protobuf-net/donate)
 
 Supported Runtimes :
-- .net 2.0/3.0/3.5/4.0
+- .NET Framework 4.0+
+- .NET Standard 1.3+
+
+Legacy Runtimes (up to v2.1.0)
+- .NET Framework 2.0/3.0/3.5
 - Compact Framework 2.0/3.5
 - Mono 2.x
 - Silverlight, Windows Phone 7&8
 - Windows 8 apps
 
-Under investigation
-- CoreClr/DNX
-
 ## install
 
-Nuget : Install-Package protobuf-net 
+Nuget : `Install-Package protobuf-net`
 
 ## Basic usage
 
