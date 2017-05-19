@@ -948,7 +948,7 @@ namespace ProtoBuf
         /// </summary>
         public static void WritePackedPrefix(int elementCount, WireType wireType, ProtoWriter writer)
         {
-            if (writer.WireType != WireType.String) throw new InvalidOperationException();
+            if (writer.WireType != WireType.String) throw new InvalidOperationException("Invalid wire-type: " + writer.WireType);
             if (elementCount < 0) throw new ArgumentOutOfRangeException(nameof(elementCount));
             ulong bytes;
             switch(wireType)
@@ -957,7 +957,7 @@ namespace ProtoBuf
                 case WireType.Fixed32: bytes = ((ulong)elementCount) << 2; break; // x4
                 case WireType.Fixed64: bytes = ((ulong)elementCount) << 3; break; // x8
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(wireType));
+                    throw new ArgumentOutOfRangeException(nameof(wireType), "Invalid wire-type: " + wireType);
             }
             WriteUInt64Variant(bytes, writer);
             writer.wireType = WireType.None;
