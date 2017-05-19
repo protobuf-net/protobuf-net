@@ -14,7 +14,7 @@ see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017
 
 ## v2.2.0
 
-- enable 64-bit processing *within constraints* that no single sub-graph can exceed 2GiB; this is assisted by...
+- enable 64-bit processing (2GiB+ file sizes) *within constraints* that no single sub-graph can exceed 2GiB; this is assisted by...
 - new `IsGroup` property on `[ProtoContract(...)]` that indicates that a type should alsways be treated as a group (rather than per-member)
 - support get-only properties (#188)
 - support `ValueTuple<...>`
