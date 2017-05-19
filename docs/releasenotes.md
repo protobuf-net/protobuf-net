@@ -1,5 +1,7 @@
 # Release Notes
 
+[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/protobuf-net/donate)
+
 ## v3.* (future plans)
 
 see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
