@@ -15,7 +15,7 @@ see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017
 ## v2.2.0
 
 - enable 64-bit processing (2GiB+ file sizes) *within constraints* that no single sub-graph can exceed 2GiB; this is assisted by...
-- new `IsGroup` property on `[ProtoContract(...)]` that indicates that a type should alsways be treated as a group (rather than per-member)
+- new `IsGroup` property on `[ProtoContract(...)]` that indicates that a type should always be treated as a group (rather than having to specify "group" per-member); groups do not require length-prefix or buffering, so are trivially usable in huge files
 - support get-only automatically-implemented properties (#188)
 - support `ValueTuple<...>`
 - fix bug with cyclic types resolving as lists (#167)
