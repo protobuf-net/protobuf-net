@@ -1,5 +1,7 @@
 # Release Notes
 
+Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net)
+
 [![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/protobuf-net/donate)
 
 ## v3.* (future plans)
