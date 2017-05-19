@@ -468,10 +468,19 @@ namespace ProtoBuf.Serializers
         {
             SubItemToken token;
             bool writePacked = WritePacked;
+            bool fixedSizePacked = writePacked & CanUsePackedPrefix(value) && value is ICollection;
             if (writePacked)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
-                token = ProtoWriter.StartSubItem(value, dest);
+                if (writePacked)
+                {
+                    ProtoWriter.WritePackedPrefix(((ICollection)value).Count, packedWireType, dest);
+                    token = default(SubItemToken);
+                }
+                else
+                {
+                    token = ProtoWriter.StartSubItem(value, dest);
+                }
                 ProtoWriter.SetPackedField(fieldNumber, dest);
             }
             else
@@ -486,9 +495,20 @@ namespace ProtoBuf.Serializers
             }
             if (writePacked)
             {
-                ProtoWriter.EndSubItem(token, dest);
+                if (fixedSizePacked)
+                {
+                    ProtoWriter.ClearPackedField(fieldNumber, dest);
+                }
+                else
+                {
+                    ProtoWriter.EndSubItem(token, dest);
+                }
             }
         }
+
+        private bool CanUsePackedPrefix(object obj) =>
+            ArrayDecorator.CanUsePackedPrefix(packedWireType, Tail.ExpectedType);
+
         public override object Read(object value, ProtoReader source)
         {
             try

@@ -114,7 +114,8 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        private bool CanUsePackedPrefix()
+        private bool CanUsePackedPrefix() => CanUsePackedPrefix(packedWireType, itemType);
+        internal static bool CanUsePackedPrefix(WireType packedWireType,  Type itemType)
         {
             // needs to be a suitably simple type *and* be definitely not nullable
             switch(packedWireType)

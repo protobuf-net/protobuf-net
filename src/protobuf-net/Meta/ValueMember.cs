@@ -508,12 +508,6 @@ namespace ProtoBuf.Meta
                     return new TimeSpanSerializer(model);
                 case ProtoTypeCode.Guid:
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-#if DEBUG
-                    if(model != null && model.ForwardsOnly)
-                    {   // kind of hacky, but make guids always use groups in forwards-only mode (debug only)
-                        defaultWireType = WireType.StartGroup;
-                    }
-#endif
                     return new GuidSerializer(model);
                 case ProtoTypeCode.Uri:
                     defaultWireType = WireType.String;
