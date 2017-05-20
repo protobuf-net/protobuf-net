@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ProtoBuf
 {
-    class Enum : ProtoBase
+    public class Enum : ProtoBase
     {
         public string Name { get; }
         internal Enum(string name)

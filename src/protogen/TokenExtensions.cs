@@ -33,6 +33,22 @@ namespace ProtoBuf
                 token.SyntaxError("Unable to parse " + typeof(T).Name);
             return val;
         }
+        internal static StringBuilder Append(this StringBuilder sb, int indent, string value)
+        {
+            while (indent-- > 0)
+            {
+                sb.Append("    ");
+            }
+            return sb.Append(value);
+        }
+        internal static StringBuilder AppendLine(this StringBuilder sb, int indent, string line)
+        {
+            while(indent-- > 0)
+            {
+                sb.Append("    ");
+            }
+            return sb.AppendLine(line);
+        }
         internal static uint ConsumeUInt32(this Peekable<Token> tokens, uint? max = null)
         {
             var token = tokens.Read();

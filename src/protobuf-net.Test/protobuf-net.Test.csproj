@@ -42,6 +42,11 @@
     <ProjectReference Include="..\protogen\protogen.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Schemas\descriptor_expected.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
     <None Update="protobuf-net.Test.xunit.runner.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

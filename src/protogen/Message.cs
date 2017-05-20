@@ -38,5 +38,6 @@ namespace ProtoBuf
         public IEnumerable<Message> Messages => Items.OfType<Message>();
 
         public IEnumerable<Reservation> Reservations => Items.OfType<Reservation>();
+        public IEnumerable<Enum> Enums => Items.OfType<Enum>();
     }
 }
