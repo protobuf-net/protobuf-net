@@ -2,6 +2,7 @@
 using ProtoBuf;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace Google.Protobuf.Reflection
 {
@@ -10,6 +11,62 @@ namespace Google.Protobuf.Reflection
     {
         public static FileDescriptorProto Parse(System.IO.TextReader schema)
             => Parsers.Parse(schema);
+
+        internal bool TryResolveEnum(string type, List<DescriptorProto> stack, out EnumDescriptorProto @enum)
+        {
+            if (stack != null)
+            {
+                for (int i = stack.Count - 1; i >= 0; i--)
+                {
+                    @enum = stack[i].enum_type.FirstOrDefault(x => x.name == type);
+                    if (@enum != null) return true;
+                }
+            }
+            @enum = enum_type.FirstOrDefault(x => x.name == type);
+            return @enum != null;
+        }
+
+        internal bool TryResolveMessage(string type, List<DescriptorProto> stack, out DescriptorProto message)
+        {
+            if (stack != null)
+            {
+                for (int i = stack.Count - 1; i >= 0; i--)
+                {
+                    message = stack[i].nested_type.FirstOrDefault(x => x.name == type);
+                    if (message != null) return true;
+                }
+            }
+            message = message_type.FirstOrDefault(x => x.name == type);
+            return message != null;
+        }
+
+        internal void FixupTypes()
+        {
+            void FixupTypes(DescriptorProto type, List<DescriptorProto> stack)
+            {
+                stack.Add(type);
+                foreach (var field in type.field)
+                {
+                    if (field.type_name != null && field.type == default(FieldDescriptorProto.Type))
+                    {
+                        if (TryResolveMessage(field.type_name, stack, out var msg))
+                        {
+                            field.type = FieldDescriptorProto.Type.TYPE_MESSAGE;
+                        }
+                        else if (TryResolveEnum(field.type_name, stack, out var @enum))
+                        {
+                            field.type = FieldDescriptorProto.Type.TYPE_ENUM;
+                        }
+                    }
+                }
+                stack.RemoveAt(stack.Count - 1);
+            }
+            {
+                var stack = new List<DescriptorProto>();
+                foreach (var type in message_type)
+                    FixupTypes(type, stack);
+            }
+        }
     }
 #pragma warning restore CS1591
 }
@@ -63,8 +120,10 @@ namespace ProtoBuf
                     }
                 }
             }
+            parsed.FixupTypes();
             return parsed;
         }
+
         internal static bool TryParseFileDescriptorProtoChildren(Peekable<Token> tokens, string syntax, FileDescriptorProto schema)
         {
             if (tokens.Peek(out var token) && token.Is(TokenType.AlphaNumeric))
@@ -236,14 +295,20 @@ namespace ProtoBuf
                 tokens.Consume();
             }
 
-            string type = tokens.Consume(TokenType.AlphaNumeric);
+            string typeName = tokens.Consume(TokenType.AlphaNumeric);
             string name = tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, "=");
             var number = tokens.ConsumeInt32();
+            if (TryIdentifyType(typeName, out var type))
+            {
+                typeName = null;
+            }
+
 
             var field = new FieldDescriptorProto
             {
-                type_name = type,
+                type = type,
+                type_name = typeName,
                 name = name,
                 number = number,
                 label = label
@@ -262,6 +327,37 @@ namespace ProtoBuf
             }
             return field;
         }
+
+        private static bool TryIdentifyType(string typeName, out FieldDescriptorProto.Type type)
+        {
+            bool Assign(FieldDescriptorProto.Type @in, out FieldDescriptorProto.Type @out)
+            {
+                @out = @in;
+                return true;
+            }
+            switch (typeName)
+            {
+                case "bool": return Assign(FieldDescriptorProto.Type.TYPE_BOOL, out @type);
+                case "bytes": return Assign(FieldDescriptorProto.Type.TYPE_BYTES, out @type);
+                case "double": return Assign(FieldDescriptorProto.Type.TYPE_DOUBLE, out @type);
+                case "fixed32": return Assign(FieldDescriptorProto.Type.TYPE_FIXED32, out @type);
+                case "fixed64": return Assign(FieldDescriptorProto.Type.TYPE_FIXED64, out @type);
+                case "float": return Assign(FieldDescriptorProto.Type.TYPE_FLOAT, out @type);
+                case "int32": return Assign(FieldDescriptorProto.Type.TYPE_INT32, out @type);
+                case "int64": return Assign(FieldDescriptorProto.Type.TYPE_INT64, out @type);
+                case "sfixed32": return Assign(FieldDescriptorProto.Type.TYPE_SFIXED32, out @type);
+                case "sfixed64": return Assign(FieldDescriptorProto.Type.TYPE_SFIXED64, out @type);
+                case "sint32": return Assign(FieldDescriptorProto.Type.TYPE_SINT32, out @type);
+                case "sint64": return Assign(FieldDescriptorProto.Type.TYPE_SINT64, out @type);
+                case "string": return Assign(FieldDescriptorProto.Type.TYPE_STRING, out @type);
+                case "uint32": return Assign(FieldDescriptorProto.Type.TYPE_UINT32, out @type);
+                case "uint64": return Assign(FieldDescriptorProto.Type.TYPE_UINT64, out @type);
+                default:
+                    type = default(FieldDescriptorProto.Type);
+                    return false;
+            }
+        }
+
         private static FileOptions ParseFileOptions(Peekable<Token> tokens, FileOptions options)
         {
             tokens.Consume(TokenType.AlphaNumeric, "option");
@@ -316,7 +412,7 @@ namespace ProtoBuf
                 {
                     var key = tokens.Consume(TokenType.AlphaNumeric);
                     tokens.Consume(TokenType.Symbol, "=");
-                    switch(key)
+                    switch (key)
                     {
                         case nameof(options.deprecated):
                             if (options == null) options = new FieldOptions();

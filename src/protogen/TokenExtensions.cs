@@ -33,21 +33,21 @@ namespace ProtoBuf
                 token.SyntaxError("Unable to parse " + typeof(T).Name);
             return val;
         }
-        internal static StringBuilder Append(this StringBuilder sb, int indent, string value)
+        internal static void Write(this TextWriter target, int indent, string value)
         {
             while (indent-- > 0)
             {
-                sb.Append("    ");
+                target.Write("    ");
             }
-            return sb.Append(value);
+            target.Write(value);
         }
-        internal static StringBuilder AppendLine(this StringBuilder sb, int indent, string line)
+        internal static void WriteLine(this TextWriter target, int indent, string line)
         {
             while(indent-- > 0)
             {
-                sb.Append("    ");
+                target.Write("    ");
             }
-            return sb.AppendLine(line);
+            target.WriteLine(line);
         }
         internal static int ConsumeInt32(this Peekable<Token> tokens, int? max = null)
         {

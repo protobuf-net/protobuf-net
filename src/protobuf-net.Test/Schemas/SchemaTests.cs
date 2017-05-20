@@ -28,20 +28,25 @@ namespace ProtoBuf.Schemas
         [InlineData(@"Schemas\descriptor.proto", @"Schemas\descriptor_expected.cs", @"Schemas\descriptor_actual.cs")]
         public void CanGenerate(string schemaPath, string expectedPath, string actualPath)
         {
-            //Schema schema;
-            //using (var proto = File.OpenText(schemaPath))
-            //{
-            //    schema = Schema.Parse(proto);
-            //}
-            //var code = schema.GenerateCSharp();
-            //File.WriteAllText(actualPath, code);
-            //_output.WriteLine(actualPath);
-            //_output.WriteLine(Directory.GetCurrentDirectory());
+            FileDescriptorProto schema;
+            using (var proto = File.OpenText(schemaPath))
+            {
+                schema = FileDescriptorProto.Parse(proto);
+            }
+            string code;
+            using (var sw = new StringWriter())
+            {
+                schema.GenerateCSharp(sw);
+                code = sw.ToString();
+            }
+            File.WriteAllText(actualPath, code);
+            _output.WriteLine(actualPath);
+            _output.WriteLine(Directory.GetCurrentDirectory());
 
-            //if (File.Exists(expectedPath))
-            //{
-            //    Assert.Equal(File.ReadAllText(expectedPath), code);
-            //}
+            if (File.Exists(expectedPath))
+            {
+                Assert.Equal(File.ReadAllText(expectedPath), code);
+            }
         }
         private string Indent(int count) => new string(' ', count);
         private void WriteMessage(DescriptorProto msg, int indent)

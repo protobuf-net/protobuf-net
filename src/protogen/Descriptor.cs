@@ -17,7 +17,7 @@ namespace Google.Protobuf.Reflection
         [global::System.ComponentModel.DefaultValue("")]
         public string package { get; set; } = "";
         [global::ProtoBuf.ProtoMember(3)]
-        public string[] dependency { get; set; }
+        public global::System.Collections.Generic.List<string> dependency { get; } = new global::System.Collections.Generic.List<string>();
         [global::ProtoBuf.ProtoMember(10)]
         public int[] public_dependency { get; set; }
         [global::ProtoBuf.ProtoMember(11)]
@@ -41,6 +41,22 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract(Name = @"DescriptorProto")]
     public partial class DescriptorProto
     {
+        [global::ProtoBuf.ProtoContract(Name = @"ExtensionRange")]
+        public partial class ExtensionRange
+        {
+            [global::ProtoBuf.ProtoMember(1)]
+            public int start { get; set; }
+            [global::ProtoBuf.ProtoMember(2)]
+            public int end { get; set; }
+        }
+        [global::ProtoBuf.ProtoContract(Name = @"ReservedRange")]
+        public partial class ReservedRange
+        {
+            [global::ProtoBuf.ProtoMember(1)]
+            public int start { get; set; }
+            [global::ProtoBuf.ProtoMember(2)]
+            public int end { get; set; }
+        }
         [global::ProtoBuf.ProtoMember(1)]
         [global::System.ComponentModel.DefaultValue("")]
         public string name { get; set; } = "";
@@ -52,28 +68,12 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<DescriptorProto> nested_type { get; } = new global::System.Collections.Generic.List<DescriptorProto>();
         [global::ProtoBuf.ProtoMember(4)]
         public global::System.Collections.Generic.List<EnumDescriptorProto> enum_type { get; } = new global::System.Collections.Generic.List<EnumDescriptorProto>();
-        [global::ProtoBuf.ProtoContract(Name = @"ExtensionRange")]
-        public partial class ExtensionRange
-        {
-            [global::ProtoBuf.ProtoMember(1)]
-            public int start { get; set; }
-            [global::ProtoBuf.ProtoMember(2)]
-            public int end { get; set; }
-        }
         [global::ProtoBuf.ProtoMember(5)]
         public global::System.Collections.Generic.List<ExtensionRange> extension_range { get; } = new global::System.Collections.Generic.List<ExtensionRange>();
         [global::ProtoBuf.ProtoMember(8)]
         public global::System.Collections.Generic.List<OneofDescriptorProto> oneof_decl { get; } = new global::System.Collections.Generic.List<OneofDescriptorProto>();
         [global::ProtoBuf.ProtoMember(7)]
         public MessageOptions options { get; set; }
-        [global::ProtoBuf.ProtoContract(Name = @"ReservedRange")]
-        public partial class ReservedRange
-        {
-            [global::ProtoBuf.ProtoMember(1)]
-            public int start { get; set; }
-            [global::ProtoBuf.ProtoMember(2)]
-            public int end { get; set; }
-        }
         [global::ProtoBuf.ProtoMember(9)]
         public global::System.Collections.Generic.List<ReservedRange> reserved_range { get; } = new global::System.Collections.Generic.List<ReservedRange>();
         [global::ProtoBuf.ProtoMember(10)]
@@ -201,6 +201,12 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract(Name = @"FileOptions")]
     public partial class FileOptions
     {
+        public enum OptimizeMode
+        {
+            SPEED = 1,
+            CODE_SIZE = 2,
+            LITE_RUNTIME = 3,
+        }
         [global::ProtoBuf.ProtoMember(1)]
         [global::System.ComponentModel.DefaultValue("")]
         public string java_package { get; set; } = "";
@@ -216,12 +222,6 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoMember(27)]
         [global::System.ComponentModel.DefaultValue(false)]
         public bool java_string_check_utf8 { get; set; } = false;
-        public enum OptimizeMode
-        {
-            SPEED = 1,
-            CODE_SIZE = 2,
-            LITE_RUNTIME = 3,
-        }
         [global::ProtoBuf.ProtoMember(9)]
         [global::System.ComponentModel.DefaultValue(OptimizeMode.SPEED)]
         public OptimizeMode optimize_for { get; set; } = OptimizeMode.SPEED;
@@ -278,26 +278,26 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract(Name = @"FieldOptions")]
     public partial class FieldOptions
     {
-        [global::ProtoBuf.ProtoMember(1)]
-        [global::System.ComponentModel.DefaultValue(CType.STRING)]
-        public CType ctype { get; set; } = CType.STRING;
         public enum CType
         {
             STRING = 0,
             CORD = 1,
             STRING_PIECE = 2,
         }
-        [global::ProtoBuf.ProtoMember(2)]
-        public bool packed { get; set; }
-        [global::ProtoBuf.ProtoMember(6)]
-        [global::System.ComponentModel.DefaultValue(JSType.JS_NORMAL)]
-        public JSType jstype { get; set; } = JSType.JS_NORMAL;
         public enum JSType
         {
             JS_NORMAL = 0,
             JS_STRING = 1,
             JS_NUMBER = 2,
         }
+        [global::ProtoBuf.ProtoMember(1)]
+        [global::System.ComponentModel.DefaultValue(CType.STRING)]
+        public CType ctype { get; set; } = CType.STRING;
+        [global::ProtoBuf.ProtoMember(2)]
+        public bool packed { get; set; }
+        [global::ProtoBuf.ProtoMember(6)]
+        [global::System.ComponentModel.DefaultValue(JSType.JS_NORMAL)]
+        public JSType jstype { get; set; } = JSType.JS_NORMAL;
         [global::ProtoBuf.ProtoMember(5)]
         [global::System.ComponentModel.DefaultValue(false)]
         public bool lazy { get; set; } = false;
@@ -348,15 +348,15 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract(Name = @"MethodOptions")]
     public partial class MethodOptions
     {
-        [global::ProtoBuf.ProtoMember(33)]
-        [global::System.ComponentModel.DefaultValue(false)]
-        public bool deprecated { get; set; } = false;
         public enum IdempotencyLevel
         {
             IDEMPOTENCY_UNKNOWN = 0,
             NO_SIDE_EFFECTS = 1,
             IDEMPOTENT = 2,
         }
+        [global::ProtoBuf.ProtoMember(33)]
+        [global::System.ComponentModel.DefaultValue(false)]
+        public bool deprecated { get; set; } = false;
         [global::ProtoBuf.ProtoMember(34)]
         [global::System.ComponentModel.DefaultValue(IdempotencyLevel.IDEMPOTENCY_UNKNOWN)]
         public IdempotencyLevel idempotency_level { get; set; } = IdempotencyLevel.IDEMPOTENCY_UNKNOWN;
@@ -394,8 +394,6 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract(Name = @"SourceCodeInfo")]
     public partial class SourceCodeInfo
     {
-        [global::ProtoBuf.ProtoMember(1)]
-        public global::System.Collections.Generic.List<Location> location { get; } = new global::System.Collections.Generic.List<Location>();
         [global::ProtoBuf.ProtoContract(Name = @"Location")]
         public partial class Location
         {
@@ -410,14 +408,14 @@ namespace Google.Protobuf.Reflection
             [global::System.ComponentModel.DefaultValue("")]
             public string trailing_comments { get; set; } = "";
             [global::ProtoBuf.ProtoMember(6)]
-            public string[] leading_detached_comments { get; set; }
+            public global::System.Collections.Generic.List<string> leading_detached_comments { get; } = new global::System.Collections.Generic.List<string>();
         }
+        [global::ProtoBuf.ProtoMember(1)]
+        public global::System.Collections.Generic.List<Location> location { get; } = new global::System.Collections.Generic.List<Location>();
     }
     [global::ProtoBuf.ProtoContract(Name = @"GeneratedCodeInfo")]
     public partial class GeneratedCodeInfo
     {
-        [global::ProtoBuf.ProtoMember(1)]
-        public global::System.Collections.Generic.List<Annotation> annotation { get; } = new global::System.Collections.Generic.List<Annotation>();
         [global::ProtoBuf.ProtoContract(Name = @"Annotation")]
         public partial class Annotation
         {
@@ -431,6 +429,8 @@ namespace Google.Protobuf.Reflection
             [global::ProtoBuf.ProtoMember(4)]
             public int end { get; set; }
         }
+        [global::ProtoBuf.ProtoMember(1)]
+        public global::System.Collections.Generic.List<Annotation> annotation { get; } = new global::System.Collections.Generic.List<Annotation>();
     }
 }
 #pragma warning restore CS1591
