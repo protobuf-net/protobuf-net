@@ -6,4 +6,7 @@
     <TargetFrameworks>net40;netstandard1.3</TargetFrameworks><!--net20;net35;-->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+  </ItemGroup>
 </Project>

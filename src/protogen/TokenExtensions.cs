@@ -49,6 +49,42 @@ namespace ProtoBuf
             }
             return sb.AppendLine(line);
         }
+        internal static int ConsumeInt32(this Peekable<Token> tokens, int? max = null)
+        {
+            var token = tokens.Read();
+            token.Assert(TokenType.AlphaNumeric);
+            tokens.Consume();
+            if (max.HasValue && token.Value == "max") return max.Value;
+
+            if (!int.TryParse(token.Value, NumberStyles.None, CultureInfo.InvariantCulture, out int val))
+                token.SyntaxError("Unable to parse integer");
+            return val;
+        }
+
+        internal static string ConsumeString(this Peekable<Token> tokens)
+        {
+            var token = tokens.Read();
+            switch (token.Type)
+            {
+                case TokenType.StringLiteral:
+                case TokenType.AlphaNumeric:
+                    tokens.Consume();
+                    return token.Value;
+                default:
+                    throw token.SyntaxError();
+            }
+        }
+
+        internal static bool ConsumeBoolean(this Peekable<Token> tokens)
+        {
+            var token = tokens.Read();
+            token.Assert(TokenType.AlphaNumeric);
+            tokens.Consume();
+            if (string.Equals("true", token.Value, StringComparison.OrdinalIgnoreCase)) return true;
+            if (string.Equals("false", token.Value, StringComparison.OrdinalIgnoreCase)) return false;
+            throw token.SyntaxError("Unable to parse boolean");
+        }
+
         internal static uint ConsumeUInt32(this Peekable<Token> tokens, uint? max = null)
         {
             var token = tokens.Read();
@@ -104,8 +140,10 @@ namespace ProtoBuf
 
             int lineNumber = 0;
             string line;
+            string lastLine = null;
             while ((line = reader.ReadLine()) != null)
             {
+                lastLine = line;
                 lineNumber++;
                 int columnNumber = 0, tokenStart = 1;
                 TokenType type = TokenType.None;
@@ -116,7 +154,7 @@ namespace ProtoBuf
                     {
                         if (c == '"')
                         {
-                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type);
+                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line);
                             buffer.Clear();
                             type = TokenType.None;
                         }
@@ -136,7 +174,7 @@ namespace ProtoBuf
                         {
                             if (buffer.Length != 0)
                             {
-                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type);
+                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line);
                                 buffer.Clear();
                             }
                             type = newType;
@@ -151,7 +189,7 @@ namespace ProtoBuf
 
                 if (buffer.Length != 0)
                 {
-                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type);
+                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, lastLine);
                     buffer.Clear();
                 }
             }

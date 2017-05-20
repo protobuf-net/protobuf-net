@@ -1,3 +1,4 @@
+﻿#pragma warning disable CS1591
 namespace Google.Protobuf.Reflection
 {
     [global::ProtoBuf.ProtoContract(Name = @"FileDescriptorSet")]
@@ -76,7 +77,7 @@ namespace Google.Protobuf.Reflection
         [global::ProtoBuf.ProtoMember(9)]
         public global::System.Collections.Generic.List<ReservedRange> reserved_range { get; } = new global::System.Collections.Generic.List<ReservedRange>();
         [global::ProtoBuf.ProtoMember(10)]
-        public string[] reserved_name { get; set; }
+        public global::System.Collections.Generic.List<string> reserved_name { get; } = new global::System.Collections.Generic.List<string>();
     }
     [global::ProtoBuf.ProtoContract(Name = @"FieldDescriptorProto")]
     public partial class FieldDescriptorProto
@@ -432,3 +433,4 @@ namespace Google.Protobuf.Reflection
         }
     }
 }
+#pragma warning restore CS1591

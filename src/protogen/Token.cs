@@ -8,16 +8,18 @@ namespace ProtoBuf
         public int ColumnNumber { get; }
         public TokenType Type { get; }
         public string Value { get; }
-        internal Token(string value, int lineNumber, int columnNumber, TokenType type)
+        public string LineContents { get; }
+        internal Token(string value, int lineNumber, int columnNumber, TokenType type, string lineContents)
         {
             Value = value;
             LineNumber = lineNumber;
             ColumnNumber = columnNumber;
             Type = type;
+            LineContents = lineContents;
         }
-        public override string ToString() => $"({LineNumber},{ColumnNumber}:{Type}) {Value}";
+        public override string ToString() => $"({LineNumber},{ColumnNumber}) '{Value}'";
 
-        internal Exception SyntaxError(string error = null) => throw new InvalidOperationException((error ?? "syntax error") + " at " + ToString());
+        internal Exception SyntaxError(string error = null) => throw new InvalidOperationException((error ?? "syntax error") + " at " + ToString() + ": " + LineContents);
 
         internal void Assert(TokenType type, string value = null)
         {
