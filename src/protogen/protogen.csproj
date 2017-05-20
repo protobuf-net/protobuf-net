@@ -1,0 +1,9 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>protogen</AssemblyName>
+    <Title>protogen</Title>
+    <Description>ProtoBuf DSL (proto2 / proto3) tools for protobuf-net</Description>
+    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks><!--net20;net35;-->
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+</Project>
