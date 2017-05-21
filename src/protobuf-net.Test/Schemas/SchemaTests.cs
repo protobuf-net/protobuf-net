@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using Newtonsoft.Json;
 using System.IO;
 using Xunit;
 using Xunit.Abstractions;
@@ -21,6 +22,21 @@ namespace ProtoBuf.Schemas
             foreach (var msg in schema.message_type)
             {
                 WriteMessage(msg, 0);
+            }
+        }
+
+        [Fact]
+        public void CanDeserializeCompiledSchema()
+        {
+            // to regenerate bin:
+            // protoc --descriptor_set_out=descriptor.bin descriptor.proto
+            // note that protoc is on maven: http://repo1.maven.org/maven2/com/google/protobuf/protoc/
+
+            using (var file = File.OpenRead(@"Schemas\descriptor.bin"))
+            {
+                var obj = Serializer.Deserialize<FileDescriptorSet>(file);
+                var json = JsonConvert.SerializeObject(obj);
+                _output.WriteLine(json);
             }
         }
 
