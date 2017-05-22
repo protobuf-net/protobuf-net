@@ -76,11 +76,10 @@ namespace ProtoBuf
             return s;
         }
 
-        internal static T ConsumeEnum<T>(this Peekable<Token> tokens, TokenType type, bool ignoreCase = true) where T : struct
+        internal static T ConsumeEnum<T>(this Peekable<Token> tokens, bool ignoreCase = true) where T : struct
         {
             var token = tokens.Read();
-            token.Assert(type);
-            tokens.Consume();
+            var value = tokens.ConsumeString();
 
             if (!System.Enum.TryParse<T>(token.Value, ignoreCase, out T val))
                 token.SyntaxError("Unable to parse " + typeof(T).Name);

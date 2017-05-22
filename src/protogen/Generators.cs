@@ -322,12 +322,12 @@ namespace ProtoBuf
                     case FieldDescriptorProto.Type.TypeBytes:
                         return "byte[]";
                     case FieldDescriptorProto.Type.TypeEnum:
-                        var enumType = FindEnum(field.TypeName);
-                        return enumType == null ? field.TypeName : Normalizer.GetName(enumType);
+                        var enumType = Find<EnumDescriptorProto>(field.TypeName);
+                        return Normalizer.GetName(enumType);
                     case FieldDescriptorProto.Type.TypeMessage:
                     case FieldDescriptorProto.Type.TypeGroup:
-                        var msgType = FindMessage(field.TypeName);
-                        return msgType == null ? field.TypeName : Normalizer.GetName(msgType);
+                        var msgType = Find<DescriptorProto>(field.TypeName);
+                        return Normalizer.GetName(msgType);
                     default:
                         if (field.type == 0)
                         {
@@ -347,62 +347,49 @@ namespace ProtoBuf
             }
             public NameNormalizer Normalizer => normalizer;
 
-            public DescriptorProto FindMessage(string name)
+            private Dictionary<string, object> _knownTypes = new Dictionary<string, object>();
+            internal void BuildTypeIndex()
             {
-                DescriptorProto FindMessage(DescriptorProto message, string type)
+                void AddMessage(DescriptorProto message)
                 {
-                    foreach (var inner in message.NestedTypes)
-                    {
-                        if (inner.Name == name) return inner;
-
-                        var found = FindMessage(inner, type);
-                        if (found != null) return found;
-                    }
-                    return null;
-                }
-                // this will all be replaced when we have the full names thing fixed
-                foreach (var type in schema.MessageTypes)
-                {
-                    if (type.Name == name) return type;
-                    var found = FindMessage(type, name);
-                    if (found != null) return found;
-                }
-                return null;
-            }
-
-            public EnumDescriptorProto FindEnum(string name)
-            {
-                EnumDescriptorProto FindEnum(DescriptorProto message, string type)
-                {
+                    _knownTypes.Add(message.FullyQualifiedName, message);
                     foreach (var @enum in message.EnumTypes)
                     {
-                        if (@enum.Name == name) return @enum;
+                        _knownTypes.Add(@enum.FullyQualifiedName, @enum);
                     }
-                    foreach (var inner in message.NestedTypes)
+                    foreach (var msg in message.NestedTypes)
                     {
-                        var found = FindEnum(inner, type);
-                        if (found != null) return found;
+                        AddMessage(msg);
                     }
-                    return null;
                 }
-                // this will all be replaced when we have the full names thing fixed
-                foreach (var @enum in schema.EnumTypes)
                 {
-                    if (@enum.Name == name) return @enum;
+                    _knownTypes.Clear();
+                    foreach (var @enum in schema.EnumTypes)
+                    {
+                        _knownTypes.Add(@enum.FullyQualifiedName, @enum);
+                    }
+                    foreach (var msg in schema.MessageTypes)
+                    {
+                        AddMessage(msg);
+                    }
                 }
-                foreach (var type in schema.MessageTypes)
+            }
+            public T Find<T>(string typeName) where T : class
+            {
+                if(!_knownTypes.TryGetValue(typeName, out var obj) || obj == null)
                 {
-                    var found = FindEnum(type, name);
-                    if (found != null) return found;
+                    throw new InvalidOperationException($"Type not found: {typeName}");
                 }
-                return null;
+                if (obj is T) return (T)obj;
+
+                throw new InvalidOperationException($"Type of {typeName} is not suitable; expected {typeof(T).Name}, got {obj.GetType().Name}");
             }
         }
 
         public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null)
         {
             var ctx = new GeneratorContext(schema, normalizer ?? NameNormalizer.Default);
-
+            ctx.BuildTypeIndex();
             int indent = 0;
             var @namespace = schema.Options?.CsharpNamespace ?? schema.Package;
             target.WriteLine(indent, "#pragma warning disable CS1591");
@@ -487,17 +474,11 @@ namespace ProtoBuf
                 }
                 else if (!string.IsNullOrWhiteSpace(defaultValue) && field.type == FieldDescriptorProto.Type.TypeEnum)
                 {
-                    var enumType = context.FindEnum(field.TypeName);
-                    if (enumType != null)
-                    {
-                        var found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
-                        if (found != null) defaultValue = context.Normalizer.GetName(found);
-                        defaultValue = context.Normalizer.GetName(enumType) + "." + defaultValue;
-                    }
-                    else
-                    {
-                        defaultValue = field.TypeName + "." + defaultValue;
-                    }
+                    var enumType = context.Find<EnumDescriptorProto>(field.TypeName);
+
+                    var found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
+                    if (found != null) defaultValue = context.Normalizer.GetName(found);
+                    defaultValue = context.Normalizer.GetName(enumType) + "." + defaultValue;
                 }
             }
             var typeName = context.GetTypeName(field, out var dataFormat);
