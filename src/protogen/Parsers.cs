@@ -12,61 +12,104 @@ namespace Google.Protobuf.Reflection
         public static FileDescriptorProto Parse(System.IO.TextReader schema)
             => Parsers.Parse(schema);
 
-        internal bool TryResolveEnum(string type, List<DescriptorProto> stack, out EnumDescriptorProto @enum)
+        internal bool TryResolveEnum(string type, DescriptorProto parent, out EnumDescriptorProto @enum)
         {
-            if (stack != null)
+            while (parent != null)
             {
-                for (int i = stack.Count - 1; i >= 0; i--)
-                {
-                    @enum = stack[i].enum_type.FirstOrDefault(x => x.name == type);
-                    if (@enum != null) return true;
-                }
+                @enum = parent.EnumTypes.FirstOrDefault(x => x.Name == type);
+                if (@enum != null) return true;
+                parent = parent.Parent;
             }
-            @enum = enum_type.FirstOrDefault(x => x.name == type);
+            @enum = EnumTypes.FirstOrDefault(x => x.Name == type);
             return @enum != null;
         }
 
-        internal bool TryResolveMessage(string type, List<DescriptorProto> stack, out DescriptorProto message)
+        internal bool TryResolveMessage(string type, DescriptorProto parent, out DescriptorProto message)
         {
-            if (stack != null)
+            while(parent != null)
             {
-                for (int i = stack.Count - 1; i >= 0; i--)
-                {
-                    message = stack[i].nested_type.FirstOrDefault(x => x.name == type);
-                    if (message != null) return true;
-                }
+                message = parent.NestedTypes.FirstOrDefault(x => x.Name == type);
+                if (message != null) return true;
+                parent = parent.Parent;
             }
-            message = message_type.FirstOrDefault(x => x.name == type);
+            message = MessageTypes.FirstOrDefault(x => x.Name == type);
             return message != null;
         }
 
-        internal void FixupTypes()
+        static void SetParents(EnumDescriptorProto parent)
         {
-            void FixupTypes(DescriptorProto type, List<DescriptorProto> stack)
+            foreach (var val in parent.Values)
             {
-                stack.Add(type);
-                foreach (var field in type.field)
-                {
-                    if (field.type_name != null && field.type == default(FieldDescriptorProto.Type))
-                    {
-                        if (TryResolveMessage(field.type_name, stack, out var msg))
-                        {
-                            field.type = FieldDescriptorProto.Type.TYPE_MESSAGE;
-                        }
-                        else if (TryResolveEnum(field.type_name, stack, out var @enum))
-                        {
-                            field.type = FieldDescriptorProto.Type.TYPE_ENUM;
-                        }
-                    }
-                }
-                stack.RemoveAt(stack.Count - 1);
-            }
-            {
-                var stack = new List<DescriptorProto>();
-                foreach (var type in message_type)
-                    FixupTypes(type, stack);
+                val.Parent = parent;
             }
         }
+        static void SetParents(DescriptorProto parent)
+        {
+            foreach (var field in parent.Fields)
+            {
+                field.Parent = parent;
+            }
+            foreach (var @enum in parent.EnumTypes)
+            {
+                @enum.Parent = parent;
+                SetParents(@enum);
+            }
+            foreach (var child in parent.NestedTypes)
+            {
+                child.Parent = parent;
+                SetParents(child);
+            }
+        }
+        internal void FixupTypes()
+        {
+            foreach (var type in EnumTypes)
+            {
+                SetParents(type);
+            }
+            foreach (var type in MessageTypes)
+            {
+                SetParents(type);
+            }
+            foreach (var type in MessageTypes)
+            {
+                ResolveFieldTypes(type);
+            }
+        }
+
+        private void ResolveFieldTypes(DescriptorProto type)
+        {
+            foreach (var field in type.Fields)
+            {
+                if (field.TypeName != null && field.type == default(FieldDescriptorProto.Type))
+                {
+                    if (TryResolveMessage(field.TypeName, type, out var msg))
+                    {
+                        field.type = FieldDescriptorProto.Type.TypeMessage;
+                    }
+                    else if (TryResolveEnum(field.TypeName, type, out var @enum))
+                    {
+                        field.type = FieldDescriptorProto.Type.TypeEnum;
+                    }
+                }
+            }
+        }
+    }
+    partial class EnumDescriptorProto
+    {
+        internal DescriptorProto Parent { get; set; }
+    }
+    partial class FieldDescriptorProto
+    {
+        internal DescriptorProto Parent { get; set; }
+    }
+    partial class DescriptorProto
+    {
+        internal DescriptorProto Parent { get; set; }
+    }
+
+    partial class EnumValueDescriptorProto
+    {
+        internal EnumDescriptorProto Parent { get; set; }
     }
 #pragma warning restore CS1591
 }
@@ -77,13 +120,13 @@ namespace ProtoBuf
         public static FileDescriptorProto Parse(System.IO.TextReader schema)
         {
             var parsed = new FileDescriptorProto();
-            parsed.name = ((schema as System.IO.StreamReader)?.BaseStream as System.IO.FileStream)?.Name ?? "";
+            parsed.Name = ((schema as System.IO.StreamReader)?.BaseStream as System.IO.FileStream)?.Name ?? "";
 
             using (var tokens = new Peekable<Token>(schema.Tokenize().RemoveCommentsAndWhitespace()))
             {
                 while (tokens.Peek(out Token token))
                 {
-                    if (TryParseFileDescriptorProtoChildren(tokens, parsed.syntax, parsed))
+                    if (TryParseFileDescriptorProtoChildren(tokens, parsed.Syntax, parsed))
                     {
                         // handled
                     }
@@ -92,22 +135,22 @@ namespace ProtoBuf
                         switch (token.Value)
                         {
                             case "syntax":
-                                if (parsed.message_type.Any())
+                                if (parsed.MessageTypes.Any())
                                 {
                                     token.SyntaxError("syntax must be set before messages are included");
                                 }
                                 tokens.Consume();
                                 tokens.Consume(TokenType.Symbol, "=");
-                                parsed.syntax = tokens.Consume(TokenType.StringLiteral);
+                                parsed.Syntax = tokens.Consume(TokenType.StringLiteral);
                                 tokens.Consume(TokenType.Symbol, ";");
                                 break;
                             case "package":
                                 tokens.Consume();
-                                parsed.package = tokens.Consume(TokenType.AlphaNumeric);
+                                parsed.Package = tokens.Consume(TokenType.AlphaNumeric);
                                 tokens.Consume(TokenType.Symbol, ";");
                                 break;
                             case "option":
-                                parsed.options = ParseFileOptions(tokens, parsed.options);
+                                parsed.Options = ParseFileOptions(tokens, parsed.Options);
                                 break;
                             default:
                                 token.SyntaxError();
@@ -131,10 +174,10 @@ namespace ProtoBuf
                 switch (token.Value)
                 {
                     case "message":
-                        schema.message_type.Add(ParseDescriptorProto(tokens, syntax));
+                        schema.MessageTypes.Add(ParseDescriptorProto(tokens, syntax));
                         return true;
                     case "enum":
-                        schema.enum_type.Add(ParseEnumDescriptorProto(tokens, syntax));
+                        schema.EnumTypes.Add(ParseEnumDescriptorProto(tokens, syntax));
                         return true;
                 }
             }
@@ -147,16 +190,16 @@ namespace ProtoBuf
                 switch (token.Value)
                 {
                     case "message":
-                        message.nested_type.Add(ParseDescriptorProto(tokens, syntax));
+                        message.NestedTypes.Add(ParseDescriptorProto(tokens, syntax));
                         return true;
                     case "enum":
-                        message.enum_type.Add(ParseEnumDescriptorProto(tokens, syntax));
+                        message.EnumTypes.Add(ParseEnumDescriptorProto(tokens, syntax));
                         return true;
                     case "reserved":
-                        ParseReservedRanges(message.reserved_name, message.reserved_range, tokens, syntax);
+                        ParseReservedRanges(message.ReservedNames, message.ReservedRanges, tokens, syntax);
                         return true;
                     case "extensions":
-                        ParseExtensionRange(message.extension_range, tokens, syntax);
+                        ParseExtensionRange(message.ExtensionRanges, tokens, syntax);
                         return true;
                 }
             }
@@ -198,7 +241,7 @@ namespace ProtoBuf
                             tokens.Consume();
                             to = tokens.ConsumeInt32();
                         }
-                        ranges.Add(new DescriptorProto.ReservedRange { start = from, end = to });
+                        ranges.Add(new DescriptorProto.ReservedRange { Start = from, End = to });
                         token = tokens.Read();
                         if (token.Is(TokenType.Symbol, ","))
                         {
@@ -233,7 +276,7 @@ namespace ProtoBuf
                     tokens.Consume();
                     to = tokens.ConsumeInt32(MAX);
                 }
-                ranges.Add(new DescriptorProto.ExtensionRange { start = from, end = to });
+                ranges.Add(new DescriptorProto.ExtensionRange { Start = from, End = to });
 
                 var token = tokens.Read();
                 if (token.Is(TokenType.Symbol, ","))
@@ -257,7 +300,7 @@ namespace ProtoBuf
             tokens.Consume(TokenType.AlphaNumeric, "message");
 
             string msgName = tokens.Consume(TokenType.AlphaNumeric);
-            var message = new DescriptorProto { name = msgName };
+            var message = new DescriptorProto { Name = msgName };
             tokens.Consume(TokenType.Symbol, "{");
             while (tokens.Peek(out Token token) && !token.Is(TokenType.Symbol, "}"))
             {
@@ -267,7 +310,7 @@ namespace ProtoBuf
                 }
                 else
                 {   // assume anything else is a field
-                    message.field.Add(ParseFieldDescriptorProto(tokens, syntax));
+                    message.Fields.Add(ParseFieldDescriptorProto(tokens, syntax));
                 }
             }
             tokens.Consume(TokenType.Symbol, "}");
@@ -281,17 +324,17 @@ namespace ProtoBuf
             var token = tokens.Read();
             if (token.Is(TokenType.AlphaNumeric, "repeated"))
             {
-                label = FieldDescriptorProto.Label.LABEL_REPEATED;
+                label = FieldDescriptorProto.Label.LabelRepeated;
                 tokens.Consume();
             }
             else if (token.Is(TokenType.AlphaNumeric, "required"))
             {
-                label = FieldDescriptorProto.Label.LABEL_REQUIRED;
+                label = FieldDescriptorProto.Label.LabelRequired;
                 tokens.Consume();
             }
             else if (token.Is(TokenType.AlphaNumeric, "optional"))
             {
-                label = FieldDescriptorProto.Label.LABEL_OPTIONAL;
+                label = FieldDescriptorProto.Label.LabelOptional;
                 tokens.Consume();
             }
 
@@ -308,17 +351,17 @@ namespace ProtoBuf
             var field = new FieldDescriptorProto
             {
                 type = type,
-                type_name = typeName,
-                name = name,
-                number = number,
+                TypeName = typeName,
+                Name = name,
+                Number = number,
                 label = label
             };
             bool haveEndedSemicolon = false;
             if (tokens.Read().Is(TokenType.Symbol, "["))
             {
-                string defaultValue = field.default_value;
-                field.options = ParseFieldOptions(tokens, field.options, out haveEndedSemicolon, ref defaultValue);
-                field.default_value = defaultValue;
+                string defaultValue = field.DefaultValue;
+                field.Options = ParseFieldOptions(tokens, field.Options, out haveEndedSemicolon, ref defaultValue);
+                field.DefaultValue = defaultValue;
             }
 
             if (!haveEndedSemicolon)
@@ -337,21 +380,21 @@ namespace ProtoBuf
             }
             switch (typeName)
             {
-                case "bool": return Assign(FieldDescriptorProto.Type.TYPE_BOOL, out @type);
-                case "bytes": return Assign(FieldDescriptorProto.Type.TYPE_BYTES, out @type);
-                case "double": return Assign(FieldDescriptorProto.Type.TYPE_DOUBLE, out @type);
-                case "fixed32": return Assign(FieldDescriptorProto.Type.TYPE_FIXED32, out @type);
-                case "fixed64": return Assign(FieldDescriptorProto.Type.TYPE_FIXED64, out @type);
-                case "float": return Assign(FieldDescriptorProto.Type.TYPE_FLOAT, out @type);
-                case "int32": return Assign(FieldDescriptorProto.Type.TYPE_INT32, out @type);
-                case "int64": return Assign(FieldDescriptorProto.Type.TYPE_INT64, out @type);
-                case "sfixed32": return Assign(FieldDescriptorProto.Type.TYPE_SFIXED32, out @type);
-                case "sfixed64": return Assign(FieldDescriptorProto.Type.TYPE_SFIXED64, out @type);
-                case "sint32": return Assign(FieldDescriptorProto.Type.TYPE_SINT32, out @type);
-                case "sint64": return Assign(FieldDescriptorProto.Type.TYPE_SINT64, out @type);
-                case "string": return Assign(FieldDescriptorProto.Type.TYPE_STRING, out @type);
-                case "uint32": return Assign(FieldDescriptorProto.Type.TYPE_UINT32, out @type);
-                case "uint64": return Assign(FieldDescriptorProto.Type.TYPE_UINT64, out @type);
+                case "bool": return Assign(FieldDescriptorProto.Type.TypeBool, out @type);
+                case "bytes": return Assign(FieldDescriptorProto.Type.TypeBytes, out @type);
+                case "double": return Assign(FieldDescriptorProto.Type.TypeDouble, out @type);
+                case "fixed32": return Assign(FieldDescriptorProto.Type.TypeFixed32, out @type);
+                case "fixed64": return Assign(FieldDescriptorProto.Type.TypeFixed64, out @type);
+                case "float": return Assign(FieldDescriptorProto.Type.TypeFloat, out @type);
+                case "int32": return Assign(FieldDescriptorProto.Type.TypeInt32, out @type);
+                case "int64": return Assign(FieldDescriptorProto.Type.TypeInt64, out @type);
+                case "sfixed32": return Assign(FieldDescriptorProto.Type.TypeSfixed32, out @type);
+                case "sfixed64": return Assign(FieldDescriptorProto.Type.TypeSfixed64, out @type);
+                case "sint32": return Assign(FieldDescriptorProto.Type.TypeSint32, out @type);
+                case "sint64": return Assign(FieldDescriptorProto.Type.TypeSint64, out @type);
+                case "string": return Assign(FieldDescriptorProto.Type.TypeString, out @type);
+                case "uint32": return Assign(FieldDescriptorProto.Type.TypeUint32, out @type);
+                case "uint64": return Assign(FieldDescriptorProto.Type.TypeUint64, out @type);
                 default:
                     type = default(FieldDescriptorProto.Type);
                     return false;
@@ -365,17 +408,17 @@ namespace ProtoBuf
             tokens.Consume(TokenType.Symbol, "=");
             switch (key)
             {
-                case nameof(options.deprecated):
+                case "deprecated":
                     if (options == null) options = new FileOptions();
-                    options.deprecated = tokens.ConsumeBoolean();
+                    options.Deprecated = tokens.ConsumeBoolean();
                     break;
-                case nameof(options.csharp_namespace):
+                case "csharp_namespace":
                     if (options == null) options = new FileOptions();
-                    options.csharp_namespace = tokens.ConsumeString();
+                    options.CsharpNamespace = tokens.ConsumeString();
                     break;
-                case nameof(options.optimize_for):
+                case "optimize_for":
                     if (options == null) options = new FileOptions();
-                    options.optimize_for = tokens.ConsumeEnum<FileOptions.OptimizeMode>(TokenType.AlphaNumeric);
+                    options.OptimizeFor = tokens.ConsumeEnum<FileOptions.OptimizeMode>(TokenType.AlphaNumeric);
                     break;
                 default:
                     // drop it on the floor
@@ -414,13 +457,13 @@ namespace ProtoBuf
                     tokens.Consume(TokenType.Symbol, "=");
                     switch (key)
                     {
-                        case nameof(options.deprecated):
+                        case "deprecated":
                             if (options == null) options = new FieldOptions();
-                            options.deprecated = tokens.ConsumeBoolean();
+                            options.Deprecated = tokens.ConsumeBoolean();
                             break;
-                        case nameof(options.packed):
+                        case "packed":
                             if (options == null) options = new FieldOptions();
-                            options.packed = tokens.ConsumeBoolean();
+                            options.Packed = tokens.ConsumeBoolean();
                             break;
                         case "default":
                             defaultValue = tokens.ConsumeString();
@@ -438,7 +481,7 @@ namespace ProtoBuf
         public static EnumDescriptorProto ParseEnumDescriptorProto(Peekable<Token> tokens, string syntax)
         {
             tokens.Consume(TokenType.AlphaNumeric, "enum");
-            var obj = new EnumDescriptorProto { name = tokens.Consume(TokenType.AlphaNumeric) };
+            var obj = new EnumDescriptorProto { Name = tokens.Consume(TokenType.AlphaNumeric) };
             tokens.Consume(TokenType.Symbol, "{");
 
             bool cont = true;
@@ -462,7 +505,7 @@ namespace ProtoBuf
                 }
                 else
                 {
-                    obj.value.Add(ParseEnumValueDescriptorProto(tokens, syntax));
+                    obj.Values.Add(ParseEnumValueDescriptorProto(tokens, syntax));
                 }
             }
             return obj;
@@ -474,7 +517,7 @@ namespace ProtoBuf
             tokens.Consume(TokenType.Symbol, "=");
             var value = tokens.ConsumeInt32();
             tokens.Consume(TokenType.Symbol, ";");
-            return new EnumValueDescriptorProto { name = name, number = value };
+            return new EnumValueDescriptorProto { Name = name, Number = value };
         }
     }
 }

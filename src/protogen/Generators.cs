@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Google.Protobuf.Reflection
 {
@@ -23,27 +23,109 @@ namespace Google.Protobuf.Reflection
             }
         }
     }
+
     public abstract class NameNormalizer
     {
         private class NullNormalizer : NameNormalizer
         {
-            protected override string GetName(string name) => name;
+            protected override string GetName(string identifier) => identifier;
+            public override string Pluralize(string identifier) => identifier;
         }
         private class DefaultNormalizer : NameNormalizer
         {
-            protected override string GetName(string name) => AutoCapitalize(name);
+            protected override string GetName(string identifier) => AutoCapitalize(identifier);
+            public override string Pluralize(string identifier) => AutoPluralize(identifier);
         }
-        protected static string AutoCapitalize(string name)
+        protected static string AutoCapitalize(string identifier)
         {
-            return name;
+            if (string.IsNullOrEmpty(identifier)) return identifier;
+            // if all upper-case, make proper-case
+            if(Regex.IsMatch(identifier, @"^[_A-Z0-9]*$"))
+            {
+                return Regex.Replace(identifier, @"(^|_)([A-Z0-9])([A-Z0-9]*)",
+                    match => match.Groups[2].Value.ToUpperInvariant() + match.Groups[3].Value.ToLowerInvariant());
+            }
+            // if all lower-case, make proper case
+            if (Regex.IsMatch(identifier, @"^[_a-z0-9]*$"))
+            {
+                return Regex.Replace(identifier, @"(^|_)([a-z0-9])([a-z0-9]*)",
+                    match => match.Groups[2].Value.ToUpperInvariant() + match.Groups[3].Value.ToLowerInvariant());
+            }
+            // just remove underscores - leave their chosen casing alone
+            return identifier.Replace("_", "");
+        }
+        protected static string AutoPluralize(string identifier)
+        {
+            if (string.IsNullOrEmpty(identifier)) return identifier;
+            var last = identifier[identifier.Length - 1];
+            switch (last)
+            {
+                case 's':
+                case 'S':
+                    return identifier;
+                default:
+                    return identifier + "s";
+            }
         }
         public static NameNormalizer Default { get; } = new DefaultNormalizer();
         public static NameNormalizer Null { get; } = new NullNormalizer();
-        protected abstract string GetName(string name);
-        public virtual string GetName(DescriptorProto definition) => AutoCapitalize(definition.name);
-        public virtual string GetName(EnumDescriptorProto definition) => AutoCapitalize(definition.name);
-        public virtual string GetName(FieldDescriptorProto definition) => AutoCapitalize(definition.name);
-        public virtual string GetName(EnumValueDescriptorProto definition) => AutoCapitalize(definition.name);
+        protected abstract string GetName(string identifier);
+        public abstract string Pluralize(string identifier);
+        public virtual string GetName(DescriptorProto definition)
+            => GetName(definition.Parent, GetName(definition.Name), definition.Name, false);
+        public virtual string GetName(EnumDescriptorProto definition)
+            => GetName(definition.Parent, GetName(definition.Name), definition.Name, false);
+        public virtual string GetName(EnumValueDescriptorProto definition) => AutoCapitalize(definition.Name);
+        public virtual string GetName(FieldDescriptorProto definition)
+        {
+            var preferred = GetName(definition.Name);
+            if(definition.label == FieldDescriptorProto.Label.LabelRepeated)
+            {
+                preferred = Pluralize(preferred);
+            }
+            return GetName(definition.Parent, preferred, definition.Name, true);
+        }
+
+        protected HashSet<string> BuildConflicts(DescriptorProto parent, bool includeDescendents)
+        {
+            var conflicts = new HashSet<string>();
+            if (parent != null)
+            {
+                conflicts.Add(GetName(parent));
+                if (includeDescendents)
+                {
+                    foreach (var type in parent.NestedTypes)
+                    {
+                        conflicts.Add(GetName(type));
+                    }
+                    foreach (var type in parent.EnumTypes)
+                    {
+                        conflicts.Add(GetName(type));
+                    }
+                }
+            }
+            return conflicts;
+        }
+        protected virtual string GetName(DescriptorProto parent, string preferred, string fallback, bool includeDescendents)
+        {
+            var conflicts = BuildConflicts(parent, includeDescendents);
+
+            if (!conflicts.Contains(preferred)) return preferred;
+            if (!conflicts.Contains(fallback)) return fallback;
+
+            var attempt = preferred + "Value";
+            if (!conflicts.Contains(attempt)) return attempt;
+
+            attempt = fallback + "Value";
+            if (!conflicts.Contains(attempt)) return attempt;
+
+            int i = 1;
+            while (true)
+            {
+                attempt = preferred + i.ToString();
+                if (!conflicts.Contains(attempt)) return attempt;
+            }
+        }
     }
 #pragma warning restore CS1591
 }
@@ -54,40 +136,240 @@ namespace ProtoBuf
     {
         private static string Escape(string identifier)
         {
-            // TODO: return @identifier for anything that is a keyword
-            return identifier;
+            switch (identifier)
+            {
+                case "abstract":
+                case "event":
+                case "new":
+                case "struct":
+                case "as":
+                case "explicit":
+                case "null":
+                case "switch":
+                case "base":
+                case "extern":
+                case "object":
+                case "this":
+                case "bool":
+                case "false":
+                case "operator":
+                case "throw":
+                case "break":
+                case "finally":
+                case "out":
+                case "true":
+                case "byte":
+                case "fixed":
+                case "override":
+                case "try":
+                case "case":
+                case "float":
+                case "params":
+                case "typeof":
+                case "catch":
+                case "for":
+                case "private":
+                case "uint":
+                case "char":
+                case "foreach":
+                case "protected":
+                case "ulong":
+                case "checked":
+                case "goto":
+                case "public":
+                case "unchecked":
+                case "class":
+                case "if":
+                case "readonly":
+                case "unsafe":
+                case "const":
+                case "implicit":
+                case "ref":
+                case "ushort":
+                case "continue":
+                case "in":
+                case "return":
+                case "using":
+                case "decimal":
+                case "int":
+                case "sbyte":
+                case "virtual":
+                case "default":
+                case "interface":
+                case "sealed":
+                case "volatile":
+                case "delegate":
+                case "internal":
+                case "short":
+                case "void":
+                case "do":
+                case "is":
+                case "sizeof":
+                case "while":
+                case "double":
+                case "lock":
+                case "stackalloc":
+                case "else":
+                case "long":
+                case "static":
+                case "enum":
+                case "namespace":
+                case "string":
+                    return "@" + identifier;
+                default:
+                    return identifier;
+            }
         }
-        private static void Write(TextWriter target, int indent, EnumDescriptorProto @enum, NameNormalizer normalizer)
+        private static void Write(TextWriter target, int indent, EnumDescriptorProto @enum, GeneratorContext context)
         {
-            var name = normalizer.GetName(@enum);
+            var name = context.Normalizer.GetName(@enum);
+            target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{@enum.Name}"")]");
             target.WriteLine(indent, $"public enum {Escape(name)}");
             target.WriteLine(indent++, "{");
-            foreach (var val in @enum.value)
+            foreach (var val in @enum.Values)
             {
-                name = normalizer.GetName(val);
-                target.WriteLine(indent, $"{Escape(name)} = {val.number},");
+                name = context.Normalizer.GetName(val);
+                target.WriteLine(indent, $@"[global::ProtoBuf.ProtoEnum(Name = @""{val.Name}"", Value = {val.Number})]");
+                target.WriteLine(indent, $"{Escape(name)} = {val.Number},");
             }
             target.WriteLine(--indent, "}");
         }
+        private class GeneratorContext
+        {
+            private readonly FileDescriptorProto schema;
+            private readonly NameNormalizer normalizer;
+
+            public string GetTypeName(FieldDescriptorProto field, out string dataFormat)
+            {
+                const string SIGNED = "ZigZag", FIXED = "FixedSize";
+                dataFormat = "";
+                switch (field.type)
+                {
+                    case FieldDescriptorProto.Type.TypeDouble:
+                        return "double";
+                    case FieldDescriptorProto.Type.TypeFloat:
+                        return "float";
+                    case FieldDescriptorProto.Type.TypeBool:
+                        return "bool";
+                    case FieldDescriptorProto.Type.TypeString:
+                        return "string";
+                    case FieldDescriptorProto.Type.TypeSint32:
+                        dataFormat = SIGNED;
+                        return "int";
+                    case FieldDescriptorProto.Type.TypeInt32:
+                        return "int";
+                    case FieldDescriptorProto.Type.TypeSfixed32:
+                        dataFormat = FIXED;
+                        return "int";
+                    case FieldDescriptorProto.Type.TypeSint64:
+                        dataFormat = SIGNED;
+                        return "long";
+                    case FieldDescriptorProto.Type.TypeInt64:
+                        return "long";
+                    case FieldDescriptorProto.Type.TypeSfixed64:
+                        dataFormat = FIXED;
+                        return "long";
+                    case FieldDescriptorProto.Type.TypeFixed32:
+                        dataFormat = FIXED;
+                        return "uint";
+                    case FieldDescriptorProto.Type.TypeUint32:
+                        return "uint";
+                    case FieldDescriptorProto.Type.TypeFixed64:
+                        dataFormat = FIXED;
+                        return "ulong";
+                    case FieldDescriptorProto.Type.TypeUint64:
+                        return "ulong";
+                    case FieldDescriptorProto.Type.TypeBytes:
+                        return "byte[]";
+                    case FieldDescriptorProto.Type.TypeEnum:
+                        var enumType = FindEnum(field.TypeName);
+                        return enumType == null ? field.TypeName : Normalizer.GetName(enumType);
+                    case FieldDescriptorProto.Type.TypeMessage:
+                        var msgType = FindMessage(field.TypeName);
+                        return msgType == null ? field.TypeName : Normalizer.GetName(msgType);
+                    default:
+                        throw new InvalidOperationException($"Unknown type: {field.type} ({field.TypeName})");
+                }
+            }
+
+            public GeneratorContext(FileDescriptorProto schema, NameNormalizer normalizer)
+            {
+                this.schema = schema;
+                this.normalizer = normalizer;
+            }
+            public NameNormalizer Normalizer => normalizer;
+
+            public DescriptorProto FindMessage(string name)
+            {
+                DescriptorProto FindMessage(DescriptorProto message, string type)
+                {
+                    foreach (var inner in message.NestedTypes)
+                    {
+                        if (inner.Name == name) return inner;
+
+                        var found = FindMessage(inner, type);
+                        if (found != null) return found;
+                    }
+                    return null;
+                }
+                // this will all be replaced when we have the full names thing fixed
+                foreach (var type in schema.MessageTypes)
+                {
+                    if (type.Name == name) return type;
+                    var found = FindMessage(type, name);
+                    if (found != null) return found;
+                }
+                return null;
+            }
+
+            public EnumDescriptorProto FindEnum(string name)
+            {
+                EnumDescriptorProto FindEnum(DescriptorProto message, string type)
+                {
+                    foreach (var @enum in message.EnumTypes)
+                    {
+                        if (@enum.Name == name) return @enum;
+                    }
+                    foreach (var inner in message.NestedTypes)
+                    {
+                        var found = FindEnum(inner, type);
+                        if (found != null) return found;
+                    }
+                    return null;
+                }
+                // this will all be replaced when we have the full names thing fixed
+                foreach (var @enum in schema.EnumTypes)
+                {
+                    if (@enum.Name == name) return @enum;
+                }
+                foreach (var type in schema.MessageTypes)
+                {
+                    var found = FindEnum(type, name);
+                    if (found != null) return found;
+                }
+                return null;
+            }
+        }
+
         public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null)
         {
-            if (normalizer == null) normalizer = NameNormalizer.Default;
+            var ctx = new GeneratorContext(schema, normalizer ?? NameNormalizer.Default);
 
             int indent = 0;
-            var @namespace = schema.options ?.csharp_namespace ?? schema.package;
+            var @namespace = schema.Options?.CsharpNamespace ?? schema.Package;
             target.WriteLine(indent, "#pragma warning disable CS1591");
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
                 target.WriteLine(indent, $"namespace {@namespace}");
                 target.WriteLine(indent++, "{");
             }
-            foreach (var obj in schema.enum_type)
+            foreach (var obj in schema.EnumTypes)
             {
-                Write(target, indent, obj, normalizer);
+                Write(target, indent, obj, ctx);
             }
-            foreach (var obj in schema.message_type)
+            foreach (var obj in schema.MessageTypes)
             {
-                Write(target, indent, obj, normalizer);
+                Write(target, indent, obj, ctx);
             }
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
@@ -96,23 +378,23 @@ namespace ProtoBuf
             target.WriteLine(indent, "#pragma warning restore CS1591");
         }
 
-        private static void Write(TextWriter target, int indent, DescriptorProto message, NameNormalizer normalizer)
+        private static void Write(TextWriter target, int indent, DescriptorProto message, GeneratorContext context)
         {
-            var name = normalizer.GetName(message);
-            target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{message.name}"")]");
+            var name = context.Normalizer.GetName(message);
+            target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{message.Name}"")]");
             target.WriteLine(indent, $"public partial class {Escape(name)}");
             target.WriteLine(indent++, "{");
-            foreach (var obj in message.enum_type)
+            foreach (var obj in message.EnumTypes)
             {
-                Write(target, indent, obj, normalizer);
+                Write(target, indent, obj, context);
             }
-            foreach (var obj in message.nested_type)
+            foreach (var obj in message.NestedTypes)
             {
-                Write(target, indent, obj, normalizer);
+                Write(target, indent, obj, context);
             }
-            foreach (var obj in message.field)
+            foreach (var obj in message.Fields)
             {
-                Write(target, indent, obj, normalizer);
+                Write(target, indent, obj, context);
             }
             target.WriteLine(--indent, "}");
         }
@@ -120,55 +402,66 @@ namespace ProtoBuf
         {
             switch (field.type)
             {
-                case FieldDescriptorProto.Type.TYPE_BOOL:
-                case FieldDescriptorProto.Type.TYPE_DOUBLE:
-                case FieldDescriptorProto.Type.TYPE_FIXED32:
-                case FieldDescriptorProto.Type.TYPE_FIXED64:
-                case FieldDescriptorProto.Type.TYPE_FLOAT:
-                case FieldDescriptorProto.Type.TYPE_INT32:
-                case FieldDescriptorProto.Type.TYPE_INT64:
-                case FieldDescriptorProto.Type.TYPE_SFIXED32:
-                case FieldDescriptorProto.Type.TYPE_SFIXED64:
-                case FieldDescriptorProto.Type.TYPE_SINT32:
-                case FieldDescriptorProto.Type.TYPE_SINT64:
-                case FieldDescriptorProto.Type.TYPE_UINT32:
-                case FieldDescriptorProto.Type.TYPE_UINT64:
+                case FieldDescriptorProto.Type.TypeBool:
+                case FieldDescriptorProto.Type.TypeDouble:
+                case FieldDescriptorProto.Type.TypeFixed32:
+                case FieldDescriptorProto.Type.TypeFixed64:
+                case FieldDescriptorProto.Type.TypeFloat:
+                case FieldDescriptorProto.Type.TypeInt32:
+                case FieldDescriptorProto.Type.TypeInt64:
+                case FieldDescriptorProto.Type.TypeSfixed32:
+                case FieldDescriptorProto.Type.TypeSfixed64:
+                case FieldDescriptorProto.Type.TypeSint32:
+                case FieldDescriptorProto.Type.TypeSint64:
+                case FieldDescriptorProto.Type.TypeUint32:
+                case FieldDescriptorProto.Type.TypeUint64:
                     return true;
                 default:
                     return false;
             }
         }
-        private static void Write(TextWriter target, int indent, FieldDescriptorProto field, NameNormalizer normalizer)
+
+        private static void Write(TextWriter target, int indent, FieldDescriptorProto field, GeneratorContext context)
         {
-            var name = normalizer.GetName(field);
-            target.Write(indent, $"[global::ProtoBuf.ProtoMember({field.number}");
-            bool isOptional = field.label == FieldDescriptorProto.Label.LABEL_OPTIONAL;
-            bool isRepeated = field.label == FieldDescriptorProto.Label.LABEL_REPEATED;
+            var name = context.Normalizer.GetName(field);
+            target.Write(indent, $@"[global::ProtoBuf.ProtoMember({field.Number}, Name = @""{field.Name}""");
+            bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
+            bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
             string defaultValue = null;
             if (isOptional)
             {
-                defaultValue = field.default_value;
+                defaultValue = field.DefaultValue;
 
-                if (field.type == FieldDescriptorProto.Type.TYPE_STRING)
+                if (field.type == FieldDescriptorProto.Type.TypeString)
                 {
                     defaultValue = string.IsNullOrEmpty(defaultValue) ? "\"\""
                         : ("@\"" + (defaultValue ?? "").Replace("\"", "\"\"") + "\"");
                 }
-                else if (!string.IsNullOrWhiteSpace(defaultValue) && field.type == FieldDescriptorProto.Type.TYPE_ENUM)
+                else if (!string.IsNullOrWhiteSpace(defaultValue) && field.type == FieldDescriptorProto.Type.TypeEnum)
                 {
-                    defaultValue = field.type_name + "." + defaultValue;
+                    var enumType = context.FindEnum(field.TypeName);
+                    if (enumType != null)
+                    {
+                        var found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
+                        if (found != null) defaultValue = context.Normalizer.GetName(found);
+                        defaultValue = context.Normalizer.GetName(enumType) + "." + defaultValue;
+                    }
+                    else
+                    {
+                        defaultValue = field.TypeName + "." + defaultValue;
+                    }
                 }
             }
-            var typeName = GetTypeName(field, out var dataFormat);
+            var typeName = context.GetTypeName(field, out var dataFormat);
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
                 target.Write($", DataFormat=DataFormat.{dataFormat}");
             }
-            if (field.options?.packed ?? false)
+            if (field.Options?.Packed ?? false)
             {
                 target.Write($", IsPacked = true");
             }
-            if (field.label == FieldDescriptorProto.Label.LABEL_REQUIRED)
+            if (field.label == FieldDescriptorProto.Label.LabelRequired)
             {
                 target.Write($", IsRequired = true");
             }
@@ -177,7 +470,7 @@ namespace ProtoBuf
             {
                 target.WriteLine(indent, $"[global::System.ComponentModel.DefaultValue({defaultValue})]");
             }
-            if (field.options?.deprecated ?? false)
+            if (field.Options?.Deprecated ?? false)
             {
                 target.WriteLine(indent, $"[global::System.Obsolete]");
             }
@@ -200,55 +493,6 @@ namespace ProtoBuf
             }
         }
 
-        private static string GetTypeName(FieldDescriptorProto field, out string dataFormat)
-        {
-            const string SIGNED = "ZigZag", FIXED = "FixedSize";
-            dataFormat = "";
-            switch (field.type)
-            {
-                case FieldDescriptorProto.Type.TYPE_DOUBLE:
-                    return "double";
-                case FieldDescriptorProto.Type.TYPE_FLOAT:
-                    return "float";
-                case FieldDescriptorProto.Type.TYPE_BOOL:
-                    return "bool";
-                case FieldDescriptorProto.Type.TYPE_STRING:
-                    return "string";
-                case FieldDescriptorProto.Type.TYPE_SINT32:
-                    dataFormat = SIGNED;
-                    return "int";
-                case FieldDescriptorProto.Type.TYPE_INT32:
-                    return "int";
-                case FieldDescriptorProto.Type.TYPE_SFIXED32:
-                    dataFormat = FIXED;
-                    return "int";
-                case FieldDescriptorProto.Type.TYPE_SINT64:
-                    dataFormat = SIGNED;
-                    return "long";
-                case FieldDescriptorProto.Type.TYPE_INT64:
-                    return "long";
-                case FieldDescriptorProto.Type.TYPE_SFIXED64:
-                    dataFormat = FIXED;
-                    return "long";
-                case FieldDescriptorProto.Type.TYPE_FIXED32:
-                    dataFormat = FIXED;
-                    return "uint";
-                case FieldDescriptorProto.Type.TYPE_UINT32:
-                    return "uint";
-                case FieldDescriptorProto.Type.TYPE_FIXED64:
-                    dataFormat = FIXED;
-                    return "ulong";
-                case FieldDescriptorProto.Type.TYPE_UINT64:
-                    return "ulong";
-                case FieldDescriptorProto.Type.TYPE_BYTES:
-                    return "byte[]";
-                case FieldDescriptorProto.Type.TYPE_ENUM:
-                case FieldDescriptorProto.Type.TYPE_MESSAGE:
-                    // TODO: lookup actual and use noralizer, etc
-                    return field.type_name;
-                default:
-                    throw new InvalidOperationException($"Unknown type: {field.type} ({field.type_name})");
-            }
-        }
+
     }
 }

@@ -19,7 +19,7 @@ namespace ProtoBuf.Schemas
             {
                 schema = FileDescriptorProto.Parse(proto);
             }
-            foreach (var msg in schema.message_type)
+            foreach (var msg in schema.MessageTypes)
             {
                 WriteMessage(msg, 0);
             }
@@ -68,19 +68,19 @@ namespace ProtoBuf.Schemas
         private void WriteMessage(DescriptorProto msg, int indent)
         {
             _output.WriteLine($"{Indent(indent++)}{msg}");
-            foreach (var field in msg.field)
+            foreach (var field in msg.Fields)
             {
-                _output.WriteLine($"{Indent(indent)}{field.number}: {field.type_name} ({field.type})");
+                _output.WriteLine($"{Indent(indent)}{field.Number}: {field.TypeName} ({field.type})");
             }
-            foreach (var res in msg.reserved_range)
+            foreach (var res in msg.ReservedRanges)
             {
-                _output.WriteLine($"{Indent(indent)}-{res.start}-{res.end}");
+                _output.WriteLine($"{Indent(indent)}-{res.Start}-{res.End}");
             }
-            foreach (var res in msg.reserved_name)
+            foreach (var res in msg.ReservedNames)
             {               
                 _output.WriteLine($"{Indent(indent)}-{res}");
             }
-            foreach (var subMsg in msg.nested_type)
+            foreach (var subMsg in msg.NestedTypes)
             {
                 WriteMessage(subMsg, indent);
             }
