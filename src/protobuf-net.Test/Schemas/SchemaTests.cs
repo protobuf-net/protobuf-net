@@ -1,6 +1,8 @@
 ﻿using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
 using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -14,15 +16,19 @@ namespace ProtoBuf.Schemas
         [InlineData(@"Schemas\descriptor.proto")]        
         public void CanParse(string path)
         {
-            FileDescriptorProto schema;
-            using (var proto = File.OpenText(path))
-            {
-                schema = FileDescriptorProto.Parse(proto, out var errors);
-            }
+            var set = new FileDescriptorSet();
+            set.Add(path);
+            var schema = set.Files.Single();
             foreach (var msg in schema.MessageTypes)
             {
                 WriteMessage(msg, 0);
             }
+            var json = JsonConvert.SerializeObject(set, Formatting.Indented);
+            
+            var outPath = $"{Me()}.json";
+            File.WriteAllText(outPath, json);
+            _output.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), outPath));
+
         }
 
         [Fact]
@@ -34,21 +40,23 @@ namespace ProtoBuf.Schemas
 
             using (var file = File.OpenRead(@"Schemas\descriptor.bin"))
             {
-                var obj = Serializer.Deserialize<FileDescriptorSet>(file);
-                var json = JsonConvert.SerializeObject(obj);
-                _output.WriteLine(json);
+                var set = Serializer.Deserialize<FileDescriptorSet>(file);
+                var json = JsonConvert.SerializeObject(set, Formatting.Indented);
+
+                var outPath = $"{Me()}.json";
+                File.WriteAllText(outPath, json);
+                _output.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), outPath));
             }
         }
+        private static string Me([CallerMemberName] string caller = null) => caller;
 
         [Theory]
         [InlineData(@"Schemas\descriptor.proto", @"Schemas\descriptor_expected.cs", @"Schemas\descriptor_actual.cs")]
         public void CanGenerate(string schemaPath, string expectedPath, string actualPath)
         {
-            FileDescriptorProto schema;
-            using (var proto = File.OpenText(schemaPath))
-            {
-                schema = FileDescriptorProto.Parse(proto, out var errors);
-            }
+            var set = new FileDescriptorSet();
+            set.Add(schemaPath);
+            var schema = set.Files.Single();
             string code;
             using (var sw = new StringWriter())
             {
@@ -56,8 +64,7 @@ namespace ProtoBuf.Schemas
                 code = sw.ToString();
             }
             File.WriteAllText(actualPath, code);
-            _output.WriteLine(actualPath);
-            _output.WriteLine(Directory.GetCurrentDirectory());
+            _output.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), actualPath));
 
             if (File.Exists(expectedPath))
             {

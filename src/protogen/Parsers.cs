@@ -7,11 +7,35 @@ using System;
 namespace Google.Protobuf.Reflection
 {
 #pragma warning disable CS1591
+
+    partial class FileDescriptorSet
+    {
+        public List<ParserException> Errors { get; } = new List<ParserException>();
+        public void Add(string name, System.IO.TextReader source = null)
+        {
+            if(!TryResolve(name, out var descriptor))
+            {
+                using (var reader = source ?? Open(name))
+                {
+                    descriptor = new FileDescriptorProto { Name = name };
+                    Files.Add(descriptor);
+                
+                    Parsers.Parse(reader, descriptor, Errors);
+                }
+            }
+        }
+
+        private System.IO.TextReader Open(string name)
+            => new System.IO.StreamReader(System.IO.File.OpenRead(name));
+
+        bool TryResolve(string name, out FileDescriptorProto descriptor)
+        {
+            descriptor = Files.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            return descriptor != null;
+        }
+    }
     partial class FileDescriptorProto
     {
-        public static FileDescriptorProto Parse(System.IO.TextReader schema, out List<ParserException> errors)
-            => Parsers.Parse(schema, out errors);
-
         internal bool TryResolveEnum(string type, DescriptorProto parent, out EnumDescriptorProto @enum)
         {
             while (parent != null)
@@ -121,32 +145,31 @@ namespace ProtoBuf
 {
     internal class ParserContext : IDisposable
     {
-        public ParserContext(Peekable<Token> tokens)
+        public ParserContext(Peekable<Token> tokens, List<ParserException> errors)
         {
             Tokens = tokens;
+            Errors = errors;
         }
         public Peekable<Token> Tokens { get; }
-        public List<ParserException> Errors { get; } = new List<ParserException>();
+        public List<ParserException> Errors { get; }
 
         public void Dispose() { Tokens.Dispose(); }
     }
     internal static class Parsers
     {
         internal const string SyntaxProto2 = "proto2", SyntaxProto3 = "proto3";
-        public static FileDescriptorProto Parse(System.IO.TextReader schema, out List<ParserException> errors)
+        public static FileDescriptorProto Parse(System.IO.TextReader schema, FileDescriptorProto descriptor, List<ParserException> errors)
         {
-            var parsed = new FileDescriptorProto();
-            parsed.Syntax = SyntaxProto2;
-            parsed.Name = ((schema as System.IO.StreamReader)?.BaseStream as System.IO.FileStream)?.Name ?? "";
-
-            using (var ctx = new ParserContext(new Peekable<Token>(schema.Tokenize().RemoveCommentsAndWhitespace())))
+            descriptor.Syntax = SyntaxProto2;
+            
+            using (var ctx = new ParserContext(new Peekable<Token>(schema.Tokenize().RemoveCommentsAndWhitespace()), errors))
             {
                 var tokens = ctx.Tokens;
                 while (tokens.Peek(out Token token))
                 {
                     try
                     {
-                        if (TryParseFileDescriptorProtoChildren(ctx, parsed.Syntax, parsed))
+                        if (TryParseFileDescriptorProtoChildren(ctx, descriptor.Syntax, descriptor))
                         {
                             // handled
                         }
@@ -155,22 +178,22 @@ namespace ProtoBuf
                             switch (token.Value)
                             {
                                 case "syntax":
-                                    if (parsed.MessageTypes.Any() || parsed.EnumTypes.Any())
+                                    if (descriptor.MessageTypes.Any() || descriptor.EnumTypes.Any())
                                     {
                                         token.SyntaxError("syntax must be set types are included");
                                     }
                                     tokens.Consume();
                                     tokens.Consume(TokenType.Symbol, "=");
-                                    parsed.Syntax = tokens.Consume(TokenType.StringLiteral);
+                                    descriptor.Syntax = tokens.Consume(TokenType.StringLiteral);
                                     tokens.Consume(TokenType.Symbol, ";");
                                     break;
                                 case "package":
                                     tokens.Consume();
-                                    parsed.Package = tokens.Consume(TokenType.AlphaNumeric);
+                                    descriptor.Package = tokens.Consume(TokenType.AlphaNumeric);
                                     tokens.Consume(TokenType.Symbol, ";");
                                     break;
                                 case "option":
-                                    parsed.Options = ParseFileOptions(ctx, parsed.Options);
+                                    descriptor.Options = ParseFileOptions(ctx, descriptor.Options);
                                     break;
                                 default:
                                     token.SyntaxError();
@@ -188,10 +211,9 @@ namespace ProtoBuf
                         tokens.SkipToEndStatementOrObject();
                     }
                 }
-                errors = ctx.Errors;
             }
-            parsed.FixupTypes();
-            return parsed;
+            descriptor.FixupTypes();
+            return descriptor;
         }
 
         internal static bool TryParseFileDescriptorProtoChildren(ParserContext ctx, string syntax, FileDescriptorProto schema)

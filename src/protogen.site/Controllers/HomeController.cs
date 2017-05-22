@@ -18,11 +18,13 @@ namespace protogen.site.Controllers
                 {
                     using (var reader = new StringReader(schema))
                     {
-                        var parsed = FileDescriptorProto.Parse(reader, out var errors);
-                        if(errors.Any())
+                        var set = new FileDescriptorSet();
+                        set.Add("my.proto", reader);
+                        var parsed = set.Files.Single();
+                        if(set.Errors.Any())
                         {
                             var sb = new StringBuilder();
-                            foreach (var error in errors)
+                            foreach (var error in set.Errors)
                                 sb.AppendLine(error.GetErrorMessage());
                             ViewData["error"] = sb.ToString();
                         }
