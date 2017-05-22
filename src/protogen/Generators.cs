@@ -11,17 +11,39 @@ namespace Google.Protobuf.Reflection
 #pragma warning disable CS1591
     partial class FileDescriptorProto
     {
-        public void GenerateCSharp(TextWriter target)
-            => Generators.GenerateCSharp(target, this);
+        public void GenerateCSharp(TextWriter target, NameNormalizer normalizer = null)
+            => Generators.GenerateCSharp(target, this, normalizer);
 
-        public string GenerateCSharp()
+        public string GenerateCSharp(NameNormalizer normalizer = null)
         {
             using (var sw = new StringWriter())
             {
-                GenerateCSharp(sw);
+                GenerateCSharp(sw, normalizer);
                 return sw.ToString();
             }
         }
+    }
+    public abstract class NameNormalizer
+    {
+        private class NullNormalizer : NameNormalizer
+        {
+            protected override string GetName(string name) => name;
+        }
+        private class DefaultNormalizer : NameNormalizer
+        {
+            protected override string GetName(string name) => AutoCapitalize(name);
+        }
+        protected static string AutoCapitalize(string name)
+        {
+            return name;
+        }
+        public static NameNormalizer Default { get; } = new DefaultNormalizer();
+        public static NameNormalizer Null { get; } = new NullNormalizer();
+        protected abstract string GetName(string name);
+        public virtual string GetName(DescriptorProto definition) => AutoCapitalize(definition.name);
+        public virtual string GetName(EnumDescriptorProto definition) => AutoCapitalize(definition.name);
+        public virtual string GetName(FieldDescriptorProto definition) => AutoCapitalize(definition.name);
+        public virtual string GetName(EnumValueDescriptorProto definition) => AutoCapitalize(definition.name);
     }
 #pragma warning restore CS1591
 }
@@ -30,18 +52,27 @@ namespace ProtoBuf
 {
     internal static class Generators
     {
-        private static void Write(TextWriter target, int indent, EnumDescriptorProto @enum)
+        private static string Escape(string identifier)
         {
-            target.WriteLine(indent, $"public enum {@enum.name}");
+            // TODO: return @identifier for anything that is a keyword
+            return identifier;
+        }
+        private static void Write(TextWriter target, int indent, EnumDescriptorProto @enum, NameNormalizer normalizer)
+        {
+            var name = normalizer.GetName(@enum);
+            target.WriteLine(indent, $"public enum {Escape(name)}");
             target.WriteLine(indent++, "{");
             foreach (var val in @enum.value)
             {
-                target.WriteLine(indent, $"{val.name} = {val.number},");
+                name = normalizer.GetName(val);
+                target.WriteLine(indent, $"{Escape(name)} = {val.number},");
             }
             target.WriteLine(--indent, "}");
         }
-        public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema)
+        public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null)
         {
+            if (normalizer == null) normalizer = NameNormalizer.Default;
+
             int indent = 0;
             var @namespace = schema.options ?.csharp_namespace ?? schema.package;
             target.WriteLine(indent, "#pragma warning disable CS1591");
@@ -52,11 +83,11 @@ namespace ProtoBuf
             }
             foreach (var obj in schema.enum_type)
             {
-                Write(target, indent, obj);
+                Write(target, indent, obj, normalizer);
             }
             foreach (var obj in schema.message_type)
             {
-                Write(target, indent, obj);
+                Write(target, indent, obj, normalizer);
             }
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
@@ -65,22 +96,23 @@ namespace ProtoBuf
             target.WriteLine(indent, "#pragma warning restore CS1591");
         }
 
-        private static void Write(TextWriter target, int indent, DescriptorProto message)
+        private static void Write(TextWriter target, int indent, DescriptorProto message, NameNormalizer normalizer)
         {
+            var name = normalizer.GetName(message);
             target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{message.name}"")]");
-            target.WriteLine(indent, $"public partial class {message.name}");
+            target.WriteLine(indent, $"public partial class {Escape(name)}");
             target.WriteLine(indent++, "{");
             foreach (var obj in message.enum_type)
             {
-                Write(target, indent, obj);
+                Write(target, indent, obj, normalizer);
             }
             foreach (var obj in message.nested_type)
             {
-                Write(target, indent, obj);
+                Write(target, indent, obj, normalizer);
             }
             foreach (var obj in message.field)
             {
-                Write(target, indent, obj);
+                Write(target, indent, obj, normalizer);
             }
             target.WriteLine(--indent, "}");
         }
@@ -106,8 +138,9 @@ namespace ProtoBuf
                     return false;
             }
         }
-        private static void Write(TextWriter target, int indent, FieldDescriptorProto field)
+        private static void Write(TextWriter target, int indent, FieldDescriptorProto field, NameNormalizer normalizer)
         {
+            var name = normalizer.GetName(field);
             target.Write(indent, $"[global::ProtoBuf.ProtoMember({field.number}");
             bool isOptional = field.label == FieldDescriptorProto.Label.LABEL_OPTIONAL;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LABEL_REPEATED;
@@ -152,16 +185,16 @@ namespace ProtoBuf
             {
                 if (UseArray(field))
                 {
-                    target.WriteLine(indent, $"public {typeName}[] {field.name} {{ get; set; }}");
+                    target.WriteLine(indent, $"public {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
                 else
                 {
-                    target.WriteLine(indent, $"public global::System.Collections.Generic.List<{typeName}> {field.name} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
+                    target.WriteLine(indent, $"public global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
             }
             else
             {
-                target.Write(indent, $"public {typeName} {field.name} {{ get; set; }}");
+                target.Write(indent, $"public {typeName} {Escape(name)} {{ get; set; }}");
                 if (!string.IsNullOrWhiteSpace(defaultValue)) target.Write($" = {defaultValue};");
                 target.WriteLine();
             }
@@ -211,6 +244,7 @@ namespace ProtoBuf
                     return "byte[]";
                 case FieldDescriptorProto.Type.TYPE_ENUM:
                 case FieldDescriptorProto.Type.TYPE_MESSAGE:
+                    // TODO: lookup actual and use noralizer, etc
                     return field.type_name;
                 default:
                     throw new InvalidOperationException($"Unknown type: {field.type} ({field.type_name})");

@@ -4,20 +4,22 @@
 
 <h2>@ViewData["Title"].</h2>
 <a href="/about">Wait... what is this?</a>
-<form method="post">
+<form method="post" action="#result">
     <h3>Schema (can be <a href="https://developers.google.com/protocol-buffers/docs/proto">proto2</a> <strike>or <a href="https://developers.google.com/protocol-buffers/docs/proto3">proto3</a></strike>):</h3>
 <textarea name="schema" style="width:100%; max-width:unset" rows="20" id="proto" placeholder="message yourMessageType { } // etc">@ViewData["schema"]</textarea>
     <p>Not sure what to use? How about <a href="https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto">descriptor.proto</a>?</p>
     <h3>Generate</h3>
     <button type="submit">Generate</button>
 </form>
-@if(ViewData.ContainsKey("error"))
-{
-    <h3>Error</h3>
-    <p class="has-error">@ViewData["error"]</p>
-}
-@if(ViewData.ContainsKey("code"))
-{
-    <h3>Generated Code</h3>
-    <pre>@ViewData["code"]</pre>
-}
+<div id="result">
+    @if (ViewData.ContainsKey("error"))
+    {
+        <h3>Error</h3>
+        <p class="has-error">@ViewData["error"]</p>
+    }
+    @if (ViewData.ContainsKey("code"))
+    {
+        <h3>Generated Code</h3>
+        <pre>@ViewData["code"]</pre>
+    }
+</div>
