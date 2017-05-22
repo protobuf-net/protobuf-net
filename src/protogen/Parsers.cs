@@ -26,7 +26,7 @@ namespace Google.Protobuf.Reflection
 
         internal bool TryResolveMessage(string type, DescriptorProto parent, out DescriptorProto message)
         {
-            while(parent != null)
+            while (parent != null)
             {
                 message = parent.NestedTypes.FirstOrDefault(x => x.Name == type);
                 if (message != null) return true;
@@ -84,6 +84,8 @@ namespace Google.Protobuf.Reflection
                 {
                     if (TryResolveMessage(field.TypeName, type, out var msg))
                     {
+                        // TODO: how to identify groups? FieldDescriptorProto.Type.TypeGroup
+                        // do I need to track that bespokely? or is there something on the type?
                         field.type = FieldDescriptorProto.Type.TypeMessage;
                     }
                     else if (TryResolveEnum(field.TypeName, type, out var @enum))
@@ -117,9 +119,11 @@ namespace ProtoBuf
 {
     internal static class Parsers
     {
+        internal const string SyntaxProto2 = "proto2", SyntaxProto3 = "proto3";
         public static FileDescriptorProto Parse(System.IO.TextReader schema)
         {
             var parsed = new FileDescriptorProto();
+            parsed.Syntax = SyntaxProto2;
             parsed.Name = ((schema as System.IO.StreamReader)?.BaseStream as System.IO.FileStream)?.Name ?? "";
 
             using (var tokens = new Peekable<Token>(schema.Tokenize().RemoveCommentsAndWhitespace()))
@@ -169,38 +173,55 @@ namespace ProtoBuf
 
         internal static bool TryParseFileDescriptorProtoChildren(Peekable<Token> tokens, string syntax, FileDescriptorProto schema)
         {
-            if (tokens.Peek(out var token) && token.Is(TokenType.AlphaNumeric))
+            if (tokens.Peek(out var token))
             {
-                switch (token.Value)
+                if (token.Is(TokenType.AlphaNumeric))
                 {
-                    case "message":
-                        schema.MessageTypes.Add(ParseDescriptorProto(tokens, syntax));
-                        return true;
-                    case "enum":
-                        schema.EnumTypes.Add(ParseEnumDescriptorProto(tokens, syntax));
-                        return true;
+                    switch (token.Value)
+                    {
+                        case "message":
+                            schema.MessageTypes.Add(ParseDescriptorProto(tokens, syntax));
+                            return true;
+                        case "enum":
+                            schema.EnumTypes.Add(ParseEnumDescriptorProto(tokens, syntax));
+                            return true;
+                    }
+                }
+                else if (token.Is(TokenType.Symbol, ";"))
+                {
+                    tokens.Consume();
+                    return true;
                 }
             }
             return false;
         }
         internal static bool TryParseDescriptorProtoChildren(Peekable<Token> tokens, string syntax, DescriptorProto message)
         {
-            if (tokens.Peek(out var token) && token.Is(TokenType.AlphaNumeric))
+            if (tokens.Peek(out var token))
             {
-                switch (token.Value)
+                if (token.Is(TokenType.AlphaNumeric))
                 {
-                    case "message":
-                        message.NestedTypes.Add(ParseDescriptorProto(tokens, syntax));
-                        return true;
-                    case "enum":
-                        message.EnumTypes.Add(ParseEnumDescriptorProto(tokens, syntax));
-                        return true;
-                    case "reserved":
-                        ParseReservedRanges(message.ReservedNames, message.ReservedRanges, tokens, syntax);
-                        return true;
-                    case "extensions":
-                        ParseExtensionRange(message.ExtensionRanges, tokens, syntax);
-                        return true;
+                    switch (token.Value)
+                    {
+                        case "message":
+                            message.NestedTypes.Add(ParseDescriptorProto(tokens, syntax));
+                            return true;
+                        case "enum":
+                            message.EnumTypes.Add(ParseEnumDescriptorProto(tokens, syntax));
+                            return true;
+                        case "reserved":
+                            ParseReservedRanges(message.ReservedNames, message.ReservedRanges, tokens, syntax);
+                            return true;
+                        case "extensions":
+                            token.RequireProto2(syntax);
+                            ParseExtensionRange(message.ExtensionRanges, tokens, syntax);
+                            return true;
+                    }
+                }
+                else if (token.Is(TokenType.Symbol, ";"))
+                {
+                    tokens.Consume();
+                    return true;
                 }
             }
             return false;
@@ -319,23 +340,33 @@ namespace ProtoBuf
         }
         public static FieldDescriptorProto ParseFieldDescriptorProto(Peekable<Token> tokens, string syntax)
         {
-            FieldDescriptorProto.Label label = default(FieldDescriptorProto.Label);
+            FieldDescriptorProto.Label label;
 
             var token = tokens.Read();
-            if (token.Is(TokenType.AlphaNumeric, "repeated"))
+            if (syntax != Parsers.SyntaxProto2)
+            {
+                label = FieldDescriptorProto.Label.LabelOptional;
+            }
+            else if (token.Is(TokenType.AlphaNumeric, "repeated"))
             {
                 label = FieldDescriptorProto.Label.LabelRepeated;
                 tokens.Consume();
             }
             else if (token.Is(TokenType.AlphaNumeric, "required"))
             {
+                token.RequireProto2(syntax);
                 label = FieldDescriptorProto.Label.LabelRequired;
                 tokens.Consume();
             }
             else if (token.Is(TokenType.AlphaNumeric, "optional"))
             {
+                token.RequireProto2(syntax);
                 label = FieldDescriptorProto.Label.LabelOptional;
                 tokens.Consume();
+            }
+            else
+            {
+                throw token.SyntaxError("Expected 'repeated' / 'required' / 'optional'");
             }
 
             string typeName = tokens.Consume(TokenType.AlphaNumeric);
@@ -356,12 +387,19 @@ namespace ProtoBuf
                 Number = number,
                 label = label
             };
+
+            if (syntax != Parsers.SyntaxProto2)
+            {
+                if (CanPack(type)) // packed by default
+                {
+                    var opt = field.Options ?? (field.Options = new FieldOptions());
+                    opt.Packed = true;
+                }
+            }
             bool haveEndedSemicolon = false;
             if (tokens.Read().Is(TokenType.Symbol, "["))
             {
-                string defaultValue = field.DefaultValue;
-                field.Options = ParseFieldOptions(tokens, field.Options, out haveEndedSemicolon, ref defaultValue);
-                field.DefaultValue = defaultValue;
+                ParseFieldOptions(tokens, field, syntax, out haveEndedSemicolon);
             }
 
             if (!haveEndedSemicolon)
@@ -369,6 +407,30 @@ namespace ProtoBuf
                 tokens.Consume(TokenType.Symbol, ";");
             }
             return field;
+        }
+
+        private static bool CanPack(FieldDescriptorProto.Type type)
+        {
+            switch (type)
+            {
+                case FieldDescriptorProto.Type.TypeBool:
+                case FieldDescriptorProto.Type.TypeDouble:
+                case FieldDescriptorProto.Type.TypeEnum:
+                case FieldDescriptorProto.Type.TypeFixed32:
+                case FieldDescriptorProto.Type.TypeFixed64:
+                case FieldDescriptorProto.Type.TypeFloat:
+                case FieldDescriptorProto.Type.TypeInt32:
+                case FieldDescriptorProto.Type.TypeInt64:
+                case FieldDescriptorProto.Type.TypeSfixed32:
+                case FieldDescriptorProto.Type.TypeSfixed64:
+                case FieldDescriptorProto.Type.TypeSint32:
+                case FieldDescriptorProto.Type.TypeSint64:
+                case FieldDescriptorProto.Type.TypeUint32:
+                case FieldDescriptorProto.Type.TypeUint64:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private static bool TryIdentifyType(string typeName, out FieldDescriptorProto.Type type)
@@ -429,9 +491,10 @@ namespace ProtoBuf
             tokens.Consume(TokenType.Symbol, ";");
             return options;
         }
-        private static FieldOptions ParseFieldOptions(Peekable<Token> tokens, FieldOptions options, out bool consumedSemicolon, ref string defaultValue)
+        private static void ParseFieldOptions(Peekable<Token> tokens, FieldDescriptorProto field, string syntax, out bool consumedSemicolon)
         {
             tokens.Consume(TokenType.Symbol, "[");
+            var options = field.Options;
             while (true)
             {
                 var token = tokens.Read();
@@ -453,6 +516,7 @@ namespace ProtoBuf
                 }
                 else
                 {
+                    token = tokens.Read();
                     var key = tokens.Consume(TokenType.AlphaNumeric);
                     tokens.Consume(TokenType.Symbol, "=");
                     switch (key)
@@ -462,11 +526,13 @@ namespace ProtoBuf
                             options.Deprecated = tokens.ConsumeBoolean();
                             break;
                         case "packed":
+                            if (!CanPack(field.type)) token.SyntaxError($"Field of type {field.type} cannot be packed");
                             if (options == null) options = new FieldOptions();
                             options.Packed = tokens.ConsumeBoolean();
                             break;
                         case "default":
-                            defaultValue = tokens.ConsumeString();
+                            token.RequireProto2(syntax);
+                            field.DefaultValue = tokens.ConsumeString();
                             break;
                         default:
                             // drop it on the floor
@@ -475,7 +541,7 @@ namespace ProtoBuf
                     }
                 }
             }
-            return options;
+            field.Options = options;
         }
 
         public static EnumDescriptorProto ParseEnumDescriptorProto(Peekable<Token> tokens, string syntax)
@@ -488,19 +554,13 @@ namespace ProtoBuf
             while (cont)
             {
                 var token = tokens.Read();
-                if (token.Is(TokenType.Symbol, "};"))
+                if (token.Is(TokenType.Symbol, ";"))
                 {
                     tokens.Consume();
-                    cont = false;
                 }
                 else if (token.Is(TokenType.Symbol, "}"))
                 {
                     tokens.Consume();
-                    // trailing semi-colon is optional and used inconsistently
-                    if (tokens.Peek(out token) & token.Is(TokenType.Symbol, ";"))
-                    {
-                        tokens.Consume();
-                    }
                     cont = false;
                 }
                 else

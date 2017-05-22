@@ -134,6 +134,10 @@ namespace ProtoBuf
                 }
             }
         }
+
+        static bool CanCombine(TokenType type, char prev, char next)
+            => type != TokenType.Symbol || prev == next;
+
         public static IEnumerable<Token> Tokenize(this TextReader reader)
         {
             var buffer = new StringBuilder();
@@ -146,6 +150,7 @@ namespace ProtoBuf
                 lastLine = line;
                 lineNumber++;
                 int columnNumber = 0, tokenStart = 1;
+                char lastChar = '\0';
                 TokenType type = TokenType.None;
                 foreach (char c in line)
                 {
@@ -166,7 +171,7 @@ namespace ProtoBuf
                     else
                     {
                         var newType = Identify(c);
-                        if (newType == type)
+                        if (newType == type && CanCombine(type, lastChar, c))
                         {
                             buffer.Append(c);
                         }
@@ -185,6 +190,7 @@ namespace ProtoBuf
                             }
                         }
                     }
+                    lastChar = c;
                 }
 
                 if (buffer.Length != 0)

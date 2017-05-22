@@ -299,10 +299,18 @@ namespace ProtoBuf
                         var enumType = FindEnum(field.TypeName);
                         return enumType == null ? field.TypeName : Normalizer.GetName(enumType);
                     case FieldDescriptorProto.Type.TypeMessage:
+                    case FieldDescriptorProto.Type.TypeGroup:
                         var msgType = FindMessage(field.TypeName);
                         return msgType == null ? field.TypeName : Normalizer.GetName(msgType);
                     default:
-                        throw new InvalidOperationException($"Unknown type: {field.type} ({field.TypeName})");
+                        if (field.type == 0)
+                        {
+                            throw new InvalidOperationException($"Unknown type: {field.TypeName}");
+                        }
+                        else
+                        {
+                            throw new InvalidOperationException($"Unknown type: {field.type} ({field.TypeName})");
+                        }
                 }
             }
 

@@ -40,5 +40,13 @@ namespace ProtoBuf
             if (value != null && value != Value) return false;
             return true;
         }
+
+        internal void RequireProto2(string syntax)
+        {
+            if(syntax != Parsers.SyntaxProto2)
+            {
+                SyntaxError("This feature requires " + Parsers.SyntaxProto2 + " syntax");
+            }
+        }
     }
 }
