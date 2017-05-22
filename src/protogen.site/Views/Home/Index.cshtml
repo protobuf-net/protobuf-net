@@ -5,18 +5,18 @@
 <h2>@ViewData["Title"].</h2>
 <a href="/about">Wait... what is this?</a>
 <form method="post" action="#result">
+
     <h3>Schema (can be <a href="https://developers.google.com/protocol-buffers/docs/proto">proto2</a> or <a href="https://developers.google.com/protocol-buffers/docs/proto3">proto3</a>):</h3>
     <p>(note: some features are still missing; map&lt;K,V&gt;, oneof, dynamic, Struct, Timestamp, Duration, Any, Wrapper types, FieldMask, ListValue, Value, NullValue)</p>
-<textarea name="schema" style="width:100%; max-width:unset" rows="20" id="proto" placeholder="message yourMessageType { } // etc">@ViewData["schema"]</textarea>
-    <p>Not sure what to use? How about <a href="https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto">descriptor.proto</a>?</p>
-    <h3>Generate</h3>
     <button type="submit">Generate</button>
+    <textarea name="schema" style="width:100%; max-width:unset" rows="20" id="proto" placeholder="message yourMessageType { } // etc">@ViewData["schema"]</textarea>
+    <p>Not sure what to use? How about <a href="https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto">descriptor.proto</a>?</p>
 </form>
 <div id="result">
     @if (ViewData.ContainsKey("error"))
     {
         <h3>Error</h3>
-        <p class="has-error">@ViewData["error"]</p>
+        <pre class="has-error">@ViewData["error"]</pre>
     }
     @if (ViewData.ContainsKey("code"))
     {

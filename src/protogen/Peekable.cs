@@ -7,23 +7,18 @@ namespace ProtoBuf
     internal sealed class Peekable<T> : IDisposable
     {
         private readonly IEnumerator<T> _iter;
-        private T _peek;
+        private T _peek, _prev;
         private bool _havePeek, _eof;
         public Peekable(IEnumerable<T> sequence)
         {
             _iter = sequence.GetEnumerator();
         }
+        public T Previous => _prev;
         public bool Consume()
         {
             bool haveData = _havePeek || Peek(out T val);
             _havePeek = false;
             return haveData;
-        }
-        public T Read()
-        {
-            T val;
-            if (!Peek(out val)) throw new EndOfStreamException();
-            return val;
         }
         public bool Peek(out T next)
         {
@@ -31,6 +26,7 @@ namespace ProtoBuf
             {
                 if (_iter.MoveNext())
                 {
+                    _prev = _peek;
                     _peek = _iter.Current;
                     _havePeek = true;
                 }

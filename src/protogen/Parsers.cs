@@ -9,8 +9,8 @@ namespace Google.Protobuf.Reflection
 #pragma warning disable CS1591
     partial class FileDescriptorProto
     {
-        public static FileDescriptorProto Parse(System.IO.TextReader schema)
-            => Parsers.Parse(schema);
+        public static FileDescriptorProto Parse(System.IO.TextReader schema, out List<ParserException> errors)
+            => Parsers.Parse(schema, out errors);
 
         internal bool TryResolveEnum(string type, DescriptorProto parent, out EnumDescriptorProto @enum)
         {
@@ -103,6 +103,8 @@ namespace Google.Protobuf.Reflection
     partial class FieldDescriptorProto
     {
         internal DescriptorProto Parent { get; set; }
+
+        internal Token TypeToken { get; set; }
     }
     partial class DescriptorProto
     {
@@ -117,62 +119,84 @@ namespace Google.Protobuf.Reflection
 }
 namespace ProtoBuf
 {
+    internal class ParserContext : IDisposable
+    {
+        public ParserContext(Peekable<Token> tokens)
+        {
+            Tokens = tokens;
+        }
+        public Peekable<Token> Tokens { get; }
+        public List<ParserException> Errors { get; } = new List<ParserException>();
+
+        public void Dispose() { Tokens.Dispose(); }
+    }
     internal static class Parsers
     {
         internal const string SyntaxProto2 = "proto2", SyntaxProto3 = "proto3";
-        public static FileDescriptorProto Parse(System.IO.TextReader schema)
+        public static FileDescriptorProto Parse(System.IO.TextReader schema, out List<ParserException> errors)
         {
             var parsed = new FileDescriptorProto();
             parsed.Syntax = SyntaxProto2;
             parsed.Name = ((schema as System.IO.StreamReader)?.BaseStream as System.IO.FileStream)?.Name ?? "";
 
-            using (var tokens = new Peekable<Token>(schema.Tokenize().RemoveCommentsAndWhitespace()))
+            using (var ctx = new ParserContext(new Peekable<Token>(schema.Tokenize().RemoveCommentsAndWhitespace())))
             {
+                var tokens = ctx.Tokens;
                 while (tokens.Peek(out Token token))
                 {
-                    if (TryParseFileDescriptorProtoChildren(tokens, parsed.Syntax, parsed))
+                    try
                     {
-                        // handled
-                    }
-                    else if (token.Is(TokenType.AlphaNumeric))
-                    {
-                        switch (token.Value)
+                        if (TryParseFileDescriptorProtoChildren(ctx, parsed.Syntax, parsed))
                         {
-                            case "syntax":
-                                if (parsed.MessageTypes.Any())
-                                {
-                                    token.SyntaxError("syntax must be set before messages are included");
-                                }
-                                tokens.Consume();
-                                tokens.Consume(TokenType.Symbol, "=");
-                                parsed.Syntax = tokens.Consume(TokenType.StringLiteral);
-                                tokens.Consume(TokenType.Symbol, ";");
-                                break;
-                            case "package":
-                                tokens.Consume();
-                                parsed.Package = tokens.Consume(TokenType.AlphaNumeric);
-                                tokens.Consume(TokenType.Symbol, ";");
-                                break;
-                            case "option":
-                                parsed.Options = ParseFileOptions(tokens, parsed.Options);
-                                break;
-                            default:
-                                token.SyntaxError();
-                                break;
+                            // handled
+                        }
+                        else if (token.Is(TokenType.AlphaNumeric))
+                        {
+                            switch (token.Value)
+                            {
+                                case "syntax":
+                                    if (parsed.MessageTypes.Any() || parsed.EnumTypes.Any())
+                                    {
+                                        token.SyntaxError("syntax must be set types are included");
+                                    }
+                                    tokens.Consume();
+                                    tokens.Consume(TokenType.Symbol, "=");
+                                    parsed.Syntax = tokens.Consume(TokenType.StringLiteral);
+                                    tokens.Consume(TokenType.Symbol, ";");
+                                    break;
+                                case "package":
+                                    tokens.Consume();
+                                    parsed.Package = tokens.Consume(TokenType.AlphaNumeric);
+                                    tokens.Consume(TokenType.Symbol, ";");
+                                    break;
+                                case "option":
+                                    parsed.Options = ParseFileOptions(ctx, parsed.Options);
+                                    break;
+                                default:
+                                    token.SyntaxError();
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            token.SyntaxError();
                         }
                     }
-                    else
+                    catch (ParserException ex)
                     {
-                        token.SyntaxError();
+                        ctx.Errors.Add(ex);
+                        tokens.SkipToEndStatementOrObject();
                     }
                 }
+                errors = ctx.Errors;
             }
             parsed.FixupTypes();
             return parsed;
         }
 
-        internal static bool TryParseFileDescriptorProtoChildren(Peekable<Token> tokens, string syntax, FileDescriptorProto schema)
+        internal static bool TryParseFileDescriptorProtoChildren(ParserContext ctx, string syntax, FileDescriptorProto schema)
         {
+            var tokens = ctx.Tokens;
             if (tokens.Peek(out var token))
             {
                 if (token.Is(TokenType.AlphaNumeric))
@@ -180,10 +204,26 @@ namespace ProtoBuf
                     switch (token.Value)
                     {
                         case "message":
-                            schema.MessageTypes.Add(ParseDescriptorProto(tokens, syntax));
+                            try
+                            {
+                                schema.MessageTypes.Add(ParseDescriptorProto(ctx, syntax));
+                            }
+                            catch (ParserException ex)
+                            {
+                                ctx.Errors.Add(ex);
+                                tokens.SkipToEndObject();
+                            }
                             return true;
                         case "enum":
-                            schema.EnumTypes.Add(ParseEnumDescriptorProto(tokens, syntax));
+                            try
+                            {
+                                schema.EnumTypes.Add(ParseEnumDescriptorProto(ctx, syntax));
+                            }
+                            catch (ParserException ex)
+                            {
+                                ctx.Errors.Add(ex);
+                                tokens.SkipToEndObject();
+                            }
                             return true;
                     }
                 }
@@ -195,8 +235,9 @@ namespace ProtoBuf
             }
             return false;
         }
-        internal static bool TryParseDescriptorProtoChildren(Peekable<Token> tokens, string syntax, DescriptorProto message)
+        internal static bool TryParseDescriptorProtoChildren(ParserContext ctx, string syntax, DescriptorProto message)
         {
+            var tokens = ctx.Tokens;
             if (tokens.Peek(out var token))
             {
                 if (token.Is(TokenType.AlphaNumeric))
@@ -204,17 +245,49 @@ namespace ProtoBuf
                     switch (token.Value)
                     {
                         case "message":
-                            message.NestedTypes.Add(ParseDescriptorProto(tokens, syntax));
+                            try
+                            {
+                                message.NestedTypes.Add(ParseDescriptorProto(ctx, syntax));
+                            }
+                            catch (ParserException ex)
+                            {
+                                ctx.Errors.Add(ex);
+                                tokens.SkipToEndObject();
+                            }
                             return true;
                         case "enum":
-                            message.EnumTypes.Add(ParseEnumDescriptorProto(tokens, syntax));
+                            try
+                            {
+                                message.EnumTypes.Add(ParseEnumDescriptorProto(ctx, syntax));
+                            }
+                            catch (ParserException ex)
+                            {
+                                ctx.Errors.Add(ex);
+                                tokens.SkipToEndObject();
+                            }
                             return true;
                         case "reserved":
-                            ParseReservedRanges(message.ReservedNames, message.ReservedRanges, tokens, syntax);
+                            try
+                            {
+                                ParseReservedRanges(message.ReservedNames, message.ReservedRanges, ctx, syntax);
+                            }
+                            catch (ParserException ex)
+                            {
+                                ctx.Errors.Add(ex);
+                                tokens.SkipToEndStatement();
+                            }
                             return true;
                         case "extensions":
-                            token.RequireProto2(syntax);
-                            ParseExtensionRange(message.ExtensionRanges, tokens, syntax);
+                            try
+                            {
+                                token.RequireProto2(syntax);
+                                ParseExtensionRange(message.ExtensionRanges, ctx, syntax);
+                            }
+                            catch (ParserException ex)
+                            {
+                                ctx.Errors.Add(ex);
+                                tokens.SkipToEndStatement();
+                            }
                             return true;
                     }
                 }
@@ -227,8 +300,9 @@ namespace ProtoBuf
             return false;
         }
 
-        private static void ParseReservedRanges(List<string> names, List<DescriptorProto.ReservedRange> ranges, Peekable<Token> tokens, string syntax)
+        private static void ParseReservedRanges(List<string> names, List<DescriptorProto.ReservedRange> ranges, ParserContext ctx, string syntax)
         {
+            var tokens = ctx.Tokens;
             tokens.Consume(TokenType.AlphaNumeric, "reserved");
             var token = tokens.Read(); // test the first one to determine what we're doing
             switch (token.Type)
@@ -284,8 +358,9 @@ namespace ProtoBuf
             }
         }
 
-        private static void ParseExtensionRange(List<DescriptorProto.ExtensionRange> ranges, Peekable<Token> tokens, string syntax)
+        private static void ParseExtensionRange(List<DescriptorProto.ExtensionRange> ranges, ParserContext ctx, string syntax)
         {
+            var tokens = ctx.Tokens;
             tokens.Consume(TokenType.AlphaNumeric, "extensions");
 
             const int MAX = 536870911;
@@ -316,8 +391,9 @@ namespace ProtoBuf
             }
         }
 
-        public static DescriptorProto ParseDescriptorProto(Peekable<Token> tokens, string syntax)
+        public static DescriptorProto ParseDescriptorProto(ParserContext ctx, string syntax)
         {
+            var tokens = ctx.Tokens;
             tokens.Consume(TokenType.AlphaNumeric, "message");
 
             string msgName = tokens.Consume(TokenType.AlphaNumeric);
@@ -325,21 +401,30 @@ namespace ProtoBuf
             tokens.Consume(TokenType.Symbol, "{");
             while (tokens.Peek(out Token token) && !token.Is(TokenType.Symbol, "}"))
             {
-                if (TryParseDescriptorProtoChildren(tokens, syntax, message))
+                if (TryParseDescriptorProtoChildren(ctx, syntax, message))
                 {
                     // handled
                 }
                 else
                 {   // assume anything else is a field
-                    message.Fields.Add(ParseFieldDescriptorProto(tokens, syntax));
+                    try
+                    {
+                        message.Fields.Add(ParseFieldDescriptorProto(ctx, syntax));
+                    }
+                    catch (ParserException ex)
+                    {
+                        ctx.Errors.Add(ex);
+                        tokens.SkipToEndStatement();
+                    }
                 }
             }
             tokens.Consume(TokenType.Symbol, "}");
             return message;
 
         }
-        public static FieldDescriptorProto ParseFieldDescriptorProto(Peekable<Token> tokens, string syntax)
+        public static FieldDescriptorProto ParseFieldDescriptorProto(ParserContext ctx, string syntax)
         {
+            var tokens = ctx.Tokens;
             FieldDescriptorProto.Label label;
 
             var token = tokens.Read();
@@ -369,6 +454,7 @@ namespace ProtoBuf
                 throw token.SyntaxError("Expected 'repeated' / 'required' / 'optional'");
             }
 
+            var typeToken = tokens.Read();
             string typeName = tokens.Consume(TokenType.AlphaNumeric);
             string name = tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, "=");
@@ -385,7 +471,8 @@ namespace ProtoBuf
                 TypeName = typeName,
                 Name = name,
                 Number = number,
-                label = label
+                label = label,
+                TypeToken = typeToken // internal property that helps give useful error messages
             };
 
             if (syntax != Parsers.SyntaxProto2)
@@ -396,16 +483,20 @@ namespace ProtoBuf
                     opt.Packed = true;
                 }
             }
-            bool haveEndedSemicolon = false;
             if (tokens.Read().Is(TokenType.Symbol, "["))
             {
-                ParseFieldOptions(tokens, field, syntax, out haveEndedSemicolon);
+                try
+                {
+                    ParseFieldOptions(ctx, field, syntax);
+                }
+                catch (ParserException ex)
+                {
+                    ctx.Errors.Add(ex);
+                    tokens.SkipToEndOptions();
+                }
             }
 
-            if (!haveEndedSemicolon)
-            {
-                tokens.Consume(TokenType.Symbol, ";");
-            }
+            tokens.Consume(TokenType.Symbol, ";");
             return field;
         }
 
@@ -463,8 +554,9 @@ namespace ProtoBuf
             }
         }
 
-        private static FileOptions ParseFileOptions(Peekable<Token> tokens, FileOptions options)
+        private static FileOptions ParseFileOptions(ParserContext ctx, FileOptions options)
         {
+            var tokens = ctx.Tokens;
             tokens.Consume(TokenType.AlphaNumeric, "option");
             var key = tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, "=");
@@ -491,8 +583,9 @@ namespace ProtoBuf
             tokens.Consume(TokenType.Symbol, ";");
             return options;
         }
-        private static void ParseFieldOptions(Peekable<Token> tokens, FieldDescriptorProto field, string syntax, out bool consumedSemicolon)
+        private static void ParseFieldOptions(ParserContext ctx, FieldDescriptorProto field, string syntax)
         {
+            var tokens = ctx.Tokens;
             tokens.Consume(TokenType.Symbol, "[");
             var options = field.Options;
             while (true)
@@ -501,13 +594,6 @@ namespace ProtoBuf
                 if (token.Is(TokenType.Symbol, "]"))
                 {
                     tokens.Consume();
-                    consumedSemicolon = false;
-                    break;
-                }
-                else if (token.Is(TokenType.Symbol, "];"))
-                {
-                    tokens.Consume();
-                    consumedSemicolon = true;
                     break;
                 }
                 else if (token.Is(TokenType.Symbol, ","))
@@ -544,8 +630,9 @@ namespace ProtoBuf
             field.Options = options;
         }
 
-        public static EnumDescriptorProto ParseEnumDescriptorProto(Peekable<Token> tokens, string syntax)
+        public static EnumDescriptorProto ParseEnumDescriptorProto(ParserContext ctx, string syntax)
         {
+            var tokens = ctx.Tokens;
             tokens.Consume(TokenType.AlphaNumeric, "enum");
             var obj = new EnumDescriptorProto { Name = tokens.Consume(TokenType.AlphaNumeric) };
             tokens.Consume(TokenType.Symbol, "{");
@@ -565,14 +652,23 @@ namespace ProtoBuf
                 }
                 else
                 {
-                    obj.Values.Add(ParseEnumValueDescriptorProto(tokens, syntax));
+                    try
+                    {
+                        obj.Values.Add(ParseEnumValueDescriptorProto(ctx, syntax));
+                    }
+                    catch (ParserException ex)
+                    {
+                        ctx.Errors.Add(ex);
+                        tokens.SkipToEndStatement();
+                    }
                 }
             }
             return obj;
         }
 
-        public static EnumValueDescriptorProto ParseEnumValueDescriptorProto(Peekable<Token> tokens, string syntax)
+        public static EnumValueDescriptorProto ParseEnumValueDescriptorProto(ParserContext ctx, string syntax)
         {
+            var tokens = ctx.Tokens;
             string name = tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, "=");
             var value = tokens.ConsumeInt32();

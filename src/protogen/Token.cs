@@ -19,7 +19,8 @@ namespace ProtoBuf
         }
         public override string ToString() => $"({LineNumber},{ColumnNumber}) '{Value}'";
 
-        internal Exception SyntaxError(string error = null) => throw new InvalidOperationException((error ?? "syntax error") + " at " + ToString() + ": " + LineContents);
+        internal Exception SyntaxError(string error = null) =>
+            throw new ParserException(this, string.IsNullOrWhiteSpace(error) ? "syntax error" : error, true);
 
         internal void Assert(TokenType type, string value = null)
         {

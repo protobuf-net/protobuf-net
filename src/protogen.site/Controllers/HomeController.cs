@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.IO;
+using System.Linq;
+using System.Text;
 
 namespace protogen.site.Controllers
 {
@@ -16,7 +18,15 @@ namespace protogen.site.Controllers
                 {
                     using (var reader = new StringReader(schema))
                     {
-                        var parsed = FileDescriptorProto.Parse(reader);
+                        var parsed = FileDescriptorProto.Parse(reader, out var errors);
+                        if(errors.Any())
+                        {
+                            var sb = new StringBuilder();
+                            foreach (var error in errors)
+                                sb.AppendLine(error.GetErrorMessage());
+                            ViewData["error"] = sb.ToString();
+                        }
+                        
                         ViewData["code"] = parsed.GenerateCSharp();
                     }
                 }

@@ -24,6 +24,37 @@ namespace Google.Protobuf.Reflection
         }
     }
 
+#pragma warning restore CS1591
+}
+
+namespace ProtoBuf
+{
+
+    public class ParserException : Exception
+    {
+        public int ColumnNumber { get; }
+
+        public string GetErrorMessage() =>
+            Text.Length == 0
+                ? $"({LineNumber},{ColumnNumber}): {(IsError ? "error" : "warning")}: {Message}"
+                : $"({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(IsError ? "error" : "warning")}: {Message}";
+
+        public int LineNumber { get; }
+        public string Text { get; }
+        public string LineContents { get; }
+        public bool IsError { get; }
+        public bool IsWarning => !IsError;
+        internal ParserException(Token token, string message, bool isError)
+            : base(message ?? "error")
+        {
+            ColumnNumber = token.ColumnNumber;
+            LineNumber = token.LineNumber;
+            LineContents = token.LineContents;
+            Text = token.Value ?? "";
+            IsError = isError;
+        }
+    }
+
     public abstract class NameNormalizer
     {
         private class NullNormalizer : NameNormalizer
@@ -40,7 +71,7 @@ namespace Google.Protobuf.Reflection
         {
             if (string.IsNullOrEmpty(identifier)) return identifier;
             // if all upper-case, make proper-case
-            if(Regex.IsMatch(identifier, @"^[_A-Z0-9]*$"))
+            if (Regex.IsMatch(identifier, @"^[_A-Z0-9]*$"))
             {
                 return Regex.Replace(identifier, @"(^|_)([A-Z0-9])([A-Z0-9]*)",
                     match => match.Groups[2].Value.ToUpperInvariant() + match.Groups[3].Value.ToLowerInvariant());
@@ -67,7 +98,7 @@ namespace Google.Protobuf.Reflection
 
             if (identifier.EndsWith("y") && identifier.Length > 2)
             {   // identity => identities etc
-                switch(identifier[identifier.Length - 2])
+                switch (identifier[identifier.Length - 2])
                 {
                     case 'a':
                     case 'e':
@@ -93,7 +124,7 @@ namespace Google.Protobuf.Reflection
         public virtual string GetName(FieldDescriptorProto definition)
         {
             var preferred = GetName(definition.Name);
-            if(definition.label == FieldDescriptorProto.Label.LabelRepeated)
+            if (definition.label == FieldDescriptorProto.Label.LabelRepeated)
             {
                 preferred = Pluralize(preferred);
             }
@@ -141,11 +172,6 @@ namespace Google.Protobuf.Reflection
             }
         }
     }
-#pragma warning restore CS1591
-}
-
-namespace ProtoBuf
-{
     internal static class Generators
     {
         private static string Escape(string identifier)
@@ -305,11 +331,11 @@ namespace ProtoBuf
                     default:
                         if (field.type == 0)
                         {
-                            throw new InvalidOperationException($"Unknown type: {field.TypeName}");
+                            throw new ParserException(field.TypeToken, $"Unknown type: {field.TypeName}", true);
                         }
                         else
                         {
-                            throw new InvalidOperationException($"Unknown type: {field.type} ({field.TypeName})");
+                            throw new ParserException(field.TypeToken, $"Unknown type: {field.type} ({field.TypeName})", true);
                         }
                 }
             }

@@ -14,6 +14,59 @@ namespace ProtoBuf
             token.Assert(type, value);
             tokens.Consume();
         }
+
+        public static Token Read(this Peekable<Token> tokens)
+        {
+            if (!tokens.Peek(out Token val)) throw new ParserException(tokens.Previous, "Unexpected end of file", true);
+            return val;
+        }
+        public static bool SkipToEndOptions(this Peekable<Token> tokens)
+        {
+            while (tokens.Peek(out var token))
+            {
+                if (token.Is(TokenType.Symbol, ";") || token.Is(TokenType.Symbol, "}"))
+                    return true; // but don't consume
+
+                tokens.Consume();
+                if (token.Is(TokenType.Symbol, "]"))
+                    return true;
+            }
+            return false;
+        }
+        public static bool SkipToEndStatement(this Peekable<Token> tokens)
+        {
+            while (tokens.Peek(out var token))
+            {
+                if (token.Is(TokenType.Symbol, "}"))
+                    return true; // but don't consume
+
+                tokens.Consume();
+                if (token.Is(TokenType.Symbol, ";"))
+                    return true;
+            }
+            return false;
+        }
+        public static bool SkipToEndObject(this Peekable<Token> tokens) => SkipToSymbol(tokens, "}");
+        private static bool SkipToSymbol(this Peekable<Token> tokens, string symbol)
+        {
+            while (tokens.Peek(out var token))
+            {
+                tokens.Consume();
+                if (token.Is(TokenType.Symbol, symbol))
+                    return true;
+            }
+            return false;
+        }
+        public static bool SkipToEndStatementOrObject(this Peekable<Token> tokens)
+        {
+            while (tokens.Peek(out var token))
+            {
+                tokens.Consume();
+                if (token.Is(TokenType.Symbol, "}") || token.Is(TokenType.Symbol, ";"))
+                    return true;
+            }
+            return false;
+        }
         public static string Consume(this Peekable<Token> tokens, TokenType type)
         {
             var token = tokens.Read();

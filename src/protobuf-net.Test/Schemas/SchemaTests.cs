@@ -17,7 +17,7 @@ namespace ProtoBuf.Schemas
             FileDescriptorProto schema;
             using (var proto = File.OpenText(path))
             {
-                schema = FileDescriptorProto.Parse(proto);
+                schema = FileDescriptorProto.Parse(proto, out var errors);
             }
             foreach (var msg in schema.MessageTypes)
             {
@@ -47,7 +47,7 @@ namespace ProtoBuf.Schemas
             FileDescriptorProto schema;
             using (var proto = File.OpenText(schemaPath))
             {
-                schema = FileDescriptorProto.Parse(proto);
+                schema = FileDescriptorProto.Parse(proto, out var errors);
             }
             string code;
             using (var sw = new StringWriter())
