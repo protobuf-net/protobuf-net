@@ -56,16 +56,30 @@ namespace Google.Protobuf.Reflection
         }
         protected static string AutoPluralize(string identifier)
         {
-            if (string.IsNullOrEmpty(identifier)) return identifier;
-            var last = identifier[identifier.Length - 1];
-            switch (last)
-            {
-                case 's':
-                case 'S':
-                    return identifier;
-                default:
-                    return identifier + "s";
+            // horribly Anglo-centric and only covers common cases; but: is swappable
+
+            if (string.IsNullOrEmpty(identifier) || identifier.Length == 1) return identifier;
+
+            if (identifier.EndsWith("ss") || identifier.EndsWith("o")) return identifier + "es";
+            if (identifier.EndsWith("is") && identifier.Length > 2) return identifier.Substring(0, identifier.Length - 2) + "es";
+
+            if (identifier.EndsWith("s")) return identifier; // misses some things (bus => buses), but: might already be pluralized
+
+            if (identifier.EndsWith("y") && identifier.Length > 2)
+            {   // identity => identities etc
+                switch(identifier[identifier.Length - 2])
+                {
+                    case 'a':
+                    case 'e':
+                    case 'i':
+                    case 'o':
+                    case 'u':
+                        break; // only for consonant prefix
+                    default:
+                        return identifier.Substring(0, identifier.Length - 1) + "ies";
+                }
             }
+            return identifier + "s";
         }
         public static NameNormalizer Default { get; } = new DefaultNormalizer();
         public static NameNormalizer Null { get; } = new NullNormalizer();

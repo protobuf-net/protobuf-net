@@ -17,11 +17,11 @@ namespace Google.Protobuf.Reflection
         [global::System.ComponentModel.DefaultValue("")]
         public string Package { get; set; } = "";
         [global::ProtoBuf.ProtoMember(3, Name = @"dependency")]
-        public global::System.Collections.Generic.List<string> Dependencys { get; } = new global::System.Collections.Generic.List<string>();
+        public global::System.Collections.Generic.List<string> Dependencies { get; } = new global::System.Collections.Generic.List<string>();
         [global::ProtoBuf.ProtoMember(10, Name = @"public_dependency")]
-        public int[] PublicDependencys { get; set; }
+        public int[] PublicDependencies { get; set; }
         [global::ProtoBuf.ProtoMember(11, Name = @"weak_dependency")]
-        public int[] WeakDependencys { get; set; }
+        public int[] WeakDependencies { get; set; }
         [global::ProtoBuf.ProtoMember(4, Name = @"message_type")]
         public global::System.Collections.Generic.List<DescriptorProto> MessageTypes { get; } = new global::System.Collections.Generic.List<DescriptorProto>();
         [global::ProtoBuf.ProtoMember(5, Name = @"enum_type")]
