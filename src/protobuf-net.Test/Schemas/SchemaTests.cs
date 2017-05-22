@@ -1,5 +1,6 @@
 ﻿using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -29,6 +30,27 @@ namespace ProtoBuf.Schemas
             File.WriteAllText(outPath, json);
             _output.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), outPath));
 
+        }
+
+        [Theory]
+        [InlineData(@"Schemas\descriptor.proto", @"Schemas\descriptor.bin")]
+        public void ParsedDataSerializesIdentically(string schemaPath, string expectedBinaryPath)
+        {
+            var set = new FileDescriptorSet();
+            set.Add(schemaPath);
+            // need to tweak the name to get equivalence
+            set.Files.Single().Name = Path.GetFileName(schemaPath);
+            string expected = BitConverter.ToString(File.ReadAllBytes(expectedBinaryPath)), actual;
+            using (var ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, set);
+                actual = BitConverter.ToString(ms.ToArray());
+            }
+            // // cheat to debug
+            // actual = "0A-D0" + actual.Substring(5);
+            _output.WriteLine(expected);
+            _output.WriteLine(actual);
+            Assert.Equal(expected, actual);
         }
 
         [Fact]
