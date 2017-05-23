@@ -82,7 +82,7 @@ namespace ProtoBuf
             var value = tokens.ConsumeString();
 
             if (!System.Enum.TryParse<T>(token.Value, ignoreCase, out T val))
-                token.SyntaxError("Unable to parse " + typeof(T).Name);
+                token.Throw("Unable to parse " + typeof(T).Name);
             return val;
         }
         internal static void Write(this TextWriter target, int indent, string value)
@@ -109,7 +109,7 @@ namespace ProtoBuf
             if (max.HasValue && token.Value == "max") return max.Value;
 
             if (!int.TryParse(token.Value, NumberStyles.None, CultureInfo.InvariantCulture, out int val))
-                token.SyntaxError("Unable to parse integer");
+                token.Throw("Unable to parse integer");
             return val;
         }
 
@@ -123,7 +123,7 @@ namespace ProtoBuf
                     tokens.Consume();
                     return token.Value;
                 default:
-                    throw token.SyntaxError();
+                    throw token.Throw();
             }
         }
 
@@ -134,7 +134,7 @@ namespace ProtoBuf
             tokens.Consume();
             if (string.Equals("true", token.Value, StringComparison.OrdinalIgnoreCase)) return true;
             if (string.Equals("false", token.Value, StringComparison.OrdinalIgnoreCase)) return false;
-            throw token.SyntaxError("Unable to parse boolean");
+            throw token.Throw("Unable to parse boolean");
         }
 
         internal static uint ConsumeUInt32(this Peekable<Token> tokens, uint? max = null)
@@ -145,7 +145,7 @@ namespace ProtoBuf
             if (max.HasValue && token.Value == "max") return max.Value;
 
             if (!uint.TryParse(token.Value, NumberStyles.None, CultureInfo.InvariantCulture, out uint val))
-                token.SyntaxError("Unable to parse integer");
+                token.Throw("Unable to parse integer");
             return val;
         }
 

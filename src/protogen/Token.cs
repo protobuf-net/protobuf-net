@@ -19,19 +19,21 @@ namespace ProtoBuf
         }
         public override string ToString() => $"({LineNumber},{ColumnNumber}) '{Value}'";
 
-        internal Exception SyntaxError(string error = null) =>
-            throw new ParserException(this, string.IsNullOrWhiteSpace(error) ? "syntax error" : error, true);
+        internal Error Error(string error = null, bool isError = true) =>
+            new Error(this, string.IsNullOrWhiteSpace(error) ? $"syntax error: '{Value}'" : error, isError);
+        internal Exception Throw(string error = null, bool isError = true) =>
+            throw new ParserException(this, string.IsNullOrWhiteSpace(error) ? $"syntax error: '{Value}'" : error, isError);
 
         internal void Assert(TokenType type, string value = null)
         {
             if (value != null)
             {
-                if (type != Type || value != Value) SyntaxError($"expected {type} '{value}'");
+                if (type != Type || value != Value) Throw($"expected {type} '{value}'");
 
             }
             else
             {
-                if (type != Type) SyntaxError($"expected {type}");
+                if (type != Type) Throw($"expected {type}");
             }
         }
 
@@ -46,8 +48,11 @@ namespace ProtoBuf
         {
             if(syntax != Parsers.SyntaxProto2)
             {
-                SyntaxError("This feature requires " + Parsers.SyntaxProto2 + " syntax");
+                Throw("This feature requires " + Parsers.SyntaxProto2 + " syntax");
             }
         }
+
+        internal Error TypeNotFound(string typeName = null) => new Error(this,
+            $"type not found: '{(string.IsNullOrWhiteSpace(typeName) ? Value : typeName)}'", true);
     }
 }

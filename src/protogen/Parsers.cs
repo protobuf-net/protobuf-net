@@ -13,7 +13,7 @@ namespace Google.Protobuf.Reflection
     partial class FileDescriptorSet
     {
         public Error[] GetErrors() => Error.GetArray(Errors);
-        internal List<ParserException> Errors { get; } = new List<ParserException>();
+        internal List<Error> Errors { get; } = new List<Error>();
         public void Add(string name, System.IO.TextReader source = null)
         {
             if (!TryResolve(name, out var descriptor))
@@ -27,7 +27,6 @@ namespace Google.Protobuf.Reflection
                 }
             }
         }
-
         private System.IO.TextReader Open(string name)
             => new System.IO.StreamReader(System.IO.File.OpenRead(name));
 
@@ -46,7 +45,7 @@ namespace Google.Protobuf.Reflection
                 @enum = parent.EnumTypes.FirstOrDefault(x => x.Name == type);
                 if (@enum != null)
                 {
-                    fqn = GetFQN(@enum.Parent, @enum.Name);
+                    fqn = @enum.FullyQualifiedName;
                     return true;
                 }
                 parent = parent.Parent;
@@ -54,42 +53,37 @@ namespace Google.Protobuf.Reflection
             @enum = EnumTypes.FirstOrDefault(x => x.Name == type);
             if (@enum != null)
             {
-                fqn = GetFQN(@enum.Parent, @enum.Name);
+                fqn = @enum.FullyQualifiedName;
                 return true;
             }
             fqn = null;
             return false;
         }
-        private string GetFQN(DescriptorProto parent, string name)
-        {
-            // special case a few obvious scenarios
-            if (parent == null) return "." + Package + "." + name;
-            if (parent.Parent == null) return "." + Package + "." + parent.Name + "." + name;
 
-            // need to get ancestors first
-            var sb = new StringBuilder(".").Append(Package);
-            var stack = new Stack<DescriptorProto>();
-            while (parent != null)
-            {
-                stack.Push(parent);
-                parent = parent.Parent;
-            }
-            while (stack.Count != 0)
-            {
-                parent = stack.Pop();
-                sb.Append(".").Append(parent.Name);
-            }
-            return sb.Append(".").Append(name).ToString();
-
-        }
         internal bool TryResolveMessage(string typeName, DescriptorProto parent, out DescriptorProto message, out string fqn)
         {
+            int split = typeName.IndexOf('.');
+            if (split > 0)
+            {
+                // compound name; try to resolve the first part
+                var left = typeName.Substring(0, split).Trim();
+
+                if (TryResolveMessage(left, parent, out message, out fqn))
+                {
+                    parent = message;
+                    var right = typeName.Substring(split + 1).Trim();
+                    return TryResolveMessage(right, parent, out message, out fqn);
+                }
+                return false;
+            }
+
+            // simple name
             while (parent != null)
             {
                 message = parent.NestedTypes.FirstOrDefault(x => x.Name == typeName);
                 if (message != null)
                 {
-                    fqn = GetFQN(message.Parent, message.Name);
+                    fqn = message.FullyQualifiedName;
                     return true;
                 }
                 parent = parent.Parent;
@@ -97,7 +91,7 @@ namespace Google.Protobuf.Reflection
             message = MessageTypes.FirstOrDefault(x => x.Name == typeName);
             if (message != null)
             {
-                fqn = GetFQN(message.Parent, message.Name);
+                fqn = message.FullyQualifiedName;
                 return true;
             }
             fqn = null;
@@ -130,9 +124,9 @@ namespace Google.Protobuf.Reflection
                 SetParents(fqn, child);
             }
         }
-        internal void FixupTypes()
+        internal void FixupTypes(ParserContext ctx)
         {
-            var prefix = "." + Package;
+            var prefix = string.IsNullOrWhiteSpace(Package) ? "" : ("." + Package);
             foreach (var type in EnumTypes)
             {
                 SetParents(prefix, type);
@@ -143,11 +137,32 @@ namespace Google.Protobuf.Reflection
             }
             foreach (var type in MessageTypes)
             {
-                ResolveFieldTypes(type);
+                ResolveFieldTypes(ctx, type);
+            }
+            foreach (var service in Services)
+            {
+                ResolveFieldTypes(ctx, service);
             }
         }
 
-        private void ResolveFieldTypes(DescriptorProto type)
+        private void ResolveFieldTypes(ParserContext ctx, ServiceDescriptorProto service)
+        {
+            foreach(var method in service.Methods)
+            {
+                if(!TryResolveMessage(method.InputType, null, out var msg, out string fqn))
+                {
+                    ctx.Errors.Add(method.InputTypeToken.TypeNotFound(method.InputType));
+                }
+                method.InputType = fqn;
+                if (!TryResolveMessage(method.OutputType, null, out msg, out fqn))
+                {
+                    ctx.Errors.Add(method.OutputTypeToken.TypeNotFound(method.OutputType));
+                }
+                method.OutputType = fqn;
+            }
+        }
+
+        private void ResolveFieldTypes(ParserContext ctx, DescriptorProto type)
         {
             foreach (var field in type.Fields)
             {
@@ -166,6 +181,7 @@ namespace Google.Protobuf.Reflection
                     }
                     else
                     {
+                        ctx.Errors.Add(field.TypeToken.TypeNotFound(field.TypeName));
                         fqn = field.TypeName;
                     }
                     field.TypeName = fqn;
@@ -177,11 +193,18 @@ namespace Google.Protobuf.Reflection
     {
         internal DescriptorProto Parent { get; set; }
         internal string FullyQualifiedName { get; set; }
+
+
     }
     partial class FieldDescriptorProto
     {
         internal DescriptorProto Parent { get; set; }
         internal Token TypeToken { get; set; }
+    }
+    partial class MethodDescriptorProto
+    {
+        internal Token InputTypeToken { get; set; }
+        internal Token OutputTypeToken { get; set; }
     }
     partial class DescriptorProto
     {
@@ -192,6 +215,8 @@ namespace Google.Protobuf.Reflection
     partial class EnumValueDescriptorProto
     {
         internal EnumDescriptorProto Parent { get; set; }
+        // technically optional, but need value even for zero
+        public bool ShouldSerializeNumber() => true;
     }
 #pragma warning restore CS1591
 }
@@ -204,20 +229,20 @@ namespace ProtoBuf
                 ? $"({LineNumber},{ColumnNumber}): {(IsError ? "error" : "warning")}: {Message}"
                 : $"({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(IsError ? "error" : "warning")}: {Message}";
 
-        internal static Error[] GetArray(List<ParserException> errors)
-        {
-            if (errors.Count == 0) return noErrors;
-            var arr = new Error[errors.Count];
-            int index = 0;
-            foreach (var err in errors)
-            {
-                arr[index++] = new Error(err);
-            }
-            return arr;
-        }
+        internal static Error[] GetArray(List<Error> errors)
+            => errors.Count == 0 ? noErrors : errors.ToArray();
 
         private static readonly Error[] noErrors = new Error[0];
 
+        internal Error(Token token, string message, bool isError)
+        {
+            ColumnNumber = token.ColumnNumber;
+            LineNumber = token.LineNumber;
+            LineContents = token.LineContents;
+            Message = message;
+            IsError = isError;
+            Text = token.Value;
+        }
         internal Error(ParserException ex)
         {
             ColumnNumber = ex.ColumnNumber;
@@ -238,30 +263,38 @@ namespace ProtoBuf
     }
     internal class ParserContext : IDisposable
     {
-        public ParserContext(FileDescriptorProto file, Peekable<Token> tokens, List<ParserException> errors)
+        public ParserContext(FileDescriptorProto file, Peekable<Token> tokens, List<Error> errors)
         {
             Tokens = tokens;
             Errors = errors;
             _file = file;
         }
 
-        public string Syntax => _file.Syntax;
+        public string Syntax
+        {
+            get
+            {
+                var syntax = _file.Syntax;
+                return string.IsNullOrEmpty(syntax) ? Parsers.SyntaxProto2 : syntax;
+            }
+        }
 
         private readonly FileDescriptorProto _file;
         public Peekable<Token> Tokens { get; }
-        public List<ParserException> Errors { get; }
+        public List<Error> Errors { get; }
 
         public void Dispose() { Tokens.Dispose(); }
     }
     internal static class Parsers
     {
         internal const string SyntaxProto2 = "proto2", SyntaxProto3 = "proto3";
-        public static FileDescriptorProto Parse(System.IO.TextReader schema, FileDescriptorProto descriptor, List<ParserException> errors)
+        public static FileDescriptorProto Parse(System.IO.TextReader schema, FileDescriptorProto descriptor, List<Error> errors)
         {
-            descriptor.Syntax = Parsers.SyntaxProto2;
+            descriptor.Syntax = "";
             using (var ctx = new ParserContext(descriptor, new Peekable<Token>(schema.Tokenize().RemoveCommentsAndWhitespace()), errors))
             {
                 var tokens = ctx.Tokens;
+                tokens.Peek(out Token startOfFile); // want this for "stuff you didn't do" warnings
                 while (tokens.Peek(out Token token))
                 {
                     try
@@ -277,7 +310,7 @@ namespace ProtoBuf
                                 case "syntax":
                                     if (descriptor.MessageTypes.Any() || descriptor.EnumTypes.Any())
                                     {
-                                        token.SyntaxError("syntax must be set types are included");
+                                        token.Throw("syntax must be set types are included");
                                     }
                                     tokens.Consume();
                                     tokens.Consume(TokenType.Symbol, "=");
@@ -293,27 +326,36 @@ namespace ProtoBuf
                                     descriptor.Options = ParseFileOptions(ctx, descriptor.Options);
                                     break;
                                 default:
-                                    token.SyntaxError();
+                                    token.Throw();
                                     break;
                             }
                         }
                         else
                         {
-                            token.SyntaxError();
+                            token.Throw();
                         }
                     }
                     catch (ParserException ex)
                     {
-                        ctx.Errors.Add(ex);
+                        ctx.Errors.Add(new Error(ex));
                         tokens.SkipToEndStatementOrObject();
                     }
                 }
+
+                // finish up
+                descriptor.FixupTypes(ctx);
+                if (string.IsNullOrWhiteSpace(descriptor.Syntax))
+                {
+
+                    ctx.Errors.Add(startOfFile.Error("No schema specified; it is strongly recommended to specify proto2 or proto3", false));
+                }
+                if (descriptor.Syntax == Parsers.SyntaxProto2)
+                {
+                    descriptor.Syntax = ""; // for output compatibility; is blank even if set to proto2 explicitly
+                }
             }
-            descriptor.FixupTypes();
-            if(descriptor.Syntax == Parsers.SyntaxProto2)
-            {
-                descriptor.Syntax = ""; // for output compatibility; is blank even if set to proto2 explicitly
-            }
+
+
             return descriptor;
         }
 
@@ -333,7 +375,7 @@ namespace ProtoBuf
                             }
                             catch (ParserException ex)
                             {
-                                ctx.Errors.Add(ex);
+                                ctx.Errors.Add(new Error(ex));
                                 tokens.SkipToEndObject();
                             }
                             return true;
@@ -344,7 +386,18 @@ namespace ProtoBuf
                             }
                             catch (ParserException ex)
                             {
-                                ctx.Errors.Add(ex);
+                                ctx.Errors.Add(new Error(ex));
+                                tokens.SkipToEndObject();
+                            }
+                            return true;
+                        case "service":
+                            try
+                            {
+                                schema.Services.Add(ParseServiceDescriptorProto(ctx));
+                            }
+                            catch (ParserException ex)
+                            {
+                                ctx.Errors.Add(new Error(ex));
                                 tokens.SkipToEndObject();
                             }
                             return true;
@@ -358,6 +411,83 @@ namespace ProtoBuf
             }
             return false;
         }
+
+        private static ServiceDescriptorProto ParseServiceDescriptorProto(ParserContext ctx)
+        {
+            var tokens = ctx.Tokens;
+            tokens.Consume(TokenType.AlphaNumeric, "service");
+            var name = tokens.Consume(TokenType.AlphaNumeric);
+            tokens.Consume(TokenType.Symbol, "{");
+
+            var service = new ServiceDescriptorProto { Name = name };
+            while (tokens.Peek(out var token) && !token.Is(TokenType.Symbol, "}"))
+            {
+                try // everything in a service should be statement-terminated
+                {
+                    if (token.Is(TokenType.AlphaNumeric, "option"))
+                    {
+                        tokens.Consume();
+                        var key = tokens.Consume(TokenType.AlphaNumeric);
+                        tokens.Consume(TokenType.Symbol, "=");
+                        var options = service.Options;
+                        if (options == null)
+                        {
+                            options = service.Options = new ServiceOptions();
+                        }
+                        switch(key)
+                        {
+                            case "deprecated":
+                                options.Deprecated = tokens.ConsumeBoolean();
+                                break;
+                            default:
+                                // drop it on the floor
+                                tokens.Consume();
+                                break;
+                        }
+                        tokens.Consume(TokenType.Symbol, ";");
+                    }
+                    else
+                    {
+
+                        // is a method
+                        tokens.Consume(TokenType.AlphaNumeric, "rpc");
+                        name = tokens.Consume(TokenType.AlphaNumeric);
+                        tokens.Consume(TokenType.Symbol, "(");
+                        var inputTypeToken = tokens.Read();
+                        var inputType = tokens.Consume(TokenType.AlphaNumeric);
+                        tokens.Consume(TokenType.Symbol, ")");
+                        tokens.Consume(TokenType.AlphaNumeric, "returns");
+                        tokens.Consume(TokenType.Symbol, "(");
+                        var outputTypeToken = tokens.Read();
+                        var outputType = tokens.Consume(TokenType.AlphaNumeric);
+                        tokens.Consume(TokenType.Symbol, ")");
+
+                        var method = new MethodDescriptorProto
+                        {
+                            Name = name, InputType = inputType, OutputType = outputType,
+                            InputTypeToken = inputTypeToken,
+                            OutputTypeToken  = outputTypeToken
+                        };
+                        if(tokens.Read().Is(TokenType.Symbol, "["))
+                        {
+                            // service options not implemented
+                            tokens.SkipToEndOptions();
+                        }
+                        service.Methods.Add(method);
+
+                        tokens.Consume(TokenType.Symbol, ";");
+                    }
+                }
+                catch (ParserException ex)
+                {
+                    ctx.Errors.Add(new Error(ex));
+                    tokens.SkipToEndStatement();
+                }
+            }
+            tokens.Consume(TokenType.Symbol, "}");
+            return service;
+        }
+
         internal static bool TryParseDescriptorProtoChildren(ParserContext ctx, DescriptorProto message)
         {
             var tokens = ctx.Tokens;
@@ -374,7 +504,7 @@ namespace ProtoBuf
                             }
                             catch (ParserException ex)
                             {
-                                ctx.Errors.Add(ex);
+                                ctx.Errors.Add(new Error(ex));
                                 tokens.SkipToEndObject();
                             }
                             return true;
@@ -385,7 +515,7 @@ namespace ProtoBuf
                             }
                             catch (ParserException ex)
                             {
-                                ctx.Errors.Add(ex);
+                                ctx.Errors.Add(new Error(ex));
                                 tokens.SkipToEndObject();
                             }
                             return true;
@@ -396,7 +526,7 @@ namespace ProtoBuf
                             }
                             catch (ParserException ex)
                             {
-                                ctx.Errors.Add(ex);
+                                ctx.Errors.Add(new Error(ex));
                                 tokens.SkipToEndStatement();
                             }
                             return true;
@@ -408,7 +538,7 @@ namespace ProtoBuf
                             }
                             catch (ParserException ex)
                             {
-                                ctx.Errors.Add(ex);
+                                ctx.Errors.Add(new Error(ex));
                                 tokens.SkipToEndStatement();
                             }
                             return true;
@@ -446,7 +576,7 @@ namespace ProtoBuf
                         }
                         else
                         {
-                            token.SyntaxError();
+                            token.Throw();
                         }
                     }
                     break;
@@ -472,12 +602,12 @@ namespace ProtoBuf
                         }
                         else
                         {
-                            token.SyntaxError();
+                            token.Throw();
                         }
                     }
                     break;
                 default:
-                    throw token.SyntaxError();
+                    throw token.Throw();
             }
         }
 
@@ -509,7 +639,7 @@ namespace ProtoBuf
                 }
                 else
                 {
-                    throw token.SyntaxError();
+                    throw token.Throw();
                 }
             }
         }
@@ -536,7 +666,7 @@ namespace ProtoBuf
                     }
                     catch (ParserException ex)
                     {
-                        ctx.Errors.Add(ex);
+                        ctx.Errors.Add(new Error(ex));
                         tokens.SkipToEndStatement();
                     }
                 }
@@ -574,7 +704,7 @@ namespace ProtoBuf
             }
             else
             {
-                throw token.SyntaxError("Expected 'repeated' / 'required' / 'optional'");
+                throw token.Throw("Expected 'repeated' / 'required' / 'optional'");
             }
 
             var typeToken = tokens.Read();
@@ -615,7 +745,7 @@ namespace ProtoBuf
                 }
                 catch (ParserException ex)
                 {
-                    ctx.Errors.Add(ex);
+                    ctx.Errors.Add(new Error(ex));
                     tokens.SkipToEndOptions();
                 }
             }
@@ -719,6 +849,11 @@ namespace ProtoBuf
             { "packed", (options, value) => options.Packed = value },
             { "weak", (options, value) => options.Weak = value },
         };
+        private static readonly Dictionary<string, Action<EnumOptions, bool>> enumBoolActions = new Dictionary<string, Action<EnumOptions, bool>>
+        {
+            { "deprecated", (options, value) => options.Deprecated = value },
+            { "allow_alias", (options, value) => options.AllowAlias = value },
+        };
 
 #pragma warning restore 0618, 0612
         private static FileOptions ParseFileOptions(ParserContext ctx, FileOptions options)
@@ -799,7 +934,7 @@ namespace ProtoBuf
 
                         if (key == "packed" && options.Packed && !CanPack(field.type))
                         {
-                            token.SyntaxError($"Field of type {field.type} cannot be packed");
+                            token.Throw($"Field of type {field.type} cannot be packed");
                         }
                     }
                 }
@@ -827,6 +962,18 @@ namespace ProtoBuf
                     tokens.Consume();
                     cont = false;
                 }
+                else if (token.Is(TokenType.AlphaNumeric, "option"))
+                {
+                    try
+                    {
+                        ParseEnumOptions(ctx, obj);
+                    }
+                    catch (ParserException ex)
+                    {
+                        ctx.Errors.Add(new Error(ex));
+                        tokens.SkipToEndStatement();
+                    }
+                }
                 else
                 {
                     try
@@ -835,12 +982,35 @@ namespace ProtoBuf
                     }
                     catch (ParserException ex)
                     {
-                        ctx.Errors.Add(ex);
+                        ctx.Errors.Add(new Error(ex));
                         tokens.SkipToEndStatement();
                     }
                 }
             }
             return obj;
+        }
+
+        private static void ParseEnumOptions(ParserContext ctx, EnumDescriptorProto @enum)
+        {
+            var tokens = ctx.Tokens;
+            tokens.Consume(TokenType.AlphaNumeric, "option");
+            var options = @enum.Options;
+            if (options == null)
+            {
+                options = @enum.Options = new EnumOptions();
+            }
+            var key = tokens.Consume(TokenType.AlphaNumeric);
+            tokens.Consume(TokenType.Symbol, "=");
+            if (enumBoolActions.TryGetValue(key, out var action))
+            {
+                action(options, tokens.ConsumeBoolean());
+            }
+            else
+            {
+                // drop it on the floor
+                tokens.Consume();
+            }
+            tokens.Consume(TokenType.Symbol, ";");
         }
 
         public static EnumValueDescriptorProto ParseEnumValueDescriptorProto(ParserContext ctx)
