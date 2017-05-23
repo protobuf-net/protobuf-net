@@ -21,11 +21,12 @@ namespace protogen.site.Controllers
                         var set = new FileDescriptorSet();
                         set.Add("my.proto", reader);
                         var parsed = set.Files.Single();
-                        if(set.Errors.Any())
+                        var errors = set.GetErrors();
+                        if(errors.Any())
                         {
                             var sb = new StringBuilder();
-                            foreach (var error in set.Errors)
-                                sb.AppendLine(error.GetErrorMessage());
+                            foreach (var error in errors)
+                                sb.AppendLine(error.ToString());
                             ViewData["error"] = sb.ToString();
                         }
                         

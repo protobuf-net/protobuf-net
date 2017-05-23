@@ -12,7 +12,8 @@ namespace Google.Protobuf.Reflection
 
     partial class FileDescriptorSet
     {
-        public List<ParserException> Errors { get; } = new List<ParserException>();
+        public Error[] GetErrors() => Error.GetArray(Errors);
+        internal List<ParserException> Errors { get; } = new List<ParserException>();
         public void Add(string name, System.IO.TextReader source = null)
         {
             if (!TryResolve(name, out var descriptor))
@@ -196,6 +197,45 @@ namespace Google.Protobuf.Reflection
 }
 namespace ProtoBuf
 {
+    public class Error
+    {
+        public override string ToString() =>
+            Text.Length == 0
+                ? $"({LineNumber},{ColumnNumber}): {(IsError ? "error" : "warning")}: {Message}"
+                : $"({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(IsError ? "error" : "warning")}: {Message}";
+
+        internal static Error[] GetArray(List<ParserException> errors)
+        {
+            if (errors.Count == 0) return noErrors;
+            var arr = new Error[errors.Count];
+            int index = 0;
+            foreach (var err in errors)
+            {
+                arr[index++] = new Error(err);
+            }
+            return arr;
+        }
+
+        private static readonly Error[] noErrors = new Error[0];
+
+        internal Error(ParserException ex)
+        {
+            ColumnNumber = ex.ColumnNumber;
+            LineNumber = ex.LineNumber;
+            LineContents = ex.LineContents;
+            Message = ex.Message;
+            IsError = ex.IsError;
+            Text = ex.Text;
+        }
+        public bool IsWarning => !IsError;
+
+        public bool IsError { get; }
+        public string Text { get; }
+        public string Message { get; }
+        public string LineContents { get; }
+        public int LineNumber { get; }
+        public int ColumnNumber { get; }
+    }
     internal class ParserContext : IDisposable
     {
         public ParserContext(FileDescriptorProto file, Peekable<Token> tokens, List<ParserException> errors)

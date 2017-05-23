@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -18,7 +17,7 @@ namespace ProtoBuf.Schemas
         const string SchemaPath = "Schemas";
         public static IEnumerable<object[]> GetSchemas()
             => from file in Directory.GetFiles(SchemaPath, "*.proto")
-               select new object[] { file };
+               select new object[] { file.Replace('\\', '/') };
 
         [Theory]
         [MemberData(nameof(GetSchemas))]
@@ -26,46 +25,51 @@ namespace ProtoBuf.Schemas
         {
             _output.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), SchemaPath));
             Assert.True(File.Exists(path));
-            var binPath = Path.ChangeExtension(path, "protoc.bin");
+            var protocBinPath = Path.ChangeExtension(path, "protoc.bin");
             int exitCode;
-            using (var proc = Process.Start("protoc", $"--descriptor_set_out={binPath} {path}"))
+            using (var proc = Process.Start("protoc", $"--descriptor_set_out={protocBinPath} {path}"))
             {
                 proc.WaitForExit();
                 exitCode = proc.ExitCode;
             }
-            var protocHex = BitConverter.ToString(File.ReadAllBytes(binPath));
+            
             FileDescriptorSet set;
-            string json, jsonPath;
-            using (var file = File.OpenRead(binPath))
+            string protocJson, jsonPath;
+            using (var file = File.OpenRead(protocBinPath))
             {
                 set = Serializer.Deserialize<FileDescriptorSet>(file);
-                json = JsonConvert.SerializeObject(set, Formatting.Indented);
+                protocJson = JsonConvert.SerializeObject(set, Formatting.Indented);
                 jsonPath = Path.ChangeExtension(path, "protoc.json");
-                File.WriteAllText(jsonPath, json);
+                File.WriteAllText(jsonPath, protocJson);
             }
 
             set = new FileDescriptorSet();
             set.Add(path);
-            json = JsonConvert.SerializeObject(set, Formatting.Indented);
+            var parserJson = JsonConvert.SerializeObject(set, Formatting.Indented);
             jsonPath = Path.ChangeExtension(path, "parser.json");
-            File.WriteAllText(jsonPath, json);
+            File.WriteAllText(jsonPath, parserJson);
 
-            binPath = Path.ChangeExtension(path, "parser.bin");
-            using (var file = File.Create(binPath))
+            var parserBinPath = Path.ChangeExtension(path, "parser.bin");
+            using (var file = File.Create(parserBinPath))
             {
                 Serializer.Serialize(file, set);
             }
 
+            var errors = set.GetErrors();
             if (exitCode == 0)
             {
-                Assert.Equal(0, set.Errors.Count);
+                Assert.Equal(0, errors.Length);
             }
             else
             {
-                Assert.NotEqual(0, set.Errors.Count);
+                Assert.NotEqual(0, errors.Length);
             }
-            var parserHex = BitConverter.ToString(File.ReadAllBytes(binPath));
-            
+
+            // compare results
+            Assert.Equal(protocJson, parserJson);
+
+            var parserHex = BitConverter.ToString(File.ReadAllBytes(parserBinPath));
+            var protocHex = BitConverter.ToString(File.ReadAllBytes(protocBinPath));
             Assert.Equal(protocHex, parserHex);
         }
 

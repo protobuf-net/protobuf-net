@@ -30,20 +30,13 @@ namespace Google.Protobuf.Reflection
 namespace ProtoBuf
 {
 
-    public class ParserException : Exception
+    internal class ParserException : Exception
     {
         public int ColumnNumber { get; }
-
-        public string GetErrorMessage() =>
-            Text.Length == 0
-                ? $"({LineNumber},{ColumnNumber}): {(IsError ? "error" : "warning")}: {Message}"
-                : $"({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(IsError ? "error" : "warning")}: {Message}";
-
         public int LineNumber { get; }
         public string Text { get; }
         public string LineContents { get; }
         public bool IsError { get; }
-        public bool IsWarning => !IsError;
         internal ParserException(Token token, string message, bool isError)
             : base(message ?? "error")
         {
