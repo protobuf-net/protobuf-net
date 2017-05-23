@@ -12,13 +12,9 @@ syntax = "proto2";
 
 enum RootEnum {
 	A = 0;
-	B = 1;
+	B = 1 [deprecated = true];
 }
 
-service SearchService {
-  option deprecated = true;
-  rpc Search (SearchRequest) returns (SearchResponse);
-}
 
 ; // random semicolon
 message SearchRequest {
@@ -38,6 +34,7 @@ message SearchRequest {
   optional Corpus corpus = 4 [default = UNIVERSAL];
 }
 ; // random semicolon
+
 message SearchResponse {
   repeated Result result = 1;
 
@@ -47,16 +44,26 @@ message SearchResponse {
     repeated string snippets = 3;
   }
 
-  repeated group Grouped  = 10 {
-    required string url = 2;
-    optional string title = 3;
-    repeated string snippets = 4;
-  }
-  // compiler INSISTS on first name being upper-case
-  optional group UPPER  = 12 {
-    required string url = 2;
-    optional string title = 3;
-    repeated string snippets = 4;
+//  repeated group Grouped = 10 {
+//    required string url = 2;
+//    optional string title = 3;
+//    repeated string snippets = 4;
+///  }
+//  compiler INSISTS on first name being upper-case
+//  optional group UPPER  = 12 {
+//    required string url = 2;
+//    optional string title = 3;
+//    repeated string snippets = 4;
+//  }
+}
+
+
+service SearchService {
+  option deprecated = true;
+  rpc Search (SearchRequest) returns (SearchResponse);
+  rpc OldMethod (SearchRequest) returns (SearchResponse)
+  {
+    option deprecated=true;
   }
 }
 

@@ -11,6 +11,7 @@ using Xunit.Abstractions;
 
 namespace ProtoBuf.Schemas
 {
+    [Trait("kind", "schema")]
     public class SchemaTests
     {
         private ITestOutputHelper _output;

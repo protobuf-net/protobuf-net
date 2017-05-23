@@ -14,10 +14,22 @@ namespace ProtoBuf
             token.Assert(type, value);
             tokens.Consume();
         }
+        public static bool ConsumeIf(this Peekable<Token> tokens, TokenType type, string value)
+        {
+            if(tokens.Peek(out var token) && token.Is(type, value))
+            {
+                tokens.Consume();
+                return true;
+            }
+            return false;
+        }
 
         public static Token Read(this Peekable<Token> tokens)
         {
-            if (!tokens.Peek(out Token val)) throw new ParserException(tokens.Previous, "Unexpected end of file", true);
+            if (!tokens.Peek(out Token val))
+            {
+                throw new ParserException(tokens.Previous, "Unexpected end of file", true);
+            }
             return val;
         }
         public static bool SkipToEndOptions(this Peekable<Token> tokens)
@@ -194,7 +206,7 @@ namespace ProtoBuf
         {
             var buffer = new StringBuilder();
 
-            int lineNumber = 0;
+            int lineNumber = 0, offset = 0;
             string line;
             string lastLine = null;
             while ((line = reader.ReadLine()) != null)
@@ -211,7 +223,7 @@ namespace ProtoBuf
                     {
                         if (c == '"')
                         {
-                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line);
+                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++);
                             buffer.Clear();
                             type = TokenType.None;
                         }
@@ -231,7 +243,7 @@ namespace ProtoBuf
                         {
                             if (buffer.Length != 0)
                             {
-                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line);
+                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++);
                                 buffer.Clear();
                             }
                             type = newType;
@@ -247,7 +259,7 @@ namespace ProtoBuf
 
                 if (buffer.Length != 0)
                 {
-                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, lastLine);
+                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, lastLine, offset++);
                     buffer.Clear();
                 }
             }

@@ -1,21 +1,36 @@
-﻿using System;
+﻿using Google.Protobuf.Reflection;
+using System;
 
 namespace ProtoBuf
 {
     internal struct Token
     {
+
+        public static bool operator ==(Token x, Token y)
+        {
+            return x.Offset == y.Offset;
+        }
+        public static bool operator !=(Token x, Token y)
+        {
+            return x.Offset != y.Offset;
+        }
+        public override int GetHashCode() => Offset;
+        public override bool Equals(object obj) => (obj is Token) && ((Token)obj).Offset == this.Offset;
+        public bool Equals(Token token) => token.Offset == this.Offset;
+        public int Offset { get; }
         public int LineNumber { get; }
         public int ColumnNumber { get; }
         public TokenType Type { get; }
         public string Value { get; }
         public string LineContents { get; }
-        internal Token(string value, int lineNumber, int columnNumber, TokenType type, string lineContents)
+        internal Token(string value, int lineNumber, int columnNumber, TokenType type, string lineContents, int offset)
         {
             Value = value;
             LineNumber = lineNumber;
             ColumnNumber = columnNumber;
             Type = type;
             LineContents = lineContents;
+            Offset = offset;
         }
         public override string ToString() => $"({LineNumber},{ColumnNumber}) '{Value}'";
 
@@ -46,9 +61,9 @@ namespace ProtoBuf
 
         internal void RequireProto2(string syntax)
         {
-            if(syntax != Parsers.SyntaxProto2)
+            if(syntax != FileDescriptorProto.SyntaxProto2)
             {
-                Throw("This feature requires " + Parsers.SyntaxProto2 + " syntax");
+                Throw("This feature requires " + FileDescriptorProto.SyntaxProto2 + " syntax");
             }
         }
 
