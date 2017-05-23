@@ -1,4 +1,4 @@
-﻿require(['vs/editor/editor.main'], function () {
+﻿define(function () {
     // Create your own language definition here
     // You can safely look at other samples without losing modifications.
     // Modifications are not saved on browser refresh/close though -- copy often!
