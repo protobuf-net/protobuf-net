@@ -3,12 +3,14 @@
 // import
 // Oneof
 // map
-// package
+
 // custom options
 
 syntax = "proto2";
 
 // file comment
+
+package AllTheThings;
 
 enum RootEnum {
 	A = 0;
@@ -44,17 +46,18 @@ message SearchResponse {
     repeated string snippets = 3;
   }
 
-//  repeated group Grouped = 10 {
-//    required string url = 2;
-//    optional string title = 3;
-//    repeated string snippets = 4;
-///  }
-//  compiler INSISTS on first name being upper-case
-//  optional group UPPER  = 12 {
-//    required string url = 2;
-//    optional string title = 3;
-//    repeated string snippets = 4;
-//  }
+  repeated group Grouped = 10 {
+	option deprecated = true;
+    required string url = 2 [deprecated=true];
+    optional string title = 3;
+    repeated string snippets = 4;
+  }
+  // compiler INSISTS on first name being upper-case
+  optional group UPPER  = 12 {
+    required string url = 2;
+    optional string title = 3;
+    repeated string snippets = 4;
+  }
 }
 
 

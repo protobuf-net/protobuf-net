@@ -11,14 +11,14 @@ namespace Google.Protobuf.Reflection
 #pragma warning disable CS1591
     partial class FileDescriptorProto
     {
-        public void GenerateCSharp(TextWriter target, NameNormalizer normalizer = null)
-            => Generators.GenerateCSharp(target, this, normalizer);
+        public void GenerateCSharp(TextWriter target, NameNormalizer normalizer = null, IList<Error> errors = null)
+            => Generators.GenerateCSharp(target, this, normalizer, errors);
 
-        public string GenerateCSharp(NameNormalizer normalizer = null)
+        public string GenerateCSharp(NameNormalizer normalizer = null, IList<Error> errors = null)
         {
             using (var sw = new StringWriter())
             {
-                GenerateCSharp(sw, normalizer);
+                GenerateCSharp(sw, normalizer, errors);
                 return sw.ToString();
             }
         }
@@ -276,7 +276,6 @@ namespace ProtoBuf
 
             public string GetTypeName(FieldDescriptorProto field, out string dataFormat)
             {
-                const string SIGNED = "ZigZag", FIXED = "FixedSize";
                 dataFormat = "";
                 switch (field.type)
                 {
@@ -289,28 +288,28 @@ namespace ProtoBuf
                     case FieldDescriptorProto.Type.TypeString:
                         return "string";
                     case FieldDescriptorProto.Type.TypeSint32:
-                        dataFormat = SIGNED;
+                        dataFormat = nameof(DataFormat.ZigZag);
                         return "int";
                     case FieldDescriptorProto.Type.TypeInt32:
                         return "int";
                     case FieldDescriptorProto.Type.TypeSfixed32:
-                        dataFormat = FIXED;
+                        dataFormat = nameof(DataFormat.FixedSize);
                         return "int";
                     case FieldDescriptorProto.Type.TypeSint64:
-                        dataFormat = SIGNED;
+                        dataFormat = nameof(DataFormat.ZigZag);
                         return "long";
                     case FieldDescriptorProto.Type.TypeInt64:
                         return "long";
                     case FieldDescriptorProto.Type.TypeSfixed64:
-                        dataFormat = FIXED;
+                        dataFormat = nameof(DataFormat.FixedSize);
                         return "long";
                     case FieldDescriptorProto.Type.TypeFixed32:
-                        dataFormat = FIXED;
+                        dataFormat = nameof(DataFormat.FixedSize);
                         return "uint";
                     case FieldDescriptorProto.Type.TypeUint32:
                         return "uint";
                     case FieldDescriptorProto.Type.TypeFixed64:
-                        dataFormat = FIXED;
+                        dataFormat = nameof(DataFormat.FixedSize);
                         return "ulong";
                     case FieldDescriptorProto.Type.TypeUint64:
                         return "ulong";
@@ -319,9 +318,13 @@ namespace ProtoBuf
                     case FieldDescriptorProto.Type.TypeEnum:
                         var enumType = Find<EnumDescriptorProto>(field.TypeName);
                         return Normalizer.GetName(enumType);
-                    case FieldDescriptorProto.Type.TypeMessage:
                     case FieldDescriptorProto.Type.TypeGroup:
+                    case FieldDescriptorProto.Type.TypeMessage:
                         var msgType = Find<DescriptorProto>(field.TypeName);
+                        if(field.type == FieldDescriptorProto.Type.TypeGroup)
+                        {
+                            dataFormat = nameof(DataFormat.Group);
+                        }
                         return Normalizer.GetName(msgType);
                     default:
                         if (field.type == 0)
@@ -381,12 +384,26 @@ namespace ProtoBuf
             }
         }
 
-        public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null)
+        public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null, IList<Error> errors = null)
         {
             var ctx = new GeneratorContext(schema, normalizer ?? NameNormalizer.Default);
             ctx.BuildTypeIndex();
             int indent = 0;
             var @namespace = schema.Options?.CsharpNamespace ?? schema.Package;
+
+            if(errors != null)
+            {
+                bool isFirst = true;
+                foreach(var error in errors.Where(x => x.IsError))
+                {
+                    if(isFirst)
+                    {
+                        target.WriteLine(indent, "// errors in " + schema.Name);
+                        isFirst = false;
+                    }
+                    target.WriteLine(indent, "#error " + error.ToString(false));
+                }
+            }
             target.WriteLine(indent, "#pragma warning disable CS1591");
             if (!string.IsNullOrWhiteSpace(@namespace))
             {

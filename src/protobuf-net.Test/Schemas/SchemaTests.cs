@@ -65,13 +65,14 @@ namespace ProtoBuf.Schemas
             jsonPath = Path.ChangeExtension(path, "parser.json");
             File.WriteAllText(jsonPath, parserJson);
 
+            var errors = set.GetErrors();
             try
             {
                 foreach (var file in set.Files)
                 {
                     using (var codeFile = File.CreateText(Path.ChangeExtension(file.Name, "cs")))
                     {
-                        file.GenerateCSharp(codeFile);
+                        file.GenerateCSharp(codeFile, errors: errors);
                     }
                 }
             }
@@ -86,7 +87,7 @@ namespace ProtoBuf.Schemas
                 Serializer.Serialize(file, set);
             }
 
-            var errors = set.GetErrors();
+            
             if (errors.Any())
             {
                 _output.WriteLine("Parser errors:");

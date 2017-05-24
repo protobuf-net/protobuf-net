@@ -82,7 +82,7 @@ namespace Google.Protobuf.Reflection
             }
             else
             {
-                if (FieldDescriptorProto.TryParse(ctx, out var obj))
+                if (FieldDescriptorProto.TryParse(ctx, this, out var obj))
                     Fields.Add(obj);
             }
         }
@@ -379,18 +379,32 @@ namespace Google.Protobuf.Reflection
             ResolveFieldTypes(ctx, Extensions, null);
         }
 
+        static bool ShouldResolveType(FieldDescriptorProto.Type type)
+        {
+            switch(type)
+            {
+                case 0:
+                case FieldDescriptorProto.Type.TypeMessage:
+                case FieldDescriptorProto.Type.TypeEnum:
+                case FieldDescriptorProto.Type.TypeGroup:
+                    return true;
+                default:
+                    return false;
+            }
+        }
         private void ResolveFieldTypes(ParserContext ctx, List<FieldDescriptorProto> extensions, DescriptorProto parent)
         {
             foreach (var field in extensions)
             {
-                if (!string.IsNullOrEmpty(field.TypeName) && field.type == default(FieldDescriptorProto.Type))
+                if (!string.IsNullOrEmpty(field.TypeName) && ShouldResolveType(field.type))
                 {
                     string fqn;
                     if (TryResolveMessage(field.TypeName, parent, out var msg, out fqn))
                     {
-                        // TODO: how to identify groups? FieldDescriptorProto.Type.TypeGroup
-                        // do I need to track that bespokely? or is there something on the type?
-                        field.type = FieldDescriptorProto.Type.TypeMessage;
+                        if (field.type != FieldDescriptorProto.Type.TypeGroup)
+                        {
+                            field.type = FieldDescriptorProto.Type.TypeMessage;
+                        }
                     }
                     else if (TryResolveEnum(field.TypeName, parent, out var @enum, out fqn))
                     {
@@ -478,65 +492,88 @@ namespace Google.Protobuf.Reflection
         internal DescriptorProto Parent { get; set; }
         internal Token TypeToken { get; set; }
 
-        internal static bool TryParse(ParserContext ctx, out FieldDescriptorProto field)
+        internal static bool TryParse(ParserContext ctx, DescriptorProto parent, out FieldDescriptorProto field)
         {
-            bool isStatement = true;
             var tokens = ctx.Tokens;
-            try
+            ctx.AbortState = AbortState.Statement;
+            Label label;
+            var token = tokens.Read();
+            if (ctx.Syntax != FileDescriptorProto.SyntaxProto2)
             {
-                Label label;
+                label = Label.LabelOptional;
+            }
+            else if (token.Is(TokenType.AlphaNumeric, "repeated"))
+            {
+                label = Label.LabelRepeated;
+                tokens.Consume();
+            }
+            else if (token.Is(TokenType.AlphaNumeric, "required"))
+            {
+                token.RequireProto2(ctx.Syntax);
+                label = Label.LabelRequired;
+                tokens.Consume();
+            }
+            else if (token.Is(TokenType.AlphaNumeric, "optional"))
+            {
+                token.RequireProto2(ctx.Syntax);
+                label = Label.LabelOptional;
+                tokens.Consume();
+            }
+            else
+            {
+                throw token.Throw("Expected 'repeated' / 'required' / 'optional'");
+            }
 
-                var token = tokens.Read();
-                if (ctx.Syntax != FileDescriptorProto.SyntaxProto2)
-                {
-                    label = Label.LabelOptional;
-                }
-                else if (token.Is(TokenType.AlphaNumeric, "repeated"))
-                {
-                    label = Label.LabelRepeated;
-                    tokens.Consume();
-                }
-                else if (token.Is(TokenType.AlphaNumeric, "required"))
-                {
-                    token.RequireProto2(ctx.Syntax);
-                    label = Label.LabelRequired;
-                    tokens.Consume();
-                }
-                else if (token.Is(TokenType.AlphaNumeric, "optional"))
-                {
-                    token.RequireProto2(ctx.Syntax);
-                    label = Label.LabelOptional;
-                    tokens.Consume();
-                }
-                else
-                {
-                    throw token.Throw("Expected 'repeated' / 'required' / 'optional'");
-                }
+            var typeToken = tokens.Read();
+            string typeName = tokens.Consume(TokenType.AlphaNumeric);
 
-                var typeToken = tokens.Read();
-                string typeName = tokens.Consume(TokenType.AlphaNumeric);
+            var isGroup = typeName == "group";
+            if (isGroup)
+            {
+                ctx.AbortState = AbortState.Object;
+            }
 
-                // if (typeName == "group") System.Diagnostics.Debugger.Break();
+            string name = tokens.Consume(TokenType.AlphaNumeric);
+            var nameToken = tokens.Previous;
+            tokens.Consume(TokenType.Symbol, "=");
+            var number = tokens.ConsumeInt32();
 
-                string name = tokens.Consume(TokenType.AlphaNumeric);
-                tokens.Consume(TokenType.Symbol, "=");
-                var number = tokens.ConsumeInt32();
-                if (TryIdentifyType(typeName, out var type))
+            Type type;
+            if (isGroup)
+            {
+                type = Type.TypeGroup;
+                typeName = name;
+
+                var firstChar = typeName[0].ToString();
+                if(firstChar.ToLowerInvariant() == firstChar)
                 {
-                    typeName = "";
+                    ctx.Errors.Add(new Error(nameToken, "group names must start with an upper-case letter", true));
                 }
-
-                field = new FieldDescriptorProto
+                name = typeName.ToLowerInvariant();
+                if(ctx.TryReadObject<DescriptorProto>(out var grpType))
                 {
-                    type = type,
-                    TypeName = typeName,
-                    Name = name,
-                    JsonName = GetJsonName(name),
-                    Number = number,
-                    label = label,
-                    TypeToken = typeToken // internal property that helps give useful error messages
-                };
+                    grpType.Name = typeName;
+                    parent.NestedTypes.Add(grpType);
+                }
+            }
+            else if (TryIdentifyType(typeName, out type))
+            {
+                typeName = "";
+            }
 
+            field = new FieldDescriptorProto
+            {
+                type = type,
+                TypeName = typeName,
+                Name = name,
+                JsonName = GetJsonName(name),
+                Number = number,
+                label = label,
+                TypeToken = typeToken // internal property that helps give useful error messages
+            };
+
+            if (!isGroup)
+            {
                 if (ctx.Syntax != FileDescriptorProto.SyntaxProto2)
                 {
                     if (CanPack(type)) // packed by default
@@ -551,24 +588,15 @@ namespace Google.Protobuf.Reflection
 
                     if ((field.Options?.Packed ?? false) && !CanPack(type))
                     {
-                        ctx.Errors.Add(new Error(typeToken, $"Field of type {field.type} cannot be packed", true));
+                        ctx.Errors.Add(new Error(typeToken, $"field of type {field.type} cannot be packed", true));
                         field.Options.Packed = false;
                     }
                 }
 
-
-
                 tokens.Consume(TokenType.Symbol, ";");
-                return true;
             }
-            catch (ParserException ex)
-            {
-                ctx.Errors.Add(new Error(ex));
-                if (isStatement) tokens.SkipToEndStatement();
-                else tokens.SkipToEndObject(); // groups end differently
-                field = null;
-                return false;
-            }
+            ctx.AbortState = AbortState.None;
+            return true;
         }
 
         private static string GetJsonName(string name)
@@ -840,11 +868,11 @@ namespace ProtoBuf
 {
     public class Error
     {
-        public override string ToString() =>
-            Text.Length == 0
-                ? $"({LineNumber},{ColumnNumber}): {(IsError ? "error" : "warning")}: {Message}"
-                : $"({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(IsError ? "error" : "warning")}: {Message}";
-
+        internal string ToString(bool includeType) => Text.Length == 0
+                ? $"({LineNumber},{ColumnNumber}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}"
+                : $"({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}";
+        public override string ToString() => ToString(true);
+            
         internal static Error[] GetArray(List<Error> errors)
             => errors.Count == 0 ? noErrors : errors.ToArray();
 
