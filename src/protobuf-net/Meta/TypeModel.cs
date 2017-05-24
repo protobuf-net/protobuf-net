@@ -295,7 +295,6 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        [Obsolete("32-bit")]
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out int bytesRead)
         {
             object result = DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out long bytesRead64, out bool haveObject, null);
@@ -653,7 +652,6 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        [Obsolete("32-bit")]
         public object Deserialize(Stream source, object value, System.Type type, int length)
             => Deserialize(source, value, type, length, null);
         
@@ -667,7 +665,6 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        [Obsolete("32-bit")]
         public object Deserialize(Stream source, object value, System.Type type, long length)
             => Deserialize(source, value, type, length, null);
 
@@ -682,7 +679,6 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
-        [Obsolete("32-bit")]
         public object Deserialize(Stream source, object value, System.Type type, int length, SerializationContext context)
             => Deserialize(source, value, type, length == int.MaxValue ? long.MaxValue : (long)value);
 

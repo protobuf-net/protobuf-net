@@ -983,9 +983,8 @@ namespace ProtoBuf
         /// reader to be created.
         /// </summary>
         public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber)
-#pragma warning disable 0618 // "32-bit"
             => ReadLengthPrefix(source, expectHeader, style, out fieldNumber, out int bytesRead);
-#pragma warning restore 0618
+
         /// <summary>
         /// Reads a little-endian encoded integer. An exception is thrown if the data is not all available.
         /// </summary>
@@ -1052,7 +1051,6 @@ namespace ProtoBuf
         /// Reads the length-prefix of a message from a stream without buffering additional data, allowing a fixed-length
         /// reader to be created.
         /// </summary>
-        [Obsolete("32-bit")]
         public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber, out int bytesRead)
         {
             if(style == PrefixStyle.None)
@@ -1376,7 +1374,6 @@ namespace ProtoBuf
 
         #region RECYCLER
 
-        [Obsolete("32-bit")]
         internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, int len)
             => Create(source, model, context, (long)len);
         internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, long len)

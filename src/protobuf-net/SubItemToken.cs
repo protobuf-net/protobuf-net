@@ -10,7 +10,6 @@ namespace ProtoBuf
     public struct SubItemToken
     {
         internal readonly long value64;
-        [Obsolete("32-bit", true)]
         internal SubItemToken(int value) => value64 = value;
         internal SubItemToken(long value) => value64 = value;
     }
