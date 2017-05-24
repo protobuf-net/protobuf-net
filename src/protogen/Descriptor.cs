@@ -26,6 +26,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Name = value; }
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
+        public void ResetName() => __pbn__Name = null;
         private string __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"package")]
@@ -36,6 +37,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Package = value; }
         }
         public bool ShouldSerializePackage() => __pbn__Package != null;
+        public void ResetPackage() => __pbn__Package = null;
         private string __pbn__Package;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"dependency")]
@@ -73,6 +75,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Syntax = value; }
         }
         public bool ShouldSerializeSyntax() => __pbn__Syntax != null;
+        public void ResetSyntax() => __pbn__Syntax = null;
         private string __pbn__Syntax;
 
     }
@@ -90,6 +93,7 @@ namespace Google.Protobuf.Reflection
                 set { __pbn__Start = value; }
             }
             public bool ShouldSerializeStart() => __pbn__Start != null;
+            public void ResetStart() => __pbn__Start = null;
             private int? __pbn__Start;
 
             [global::ProtoBuf.ProtoMember(2, Name = @"end")]
@@ -99,6 +103,7 @@ namespace Google.Protobuf.Reflection
                 set { __pbn__End = value; }
             }
             public bool ShouldSerializeEnd() => __pbn__End != null;
+            public void ResetEnd() => __pbn__End = null;
             private int? __pbn__End;
 
         }
@@ -113,6 +118,7 @@ namespace Google.Protobuf.Reflection
                 set { __pbn__Start = value; }
             }
             public bool ShouldSerializeStart() => __pbn__Start != null;
+            public void ResetStart() => __pbn__Start = null;
             private int? __pbn__Start;
 
             [global::ProtoBuf.ProtoMember(2, Name = @"end")]
@@ -122,6 +128,7 @@ namespace Google.Protobuf.Reflection
                 set { __pbn__End = value; }
             }
             public bool ShouldSerializeEnd() => __pbn__End != null;
+            public void ResetEnd() => __pbn__End = null;
             private int? __pbn__End;
 
         }
@@ -134,6 +141,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Name = value; }
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
+        public void ResetName() => __pbn__Name = null;
         private string __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"field")]
@@ -228,6 +236,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Name = value; }
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
+        public void ResetName() => __pbn__Name = null;
         private string __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"number")]
@@ -237,6 +246,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Number = value; }
         }
         public bool ShouldSerializeNumber() => __pbn__Number != null;
+        public void ResetNumber() => __pbn__Number = null;
         private int? __pbn__Number;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"label")]
@@ -246,6 +256,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__label = value; }
         }
         public bool ShouldSerializelabel() => __pbn__label != null;
+        public void Resetlabel() => __pbn__label = null;
         private Label? __pbn__label;
 
         [global::ProtoBuf.ProtoMember(5, Name = @"type")]
@@ -255,6 +266,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__type = value; }
         }
         public bool ShouldSerializetype() => __pbn__type != null;
+        public void Resettype() => __pbn__type = null;
         private Type? __pbn__type;
 
         [global::ProtoBuf.ProtoMember(6, Name = @"type_name")]
@@ -265,6 +277,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__TypeName = value; }
         }
         public bool ShouldSerializeTypeName() => __pbn__TypeName != null;
+        public void ResetTypeName() => __pbn__TypeName = null;
         private string __pbn__TypeName;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"extendee")]
@@ -275,6 +288,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Extendee = value; }
         }
         public bool ShouldSerializeExtendee() => __pbn__Extendee != null;
+        public void ResetExtendee() => __pbn__Extendee = null;
         private string __pbn__Extendee;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"default_value")]
@@ -285,6 +299,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__DefaultValue = value; }
         }
         public bool ShouldSerializeDefaultValue() => __pbn__DefaultValue != null;
+        public void ResetDefaultValue() => __pbn__DefaultValue = null;
         private string __pbn__DefaultValue;
 
         [global::ProtoBuf.ProtoMember(9, Name = @"oneof_index")]
@@ -294,6 +309,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__OneofIndex = value; }
         }
         public bool ShouldSerializeOneofIndex() => __pbn__OneofIndex != null;
+        public void ResetOneofIndex() => __pbn__OneofIndex = null;
         private int? __pbn__OneofIndex;
 
         [global::ProtoBuf.ProtoMember(10, Name = @"json_name")]
@@ -304,6 +320,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__JsonName = value; }
         }
         public bool ShouldSerializeJsonName() => __pbn__JsonName != null;
+        public void ResetJsonName() => __pbn__JsonName = null;
         private string __pbn__JsonName;
 
         [global::ProtoBuf.ProtoMember(8, Name = @"options")]
@@ -322,6 +339,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Name = value; }
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
+        public void ResetName() => __pbn__Name = null;
         private string __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"options")]
@@ -340,6 +358,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Name = value; }
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
+        public void ResetName() => __pbn__Name = null;
         private string __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"value")]
@@ -361,6 +380,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Name = value; }
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
+        public void ResetName() => __pbn__Name = null;
         private string __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"number")]
@@ -370,6 +390,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Number = value; }
         }
         public bool ShouldSerializeNumber() => __pbn__Number != null;
+        public void ResetNumber() => __pbn__Number = null;
         private int? __pbn__Number;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"options")]
@@ -388,6 +409,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Name = value; }
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
+        public void ResetName() => __pbn__Name = null;
         private string __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"method")]
@@ -409,6 +431,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Name = value; }
         }
         public bool ShouldSerializeName() => __pbn__Name != null;
+        public void ResetName() => __pbn__Name = null;
         private string __pbn__Name;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"input_type")]
@@ -419,6 +442,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__InputType = value; }
         }
         public bool ShouldSerializeInputType() => __pbn__InputType != null;
+        public void ResetInputType() => __pbn__InputType = null;
         private string __pbn__InputType;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"output_type")]
@@ -429,6 +453,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__OutputType = value; }
         }
         public bool ShouldSerializeOutputType() => __pbn__OutputType != null;
+        public void ResetOutputType() => __pbn__OutputType = null;
         private string __pbn__OutputType;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"options")]
@@ -442,6 +467,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__ClientStreaming = value; }
         }
         public bool ShouldSerializeClientStreaming() => __pbn__ClientStreaming != null;
+        public void ResetClientStreaming() => __pbn__ClientStreaming = null;
         private bool? __pbn__ClientStreaming;
 
         [global::ProtoBuf.ProtoMember(6, Name = @"server_streaming")]
@@ -452,6 +478,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__ServerStreaming = value; }
         }
         public bool ShouldSerializeServerStreaming() => __pbn__ServerStreaming != null;
+        public void ResetServerStreaming() => __pbn__ServerStreaming = null;
         private bool? __pbn__ServerStreaming;
 
     }
@@ -478,6 +505,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__JavaPackage = value; }
         }
         public bool ShouldSerializeJavaPackage() => __pbn__JavaPackage != null;
+        public void ResetJavaPackage() => __pbn__JavaPackage = null;
         private string __pbn__JavaPackage;
 
         [global::ProtoBuf.ProtoMember(8, Name = @"java_outer_classname")]
@@ -488,6 +516,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__JavaOuterClassname = value; }
         }
         public bool ShouldSerializeJavaOuterClassname() => __pbn__JavaOuterClassname != null;
+        public void ResetJavaOuterClassname() => __pbn__JavaOuterClassname = null;
         private string __pbn__JavaOuterClassname;
 
         [global::ProtoBuf.ProtoMember(10, Name = @"java_multiple_files")]
@@ -498,6 +527,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__JavaMultipleFiles = value; }
         }
         public bool ShouldSerializeJavaMultipleFiles() => __pbn__JavaMultipleFiles != null;
+        public void ResetJavaMultipleFiles() => __pbn__JavaMultipleFiles = null;
         private bool? __pbn__JavaMultipleFiles;
 
         [global::ProtoBuf.ProtoMember(20, Name = @"java_generate_equals_and_hash")]
@@ -508,6 +538,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__JavaGenerateEqualsAndHash = value; }
         }
         public bool ShouldSerializeJavaGenerateEqualsAndHash() => __pbn__JavaGenerateEqualsAndHash != null;
+        public void ResetJavaGenerateEqualsAndHash() => __pbn__JavaGenerateEqualsAndHash = null;
         private bool? __pbn__JavaGenerateEqualsAndHash;
 
         [global::ProtoBuf.ProtoMember(27, Name = @"java_string_check_utf8")]
@@ -518,6 +549,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__JavaStringCheckUtf8 = value; }
         }
         public bool ShouldSerializeJavaStringCheckUtf8() => __pbn__JavaStringCheckUtf8 != null;
+        public void ResetJavaStringCheckUtf8() => __pbn__JavaStringCheckUtf8 = null;
         private bool? __pbn__JavaStringCheckUtf8;
 
         [global::ProtoBuf.ProtoMember(9, Name = @"optimize_for")]
@@ -528,6 +560,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__OptimizeFor = value; }
         }
         public bool ShouldSerializeOptimizeFor() => __pbn__OptimizeFor != null;
+        public void ResetOptimizeFor() => __pbn__OptimizeFor = null;
         private OptimizeMode? __pbn__OptimizeFor;
 
         [global::ProtoBuf.ProtoMember(11, Name = @"go_package")]
@@ -538,6 +571,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__GoPackage = value; }
         }
         public bool ShouldSerializeGoPackage() => __pbn__GoPackage != null;
+        public void ResetGoPackage() => __pbn__GoPackage = null;
         private string __pbn__GoPackage;
 
         [global::ProtoBuf.ProtoMember(16, Name = @"cc_generic_services")]
@@ -548,6 +582,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__CcGenericServices = value; }
         }
         public bool ShouldSerializeCcGenericServices() => __pbn__CcGenericServices != null;
+        public void ResetCcGenericServices() => __pbn__CcGenericServices = null;
         private bool? __pbn__CcGenericServices;
 
         [global::ProtoBuf.ProtoMember(17, Name = @"java_generic_services")]
@@ -558,6 +593,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__JavaGenericServices = value; }
         }
         public bool ShouldSerializeJavaGenericServices() => __pbn__JavaGenericServices != null;
+        public void ResetJavaGenericServices() => __pbn__JavaGenericServices = null;
         private bool? __pbn__JavaGenericServices;
 
         [global::ProtoBuf.ProtoMember(18, Name = @"py_generic_services")]
@@ -568,6 +604,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__PyGenericServices = value; }
         }
         public bool ShouldSerializePyGenericServices() => __pbn__PyGenericServices != null;
+        public void ResetPyGenericServices() => __pbn__PyGenericServices = null;
         private bool? __pbn__PyGenericServices;
 
         [global::ProtoBuf.ProtoMember(23, Name = @"deprecated")]
@@ -578,6 +615,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Deprecated = value; }
         }
         public bool ShouldSerializeDeprecated() => __pbn__Deprecated != null;
+        public void ResetDeprecated() => __pbn__Deprecated = null;
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(31, Name = @"cc_enable_arenas")]
@@ -588,6 +626,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__CcEnableArenas = value; }
         }
         public bool ShouldSerializeCcEnableArenas() => __pbn__CcEnableArenas != null;
+        public void ResetCcEnableArenas() => __pbn__CcEnableArenas = null;
         private bool? __pbn__CcEnableArenas;
 
         [global::ProtoBuf.ProtoMember(36, Name = @"objc_class_prefix")]
@@ -598,6 +637,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__ObjcClassPrefix = value; }
         }
         public bool ShouldSerializeObjcClassPrefix() => __pbn__ObjcClassPrefix != null;
+        public void ResetObjcClassPrefix() => __pbn__ObjcClassPrefix = null;
         private string __pbn__ObjcClassPrefix;
 
         [global::ProtoBuf.ProtoMember(37, Name = @"csharp_namespace")]
@@ -608,6 +648,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__CsharpNamespace = value; }
         }
         public bool ShouldSerializeCsharpNamespace() => __pbn__CsharpNamespace != null;
+        public void ResetCsharpNamespace() => __pbn__CsharpNamespace = null;
         private string __pbn__CsharpNamespace;
 
         [global::ProtoBuf.ProtoMember(39, Name = @"swift_prefix")]
@@ -618,6 +659,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__SwiftPrefix = value; }
         }
         public bool ShouldSerializeSwiftPrefix() => __pbn__SwiftPrefix != null;
+        public void ResetSwiftPrefix() => __pbn__SwiftPrefix = null;
         private string __pbn__SwiftPrefix;
 
         [global::ProtoBuf.ProtoMember(40, Name = @"php_class_prefix")]
@@ -628,6 +670,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__PhpClassPrefix = value; }
         }
         public bool ShouldSerializePhpClassPrefix() => __pbn__PhpClassPrefix != null;
+        public void ResetPhpClassPrefix() => __pbn__PhpClassPrefix = null;
         private string __pbn__PhpClassPrefix;
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
@@ -646,6 +689,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__MessageSetWireFormat = value; }
         }
         public bool ShouldSerializeMessageSetWireFormat() => __pbn__MessageSetWireFormat != null;
+        public void ResetMessageSetWireFormat() => __pbn__MessageSetWireFormat = null;
         private bool? __pbn__MessageSetWireFormat;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"no_standard_descriptor_accessor")]
@@ -656,6 +700,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__NoStandardDescriptorAccessor = value; }
         }
         public bool ShouldSerializeNoStandardDescriptorAccessor() => __pbn__NoStandardDescriptorAccessor != null;
+        public void ResetNoStandardDescriptorAccessor() => __pbn__NoStandardDescriptorAccessor = null;
         private bool? __pbn__NoStandardDescriptorAccessor;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"deprecated")]
@@ -666,6 +711,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Deprecated = value; }
         }
         public bool ShouldSerializeDeprecated() => __pbn__Deprecated != null;
+        public void ResetDeprecated() => __pbn__Deprecated = null;
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"map_entry")]
@@ -675,6 +721,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__MapEntry = value; }
         }
         public bool ShouldSerializeMapEntry() => __pbn__MapEntry != null;
+        public void ResetMapEntry() => __pbn__MapEntry = null;
         private bool? __pbn__MapEntry;
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
@@ -715,6 +762,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Ctype = value; }
         }
         public bool ShouldSerializeCtype() => __pbn__Ctype != null;
+        public void ResetCtype() => __pbn__Ctype = null;
         private CType? __pbn__Ctype;
 
         [global::ProtoBuf.ProtoMember(2, Name = @"packed")]
@@ -724,6 +772,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Packed = value; }
         }
         public bool ShouldSerializePacked() => __pbn__Packed != null;
+        public void ResetPacked() => __pbn__Packed = null;
         private bool? __pbn__Packed;
 
         [global::ProtoBuf.ProtoMember(6, Name = @"jstype")]
@@ -734,6 +783,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Jstype = value; }
         }
         public bool ShouldSerializeJstype() => __pbn__Jstype != null;
+        public void ResetJstype() => __pbn__Jstype = null;
         private JSType? __pbn__Jstype;
 
         [global::ProtoBuf.ProtoMember(5, Name = @"lazy")]
@@ -744,6 +794,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Lazy = value; }
         }
         public bool ShouldSerializeLazy() => __pbn__Lazy != null;
+        public void ResetLazy() => __pbn__Lazy = null;
         private bool? __pbn__Lazy;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"deprecated")]
@@ -754,6 +805,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Deprecated = value; }
         }
         public bool ShouldSerializeDeprecated() => __pbn__Deprecated != null;
+        public void ResetDeprecated() => __pbn__Deprecated = null;
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(10, Name = @"weak")]
@@ -764,6 +816,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Weak = value; }
         }
         public bool ShouldSerializeWeak() => __pbn__Weak != null;
+        public void ResetWeak() => __pbn__Weak = null;
         private bool? __pbn__Weak;
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
@@ -789,6 +842,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__AllowAlias = value; }
         }
         public bool ShouldSerializeAllowAlias() => __pbn__AllowAlias != null;
+        public void ResetAllowAlias() => __pbn__AllowAlias = null;
         private bool? __pbn__AllowAlias;
 
         [global::ProtoBuf.ProtoMember(3, Name = @"deprecated")]
@@ -799,6 +853,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Deprecated = value; }
         }
         public bool ShouldSerializeDeprecated() => __pbn__Deprecated != null;
+        public void ResetDeprecated() => __pbn__Deprecated = null;
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
@@ -817,6 +872,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Deprecated = value; }
         }
         public bool ShouldSerializeDeprecated() => __pbn__Deprecated != null;
+        public void ResetDeprecated() => __pbn__Deprecated = null;
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
@@ -835,6 +891,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Deprecated = value; }
         }
         public bool ShouldSerializeDeprecated() => __pbn__Deprecated != null;
+        public void ResetDeprecated() => __pbn__Deprecated = null;
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
@@ -864,6 +921,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__Deprecated = value; }
         }
         public bool ShouldSerializeDeprecated() => __pbn__Deprecated != null;
+        public void ResetDeprecated() => __pbn__Deprecated = null;
         private bool? __pbn__Deprecated;
 
         [global::ProtoBuf.ProtoMember(34, Name = @"idempotency_level")]
@@ -874,6 +932,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__idempotency_level = value; }
         }
         public bool ShouldSerializeidempotency_level() => __pbn__idempotency_level != null;
+        public void Resetidempotency_level() => __pbn__idempotency_level = null;
         private IdempotencyLevel? __pbn__idempotency_level;
 
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
@@ -906,6 +965,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__IdentifierValue = value; }
         }
         public bool ShouldSerializeIdentifierValue() => __pbn__IdentifierValue != null;
+        public void ResetIdentifierValue() => __pbn__IdentifierValue = null;
         private string __pbn__IdentifierValue;
 
         [global::ProtoBuf.ProtoMember(4, Name = @"positive_int_value")]
@@ -915,6 +975,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__PositiveIntValue = value; }
         }
         public bool ShouldSerializePositiveIntValue() => __pbn__PositiveIntValue != null;
+        public void ResetPositiveIntValue() => __pbn__PositiveIntValue = null;
         private ulong? __pbn__PositiveIntValue;
 
         [global::ProtoBuf.ProtoMember(5, Name = @"negative_int_value")]
@@ -924,6 +985,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__NegativeIntValue = value; }
         }
         public bool ShouldSerializeNegativeIntValue() => __pbn__NegativeIntValue != null;
+        public void ResetNegativeIntValue() => __pbn__NegativeIntValue = null;
         private long? __pbn__NegativeIntValue;
 
         [global::ProtoBuf.ProtoMember(6, Name = @"double_value")]
@@ -933,6 +995,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__DoubleValue = value; }
         }
         public bool ShouldSerializeDoubleValue() => __pbn__DoubleValue != null;
+        public void ResetDoubleValue() => __pbn__DoubleValue = null;
         private double? __pbn__DoubleValue;
 
         [global::ProtoBuf.ProtoMember(7, Name = @"string_value")]
@@ -942,6 +1005,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__StringValue = value; }
         }
         public bool ShouldSerializeStringValue() => __pbn__StringValue != null;
+        public void ResetStringValue() => __pbn__StringValue = null;
         private byte[] __pbn__StringValue;
 
         [global::ProtoBuf.ProtoMember(8, Name = @"aggregate_value")]
@@ -952,6 +1016,7 @@ namespace Google.Protobuf.Reflection
             set { __pbn__AggregateValue = value; }
         }
         public bool ShouldSerializeAggregateValue() => __pbn__AggregateValue != null;
+        public void ResetAggregateValue() => __pbn__AggregateValue = null;
         private string __pbn__AggregateValue;
 
     }
@@ -976,6 +1041,7 @@ namespace Google.Protobuf.Reflection
                 set { __pbn__LeadingComments = value; }
             }
             public bool ShouldSerializeLeadingComments() => __pbn__LeadingComments != null;
+            public void ResetLeadingComments() => __pbn__LeadingComments = null;
             private string __pbn__LeadingComments;
 
             [global::ProtoBuf.ProtoMember(4, Name = @"trailing_comments")]
@@ -986,6 +1052,7 @@ namespace Google.Protobuf.Reflection
                 set { __pbn__TrailingComments = value; }
             }
             public bool ShouldSerializeTrailingComments() => __pbn__TrailingComments != null;
+            public void ResetTrailingComments() => __pbn__TrailingComments = null;
             private string __pbn__TrailingComments;
 
             [global::ProtoBuf.ProtoMember(6, Name = @"leading_detached_comments")]
@@ -1015,6 +1082,7 @@ namespace Google.Protobuf.Reflection
                 set { __pbn__SourceFile = value; }
             }
             public bool ShouldSerializeSourceFile() => __pbn__SourceFile != null;
+            public void ResetSourceFile() => __pbn__SourceFile = null;
             private string __pbn__SourceFile;
 
             [global::ProtoBuf.ProtoMember(3, Name = @"begin")]
@@ -1024,6 +1092,7 @@ namespace Google.Protobuf.Reflection
                 set { __pbn__Begin = value; }
             }
             public bool ShouldSerializeBegin() => __pbn__Begin != null;
+            public void ResetBegin() => __pbn__Begin = null;
             private int? __pbn__Begin;
 
             [global::ProtoBuf.ProtoMember(4, Name = @"end")]
@@ -1033,6 +1102,7 @@ namespace Google.Protobuf.Reflection
                 set { __pbn__End = value; }
             }
             public bool ShouldSerializeEnd() => __pbn__End != null;
+            public void ResetEnd() => __pbn__End = null;
             private int? __pbn__End;
 
         }

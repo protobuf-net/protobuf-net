@@ -614,6 +614,7 @@ namespace ProtoBuf
                 context.WriteLine($"set {{ {fieldName} = value; }}")
                     .Outdent().WriteLine("}")
                     .WriteLine($"public bool ShouldSerialize{name}() => {fieldName} != null;")
+                    .WriteLine($"public void Reset{name}() => {fieldName} = null;")
                     .WriteLine($"private {fieldType} {fieldName};");
             }
             else
