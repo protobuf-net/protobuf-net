@@ -253,27 +253,23 @@ namespace ProtoBuf
                     return identifier;
             }
         }
-        private static void Write(TextWriter target, int indent, EnumDescriptorProto @enum, GeneratorContext context)
+        private static void Write(GeneratorContext context, EnumDescriptorProto @enum)
         {
             var name = context.Normalizer.GetName(@enum);
-            target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{@enum.Name}"")]");
-            WriteOptions(target, indent, @enum.Options);
-            target.WriteLine(indent, $"public enum {Escape(name)}");
-            target.WriteLine(indent++, "{");
+            context.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{@enum.Name}"")]");
+            WriteOptions(context, @enum.Options);
+            context.WriteLine($"public enum {Escape(name)}").WriteLine("{").Indent();
             foreach (var val in @enum.Values)
             {
                 name = context.Normalizer.GetName(val);
-                target.WriteLine(indent, $@"[global::ProtoBuf.ProtoEnum(Name = @""{val.Name}"", Value = {val.Number})]");
-                WriteOptions(target, indent, val.Options);
-                target.WriteLine(indent, $"{Escape(name)} = {val.Number},");
+                context.WriteLine($@"[global::ProtoBuf.ProtoEnum(Name = @""{val.Name}"", Value = {val.Number})]");
+                WriteOptions(context, val.Options);
+                context.WriteLine($"{Escape(name)} = {val.Number},");
             }
-            target.WriteLine(--indent, "}");
+            context.Outdent().WriteLine("}");
         }
         private class GeneratorContext
         {
-            private readonly FileDescriptorProto schema;
-            private readonly NameNormalizer normalizer;
-
             public string GetTypeName(FieldDescriptorProto field, out string dataFormat)
             {
                 dataFormat = "";
@@ -337,15 +333,57 @@ namespace ProtoBuf
                         }
                 }
             }
-
-            public GeneratorContext(FileDescriptorProto schema, NameNormalizer normalizer)
+            public GeneratorContext Indent()
             {
-                this.schema = schema;
-                this.normalizer = normalizer;
+                _indent++;
+                return this;
             }
-            public NameNormalizer Normalizer => normalizer;
+            public GeneratorContext Outdent()
+            {
+                _indent--;
+                return this;
+            }
+            private int _indent;
+            public GeneratorContext(FileDescriptorProto schema, NameNormalizer normalizer, TextWriter output)
+            {
+                this.fileDescriptor = schema;
+                Normalizer = normalizer;
+                Output = output;
+            }
+            public TextWriter Write(string value)
+            {
+                var indent = _indent;
+                var target = Output;
+                while (indent-- > 0)
+                {
+                    target.Write(Tab);
+                }
+                target.Write(value);
+                return target;
+            }
+            public string Tab { get; set; } = "    ";
+            public GeneratorContext WriteLine()
+            {
+                Output.WriteLine();
+                return this;
+            }
+            public GeneratorContext WriteLine(string line)
+            {
+                var indent = _indent;
+                var target = Output;
+                while (indent-- > 0)
+                {
+                    target.Write(Tab);
+                }
+                target.WriteLine(line);
+                return this;
+            }
+            public TextWriter Output { get; }
+            public NameNormalizer Normalizer { get; }
 
             private Dictionary<string, object> _knownTypes = new Dictionary<string, object>();
+            private readonly FileDescriptorProto fileDescriptor;
+
             internal void BuildTypeIndex()
             {
                 void AddMessage(DescriptorProto message)
@@ -362,11 +400,11 @@ namespace ProtoBuf
                 }
                 {
                     _knownTypes.Clear();
-                    foreach (var @enum in schema.EnumTypes)
+                    foreach (var @enum in fileDescriptor.EnumTypes)
                     {
                         _knownTypes.Add(@enum.FullyQualifiedName, @enum);
                     }
-                    foreach (var msg in schema.MessageTypes)
+                    foreach (var msg in fileDescriptor.MessageTypes)
                     {
                         AddMessage(msg);
                     }
@@ -386,9 +424,13 @@ namespace ProtoBuf
 
         public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null, IList<Error> errors = null)
         {
-            var ctx = new GeneratorContext(schema, normalizer ?? NameNormalizer.Default);
+            var ctx = new GeneratorContext(schema, normalizer ?? NameNormalizer.Default, target);
             ctx.BuildTypeIndex();
-            int indent = 0;
+
+            ctx.WriteLine("// This file is generated by a tool; you should avoid making direct changes.")
+                .WriteLine("// Consider using 'partial classes' to extend these types")
+                .WriteLine($"// Input: {Path.GetFileName(schema.Name)}").WriteLine();
+            
             var @namespace = schema.Options?.CsharpNamespace ?? schema.Package;
 
             if(errors != null)
@@ -398,53 +440,53 @@ namespace ProtoBuf
                 {
                     if(isFirst)
                     {
-                        target.WriteLine(indent, "// errors in " + schema.Name);
+                        ctx.WriteLine("// errors in " + schema.Name);
                         isFirst = false;
                     }
-                    target.WriteLine(indent, "#error " + error.ToString(false));
+                    ctx.WriteLine("#error " + error.ToString(false));
                 }
             }
-            target.WriteLine(indent, "#pragma warning disable CS1591");
+            ctx.WriteLine("#pragma warning disable CS1591");
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
-                target.WriteLine(indent, $"namespace {@namespace}");
-                target.WriteLine(indent++, "{");
+                ctx.WriteLine($"namespace {@namespace}");
+                ctx.WriteLine("{").Indent();
             }
-            foreach (var obj in schema.EnumTypes)
+            foreach (var @enum in schema.EnumTypes)
             {
-                Write(target, indent, obj, ctx);
+                Write(ctx, @enum);
             }
-            foreach (var obj in schema.MessageTypes)
+            foreach (var msgType in schema.MessageTypes)
             {
-                Write(target, indent, obj, ctx);
+                Write(ctx, msgType);
             }
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
-                target.WriteLine(--indent, "}");
+                ctx.Outdent().WriteLine("}");
             }
-            target.WriteLine(indent, "#pragma warning restore CS1591");
+            ctx.WriteLine("#pragma warning restore CS1591");
         }
 
-        private static void Write(TextWriter target, int indent, DescriptorProto message, GeneratorContext context)
+        private static void Write(GeneratorContext context, DescriptorProto message)
         {
             var name = context.Normalizer.GetName(message);
-            target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{message.Name}"")]");
-            WriteOptions(target, indent, message.Options);
-            target.WriteLine(indent, $"public partial class {Escape(name)}");
-            target.WriteLine(indent++, "{");
+            context.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{message.Name}"")]");
+            WriteOptions(context, message.Options);
+            context.WriteLine($"public partial class {Escape(name)}");
+            context.WriteLine("{").Indent();
             foreach (var obj in message.EnumTypes)
             {
-                Write(target, indent, obj, context);
+                Write(context, obj);
             }
             foreach (var obj in message.NestedTypes)
             {
-                Write(target, indent, obj, context);
+                Write(context, obj);
             }
             foreach (var obj in message.Fields)
             {
-                Write(target, indent, obj, context);
+                Write(context, obj);
             }
-            target.WriteLine(--indent, "}");
+            context.Outdent().WriteLine("}");
         }
         private static bool UseArray(FieldDescriptorProto field)
         {
@@ -469,18 +511,18 @@ namespace ProtoBuf
             }
         }
 
-        private static void WriteOptions<T>(TextWriter target, int indent, T obj) where T : class, ISchemaOptions
+        private static void WriteOptions<T>(GeneratorContext context, T obj) where T : class, ISchemaOptions
         {
             if (obj == null) return;
             if(obj.Deprecated)
             {
-                target.WriteLine(indent, $"[global::System.Obsolete]");
+                context.WriteLine($"[global::System.Obsolete]");
             }
         }
-        private static void Write(TextWriter target, int indent, FieldDescriptorProto field, GeneratorContext context)
+        private static void Write(GeneratorContext context, FieldDescriptorProto field)
         {
             var name = context.Normalizer.GetName(field);
-            target.Write(indent, $@"[global::ProtoBuf.ProtoMember({field.Number}, Name = @""{field.Name}""");
+            var tw = context.Write($@"[global::ProtoBuf.ProtoMember({field.Number}, Name = @""{field.Name}""");
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
             string defaultValue = null;
@@ -505,38 +547,38 @@ namespace ProtoBuf
             var typeName = context.GetTypeName(field, out var dataFormat);
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
-                target.Write($", DataFormat = DataFormat.{dataFormat}");
+                tw.Write($", DataFormat = DataFormat.{dataFormat}");
             }
             if (field.Options?.Packed ?? false)
             {
-                target.Write($", IsPacked = true");
+                tw.Write($", IsPacked = true");
             }
             if (field.label == FieldDescriptorProto.Label.LabelRequired)
             {
-                target.Write($", IsRequired = true");
+                tw.Write($", IsRequired = true");
             }
-            target.WriteLine(")]");
+            tw.WriteLine(")]");
             if (!isRepeated && !string.IsNullOrWhiteSpace(defaultValue))
             {
-                target.WriteLine(indent, $"[global::System.ComponentModel.DefaultValue({defaultValue})]");
+                context.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue})]");
             }
-            WriteOptions(target, indent, field.Options);
+            WriteOptions(context, field.Options);
             if (isRepeated)
             {
                 if (UseArray(field))
                 {
-                    target.WriteLine(indent, $"public {typeName}[] {Escape(name)} {{ get; set; }}");
+                    context.WriteLine($"public {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
                 else
                 {
-                    target.WriteLine(indent, $"public global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
+                    context.WriteLine($"public global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
             }
             else
             {
-                target.Write(indent, $"public {typeName} {Escape(name)} {{ get; set; }}");
-                if (!string.IsNullOrWhiteSpace(defaultValue)) target.Write($" = {defaultValue};");
-                target.WriteLine();
+                tw = context.Write($"public {typeName} {Escape(name)} {{ get; set; }}");
+                if (!string.IsNullOrWhiteSpace(defaultValue)) tw.Write($" = {defaultValue};");
+                context.WriteLine();
             }
         }
 
