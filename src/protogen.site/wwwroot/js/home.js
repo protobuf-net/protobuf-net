@@ -17,6 +17,7 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
             {
                 return;
             }
+            var decorations = [];
             if (data.code)
             {
                 codeResultSection.style.display = "";
@@ -33,37 +34,35 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
                     codeViewer.setValue(data.code);
                 }
             }
-            else if (data.parserExceptions)
+            if (data.parserExceptions)
             {
                 codeResultSection.style.display = "none";
                 var length = data.parserExceptions.length;
-                var decorations = new Array(length);
                 for (var i = 0; i < length; i++)
                 {
                     var parserException = data.parserExceptions[i];
-                    decorations[i] = {
+                    decorations.push({
                         range: new monaco.Range(parserException.lineNumber, parserException.columnNumber, parserException.lineNumber, parserException.columnNumber + parserException.text.length),
                         options: {
                             inlineClassName: parserException.isError ? "redsquiggly" : "greensquiggly",
                             hoverMessage: parserException.message
                         }
-                    };
+                    });
                 }
-                oldDecorations = editor.deltaDecorations(oldDecorations, decorations);
             }
-            else if (data.exception)
+            if (data.exception)
             {
                 codeResultSection.style.display = "none";
-                oldDecorations = editor.deltaDecorations(oldDecorations, [
-                    {
+                decorations.push({
                         range: new monaco.Range(1, 1, editor.getModel().getLineCount(), 1),
                         options: {
                             isWholeLine: true,
                             inlineClassName: "redsquiggly",
                             hoverMessage: data.exception.message
                         }
-                    }]);
+                    });
             }
+            oldDecorations = editor.deltaDecorations(oldDecorations, decorations);
         }, "json");
     });
 });
