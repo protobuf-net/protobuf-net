@@ -541,9 +541,17 @@ namespace Google.Protobuf.Reflection
             Type type;
             if (isGroup)
             {
-                typeToken.RequireProto2(ctx.Syntax);
                 type = Type.TypeGroup;
                 typeName = name;
+
+                try
+                {
+                    typeToken.RequireProto2(ctx.Syntax);
+                }
+                catch (ParserException ex)
+                {
+                    ctx.Errors.Add(new Error(ex));
+                }
 
                 var firstChar = typeName[0].ToString();
                 if(firstChar.ToLowerInvariant() == firstChar)
@@ -573,7 +581,7 @@ namespace Google.Protobuf.Reflection
                 TypeToken = typeToken // internal property that helps give useful error messages
             };
 
-            if (!isGroup)
+            if(!isGroup)
             {
                 if (ctx.Syntax != FileDescriptorProto.SyntaxProto2)
                 {

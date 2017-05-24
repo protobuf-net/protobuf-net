@@ -63,7 +63,7 @@ namespace ProtoBuf
         {
             if(syntax != FileDescriptorProto.SyntaxProto2)
             {
-                Throw("This feature requires " + FileDescriptorProto.SyntaxProto2 + " syntax");
+                Throw("this feature requires " + FileDescriptorProto.SyntaxProto2 + " syntax");
             }
         }
 

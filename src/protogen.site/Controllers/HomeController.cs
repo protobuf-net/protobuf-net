@@ -30,7 +30,7 @@ namespace protogen.site.Controllers
                             ViewData["error"] = sb.ToString();
                         }
                         
-                        ViewData["code"] = parsed.GenerateCSharp();
+                        ViewData["code"] = parsed.GenerateCSharp(errors: errors);
                     }
                 }
                 catch (Exception ex)
