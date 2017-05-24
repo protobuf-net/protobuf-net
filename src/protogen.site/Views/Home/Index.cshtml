@@ -1,10 +1,6 @@
 ﻿@{
     ViewData["Title"] = "Generator";
 }
-<script src="~/lib/monaco-editor/min/vs/loader.js"></script>
-<script>
-    require.config({ paths: { 'vs': 'lib/monaco-editor/min/vs' } });
-</script>
 <h2>@ViewData["Title"].</h2>
 <a href="/about">Wait... what is this?</a>
 <section>
@@ -13,74 +9,7 @@
     <button id="generatecsharp">Generate</button>
     <div id="protocontainer" style="width:100%; max-width:unset;height:600px;border:1px solid grey"></div>
     <script>
-        require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
-        {
-            monaco.languages.register({ id: 'proto3lang' });
-            monaco.languages.setMonarchTokensProvider('proto3lang', proto3lang);
-            var editor = monaco.editor.create(document.getElementById('protocontainer'), {
-                language: 'proto3lang'
-            });
-            var codeViewer = null;
-            var codeResultSection = document.getElementById("coderesult");
-            var oldDecorations = []
-            document.getElementById("generatecsharp").addEventListener("click", function ()
-            {
-                jQuery.post("/generate", "schema=" + editor.getValue({ preserveBOM: false, lineEnding: "\n" }), function (data, textStatus, jqXHR)
-                {
-                    if (data == null)
-                    {
-                        return;
-                    }
-                    if (data.code)
-                    {
-                        codeResultSection.style.display = "";
-                        if (codeViewer == null)
-                        {
-                            codeViewer = monaco.editor.create(document.getElementById('csharpcontainer'), {
-                                value: data.code,
-                                language: 'csharp',
-                                readOnly: true
-                            });
-                        }
-                        else
-                        {
-                            codeViewer.setValue(data.code);
-                        }
-                    }
-                    else if (data.parserExceptions)
-                    {
-                        codeResultSection.style.display = "none";
-                        var length = data.parserExceptions.length;
-                        var decorations = new Array(length);
-                        for (var i = 0; i < length; i++)
-                        {
-                            var parserException = data.parserExceptions[i];
-                            decorations[i] = {
-                                range: new monaco.Range(parserException.lineNumber, parserException.columnNumber, parserException.lineNumber, parserException.columnNumber + parserException.text.length),
-                                options: {
-                                    inlineClassName: parserException.isError ? "redsquiggly" : "greensquiggly",
-                                    hoverMessage: parserException.message
-                                }
-                            };
-                        }
-                        oldDecorations = editor.deltaDecorations(oldDecorations, decorations);
-                    }
-                    else if (data.exception)
-                    {
-                        codeResultSection.style.display = "none";
-                        oldDecorations = editor.deltaDecorations(oldDecorations, [
-                            {
-                                range: new monaco.Range(1, 1, editor.getModel().getLineCount(), 1),
-                                options: {
-                                    isWholeLine: true,
-                                    inlineClassName: "redsquiggly",
-                                    hoverMessage: data.exception.message
-                                }
-                            }]);
-                    }
-                }, "json");
-            });
-        });
+
     </script>
     <p>Not sure what to use? How about <a href="https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto">descriptor.proto</a>?</p>
 </section>
@@ -88,3 +17,5 @@
     <h3>Generated Code</h3>
     <div id="csharpcontainer" style="width:100%; max-width:unset;height:600px;border:1px solid grey"></div>
 </section>
+<script src="~/lib/monaco-editor/min/vs/loader.js"></script>
+<script src="~/js/home.js" asp-append-version="true"></script>

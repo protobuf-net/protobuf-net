@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="wwwroot\js\home.js" />
     <Content Include="wwwroot\js\proto3lang.js" />
   </ItemGroup>
 
