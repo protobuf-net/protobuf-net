@@ -329,11 +329,11 @@ namespace ProtoBuf
                     default:
                         if (field.type == 0)
                         {
-                            throw new ParserException(field.TypeToken, $"Unknown type: {field.TypeName}", true);
+                            throw new ParserException(field.TypeToken, $"unknown type: {field.TypeName}", true);
                         }
                         else
                         {
-                            throw new ParserException(field.TypeToken, $"Unknown type: {field.type} ({field.TypeName})", true);
+                            throw new ParserException(field.TypeToken, $"unknown type: {field.type} ({field.TypeName})", true);
                         }
                 }
             }

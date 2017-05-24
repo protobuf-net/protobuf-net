@@ -258,7 +258,7 @@ namespace Google.Protobuf.Reflection
                 FixupTypes(ctx);
                 if (string.IsNullOrWhiteSpace(Syntax))
                 {
-                    ctx.Errors.Add(startOfFile.Error("No schema specified; it is strongly recommended to specify proto2 or proto3", false));
+                    ctx.Errors.Add(startOfFile.Error("no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", false));
                 }
                 if (Syntax == SyntaxProto2)
                 {
