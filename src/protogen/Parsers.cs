@@ -80,9 +80,13 @@ namespace Google.Protobuf.Reflection
             {
                 FieldDescriptorProto.ParseExtensions(ctx, Extensions);
             }
+            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "oneof"))
+            {
+                OneofDescriptorProto.Parse(ctx, this);
+            }
             else
             {
-                if (FieldDescriptorProto.TryParse(ctx, this, out var obj))
+                if (FieldDescriptorProto.TryParse(ctx, this, false, out var obj))
                     Fields.Add(obj);
             }
         }
@@ -178,6 +182,46 @@ namespace Google.Protobuf.Reflection
 
     }
 
+    partial class OneofDescriptorProto : ISchemaObject
+    {
+        internal DescriptorProto Parent { get; set; }
+        internal static void Parse(ParserContext ctx, DescriptorProto parent)
+        {
+            ctx.AbortState = AbortState.Object;
+            var oneOf = new OneofDescriptorProto
+            {
+                Name = ctx.Tokens.Consume(TokenType.AlphaNumeric)
+            };
+            parent.OneofDecls.Add(oneOf);
+            oneOf.Parent = parent;
+
+            if (ctx.TryReadObjectImpl(oneOf))
+            {
+                ctx.AbortState = AbortState.None;
+            }
+        }
+        void ISchemaObject.ReadOne(ParserContext ctx)
+        {
+            var tokens = ctx.Tokens;
+            if (tokens.ConsumeIf(TokenType.AlphaNumeric, "option"))
+            {
+                Options = ctx.ParseOptionStatement(Options);
+            }
+            else
+            {
+                if (FieldDescriptorProto.TryParse(ctx, Parent, true, out var field))
+                {
+                    field.OneofIndex = Parent.OneofDecls.Count() - 1;
+                    Parent.Fields.Add(field);
+                }
+            }
+        }
+    }
+    partial class OneofOptions : ISchemaOptions
+    {
+        bool ISchemaOptions.Deprecated { get { return false; } set { } }
+        bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
+    }
     partial class FileDescriptorProto : ISchemaObject
     {
         internal const string SyntaxProto2 = "proto2", SyntaxProto3 = "proto3";
@@ -235,7 +279,7 @@ namespace Google.Protobuf.Reflection
             {
                 Options = ctx.ParseOptionStatement(Options);
             }
-            else if(tokens.Peek(out var token))
+            else if (tokens.Peek(out var token))
             {
                 token.Throw();
             } // else EOF
@@ -381,7 +425,7 @@ namespace Google.Protobuf.Reflection
 
         static bool ShouldResolveType(FieldDescriptorProto.Type type)
         {
-            switch(type)
+            switch (type)
             {
                 case 0:
                 case FieldDescriptorProto.Type.TypeMessage:
@@ -492,33 +536,39 @@ namespace Google.Protobuf.Reflection
         internal DescriptorProto Parent { get; set; }
         internal Token TypeToken { get; set; }
 
-        internal static bool TryParse(ParserContext ctx, DescriptorProto parent, out FieldDescriptorProto field)
+        internal static bool TryParse(ParserContext ctx, DescriptorProto parent, bool isOneOf, out FieldDescriptorProto field)
         {
+            void NotAllowedOneOf(ParserContext context)
+            {
+                var token = ctx.Tokens.Previous;
+                context.Errors.Add(new Error(token, $"'{token.Value}' not allowed with 'oneof'", true));
+            }
             var tokens = ctx.Tokens;
             ctx.AbortState = AbortState.Statement;
             Label label = Label.LabelOptional; // default
 
             if (tokens.ConsumeIf(TokenType.AlphaNumeric, "repeated"))
             {
+                if (isOneOf) NotAllowedOneOf(ctx);
                 label = Label.LabelRepeated;
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "required"))
             {
-                tokens.Previous.RequireProto2(ctx);
+                if (isOneOf) NotAllowedOneOf(ctx);
+                else tokens.Previous.RequireProto2(ctx);
                 label = Label.LabelRequired;
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "optional"))
             {
-                tokens.Previous.RequireProto2(ctx);
+                if (isOneOf) NotAllowedOneOf(ctx);
+                else tokens.Previous.RequireProto2(ctx);
                 label = Label.LabelOptional;
             }
-            else if(ctx.Syntax == FileDescriptorProto.SyntaxProto2)
+            else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2 && !isOneOf)
             {
                 // required in proto2
                 throw tokens.Read().Throw("expected 'repeated' / 'required' / 'optional'");
             }
-
-
 
             var typeToken = tokens.Read();
             string typeName = tokens.Consume(TokenType.AlphaNumeric);
@@ -526,6 +576,7 @@ namespace Google.Protobuf.Reflection
             var isGroup = typeName == "group";
             if (isGroup)
             {
+                if (isOneOf) NotAllowedOneOf(ctx);
                 ctx.AbortState = AbortState.Object;
             }
 
@@ -541,14 +592,14 @@ namespace Google.Protobuf.Reflection
                 typeName = name;
 
                 typeToken.RequireProto2(ctx);
-                
+
                 var firstChar = typeName[0].ToString();
-                if(firstChar.ToLowerInvariant() == firstChar)
+                if (firstChar.ToLowerInvariant() == firstChar)
                 {
                     ctx.Errors.Add(new Error(nameToken, "group names must start with an upper-case letter", true));
                 }
                 name = typeName.ToLowerInvariant();
-                if(ctx.TryReadObject<DescriptorProto>(out var grpType))
+                if (ctx.TryReadObject<DescriptorProto>(out var grpType))
                 {
                     grpType.Name = typeName;
                     parent.NestedTypes.Add(grpType);
@@ -570,7 +621,7 @@ namespace Google.Protobuf.Reflection
                 TypeToken = typeToken // internal property that helps give useful error messages
             };
 
-            if(!isGroup)
+            if (!isGroup)
             {
                 if (ctx.Syntax != FileDescriptorProto.SyntaxProto2)
                 {
@@ -657,9 +708,9 @@ namespace Google.Protobuf.Reflection
         internal static void ParseExtensions(ParserContext ctx, List<FieldDescriptorProto> extensions)
         {
             // lazy; should improve this!
-            if(DescriptorProto.TryParse(ctx, out var obj))
+            if (DescriptorProto.TryParse(ctx, out var obj))
             {
-                foreach(var field in obj.Fields)
+                foreach (var field in obj.Fields)
                 {
                     field.Extendee = obj.Name;
                 }
@@ -730,7 +781,7 @@ namespace Google.Protobuf.Reflection
             if (tokens.Peek(out var token) && token.Is(TokenType.Symbol, "{"))
             {
                 ctx.AbortState = AbortState.Object;
-                ctx.TryReadObjectImpl(ref method);
+                ctx.TryReadObjectImpl(method);
             }
             else
             {
@@ -869,7 +920,7 @@ namespace ProtoBuf
                 ? $"({LineNumber},{ColumnNumber}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}"
                 : $"({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}";
         public override string ToString() => ToString(true);
-            
+
         internal static Error[] GetArray(List<Error> errors)
             => errors.Count == 0 ? noErrors : errors.ToArray();
 
@@ -924,7 +975,7 @@ namespace ProtoBuf
             AbortState oldState = AbortState;
             AbortState = AbortState.None;
             if (!Tokens.Peek(out var stateBefore)) return;
-            
+
             try
             {
                 obj.ReadOne(this);
@@ -936,7 +987,7 @@ namespace ProtoBuf
             finally
             {
                 var state = AbortState;
-                if(Tokens.Peek(out var stateAfter) && stateBefore == stateAfter)
+                if (Tokens.Peek(out var stateAfter) && stateBefore == stateAfter)
                 {
                     // we didn't move! avoid looping forever failing to do the same thing
                     Errors.Add(stateAfter.Error());
@@ -981,7 +1032,8 @@ namespace ProtoBuf
                 // we need obj to stay null if *just* default set
                 ((FieldDescriptorProto)parent).DefaultValue = tokens.ConsumeString();
             }
-            else {
+            else
+            {
                 if (obj == null) obj = new T();
                 if (key == "deprecated")
                 {
@@ -1038,17 +1090,16 @@ namespace ProtoBuf
         }
         public bool TryReadObject<T>(out T obj) where T : class, ISchemaObject, new()
         {
-            obj = null;
-            return TryReadObjectImpl(ref obj);
+            obj = new T();
+            return TryReadObjectImpl(obj);
         }
-        internal bool TryReadObjectImpl<T>(ref T obj) where T : class, ISchemaObject, new()
+        internal bool TryReadObjectImpl<T>(T obj) where T : class, ISchemaObject
         {
             var tokens = Tokens;
 
             try
             {
                 tokens.Consume(TokenType.Symbol, "{");
-                if(obj == null) obj = new T();
                 while (tokens.Peek(out var token) && !token.Is(TokenType.Symbol, "}"))
                 {
                     if (tokens.ConsumeIf(TokenType.Symbol, ";"))
