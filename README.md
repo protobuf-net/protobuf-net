@@ -104,7 +104,7 @@ Inheritance must be explicitly declared, in a similar way that if must for XmlSe
 
 ```csharp
 [ProtoContract]
-[ProtoInclude(7, typeof(SomeDerivedType)]
+[ProtoInclude(7, typeof(SomeDerivedType))]
 class SomeBaseType {...}
 
 [ProtoContract]
