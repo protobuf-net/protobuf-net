@@ -90,7 +90,7 @@ namespace Google.Protobuf.Reflection
         {
             ctx.AbortState = AbortState.Statement;
             var tokens = ctx.Tokens;
-
+            tokens.Previous.RequireProto2(ctx);
             const int MAX = 536870911;
             while (true)
             {
@@ -207,9 +207,9 @@ namespace Google.Protobuf.Reflection
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "syntax"))
             {
                 ctx.AbortState = AbortState.Statement;
-                if (MessageTypes.Any() || EnumTypes.Any())
+                if (MessageTypes.Any() || EnumTypes.Any() || Extensions.Any())
                 {
-                    ctx.Errors.Add(new Error(tokens.Previous, "syntax must be set types are included", true));
+                    ctx.Errors.Add(new Error(tokens.Previous, "syntax must be set before types are defined", true));
                 }
                 tokens.Consume(TokenType.Symbol, "=");
                 Syntax = tokens.Consume(TokenType.StringLiteral);
@@ -496,33 +496,29 @@ namespace Google.Protobuf.Reflection
         {
             var tokens = ctx.Tokens;
             ctx.AbortState = AbortState.Statement;
-            Label label;
-            var token = tokens.Read();
-            if (ctx.Syntax != FileDescriptorProto.SyntaxProto2)
-            {
-                label = Label.LabelOptional;
-            }
-            else if (token.Is(TokenType.AlphaNumeric, "repeated"))
+            Label label = Label.LabelOptional; // default
+
+            if (tokens.ConsumeIf(TokenType.AlphaNumeric, "repeated"))
             {
                 label = Label.LabelRepeated;
-                tokens.Consume();
             }
-            else if (token.Is(TokenType.AlphaNumeric, "required"))
+            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "required"))
             {
-                token.RequireProto2(ctx.Syntax);
+                tokens.Previous.RequireProto2(ctx);
                 label = Label.LabelRequired;
-                tokens.Consume();
             }
-            else if (token.Is(TokenType.AlphaNumeric, "optional"))
+            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "optional"))
             {
-                token.RequireProto2(ctx.Syntax);
+                tokens.Previous.RequireProto2(ctx);
                 label = Label.LabelOptional;
-                tokens.Consume();
             }
-            else
+            else if(ctx.Syntax == FileDescriptorProto.SyntaxProto2)
             {
-                throw token.Throw("Expected 'repeated' / 'required' / 'optional'");
+                // required in proto2
+                throw tokens.Read().Throw("expected 'repeated' / 'required' / 'optional'");
             }
+
+
 
             var typeToken = tokens.Read();
             string typeName = tokens.Consume(TokenType.AlphaNumeric);
@@ -544,15 +540,8 @@ namespace Google.Protobuf.Reflection
                 type = Type.TypeGroup;
                 typeName = name;
 
-                try
-                {
-                    typeToken.RequireProto2(ctx.Syntax);
-                }
-                catch (ParserException ex)
-                {
-                    ctx.Errors.Add(new Error(ex));
-                }
-
+                typeToken.RequireProto2(ctx);
+                
                 var firstChar = typeName[0].ToString();
                 if(firstChar.ToLowerInvariant() == firstChar)
                 {

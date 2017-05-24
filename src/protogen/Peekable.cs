@@ -21,7 +21,8 @@ namespace ProtoBuf
         public bool Consume()
         {
             bool haveData = _havePeek || Peek(out T val);
-            _havePeek = false;
+            _prev = _peek;
+            _havePeek = false;            
             return haveData;
         }
         public bool Peek(out T next)

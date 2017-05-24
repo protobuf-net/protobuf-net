@@ -59,11 +59,12 @@ namespace ProtoBuf
             return true;
         }
 
-        internal void RequireProto2(string syntax)
+        internal void RequireProto2(ParserContext ctx)
         {
-            if(syntax != FileDescriptorProto.SyntaxProto2)
+            if(ctx.Syntax != FileDescriptorProto.SyntaxProto2)
             {
-                Throw("this feature requires " + FileDescriptorProto.SyntaxProto2 + " syntax");
+                var msg = "'" + Value + "' requires " + FileDescriptorProto.SyntaxProto2 + " syntax";
+                ctx.Errors.Add(new Error(this, msg, true));
             }
         }
 
