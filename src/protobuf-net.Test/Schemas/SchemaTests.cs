@@ -28,7 +28,7 @@ namespace ProtoBuf.Schemas
             _output.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), SchemaPath));
             Assert.True(File.Exists(path));
             var protocBinPath = Path.ChangeExtension(path, "protoc.bin");
-            int exitCode;            
+            int exitCode;
             using (var proc = new Process())
             {
                 var psi = proc.StartInfo;
@@ -42,13 +42,13 @@ namespace ProtoBuf.Schemas
                 proc.Start();
                 proc.WaitForExit();
                 exitCode = proc.ExitCode;
-                if(output.Length != 0)
+                if (output.Length != 0)
                 {
                     _output.WriteLine(output.ToString());
                 }
             }
 
-            
+
             FileDescriptorSet set;
             string protocJson, jsonPath;
             using (var file = File.OpenRead(protocBinPath))
@@ -65,6 +65,21 @@ namespace ProtoBuf.Schemas
             jsonPath = Path.ChangeExtension(path, "parser.json");
             File.WriteAllText(jsonPath, parserJson);
 
+            try
+            {
+                foreach (var file in set.Files)
+                {
+                    using (var codeFile = File.CreateText(Path.ChangeExtension(file.Name, "cs")))
+                    {
+                        file.GenerateCSharp(codeFile);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _output.WriteLine(ex.Message);
+            }
+
             var parserBinPath = Path.ChangeExtension(path, "parser.bin");
             using (var file = File.Create(parserBinPath))
             {
@@ -72,7 +87,7 @@ namespace ProtoBuf.Schemas
             }
 
             var errors = set.GetErrors();
-            if(errors.Any())
+            if (errors.Any())
             {
                 _output.WriteLine("Parser errors:");
                 foreach (var err in errors) _output.WriteLine(err.ToString());

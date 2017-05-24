@@ -257,12 +257,14 @@ namespace ProtoBuf
         {
             var name = context.Normalizer.GetName(@enum);
             target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{@enum.Name}"")]");
+            WriteOptions(target, indent, @enum.Options);
             target.WriteLine(indent, $"public enum {Escape(name)}");
             target.WriteLine(indent++, "{");
             foreach (var val in @enum.Values)
             {
                 name = context.Normalizer.GetName(val);
                 target.WriteLine(indent, $@"[global::ProtoBuf.ProtoEnum(Name = @""{val.Name}"", Value = {val.Number})]");
+                WriteOptions(target, indent, val.Options);
                 target.WriteLine(indent, $"{Escape(name)} = {val.Number},");
             }
             target.WriteLine(--indent, "}");
@@ -410,6 +412,7 @@ namespace ProtoBuf
         {
             var name = context.Normalizer.GetName(message);
             target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{message.Name}"")]");
+            WriteOptions(target, indent, message.Options);
             target.WriteLine(indent, $"public partial class {Escape(name)}");
             target.WriteLine(indent++, "{");
             foreach (var obj in message.EnumTypes)
@@ -449,6 +452,14 @@ namespace ProtoBuf
             }
         }
 
+        private static void WriteOptions<T>(TextWriter target, int indent, T obj) where T : class, ISchemaOptions
+        {
+            if (obj == null) return;
+            if(obj.Deprecated)
+            {
+                target.WriteLine(indent, $"[global::System.Obsolete]");
+            }
+        }
         private static void Write(TextWriter target, int indent, FieldDescriptorProto field, GeneratorContext context)
         {
             var name = context.Normalizer.GetName(field);
@@ -492,10 +503,7 @@ namespace ProtoBuf
             {
                 target.WriteLine(indent, $"[global::System.ComponentModel.DefaultValue({defaultValue})]");
             }
-            if (field.Options?.Deprecated ?? false)
-            {
-                target.WriteLine(indent, $"[global::System.Obsolete]");
-            }
+            WriteOptions(target, indent, field.Options);
             if (isRepeated)
             {
                 if (UseArray(field))
