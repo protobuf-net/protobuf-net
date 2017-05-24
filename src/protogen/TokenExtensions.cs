@@ -14,10 +14,22 @@ namespace ProtoBuf
             token.Assert(type, value);
             tokens.Consume();
         }
+        public static bool ConsumeIf(this Peekable<Token> tokens, TokenType type, string value)
+        {
+            if(tokens.Peek(out var token) && token.Is(type, value))
+            {
+                tokens.Consume();
+                return true;
+            }
+            return false;
+        }
 
         public static Token Read(this Peekable<Token> tokens)
         {
-            if (!tokens.Peek(out Token val)) throw new ParserException(tokens.Previous, "Unexpected end of file", true);
+            if (!tokens.Peek(out Token val))
+            {
+                throw new ParserException(tokens.Previous, "Unexpected end of file", true);
+            }
             return val;
         }
         public static bool SkipToEndOptions(this Peekable<Token> tokens)
@@ -76,14 +88,13 @@ namespace ProtoBuf
             return s;
         }
 
-        internal static T ConsumeEnum<T>(this Peekable<Token> tokens, TokenType type, bool ignoreCase = true) where T : struct
+        internal static T ConsumeEnum<T>(this Peekable<Token> tokens, bool ignoreCase = true) where T : struct
         {
             var token = tokens.Read();
-            token.Assert(type);
-            tokens.Consume();
+            var value = tokens.ConsumeString();
 
             if (!System.Enum.TryParse<T>(token.Value, ignoreCase, out T val))
-                token.SyntaxError("Unable to parse " + typeof(T).Name);
+                token.Throw("Unable to parse " + typeof(T).Name);
             return val;
         }
         internal static void Write(this TextWriter target, int indent, string value)
@@ -110,7 +121,7 @@ namespace ProtoBuf
             if (max.HasValue && token.Value == "max") return max.Value;
 
             if (!int.TryParse(token.Value, NumberStyles.None, CultureInfo.InvariantCulture, out int val))
-                token.SyntaxError("Unable to parse integer");
+                token.Throw("Unable to parse integer");
             return val;
         }
 
@@ -124,7 +135,7 @@ namespace ProtoBuf
                     tokens.Consume();
                     return token.Value;
                 default:
-                    throw token.SyntaxError();
+                    throw token.Throw();
             }
         }
 
@@ -135,7 +146,7 @@ namespace ProtoBuf
             tokens.Consume();
             if (string.Equals("true", token.Value, StringComparison.OrdinalIgnoreCase)) return true;
             if (string.Equals("false", token.Value, StringComparison.OrdinalIgnoreCase)) return false;
-            throw token.SyntaxError("Unable to parse boolean");
+            throw token.Throw("Unable to parse boolean");
         }
 
         internal static uint ConsumeUInt32(this Peekable<Token> tokens, uint? max = null)
@@ -146,7 +157,7 @@ namespace ProtoBuf
             if (max.HasValue && token.Value == "max") return max.Value;
 
             if (!uint.TryParse(token.Value, NumberStyles.None, CultureInfo.InvariantCulture, out uint val))
-                token.SyntaxError("Unable to parse integer");
+                token.Throw("Unable to parse integer");
             return val;
         }
 
@@ -195,7 +206,7 @@ namespace ProtoBuf
         {
             var buffer = new StringBuilder();
 
-            int lineNumber = 0;
+            int lineNumber = 0, offset = 0;
             string line;
             string lastLine = null;
             while ((line = reader.ReadLine()) != null)
@@ -212,7 +223,7 @@ namespace ProtoBuf
                     {
                         if (c == '"')
                         {
-                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line);
+                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++);
                             buffer.Clear();
                             type = TokenType.None;
                         }
@@ -232,7 +243,7 @@ namespace ProtoBuf
                         {
                             if (buffer.Length != 0)
                             {
-                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line);
+                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++);
                                 buffer.Clear();
                             }
                             type = newType;
@@ -248,7 +259,7 @@ namespace ProtoBuf
 
                 if (buffer.Length != 0)
                 {
-                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, lastLine);
+                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, lastLine, offset++);
                     buffer.Clear();
                 }
             }

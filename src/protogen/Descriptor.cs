@@ -1,4 +1,4 @@
-﻿#pragma warning disable CS1591
+#pragma warning disable CS1591
 namespace Google.Protobuf.Reflection
 {
     [global::ProtoBuf.ProtoContract(Name = @"FileDescriptorSet")]

@@ -6,6 +6,10 @@ namespace ProtoBuf
 {
     internal sealed class Peekable<T> : IDisposable
     {
+        public override string ToString()
+        {
+            return Peek(out T val) ? (val?.ToString() ?? "(null)") : "(EOF)";
+        }
         private readonly IEnumerator<T> _iter;
         private T _peek, _prev;
         private bool _havePeek, _eof;
@@ -17,7 +21,8 @@ namespace ProtoBuf
         public bool Consume()
         {
             bool haveData = _havePeek || Peek(out T val);
-            _havePeek = false;
+            _prev = _peek;
+            _havePeek = false;            
             return haveData;
         }
         public bool Peek(out T next)

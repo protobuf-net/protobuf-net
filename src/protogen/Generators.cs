@@ -11,14 +11,14 @@ namespace Google.Protobuf.Reflection
 #pragma warning disable CS1591
     partial class FileDescriptorProto
     {
-        public void GenerateCSharp(TextWriter target, NameNormalizer normalizer = null)
-            => Generators.GenerateCSharp(target, this, normalizer);
+        public void GenerateCSharp(TextWriter target, NameNormalizer normalizer = null, IList<Error> errors = null)
+            => Generators.GenerateCSharp(target, this, normalizer, errors);
 
-        public string GenerateCSharp(NameNormalizer normalizer = null)
+        public string GenerateCSharp(NameNormalizer normalizer = null, IList<Error> errors = null)
         {
             using (var sw = new StringWriter())
             {
-                GenerateCSharp(sw, normalizer);
+                GenerateCSharp(sw, normalizer, errors);
                 return sw.ToString();
             }
         }
@@ -30,20 +30,13 @@ namespace Google.Protobuf.Reflection
 namespace ProtoBuf
 {
 
-    public class ParserException : Exception
+    internal class ParserException : Exception
     {
         public int ColumnNumber { get; }
-
-        public string GetErrorMessage() =>
-            Text.Length == 0
-                ? $"({LineNumber},{ColumnNumber}): {(IsError ? "error" : "warning")}: {Message}"
-                : $"({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(IsError ? "error" : "warning")}: {Message}";
-
         public int LineNumber { get; }
         public string Text { get; }
         public string LineContents { get; }
         public bool IsError { get; }
-        public bool IsWarning => !IsError;
         internal ParserException(Token token, string message, bool isError)
             : base(message ?? "error")
         {
@@ -264,12 +257,14 @@ namespace ProtoBuf
         {
             var name = context.Normalizer.GetName(@enum);
             target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{@enum.Name}"")]");
+            WriteOptions(target, indent, @enum.Options);
             target.WriteLine(indent, $"public enum {Escape(name)}");
             target.WriteLine(indent++, "{");
             foreach (var val in @enum.Values)
             {
                 name = context.Normalizer.GetName(val);
                 target.WriteLine(indent, $@"[global::ProtoBuf.ProtoEnum(Name = @""{val.Name}"", Value = {val.Number})]");
+                WriteOptions(target, indent, val.Options);
                 target.WriteLine(indent, $"{Escape(name)} = {val.Number},");
             }
             target.WriteLine(--indent, "}");
@@ -281,7 +276,6 @@ namespace ProtoBuf
 
             public string GetTypeName(FieldDescriptorProto field, out string dataFormat)
             {
-                const string SIGNED = "ZigZag", FIXED = "FixedSize";
                 dataFormat = "";
                 switch (field.type)
                 {
@@ -294,48 +288,52 @@ namespace ProtoBuf
                     case FieldDescriptorProto.Type.TypeString:
                         return "string";
                     case FieldDescriptorProto.Type.TypeSint32:
-                        dataFormat = SIGNED;
+                        dataFormat = nameof(DataFormat.ZigZag);
                         return "int";
                     case FieldDescriptorProto.Type.TypeInt32:
                         return "int";
                     case FieldDescriptorProto.Type.TypeSfixed32:
-                        dataFormat = FIXED;
+                        dataFormat = nameof(DataFormat.FixedSize);
                         return "int";
                     case FieldDescriptorProto.Type.TypeSint64:
-                        dataFormat = SIGNED;
+                        dataFormat = nameof(DataFormat.ZigZag);
                         return "long";
                     case FieldDescriptorProto.Type.TypeInt64:
                         return "long";
                     case FieldDescriptorProto.Type.TypeSfixed64:
-                        dataFormat = FIXED;
+                        dataFormat = nameof(DataFormat.FixedSize);
                         return "long";
                     case FieldDescriptorProto.Type.TypeFixed32:
-                        dataFormat = FIXED;
+                        dataFormat = nameof(DataFormat.FixedSize);
                         return "uint";
                     case FieldDescriptorProto.Type.TypeUint32:
                         return "uint";
                     case FieldDescriptorProto.Type.TypeFixed64:
-                        dataFormat = FIXED;
+                        dataFormat = nameof(DataFormat.FixedSize);
                         return "ulong";
                     case FieldDescriptorProto.Type.TypeUint64:
                         return "ulong";
                     case FieldDescriptorProto.Type.TypeBytes:
                         return "byte[]";
                     case FieldDescriptorProto.Type.TypeEnum:
-                        var enumType = FindEnum(field.TypeName);
-                        return enumType == null ? field.TypeName : Normalizer.GetName(enumType);
-                    case FieldDescriptorProto.Type.TypeMessage:
+                        var enumType = Find<EnumDescriptorProto>(field.TypeName);
+                        return Normalizer.GetName(enumType);
                     case FieldDescriptorProto.Type.TypeGroup:
-                        var msgType = FindMessage(field.TypeName);
-                        return msgType == null ? field.TypeName : Normalizer.GetName(msgType);
+                    case FieldDescriptorProto.Type.TypeMessage:
+                        var msgType = Find<DescriptorProto>(field.TypeName);
+                        if(field.type == FieldDescriptorProto.Type.TypeGroup)
+                        {
+                            dataFormat = nameof(DataFormat.Group);
+                        }
+                        return Normalizer.GetName(msgType);
                     default:
                         if (field.type == 0)
                         {
-                            throw new ParserException(field.TypeToken, $"Unknown type: {field.TypeName}", true);
+                            throw new ParserException(field.TypeToken, $"unknown type: {field.TypeName}", true);
                         }
                         else
                         {
-                            throw new ParserException(field.TypeToken, $"Unknown type: {field.type} ({field.TypeName})", true);
+                            throw new ParserException(field.TypeToken, $"unknown type: {field.type} ({field.TypeName})", true);
                         }
                 }
             }
@@ -347,64 +345,65 @@ namespace ProtoBuf
             }
             public NameNormalizer Normalizer => normalizer;
 
-            public DescriptorProto FindMessage(string name)
+            private Dictionary<string, object> _knownTypes = new Dictionary<string, object>();
+            internal void BuildTypeIndex()
             {
-                DescriptorProto FindMessage(DescriptorProto message, string type)
+                void AddMessage(DescriptorProto message)
                 {
-                    foreach (var inner in message.NestedTypes)
-                    {
-                        if (inner.Name == name) return inner;
-
-                        var found = FindMessage(inner, type);
-                        if (found != null) return found;
-                    }
-                    return null;
-                }
-                // this will all be replaced when we have the full names thing fixed
-                foreach (var type in schema.MessageTypes)
-                {
-                    if (type.Name == name) return type;
-                    var found = FindMessage(type, name);
-                    if (found != null) return found;
-                }
-                return null;
-            }
-
-            public EnumDescriptorProto FindEnum(string name)
-            {
-                EnumDescriptorProto FindEnum(DescriptorProto message, string type)
-                {
+                    _knownTypes.Add(message.FullyQualifiedName, message);
                     foreach (var @enum in message.EnumTypes)
                     {
-                        if (@enum.Name == name) return @enum;
+                        _knownTypes.Add(@enum.FullyQualifiedName, @enum);
                     }
-                    foreach (var inner in message.NestedTypes)
+                    foreach (var msg in message.NestedTypes)
                     {
-                        var found = FindEnum(inner, type);
-                        if (found != null) return found;
+                        AddMessage(msg);
                     }
-                    return null;
                 }
-                // this will all be replaced when we have the full names thing fixed
-                foreach (var @enum in schema.EnumTypes)
                 {
-                    if (@enum.Name == name) return @enum;
+                    _knownTypes.Clear();
+                    foreach (var @enum in schema.EnumTypes)
+                    {
+                        _knownTypes.Add(@enum.FullyQualifiedName, @enum);
+                    }
+                    foreach (var msg in schema.MessageTypes)
+                    {
+                        AddMessage(msg);
+                    }
                 }
-                foreach (var type in schema.MessageTypes)
+            }
+            public T Find<T>(string typeName) where T : class
+            {
+                if(!_knownTypes.TryGetValue(typeName, out var obj) || obj == null)
                 {
-                    var found = FindEnum(type, name);
-                    if (found != null) return found;
+                    throw new InvalidOperationException($"Type not found: {typeName}");
                 }
-                return null;
+                if (obj is T) return (T)obj;
+
+                throw new InvalidOperationException($"Type of {typeName} is not suitable; expected {typeof(T).Name}, got {obj.GetType().Name}");
             }
         }
 
-        public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null)
+        public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null, IList<Error> errors = null)
         {
             var ctx = new GeneratorContext(schema, normalizer ?? NameNormalizer.Default);
-
+            ctx.BuildTypeIndex();
             int indent = 0;
             var @namespace = schema.Options?.CsharpNamespace ?? schema.Package;
+
+            if(errors != null)
+            {
+                bool isFirst = true;
+                foreach(var error in errors.Where(x => x.IsError))
+                {
+                    if(isFirst)
+                    {
+                        target.WriteLine(indent, "// errors in " + schema.Name);
+                        isFirst = false;
+                    }
+                    target.WriteLine(indent, "#error " + error.ToString(false));
+                }
+            }
             target.WriteLine(indent, "#pragma warning disable CS1591");
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
@@ -430,6 +429,7 @@ namespace ProtoBuf
         {
             var name = context.Normalizer.GetName(message);
             target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{message.Name}"")]");
+            WriteOptions(target, indent, message.Options);
             target.WriteLine(indent, $"public partial class {Escape(name)}");
             target.WriteLine(indent++, "{");
             foreach (var obj in message.EnumTypes)
@@ -469,6 +469,14 @@ namespace ProtoBuf
             }
         }
 
+        private static void WriteOptions<T>(TextWriter target, int indent, T obj) where T : class, ISchemaOptions
+        {
+            if (obj == null) return;
+            if(obj.Deprecated)
+            {
+                target.WriteLine(indent, $"[global::System.Obsolete]");
+            }
+        }
         private static void Write(TextWriter target, int indent, FieldDescriptorProto field, GeneratorContext context)
         {
             var name = context.Normalizer.GetName(field);
@@ -487,23 +495,17 @@ namespace ProtoBuf
                 }
                 else if (!string.IsNullOrWhiteSpace(defaultValue) && field.type == FieldDescriptorProto.Type.TypeEnum)
                 {
-                    var enumType = context.FindEnum(field.TypeName);
-                    if (enumType != null)
-                    {
-                        var found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
-                        if (found != null) defaultValue = context.Normalizer.GetName(found);
-                        defaultValue = context.Normalizer.GetName(enumType) + "." + defaultValue;
-                    }
-                    else
-                    {
-                        defaultValue = field.TypeName + "." + defaultValue;
-                    }
+                    var enumType = context.Find<EnumDescriptorProto>(field.TypeName);
+
+                    var found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
+                    if (found != null) defaultValue = context.Normalizer.GetName(found);
+                    defaultValue = context.Normalizer.GetName(enumType) + "." + defaultValue;
                 }
             }
             var typeName = context.GetTypeName(field, out var dataFormat);
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
-                target.Write($", DataFormat=DataFormat.{dataFormat}");
+                target.Write($", DataFormat = DataFormat.{dataFormat}");
             }
             if (field.Options?.Packed ?? false)
             {
@@ -518,10 +520,7 @@ namespace ProtoBuf
             {
                 target.WriteLine(indent, $"[global::System.ComponentModel.DefaultValue({defaultValue})]");
             }
-            if (field.Options?.Deprecated ?? false)
-            {
-                target.WriteLine(indent, $"[global::System.Obsolete]");
-            }
+            WriteOptions(target, indent, field.Options);
             if (isRepeated)
             {
                 if (UseArray(field))

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -20,16 +19,19 @@ namespace protogen.site.Controllers
 				{
 					using (var reader = new StringReader(schema))
 					{
-						var parsed = FileDescriptorProto.Parse(reader, out var errors);
+						var set = new FileDescriptorSet();
+						set.Add("my.proto", reader);
+						var parsed = set.Files.Single();
+						var errors = set.GetErrors();
 						if (errors.Any())
 						{
 							var sb = new StringBuilder();
 							foreach (var error in errors)
-								sb.AppendLine(error.GetErrorMessage());
+								sb.AppendLine(error.ToString());
 							ViewData["error"] = sb.ToString();
 						}
 
-						ViewData["code"] = parsed.GenerateCSharp();
+						ViewData["code"] = parsed.GenerateCSharp(errors: errors);
 					}
 				}
 				catch (Exception ex)
@@ -53,7 +55,7 @@ namespace protogen.site.Controllers
 				set;
 			}
 
-			public List<ParserException> ParserExceptions
+			public Error[] ParserExceptions
 			{
 				get;
 				set;
@@ -78,12 +80,16 @@ namespace protogen.site.Controllers
 			{
 				using (var reader = new StringReader(schema))
 				{
-					var parsed = FileDescriptorProto.Parse(reader, out var errors);
-					if (errors.Count > 0)
+					var set = new FileDescriptorSet();
+					set.Add("my.proto", reader);
+					var parsed = set.Files.Single();
+					var errors = set.GetErrors();
+					if (errors.Length > 0)
 					{
 						return new GenerateResult() { ParserExceptions = errors };
 					}
-					return new GenerateResult() { Code = parsed.GenerateCSharp() };
+
+					return new GenerateResult() { Code = parsed.GenerateCSharp(errors: errors) };
 				}
 			}
 			catch (Exception ex)

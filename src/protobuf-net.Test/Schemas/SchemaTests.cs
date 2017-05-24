@@ -1,89 +1,124 @@
 ﻿using Google.Protobuf.Reflection;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Text;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace ProtoBuf.Schemas
 {
+    [Trait("kind", "schema")]
     public class SchemaTests
     {
         private ITestOutputHelper _output;
+
+        const string SchemaPath = "Schemas";
+        public static IEnumerable<object[]> GetSchemas()
+            => from file in Directory.GetFiles(SchemaPath, "*.proto")
+               select new object[] { file.Replace('\\', '/') };
+
+        [Theory]
+        [MemberData(nameof(GetSchemas))]
+        public void CompareProtoToParser(string path)
+        {
+            _output.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), SchemaPath));
+            Assert.True(File.Exists(path));
+            var protocBinPath = Path.ChangeExtension(path, "protoc.bin");
+            int exitCode;
+            using (var proc = new Process())
+            {
+                var psi = proc.StartInfo;
+                psi.FileName = "protoc";
+                psi.Arguments = $"--descriptor_set_out={protocBinPath} {path}";
+                psi.RedirectStandardError = psi.RedirectStandardOutput = true;
+                psi.UseShellExecute = false;
+                var output = new StringBuilder();
+                proc.ErrorDataReceived += (sender, args) => { lock (output) { output.AppendLine($"stderr: {args.Data}"); } };
+                proc.OutputDataReceived += (sender, args) => { lock (output) { output.AppendLine($"stdout: {args.Data}"); } };
+                proc.Start();
+                proc.WaitForExit();
+                exitCode = proc.ExitCode;
+                if (output.Length != 0)
+                {
+                    _output.WriteLine(output.ToString());
+                }
+            }
+
+
+            FileDescriptorSet set;
+            string protocJson, jsonPath;
+            using (var file = File.OpenRead(protocBinPath))
+            {
+                set = Serializer.Deserialize<FileDescriptorSet>(file);
+                protocJson = JsonConvert.SerializeObject(set, Formatting.Indented);
+                jsonPath = Path.ChangeExtension(path, "protoc.json");
+                File.WriteAllText(jsonPath, protocJson);
+            }
+
+            set = new FileDescriptorSet();
+            set.Add(path);
+            var parserJson = JsonConvert.SerializeObject(set, Formatting.Indented);
+            jsonPath = Path.ChangeExtension(path, "parser.json");
+            File.WriteAllText(jsonPath, parserJson);
+
+            var errors = set.GetErrors();
+            try
+            {
+                foreach (var file in set.Files)
+                {
+                    using (var codeFile = File.CreateText(Path.ChangeExtension(file.Name, "cs")))
+                    {
+                        file.GenerateCSharp(codeFile, errors: errors);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _output.WriteLine(ex.Message);
+            }
+
+            var parserBinPath = Path.ChangeExtension(path, "parser.bin");
+            using (var file = File.Create(parserBinPath))
+            {
+                Serializer.Serialize(file, set);
+            }
+
+            
+            if (errors.Any())
+            {
+                _output.WriteLine("Parser errors:");
+                foreach (var err in errors) _output.WriteLine(err.ToString());
+            }
+
+            _output.WriteLine("Protoc exited with code " + exitCode);
+
+            var errorCount = errors.Count(x => x.IsError);
+            if (exitCode == 0)
+            {
+                Assert.Equal(0, errorCount);
+            }
+            else
+            {
+                Assert.NotEqual(0, errorCount);
+            }
+
+
+
+            var parserHex = BitConverter.ToString(File.ReadAllBytes(parserBinPath));
+            var protocHex = BitConverter.ToString(File.ReadAllBytes(protocBinPath));
+            File.WriteAllText(Path.ChangeExtension(parserBinPath, "parser.hex"), parserHex);
+            File.WriteAllText(Path.ChangeExtension(protocBinPath, "protoc.hex"), protocHex);
+
+            // compare results
+            Assert.Equal(protocJson, parserJson);
+            Assert.Equal(protocHex, parserHex);
+        }
+
         public SchemaTests(ITestOutputHelper output) => _output = output;
-        [Theory]
-        [InlineData(@"Schemas\descriptor.proto")]        
-        public void CanParse(string path)
-        {
-            FileDescriptorProto schema;
-            using (var proto = File.OpenText(path))
-            {
-                schema = FileDescriptorProto.Parse(proto, out var errors);
-            }
-            foreach (var msg in schema.MessageTypes)
-            {
-                WriteMessage(msg, 0);
-            }
-        }
 
-        [Fact]
-        public void CanDeserializeCompiledSchema()
-        {
-            // to regenerate bin:
-            // protoc --descriptor_set_out=descriptor.bin descriptor.proto
-            // note that protoc is on maven: http://repo1.maven.org/maven2/com/google/protobuf/protoc/
-
-            using (var file = File.OpenRead(@"Schemas\descriptor.bin"))
-            {
-                var obj = Serializer.Deserialize<FileDescriptorSet>(file);
-                var json = JsonConvert.SerializeObject(obj);
-                _output.WriteLine(json);
-            }
-        }
-
-        [Theory]
-        [InlineData(@"Schemas\descriptor.proto", @"Schemas\descriptor_expected.cs", @"Schemas\descriptor_actual.cs")]
-        public void CanGenerate(string schemaPath, string expectedPath, string actualPath)
-        {
-            FileDescriptorProto schema;
-            using (var proto = File.OpenText(schemaPath))
-            {
-                schema = FileDescriptorProto.Parse(proto, out var errors);
-            }
-            string code;
-            using (var sw = new StringWriter())
-            {
-                schema.GenerateCSharp(sw);
-                code = sw.ToString();
-            }
-            File.WriteAllText(actualPath, code);
-            _output.WriteLine(actualPath);
-            _output.WriteLine(Directory.GetCurrentDirectory());
-
-            if (File.Exists(expectedPath))
-            {
-                Assert.Equal(File.ReadAllText(expectedPath), code);
-            }
-        }
-        private string Indent(int count) => new string(' ', count);
-        private void WriteMessage(DescriptorProto msg, int indent)
-        {
-            _output.WriteLine($"{Indent(indent++)}{msg}");
-            foreach (var field in msg.Fields)
-            {
-                _output.WriteLine($"{Indent(indent)}{field.Number}: {field.TypeName} ({field.type})");
-            }
-            foreach (var res in msg.ReservedRanges)
-            {
-                _output.WriteLine($"{Indent(indent)}-{res.Start}-{res.End}");
-            }
-            foreach (var res in msg.ReservedNames)
-            {               
-                _output.WriteLine($"{Indent(indent)}-{res}");
-            }
-            foreach (var subMsg in msg.NestedTypes)
-            {
-                WriteMessage(subMsg, indent);
-            }
-        }
     }
 }
