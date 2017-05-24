@@ -266,10 +266,13 @@ namespace ProtoBuf
                 WriteOptions(context, val.Options);
                 context.WriteLine($"{Escape(name)} = {val.Number},");
             }
-            context.Outdent().WriteLine("}");
+            context.Outdent().WriteLine("}").WriteLine();
         }
         private class GeneratorContext
         {
+            public string Syntax => string.IsNullOrWhiteSpace(fileDescriptor.Syntax)
+                ? FileDescriptorProto.SyntaxProto2 : fileDescriptor.Syntax;
+
             public string GetTypeName(FieldDescriptorProto field, out string dataFormat)
             {
                 dataFormat = "";
@@ -445,12 +448,13 @@ namespace ProtoBuf
                     }
                     ctx.WriteLine("#error " + error.ToString(false));
                 }
+                if (!isFirst) ctx.WriteLine();
             }
-            ctx.WriteLine("#pragma warning disable CS1591");
+            ctx.WriteLine("#pragma warning disable CS1591").WriteLine();
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
                 ctx.WriteLine($"namespace {@namespace}");
-                ctx.WriteLine("{").Indent();
+                ctx.WriteLine("{").Indent().WriteLine();
             }
             foreach (var @enum in schema.EnumTypes)
             {
@@ -462,7 +466,7 @@ namespace ProtoBuf
             }
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
-                ctx.Outdent().WriteLine("}");
+                ctx.Outdent().WriteLine("}").WriteLine();
             }
             ctx.WriteLine("#pragma warning restore CS1591");
         }
@@ -486,7 +490,7 @@ namespace ProtoBuf
             {
                 Write(context, obj);
             }
-            context.Outdent().WriteLine("}");
+            context.Outdent().WriteLine("}").WriteLine();
         }
         private static bool UseArray(FieldDescriptorProto field)
         {
@@ -519,12 +523,18 @@ namespace ProtoBuf
                 context.WriteLine($"[global::System.Obsolete]");
             }
         }
+        const string FieldPrefix = "__pbn__";
         private static void Write(GeneratorContext context, FieldDescriptorProto field)
         {
             var name = context.Normalizer.GetName(field);
             var tw = context.Write($@"[global::ProtoBuf.ProtoMember({field.Number}, Name = @""{field.Name}""");
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
+
+            bool explicitValues = isOptional && context.Syntax == FileDescriptorProto.SyntaxProto2
+                && field.type != FieldDescriptorProto.Type.TypeMessage
+                && field.type != FieldDescriptorProto.Type.TypeGroup;
+
             string defaultValue = null;
             if (isOptional)
             {
@@ -574,12 +584,45 @@ namespace ProtoBuf
                     context.WriteLine($"public global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
             }
+            else if(explicitValues)
+            {
+                string fieldName = FieldPrefix + name, fieldType;
+                bool isRef = false;
+                switch(field.type)
+                {
+                    case FieldDescriptorProto.Type.TypeString:
+                    case FieldDescriptorProto.Type.TypeBytes:
+                        fieldType = typeName;
+                        isRef = true;
+                        break;
+                    default:
+                        fieldType = typeName + "?";
+                        break;
+                }
+                context.WriteLine($"public {typeName} {Escape(name)}").WriteLine("{").Indent();
+                tw = context.Write($"get {{ return {fieldName}");
+                if (!string.IsNullOrWhiteSpace(defaultValue))
+                {
+                    tw.Write(" ?? ");
+                    tw.Write(defaultValue);
+                }
+                else if (!isRef)
+                {
+                    tw.Write(".GetValueOrDefault()");
+                }
+                tw.WriteLine("; }");
+                context.WriteLine($"set {{ {fieldName} = value; }}")
+                    .Outdent().WriteLine("}")
+                    .WriteLine($"public bool ShouldSerialize{name}() => {fieldName} != null;")
+                    .WriteLine($"private {fieldType} {fieldName};");
+            }
             else
             {
                 tw = context.Write($"public {typeName} {Escape(name)} {{ get; set; }}");
                 if (!string.IsNullOrWhiteSpace(defaultValue)) tw.Write($" = {defaultValue};");
-                context.WriteLine();
+                tw.WriteLine();
             }
+            context.WriteLine();
         }
 
 

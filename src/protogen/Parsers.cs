@@ -260,9 +260,9 @@ namespace Google.Protobuf.Reflection
                 {
                     ctx.Errors.Add(startOfFile.Error("no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", false));
                 }
-                if (Syntax == SyntaxProto2)
+                if (Syntax == "" || Syntax == SyntaxProto2)
                 {
-                    Syntax = ""; // for output compatibility; is blank even if set to proto2 explicitly
+                    Syntax = null; // for output compatibility; is blank even if set to proto2 explicitly
                 }
             }
         }
@@ -556,7 +556,7 @@ namespace Google.Protobuf.Reflection
             }
             else if (TryIdentifyType(typeName, out type))
             {
-                typeName = "";
+                typeName = null;
             }
 
             field = new FieldDescriptorProto
@@ -764,8 +764,7 @@ namespace Google.Protobuf.Reflection
             return obj;
         }
         internal EnumDescriptorProto Parent { get; set; }
-        // technically optional, but need value even for zero
-        public bool ShouldSerializeNumber() => true;
+
     }
     partial class MessageOptions : ISchemaOptions
     {
