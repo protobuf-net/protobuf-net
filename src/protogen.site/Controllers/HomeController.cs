@@ -53,12 +53,13 @@ namespace protogen.site.Controllers
 					set.Add("my.proto", reader);
 					var parsed = set.Files.Single();
 					var errors = set.GetErrors();
+					var result = new GenerateResult();
 					if (errors.Length > 0)
 					{
-						return new GenerateResult() { ParserExceptions = errors };
+						result.ParserExceptions = errors;
 					}
-
-					return new GenerateResult() { Code = parsed.GenerateCSharp(errors: errors) };
+					result.Code = parsed.GenerateCSharp(errors: errors);
+					return result;
 				}
 			}
 			catch (Exception ex)
