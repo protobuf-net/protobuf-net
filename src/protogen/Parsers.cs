@@ -541,6 +541,7 @@ namespace Google.Protobuf.Reflection
             Type type;
             if (isGroup)
             {
+                typeToken.RequireProto2(ctx.Syntax);
                 type = Type.TypeGroup;
                 typeName = name;
 
