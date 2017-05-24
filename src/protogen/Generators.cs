@@ -505,7 +505,7 @@ namespace ProtoBuf
             var typeName = context.GetTypeName(field, out var dataFormat);
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
-                target.Write($", DataFormat=DataFormat.{dataFormat}");
+                target.Write($", DataFormat = DataFormat.{dataFormat}");
             }
             if (field.Options?.Packed ?? false)
             {
