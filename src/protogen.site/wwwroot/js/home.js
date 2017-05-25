@@ -46,7 +46,11 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
                         range: new monaco.Range(parserException.lineNumber, parserException.columnNumber, parserException.lineNumber, parserException.columnNumber + parserException.text.length),
                         options: {
                             inlineClassName: parserException.isError ? "redsquiggly" : "greensquiggly",
-                            hoverMessage: parserException.message
+                            hoverMessage: parserException.message,
+                            overviewRuler: {
+                                color: parserException.isError ? "#E47777" : "#71B771",
+                                position: parserException.isError ? monaco.editor.OverviewRulerLane.Right : monaco.editor.OverviewRulerLane.Center
+                            }
                         }
                     });
                 }
