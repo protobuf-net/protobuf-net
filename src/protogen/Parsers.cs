@@ -475,7 +475,8 @@ namespace Google.Protobuf.Reflection
                 }
 
                 bool canPack = FieldDescriptorProto.CanPack(field.type);
-                if (ctx.Syntax != FileDescriptorProto.SyntaxProto2 && canPack)
+                if (ctx.Syntax != FileDescriptorProto.SyntaxProto2 && canPack
+                    && field.label == FieldDescriptorProto.Label.LabelRepeated)
                 {
                     // packed by default *if not explicitly specified*
                     var opt = field.Options ?? (field.Options = new FieldOptions());
@@ -485,10 +486,13 @@ namespace Google.Protobuf.Reflection
                     }
                 }
 
-                if ((field.Options?.Packed ?? false) && !canPack)
+                if (field.Options?.Packed ?? false)
                 {
-                    ctx.Errors.Add(new Error(field.TypeToken, $"field of type {field.type} cannot be packed", true));
-                    field.Options.Packed = false;
+                    if (!canPack)
+                    {
+                        ctx.Errors.Add(new Error(field.TypeToken, $"field of type {field.type} cannot be packed", true));
+                        field.Options.Packed = false;
+                    }
                 }
             }
         }
