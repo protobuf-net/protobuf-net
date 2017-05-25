@@ -11,16 +11,15 @@ namespace ProtoBuf
         /// <summary>The value typed as Object</summary>
         public readonly object Object;
 
-        private DiscriminatedUnionObject(int discriminator) : this()
-        {
-            _discriminator = ~discriminator; // avoids issues with default value / 0
-        }
-
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
         public bool Is(int discriminator) => _discriminator == ~discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnionObject(int discriminator, object value) : this(discriminator) { Object = value; }
+        public DiscriminatedUnionObject(int discriminator, object value)
+        {
+            _discriminator = ~discriminator; // avoids issues with default value / 0
+            Object = value;
+        }
 
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnionObject value, int discriminator)
