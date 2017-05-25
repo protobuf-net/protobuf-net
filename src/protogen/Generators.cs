@@ -268,7 +268,7 @@ namespace ProtoBuf
             }
             context.Outdent().WriteLine("}").WriteLine();
         }
-        private class GeneratorContext
+        internal class GeneratorContext
         {
             public string Syntax => string.IsNullOrWhiteSpace(fileDescriptor.Syntax)
                 ? FileDescriptorProto.SyntaxProto2 : fileDescriptor.Syntax;
@@ -486,11 +486,125 @@ namespace ProtoBuf
             {
                 Write(context, obj);
             }
+            var oneOfs = OneOfStub.Build(context, message);
             foreach (var obj in message.Fields)
             {
-                Write(context, obj);
+                Write(context, obj, oneOfs);
             }
             context.Outdent().WriteLine("}").WriteLine();
+        }
+        internal class OneOfStub
+        {
+            public OneofDescriptorProto OneOf { get; }
+
+            internal OneOfStub(GeneratorContext context, OneofDescriptorProto decl)
+            {
+                OneOf = decl;
+                //context.
+            }
+            public int Count32 { get; private set; }
+            public int Count64 { get; private set; }
+            public int CountRef { get; private set; }
+            public int CountTotal => CountRef + Count32 + Count64;
+
+            void AccountFor(FieldDescriptorProto.Type type)
+            {
+                switch(type)
+                {
+                    case FieldDescriptorProto.Type.TypeBool:
+                    case FieldDescriptorProto.Type.TypeEnum:
+                    case FieldDescriptorProto.Type.TypeFixed32:
+                    case FieldDescriptorProto.Type.TypeFloat:
+                    case FieldDescriptorProto.Type.TypeInt32:
+                    case FieldDescriptorProto.Type.TypeSfixed32:
+                    case FieldDescriptorProto.Type.TypeSint32:
+                    case FieldDescriptorProto.Type.TypeUint32:
+                        Count32++;
+                        break;
+                    case FieldDescriptorProto.Type.TypeDouble:
+                    case FieldDescriptorProto.Type.TypeFixed64:
+                    case FieldDescriptorProto.Type.TypeInt64:
+                    case FieldDescriptorProto.Type.TypeSfixed64:
+                    case FieldDescriptorProto.Type.TypeSint64:
+                    case FieldDescriptorProto.Type.TypeUint64:
+                        Count32++;
+                        Count64++;
+                        break;
+                    default:
+                        CountRef++;
+                        break;
+                }
+            }
+            internal string GetStorage(FieldDescriptorProto.Type type)
+            {
+                switch (type)
+                {
+                    case FieldDescriptorProto.Type.TypeBool:
+                        return "Boolean";
+                    case FieldDescriptorProto.Type.TypeInt32:
+                    case FieldDescriptorProto.Type.TypeSfixed32:
+                    case FieldDescriptorProto.Type.TypeSint32:
+                    case FieldDescriptorProto.Type.TypeFixed32:
+                    case FieldDescriptorProto.Type.TypeEnum:
+                        return "Int32";
+                    case FieldDescriptorProto.Type.TypeFloat:
+                        return "Single";
+                    case FieldDescriptorProto.Type.TypeUint32:
+                        return "UInt32";
+                    case FieldDescriptorProto.Type.TypeDouble:
+                        return "Double";
+                    case FieldDescriptorProto.Type.TypeFixed64:
+                    case FieldDescriptorProto.Type.TypeInt64:
+                    case FieldDescriptorProto.Type.TypeSfixed64:
+                    case FieldDescriptorProto.Type.TypeSint64:
+                        return "Int64";
+                    case FieldDescriptorProto.Type.TypeUint64:
+                        return "UInt64";
+                    default:
+                        return "Object";
+                }
+            }
+            internal static OneOfStub[] Build(GeneratorContext context, DescriptorProto message)
+            {
+                if (message.OneofDecls.Count == 0) return null;
+                var stubs = new OneOfStub[message.OneofDecls.Count];
+                int index = 0;
+                foreach(var decl in message.OneofDecls)
+                {
+                    stubs[index++] = new OneOfStub(context, decl);
+                }
+                foreach(var field in message.Fields)
+                {
+                    if(field.ShouldSerializeOneofIndex())
+                    {
+                        stubs[field.OneofIndex].AccountFor(field.type);
+                    }
+                }
+                return stubs;
+            }
+            private bool isFirst = true;
+            internal bool IsFirst()
+            {
+                if(isFirst)
+                {
+                    isFirst = false;
+                    return true;
+                }
+                return false;
+            }
+
+            internal string GetUnionType()
+            {
+                if (Count64 != 0)
+                {
+                    return CountRef == 0 ? "DiscriminatedUnion64" : "DiscriminatedUnion64Ref";
+                }
+                if (Count32 != 0)
+                {
+                    return CountRef == 0 ? "DiscriminatedUnion32" : "DiscriminatedUnion32Ref";
+                }
+                return "DiscriminatedUnionRef";
+            }
         }
         private static bool UseArray(FieldDescriptorProto field)
         {
@@ -524,17 +638,23 @@ namespace ProtoBuf
             }
         }
         const string FieldPrefix = "__pbn__";
-        private static void Write(GeneratorContext context, FieldDescriptorProto field)
+        private static void Write(GeneratorContext context, FieldDescriptorProto field, OneOfStub[] oneOfs)
         {
             var name = context.Normalizer.GetName(field);
             var tw = context.Write($@"[global::ProtoBuf.ProtoMember({field.Number}, Name = @""{field.Name}""");
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
 
-            bool explicitValues = isOptional && context.Syntax == FileDescriptorProto.SyntaxProto2
+            OneOfStub oneOf = field.ShouldSerializeOneofIndex() ? oneOfs[field.OneofIndex] : null;
+            if(oneOf != null & oneOf.CountTotal == 1)
+            {
+                oneOf = null; // not really a one-of, then!
+            }
+            bool explicitValues = isOptional && oneOf == null && context.Syntax == FileDescriptorProto.SyntaxProto2
                 && field.type != FieldDescriptorProto.Type.TypeMessage
                 && field.type != FieldDescriptorProto.Type.TypeGroup;
 
+            
             string defaultValue = null;
             if (isOptional)
             {
@@ -582,6 +702,44 @@ namespace ProtoBuf
                 else
                 {
                     context.WriteLine($"public global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
+                }
+            }
+            else if(oneOf != null)
+            {
+                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"default({typeName})" : defaultValue;
+                var fieldName = FieldPrefix + oneOf.OneOf.Name;
+                var storage = oneOf.GetStorage(field.type);
+                context.WriteLine($"public {typeName} {Escape(name)}").WriteLine("{").Indent();
+
+                switch(field.type)
+                {
+                    case FieldDescriptorProto.Type.TypeMessage:
+                    case FieldDescriptorProto.Type.TypeGroup:
+                        tw = context.Write($"get {{ return ({typeName}) {fieldName}.Get{storage}({field.Number})");
+                        if (!string.IsNullOrWhiteSpace(defaultValue))
+                        {
+                            tw.Write(" ?? ");
+                            tw.Write(defaultValue);
+                        }
+                        tw.WriteLine("; }");
+                        break;
+                    case FieldDescriptorProto.Type.TypeEnum:
+                        throw new NotImplementedException();
+                    default:
+                        context.WriteLine($"get {{ return {fieldName}.Get{storage}({field.Number}) ?? {defValue}; }}");
+                        break;
+                }
+                context.WriteLine($"set {{ {fieldName}.Set({field.Number}, value); }}")
+                    .Outdent().WriteLine("}")
+                    .WriteLine($"public bool ShouldSerialize{name}() => {fieldName}.Is({field.Number});")
+                    .WriteLine($"public void Reset{name}() => {fieldName}.Reset({field.Number});");
+
+                if (oneOf.IsFirst())
+                {
+                    string unionType = oneOf.GetUnionType();
+
+                    context.WriteLine()
+                        .Write($"private global::ProtoBuf.{unionType} {fieldName};");
                 }
             }
             else if(explicitValues)
