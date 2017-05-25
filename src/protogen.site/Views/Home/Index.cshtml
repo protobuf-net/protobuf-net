@@ -6,6 +6,12 @@
 <section>
     <h3>Schema (can be <a href="https://developers.google.com/protocol-buffers/docs/proto">proto2</a> or <a href="https://developers.google.com/protocol-buffers/docs/proto3">proto3</a>):</h3>
     <p>(note: some features are still missing; map&lt;K,V&gt;, dynamic, Struct, Timestamp, Duration, Any, Wrapper types, FieldMask, ListValue, Value, NullValue)</p>
+    <p>Pending work items in generated code:</p>
+    <ul>
+        <li>switch to bitwise mask ops for optional field tracking (rather than nullable-per-field)</li>
+        <li>use fully qualified names when talking about the generated types</li>
+        <li>intellisense comments</li>
+    </ul>
     <button id="generatecsharp">Generate</button>
     <div id="protocontainer" style="width:100%; max-width:unset;height:600px;border:1px solid grey"></div>
     <script>
