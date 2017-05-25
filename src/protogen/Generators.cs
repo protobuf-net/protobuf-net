@@ -540,28 +540,28 @@ namespace ProtoBuf
                 switch (type)
                 {
                     case FieldDescriptorProto.Type.TypeBool:
-                        return "Boolean";
+                        return nameof(DiscriminatedUnion64Object.Boolean);
                     case FieldDescriptorProto.Type.TypeInt32:
                     case FieldDescriptorProto.Type.TypeSfixed32:
                     case FieldDescriptorProto.Type.TypeSint32:
                     case FieldDescriptorProto.Type.TypeFixed32:
                     case FieldDescriptorProto.Type.TypeEnum:
-                        return "Int32";
+                        return nameof(DiscriminatedUnion64Object.Int32);
                     case FieldDescriptorProto.Type.TypeFloat:
-                        return "Single";
+                        return nameof(DiscriminatedUnion64Object.Single);
                     case FieldDescriptorProto.Type.TypeUint32:
-                        return "UInt32";
+                        return nameof(DiscriminatedUnion64Object.UInt32);
                     case FieldDescriptorProto.Type.TypeDouble:
-                        return "Double";
+                        return nameof(DiscriminatedUnion64Object.Double);
                     case FieldDescriptorProto.Type.TypeFixed64:
                     case FieldDescriptorProto.Type.TypeInt64:
                     case FieldDescriptorProto.Type.TypeSfixed64:
                     case FieldDescriptorProto.Type.TypeSint64:
-                        return "Int64";
+                        return nameof(DiscriminatedUnion64Object.Int64);
                     case FieldDescriptorProto.Type.TypeUint64:
-                        return "UInt64";
+                        return nameof(DiscriminatedUnion64Object.UInt64);
                     default:
-                        return "Object";
+                        return nameof(DiscriminatedUnion64Object.Object);
                 }
             }
             internal static OneOfStub[] Build(GeneratorContext context, DescriptorProto message)
@@ -597,13 +597,13 @@ namespace ProtoBuf
             {
                 if (Count64 != 0)
                 {
-                    return CountRef == 0 ? "DiscriminatedUnion64" : "DiscriminatedUnion64Ref";
+                    return CountRef == 0 ? nameof(DiscriminatedUnion64) : nameof(DiscriminatedUnion64Object);
                 }
                 if (Count32 != 0)
                 {
-                    return CountRef == 0 ? "DiscriminatedUnion32" : "DiscriminatedUnion32Ref";
+                    return CountRef == 0 ? nameof(DiscriminatedUnion32) : nameof(DiscriminatedUnion32Object);
                 }
-                return "DiscriminatedUnionRef";
+                return nameof(DiscriminatedUnionObject);
             }
         }
         private static bool UseArray(FieldDescriptorProto field)
@@ -645,8 +645,8 @@ namespace ProtoBuf
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
 
-            OneOfStub oneOf = field.ShouldSerializeOneofIndex() ? oneOfs[field.OneofIndex] : null;
-            if(oneOf != null & oneOf.CountTotal == 1)
+            OneOfStub oneOf = field.ShouldSerializeOneofIndex() ? oneOfs?[field.OneofIndex] : null;
+            if(oneOf != null && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
             }
@@ -715,31 +715,22 @@ namespace ProtoBuf
                 {
                     case FieldDescriptorProto.Type.TypeMessage:
                     case FieldDescriptorProto.Type.TypeGroup:
-                        tw = context.Write($"get {{ return ({typeName}) {fieldName}.Get{storage}({field.Number})");
-                        if (!string.IsNullOrWhiteSpace(defaultValue))
-                        {
-                            tw.Write(" ?? ");
-                            tw.Write(defaultValue);
-                        }
-                        tw.WriteLine("; }");
-                        break;
                     case FieldDescriptorProto.Type.TypeEnum:
-                        throw new NotImplementedException();
+                        context.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? (({typeName}) {fieldName}.{storage}) : {defValue}; }}");
+                        break;
                     default:
-                        context.WriteLine($"get {{ return {fieldName}.Get{storage}({field.Number}) ?? {defValue}; }}");
+                        context.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? {fieldName}.{storage} : {defValue}; }}");
                         break;
                 }
-                context.WriteLine($"set {{ {fieldName}.Set({field.Number}, value); }}")
+                var unionType = oneOf.GetUnionType();
+                context.WriteLine($"set {{ {fieldName} = new global::ProtoBuf.{unionType}({field.Number}, value); }}")
                     .Outdent().WriteLine("}")
                     .WriteLine($"public bool ShouldSerialize{name}() => {fieldName}.Is({field.Number});")
-                    .WriteLine($"public void Reset{name}() => {fieldName}.Reset({field.Number});");
+                    .WriteLine($"public void Reset{name}() => global::ProtoBuf.{unionType}.Reset(ref {fieldName}, {field.Number});");
 
                 if (oneOf.IsFirst())
                 {
-                    string unionType = oneOf.GetUnionType();
-
-                    context.WriteLine()
-                        .Write($"private global::ProtoBuf.{unionType} {fieldName};");
+                    context.WriteLine().WriteLine($"private global::ProtoBuf.{unionType} {fieldName};");
                 }
             }
             else if(explicitValues)
