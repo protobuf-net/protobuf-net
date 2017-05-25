@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.1</TargetFramework>
@@ -6,6 +6,11 @@
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
 
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="wwwroot\js\home.js" />
+    <Content Include="wwwroot\js\proto3lang.js" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.0.0" />
@@ -23,6 +28,15 @@
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <ProjectReference Include="..\protogen\protogen.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update=".npmrc">
+      <DependentUpon>package.json</DependentUpon>
+    </None>
+    <None Update="postinstall.js">
+      <DependentUpon>package.json</DependentUpon>
+    </None>
   </ItemGroup>
 
 </Project>
