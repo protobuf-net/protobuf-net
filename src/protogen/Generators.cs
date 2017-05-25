@@ -316,17 +316,17 @@ namespace ProtoBuf
                     case FieldDescriptorProto.Type.TypeBytes:
                         return "byte[]";
                     case FieldDescriptorProto.Type.TypeEnum:
-                        var enumType = Find<EnumDescriptorProto>(field.TypeName);
-                        return Normalizer.GetName(enumType);
+                        var enumType = TryFind<EnumDescriptorProto>(field.TypeName);
+                        return enumType == null ? field.TypeName : Normalizer.GetName(enumType);
                     case FieldDescriptorProto.Type.TypeGroup:
                     case FieldDescriptorProto.Type.TypeMessage:
-                        var msgType = Find<DescriptorProto>(field.TypeName);
+                        var msgType = TryFind<DescriptorProto>(field.TypeName);
                         if (field.type == FieldDescriptorProto.Type.TypeGroup)
                         {
                             dataFormat = nameof(DataFormat.Group);
                         }
-                        isMap = msgType.Options?.MapEntry ?? false;
-                        return Normalizer.GetName(msgType);
+                        isMap = msgType?.Options?.MapEntry ?? false;
+                        return msgType == null ? field.TypeName : Normalizer.GetName(msgType);
                     default:
                         return field.TypeName;
                 }
@@ -408,15 +408,13 @@ namespace ProtoBuf
                     }
                 }
             }
-            public T Find<T>(string typeName) where T : class
+            public T TryFind<T>(string typeName) where T : class
             {
                 if (!_knownTypes.TryGetValue(typeName, out var obj) || obj == null)
                 {
-                    throw new InvalidOperationException($"Type not found: {typeName}");
+                    return null;
                 }
-                if (obj is T) return (T)obj;
-
-                throw new InvalidOperationException($"Type of {typeName} is not suitable; expected {typeof(T).Name}, got {obj.GetType().Name}");
+                return obj as T;
             }
         }
 
@@ -684,11 +682,13 @@ namespace ProtoBuf
                 }
                 else if (!string.IsNullOrWhiteSpace(defaultValue) && field.type == FieldDescriptorProto.Type.TypeEnum)
                 {
-                    var enumType = context.Find<EnumDescriptorProto>(field.TypeName);
-
-                    var found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
-                    if (found != null) defaultValue = context.Normalizer.GetName(found);
-                    defaultValue = context.Normalizer.GetName(enumType) + "." + defaultValue;
+                    var enumType = context.TryFind<EnumDescriptorProto>(field.TypeName);
+                    if (enumType != null)
+                    {
+                        var found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
+                        if (found != null) defaultValue = context.Normalizer.GetName(found);
+                        defaultValue = context.Normalizer.GetName(enumType) + "." + defaultValue;
+                    }
                 }
             }
             var typeName = context.GetTypeName(field, out var dataFormat, out var isMap);
@@ -712,14 +712,12 @@ namespace ProtoBuf
             WriteOptions(context, field.Options);
             if (isRepeated)
             {
-
-                if(isMap)
-                {
-                    var msgType = context.Find<DescriptorProto>(field.TypeName);
-                    
-                    var keyTypeName = context.GetTypeName(msgType.Fields.Single(x => x.Number == 1),
+                var mapMsgType = isMap ? context.TryFind<DescriptorProto>(field.TypeName) : null;
+                if (mapMsgType != null)
+                {   
+                    var keyTypeName = context.GetTypeName(mapMsgType.Fields.Single(x => x.Number == 1),
                         out var keyDataFormat, out var _);
-                    var valueTypeName = context.GetTypeName(msgType.Fields.Single(x => x.Number == 2),
+                    var valueTypeName = context.GetTypeName(mapMsgType.Fields.Single(x => x.Number == 2),
                         out var valueDataFormat, out var _);
 
                     bool first = true;
