@@ -1,9 +1,6 @@
 ﻿// NOT SHOWN
 //
 // import
-// Oneof
-// map
-
 // custom options
 
 syntax = "proto2";
@@ -96,7 +93,7 @@ service SearchService {
 }
 
 message Outer {                  // Level 0
-  map<int32, string> map_field1 = 7 [deprecated=true];
+  map<sint32, string> map_field1 = 7 [deprecated=true];
   map<string, Outer> map_field2 = 8;
   message MiddleAA {  // Level 1
     message Inner {   // Level 2

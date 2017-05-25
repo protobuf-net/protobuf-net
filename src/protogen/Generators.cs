@@ -273,9 +273,10 @@ namespace ProtoBuf
             public string Syntax => string.IsNullOrWhiteSpace(fileDescriptor.Syntax)
                 ? FileDescriptorProto.SyntaxProto2 : fileDescriptor.Syntax;
 
-            public string GetTypeName(FieldDescriptorProto field, out string dataFormat)
+            public string GetTypeName(FieldDescriptorProto field, out string dataFormat, out bool isMap)
             {
                 dataFormat = "";
+                isMap = false;
                 switch (field.type)
                 {
                     case FieldDescriptorProto.Type.TypeDouble:
@@ -324,6 +325,7 @@ namespace ProtoBuf
                         {
                             dataFormat = nameof(DataFormat.Group);
                         }
+                        isMap = msgType.Options?.MapEntry ?? false;
                         return Normalizer.GetName(msgType);
                     default:
                         return field.TypeName;
@@ -384,10 +386,10 @@ namespace ProtoBuf
             {
                 void AddMessage(DescriptorProto message)
                 {
-                    _knownTypes.Add(message.FullyQualifiedName, message);
+                    _knownTypes[message.FullyQualifiedName] = message;
                     foreach (var @enum in message.EnumTypes)
                     {
-                        _knownTypes.Add(@enum.FullyQualifiedName, @enum);
+                        _knownTypes[@enum.FullyQualifiedName] = @enum;
                     }
                     foreach (var msg in message.NestedTypes)
                     {
@@ -398,7 +400,7 @@ namespace ProtoBuf
                     _knownTypes.Clear();
                     foreach (var @enum in fileDescriptor.EnumTypes)
                     {
-                        _knownTypes.Add(@enum.FullyQualifiedName, @enum);
+                        _knownTypes[@enum.FullyQualifiedName] = @enum;
                     }
                     foreach (var msg in fileDescriptor.MessageTypes)
                     {
@@ -466,6 +468,11 @@ namespace ProtoBuf
 
         private static void Write(GeneratorContext context, DescriptorProto message)
         {
+            if(message.Options?.MapEntry??false)
+            {
+                return; // don't write this type - use a dictionary instead
+            }
+
             var name = context.Normalizer.GetName(message);
             context.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{message.Name}"")]");
             WriteOptions(context, message.Options);
@@ -621,7 +628,6 @@ namespace ProtoBuf
                     return false;
             }
         }
-
         private static void WriteOptions<T>(GeneratorContext context, T obj) where T : class, ISchemaOptions
         {
             if (obj == null) return;
@@ -685,7 +691,7 @@ namespace ProtoBuf
                     defaultValue = context.Normalizer.GetName(enumType) + "." + defaultValue;
                 }
             }
-            var typeName = context.GetTypeName(field, out var dataFormat);
+            var typeName = context.GetTypeName(field, out var dataFormat, out var isMap);
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
                 tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
@@ -706,7 +712,32 @@ namespace ProtoBuf
             WriteOptions(context, field.Options);
             if (isRepeated)
             {
-                if (UseArray(field))
+
+                if(isMap)
+                {
+                    var msgType = context.Find<DescriptorProto>(field.TypeName);
+                    
+                    var keyTypeName = context.GetTypeName(msgType.Fields.Single(x => x.Number == 1),
+                        out var keyDataFormat, out var _);
+                    var valueTypeName = context.GetTypeName(msgType.Fields.Single(x => x.Number == 2),
+                        out var valueDataFormat, out var _);
+
+                    bool first = true;
+                    tw = context.Write($"[global::ProtoBuf.Map");
+                    if (!string.IsNullOrWhiteSpace(keyDataFormat))
+                    {
+                        tw.Write($"{(first ? "(" : ", ")}KeyFormat = global::ProtoBuf.DataFormat.{keyDataFormat}");
+                        first = false;
+                    }
+                    if (!string.IsNullOrWhiteSpace(valueDataFormat))
+                    {
+                        tw.Write($"{(first ? "(" : ", ")}ValueFormat = global::ProtoBuf.DataFormat.{valueDataFormat}");
+                        first = false;
+                    }
+                    tw.WriteLine(first ? "]" : ")]");
+                    context.WriteLine($"public global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
+                }
+                else if (UseArray(field))
                 {
                     context.WriteLine($"public {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
@@ -729,7 +760,7 @@ namespace ProtoBuf
                     case FieldDescriptorProto.Type.TypeEnum:
                     case FieldDescriptorProto.Type.TypeBytes:
                     case FieldDescriptorProto.Type.TypeString:
-                        context.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? (({typeName}) {fieldName}.{storage}) : {defValue}; }}");
+                        context.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? (({typeName}){fieldName}.{storage}) : {defValue}; }}");
                         break;
                     default:
                         context.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? {fieldName}.{storage} : {defValue}; }}");
