@@ -7,7 +7,11 @@ using ProtoBuf;
 
 namespace protogen.site.Controllers
 {
-	public class HomeController : Controller
+
+#if RELEASE
+    [RequireHttps]
+#endif
+    public class HomeController : Controller
 	{
 		public IActionResult Index() => View();
 
