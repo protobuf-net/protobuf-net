@@ -105,7 +105,7 @@ namespace ProtoBuf
             tokens.Consume();
             if (max.HasValue && token.Value == "max") return max.Value;
 
-            if (!int.TryParse(token.Value, NumberStyles.None, CultureInfo.InvariantCulture, out int val))
+            if (!int.TryParse(token.Value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int val))
                 token.Throw("Unable to parse integer");
             return val;
         }
@@ -134,18 +134,6 @@ namespace ProtoBuf
             throw token.Throw("Unable to parse boolean");
         }
 
-        internal static uint ConsumeUInt32(this Peekable<Token> tokens, uint? max = null)
-        {
-            var token = tokens.Read();
-            token.Assert(TokenType.AlphaNumeric);
-            tokens.Consume();
-            if (max.HasValue && token.Value == "max") return max.Value;
-
-            if (!uint.TryParse(token.Value, NumberStyles.None, CultureInfo.InvariantCulture, out uint val))
-                token.Throw("Unable to parse integer");
-            return val;
-        }
-
         static TokenType Identify(char c)
         {
             if (c == '"') return TokenType.StringLiteral;
@@ -155,6 +143,7 @@ namespace ProtoBuf
             {
                 case '_':
                 case '.':
+                case '-':
                     return TokenType.AlphaNumeric;
             }
             return TokenType.Symbol;
