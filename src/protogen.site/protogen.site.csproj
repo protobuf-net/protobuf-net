@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Properties\PublishProfiles\protogensite20170521042027 - Web Deploy.pubxml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="wwwroot\js\home.js" />
     <Content Include="wwwroot\js\proto3lang.js" />
   </ItemGroup>

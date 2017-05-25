@@ -584,6 +584,26 @@ namespace Google.Protobuf.Reflection
             var nameToken = tokens.Previous;
             tokens.Consume(TokenType.Symbol, "=");
             var number = tokens.ConsumeInt32();
+            var numberToken = tokens.Previous;
+            var conflict = parent.Fields.FirstOrDefault(x => x.Number == number);
+            if(conflict != null)
+            {
+                ctx.Errors.Add(new Error(numberToken, $"field {number} is already in use by '{conflict.Name}'", true));
+            }
+            conflict = parent.Fields.FirstOrDefault(x => x.Name == name);
+            if (conflict != null)
+            {
+                ctx.Errors.Add(new Error(nameToken, $"field '{name}' is already in use by field {conflict.Number}", true));
+            }
+            if(parent.ReservedNames.Contains(name))
+            {
+                ctx.Errors.Add(new Error(nameToken, $"field '{name}' is reserved", true));
+            }
+            if(parent.ReservedRanges.Any(x => x.Start <= number && x.End > number))
+            {
+                ctx.Errors.Add(new Error(numberToken, $"field {number} is reserved", true));
+            }
+
 
             Type type;
             if (isGroup)
