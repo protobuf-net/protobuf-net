@@ -36,11 +36,12 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
             }
             if (data.parserExceptions)
             {
-                codeResultSection.style.display = "none";
                 var length = data.parserExceptions.length;
+                var haveErrors = false;
                 for (var i = 0; i < length; i++)
                 {
                     var parserException = data.parserExceptions[i];
+                    if (parserException.isError) { haveErrors = true; }
                     decorations.push({
                         range: new monaco.Range(parserException.lineNumber, parserException.columnNumber, parserException.lineNumber, parserException.columnNumber + parserException.text.length),
                         options: {
@@ -49,6 +50,7 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
                         }
                     });
                 }
+                if (haveErrors) { codeResultSection.style.display = "none"; }
             }
             if (data.exception)
             {
