@@ -1,4 +1,4 @@
-﻿require.config({ paths: { 'vs': 'lib/monaco-editor/min/vs' } });
+﻿require.config({ paths: { vs: 'lib/monaco-editor/min/vs' } });
 require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
 {
     monaco.languages.register({ id: 'proto3lang' });
@@ -13,7 +13,7 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
     {
         jQuery.post("/generate", "schema=" + editor.getValue({ preserveBOM: false, lineEnding: "\n" }), function (data, textStatus, jqXHR)
         {
-            if (data == null)
+            if (data === null || data === undefined)
             {
                 return;
             }
@@ -21,7 +21,7 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
             if (data.code)
             {
                 codeResultSection.style.display = "";
-                if (codeViewer == null)
+                if (codeViewer === null)
                 {
                     codeViewer = monaco.editor.create(document.getElementById('csharpcontainer'), {
                         value: data.code,
