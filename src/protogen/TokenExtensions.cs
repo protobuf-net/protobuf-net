@@ -97,22 +97,7 @@ namespace ProtoBuf
                 token.Throw("Unable to parse " + typeof(T).Name);
             return val;
         }
-        internal static void Write(this TextWriter target, int indent, string value)
-        {
-            while (indent-- > 0)
-            {
-                target.Write("    ");
-            }
-            target.Write(value);
-        }
-        internal static void WriteLine(this TextWriter target, int indent, string line)
-        {
-            while(indent-- > 0)
-            {
-                target.Write("    ");
-            }
-            target.WriteLine(line);
-        }
+
         internal static int ConsumeInt32(this Peekable<Token> tokens, int? max = null)
         {
             var token = tokens.Read();

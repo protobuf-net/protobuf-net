@@ -66,6 +66,7 @@ namespace ProtoBuf.Schemas
             File.WriteAllText(jsonPath, parserJson);
 
             var errors = set.GetErrors();
+            Exception genError = null;
             try
             {
                 foreach (var file in set.Files)
@@ -78,7 +79,9 @@ namespace ProtoBuf.Schemas
             }
             catch (Exception ex)
             {
+                genError = ex;
                 _output.WriteLine(ex.Message);
+                _output.WriteLine(ex.StackTrace);
             }
 
             var parserBinPath = Path.ChangeExtension(path, "parser.bin");
@@ -116,6 +119,8 @@ namespace ProtoBuf.Schemas
             // compare results
             Assert.Equal(protocJson, parserJson);
             Assert.Equal(protocHex, parserHex);
+
+            Assert.Null(genError);
         }
 
         public SchemaTests(ITestOutputHelper output) => _output = output;

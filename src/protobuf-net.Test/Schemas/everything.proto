@@ -17,6 +17,20 @@ enum RootEnum {
 	B = 1 [deprecated = true];
 }
 
+message SampleMessage {
+  optional string foo_name = 1 [default="abc"];
+  oneof test_oneof {
+     //option deprecated = true;
+     string name = 4 [default="abc"];
+     bool sub_message = 9 [deprecated=true];
+  }
+  oneof another_one_of {
+     //option deprecated = true;
+     string name2 = 5 [default="abc"];
+     bool sub_message2 = 10 [deprecated=true];
+  }
+  optional string bar_name = 12 [default="abc"];
+}
 
 ; // random semicolon
 message SearchRequest {
@@ -86,7 +100,7 @@ message Outer {                  // Level 0
 }
 
 message SomeOtherMessage {
-  optional SearchResponse.Result result = 1;
+  optional string result = 1;
 }
 
 ; // random semicolon

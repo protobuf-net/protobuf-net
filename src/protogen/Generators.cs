@@ -253,26 +253,25 @@ namespace ProtoBuf
                     return identifier;
             }
         }
-        private static void Write(TextWriter target, int indent, EnumDescriptorProto @enum, GeneratorContext context)
+        private static void Write(GeneratorContext context, EnumDescriptorProto @enum)
         {
             var name = context.Normalizer.GetName(@enum);
-            target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{@enum.Name}"")]");
-            WriteOptions(target, indent, @enum.Options);
-            target.WriteLine(indent, $"public enum {Escape(name)}");
-            target.WriteLine(indent++, "{");
+            context.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{@enum.Name}"")]");
+            WriteOptions(context, @enum.Options);
+            context.WriteLine($"public enum {Escape(name)}").WriteLine("{").Indent();
             foreach (var val in @enum.Values)
             {
                 name = context.Normalizer.GetName(val);
-                target.WriteLine(indent, $@"[global::ProtoBuf.ProtoEnum(Name = @""{val.Name}"", Value = {val.Number})]");
-                WriteOptions(target, indent, val.Options);
-                target.WriteLine(indent, $"{Escape(name)} = {val.Number},");
+                context.WriteLine($@"[global::ProtoBuf.ProtoEnum(Name = @""{val.Name}"", Value = {val.Number})]");
+                WriteOptions(context, val.Options);
+                context.WriteLine($"{Escape(name)} = {val.Number},");
             }
-            target.WriteLine(--indent, "}");
+            context.Outdent().WriteLine("}").WriteLine();
         }
-        private class GeneratorContext
+        internal class GeneratorContext
         {
-            private readonly FileDescriptorProto schema;
-            private readonly NameNormalizer normalizer;
+            public string Syntax => string.IsNullOrWhiteSpace(fileDescriptor.Syntax)
+                ? FileDescriptorProto.SyntaxProto2 : fileDescriptor.Syntax;
 
             public string GetTypeName(FieldDescriptorProto field, out string dataFormat)
             {
@@ -337,15 +336,57 @@ namespace ProtoBuf
                         }
                 }
             }
-
-            public GeneratorContext(FileDescriptorProto schema, NameNormalizer normalizer)
+            public GeneratorContext Indent()
             {
-                this.schema = schema;
-                this.normalizer = normalizer;
+                _indent++;
+                return this;
             }
-            public NameNormalizer Normalizer => normalizer;
+            public GeneratorContext Outdent()
+            {
+                _indent--;
+                return this;
+            }
+            private int _indent;
+            public GeneratorContext(FileDescriptorProto schema, NameNormalizer normalizer, TextWriter output)
+            {
+                this.fileDescriptor = schema;
+                Normalizer = normalizer;
+                Output = output;
+            }
+            public TextWriter Write(string value)
+            {
+                var indent = _indent;
+                var target = Output;
+                while (indent-- > 0)
+                {
+                    target.Write(Tab);
+                }
+                target.Write(value);
+                return target;
+            }
+            public string Tab { get; set; } = "    ";
+            public GeneratorContext WriteLine()
+            {
+                Output.WriteLine();
+                return this;
+            }
+            public GeneratorContext WriteLine(string line)
+            {
+                var indent = _indent;
+                var target = Output;
+                while (indent-- > 0)
+                {
+                    target.Write(Tab);
+                }
+                target.WriteLine(line);
+                return this;
+            }
+            public TextWriter Output { get; }
+            public NameNormalizer Normalizer { get; }
 
             private Dictionary<string, object> _knownTypes = new Dictionary<string, object>();
+            private readonly FileDescriptorProto fileDescriptor;
+
             internal void BuildTypeIndex()
             {
                 void AddMessage(DescriptorProto message)
@@ -362,11 +403,11 @@ namespace ProtoBuf
                 }
                 {
                     _knownTypes.Clear();
-                    foreach (var @enum in schema.EnumTypes)
+                    foreach (var @enum in fileDescriptor.EnumTypes)
                     {
                         _knownTypes.Add(@enum.FullyQualifiedName, @enum);
                     }
-                    foreach (var msg in schema.MessageTypes)
+                    foreach (var msg in fileDescriptor.MessageTypes)
                     {
                         AddMessage(msg);
                     }
@@ -386,9 +427,13 @@ namespace ProtoBuf
 
         public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null, IList<Error> errors = null)
         {
-            var ctx = new GeneratorContext(schema, normalizer ?? NameNormalizer.Default);
+            var ctx = new GeneratorContext(schema, normalizer ?? NameNormalizer.Default, target);
             ctx.BuildTypeIndex();
-            int indent = 0;
+
+            ctx.WriteLine("// This file is generated by a tool; you should avoid making direct changes.")
+                .WriteLine("// Consider using 'partial classes' to extend these types")
+                .WriteLine($"// Input: {Path.GetFileName(schema.Name)}").WriteLine();
+            
             var @namespace = schema.Options?.CsharpNamespace ?? schema.Package;
 
             if(errors != null)
@@ -398,53 +443,168 @@ namespace ProtoBuf
                 {
                     if(isFirst)
                     {
-                        target.WriteLine(indent, "// errors in " + schema.Name);
+                        ctx.WriteLine("// errors in " + schema.Name);
                         isFirst = false;
                     }
-                    target.WriteLine(indent, "#error " + error.ToString(false));
+                    ctx.WriteLine("#error " + error.ToString(false));
                 }
+                if (!isFirst) ctx.WriteLine();
             }
-            target.WriteLine(indent, "#pragma warning disable CS1591");
+            ctx.WriteLine("#pragma warning disable CS1591").WriteLine();
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
-                target.WriteLine(indent, $"namespace {@namespace}");
-                target.WriteLine(indent++, "{");
+                ctx.WriteLine($"namespace {@namespace}");
+                ctx.WriteLine("{").Indent().WriteLine();
             }
-            foreach (var obj in schema.EnumTypes)
+            foreach (var @enum in schema.EnumTypes)
             {
-                Write(target, indent, obj, ctx);
+                Write(ctx, @enum);
             }
-            foreach (var obj in schema.MessageTypes)
+            foreach (var msgType in schema.MessageTypes)
             {
-                Write(target, indent, obj, ctx);
+                Write(ctx, msgType);
             }
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
-                target.WriteLine(--indent, "}");
+                ctx.Outdent().WriteLine("}").WriteLine();
             }
-            target.WriteLine(indent, "#pragma warning restore CS1591");
+            ctx.WriteLine("#pragma warning restore CS1591");
         }
 
-        private static void Write(TextWriter target, int indent, DescriptorProto message, GeneratorContext context)
+        private static void Write(GeneratorContext context, DescriptorProto message)
         {
             var name = context.Normalizer.GetName(message);
-            target.WriteLine(indent, $@"[global::ProtoBuf.ProtoContract(Name = @""{message.Name}"")]");
-            WriteOptions(target, indent, message.Options);
-            target.WriteLine(indent, $"public partial class {Escape(name)}");
-            target.WriteLine(indent++, "{");
+            context.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{message.Name}"")]");
+            WriteOptions(context, message.Options);
+            context.WriteLine($"public partial class {Escape(name)}");
+            context.WriteLine("{").Indent();
             foreach (var obj in message.EnumTypes)
             {
-                Write(target, indent, obj, context);
+                Write(context, obj);
             }
             foreach (var obj in message.NestedTypes)
             {
-                Write(target, indent, obj, context);
+                Write(context, obj);
             }
+            var oneOfs = OneOfStub.Build(context, message);
             foreach (var obj in message.Fields)
             {
-                Write(target, indent, obj, context);
+                Write(context, obj, oneOfs);
             }
-            target.WriteLine(--indent, "}");
+            context.Outdent().WriteLine("}").WriteLine();
+        }
+        internal class OneOfStub
+        {
+            public OneofDescriptorProto OneOf { get; }
+
+            internal OneOfStub(GeneratorContext context, OneofDescriptorProto decl)
+            {
+                OneOf = decl;
+                //context.
+            }
+            public int Count32 { get; private set; }
+            public int Count64 { get; private set; }
+            public int CountRef { get; private set; }
+            public int CountTotal => CountRef + Count32 + Count64;
+
+            void AccountFor(FieldDescriptorProto.Type type)
+            {
+                switch(type)
+                {
+                    case FieldDescriptorProto.Type.TypeBool:
+                    case FieldDescriptorProto.Type.TypeEnum:
+                    case FieldDescriptorProto.Type.TypeFixed32:
+                    case FieldDescriptorProto.Type.TypeFloat:
+                    case FieldDescriptorProto.Type.TypeInt32:
+                    case FieldDescriptorProto.Type.TypeSfixed32:
+                    case FieldDescriptorProto.Type.TypeSint32:
+                    case FieldDescriptorProto.Type.TypeUint32:
+                        Count32++;
+                        break;
+                    case FieldDescriptorProto.Type.TypeDouble:
+                    case FieldDescriptorProto.Type.TypeFixed64:
+                    case FieldDescriptorProto.Type.TypeInt64:
+                    case FieldDescriptorProto.Type.TypeSfixed64:
+                    case FieldDescriptorProto.Type.TypeSint64:
+                    case FieldDescriptorProto.Type.TypeUint64:
+                        Count32++;
+                        Count64++;
+                        break;
+                    default:
+                        CountRef++;
+                        break;
+                }
+            }
+            internal string GetStorage(FieldDescriptorProto.Type type)
+            {
+                switch (type)
+                {
+                    case FieldDescriptorProto.Type.TypeBool:
+                        return nameof(DiscriminatedUnion64Object.Boolean);
+                    case FieldDescriptorProto.Type.TypeInt32:
+                    case FieldDescriptorProto.Type.TypeSfixed32:
+                    case FieldDescriptorProto.Type.TypeSint32:
+                    case FieldDescriptorProto.Type.TypeFixed32:
+                    case FieldDescriptorProto.Type.TypeEnum:
+                        return nameof(DiscriminatedUnion64Object.Int32);
+                    case FieldDescriptorProto.Type.TypeFloat:
+                        return nameof(DiscriminatedUnion64Object.Single);
+                    case FieldDescriptorProto.Type.TypeUint32:
+                        return nameof(DiscriminatedUnion64Object.UInt32);
+                    case FieldDescriptorProto.Type.TypeDouble:
+                        return nameof(DiscriminatedUnion64Object.Double);
+                    case FieldDescriptorProto.Type.TypeFixed64:
+                    case FieldDescriptorProto.Type.TypeInt64:
+                    case FieldDescriptorProto.Type.TypeSfixed64:
+                    case FieldDescriptorProto.Type.TypeSint64:
+                        return nameof(DiscriminatedUnion64Object.Int64);
+                    case FieldDescriptorProto.Type.TypeUint64:
+                        return nameof(DiscriminatedUnion64Object.UInt64);
+                    default:
+                        return nameof(DiscriminatedUnion64Object.Object);
+                }
+            }
+            internal static OneOfStub[] Build(GeneratorContext context, DescriptorProto message)
+            {
+                if (message.OneofDecls.Count == 0) return null;
+                var stubs = new OneOfStub[message.OneofDecls.Count];
+                int index = 0;
+                foreach(var decl in message.OneofDecls)
+                {
+                    stubs[index++] = new OneOfStub(context, decl);
+                }
+                foreach(var field in message.Fields)
+                {
+                    if(field.ShouldSerializeOneofIndex())
+                    {
+                        stubs[field.OneofIndex].AccountFor(field.type);
+                    }
+                }
+                return stubs;
+            }
+            private bool isFirst = true;
+            internal bool IsFirst()
+            {
+                if(isFirst)
+                {
+                    isFirst = false;
+                    return true;
+                }
+                return false;
+            }
+
+            internal string GetUnionType()
+            {
+                if (Count64 != 0)
+                {
+                    return CountRef == 0 ? nameof(DiscriminatedUnion64) : nameof(DiscriminatedUnion64Object);
+                }
+                if (Count32 != 0)
+                {
+                    return CountRef == 0 ? nameof(DiscriminatedUnion32) : nameof(DiscriminatedUnion32Object);
+                }
+                return nameof(DiscriminatedUnionObject);
+            }
         }
         private static bool UseArray(FieldDescriptorProto field)
         {
@@ -469,20 +629,32 @@ namespace ProtoBuf
             }
         }
 
-        private static void WriteOptions<T>(TextWriter target, int indent, T obj) where T : class, ISchemaOptions
+        private static void WriteOptions<T>(GeneratorContext context, T obj) where T : class, ISchemaOptions
         {
             if (obj == null) return;
             if(obj.Deprecated)
             {
-                target.WriteLine(indent, $"[global::System.Obsolete]");
+                context.WriteLine($"[global::System.Obsolete]");
             }
         }
-        private static void Write(TextWriter target, int indent, FieldDescriptorProto field, GeneratorContext context)
+        const string FieldPrefix = "__pbn__";
+        private static void Write(GeneratorContext context, FieldDescriptorProto field, OneOfStub[] oneOfs)
         {
             var name = context.Normalizer.GetName(field);
-            target.Write(indent, $@"[global::ProtoBuf.ProtoMember({field.Number}, Name = @""{field.Name}""");
+            var tw = context.Write($@"[global::ProtoBuf.ProtoMember({field.Number}, Name = @""{field.Name}""");
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
+
+            OneOfStub oneOf = field.ShouldSerializeOneofIndex() ? oneOfs?[field.OneofIndex] : null;
+            if(oneOf != null && oneOf.CountTotal == 1)
+            {
+                oneOf = null; // not really a one-of, then!
+            }
+            bool explicitValues = isOptional && oneOf == null && context.Syntax == FileDescriptorProto.SyntaxProto2
+                && field.type != FieldDescriptorProto.Type.TypeMessage
+                && field.type != FieldDescriptorProto.Type.TypeGroup;
+
+            
             string defaultValue = null;
             if (isOptional)
             {
@@ -505,39 +677,104 @@ namespace ProtoBuf
             var typeName = context.GetTypeName(field, out var dataFormat);
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
-                target.Write($", DataFormat = DataFormat.{dataFormat}");
+                tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
             }
             if (field.Options?.Packed ?? false)
             {
-                target.Write($", IsPacked = true");
+                tw.Write($", IsPacked = true");
             }
             if (field.label == FieldDescriptorProto.Label.LabelRequired)
             {
-                target.Write($", IsRequired = true");
+                tw.Write($", IsRequired = true");
             }
-            target.WriteLine(")]");
+            tw.WriteLine(")]");
             if (!isRepeated && !string.IsNullOrWhiteSpace(defaultValue))
             {
-                target.WriteLine(indent, $"[global::System.ComponentModel.DefaultValue({defaultValue})]");
+                context.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue})]");
             }
-            WriteOptions(target, indent, field.Options);
+            WriteOptions(context, field.Options);
             if (isRepeated)
             {
                 if (UseArray(field))
                 {
-                    target.WriteLine(indent, $"public {typeName}[] {Escape(name)} {{ get; set; }}");
+                    context.WriteLine($"public {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
                 else
                 {
-                    target.WriteLine(indent, $"public global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
+                    context.WriteLine($"public global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
+            }
+            else if(oneOf != null)
+            {
+                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"default({typeName})" : defaultValue;
+                var fieldName = FieldPrefix + oneOf.OneOf.Name;
+                var storage = oneOf.GetStorage(field.type);
+                context.WriteLine($"public {typeName} {Escape(name)}").WriteLine("{").Indent();
+
+                switch(field.type)
+                {
+                    case FieldDescriptorProto.Type.TypeMessage:
+                    case FieldDescriptorProto.Type.TypeGroup:
+                    case FieldDescriptorProto.Type.TypeEnum:
+                    case FieldDescriptorProto.Type.TypeBytes:
+                    case FieldDescriptorProto.Type.TypeString:
+                        context.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? (({typeName}) {fieldName}.{storage}) : {defValue}; }}");
+                        break;
+                    default:
+                        context.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? {fieldName}.{storage} : {defValue}; }}");
+                        break;
+                }
+                var unionType = oneOf.GetUnionType();
+                context.WriteLine($"set {{ {fieldName} = new global::ProtoBuf.{unionType}({field.Number}, value); }}")
+                    .Outdent().WriteLine("}")
+                    .WriteLine($"public bool ShouldSerialize{name}() => {fieldName}.Is({field.Number});")
+                    .WriteLine($"public void Reset{name}() => global::ProtoBuf.{unionType}.Reset(ref {fieldName}, {field.Number});");
+
+                if (oneOf.IsFirst())
+                {
+                    context.WriteLine().WriteLine($"private global::ProtoBuf.{unionType} {fieldName};");
+                }
+            }
+            else if(explicitValues)
+            {
+                string fieldName = FieldPrefix + name, fieldType;
+                bool isRef = false;
+                switch(field.type)
+                {
+                    case FieldDescriptorProto.Type.TypeString:
+                    case FieldDescriptorProto.Type.TypeBytes:
+                        fieldType = typeName;
+                        isRef = true;
+                        break;
+                    default:
+                        fieldType = typeName + "?";
+                        break;
+                }
+                context.WriteLine($"public {typeName} {Escape(name)}").WriteLine("{").Indent();
+                tw = context.Write($"get {{ return {fieldName}");
+                if (!string.IsNullOrWhiteSpace(defaultValue))
+                {
+                    tw.Write(" ?? ");
+                    tw.Write(defaultValue);
+                }
+                else if (!isRef)
+                {
+                    tw.Write(".GetValueOrDefault()");
+                }
+                tw.WriteLine("; }");
+                context.WriteLine($"set {{ {fieldName} = value; }}")
+                    .Outdent().WriteLine("}")
+                    .WriteLine($"public bool ShouldSerialize{name}() => {fieldName} != null;")
+                    .WriteLine($"public void Reset{name}() => {fieldName} = null;")
+                    .WriteLine($"private {fieldType} {fieldName};");
             }
             else
             {
-                target.Write(indent, $"public {typeName} {Escape(name)} {{ get; set; }}");
-                if (!string.IsNullOrWhiteSpace(defaultValue)) target.Write($" = {defaultValue};");
-                target.WriteLine();
+                tw = context.Write($"public {typeName} {Escape(name)} {{ get; set; }}");
+                if (!string.IsNullOrWhiteSpace(defaultValue)) tw.Write($" = {defaultValue};");
+                tw.WriteLine();
             }
+            context.WriteLine();
         }
 
 
