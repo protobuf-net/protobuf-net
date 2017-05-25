@@ -326,14 +326,7 @@ namespace ProtoBuf
                         }
                         return Normalizer.GetName(msgType);
                     default:
-                        if (field.type == 0)
-                        {
-                            throw new ParserException(field.TypeToken, $"unknown type: {field.TypeName}", true);
-                        }
-                        else
-                        {
-                            throw new ParserException(field.TypeToken, $"unknown type: {field.type} ({field.TypeName})", true);
-                        }
+                        return field.TypeName;
                 }
             }
             public GeneratorContext Indent()
