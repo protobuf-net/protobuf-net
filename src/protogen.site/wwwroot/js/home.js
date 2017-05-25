@@ -1,4 +1,4 @@
-﻿require.config({ paths: { 'vs': 'lib/monaco-editor/min/vs' } });
+﻿require.config({ paths: { vs: 'lib/monaco-editor/min/vs' } });
 require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
 {
     monaco.languages.register({ id: 'proto3lang' });
