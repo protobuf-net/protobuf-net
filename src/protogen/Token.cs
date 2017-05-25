@@ -34,8 +34,7 @@ namespace ProtoBuf
         }
         public override string ToString() => $"({LineNumber},{ColumnNumber}) '{Value}'";
 
-        internal Error Error(string error = null, bool isError = true) =>
-            new Error(this, string.IsNullOrWhiteSpace(error) ? $"syntax error: '{Value}'" : error, isError);
+        
         internal Exception Throw(string error = null, bool isError = true) =>
             throw new ParserException(this, string.IsNullOrWhiteSpace(error) ? $"syntax error: '{Value}'" : error, isError);
 
@@ -64,7 +63,7 @@ namespace ProtoBuf
             if(ctx.Syntax != FileDescriptorProto.SyntaxProto2)
             {
                 var msg = "'" + Value + "' requires " + FileDescriptorProto.SyntaxProto2 + " syntax";
-                ctx.Errors.Add(new Error(this, msg, true));
+                ctx.Errors.Error(this, msg);
             }
         }
 

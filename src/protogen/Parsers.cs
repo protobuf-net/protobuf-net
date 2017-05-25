@@ -135,7 +135,14 @@ namespace Google.Protobuf.Reflection
                 case TokenType.StringLiteral:
                     while (true)
                     {
-                        ReservedNames.Add(tokens.Consume(TokenType.StringLiteral));
+                        var name = tokens.Consume(TokenType.StringLiteral);
+                        var conflict = Fields.FirstOrDefault(x => x.Name == name);
+                        if (conflict != null)
+                        {
+                            ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by feild {conflict.Number}");
+                        }
+                        ReservedNames.Add(name);
+                        
                         if (tokens.ConsumeIf(TokenType.Symbol, ","))
                         {
                         }
@@ -158,7 +165,13 @@ namespace Google.Protobuf.Reflection
                             tokens.Consume();
                             to = tokens.ConsumeInt32();
                         }
+                        var conflict = Fields.FirstOrDefault(x => x.Number >= from && x.Number <= to);
+                        if(conflict != null)
+                        {
+                            ctx.Errors.Error(tokens.Previous, $"field {conflict.Number} is already in use by '{conflict.Name}'");
+                        }
                         ReservedRanges.Add(new ReservedRange { Start = from, End = to + 1 });
+                        
                         token = tokens.Read();
                         if (token.Is(TokenType.Symbol, ","))
                         {
@@ -254,7 +267,7 @@ namespace Google.Protobuf.Reflection
                 ctx.AbortState = AbortState.Statement;
                 if (MessageTypes.Any() || EnumTypes.Any() || Extensions.Any())
                 {
-                    ctx.Errors.Add(new Error(tokens.Previous, "syntax must be set before types are defined", true));
+                    ctx.Errors.Error(tokens.Previous, "syntax must be set before types are defined");
                 }
                 tokens.Consume(TokenType.Symbol, "=");
                 Syntax = tokens.Consume(TokenType.StringLiteral);
@@ -264,7 +277,7 @@ namespace Google.Protobuf.Reflection
                     case SyntaxProto3:
                         break;
                     default:
-                        ctx.Errors.Add(new Error(tokens.Previous, $"unknown syntax '{Syntax}'", true));
+                        ctx.Errors.Error(tokens.Previous, $"unknown syntax '{Syntax}'");
                         break;
                 }
                 tokens.Consume(TokenType.Symbol, ";");
@@ -303,7 +316,7 @@ namespace Google.Protobuf.Reflection
                 FixupTypes(ctx);
                 if (string.IsNullOrWhiteSpace(Syntax))
                 {
-                    ctx.Errors.Add(startOfFile.Error("no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", false));
+                    ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'");
                 }
                 if (Syntax == "" || Syntax == SyntaxProto2)
                 {
@@ -454,6 +467,11 @@ namespace Google.Protobuf.Reflection
                     else if (TryResolveEnum(field.TypeName, parent, out var @enum, out fqn))
                     {
                         field.type = FieldDescriptorProto.Type.TypeEnum;
+                        if (!string.IsNullOrWhiteSpace(field.DefaultValue)
+                            & !@enum.Values.Any(x => x.Name == field.DefaultValue))
+                        {
+                            ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'");
+                        }
                     }
                     else
                     {
@@ -490,7 +508,7 @@ namespace Google.Protobuf.Reflection
                 {
                     if (!canPack)
                     {
-                        ctx.Errors.Add(new Error(field.TypeToken, $"field of type {field.type} cannot be packed", true));
+                        ctx.Errors.Error(field.TypeToken, $"field of type {field.type} cannot be packed");
                         field.Options.Packed = false;
                     }
                 }
@@ -567,7 +585,7 @@ namespace Google.Protobuf.Reflection
             void NotAllowedOneOf(ParserContext context)
             {
                 var token = ctx.Tokens.Previous;
-                context.Errors.Add(new Error(token, $"'{token.Value}' not allowed with 'oneof'", true));
+                context.Errors.Error(token, $"'{token.Value}' not allowed with 'oneof'");
             }
             var tokens = ctx.Tokens;
             ctx.AbortState = AbortState.Statement;
@@ -614,30 +632,30 @@ namespace Google.Protobuf.Reflection
 
             if (number < 1 || number > MaxField)
             {
-                ctx.Errors.Add(new Error(numberToken, $"field numbers must be in the range 1-{MaxField}", true));
+                ctx.Errors.Error(numberToken, $"field numbers must be in the range 1-{MaxField}");
             }
             else if (number >= FirstReservedField && number <= LastReservedField)
             {
-                ctx.Errors.Add(new Error(numberToken, $"field numbers in the range {FirstReservedField}-{LastReservedField} are reserved; this may cause problems on many implementations", false));
+                ctx.Errors.Warn(numberToken, $"field numbers in the range {FirstReservedField}-{LastReservedField} are reserved; this may cause problems on many implementations");
             }
 
             var conflict = parent.Fields.FirstOrDefault(x => x.Number == number);
             if (conflict != null)
             {
-                ctx.Errors.Add(new Error(numberToken, $"field {number} is already in use by '{conflict.Name}'", true));
+                ctx.Errors.Error(numberToken, $"field {number} is already in use by '{conflict.Name}'");
             }
             conflict = parent.Fields.FirstOrDefault(x => x.Name == name);
             if (conflict != null)
             {
-                ctx.Errors.Add(new Error(nameToken, $"field '{name}' is already in use by field {conflict.Number}", true));
+                ctx.Errors.Error(nameToken, $"field '{name}' is already in use by field {conflict.Number}");
             }
             if (parent.ReservedNames.Contains(name))
             {
-                ctx.Errors.Add(new Error(nameToken, $"field '{name}' is reserved", true));
+                ctx.Errors.Error(nameToken, $"field '{name}' is reserved");
             }
             if (parent.ReservedRanges.Any(x => x.Start <= number && x.End > number))
             {
-                ctx.Errors.Add(new Error(numberToken, $"field {number} is reserved", true));
+                ctx.Errors.Error(numberToken, $"field {number} is reserved");
             }
 
 
@@ -652,7 +670,7 @@ namespace Google.Protobuf.Reflection
                 var firstChar = typeName[0].ToString();
                 if (firstChar.ToLowerInvariant() == firstChar)
                 {
-                    ctx.Errors.Add(new Error(nameToken, "group names must start with an upper-case letter", true));
+                    ctx.Errors.Error(nameToken, "group names must start with an upper-case letter");
                 }
                 name = typeName.ToLowerInvariant();
                 if (ctx.TryReadObject<DescriptorProto>(out var grpType))
@@ -956,6 +974,15 @@ namespace Google.Protobuf.Reflection
 }
 namespace ProtoBuf
 {
+    internal static class ErrorExtensions
+    {
+        public static void Warn(this List<Error> errors, Token token, string message)
+            => errors.Add(new Error(token, message, false));
+        public static void Error(this List<Error> errors, Token token, string message)
+            => errors.Add(new Error(token, message, true));
+        public static void Error(this List<Error> errors, ParserException ex)
+            => errors.Add(new Error(ex));
+    }
     public class Error
     {
         internal string ToString(bool includeType) => Text.Length == 0
@@ -1024,7 +1051,7 @@ namespace ProtoBuf
             }
             catch (ParserException ex)
             {
-                Errors.Add(new Error(ex));
+                Errors.Error(ex);
             }
             finally
             {
@@ -1032,7 +1059,7 @@ namespace ProtoBuf
                 if (Tokens.Peek(out var stateAfter) && stateBefore == stateAfter)
                 {
                     // we didn't move! avoid looping forever failing to do the same thing
-                    Errors.Add(stateAfter.Error());
+                    Errors.Error(stateAfter, "unknown error");
                     state = stateAfter.Is(TokenType.Symbol, "}")
                         ? AbortState.Object : AbortState.Statement;
                 }
@@ -1117,7 +1144,7 @@ namespace ProtoBuf
                         case "false":
                             break;
                         default:
-                            Errors.Add(new Error(token, "expected 'true' or 'false'", true));
+                            Errors.Error(token, "expected 'true' or 'false'");
                             break;
                     }
                     break;
@@ -1135,7 +1162,7 @@ namespace ProtoBuf
                             }
                             else
                             {
-                                Errors.Add(new Error(token, "invalid floating-point number", true));
+                                Errors.Error(token, "invalid floating-point number");
                             }
                             break;
                     }
@@ -1154,7 +1181,7 @@ namespace ProtoBuf
                             }
                             else
                             {
-                                Errors.Add(new Error(token, "invalid floating-point number", true));
+                                Errors.Error(token, "invalid floating-point number");
                             }
                             break;
                     }
@@ -1169,7 +1196,7 @@ namespace ProtoBuf
                         }
                         else
                         {
-                            Errors.Add(new Error(token, "invalid integer", true));
+                            Errors.Error(token, "invalid integer");
                         }
                     }
                     break;
@@ -1181,7 +1208,7 @@ namespace ProtoBuf
                         }
                         else
                         {
-                            Errors.Add(new Error(token, "invalid unsigned integer", true));
+                            Errors.Error(token, "invalid unsigned integer");
                         }
                     }
                     break;
@@ -1195,7 +1222,7 @@ namespace ProtoBuf
                         }
                         else
                         {
-                            Errors.Add(new Error(token, "invalid integer", true));
+                            Errors.Error(token, "invalid integer");
                         }
                     }
                     break;
@@ -1207,7 +1234,7 @@ namespace ProtoBuf
                         }
                         else
                         {
-                            Errors.Add(new Error(token, "invalid unsigned integer", true));
+                            Errors.Error(token, "invalid unsigned integer");
                         }
                     }
                     break;
@@ -1237,7 +1264,7 @@ namespace ProtoBuf
             }
             catch (ParserException ex)
             {
-                Errors.Add(new Error(ex));
+                Errors.Error(ex);
                 tokens.SkipToEndOptions();
             }
             return obj;
@@ -1252,7 +1279,7 @@ namespace ProtoBuf
             }
             catch (ParserException ex)
             {
-                Errors.Add(new Error(ex));
+                Errors.Error(ex);
                 tokens.SkipToEndStatement();
             }
             return obj;
@@ -1283,7 +1310,7 @@ namespace ProtoBuf
             }
             catch (ParserException ex)
             {
-                Errors.Add(new Error(ex));
+                Errors.Error(ex);
                 tokens.SkipToEndObject();
             }
             obj = null;
