@@ -5,6 +5,7 @@ using System.Linq;
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace Google.Protobuf.Reflection
 {
@@ -95,14 +96,14 @@ namespace Google.Protobuf.Reflection
             ctx.AbortState = AbortState.Statement;
             var tokens = ctx.Tokens;
             tokens.Previous.RequireProto2(ctx);
-            const int MAX = 536870911;
+
             while (true)
             {
-                int from = tokens.ConsumeInt32(MAX), to = from;
+                int from = tokens.ConsumeInt32(FieldDescriptorProto.MaxField), to = from;
                 if (tokens.Read().Is(TokenType.AlphaNumeric, "to"))
                 {
                     tokens.Consume();
-                    to = tokens.ConsumeInt32(MAX);
+                    to = tokens.ConsumeInt32(FieldDescriptorProto.MaxField);
                 }
                 ExtensionRanges.Add(new ExtensionRange { Start = from, End = to + 1 });
 
@@ -472,6 +473,23 @@ namespace Google.Protobuf.Reflection
                     }
                     field.Extendee = fqn;
                 }
+
+                bool canPack = FieldDescriptorProto.CanPack(field.type);
+                if (ctx.Syntax != FileDescriptorProto.SyntaxProto2 && canPack)
+                {
+                    // packed by default *if not explicitly specified*
+                    var opt = field.Options ?? (field.Options = new FieldOptions());
+                    if (!opt.ShouldSerializePacked())
+                    {
+                        opt.Packed = true;
+                    }
+                }
+
+                if ((field.Options?.Packed ?? false) && !canPack)
+                {
+                    ctx.Errors.Add(new Error(field.TypeToken, $"field of type {field.type} cannot be packed", true));
+                    field.Options.Packed = false;
+                }
             }
         }
 
@@ -533,6 +551,10 @@ namespace Google.Protobuf.Reflection
     }
     partial class FieldDescriptorProto
     {
+        internal const int MaxField = 536870911;
+        internal const int FirstReservedField = 19000;
+        internal const int LastReservedField = 19999;
+
         internal DescriptorProto Parent { get; set; }
         internal Token TypeToken { get; set; }
 
@@ -585,8 +607,18 @@ namespace Google.Protobuf.Reflection
             tokens.Consume(TokenType.Symbol, "=");
             var number = tokens.ConsumeInt32();
             var numberToken = tokens.Previous;
+
+            if (number < 1 || number > MaxField)
+            {
+                ctx.Errors.Add(new Error(numberToken, $"field numbers must be in the range 1-{MaxField}", true));
+            }
+            else if (number >= FirstReservedField && number <= LastReservedField)
+            {
+                ctx.Errors.Add(new Error(numberToken, $"field numbers in the range {FirstReservedField}-{LastReservedField} are reserved; this may cause problems on many implementations", false));
+            }
+
             var conflict = parent.Fields.FirstOrDefault(x => x.Number == number);
-            if(conflict != null)
+            if (conflict != null)
             {
                 ctx.Errors.Add(new Error(numberToken, $"field {number} is already in use by '{conflict.Name}'", true));
             }
@@ -595,11 +627,11 @@ namespace Google.Protobuf.Reflection
             {
                 ctx.Errors.Add(new Error(nameToken, $"field '{name}' is already in use by field {conflict.Number}", true));
             }
-            if(parent.ReservedNames.Contains(name))
+            if (parent.ReservedNames.Contains(name))
             {
                 ctx.Errors.Add(new Error(nameToken, $"field '{name}' is reserved", true));
             }
-            if(parent.ReservedRanges.Any(x => x.Start <= number && x.End > number))
+            if (parent.ReservedRanges.Any(x => x.Start <= number && x.End > number))
             {
                 ctx.Errors.Add(new Error(numberToken, $"field {number} is reserved", true));
             }
@@ -643,23 +675,9 @@ namespace Google.Protobuf.Reflection
 
             if (!isGroup)
             {
-                if (ctx.Syntax != FileDescriptorProto.SyntaxProto2)
-                {
-                    if (CanPack(type)) // packed by default
-                    {
-                        var opt = field.Options ?? (field.Options = new FieldOptions());
-                        opt.Packed = true;
-                    }
-                }
                 if (tokens.ConsumeIf(TokenType.Symbol, "["))
                 {
                     field.Options = ctx.ParseOptionBlock(field.Options, field);
-
-                    if ((field.Options?.Packed ?? false) && !CanPack(type))
-                    {
-                        ctx.Errors.Add(new Error(typeToken, $"field of type {field.type} cannot be packed", true));
-                        field.Options.Packed = false;
-                    }
                 }
 
                 tokens.Consume(TokenType.Symbol, ";");
@@ -1045,12 +1063,29 @@ namespace ProtoBuf
             string key = tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, "=");
 
-            if (key == "default" && typeof(T) == typeof(FieldOptions)
-                && parent is FieldDescriptorProto)
+            var field = parent as FieldDescriptorProto;
+            bool isField = typeof(T) == typeof(FieldOptions) && field != null;
+            if (key == "default" && isField)
             {
-                // special-case this; for compatibility with protoc,
-                // we need obj to stay null if *just* default set
-                ((FieldDescriptorProto)parent).DefaultValue = tokens.ConsumeString();
+                string defaultValue = tokens.ConsumeString();
+
+                ParseDefault(tokens.Previous, field.type, ref defaultValue);
+                if (defaultValue != null)
+                {
+                    field.DefaultValue = defaultValue;
+                }
+            }
+            else if (key == "json_name" && isField)
+            {
+                string jsonName = tokens.ConsumeString();
+                if (string.Equals(jsonName, "none", StringComparison.OrdinalIgnoreCase) && tokens.Previous.Is(TokenType.StringLiteral))
+                {
+                    field.JsonName = jsonName;
+                }
+                else
+                {
+                    field.ResetJsonName();
+                }
             }
             else
             {
@@ -1066,6 +1101,116 @@ namespace ProtoBuf
                 }
             }
         }
+
+        private void ParseDefault(Token token, FieldDescriptorProto.Type type, ref string defaultValue)
+        {
+            switch (type)
+            {
+                case FieldDescriptorProto.Type.TypeBool:
+                    switch (defaultValue)
+                    {
+                        case "true":
+                        case "false":
+                            break;
+                        default:
+                            Errors.Add(new Error(token, "expected 'true' or 'false'", true));
+                            break;
+                    }
+                    break;
+                case FieldDescriptorProto.Type.TypeDouble:
+                    switch (defaultValue)
+                    {
+                        case "inf":
+                        case "-inf":
+                        case "nan":
+                            break;
+                        default:
+                            if (double.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var val))
+                            {
+                                defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                            }
+                            else
+                            {
+                                Errors.Add(new Error(token, "invalid floating-point number", true));
+                            }
+                            break;
+                    }
+                    break;
+                case FieldDescriptorProto.Type.TypeFloat:
+                    switch (defaultValue)
+                    {
+                        case "inf":
+                        case "-inf":
+                        case "nan":
+                            break;
+                        default:
+                            if (float.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var val))
+                            {
+                                defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                            }
+                            else
+                            {
+                                Errors.Add(new Error(token, "invalid floating-point number", true));
+                            }
+                            break;
+                    }
+                    break;
+                case FieldDescriptorProto.Type.TypeFixed32:
+                case FieldDescriptorProto.Type.TypeInt32:
+                case FieldDescriptorProto.Type.TypeSint32:
+                    {
+                        if (int.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var val))
+                        {
+                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            Errors.Add(new Error(token, "invalid integer", true));
+                        }
+                    }
+                    break;
+                case FieldDescriptorProto.Type.TypeUint32:
+                    {
+                        if (uint.TryParse(defaultValue, NumberStyles.Number & ~NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var val))
+                        {
+                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            Errors.Add(new Error(token, "invalid unsigned integer", true));
+                        }
+                    }
+                    break;
+                case FieldDescriptorProto.Type.TypeFixed64:
+                case FieldDescriptorProto.Type.TypeInt64:
+                case FieldDescriptorProto.Type.TypeSint64:
+                    {
+                        if (long.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var val))
+                        {
+                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            Errors.Add(new Error(token, "invalid integer", true));
+                        }
+                    }
+                    break;
+                case FieldDescriptorProto.Type.TypeUint64:
+                    {
+                        if (ulong.TryParse(defaultValue, NumberStyles.Number & ~NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var val))
+                        {
+                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            Errors.Add(new Error(token, "invalid unsigned integer", true));
+                        }
+                    }
+                    break;
+
+            }
+        }
+
         public T ParseOptionBlock<T>(T obj, object parent = null) where T : class, ISchemaOptions, new()
         {
             var tokens = Tokens;

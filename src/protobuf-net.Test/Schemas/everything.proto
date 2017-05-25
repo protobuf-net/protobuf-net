@@ -17,8 +17,19 @@ enum RootEnum {
 	B = 1 [deprecated = true];
 }
 
+message MagicValues {
+    optional float a = 1 [default=inf];
+	optional float b = 2 [default=-inf];
+	optional float c = 3 [default=nan];
+	optional float d = 4 [default=0];
+	optional float e = 5 [default=0.];
+	optional float f = 6 [default=0.0];
+
+	optional bool g = 7 [default=true];
+}
+
 message SampleMessage {
-  optional string foo_name = 1 [default="abc"];
+  optional string foo_name = 1 [default="abc", json_name="none"];
   oneof test_oneof {
      //option deprecated = true;
      string name = 4 [default="abc"];

@@ -18,3 +18,4 @@ Tests.Dnx/sandbox.txt
 Tests.Dnx/protoTest.txt
 Tests.Dnx/TraceCompile.txt
 *.NoCommit.*
+del.me
