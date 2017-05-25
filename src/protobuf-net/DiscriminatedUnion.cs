@@ -6,7 +6,7 @@ namespace ProtoBuf
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
     public struct DiscriminatedUnionObject
     {
-        private int _discriminator;
+        private readonly int _discriminator;
 
         /// <summary>The value typed as Object</summary>
         public readonly object Object;
@@ -34,7 +34,7 @@ namespace ProtoBuf
     [StructLayout(LayoutKind.Explicit)]
     public struct DiscriminatedUnion64
     {
-        [FieldOffset(0)] private int _discriminator;
+        [FieldOffset(0)] private readonly int _discriminator;  // note that we can't pack further because Object needs x8 alignment/padding on x64
 
         /// <summary>The value typed as Int64</summary>
         [FieldOffset(8)] public readonly long Int64;
@@ -45,11 +45,11 @@ namespace ProtoBuf
         /// <summary>The value typed as UInt32</summary>
         [FieldOffset(8)] public readonly uint UInt32;
         /// <summary>The value typed as Boolean</summary>
-        [FieldOffset(8)] public bool Boolean;
+        [FieldOffset(8)] public readonly bool Boolean;
         /// <summary>The value typed as Single</summary>
-        [FieldOffset(8)] public float Single;
+        [FieldOffset(8)] public readonly float Single;
         /// <summary>The value typed as Double</summary>
-        [FieldOffset(8)] public double Double;
+        [FieldOffset(8)] public readonly double Double;
 
         private DiscriminatedUnion64(int discriminator) : this()
         {
@@ -86,7 +86,7 @@ namespace ProtoBuf
     [StructLayout(LayoutKind.Explicit)]
     public struct DiscriminatedUnion64Object
     {
-        [FieldOffset(0)] private int _discriminator;
+        [FieldOffset(0)] private readonly int _discriminator;  // note that we can't pack further because Object needs x8 alignment/padding on x64
 
         /// <summary>The value typed as Int64</summary>
         [FieldOffset(8)] public readonly long Int64;
@@ -97,13 +97,13 @@ namespace ProtoBuf
         /// <summary>The value typed as UInt32</summary>
         [FieldOffset(8)] public readonly uint UInt32;
         /// <summary>The value typed as Boolean</summary>
-        [FieldOffset(8)] public bool Boolean;
+        [FieldOffset(8)] public readonly bool Boolean;
         /// <summary>The value typed as Single</summary>
-        [FieldOffset(8)] public float Single;
+        [FieldOffset(8)] public readonly float Single;
         /// <summary>The value typed as Double</summary>
-        [FieldOffset(8)] public double Double;
+        [FieldOffset(8)] public readonly double Double;
         /// <summary>The value typed as Double</summary>
-        [FieldOffset(16)] public object Object;
+        [FieldOffset(16)] public readonly object Object;
 
         private DiscriminatedUnion64Object(int discriminator) : this()
         {
@@ -142,16 +142,16 @@ namespace ProtoBuf
     [StructLayout(LayoutKind.Explicit)]
     public struct DiscriminatedUnion32
     {
-        [FieldOffset(0)] private int _discriminator;
+        [FieldOffset(0)] private readonly int _discriminator;
 
         /// <summary>The value typed as Int32</summary>
         [FieldOffset(4)] public readonly int Int32;
         /// <summary>The value typed as UInt32</summary>
         [FieldOffset(4)] public readonly uint UInt32;
         /// <summary>The value typed as Boolean</summary>
-        [FieldOffset(4)] public bool Boolean;
+        [FieldOffset(4)] public readonly bool Boolean;
         /// <summary>The value typed as Single</summary>
-        [FieldOffset(4)] public float Single;
+        [FieldOffset(4)] public readonly float Single;
 
         private DiscriminatedUnion32(int discriminator) : this()
         {
@@ -182,18 +182,18 @@ namespace ProtoBuf
     [StructLayout(LayoutKind.Explicit)]
     public struct DiscriminatedUnion32Object
     {
-        [FieldOffset(0)] private int _discriminator;
+        [FieldOffset(0)] private readonly int _discriminator;
 
         /// <summary>The value typed as Int32</summary>
         [FieldOffset(4)] public readonly int Int32;
         /// <summary>The value typed as UInt32</summary>
         [FieldOffset(4)] public readonly uint UInt32;
         /// <summary>The value typed as Boolean</summary>
-        [FieldOffset(4)] public bool Boolean;
+        [FieldOffset(4)] public readonly bool Boolean;
         /// <summary>The value typed as Single</summary>
-        [FieldOffset(4)] public float Single;
+        [FieldOffset(4)] public readonly float Single;
         /// <summary>The value typed as Double</summary>
-        [FieldOffset(8)] public object Object;
+        [FieldOffset(8)] public readonly object Object;
 
         private DiscriminatedUnion32Object(int discriminator) : this()
         {
