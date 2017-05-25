@@ -677,7 +677,7 @@ namespace ProtoBuf
             var typeName = context.GetTypeName(field, out var dataFormat);
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
-                tw.Write($", DataFormat = DataFormat.{dataFormat}");
+                tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
             }
             if (field.Options?.Packed ?? false)
             {
@@ -716,6 +716,8 @@ namespace ProtoBuf
                     case FieldDescriptorProto.Type.TypeMessage:
                     case FieldDescriptorProto.Type.TypeGroup:
                     case FieldDescriptorProto.Type.TypeEnum:
+                    case FieldDescriptorProto.Type.TypeBytes:
+                    case FieldDescriptorProto.Type.TypeString:
                         context.WriteLine($"get {{ return {fieldName}.Is({field.Number}) ? (({typeName}) {fieldName}.{storage}) : {defValue}; }}");
                         break;
                     default:

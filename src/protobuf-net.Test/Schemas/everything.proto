@@ -100,7 +100,7 @@ message Outer {                  // Level 0
 }
 
 message SomeOtherMessage {
-  optional SearchResponse.Result result = 1;
+  optional string result = 1;
 }
 
 ; // random semicolon
