@@ -16,7 +16,6 @@
     <Content Include="wwwroot\js\proto3lang.js" />
     <Content Include="wwwroot\js\protogen\mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
     <Content Include="wwwroot\js\protogen\protogen, Version=2.3.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67.js" />
-    <Content Include="wwwroot\js\protogen\protogen.dll.jsillog" />
     <Content Include="wwwroot\js\protogen\protogen.dll.manifest.js" />
     <Content Include="wwwroot\js\protogen\System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
     <Content Include="wwwroot\js\protogen\System.Configuration, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />

@@ -2543,6 +2543,398 @@ JSIL.DeclareNamespace("ProtoBuf");
 
 })();
 
+/* class ProtoBuf.CodeFile */ 
+
+(function CodeFile$Members () {
+  var $, $thisType;
+  var $T00 = function () {
+    return ($T00 = JSIL.Memoize($asm00.System.String)) ();
+  };
+
+
+  function CodeFile__ctor (name, text) {
+    this.CodeFile$Name$value = name;
+    this.CodeFile$Text$value = text;
+  }; 
+
+  function CodeFile_get_Name () {
+    return this.CodeFile$Name$value;
+  }; 
+
+  function CodeFile_get_Text () {
+    return this.CodeFile$Text$value;
+  }; 
+
+  function CodeFile_toString () {
+    return this.CodeFile$Name$value;
+  }; 
+
+  JSIL.MakeType({
+      BaseType: $asm00.TypeRef("System.Object"), 
+      Name: "ProtoBuf.CodeFile", 
+      IsPublic: true, 
+      IsReferenceType: true, 
+      MaximumConstructorArguments: 2, 
+    }, function ($ib) {
+    $ = $ib;
+
+    $.Method({Static:false, Public:true }, ".ctor", 
+      new JSIL.MethodSignature(null, [$.String, $.String]), 
+      CodeFile__ctor
+    );
+
+    $.Method({Static:false, Public:true }, "get_Name", 
+      JSIL.MethodSignature.Return($.String), 
+      CodeFile_get_Name
+    )
+      .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
+
+    $.Method({Static:false, Public:true }, "get_Text", 
+      JSIL.MethodSignature.Return($.String), 
+      CodeFile_get_Text
+    )
+      .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
+
+    $.Method({Static:false, Public:true , Virtual:true }, "toString", 
+      JSIL.MethodSignature.Return($.String), 
+      CodeFile_toString
+    );
+
+    $.Field({Static:false, Public:false, ReadOnly:true }, "CodeFile$Name$value", $.String)
+      .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
+
+    $.Field({Static:false, Public:false, ReadOnly:true }, "CodeFile$Text$value", $.String)
+      .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
+
+    $.Property({Static:false, Public:true }, "Name", $.String);
+
+    $.Property({Static:false, Public:true }, "Text", $.String);
+
+
+    return function (newThisType) { $thisType = newThisType; }; 
+  });
+
+})();
+
+/* class ProtoBuf.LineReader */ 
+
+(function LineReader$Members () {
+  var $, $thisType;
+
+  function LineReader__ctor () {
+  }; 
+
+  function LineReader_Dispose () {
+  }; 
+
+  JSIL.MakeType({
+      BaseType: $asm00.TypeRef("System.Object"), 
+      Name: "ProtoBuf.LineReader", 
+      IsPublic: false, 
+      IsReferenceType: true, 
+      MaximumConstructorArguments: 0, 
+    }, function ($ib) {
+    $ = $ib;
+
+    $.Method({Static:false, Public:false}, ".ctor", 
+      JSIL.MethodSignature.Void, 
+      LineReader__ctor
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "Dispose", 
+      JSIL.MethodSignature.Void, 
+      LineReader_Dispose
+    );
+
+    $.ImplementInterfaces(
+      /* 0 */ $asm00.TypeRef("System.IDisposable")
+    );
+
+
+    return function (newThisType) { $thisType = newThisType; }; 
+  });
+
+})();
+
+/* class ProtoBuf.StringLineReader */ 
+
+(function StringLineReader$Members () {
+  var $, $thisType;
+  var $T00 = function () {
+    return ($T00 = JSIL.Memoize($asm00.System.String)) ();
+  };
+  var $T01 = function () {
+    return ($T01 = JSIL.Memoize($asm01.ProtoBuf.LineReader)) ();
+  };
+  var $T02 = function () {
+    return ($T02 = JSIL.Memoize(System.Array.Of($asm00.System.String))) ();
+  };
+  var $T03 = function () {
+    return ($T03 = JSIL.Memoize($asm00.System.StringSplitOptions)) ();
+  };
+  var $T04 = function () {
+    return ($T04 = JSIL.Memoize($asm00.System.Int32)) ();
+  };
+
+
+  function StringLineReader__ctor (text) {
+    $T01().prototype._ctor.call(this);
+    this.lines = (JSIL.SplitString(text, this.lines, -1, $T03().None));
+  }; 
+
+  function StringLineReader_ReadLine () {
+    if ((this.index | 0) >= (this.lines.length | 0)) {
+      return null;
+    }
+    var arg_29_0 = this.lines;
+    var num = (this.index | 0);
+    this.index = ((num + 1) | 0);
+    return arg_29_0[num];
+  }; 
+
+  JSIL.MakeType({
+      BaseType: $asm01.TypeRef("ProtoBuf.LineReader"), 
+      Name: "ProtoBuf.StringLineReader", 
+      IsPublic: false, 
+      IsReferenceType: true, 
+      MaximumConstructorArguments: 1, 
+    }, function ($ib) {
+    $ = $ib;
+
+    $.Method({Static:false, Public:true }, ".ctor", 
+      JSIL.MethodSignature.Action($.String), 
+      StringLineReader__ctor
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "ReadLine", 
+      JSIL.MethodSignature.Return($.String), 
+      StringLineReader_ReadLine
+    );
+
+    $.Field({Static:false, Public:false}, "lines", $jsilcore.TypeRef("System.Array", [$.String]));
+
+    $.Field({Static:true , Public:false, ReadOnly:true }, "splits", $jsilcore.TypeRef("System.Array", [$.String]));
+
+    $.Field({Static:false, Public:false}, "index", $.Int32);
+
+
+    function StringLineReader__cctor () {
+      $thisType.splits = JSIL.Array.New($T00(), ["\r\n", "\r", "\n"]);
+    }; 
+
+    $.Method({Static:true , Public:false}, ".cctor", 
+      JSIL.MethodSignature.Void, 
+      StringLineReader__cctor
+    );
+
+    $.ImplementInterfaces(
+    );
+
+
+    return function (newThisType) { $thisType = newThisType; }; 
+  });
+
+})();
+
+/* class ProtoBuf.CSharpCompiler */ 
+
+(function CSharpCompiler$Members () {
+  var $, $thisType;
+  var $T00 = function () {
+    return ($T00 = JSIL.Memoize($asm01.ProtoBuf.CodeFile)) ();
+  };
+  var $T01 = function () {
+    return ($T01 = JSIL.Memoize(System.Array.Of($asm01.ProtoBuf.CodeFile))) ();
+  };
+  var $T02 = function () {
+    return ($T02 = JSIL.Memoize($asm00.System.Exception)) ();
+  };
+  var $T03 = function () {
+    return ($T03 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorSet)) ();
+  };
+  var $T04 = function () {
+    return ($T04 = JSIL.Memoize($asm00.System.Int32)) ();
+  };
+  var $T05 = function () {
+    return ($T05 = JSIL.Memoize($asm01.ProtoBuf.StringLineReader)) ();
+  };
+  var $T06 = function () {
+    return ($T06 = JSIL.Memoize($asm00.System.Console)) ();
+  };
+  var $T07 = function () {
+    return ($T07 = JSIL.Memoize($asm00.System.String)) ();
+  };
+  var $T08 = function () {
+    return ($T08 = JSIL.Memoize($asm00.System.IDisposable)) ();
+  };
+  var $T09 = function () {
+    return ($T09 = JSIL.Memoize($asm00.System.Collections.Generic.List$b1.Of($asm01.ProtoBuf.CodeFile))) ();
+  };
+  var $T0A = function () {
+    return ($T0A = JSIL.Memoize($asm00.System.Collections.Generic.List$b1.Of($asm01.ProtoBuf.Error))) ();
+  };
+  var $T0B = function () {
+    return ($T0B = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto)) ();
+  };
+  var $T0C = function () {
+    return ($T0C = JSIL.Memoize($asm01.ProtoBuf.Error)) ();
+  };
+  var $T0D = function () {
+    return ($T0D = JSIL.Memoize($asm01.ProtoBuf.Token)) ();
+  };
+  var $T0E = function () {
+    return ($T0E = JSIL.Memoize(System.Array.Of($asm01.ProtoBuf.Error))) ();
+  };
+  var $T0F = function () {
+    return ($T0F = JSIL.Memoize($asm01.ProtoBuf.CompilerResult)) ();
+  };
+  var $S00 = function () {
+    return ($S00 = JSIL.Memoize(new JSIL.MethodSignature($asm01.ProtoBuf.CompilerResult, [System.Array.Of($asm01.ProtoBuf.CodeFile)]))) ();
+  };
+  var $S01 = function () {
+    return ($S01 = JSIL.Memoize(new JSIL.ConstructorSignature($asm00.System.Collections.Generic.List$b1.Of($asm01.ProtoBuf.CodeFile), null))) ();
+  };
+  var $S02 = function () {
+    return ($S02 = JSIL.Memoize(new JSIL.ConstructorSignature($asm00.System.Collections.Generic.List$b1.Of($asm01.ProtoBuf.Error), null))) ();
+  };
+  var $S03 = function () {
+    return ($S03 = JSIL.Memoize(new JSIL.ConstructorSignature($asm01.ProtoBuf.Error, [
+        $asm01.ProtoBuf.Token, $asm00.System.String, 
+        $asm00.System.Boolean
+      ]))) ();
+  };
+  var $IM00 = function () {
+    return ($IM00 = JSIL.Memoize($asm00.System.IDisposable.Dispose)) ();
+  };
+
+
+  function CSharpCompiler_Compile$00 (file) {
+    return $S00().CallStatic($thisType, "Compile", null, JSIL.Array.New($T00(), [file]));
+  }; 
+
+  function CSharpCompiler_Compile$01 (files, $exception) {
+    var $temp00;
+    var fileDescriptorSet = new ($T03())();
+
+    for (var i = 0; i < (files.length | 0); i = ((i + 1) | 0)) {
+      var codeFile = files[i];
+      var stringLineReader = new ($T05())(codeFile.CodeFile$Text$value);
+      try {
+        $T06().WriteLine($T07().Format("Parsing {0}...", codeFile.CodeFile$Name$value));
+        fileDescriptorSet.Add(codeFile.CodeFile$Name$value, stringLineReader);
+      } finally {
+        if (stringLineReader !== null) {
+          $IM00().Call(stringLineReader, null);
+        }
+      }
+    }
+    var list = $S01().Construct();
+    var list2 = $S02().Construct();
+
+    for (var a$0 = fileDescriptorSet.FileDescriptorSet$Files$value._items, i$0 = 0, l$0 = (fileDescriptorSet.FileDescriptorSet$Files$value._size | 0); i$0 < l$0; ($temp00 = i$0, 
+        i$0 = ((i$0 + 1) | 0), 
+        $temp00)) {
+      var current = a$0[i$0];
+      try {
+        var name = (JSIL.ConcatString(current.get_Name(), ".cs"));
+        list.Add(new ($T00())(name, current.GenerateCSharp(null, null)));
+      } catch ($exception) {
+        list2.Add($S03().Construct(new ($T0D())(), $exception.get_Message(), true));
+      }
+    }
+    var errors = fileDescriptorSet.GetErrors();
+    return new ($T0F())(errors, $T09().prototype.ToArray.call(list));
+  }; 
+
+  JSIL.MakeStaticClass("ProtoBuf.CSharpCompiler", true, [], function ($ib) {
+    $ = $ib;
+
+    $.Method({Static:true , Public:true }, "Compile", 
+      new JSIL.MethodSignature($asm01.TypeRef("ProtoBuf.CompilerResult"), [$asm01.TypeRef("ProtoBuf.CodeFile")]), 
+      CSharpCompiler_Compile$00
+    );
+
+    $.Method({Static:true , Public:true }, "Compile", 
+      new JSIL.MethodSignature($asm01.TypeRef("ProtoBuf.CompilerResult"), [$jsilcore.TypeRef("System.Array", [$asm01.TypeRef("ProtoBuf.CodeFile")])]), 
+      CSharpCompiler_Compile$01
+    )
+      .Parameter(0, "files", function (_) {
+          _.Attribute($asm00.TypeRef("System.ParamArrayAttribute"))
+        });
+
+
+    return function (newThisType) { $thisType = newThisType; }; 
+  });
+
+})();
+
+/* class ProtoBuf.CompilerResult */ 
+
+(function CompilerResult$Members () {
+  var $, $thisType;
+  var $T00 = function () {
+    return ($T00 = JSIL.Memoize(System.Array.Of($asm01.ProtoBuf.Error))) ();
+  };
+  var $T01 = function () {
+    return ($T01 = JSIL.Memoize(System.Array.Of($asm01.ProtoBuf.CodeFile))) ();
+  };
+
+
+  function CompilerResult__ctor (errors, files) {
+    this.CompilerResult$Errors$value = errors;
+    this.CompilerResult$Files$value = files;
+  }; 
+
+  function CompilerResult_get_Errors () {
+    return this.CompilerResult$Errors$value;
+  }; 
+
+  function CompilerResult_get_Files () {
+    return this.CompilerResult$Files$value;
+  }; 
+
+  JSIL.MakeType({
+      BaseType: $asm00.TypeRef("System.Object"), 
+      Name: "ProtoBuf.CompilerResult", 
+      IsPublic: true, 
+      IsReferenceType: true, 
+      MaximumConstructorArguments: 2, 
+    }, function ($ib) {
+    $ = $ib;
+
+    $.Method({Static:false, Public:false}, ".ctor", 
+      new JSIL.MethodSignature(null, [$jsilcore.TypeRef("System.Array", [$asm01.TypeRef("ProtoBuf.Error")]), $jsilcore.TypeRef("System.Array", [$asm01.TypeRef("ProtoBuf.CodeFile")])]), 
+      CompilerResult__ctor
+    );
+
+    $.Method({Static:false, Public:true }, "get_Errors", 
+      JSIL.MethodSignature.Return($jsilcore.TypeRef("System.Array", [$asm01.TypeRef("ProtoBuf.Error")])), 
+      CompilerResult_get_Errors
+    )
+      .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
+
+    $.Method({Static:false, Public:true }, "get_Files", 
+      JSIL.MethodSignature.Return($jsilcore.TypeRef("System.Array", [$asm01.TypeRef("ProtoBuf.CodeFile")])), 
+      CompilerResult_get_Files
+    )
+      .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
+
+    $.Field({Static:false, Public:false, ReadOnly:true }, "CompilerResult$Errors$value", $jsilcore.TypeRef("System.Array", [$asm01.TypeRef("ProtoBuf.Error")]))
+      .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
+
+    $.Field({Static:false, Public:false, ReadOnly:true }, "CompilerResult$Files$value", $jsilcore.TypeRef("System.Array", [$asm01.TypeRef("ProtoBuf.CodeFile")]))
+      .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
+
+    $.Property({Static:false, Public:true }, "Errors", $jsilcore.TypeRef("System.Array", [$asm01.TypeRef("ProtoBuf.Error")]));
+
+    $.Property({Static:false, Public:true }, "Files", $jsilcore.TypeRef("System.Array", [$asm01.TypeRef("ProtoBuf.CodeFile")]));
+
+
+    return function (newThisType) { $thisType = newThisType; }; 
+  });
+
+})();
+
 /* class ProtoBuf.Error */ 
 
 (function Error$Members () {
@@ -3906,7 +4298,7 @@ JSIL.MakeInterface(
     return ($T10 = JSIL.Memoize($asm01.ProtoBuf.TokenExtensions_$lRemoveCommentsAndWhitespace$gd__14)) ();
   };
   var $T11 = function () {
-    return ($T11 = JSIL.Memoize($asm00.System.IO.TextReader)) ();
+    return ($T11 = JSIL.Memoize($asm01.ProtoBuf.LineReader)) ();
   };
   var $T12 = function () {
     return ($T12 = JSIL.Memoize($asm01.ProtoBuf.TokenExtensions_$lTokenize$gd__16)) ();
@@ -4198,7 +4590,7 @@ JSIL.MakeInterface(
       .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.ExtensionAttribute"));
 
     $.Method({Static:true , Public:true }, "Tokenize", 
-      new JSIL.MethodSignature($asm00.TypeRef("System.Collections.Generic.IEnumerable`1", [$asm01.TypeRef("ProtoBuf.Token")]), [$asm00.TypeRef("System.IO.TextReader")]), 
+      new JSIL.MethodSignature($asm00.TypeRef("System.Collections.Generic.IEnumerable`1", [$asm01.TypeRef("ProtoBuf.Token")]), [$asm01.TypeRef("ProtoBuf.LineReader")]), 
       TokenExtensions_Tokenize
     )
       .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.ExtensionAttribute"));
@@ -4484,7 +4876,7 @@ JSIL.MakeInterface(
     return ($T07 = JSIL.Memoize($asm01.ProtoBuf.TokenExtensions)) ();
   };
   var $T08 = function () {
-    return ($T08 = JSIL.Memoize($asm00.System.IO.TextReader)) ();
+    return ($T08 = JSIL.Memoize($asm01.ProtoBuf.LineReader)) ();
   };
   var $T09 = function () {
     return ($T09 = JSIL.Memoize($asm00.System.NotSupportedException)) ();
@@ -4762,9 +5154,9 @@ JSIL.MakeInterface(
 
     $.Field({Static:false, Public:false}, "$llastLine$g5__10", $.String);
 
-    $.Field({Static:false, Public:false}, "reader", $asm00.TypeRef("System.IO.TextReader"));
+    $.Field({Static:false, Public:false}, "reader", $asm01.TypeRef("ProtoBuf.LineReader"));
 
-    $.Field({Static:false, Public:true }, "$l$g3__reader", $asm00.TypeRef("System.IO.TextReader"));
+    $.Field({Static:false, Public:true }, "$l$g3__reader", $asm01.TypeRef("ProtoBuf.LineReader"));
 
     $.Field({Static:false, Public:false}, "$l$g7__wrap1", $.String);
 
@@ -6409,7 +6801,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     return ($T02 = JSIL.Memoize($asm00.System.String)) ();
   };
   var $T03 = function () {
-    return ($T03 = JSIL.Memoize($asm00.System.IO.TextReader)) ();
+    return ($T03 = JSIL.Memoize($asm01.ProtoBuf.LineReader)) ();
   };
   var $T04 = function () {
     return ($T04 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto)) ();
@@ -6421,19 +6813,13 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     return ($T06 = JSIL.Memoize($asm01.ProtoBuf.Error)) ();
   };
   var $T07 = function () {
-    return ($T07 = JSIL.Memoize($asm00.System.IO.StreamReader)) ();
+    return ($T07 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorSet_$l$gc__DisplayClass9_0)) ();
   };
   var $T08 = function () {
-    return ($T08 = JSIL.Memoize($asm00.System.IO.File)) ();
+    return ($T08 = JSIL.Memoize($asm04.System.Linq.Enumerable)) ();
   };
   var $T09 = function () {
-    return ($T09 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorSet_$l$gc__DisplayClass9_0)) ();
-  };
-  var $T0A = function () {
-    return ($T0A = JSIL.Memoize($asm04.System.Linq.Enumerable)) ();
-  };
-  var $T0B = function () {
-    return ($T0B = JSIL.Memoize($asm00.System.Func$b2.Of($asm01.Google.Protobuf.Reflection.FileDescriptorProto, $asm00.System.Boolean))) ();
+    return ($T09 = JSIL.Memoize($asm00.System.Func$b2.Of($asm01.Google.Protobuf.Reflection.FileDescriptorProto, $asm00.System.Boolean))) ();
   };
   var $S00 = function () {
     return ($S00 = JSIL.Memoize(new JSIL.ConstructorSignature($asm00.System.Collections.Generic.List$b1.Of($asm01.Google.Protobuf.Reflection.FileDescriptorProto), null))) ();
@@ -6442,13 +6828,10 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     return ($S01 = JSIL.Memoize(new JSIL.ConstructorSignature($asm00.System.Collections.Generic.List$b1.Of($asm01.ProtoBuf.Error), null))) ();
   };
   var $S02 = function () {
-    return ($S02 = JSIL.Memoize(new JSIL.ConstructorSignature($asm00.System.IO.StreamReader, [$asm00.System.IO.Stream]))) ();
+    return ($S02 = JSIL.Memoize(new JSIL.MethodSignature("!!0", [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
   };
   var $S03 = function () {
-    return ($S03 = JSIL.Memoize(new JSIL.MethodSignature("!!0", [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
-  };
-  var $S04 = function () {
-    return ($S04 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.FileDescriptorProto]))) ();
+    return ($S03 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.FileDescriptorProto]))) ();
   };
   var $IM00 = function () {
     return ($IM00 = JSIL.Memoize($asm00.System.IDisposable.Dispose)) ();
@@ -6463,16 +6846,16 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
   function FileDescriptorSet_Add (name, source) {
     var fileDescriptorProto = new JSIL.BoxedVariable(null);
     if (!this.TryResolve(name, /* ref */ fileDescriptorProto)) {
-      var textReader = JSIL.Coalesce(source, this.Open(name));
+      var lineReader = JSIL.Coalesce(source, this.Open(name));
       try {
         var expr_1D = new ($T04())();
         expr_1D.set_Name(name);
         fileDescriptorProto.set(expr_1D);
         (this.FileDescriptorSet$Files$value).Add(fileDescriptorProto.get());
-        (fileDescriptorProto.get()).Parse(textReader, this.FileDescriptorSet$Errors$value);
+        (fileDescriptorProto.get()).Parse(lineReader, this.FileDescriptorSet$Errors$value);
       } finally {
-        if (textReader !== null) {
-          $IM00().Call(textReader, null);
+        if (lineReader !== null) {
+          $IM00().Call(lineReader, null);
         }
       }
     }
@@ -6491,13 +6874,13 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
   }; 
 
   function FileDescriptorSet_Open (name) {
-    return $S02().Construct($T08().OpenRead(name));
+    return null;
   }; 
 
   function FileDescriptorSet_TryResolve (name, /* ref */ descriptor) {
-    var $closure0 = new ($T09())();
+    var $closure0 = new ($T07())();
     $closure0.$name = name;
-    descriptor.set($S03().CallStatic($T0A(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.FileDescriptorProto], this.FileDescriptorSet$Files$value, $T0B().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorSet_$l$gc__DisplayClass9_0, "$lTryResolve$gb__0", $S04(), false, false))));
+    descriptor.set($S02().CallStatic($T08(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.FileDescriptorProto], this.FileDescriptorSet$Files$value, $T09().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorSet_$l$gc__DisplayClass9_0, "$lTryResolve$gb__0", $S03(), false, false))));
     return (descriptor.get() !== null);
   }; 
 
@@ -6515,8 +6898,8 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
       FileDescriptorSet__ctor
     );
 
-    $.Method({Static:false, Public:true }, "Add", 
-      new JSIL.MethodSignature(null, [$.String, $asm00.TypeRef("System.IO.TextReader")]), 
+    $.Method({Static:false, Public:false}, "Add", 
+      new JSIL.MethodSignature(null, [$.String, $asm01.TypeRef("ProtoBuf.LineReader")]), 
       FileDescriptorSet_Add
     );
 
@@ -6538,7 +6921,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     );
 
     $.Method({Static:false, Public:false}, "Open", 
-      new JSIL.MethodSignature($asm00.TypeRef("System.IO.TextReader"), [$.String]), 
+      new JSIL.MethodSignature($asm01.TypeRef("ProtoBuf.LineReader"), [$.String]), 
       FileDescriptorSet_Open
     );
 
@@ -6674,7 +7057,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     return ($T11 = JSIL.Memoize($asm00.System.IDisposable)) ();
   };
   var $T12 = function () {
-    return ($T12 = JSIL.Memoize($asm00.System.IO.TextReader)) ();
+    return ($T12 = JSIL.Memoize($asm01.ProtoBuf.LineReader)) ();
   };
   var $T13 = function () {
     return ($T13 = JSIL.Memoize($asm00.System.Collections.Generic.List$b1.Of($asm01.ProtoBuf.Error))) ();
@@ -7371,8 +7754,8 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     )
       .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
 
-    $.Method({Static:false, Public:true }, "Parse", 
-      new JSIL.MethodSignature(null, [$asm00.TypeRef("System.IO.TextReader"), $asm00.TypeRef("System.Collections.Generic.List`1", [$asm01.TypeRef("ProtoBuf.Error")])]), 
+    $.Method({Static:false, Public:false}, "Parse", 
+      new JSIL.MethodSignature(null, [$asm01.TypeRef("ProtoBuf.LineReader"), $asm00.TypeRef("System.Collections.Generic.List`1", [$asm01.TypeRef("ProtoBuf.Error")])]), 
       FileDescriptorProto_Parse
     );
 

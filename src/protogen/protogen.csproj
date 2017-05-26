@@ -8,7 +8,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'jsil'">
     <TargetFrameworks>net40</TargetFrameworks>
-    <DefineConstants>$(DefineConstants),NO_RUNTIME</DefineConstants>
+    <DefineConstants>$(DefineConstants),NO_RUNTIME,NO_IO</DefineConstants>
     <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Optimize>True</Optimize>
   </PropertyGroup>

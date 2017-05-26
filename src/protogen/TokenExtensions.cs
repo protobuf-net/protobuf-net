@@ -176,7 +176,7 @@ namespace ProtoBuf
         static bool CanCombine(TokenType type, char prev, char next)
             => type != TokenType.Symbol || prev == next;
 
-        public static IEnumerable<Token> Tokenize(this TextReader reader)
+        public static IEnumerable<Token> Tokenize(this LineReader reader)
         {
             var buffer = new StringBuilder();
 

@@ -1,11 +1,23 @@
-﻿@{
-    ViewData["OnLoad"] = "onLoad()";
+﻿@model bool
+@{
+    if (Model)
+    {
+        ViewData["OnLoad"] = "onLoad()";
+    }
     ViewData["Title"] = "Generator";
 }
 <h2>@ViewData["Title"].</h2>
 <a href="/about">Wait... what is this?</a>
 <section>
-    <h3>Schema (can be <a href="https://developers.google.com/protocol-buffers/docs/proto">proto2</a> or <a href="https://developers.google.com/protocol-buffers/docs/proto3">proto3</a>):</h3>
+    <h3>.proto Schema (can be <a href="https://developers.google.com/protocol-buffers/docs/proto">proto2</a> or <a href="https://developers.google.com/protocol-buffers/docs/proto3">proto3</a>):</h3>
+    @if (Model)
+    {
+        <p><em>You're using the <a href="http://jsil.org/">JSIL</a> cross-compiled version! Yay! Sorry about the script size...</em> to use the AJAX version, <a href="/">click here</a></p>
+    }
+    else
+    {
+
+    }
     <p>(note: some features are still missing; map&lt;K,V&gt;, dynamic, Struct, Timestamp, Duration, Any, Wrapper types, FieldMask, ListValue, Value, NullValue)</p>
     <p>Pending work items in generated code:</p>
     <ul>
@@ -25,6 +37,9 @@
     <div id="csharpcontainer" style="width:100%; max-width:unset;height:600px;border:1px solid grey"></div>
 </section>
 <script src="~/lib/monaco-editor/min/vs/loader.js"></script>
+
+@if(Model)
+{
 <script src="~/js/home.js" asp-append-version="true"></script>
 
 <script type="text/javascript">
@@ -35,11 +50,11 @@
         showProgressBar: true,
         manifests: ['protogen.dll'] // gets as far as Loading '/js/protogen/protogen.dll.manifest.js'... (200 OK)
     };
-    var asm = null;
     var runMain = function () { // doesn't get invoked
         console.log('> main');
-        asm = JSIL.GetAssembly("protogen", true); // (executed outside method) returns a stub with no content
+        window.asm = JSIL.GetAssembly("protogen", true); // (executed outside method) returns a stub with no content
         console.log('< main');
     };
 </script>
 <script src="~/js/jsil/jsil.js" asp-append-version="true"></script>
+}
