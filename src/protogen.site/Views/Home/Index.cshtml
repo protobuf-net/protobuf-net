@@ -1,4 +1,5 @@
 ﻿@{
+    ViewData["OnLoad"] = "onLoad()";
     ViewData["Title"] = "Generator";
 }
 <h2>@ViewData["Title"].</h2>
@@ -26,7 +27,6 @@
 <script src="~/lib/monaco-editor/min/vs/loader.js"></script>
 <script src="~/js/home.js" asp-append-version="true"></script>
 
-@*
 <script type="text/javascript">
     var jsilConfig = {
         libraryRoot: '/js/jsil/',
@@ -43,4 +43,3 @@
     };
 </script>
 <script src="~/js/jsil/jsil.js" asp-append-version="true"></script>
-*@
