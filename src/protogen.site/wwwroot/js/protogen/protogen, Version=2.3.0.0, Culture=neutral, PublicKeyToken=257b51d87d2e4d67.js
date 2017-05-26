@@ -659,7 +659,7 @@ JSIL.DeclareNamespace("ProtoBuf");
     return ($T02 = JSIL.Memoize($asm01.$lPrivateImplementationDetails$g)) ();
   };
   var $T03 = function () {
-    return ($T03 = JSIL.Memoize($asm00.System.IO.TextWriter)) ();
+    return ($T03 = JSIL.Memoize($asm01.ProtoBuf.LineWriter)) ();
   };
   var $T04 = function () {
     return ($T04 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto)) ();
@@ -800,19 +800,13 @@ JSIL.DeclareNamespace("ProtoBuf");
     return ($S09 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto]))) ();
   };
   var $S0A = function () {
-    return ($S0A = JSIL.Memoize(JSIL.MethodSignature.Action($asm00.TypeRef("System.String")))) ();
+    return ($S0A = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.FieldDescriptorProto]))) ();
   };
   var $S0B = function () {
-    return ($S0B = JSIL.Memoize(JSIL.MethodSignature.Action($asm00.TypeRef("System.String")))) ();
+    return ($S0B = JSIL.Memoize(new JSIL.MethodSignature("!!0", [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
   };
   var $S0C = function () {
     return ($S0C = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.FieldDescriptorProto]))) ();
-  };
-  var $S0D = function () {
-    return ($S0D = JSIL.Memoize(new JSIL.MethodSignature("!!0", [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
-  };
-  var $S0E = function () {
-    return ($S0E = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.FieldDescriptorProto]))) ();
   };
   var $IM00 = function () {
     return ($IM00 = JSIL.Memoize($asm00.System.Collections.Generic.IEnumerable$b1.Of($asm01.ProtoBuf.Error).GetEnumerator)) ();
@@ -1394,7 +1388,7 @@ JSIL.DeclareNamespace("ProtoBuf");
     var arg_358_1 = null, arg_38F_1 = null;
     var $closure0 = new ($T1E())();
     var name = $S07().CallVirtual("GetName", null, context.GeneratorContext$Normalizer$value, field);
-    var textWriter = context.Write($T00().Format(
+    var lineWriter = context.Write($T00().Format(
         "[global::ProtoBuf.ProtoMember({0}, Name = @\"{1}\"", 
         $T13().$Box(field.get_Number()), 
         field.get_Name()
@@ -1466,16 +1460,16 @@ JSIL.DeclareNamespace("ProtoBuf");
     }
     var typeName = context.GetTypeName(field, /* ref */ text, /* ref */ flag4);
     if (!$T00().IsNullOrWhiteSpace(text.get())) {
-      $S0A().CallVirtual("Write", null, textWriter, $T00().Format(", DataFormat = global::ProtoBuf.DataFormat.{0}", text.get()));
+      lineWriter.Write($T00().Format(", DataFormat = global::ProtoBuf.DataFormat.{0}", text.get()));
     }
     var expr_2A2 = field.FieldDescriptorProto$Options$value;
     if ((expr_2A2 !== null) && expr_2A2.get_Packed()) {
-      $S0A().CallVirtual("Write", null, textWriter, ", IsPacked = true");
+      lineWriter.Write(", IsPacked = true");
     }
     if (field.get_label() === $T1F().LabelRequired) {
-      $S0A().CallVirtual("Write", null, textWriter, ", IsRequired = true");
+      lineWriter.Write(", IsRequired = true");
     }
-    $S0B().CallVirtual("WriteLine", null, textWriter, ")]");
+    lineWriter.WriteLine(")]");
     if (!(flag2 || $T00().IsNullOrWhiteSpace($closure0.defaultValue))) {
       context.WriteLine($T00().Format("[global::System.ComponentModel.DefaultValue({0})]", $closure0.defaultValue));
     }
@@ -1489,18 +1483,18 @@ JSIL.DeclareNamespace("ProtoBuf");
       if (descriptorProto !== null) {
         var arg_358_0 = descriptorProto.DescriptorProto$Fields$value;
         if ((arg_358_1 = $T0C().$l$g9__9_1) === null) {
-          arg_358_1 = $T0C().$l$g9__9_1 = $T1D().New($T0C().$l$g9, null, new JSIL.MethodPointerInfo($asm01.ProtoBuf.Generators_$l$gc, "$lWrite$gb__9_1", $S0C(), false, false));
+          arg_358_1 = $T0C().$l$g9__9_1 = $T1D().New($T0C().$l$g9, null, new JSIL.MethodPointerInfo($asm01.ProtoBuf.Generators_$l$gc, "$lWrite$gb__9_1", $S0A(), false, false));
         }
-        var typeName2 = context.GetTypeName($S0D().CallStatic($T10(), "Single$b1", [$asm01.Google.Protobuf.Reflection.FieldDescriptorProto], arg_358_0, arg_358_1), /* ref */ text2, /* ref */ flag5);
+        var typeName2 = context.GetTypeName($S0B().CallStatic($T10(), "Single$b1", [$asm01.Google.Protobuf.Reflection.FieldDescriptorProto], arg_358_0, arg_358_1), /* ref */ text2, /* ref */ flag5);
         var arg_38F_0 = descriptorProto.DescriptorProto$Fields$value;
         if ((arg_38F_1 = $T0C().$l$g9__9_2) === null) {
-          arg_38F_1 = $T0C().$l$g9__9_2 = $T1D().New($T0C().$l$g9, null, new JSIL.MethodPointerInfo($asm01.ProtoBuf.Generators_$l$gc, "$lWrite$gb__9_2", $S0E(), false, false));
+          arg_38F_1 = $T0C().$l$g9__9_2 = $T1D().New($T0C().$l$g9, null, new JSIL.MethodPointerInfo($asm01.ProtoBuf.Generators_$l$gc, "$lWrite$gb__9_2", $S0C(), false, false));
         }
-        var typeName3 = context.GetTypeName($S0D().CallStatic($T10(), "Single$b1", [$asm01.Google.Protobuf.Reflection.FieldDescriptorProto], arg_38F_0, arg_38F_1), /* ref */ text3, /* ref */ flag5);
+        var typeName3 = context.GetTypeName($S0B().CallStatic($T10(), "Single$b1", [$asm01.Google.Protobuf.Reflection.FieldDescriptorProto], arg_38F_0, arg_38F_1), /* ref */ text3, /* ref */ flag5);
         var flag6 = true;
-        textWriter = context.Write("[global::ProtoBuf.Map");
+        lineWriter = context.Write("[global::ProtoBuf.Map");
         if (!$T00().IsNullOrWhiteSpace(text2.get())) {
-          $S0A().CallVirtual("Write", null, textWriter, $T00().Format("{0}KeyFormat = global::ProtoBuf.DataFormat.{1}", (
+          lineWriter.Write($T00().Format("{0}KeyFormat = global::ProtoBuf.DataFormat.{1}", (
                 flag6
                    ? "("
                    : ", ")
@@ -1508,14 +1502,14 @@ JSIL.DeclareNamespace("ProtoBuf");
           flag6 = false;
         }
         if (!$T00().IsNullOrWhiteSpace(text3.get())) {
-          $S0A().CallVirtual("Write", null, textWriter, $T00().Format("{0}ValueFormat = global::ProtoBuf.DataFormat.{1}", (
+          lineWriter.Write($T00().Format("{0}ValueFormat = global::ProtoBuf.DataFormat.{1}", (
                 flag6
                    ? "("
                    : ", ")
               , text3.get()));
           flag6 = false;
         }
-        $S0B().CallVirtual("WriteLine", null, textWriter, (
+        lineWriter.WriteLine((
             flag6
                ? "]"
                : ")]")
@@ -1557,21 +1551,21 @@ JSIL.DeclareNamespace("ProtoBuf");
         arg = (JSIL.ConcatString(typeName, "?"));
       }
       ((context.WriteLine($T00().Format("public {0} {1}", typeName, $thisType.Escape(name)))).WriteLine("{")).Indent();
-      textWriter = context.Write($T00().Format("get {{ return {0}", text6));
+      lineWriter = context.Write($T00().Format("get {{ return {0}", text6));
       if (!$T00().IsNullOrWhiteSpace($closure0.defaultValue)) {
-        $S0A().CallVirtual("Write", null, textWriter, " ?? ");
-        $S0A().CallVirtual("Write", null, textWriter, $closure0.defaultValue);
+        lineWriter.Write(" ?? ");
+        lineWriter.Write($closure0.defaultValue);
       } else if (!flag7) {
-        $S0A().CallVirtual("Write", null, textWriter, ".GetValueOrDefault()");
+        lineWriter.Write(".GetValueOrDefault()");
       }
-      $S0B().CallVirtual("WriteLine", null, textWriter, "; }");
+      lineWriter.WriteLine("; }");
       (((((context.WriteLine($T00().Format("set {{ {0} = value; }}", text6))).Outdent()).WriteLine("}")).WriteLine($T00().Format("public bool ShouldSerialize{0}() => {1} != null;", name, text6))).WriteLine($T00().Format("public void Reset{0}() => {1} = null;", name, text6))).WriteLine($T00().Format("private {0} {1};", arg, text6));
     } else {
-      textWriter = context.Write($T00().Format("public {0} {1} {{ get; set; }}", typeName, $thisType.Escape(name)));
+      lineWriter = context.Write($T00().Format("public {0} {1} {{ get; set; }}", typeName, $thisType.Escape(name)));
       if (!$T00().IsNullOrWhiteSpace($closure0.defaultValue)) {
-        $S0A().CallVirtual("Write", null, textWriter, $T00().Format(" = {0};", $closure0.defaultValue));
+        lineWriter.Write($T00().Format(" = {0};", $closure0.defaultValue));
       }
-      textWriter.WriteLine();
+      lineWriter.WriteLine();
     }
     context.WriteLine();
   }; 
@@ -1593,9 +1587,9 @@ JSIL.DeclareNamespace("ProtoBuf");
       Generators_Escape
     );
 
-    $.Method({Static:true , Public:true }, "GenerateCSharp", 
+    $.Method({Static:true , Public:false}, "GenerateCSharp", 
       new JSIL.MethodSignature(null, [
-          $asm00.TypeRef("System.IO.TextWriter"), $asm01.TypeRef("Google.Protobuf.Reflection.FileDescriptorProto"), 
+          $asm01.TypeRef("ProtoBuf.LineWriter"), $asm01.TypeRef("Google.Protobuf.Reflection.FileDescriptorProto"), 
           $asm01.TypeRef("ProtoBuf.NameNormalizer"), $asm00.TypeRef("System.Collections.Generic.IList`1", [$asm01.TypeRef("ProtoBuf.Error")])
         ]), 
       Generators_GenerateCSharp
@@ -1648,7 +1642,7 @@ JSIL.DeclareNamespace("ProtoBuf");
     return ($T01 = JSIL.Memoize($asm01.ProtoBuf.NameNormalizer)) ();
   };
   var $T02 = function () {
-    return ($T02 = JSIL.Memoize($asm00.System.IO.TextWriter)) ();
+    return ($T02 = JSIL.Memoize($asm01.ProtoBuf.LineWriter)) ();
   };
   var $T03 = function () {
     return ($T03 = JSIL.Memoize($asm00.System.Collections.Generic.Dictionary$b2.Of($asm00.System.String, $asm00.System.Object))) ();
@@ -1691,12 +1685,6 @@ JSIL.DeclareNamespace("ProtoBuf");
   };
   var $S02 = function () {
     return ($S02 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.String, [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto]))) ();
-  };
-  var $S03 = function () {
-    return ($S03 = JSIL.Memoize(JSIL.MethodSignature.Action($asm00.TypeRef("System.String")))) ();
-  };
-  var $S04 = function () {
-    return ($S04 = JSIL.Memoize(JSIL.MethodSignature.Action($asm00.TypeRef("System.String")))) ();
   };
 
 
@@ -1889,9 +1877,9 @@ JSIL.DeclareNamespace("ProtoBuf");
     while ((($temp00 = indent, 
         indent = ((indent - 1) | 0), 
         $temp00) | 0) > 0) {
-      $S03().CallVirtual("Write", null, output, this.GeneratorContext$Tab$value);
+      output.Write(this.GeneratorContext$Tab$value);
     }
-    $S03().CallVirtual("Write", null, output, value);
+    output.Write(value);
     return output;
   }; 
 
@@ -1908,9 +1896,9 @@ JSIL.DeclareNamespace("ProtoBuf");
     while ((($temp00 = indent, 
         indent = ((indent - 1) | 0), 
         $temp00) | 0) > 0) {
-      $S03().CallVirtual("Write", null, output, this.GeneratorContext$Tab$value);
+      output.Write(this.GeneratorContext$Tab$value);
     }
-    $S04().CallVirtual("WriteLine", null, output, line);
+    output.WriteLine(line);
     return this;
   }; 
 
@@ -1926,7 +1914,7 @@ JSIL.DeclareNamespace("ProtoBuf");
     $.Method({Static:false, Public:true }, ".ctor", 
       new JSIL.MethodSignature(null, [
           $asm01.TypeRef("Google.Protobuf.Reflection.FileDescriptorProto"), $asm01.TypeRef("ProtoBuf.NameNormalizer"), 
-          $asm00.TypeRef("System.IO.TextWriter")
+          $asm01.TypeRef("ProtoBuf.LineWriter")
         ]), 
       GeneratorContext__ctor
     );
@@ -1949,7 +1937,7 @@ JSIL.DeclareNamespace("ProtoBuf");
       .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
 
     $.Method({Static:false, Public:true }, "get_Output", 
-      JSIL.MethodSignature.Return($asm00.TypeRef("System.IO.TextWriter")), 
+      JSIL.MethodSignature.Return($asm01.TypeRef("ProtoBuf.LineWriter")), 
       GeneratorContext_get_Output
     )
       .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
@@ -1995,7 +1983,7 @@ JSIL.DeclareNamespace("ProtoBuf");
     );
 
     $.Method({Static:false, Public:true }, "Write", 
-      new JSIL.MethodSignature($asm00.TypeRef("System.IO.TextWriter"), [$.String]), 
+      new JSIL.MethodSignature($asm01.TypeRef("ProtoBuf.LineWriter"), [$.String]), 
       GeneratorContext_Write
     );
 
@@ -2014,7 +2002,7 @@ JSIL.DeclareNamespace("ProtoBuf");
     $.Field({Static:false, Public:false}, "GeneratorContext$Tab$value", $.String)
       .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
 
-    $.Field({Static:false, Public:false, ReadOnly:true }, "GeneratorContext$Output$value", $asm00.TypeRef("System.IO.TextWriter"))
+    $.Field({Static:false, Public:false, ReadOnly:true }, "GeneratorContext$Output$value", $asm01.TypeRef("ProtoBuf.LineWriter"))
       .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
 
     $.Field({Static:false, Public:false, ReadOnly:true }, "GeneratorContext$Normalizer$value", $asm01.TypeRef("ProtoBuf.NameNormalizer"))
@@ -2028,7 +2016,7 @@ JSIL.DeclareNamespace("ProtoBuf");
 
     $.Property({Static:false, Public:true }, "Tab", $.String);
 
-    $.Property({Static:false, Public:true }, "Output", $asm00.TypeRef("System.IO.TextWriter"));
+    $.Property({Static:false, Public:true }, "Output", $asm01.TypeRef("ProtoBuf.LineWriter"));
 
     $.Property({Static:false, Public:true }, "Normalizer", $asm01.TypeRef("ProtoBuf.NameNormalizer"));
 
@@ -2609,6 +2597,172 @@ JSIL.DeclareNamespace("ProtoBuf");
     $.Property({Static:false, Public:true }, "Name", $.String);
 
     $.Property({Static:false, Public:true }, "Text", $.String);
+
+
+    return function (newThisType) { $thisType = newThisType; }; 
+  });
+
+})();
+
+/* class ProtoBuf.LineWriter */ 
+
+(function LineWriter$Members () {
+  var $, $thisType;
+  var $T00 = function () {
+    return ($T00 = JSIL.Memoize($asm00.System.String)) ();
+  };
+
+
+  function LineWriter__ctor () {
+  }; 
+
+  function LineWriter_Dispose () {
+  }; 
+
+  function LineWriter_WriteLine$00 () {
+    this.Write("\r\n");
+  }; 
+
+  function LineWriter_WriteLine$01 (value) {
+    this.Write(value);
+    this.WriteLine();
+  }; 
+
+  JSIL.MakeType({
+      BaseType: $asm00.TypeRef("System.Object"), 
+      Name: "ProtoBuf.LineWriter", 
+      IsPublic: false, 
+      IsReferenceType: true, 
+      MaximumConstructorArguments: 0, 
+    }, function ($ib) {
+    $ = $ib;
+
+    $.Method({Static:false, Public:false}, ".ctor", 
+      JSIL.MethodSignature.Void, 
+      LineWriter__ctor
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "Dispose", 
+      JSIL.MethodSignature.Void, 
+      LineWriter_Dispose
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "WriteLine", 
+      JSIL.MethodSignature.Void, 
+      LineWriter_WriteLine$00
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "WriteLine", 
+      JSIL.MethodSignature.Action($.String), 
+      LineWriter_WriteLine$01
+    );
+
+    $.ImplementInterfaces(
+      /* 0 */ $asm00.TypeRef("System.IDisposable")
+    );
+
+
+    return function (newThisType) { $thisType = newThisType; }; 
+  });
+
+})();
+
+/* class ProtoBuf.StringLineWriter */ 
+
+(function StringLineWriter$Members () {
+  var $, $thisType;
+  var $T00 = function () {
+    return ($T00 = JSIL.Memoize($asm00.System.Text.StringBuilder)) ();
+  };
+  var $T01 = function () {
+    return ($T01 = JSIL.Memoize($asm01.ProtoBuf.LineWriter)) ();
+  };
+  var $T02 = function () {
+    return ($T02 = JSIL.Memoize($asm00.System.Object)) ();
+  };
+  var $T03 = function () {
+    return ($T03 = JSIL.Memoize($asm00.System.String)) ();
+  };
+  var $S00 = function () {
+    return ($S00 = JSIL.Memoize(new JSIL.ConstructorSignature($asm00.System.Text.StringBuilder, null))) ();
+  };
+  var $S01 = function () {
+    return ($S01 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Text.StringBuilder, [$asm00.System.String]))) ();
+  };
+
+
+  function StringLineWriter__ctor () {
+    this.buffer = $S00().Construct();
+    $T01().prototype._ctor.call(this);
+  }; 
+
+  function StringLineWriter_Dispose () {
+    this.buffer = null;
+  }; 
+
+  function StringLineWriter_toString () {
+    var expr_06 = this.buffer;
+    if (expr_06 === null) {
+      return null;
+    }
+    return expr_06.toString();
+  }; 
+
+  function StringLineWriter_Write (value) {
+    $S01().CallVirtual("Append", null, this.buffer, value);
+  }; 
+
+  function StringLineWriter_WriteLine$00 () {
+    (this.buffer).AppendLine();
+  }; 
+
+  function StringLineWriter_WriteLine$01 (value) {
+    (this.buffer).AppendLine(value);
+  }; 
+
+  JSIL.MakeType({
+      BaseType: $asm01.TypeRef("ProtoBuf.LineWriter"), 
+      Name: "ProtoBuf.StringLineWriter", 
+      IsPublic: false, 
+      IsReferenceType: true, 
+      MaximumConstructorArguments: 0, 
+    }, function ($ib) {
+    $ = $ib;
+
+    $.Method({Static:false, Public:true }, ".ctor", 
+      JSIL.MethodSignature.Void, 
+      StringLineWriter__ctor
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "Dispose", 
+      JSIL.MethodSignature.Void, 
+      StringLineWriter_Dispose
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "toString", 
+      JSIL.MethodSignature.Return($.String), 
+      StringLineWriter_toString
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "Write", 
+      JSIL.MethodSignature.Action($.String), 
+      StringLineWriter_Write
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "WriteLine", 
+      JSIL.MethodSignature.Void, 
+      StringLineWriter_WriteLine$00
+    );
+
+    $.Method({Static:false, Public:true , Virtual:true }, "WriteLine", 
+      JSIL.MethodSignature.Action($.String), 
+      StringLineWriter_WriteLine$01
+    );
+
+    $.Field({Static:false, Public:false}, "buffer", $asm00.TypeRef("System.Text.StringBuilder"));
+
+    $.ImplementInterfaces(
+    );
 
 
     return function (newThisType) { $thisType = newThisType; }; 
@@ -3457,7 +3611,7 @@ JSIL.MakeInterface(
       case 5: 
       case 7: 
       case 17: 
-        if ($T10().TryParse(defaultValue.get(), $T12().Number, $T13().get_InvariantCulture(), /* ref */ num5)) {
+        if ($T10().TryParse(defaultValue.get(), $T12().AllowLeadingSign, $T13().get_InvariantCulture(), /* ref */ num5)) {
           defaultValue.set(($T10().__Type__.__PublicInterface__.$ToString(num5.get(), null, $T13().get_InvariantCulture())));
           return;
         }
@@ -4280,28 +4434,22 @@ JSIL.MakeInterface(
     return ($T0A = JSIL.Memoize($asm00.System.Int32)) ();
   };
   var $T0B = function () {
-    return ($T0B = JSIL.Memoize($asm00.System.Globalization.NumberStyles)) ();
+    return ($T0B = JSIL.Memoize($asm00.System.UInt32)) ();
   };
   var $T0C = function () {
-    return ($T0C = JSIL.Memoize($asm00.System.Globalization.CultureInfo)) ();
+    return ($T0C = JSIL.Memoize($asm01.ProtoBuf.ParserException)) ();
   };
   var $T0D = function () {
-    return ($T0D = JSIL.Memoize($asm00.System.UInt32)) ();
+    return ($T0D = JSIL.Memoize($asm00.System.Collections.Generic.IEnumerable$b1.Of($asm01.ProtoBuf.Token))) ();
   };
   var $T0E = function () {
-    return ($T0E = JSIL.Memoize($asm01.ProtoBuf.ParserException)) ();
+    return ($T0E = JSIL.Memoize($asm01.ProtoBuf.TokenExtensions_$lRemoveCommentsAndWhitespace$gd__15)) ();
   };
   var $T0F = function () {
-    return ($T0F = JSIL.Memoize($asm00.System.Collections.Generic.IEnumerable$b1.Of($asm01.ProtoBuf.Token))) ();
+    return ($T0F = JSIL.Memoize($asm01.ProtoBuf.LineReader)) ();
   };
   var $T10 = function () {
-    return ($T10 = JSIL.Memoize($asm01.ProtoBuf.TokenExtensions_$lRemoveCommentsAndWhitespace$gd__14)) ();
-  };
-  var $T11 = function () {
-    return ($T11 = JSIL.Memoize($asm01.ProtoBuf.LineReader)) ();
-  };
-  var $T12 = function () {
-    return ($T12 = JSIL.Memoize($asm01.ProtoBuf.TokenExtensions_$lTokenize$gd__16)) ();
+    return ($T10 = JSIL.Memoize($asm01.ProtoBuf.TokenExtensions_$lTokenize$gd__17)) ();
   };
   var $S00 = function () {
     return ($S00 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [
@@ -4372,7 +4520,7 @@ JSIL.MakeInterface(
     if (!((max === null) || !(token.Token$Value$value == "max"))) {
       return JSIL.Nullable_Value(max);
     }
-    if (!$T0A().TryParse(token.Token$Value$value, $T0B().AllowLeadingSign, $T0C().get_InvariantCulture(), /* ref */ result)) {
+    if (!$thisType.TryParseInt32(token.Token$Value$value, /* ref */ result)) {
       token.Throw("Unable to parse integer", true);
     }
     return result.get();
@@ -4408,13 +4556,13 @@ JSIL.MakeInterface(
   function TokenExtensions_Read (tokens) {
     var result = new JSIL.BoxedVariable(new ($T04())());
     if (!tokens.Peek(/* ref */ result)) {
-      throw new ($T0E())(tokens.get_Previous(), "Unexpected end of file", true);
+      throw new ($T0C())(tokens.get_Previous(), "Unexpected end of file", true);
     }
     return result.get();
   }; 
 
   function TokenExtensions_RemoveCommentsAndWhitespace (tokens) {
-    var expr_07 = new ($T10())(-2);
+    var expr_07 = new ($T0E())(-2);
     expr_07.$l$g3__tokens = tokens;
     return expr_07;
   }; 
@@ -4478,9 +4626,37 @@ JSIL.MakeInterface(
   }; 
 
   function TokenExtensions_Tokenize (reader) {
-    var expr_07 = new ($T12())(-2);
+    var expr_07 = new ($T10())(-2);
     expr_07.$l$g3__reader = reader;
     return expr_07;
+  }; 
+
+  function TokenExtensions_TryParseInt32 (s, /* ref */ value) {
+    value.set(0);
+    if (!((s !== null) && ((s.length | 0) !== 0))) {
+      return false;
+    }
+    var i = 0;
+    var flag = false;
+    if (((s[0]).charCodeAt(0) | 0) === (("-").charCodeAt(0) | 0)) {
+      if ((s.length | 0) === 1) {
+        return false;
+      }
+      flag = true;
+      i = 1;
+    }
+
+    for (; i < (s.length | 0); i = ((i + 1) | 0)) {
+      var c = (s[i]);
+      if (!(((c.charCodeAt(0) | 0) >= (("0").charCodeAt(0) | 0)) && ((c.charCodeAt(0) | 0) <= (("9").charCodeAt(0) | 0)))) {
+        return false;
+      }
+      value.set(((Math.imul(value.get(), 10) + ((String.fromCharCode((c.charCodeAt(0) | 0) - (("0").charCodeAt(0) | 0))).charCodeAt(0) | 0)) | 0));
+    }
+    if (flag) {
+      value.set((-value.get() | 0));
+    }
+    return true;
   }; 
 
   JSIL.MakeStaticClass("ProtoBuf.TokenExtensions", false, [], function ($ib) {
@@ -4595,6 +4771,11 @@ JSIL.MakeInterface(
     )
       .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.ExtensionAttribute"));
 
+    $.Method({Static:true , Public:false}, "TryParseInt32", 
+      new JSIL.MethodSignature($.Boolean, [$.String, $jsilcore.TypeRef("JSIL.Reference", [$.Int32])]), 
+      TokenExtensions_TryParseInt32
+    );
+
 
     return function (newThisType) { $thisType = newThisType; }; 
   })
@@ -4602,9 +4783,9 @@ JSIL.MakeInterface(
 
 })();
 
-/* class ProtoBuf.TokenExtensions+<RemoveCommentsAndWhitespace>d__14 */ 
+/* class ProtoBuf.TokenExtensions+<RemoveCommentsAndWhitespace>d__15 */ 
 
-(function $lRemoveCommentsAndWhitespace$gd__14$Members () {
+(function $lRemoveCommentsAndWhitespace$gd__15$Members () {
   var $, $thisType;
   var $T00 = function () {
     return ($T00 = JSIL.Memoize($asm00.System.Int32)) ();
@@ -4659,19 +4840,19 @@ JSIL.MakeInterface(
   };
 
 
-  function $lRemoveCommentsAndWhitespace$gd__14__ctor ($l$g1__state) {
+  function $lRemoveCommentsAndWhitespace$gd__15__ctor ($l$g1__state) {
     this.$l$g1__state = ($l$g1__state | 0);
     this.$l$gl__initialThreadId = ($T01().get_CurrentThread().get_ManagedThreadId() | 0);
   }; 
 
-  function $lRemoveCommentsAndWhitespace$gd__14_$l$gm__Finally1 () {
+  function $lRemoveCommentsAndWhitespace$gd__15_$l$gm__Finally1 () {
     this.$l$g1__state = -1;
     if (this.$l$g7__wrap1 !== null) {
       $IM00().Call(this.$l$g7__wrap1, null);
     }
   }; 
 
-  function $lRemoveCommentsAndWhitespace$gd__14_MoveNext ($exception) {
+  function $lRemoveCommentsAndWhitespace$gd__15_MoveNext ($exception) {
     try {
       var num = (this.$l$g1__state | 0);
       if (num !== 0) {
@@ -4709,7 +4890,7 @@ JSIL.MakeInterface(
     return result;
   }; 
 
-  function $lRemoveCommentsAndWhitespace$gd__14_System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator () {
+  function $lRemoveCommentsAndWhitespace$gd__15_System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator () {
     if (!(((this.$l$g1__state | 0) !== -2) || ((this.$l$gl__initialThreadId | 0) !== ($T01().get_CurrentThread().get_ManagedThreadId() | 0)))) {
       this.$l$g1__state = 0;
       var $lRemoveCommentsAndWhitespace$gd__ = this;
@@ -4720,23 +4901,23 @@ JSIL.MakeInterface(
     return $lRemoveCommentsAndWhitespace$gd__;
   }; 
 
-  function $lRemoveCommentsAndWhitespace$gd__14_System_Collections_Generic_IEnumerator$lProtoBuf_Token$g_get_Current () {
+  function $lRemoveCommentsAndWhitespace$gd__15_System_Collections_Generic_IEnumerator$lProtoBuf_Token$g_get_Current () {
     return this.$l$g2__current;
   }; 
 
-  function $lRemoveCommentsAndWhitespace$gd__14_System_Collections_IEnumerable_GetEnumerator () {
+  function $lRemoveCommentsAndWhitespace$gd__15_System_Collections_IEnumerable_GetEnumerator () {
     return this.System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator();
   }; 
 
-  function $lRemoveCommentsAndWhitespace$gd__14_System_Collections_IEnumerator_get_Current () {
+  function $lRemoveCommentsAndWhitespace$gd__15_System_Collections_IEnumerator_get_Current () {
     return this.$l$g2__current;
   }; 
 
-  function $lRemoveCommentsAndWhitespace$gd__14_System_Collections_IEnumerator_Reset () {
+  function $lRemoveCommentsAndWhitespace$gd__15_System_Collections_IEnumerator_Reset () {
     throw $S00().Construct();
   }; 
 
-  function $lRemoveCommentsAndWhitespace$gd__14_System_IDisposable_Dispose () {
+  function $lRemoveCommentsAndWhitespace$gd__15_System_IDisposable_Dispose () {
     var num = (this.$l$g1__state | 0);
     if (!((num !== -3) && (num !== 1))) {
       try {
@@ -4748,7 +4929,7 @@ JSIL.MakeInterface(
 
   JSIL.MakeType({
       BaseType: $asm00.TypeRef("System.Object"), 
-      Name: "ProtoBuf.TokenExtensions+<RemoveCommentsAndWhitespace>d__14", 
+      Name: "ProtoBuf.TokenExtensions+<RemoveCommentsAndWhitespace>d__15", 
       IsPublic: false, 
       IsReferenceType: true, 
       MaximumConstructorArguments: 1, 
@@ -4757,59 +4938,59 @@ JSIL.MakeInterface(
 
     $.Method({Static:false, Public:true }, ".ctor", 
       JSIL.MethodSignature.Action($.Int32), 
-      $lRemoveCommentsAndWhitespace$gd__14__ctor
+      $lRemoveCommentsAndWhitespace$gd__15__ctor
     )
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false}, "$l$gm__Finally1", 
       JSIL.MethodSignature.Void, 
-      $lRemoveCommentsAndWhitespace$gd__14_$l$gm__Finally1
+      $lRemoveCommentsAndWhitespace$gd__15_$l$gm__Finally1
     );
 
     $.Method({Static:false, Public:false, Virtual:true }, "MoveNext", 
       JSIL.MethodSignature.Return($.Boolean), 
-      $lRemoveCommentsAndWhitespace$gd__14_MoveNext
+      $lRemoveCommentsAndWhitespace$gd__15_MoveNext
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerator"), "MoveNext");
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.Generic.IEnumerable$lProtoBuf.Token$g.GetEnumerator", 
       JSIL.MethodSignature.Return($asm00.TypeRef("System.Collections.Generic.IEnumerator`1", [$asm01.TypeRef("ProtoBuf.Token")])), 
-      $lRemoveCommentsAndWhitespace$gd__14_System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator
+      $lRemoveCommentsAndWhitespace$gd__15_System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator
     )
       .Overrides($asm00.TypeRef("System.Collections.Generic.IEnumerable`1", [$asm01.TypeRef("ProtoBuf.Token")]), "GetEnumerator")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.Generic.IEnumerator$lProtoBuf.Token$g.get_Current", 
       JSIL.MethodSignature.Return($asm01.TypeRef("ProtoBuf.Token")), 
-      $lRemoveCommentsAndWhitespace$gd__14_System_Collections_Generic_IEnumerator$lProtoBuf_Token$g_get_Current
+      $lRemoveCommentsAndWhitespace$gd__15_System_Collections_Generic_IEnumerator$lProtoBuf_Token$g_get_Current
     )
       .Overrides($asm00.TypeRef("System.Collections.Generic.IEnumerator`1", [$asm01.TypeRef("ProtoBuf.Token")]), "get_Current")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.IEnumerable.GetEnumerator", 
       JSIL.MethodSignature.Return($asm00.TypeRef("System.Collections.IEnumerator")), 
-      $lRemoveCommentsAndWhitespace$gd__14_System_Collections_IEnumerable_GetEnumerator
+      $lRemoveCommentsAndWhitespace$gd__15_System_Collections_IEnumerable_GetEnumerator
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerable"), "GetEnumerator")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.IEnumerator.get_Current", 
       JSIL.MethodSignature.Return($.Object), 
-      $lRemoveCommentsAndWhitespace$gd__14_System_Collections_IEnumerator_get_Current
+      $lRemoveCommentsAndWhitespace$gd__15_System_Collections_IEnumerator_get_Current
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerator"), "get_Current")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.IEnumerator.Reset", 
       JSIL.MethodSignature.Void, 
-      $lRemoveCommentsAndWhitespace$gd__14_System_Collections_IEnumerator_Reset
+      $lRemoveCommentsAndWhitespace$gd__15_System_Collections_IEnumerator_Reset
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerator"), "Reset")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.IDisposable.Dispose", 
       JSIL.MethodSignature.Void, 
-      $lRemoveCommentsAndWhitespace$gd__14_System_IDisposable_Dispose
+      $lRemoveCommentsAndWhitespace$gd__15_System_IDisposable_Dispose
     )
       .Overrides($asm00.TypeRef("System.IDisposable"), "Dispose")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
@@ -4847,9 +5028,9 @@ JSIL.MakeInterface(
 
 })();
 
-/* class ProtoBuf.TokenExtensions+<Tokenize>d__16 */ 
+/* class ProtoBuf.TokenExtensions+<Tokenize>d__17 */ 
 
-(function $lTokenize$gd__16$Members () {
+(function $lTokenize$gd__17$Members () {
   var $, $thisType;
   var $T00 = function () {
     return ($T00 = JSIL.Memoize($asm00.System.Int32)) ();
@@ -4892,12 +5073,12 @@ JSIL.MakeInterface(
   };
 
 
-  function $lTokenize$gd__16__ctor ($l$g1__state) {
+  function $lTokenize$gd__17__ctor ($l$g1__state) {
     this.$l$g1__state = ($l$g1__state | 0);
     this.$l$gl__initialThreadId = ($T01().get_CurrentThread().get_ManagedThreadId() | 0);
   }; 
 
-  function $lTokenize$gd__16_MoveNext () {
+  function $lTokenize$gd__17_MoveNext () {
 
     var $label0 = 0;
   $labelgroup0: 
@@ -5035,7 +5216,7 @@ JSIL.MakeInterface(
     }
   }; 
 
-  function $lTokenize$gd__16_System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator () {
+  function $lTokenize$gd__17_System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator () {
     if (!(((this.$l$g1__state | 0) !== -2) || ((this.$l$gl__initialThreadId | 0) !== ($T01().get_CurrentThread().get_ManagedThreadId() | 0)))) {
       this.$l$g1__state = 0;
       var $lTokenize$gd__ = this;
@@ -5046,28 +5227,28 @@ JSIL.MakeInterface(
     return $lTokenize$gd__;
   }; 
 
-  function $lTokenize$gd__16_System_Collections_Generic_IEnumerator$lProtoBuf_Token$g_get_Current () {
+  function $lTokenize$gd__17_System_Collections_Generic_IEnumerator$lProtoBuf_Token$g_get_Current () {
     return this.$l$g2__current;
   }; 
 
-  function $lTokenize$gd__16_System_Collections_IEnumerable_GetEnumerator () {
+  function $lTokenize$gd__17_System_Collections_IEnumerable_GetEnumerator () {
     return this.System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator();
   }; 
 
-  function $lTokenize$gd__16_System_Collections_IEnumerator_get_Current () {
+  function $lTokenize$gd__17_System_Collections_IEnumerator_get_Current () {
     return this.$l$g2__current;
   }; 
 
-  function $lTokenize$gd__16_System_Collections_IEnumerator_Reset () {
+  function $lTokenize$gd__17_System_Collections_IEnumerator_Reset () {
     throw $S02().Construct();
   }; 
 
-  function $lTokenize$gd__16_System_IDisposable_Dispose () {
+  function $lTokenize$gd__17_System_IDisposable_Dispose () {
   }; 
 
   JSIL.MakeType({
       BaseType: $asm00.TypeRef("System.Object"), 
-      Name: "ProtoBuf.TokenExtensions+<Tokenize>d__16", 
+      Name: "ProtoBuf.TokenExtensions+<Tokenize>d__17", 
       IsPublic: false, 
       IsReferenceType: true, 
       MaximumConstructorArguments: 1, 
@@ -5076,54 +5257,54 @@ JSIL.MakeInterface(
 
     $.Method({Static:false, Public:true }, ".ctor", 
       JSIL.MethodSignature.Action($.Int32), 
-      $lTokenize$gd__16__ctor
+      $lTokenize$gd__17__ctor
     )
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "MoveNext", 
       JSIL.MethodSignature.Return($.Boolean), 
-      $lTokenize$gd__16_MoveNext
+      $lTokenize$gd__17_MoveNext
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerator"), "MoveNext");
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.Generic.IEnumerable$lProtoBuf.Token$g.GetEnumerator", 
       JSIL.MethodSignature.Return($asm00.TypeRef("System.Collections.Generic.IEnumerator`1", [$asm01.TypeRef("ProtoBuf.Token")])), 
-      $lTokenize$gd__16_System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator
+      $lTokenize$gd__17_System_Collections_Generic_IEnumerable$lProtoBuf_Token$g_GetEnumerator
     )
       .Overrides($asm00.TypeRef("System.Collections.Generic.IEnumerable`1", [$asm01.TypeRef("ProtoBuf.Token")]), "GetEnumerator")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.Generic.IEnumerator$lProtoBuf.Token$g.get_Current", 
       JSIL.MethodSignature.Return($asm01.TypeRef("ProtoBuf.Token")), 
-      $lTokenize$gd__16_System_Collections_Generic_IEnumerator$lProtoBuf_Token$g_get_Current
+      $lTokenize$gd__17_System_Collections_Generic_IEnumerator$lProtoBuf_Token$g_get_Current
     )
       .Overrides($asm00.TypeRef("System.Collections.Generic.IEnumerator`1", [$asm01.TypeRef("ProtoBuf.Token")]), "get_Current")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.IEnumerable.GetEnumerator", 
       JSIL.MethodSignature.Return($asm00.TypeRef("System.Collections.IEnumerator")), 
-      $lTokenize$gd__16_System_Collections_IEnumerable_GetEnumerator
+      $lTokenize$gd__17_System_Collections_IEnumerable_GetEnumerator
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerable"), "GetEnumerator")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.IEnumerator.get_Current", 
       JSIL.MethodSignature.Return($.Object), 
-      $lTokenize$gd__16_System_Collections_IEnumerator_get_Current
+      $lTokenize$gd__17_System_Collections_IEnumerator_get_Current
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerator"), "get_Current")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.IEnumerator.Reset", 
       JSIL.MethodSignature.Void, 
-      $lTokenize$gd__16_System_Collections_IEnumerator_Reset
+      $lTokenize$gd__17_System_Collections_IEnumerator_Reset
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerator"), "Reset")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.IDisposable.Dispose", 
       JSIL.MethodSignature.Void, 
-      $lTokenize$gd__16_System_IDisposable_Dispose
+      $lTokenize$gd__17_System_IDisposable_Dispose
     )
       .Overrides($asm00.TypeRef("System.IDisposable"), "Dispose")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
@@ -7036,109 +7217,106 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     return ($T0A = JSIL.Memoize($asm01.Google.Protobuf.Reflection.ServiceDescriptorProto)) ();
   };
   var $T0B = function () {
-    return ($T0B = JSIL.Memoize($asm00.System.IO.TextWriter)) ();
+    return ($T0B = JSIL.Memoize($asm01.ProtoBuf.NameNormalizer)) ();
   };
   var $T0C = function () {
-    return ($T0C = JSIL.Memoize($asm01.ProtoBuf.NameNormalizer)) ();
+    return ($T0C = JSIL.Memoize($asm00.System.Collections.Generic.IList$b1.Of($asm01.ProtoBuf.Error))) ();
   };
   var $T0D = function () {
-    return ($T0D = JSIL.Memoize($asm00.System.Collections.Generic.IList$b1.Of($asm01.ProtoBuf.Error))) ();
+    return ($T0D = JSIL.Memoize($asm01.ProtoBuf.StringLineWriter)) ();
   };
   var $T0E = function () {
     return ($T0E = JSIL.Memoize($asm01.ProtoBuf.Generators)) ();
   };
   var $T0F = function () {
-    return ($T0F = JSIL.Memoize($asm00.System.IO.StringWriter)) ();
+    return ($T0F = JSIL.Memoize($asm00.System.Object)) ();
   };
   var $T10 = function () {
-    return ($T10 = JSIL.Memoize($asm00.System.Object)) ();
+    return ($T10 = JSIL.Memoize($asm00.System.IDisposable)) ();
   };
   var $T11 = function () {
-    return ($T11 = JSIL.Memoize($asm00.System.IDisposable)) ();
+    return ($T11 = JSIL.Memoize($asm01.ProtoBuf.LineReader)) ();
   };
   var $T12 = function () {
-    return ($T12 = JSIL.Memoize($asm01.ProtoBuf.LineReader)) ();
+    return ($T12 = JSIL.Memoize($asm00.System.Collections.Generic.List$b1.Of($asm01.ProtoBuf.Error))) ();
   };
   var $T13 = function () {
-    return ($T13 = JSIL.Memoize($asm00.System.Collections.Generic.List$b1.Of($asm01.ProtoBuf.Error))) ();
+    return ($T13 = JSIL.Memoize($asm01.ProtoBuf.Token)) ();
   };
   var $T14 = function () {
-    return ($T14 = JSIL.Memoize($asm01.ProtoBuf.Token)) ();
+    return ($T14 = JSIL.Memoize($asm01.ProtoBuf.Peekable$b1.Of($asm01.ProtoBuf.Token))) ();
   };
   var $T15 = function () {
-    return ($T15 = JSIL.Memoize($asm01.ProtoBuf.Peekable$b1.Of($asm01.ProtoBuf.Token))) ();
+    return ($T15 = JSIL.Memoize($asm01.ProtoBuf.TokenExtensions)) ();
   };
   var $T16 = function () {
-    return ($T16 = JSIL.Memoize($asm01.ProtoBuf.TokenExtensions)) ();
+    return ($T16 = JSIL.Memoize($asm01.ProtoBuf.ErrorExtensions)) ();
   };
   var $T17 = function () {
-    return ($T17 = JSIL.Memoize($asm01.ProtoBuf.ErrorExtensions)) ();
+    return ($T17 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$lProtoBuf$daIHazNames$daGetNames$gd__63)) ();
   };
   var $T18 = function () {
-    return ($T18 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$lProtoBuf$daIHazNames$daGetNames$gd__64)) ();
+    return ($T18 = JSIL.Memoize($asm01.ProtoBuf.TokenType)) ();
   };
   var $T19 = function () {
-    return ($T19 = JSIL.Memoize($asm01.ProtoBuf.TokenType)) ();
+    return ($T19 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FieldDescriptorProto)) ();
   };
   var $T1A = function () {
-    return ($T1A = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FieldDescriptorProto)) ();
+    return ($T1A = JSIL.Memoize($asm01.ProtoBuf.AbortState)) ();
   };
   var $T1B = function () {
-    return ($T1B = JSIL.Memoize($asm01.ProtoBuf.AbortState)) ();
+    return ($T1B = JSIL.Memoize($asm04.System.Linq.Enumerable)) ();
   };
   var $T1C = function () {
-    return ($T1C = JSIL.Memoize($asm04.System.Linq.Enumerable)) ();
+    return ($T1C = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileOptions)) ();
   };
   var $T1D = function () {
-    return ($T1D = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileOptions)) ();
+    return ($T1D = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FieldOptions)) ();
   };
   var $T1E = function () {
-    return ($T1E = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FieldOptions)) ();
+    return ($T1E = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass60_0)) ();
   };
   var $T1F = function () {
-    return ($T1F = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass61_0)) ();
+    return ($T1F = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FieldDescriptorProto_Type)) ();
   };
   var $T20 = function () {
-    return ($T20 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FieldDescriptorProto_Type)) ();
+    return ($T20 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto)) ();
   };
   var $T21 = function () {
-    return ($T21 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto)) ();
+    return ($T21 = JSIL.Memoize($asm00.System.Func$b2.Of($asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto, $asm00.System.Boolean))) ();
   };
   var $T22 = function () {
-    return ($T22 = JSIL.Memoize($asm00.System.Func$b2.Of($asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto, $asm00.System.Boolean))) ();
+    return ($T22 = JSIL.Memoize($asm00.System.Boolean)) ();
   };
   var $T23 = function () {
-    return ($T23 = JSIL.Memoize($asm00.System.Boolean)) ();
+    return ($T23 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FieldDescriptorProto_Label)) ();
   };
   var $T24 = function () {
-    return ($T24 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FieldDescriptorProto_Label)) ();
+    return ($T24 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.MethodDescriptorProto)) ();
   };
   var $T25 = function () {
-    return ($T25 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.MethodDescriptorProto)) ();
+    return ($T25 = JSIL.Memoize(System.Array.Of($asm00.System.Int32))) ();
   };
   var $T26 = function () {
-    return ($T26 = JSIL.Memoize(System.Array.Of($asm00.System.Int32))) ();
+    return ($T26 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.SourceCodeInfo)) ();
   };
   var $T27 = function () {
-    return ($T27 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.SourceCodeInfo)) ();
+    return ($T27 = JSIL.Memoize($asm00.System.UInt32)) ();
   };
   var $T28 = function () {
-    return ($T28 = JSIL.Memoize($asm00.System.UInt32)) ();
+    return ($T28 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass54_0)) ();
   };
   var $T29 = function () {
-    return ($T29 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass55_0)) ();
+    return ($T29 = JSIL.Memoize($asm00.System.Func$b2.Of($asm01.Google.Protobuf.Reflection.EnumDescriptorProto, $asm00.System.Boolean))) ();
   };
   var $T2A = function () {
-    return ($T2A = JSIL.Memoize($asm00.System.Func$b2.Of($asm01.Google.Protobuf.Reflection.EnumDescriptorProto, $asm00.System.Boolean))) ();
+    return ($T2A = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass55_0)) ();
   };
   var $T2B = function () {
-    return ($T2B = JSIL.Memoize($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass56_0)) ();
+    return ($T2B = JSIL.Memoize($asm00.System.Char)) ();
   };
   var $T2C = function () {
-    return ($T2C = JSIL.Memoize($asm00.System.Char)) ();
-  };
-  var $T2D = function () {
-    return ($T2D = JSIL.Memoize($asm00.System.Func$b2.Of($asm01.Google.Protobuf.Reflection.DescriptorProto, $asm00.System.Boolean))) ();
+    return ($T2C = JSIL.Memoize($asm00.System.Func$b2.Of($asm01.Google.Protobuf.Reflection.DescriptorProto, $asm00.System.Boolean))) ();
   };
   var $S00 = function () {
     return ($S00 = JSIL.Memoize(new JSIL.ConstructorSignature($asm00.System.Collections.Generic.List$b1.Of($asm00.System.String), null))) ();
@@ -7168,7 +7346,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     return ($S08 = JSIL.Memoize(new JSIL.MethodSignature(null, [$asm01.ProtoBuf.ParserContext, $asm01.Google.Protobuf.Reflection.ServiceDescriptorProto]))) ();
   };
   var $S09 = function () {
-    return ($S09 = JSIL.Memoize(new JSIL.ConstructorSignature($asm00.System.IO.StringWriter, null))) ();
+    return ($S09 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"])], ["TSource"]))) ();
   };
   var $S0A = function () {
     return ($S0A = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"])], ["TSource"]))) ();
@@ -7177,31 +7355,28 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     return ($S0B = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"])], ["TSource"]))) ();
   };
   var $S0C = function () {
-    return ($S0C = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"])], ["TSource"]))) ();
+    return ($S0C = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
   };
   var $S0D = function () {
-    return ($S0D = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
+    return ($S0D = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto]))) ();
   };
   var $S0E = function () {
-    return ($S0E = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto]))) ();
+    return ($S0E = JSIL.Memoize(new JSIL.MethodSignature("!!0", [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
   };
   var $S0F = function () {
-    return ($S0F = JSIL.Memoize(new JSIL.MethodSignature("!!0", [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
+    return ($S0F = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto]))) ();
   };
   var $S10 = function () {
     return ($S10 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto]))) ();
   };
   var $S11 = function () {
-    return ($S11 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto]))) ();
+    return ($S11 = JSIL.Memoize(new JSIL.MethodSignature("!!0", [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
   };
   var $S12 = function () {
-    return ($S12 = JSIL.Memoize(new JSIL.MethodSignature("!!0", [$asm00.TypeRef("System.Collections.Generic.IEnumerable`1", ["!!0"]), $asm00.TypeRef("System.Func`2", ["!!0", $asm00.TypeRef("System.Boolean")])], ["TSource"]))) ();
+    return ($S12 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.DescriptorProto]))) ();
   };
   var $S13 = function () {
     return ($S13 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.DescriptorProto]))) ();
-  };
-  var $S14 = function () {
-    return ($S14 = JSIL.Memoize(new JSIL.MethodSignature($asm00.System.Boolean, [$asm01.Google.Protobuf.Reflection.DescriptorProto]))) ();
   };
   var $IM00 = function () {
     return ($IM00 = JSIL.Memoize($asm00.System.IDisposable.Dispose)) ();
@@ -7254,18 +7429,14 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     this.ResolveFieldTypes(ctx, this.FileDescriptorProto$Extensions$value, null);
   }; 
 
-  function FileDescriptorProto_GenerateCSharp$00 (target, normalizer, errors) {
-    $T0E().GenerateCSharp(target, this, normalizer, errors);
-  }; 
-
-  function FileDescriptorProto_GenerateCSharp$01 (normalizer, errors) {
-    var stringWriter = $S09().Construct();
+  function FileDescriptorProto_GenerateCSharp (normalizer, errors) {
+    var stringLineWriter = new ($T0D())();
     try {
-      this.GenerateCSharp(stringWriter, normalizer, errors);
-      var result = stringWriter.toString();
+      $T0E().GenerateCSharp(stringLineWriter, this, normalizer, errors);
+      var result = stringLineWriter.toString();
     } finally {
-      if (stringWriter !== null) {
-        $IM00().Call(stringWriter, null);
+      if (stringLineWriter !== null) {
+        $IM00().Call(stringLineWriter, null);
       }
     }
     return result;
@@ -7320,16 +7491,16 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
   }; 
 
   function FileDescriptorProto_Parse (schema, errors) {
-    var token = new JSIL.BoxedVariable(new ($T14())());
+    var token = new JSIL.BoxedVariable(new ($T13())());
     this.set_Syntax("");
-    var parserContext = new ($T05())(this, new ($T15())($T16().RemoveCommentsAndWhitespace($T16().Tokenize(schema))), errors);
+    var parserContext = new ($T05())(this, new ($T14())($T15().RemoveCommentsAndWhitespace($T15().Tokenize(schema))), errors);
     try {
       var tokens = parserContext.ParserContext$Tokens$value;
       tokens.Peek(/* ref */ token);
       parserContext.Fill$b1($thisType)(this);
       this.FixupTypes(parserContext);
       if ($T06().IsNullOrWhiteSpace(this.get_Syntax())) {
-        $T17().Warn(parserContext.ParserContext$Errors$value, token.get(), "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'");
+        $T16().Warn(parserContext.ParserContext$Errors$value, token.get(), "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'");
       }
       if (!(!(this.get_Syntax() == "") && !(this.get_Syntax() == "proto2"))) {
         this.set_Syntax(null);
@@ -7342,7 +7513,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
   }; 
 
   function FileDescriptorProto_ProtoBuf_IHazNames_GetNames () {
-    var expr_07 = new ($T18())(-2);
+    var expr_07 = new ($T17())(-2);
     expr_07.$l$g4__this = this;
     return expr_07;
   }; 
@@ -7351,57 +7522,57 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     var item = new JSIL.BoxedVariable(null);
     var item2 = new JSIL.BoxedVariable(null);
     var item3 = new JSIL.BoxedVariable(null);
-    var token = new JSIL.BoxedVariable(new ($T14())());
+    var token = new JSIL.BoxedVariable(new ($T13())());
     var tokens = ctx.ParserContext$Tokens$value;
-    if ($T16().ConsumeIf(tokens, $T19().AlphaNumeric, "message")) {
+    if ($T15().ConsumeIf(tokens, $T18().AlphaNumeric, "message")) {
       if ($T09().TryParse(ctx, this, /* ref */ item)) {
         (this.FileDescriptorProto$MessageTypes$value).Add(item.get());
         return;
       }
-    } else if ($T16().ConsumeIf(tokens, $T19().AlphaNumeric, "enum")) {
+    } else if ($T15().ConsumeIf(tokens, $T18().AlphaNumeric, "enum")) {
       if ($T08().TryParse(ctx, this, /* ref */ item2)) {
         (this.FileDescriptorProto$EnumTypes$value).Add(item2.get());
         return;
       }
     } else {
-      if ($T16().ConsumeIf(tokens, $T19().AlphaNumeric, "extend")) {
-        $T1A().ParseExtensions(ctx, this, this.FileDescriptorProto$Extensions$value);
+      if ($T15().ConsumeIf(tokens, $T18().AlphaNumeric, "extend")) {
+        $T19().ParseExtensions(ctx, this, this.FileDescriptorProto$Extensions$value);
         return;
       }
-      if ($T16().ConsumeIf(tokens, $T19().AlphaNumeric, "service")) {
+      if ($T15().ConsumeIf(tokens, $T18().AlphaNumeric, "service")) {
         if ($T0A().TryParse(ctx, /* ref */ item3)) {
           (this.FileDescriptorProto$Services$value).Add(item3.get());
           return;
         }
       } else {
-        if ($T16().ConsumeIf(tokens, $T19().AlphaNumeric, "syntax")) {
-          ctx.ParserContext$AbortState$value = $T1B().Statement;
-          if (!(!$S0A().CallStatic($T1C(), "Any$b1", [$asm01.Google.Protobuf.Reflection.DescriptorProto], this.FileDescriptorProto$MessageTypes$value) && 
-              !$S0B().CallStatic($T1C(), "Any$b1", [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto], this.FileDescriptorProto$EnumTypes$value) && !$S0C().CallStatic($T1C(), "Any$b1", [$asm01.Google.Protobuf.Reflection.FieldDescriptorProto], this.FileDescriptorProto$Extensions$value))) {
-            $T17().Error(ctx.ParserContext$Errors$value, tokens.get_Previous(), "syntax must be set before types are defined");
+        if ($T15().ConsumeIf(tokens, $T18().AlphaNumeric, "syntax")) {
+          ctx.ParserContext$AbortState$value = $T1A().Statement;
+          if (!(!$S09().CallStatic($T1B(), "Any$b1", [$asm01.Google.Protobuf.Reflection.DescriptorProto], this.FileDescriptorProto$MessageTypes$value) && 
+              !$S0A().CallStatic($T1B(), "Any$b1", [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto], this.FileDescriptorProto$EnumTypes$value) && !$S0B().CallStatic($T1B(), "Any$b1", [$asm01.Google.Protobuf.Reflection.FieldDescriptorProto], this.FileDescriptorProto$Extensions$value))) {
+            $T16().Error(ctx.ParserContext$Errors$value, tokens.get_Previous(), "syntax must be set before types are defined");
           }
-          $T16().Consume(tokens, $T19().Symbol, "=");
-          this.set_Syntax($T16().Consume(tokens, $T19().StringLiteral));
+          $T15().Consume(tokens, $T18().Symbol, "=");
+          this.set_Syntax($T15().Consume(tokens, $T18().StringLiteral));
           var syntax = this.get_Syntax();
           if (!((syntax == "proto2") || (syntax == "proto3"))) {
-            $T17().Error(
+            $T16().Error(
               ctx.ParserContext$Errors$value, 
               tokens.get_Previous(), 
               $T06().Format("unknown syntax '{0}'", this.get_Syntax())
             );
           }
-          $T16().Consume(tokens, $T19().Symbol, ";");
-          ctx.ParserContext$AbortState$value = $T1B().None;
+          $T15().Consume(tokens, $T18().Symbol, ";");
+          ctx.ParserContext$AbortState$value = $T1A().None;
           return;
         }
-        if ($T16().ConsumeIf(tokens, $T19().AlphaNumeric, "package")) {
-          ctx.ParserContext$AbortState$value = $T1B().Statement;
-          this.set_Package($T16().Consume(tokens, $T19().AlphaNumeric));
-          ctx.ParserContext$AbortState$value = $T1B().None;
+        if ($T15().ConsumeIf(tokens, $T18().AlphaNumeric, "package")) {
+          ctx.ParserContext$AbortState$value = $T1A().Statement;
+          this.set_Package($T15().Consume(tokens, $T18().AlphaNumeric));
+          ctx.ParserContext$AbortState$value = $T1A().None;
           return;
         }
-        if ($T16().ConsumeIf(tokens, $T19().AlphaNumeric, "option")) {
-          this.FileDescriptorProto$Options$value = ctx.ParseOptionStatement$b1($T1D())(this.FileDescriptorProto$Options$value, null);
+        if ($T15().ConsumeIf(tokens, $T18().AlphaNumeric, "option")) {
+          this.FileDescriptorProto$Options$value = ctx.ParseOptionStatement$b1($T1C())(this.FileDescriptorProto$Options$value, null);
           return;
         }
         if (tokens.Peek(/* ref */ token)) {
@@ -7423,7 +7594,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     this.__pbn__Syntax = null;
   }; 
 
-  function FileDescriptorProto_ResolveFieldTypes$02 (ctx, extensions, parent) {
+  function FileDescriptorProto_ResolveFieldTypes$00 (ctx, extensions, parent) {
     var $temp00;
     var descriptorProto = new JSIL.BoxedVariable(null);
     var typeName = new JSIL.BoxedVariable(null);
@@ -7435,17 +7606,17 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     for (var a$0 = extensions._items, i$0 = 0, l$0 = (extensions._size | 0); i$0 < l$0; ($temp00 = i$0, 
         i$0 = ((i$0 + 1) | 0), 
         $temp00)) {
-      var $closure0 = new ($T1F())();
+      var $closure0 = new ($T1E())();
       $closure0.field = a$0[i$0];
       if (!($T06().IsNullOrEmpty(($closure0.field).get_TypeName()) || !$thisType.ShouldResolveType(($closure0.field).get_type()))) {
         if (this.TryResolveMessage(($closure0.field).get_TypeName(), parent, /* ref */ descriptorProto, /* ref */ typeName)) {
-          if (($closure0.field).get_type() !== $T20().TypeGroup) {
-            ($closure0.field).set_type($T20().TypeMessage);
+          if (($closure0.field).get_type() !== $T1F().TypeGroup) {
+            ($closure0.field).set_type($T1F().TypeMessage);
           }
         } else if (this.TryResolveEnum(($closure0.field).get_TypeName(), parent, /* ref */ enumDescriptorProto, /* ref */ typeName)) {
-          ($closure0.field).set_type($T20().TypeEnum);
-          if (!$T06().IsNullOrWhiteSpace(($closure0.field).get_DefaultValue()) & !$S0D().CallStatic($T1C(), "Any$b1", [$asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto], enumDescriptorProto.get().EnumDescriptorProto$Values$value, $T22().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass61_0, "$lResolveFieldTypes$gb__0", $S0E(), false, false)))) {
-            $T17().Error(ctx.ParserContext$Errors$value, $closure0.field.FieldDescriptorProto$TypeToken$value, $T06().Format(
+          ($closure0.field).set_type($T1F().TypeEnum);
+          if (!$T06().IsNullOrWhiteSpace(($closure0.field).get_DefaultValue()) & !$S0C().CallStatic($T1B(), "Any$b1", [$asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto], enumDescriptorProto.get().EnumDescriptorProto$Values$value, $T21().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass60_0, "$lResolveFieldTypes$gb__0", $S0D(), false, false)))) {
+            $T16().Error(ctx.ParserContext$Errors$value, $closure0.field.FieldDescriptorProto$TypeToken$value, $T06().Format(
                 "enum {0} does not contain value '{1}'", 
                 (enumDescriptorProto.get()).get_Name(), 
                 ($closure0.field).get_DefaultValue()
@@ -7454,7 +7625,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
         } else {
           (ctx.ParserContext$Errors$value).Add(($closure0.field.FieldDescriptorProto$TypeToken$value.MemberwiseClone()).TypeNotFound(($closure0.field).get_TypeName()));
           typeName.set(($closure0.field).get_TypeName());
-          ($closure0.field).set_type($T20().TypeMessage);
+          ($closure0.field).set_type($T1F().TypeMessage);
         }
         ($closure0.field).set_TypeName(typeName.get());
       }
@@ -7465,10 +7636,10 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
         }
         ($closure0.field).set_Extendee(extendee.get());
       }
-      var flag = $T1A().CanPack(($closure0.field).get_type());
-      if (!(!((ctx.get_Syntax() != "proto2") & flag) || (($closure0.field).get_label() !== $T24().LabelRepeated))) {
+      var flag = $T19().CanPack(($closure0.field).get_type());
+      if (!(!((ctx.get_Syntax() != "proto2") & flag) || (($closure0.field).get_label() !== $T23().LabelRepeated))) {
         if ((arg_223_0 = $closure0.field.FieldDescriptorProto$Options$value) === null) {
-          arg_223_0 = $closure0.field.FieldDescriptorProto$Options$value = new ($T1E())();
+          arg_223_0 = $closure0.field.FieldDescriptorProto$Options$value = new ($T1D())();
         }
         var fieldOptions = arg_223_0;
         if (!fieldOptions.ShouldSerializePacked()) {
@@ -7478,13 +7649,13 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
       var expr_241 = $closure0.field.FieldDescriptorProto$Options$value;
       if (!(!((expr_241 !== null) && 
             expr_241.get_Packed()) || flag)) {
-        $T17().Error(ctx.ParserContext$Errors$value, $closure0.field.FieldDescriptorProto$TypeToken$value, $T06().Format("field of type {0} cannot be packed", ($closure0.field).get_type()));
+        $T16().Error(ctx.ParserContext$Errors$value, $closure0.field.FieldDescriptorProto$TypeToken$value, $T06().Format("field of type {0} cannot be packed", ($closure0.field).get_type()));
         ($closure0.field.FieldDescriptorProto$Options$value).set_Packed(false);
       }
     }
   }; 
 
-  function FileDescriptorProto_ResolveFieldTypes$03 (ctx, service) {
+  function FileDescriptorProto_ResolveFieldTypes$01 (ctx, service) {
     var $temp00;
     var descriptorProto = new JSIL.BoxedVariable(null);
     var text = new JSIL.BoxedVariable(null);
@@ -7504,7 +7675,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     }
   }; 
 
-  function FileDescriptorProto_ResolveFieldTypes$04 (ctx, type) {
+  function FileDescriptorProto_ResolveFieldTypes$02 (ctx, type) {
     var $temp00;
     this.ResolveFieldTypes(ctx, type.DescriptorProto$Fields$value, type);
     this.ResolveFieldTypes(ctx, type.DescriptorProto$Extensions$value, type);
@@ -7545,7 +7716,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     this.FileDescriptorProto$WeakDependencies$value = value;
   }; 
 
-  function FileDescriptorProto_SetParents$05 (prefix, parent) {
+  function FileDescriptorProto_SetParents$03 (prefix, parent) {
     var $temp00;
     parent.EnumDescriptorProto$FullyQualifiedName$value = ((prefix + "." + parent.get_Name()));
 
@@ -7557,7 +7728,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     }
   }; 
 
-  function FileDescriptorProto_SetParents$06 (prefix, parent) {
+  function FileDescriptorProto_SetParents$04 (prefix, parent) {
     var $temp00, $temp01, $temp02;
     var prefix2 = parent.DescriptorProto$FullyQualifiedName$value = ((prefix + "." + parent.get_Name()));
 
@@ -7587,7 +7758,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
 
   function FileDescriptorProto_ShouldResolveType (type) {
     return !(((type.valueOf() | 0) !== 0) && 
-      ((((type - $T20().TypeGroup) | 0) >>> 0) > (1 >>> 0)) && (type !== $T20().TypeEnum));
+      ((((type - $T1F().TypeGroup) | 0) >>> 0) > (1 >>> 0)) && (type !== $T1F().TypeEnum));
   }; 
 
   function FileDescriptorProto_ShouldSerializeName () {
@@ -7603,17 +7774,17 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
   }; 
 
   function FileDescriptorProto_TryResolveEnum (type, parent, /* ref */ $enum, /* ref */ fqn) {
-    var $closure0 = new ($T29())();
+    var $closure0 = new ($T28())();
     $closure0.type = type;
 
     for (; parent !== null; parent = parent.DescriptorProto$Parent$value) {
-      $enum.set($S0F().CallStatic($T1C(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto], parent.DescriptorProto$EnumTypes$value, $T2A().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass55_0, "$lTryResolveEnum$gb__0", $S10(), false, false))));
+      $enum.set($S0E().CallStatic($T1B(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto], parent.DescriptorProto$EnumTypes$value, $T29().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass54_0, "$lTryResolveEnum$gb__0", $S0F(), false, false))));
       if ($enum.get() !== null) {
         fqn.set($enum.get().EnumDescriptorProto$FullyQualifiedName$value);
         return true;
       }
     }
-    $enum.set($S0F().CallStatic($T1C(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto], this.FileDescriptorProto$EnumTypes$value, $T2A().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass55_0, "$lTryResolveEnum$gb__1", $S11(), false, false))));
+    $enum.set($S0E().CallStatic($T1B(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.EnumDescriptorProto], this.FileDescriptorProto$EnumTypes$value, $T29().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass54_0, "$lTryResolveEnum$gb__1", $S10(), false, false))));
     if ($enum.get() !== null) {
       fqn.set($enum.get().EnumDescriptorProto$FullyQualifiedName$value);
       return true;
@@ -7623,7 +7794,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
   }; 
 
   function FileDescriptorProto_TryResolveMessage (typeName, parent, /* ref */ message, /* ref */ fqn) {
-    var $closure0 = new ($T2B())();
+    var $closure0 = new ($T2A())();
     $closure0.typeName = typeName;
     var num = ($closure0.typeName.indexOf("."));
     if (num > 0) {
@@ -7637,13 +7808,13 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     } else {
 
       for (; parent !== null; parent = parent.DescriptorProto$Parent$value) {
-        message.set($S12().CallStatic($T1C(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.DescriptorProto], parent.DescriptorProto$NestedTypes$value, $T2D().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass56_0, "$lTryResolveMessage$gb__0", $S13(), false, false))));
+        message.set($S11().CallStatic($T1B(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.DescriptorProto], parent.DescriptorProto$NestedTypes$value, $T2C().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass55_0, "$lTryResolveMessage$gb__0", $S12(), false, false))));
         if (message.get() !== null) {
           fqn.set(message.get().DescriptorProto$FullyQualifiedName$value);
           return true;
         }
       }
-      message.set($S12().CallStatic($T1C(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.DescriptorProto], this.FileDescriptorProto$MessageTypes$value, $T2D().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass56_0, "$lTryResolveMessage$gb__1", $S14(), false, false))));
+      message.set($S11().CallStatic($T1B(), "FirstOrDefault$b1", [$asm01.Google.Protobuf.Reflection.DescriptorProto], this.FileDescriptorProto$MessageTypes$value, $T2C().New($closure0, null, new JSIL.MethodPointerInfo($asm01.Google.Protobuf.Reflection.FileDescriptorProto_$l$gc__DisplayClass55_0, "$lTryResolveMessage$gb__1", $S13(), false, false))));
       if (message.get() !== null) {
         fqn.set(message.get().DescriptorProto$FullyQualifiedName$value);
         return true;
@@ -7673,16 +7844,8 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     );
 
     $.Method({Static:false, Public:true }, "GenerateCSharp", 
-      new JSIL.MethodSignature(null, [
-          $asm00.TypeRef("System.IO.TextWriter"), $asm01.TypeRef("ProtoBuf.NameNormalizer"), 
-          $asm00.TypeRef("System.Collections.Generic.IList`1", [$asm01.TypeRef("ProtoBuf.Error")])
-        ]), 
-      FileDescriptorProto_GenerateCSharp$00
-    );
-
-    $.Method({Static:false, Public:true }, "GenerateCSharp", 
       new JSIL.MethodSignature($.String, [$asm01.TypeRef("ProtoBuf.NameNormalizer"), $asm00.TypeRef("System.Collections.Generic.IList`1", [$asm01.TypeRef("ProtoBuf.Error")])]), 
-      FileDescriptorProto_GenerateCSharp$01
+      FileDescriptorProto_GenerateCSharp
     );
 
     $.Method({Static:false, Public:true }, "get_Dependencies", 
@@ -7791,17 +7954,17 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
           $asm01.TypeRef("ProtoBuf.ParserContext"), $asm00.TypeRef("System.Collections.Generic.List`1", [$asm01.TypeRef("Google.Protobuf.Reflection.FieldDescriptorProto")]), 
           $asm01.TypeRef("Google.Protobuf.Reflection.DescriptorProto")
         ]), 
-      FileDescriptorProto_ResolveFieldTypes$02
+      FileDescriptorProto_ResolveFieldTypes$00
     );
 
     $.Method({Static:false, Public:false}, "ResolveFieldTypes", 
       new JSIL.MethodSignature(null, [$asm01.TypeRef("ProtoBuf.ParserContext"), $asm01.TypeRef("Google.Protobuf.Reflection.ServiceDescriptorProto")]), 
-      FileDescriptorProto_ResolveFieldTypes$03
+      FileDescriptorProto_ResolveFieldTypes$01
     );
 
     $.Method({Static:false, Public:false}, "ResolveFieldTypes", 
       new JSIL.MethodSignature(null, [$asm01.TypeRef("ProtoBuf.ParserContext"), $asm01.TypeRef("Google.Protobuf.Reflection.DescriptorProto")]), 
-      FileDescriptorProto_ResolveFieldTypes$04
+      FileDescriptorProto_ResolveFieldTypes$02
     );
 
     $.Method({Static:false, Public:true }, "set_Name", 
@@ -7845,12 +8008,12 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
 
     $.Method({Static:true , Public:false}, "SetParents", 
       new JSIL.MethodSignature(null, [$.String, $asm01.TypeRef("Google.Protobuf.Reflection.EnumDescriptorProto")]), 
-      FileDescriptorProto_SetParents$05
+      FileDescriptorProto_SetParents$03
     );
 
     $.Method({Static:true , Public:false}, "SetParents", 
       new JSIL.MethodSignature(null, [$.String, $asm01.TypeRef("Google.Protobuf.Reflection.DescriptorProto")]), 
-      FileDescriptorProto_SetParents$06
+      FileDescriptorProto_SetParents$04
     );
 
     $.Method({Static:true , Public:false}, "ShouldResolveType", 
@@ -7977,9 +8140,9 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
 
 })();
 
-/* class Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass55_0 */ 
+/* class Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass54_0 */ 
 
-(function $l$gc__DisplayClass55_0$Members () {
+(function $l$gc__DisplayClass54_0$Members () {
   var $, $thisType;
   var $T00 = function () {
     return ($T00 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.EnumDescriptorProto)) ();
@@ -7989,15 +8152,71 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
   };
 
 
+  function $l$gc__DisplayClass54_0__ctor () {
+  }; 
+
+  function $l$gc__DisplayClass54_0_$lTryResolveEnum$gb__0 (x) {
+    return x.get_Name() == this.type;
+  }; 
+
+  function $l$gc__DisplayClass54_0_$lTryResolveEnum$gb__1 (x) {
+    return x.get_Name() == this.type;
+  }; 
+
+  JSIL.MakeType({
+      BaseType: $asm00.TypeRef("System.Object"), 
+      Name: "Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass54_0", 
+      IsPublic: false, 
+      IsReferenceType: true, 
+      MaximumConstructorArguments: 0, 
+    }, function ($ib) {
+    $ = $ib;
+
+    $.Method({Static:false, Public:true }, ".ctor", 
+      JSIL.MethodSignature.Void, 
+      $l$gc__DisplayClass54_0__ctor
+    );
+
+    $.Method({Static:false, Public:false}, "$lTryResolveEnum$gb__0", 
+      new JSIL.MethodSignature($.Boolean, [$asm01.TypeRef("Google.Protobuf.Reflection.EnumDescriptorProto")]), 
+      $l$gc__DisplayClass54_0_$lTryResolveEnum$gb__0
+    );
+
+    $.Method({Static:false, Public:false}, "$lTryResolveEnum$gb__1", 
+      new JSIL.MethodSignature($.Boolean, [$asm01.TypeRef("Google.Protobuf.Reflection.EnumDescriptorProto")]), 
+      $l$gc__DisplayClass54_0_$lTryResolveEnum$gb__1
+    );
+
+    $.Field({Static:false, Public:true }, "type", $.String);
+
+
+    return function (newThisType) { $thisType = newThisType; }; 
+  })
+    .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
+
+})();
+
+/* class Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass55_0 */ 
+
+(function $l$gc__DisplayClass55_0$Members () {
+  var $, $thisType;
+  var $T00 = function () {
+    return ($T00 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.DescriptorProto)) ();
+  };
+  var $T01 = function () {
+    return ($T01 = JSIL.Memoize($asm00.System.String)) ();
+  };
+
+
   function $l$gc__DisplayClass55_0__ctor () {
   }; 
 
-  function $l$gc__DisplayClass55_0_$lTryResolveEnum$gb__0 (x) {
-    return x.get_Name() == this.type;
+  function $l$gc__DisplayClass55_0_$lTryResolveMessage$gb__0 (x) {
+    return x.get_Name() == this.typeName;
   }; 
 
-  function $l$gc__DisplayClass55_0_$lTryResolveEnum$gb__1 (x) {
-    return x.get_Name() == this.type;
+  function $l$gc__DisplayClass55_0_$lTryResolveMessage$gb__1 (x) {
+    return x.get_Name() == this.typeName;
   }; 
 
   JSIL.MakeType({
@@ -8014,70 +8233,14 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
       $l$gc__DisplayClass55_0__ctor
     );
 
-    $.Method({Static:false, Public:false}, "$lTryResolveEnum$gb__0", 
-      new JSIL.MethodSignature($.Boolean, [$asm01.TypeRef("Google.Protobuf.Reflection.EnumDescriptorProto")]), 
-      $l$gc__DisplayClass55_0_$lTryResolveEnum$gb__0
-    );
-
-    $.Method({Static:false, Public:false}, "$lTryResolveEnum$gb__1", 
-      new JSIL.MethodSignature($.Boolean, [$asm01.TypeRef("Google.Protobuf.Reflection.EnumDescriptorProto")]), 
-      $l$gc__DisplayClass55_0_$lTryResolveEnum$gb__1
-    );
-
-    $.Field({Static:false, Public:true }, "type", $.String);
-
-
-    return function (newThisType) { $thisType = newThisType; }; 
-  })
-    .Attribute($asm00.TypeRef("System.Runtime.CompilerServices.CompilerGeneratedAttribute"));
-
-})();
-
-/* class Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass56_0 */ 
-
-(function $l$gc__DisplayClass56_0$Members () {
-  var $, $thisType;
-  var $T00 = function () {
-    return ($T00 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.DescriptorProto)) ();
-  };
-  var $T01 = function () {
-    return ($T01 = JSIL.Memoize($asm00.System.String)) ();
-  };
-
-
-  function $l$gc__DisplayClass56_0__ctor () {
-  }; 
-
-  function $l$gc__DisplayClass56_0_$lTryResolveMessage$gb__0 (x) {
-    return x.get_Name() == this.typeName;
-  }; 
-
-  function $l$gc__DisplayClass56_0_$lTryResolveMessage$gb__1 (x) {
-    return x.get_Name() == this.typeName;
-  }; 
-
-  JSIL.MakeType({
-      BaseType: $asm00.TypeRef("System.Object"), 
-      Name: "Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass56_0", 
-      IsPublic: false, 
-      IsReferenceType: true, 
-      MaximumConstructorArguments: 0, 
-    }, function ($ib) {
-    $ = $ib;
-
-    $.Method({Static:false, Public:true }, ".ctor", 
-      JSIL.MethodSignature.Void, 
-      $l$gc__DisplayClass56_0__ctor
-    );
-
     $.Method({Static:false, Public:false}, "$lTryResolveMessage$gb__0", 
       new JSIL.MethodSignature($.Boolean, [$asm01.TypeRef("Google.Protobuf.Reflection.DescriptorProto")]), 
-      $l$gc__DisplayClass56_0_$lTryResolveMessage$gb__0
+      $l$gc__DisplayClass55_0_$lTryResolveMessage$gb__0
     );
 
     $.Method({Static:false, Public:false}, "$lTryResolveMessage$gb__1", 
       new JSIL.MethodSignature($.Boolean, [$asm01.TypeRef("Google.Protobuf.Reflection.DescriptorProto")]), 
-      $l$gc__DisplayClass56_0_$lTryResolveMessage$gb__1
+      $l$gc__DisplayClass55_0_$lTryResolveMessage$gb__1
     );
 
     $.Field({Static:false, Public:true }, "typeName", $.String);
@@ -8089,9 +8252,9 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
 
 })();
 
-/* class Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass61_0 */ 
+/* class Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass60_0 */ 
 
-(function $l$gc__DisplayClass61_0$Members () {
+(function $l$gc__DisplayClass60_0$Members () {
   var $, $thisType;
   var $T00 = function () {
     return ($T00 = JSIL.Memoize($asm01.Google.Protobuf.Reflection.EnumValueDescriptorProto)) ();
@@ -8104,16 +8267,16 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
   };
 
 
-  function $l$gc__DisplayClass61_0__ctor () {
+  function $l$gc__DisplayClass60_0__ctor () {
   }; 
 
-  function $l$gc__DisplayClass61_0_$lResolveFieldTypes$gb__0 (x) {
+  function $l$gc__DisplayClass60_0_$lResolveFieldTypes$gb__0 (x) {
     return x.get_Name() == (this.field).get_DefaultValue();
   }; 
 
   JSIL.MakeType({
       BaseType: $asm00.TypeRef("System.Object"), 
-      Name: "Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass61_0", 
+      Name: "Google.Protobuf.Reflection.FileDescriptorProto+<>c__DisplayClass60_0", 
       IsPublic: false, 
       IsReferenceType: true, 
       MaximumConstructorArguments: 0, 
@@ -8122,12 +8285,12 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
 
     $.Method({Static:false, Public:true }, ".ctor", 
       JSIL.MethodSignature.Void, 
-      $l$gc__DisplayClass61_0__ctor
+      $l$gc__DisplayClass60_0__ctor
     );
 
     $.Method({Static:false, Public:false}, "$lResolveFieldTypes$gb__0", 
       new JSIL.MethodSignature($.Boolean, [$asm01.TypeRef("Google.Protobuf.Reflection.EnumValueDescriptorProto")]), 
-      $l$gc__DisplayClass61_0_$lResolveFieldTypes$gb__0
+      $l$gc__DisplayClass60_0_$lResolveFieldTypes$gb__0
     );
 
     $.Field({Static:false, Public:true }, "field", $asm01.TypeRef("Google.Protobuf.Reflection.FieldDescriptorProto"));
@@ -8139,9 +8302,9 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
 
 })();
 
-/* class Google.Protobuf.Reflection.FileDescriptorProto+<ProtoBuf-IHazNames-GetNames>d__64 */ 
+/* class Google.Protobuf.Reflection.FileDescriptorProto+<ProtoBuf-IHazNames-GetNames>d__63 */ 
 
-(function $lProtoBuf$daIHazNames$daGetNames$gd__64$Members () {
+(function $lProtoBuf$daIHazNames$daGetNames$gd__63$Members () {
   var $, $thisType;
   var $T00 = function () {
     return ($T00 = JSIL.Memoize($asm00.System.Int32)) ();
@@ -8190,22 +8353,22 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
   };
 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64__ctor ($l$g1__state) {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63__ctor ($l$g1__state) {
     this.$l$g1__state = ($l$g1__state | 0);
     this.$l$gl__initialThreadId = ($T01().get_CurrentThread().get_ManagedThreadId() | 0);
   }; 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64_$l$gm__Finally1 () {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63_$l$gm__Finally1 () {
     this.$l$g1__state = -1;
     $IM00().Call(this.$l$g7__wrap1, null);
   }; 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64_$l$gm__Finally2 () {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63_$l$gm__Finally2 () {
     this.$l$g1__state = -1;
     $IM00().Call(this.$l$g7__wrap2, null);
   }; 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64_MoveNext ($exception) {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63_MoveNext ($exception) {
     try {
 
       var $label0 = 0;
@@ -8272,7 +8435,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     return result;
   }; 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_Generic_IEnumerable$lSystem_String$g_GetEnumerator () {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_Generic_IEnumerable$lSystem_String$g_GetEnumerator () {
     if (!(((this.$l$g1__state | 0) !== -2) || ((this.$l$gl__initialThreadId | 0) !== ($T01().get_CurrentThread().get_ManagedThreadId() | 0)))) {
       this.$l$g1__state = 0;
       var $lProtoBuf$daIHazNames$daGetNames$gd__ = this;
@@ -8283,23 +8446,23 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
     return $lProtoBuf$daIHazNames$daGetNames$gd__;
   }; 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_Generic_IEnumerator$lSystem_String$g_get_Current () {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_Generic_IEnumerator$lSystem_String$g_get_Current () {
     return this.$l$g2__current;
   }; 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_IEnumerable_GetEnumerator () {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_IEnumerable_GetEnumerator () {
     return this.System_Collections_Generic_IEnumerable$lSystem_String$g_GetEnumerator();
   }; 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_IEnumerator_get_Current () {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_IEnumerator_get_Current () {
     return this.$l$g2__current;
   }; 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_IEnumerator_Reset () {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_IEnumerator_Reset () {
     throw $S00().Construct();
   }; 
 
-  function $lProtoBuf$daIHazNames$daGetNames$gd__64_System_IDisposable_Dispose () {
+  function $lProtoBuf$daIHazNames$daGetNames$gd__63_System_IDisposable_Dispose () {
     switch (this.$l$g1__state) {
       case -4: 
       case 2: 
@@ -8331,7 +8494,7 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
 
   JSIL.MakeType({
       BaseType: $asm00.TypeRef("System.Object"), 
-      Name: "Google.Protobuf.Reflection.FileDescriptorProto+<ProtoBuf-IHazNames-GetNames>d__64", 
+      Name: "Google.Protobuf.Reflection.FileDescriptorProto+<ProtoBuf-IHazNames-GetNames>d__63", 
       IsPublic: false, 
       IsReferenceType: true, 
       MaximumConstructorArguments: 1, 
@@ -8340,64 +8503,64 @@ JSIL.DeclareNamespace("Google.Protobuf.Reflection");
 
     $.Method({Static:false, Public:true }, ".ctor", 
       JSIL.MethodSignature.Action($.Int32), 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64__ctor
+      $lProtoBuf$daIHazNames$daGetNames$gd__63__ctor
     )
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false}, "$l$gm__Finally1", 
       JSIL.MethodSignature.Void, 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64_$l$gm__Finally1
+      $lProtoBuf$daIHazNames$daGetNames$gd__63_$l$gm__Finally1
     );
 
     $.Method({Static:false, Public:false}, "$l$gm__Finally2", 
       JSIL.MethodSignature.Void, 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64_$l$gm__Finally2
+      $lProtoBuf$daIHazNames$daGetNames$gd__63_$l$gm__Finally2
     );
 
     $.Method({Static:false, Public:false, Virtual:true }, "MoveNext", 
       JSIL.MethodSignature.Return($.Boolean), 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64_MoveNext
+      $lProtoBuf$daIHazNames$daGetNames$gd__63_MoveNext
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerator"), "MoveNext");
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.Generic.IEnumerable$lSystem.String$g.GetEnumerator", 
       JSIL.MethodSignature.Return($asm00.TypeRef("System.Collections.Generic.IEnumerator`1", [$.String])), 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_Generic_IEnumerable$lSystem_String$g_GetEnumerator
+      $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_Generic_IEnumerable$lSystem_String$g_GetEnumerator
     )
       .Overrides($asm00.TypeRef("System.Collections.Generic.IEnumerable`1", [$asm00.TypeRef("System.String")]), "GetEnumerator")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.Generic.IEnumerator$lSystem.String$g.get_Current", 
       JSIL.MethodSignature.Return($.String), 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_Generic_IEnumerator$lSystem_String$g_get_Current
+      $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_Generic_IEnumerator$lSystem_String$g_get_Current
     )
       .Overrides($asm00.TypeRef("System.Collections.Generic.IEnumerator`1", [$asm00.TypeRef("System.String")]), "get_Current")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.IEnumerable.GetEnumerator", 
       JSIL.MethodSignature.Return($asm00.TypeRef("System.Collections.IEnumerator")), 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_IEnumerable_GetEnumerator
+      $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_IEnumerable_GetEnumerator
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerable"), "GetEnumerator")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.IEnumerator.get_Current", 
       JSIL.MethodSignature.Return($.Object), 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_IEnumerator_get_Current
+      $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_IEnumerator_get_Current
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerator"), "get_Current")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.Collections.IEnumerator.Reset", 
       JSIL.MethodSignature.Void, 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64_System_Collections_IEnumerator_Reset
+      $lProtoBuf$daIHazNames$daGetNames$gd__63_System_Collections_IEnumerator_Reset
     )
       .Overrides($asm00.TypeRef("System.Collections.IEnumerator"), "Reset")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));
 
     $.Method({Static:false, Public:false, Virtual:true }, "System.IDisposable.Dispose", 
       JSIL.MethodSignature.Void, 
-      $lProtoBuf$daIHazNames$daGetNames$gd__64_System_IDisposable_Dispose
+      $lProtoBuf$daIHazNames$daGetNames$gd__63_System_IDisposable_Dispose
     )
       .Overrides($asm00.TypeRef("System.IDisposable"), "Dispose")
       .Attribute($asm00.TypeRef("System.Diagnostics.DebuggerHiddenAttribute"));

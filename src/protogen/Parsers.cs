@@ -1162,6 +1162,41 @@ namespace ProtoBuf
         public string Text { get; }
     }
 
+    internal abstract class LineWriter : IDisposable
+    {
+        public abstract void Write(string value);
+        public virtual void WriteLine() => Write("\r\n");
+        public virtual void WriteLine(string value)
+        {
+            Write(value);
+            WriteLine();
+        }
+        public virtual void Dispose() { }
+    }
+#if !NO_IO
+    internal sealed class TextWriterLineWriter : LineWriter
+    {
+        public TextWriterLineWriter(TextWriter buffer)
+        {
+            this.buffer = buffer;
+        }
+        private TextWriter buffer;
+        public override void Write(string value) => buffer.Write(value);
+        public override void WriteLine() => buffer.WriteLine();
+        public override void WriteLine(string value) => buffer.WriteLine(value);
+        public override void Dispose() { buffer?.Dispose(); buffer = null; }
+        public override string ToString() => buffer?.ToString();
+    }
+#endif
+    internal sealed class StringLineWriter : LineWriter
+    {
+        private StringBuilder buffer = new StringBuilder();
+        public override void Write(string value) => buffer.Append(value);
+        public override void WriteLine() => buffer.AppendLine();
+        public override void WriteLine(string value) => buffer.AppendLine(value);
+        public override void Dispose() { buffer = null; }
+        public override string ToString() => buffer?.ToString();
+    }
     internal abstract class LineReader : IDisposable
     {
         public abstract string ReadLine();
@@ -1450,7 +1485,7 @@ namespace ProtoBuf
                 case FieldDescriptorProto.Type.TypeInt32:
                 case FieldDescriptorProto.Type.TypeSint32:
                     {
-                        if (int.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var val))
+                        if (int.TryParse(defaultValue, NumberStyles.Number & NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }

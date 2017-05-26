@@ -13,7 +13,7 @@ var $asm08 = JSIL.GetAssembly("System.Data.SqlXml, Version=4.0.0.0, Culture=neut
 
 if (typeof (contentManifest) !== "object") { JSIL.GlobalNamespace.contentManifest = {}; };
 contentManifest["protogen.dll"] = [
-    ["Script", "protogen, Version=2.3.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67.js", { "sizeBytes": 597428 }],
+    ["Script", "protogen, Version=2.3.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67.js", { "sizeBytes": 600821 }],
     ["Script", "mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js", { "sizeBytes": 9385689 }],
     ["Script", "System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js", { "sizeBytes": 3154551 }],
     ["Script", "System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js", { "sizeBytes": 6405452 }],

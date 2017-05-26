@@ -11,14 +11,15 @@ namespace Google.Protobuf.Reflection
 #pragma warning disable CS1591
     partial class FileDescriptorProto
     {
+#if !NO_IO
         public void GenerateCSharp(TextWriter target, NameNormalizer normalizer = null, IList<Error> errors = null)
-            => Generators.GenerateCSharp(target, this, normalizer, errors);
-
+            => Generators.GenerateCSharp(new TextWriterLineWriter(target), this, normalizer, errors);
+#endif
         public string GenerateCSharp(NameNormalizer normalizer = null, IList<Error> errors = null)
         {
-            using (var sw = new StringWriter())
+            using (var sw = new StringLineWriter())
             {
-                GenerateCSharp(sw, normalizer, errors);
+                Generators.GenerateCSharp(sw, this, normalizer, errors);
                 return sw.ToString();
             }
         }
@@ -342,13 +343,13 @@ namespace ProtoBuf
                 return this;
             }
             private int _indent;
-            public GeneratorContext(FileDescriptorProto schema, NameNormalizer normalizer, TextWriter output)
+            public GeneratorContext(FileDescriptorProto schema, NameNormalizer normalizer, LineWriter output)
             {
                 this.fileDescriptor = schema;
                 Normalizer = normalizer;
                 Output = output;
             }
-            public TextWriter Write(string value)
+            public LineWriter Write(string value)
             {
                 var indent = _indent;
                 var target = Output;
@@ -376,7 +377,7 @@ namespace ProtoBuf
                 target.WriteLine(line);
                 return this;
             }
-            public TextWriter Output { get; }
+            public LineWriter Output { get; }
             public NameNormalizer Normalizer { get; }
 
             private Dictionary<string, object> _knownTypes = new Dictionary<string, object>();
@@ -418,7 +419,7 @@ namespace ProtoBuf
             }
         }
 
-        public static void GenerateCSharp(TextWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null, IList<Error> errors = null)
+        internal static void GenerateCSharp(LineWriter target, FileDescriptorProto schema, NameNormalizer normalizer = null, IList<Error> errors = null)
         {
             var ctx = new GeneratorContext(schema, normalizer ?? NameNormalizer.Default, target);
             ctx.BuildTypeIndex();
