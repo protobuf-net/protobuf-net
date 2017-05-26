@@ -219,7 +219,9 @@ namespace ProtoBuf
         public ProtoPartialMemberAttribute(int tag, string memberName)
             : base(tag)
         {
+#if !NO_RUNTIME
             if (Helpers.IsNullOrEmpty(memberName)) throw new ArgumentNullException("memberName");
+#endif
             this.memberName = memberName;
         }
         /// <summary>
