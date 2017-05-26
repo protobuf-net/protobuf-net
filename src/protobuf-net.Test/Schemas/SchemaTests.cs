@@ -48,15 +48,17 @@ namespace ProtoBuf.Schemas
                 }
             }
 
-
             FileDescriptorSet set;
-            string protocJson, jsonPath;
-            using (var file = File.OpenRead(protocBinPath))
+            string protocJson = null, jsonPath;
+            if (exitCode == 0)
             {
-                set = Serializer.Deserialize<FileDescriptorSet>(file);
-                protocJson = JsonConvert.SerializeObject(set, Formatting.Indented);
-                jsonPath = Path.ChangeExtension(path, "protoc.json");
-                File.WriteAllText(jsonPath, protocJson);
+                using (var file = File.OpenRead(protocBinPath))
+                {
+                    set = Serializer.Deserialize<FileDescriptorSet>(file);
+                    protocJson = JsonConvert.SerializeObject(set, Formatting.Indented);
+                    jsonPath = Path.ChangeExtension(path, "protoc.json");
+                    File.WriteAllText(jsonPath, protocJson);
+                }
             }
 
             set = new FileDescriptorSet();
@@ -112,13 +114,19 @@ namespace ProtoBuf.Schemas
 
 
             var parserHex = BitConverter.ToString(File.ReadAllBytes(parserBinPath));
-            var protocHex = BitConverter.ToString(File.ReadAllBytes(protocBinPath));
             File.WriteAllText(Path.ChangeExtension(parserBinPath, "parser.hex"), parserHex);
-            File.WriteAllText(Path.ChangeExtension(protocBinPath, "protoc.hex"), protocHex);
 
-            // compare results
-            Assert.Equal(protocJson, parserJson);
-            Assert.Equal(protocHex, parserHex);
+            if (exitCode == 0)
+            {
+                var protocHex = BitConverter.ToString(File.ReadAllBytes(protocBinPath));
+                File.WriteAllText(Path.ChangeExtension(protocBinPath, "protoc.hex"), protocHex);
+
+                // compare results
+                Assert.Equal(protocJson, parserJson);
+                Assert.Equal(protocHex, parserHex);
+            }
+
+
 
             Assert.Null(genError);
         }

@@ -1253,6 +1253,7 @@ namespace ProtoBuf
         {
             var tokens = Tokens;
             string key = tokens.Consume(TokenType.AlphaNumeric);
+            var keyToken = tokens.Previous;
             tokens.Consume(TokenType.Symbol, "=");
 
             var field = parent as FieldDescriptorProto;
@@ -1260,7 +1261,7 @@ namespace ProtoBuf
             if (key == "default" && isField)
             {
                 string defaultValue = tokens.ConsumeString();
-
+                keyToken.RequireProto2(this);
                 ParseDefault(tokens.Previous, field.type, ref defaultValue);
                 if (defaultValue != null)
                 {
