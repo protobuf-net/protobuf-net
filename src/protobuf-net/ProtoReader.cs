@@ -1151,13 +1151,13 @@ namespace ProtoBuf
             if (b < 0) { return 0; }
             value = (uint)b;
             if ((value & 0x80) == 0) { return 1; }
-
+            value &= 0x7F;
             int bytesRead = 1, shift = 7;
             while(bytesRead < 9)
             {
                 b = source.ReadByte();
                 if (b < 0) throw EoF(null);
-                value |= ((uint)b & 0x7F) << shift;
+                value |= ((ulong)b & 0x7F) << shift;
                 shift += 7;
 
                 if ((b & 0x80) == 0) return ++bytesRead;
@@ -1166,7 +1166,7 @@ namespace ProtoBuf
             if (b < 0) throw EoF(null);
             if((b & 1) == 0) // only use 1 bit from the last byte
             {
-                value |= ((uint)b & 0x7F) << shift;
+                value |= ((ulong)b & 0x7F) << shift;
                 return ++bytesRead;
             }
             throw new OverflowException();

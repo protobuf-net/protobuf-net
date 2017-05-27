@@ -10,7 +10,13 @@ see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017
 
 ## v2.3 (work in progress)
 
-- proto2/proto3 DSL processing tools to make a resurgance 
+- proto2/proto3 DSL processing tools to make a resurgance
+
+preview: [https://protogen.marcgravell.com/](https://protogen.marcgravell.com/)
+
+## v2.2.1
+
+- critical bug fix [#256](https://github.com/mgravell/protobuf-net/issues/256) - length-based readers are failing
 
 ## v2.2.0
 
