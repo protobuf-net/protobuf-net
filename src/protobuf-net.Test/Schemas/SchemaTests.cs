@@ -33,7 +33,8 @@ namespace ProtoBuf.Schemas
         [MemberData(nameof(GetSchemas))]
         public void CompareProtoToParser(string path)
         {
-            _output.WriteLine(Path.Combine(Directory.GetCurrentDirectory(), SchemaPath));
+            var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
+            _output.WriteLine(schemaPath);
             Assert.True(File.Exists(path));
             var protocBinPath = Path.ChangeExtension(path, "protoc.bin");
             int exitCode;
@@ -41,7 +42,7 @@ namespace ProtoBuf.Schemas
             {
                 var psi = proc.StartInfo;
                 psi.FileName = "protoc";
-                psi.Arguments = $"--descriptor_set_out={protocBinPath} {path}";
+                psi.Arguments = $"--descriptor_set_out={protocBinPath} {path} -I{SchemaPath}/";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
                 psi.UseShellExecute = false;
                 proc.Start();
@@ -82,7 +83,12 @@ namespace ProtoBuf.Schemas
             }
 
             set = new FileDescriptorSet();
-            set.Add(path);
+            set.AddImportPath(SchemaPath);
+            set.Add(path, includeInOutput: true);
+
+            set.Process();
+
+
             var parserJson = JsonConvert.SerializeObject(set, Formatting.Indented);
             jsonPath = Path.ChangeExtension(path, "parser.json");
             File.WriteAllText(jsonPath, parserJson);

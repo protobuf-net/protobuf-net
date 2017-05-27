@@ -1,0 +1,12 @@
+﻿syntax = "proto2";
+import "b.proto";
+package A;
+message Bar {
+  optional B.Foo foo = 1;
+}
+
+// Schemas/A.proto: Import "b.proto" was not found or had errors.
+// Schemas/A.proto: Import "b.proto" was listed twice.
+// A.proto: warning: Import b.proto but not used.
+// a.proto:4:9: "Bar" is already defined in file "b.proto".
+// a.proto: File recursively imports itself: a.proto -> b.proto -> a.proto

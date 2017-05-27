@@ -111,9 +111,9 @@ namespace ProtoBuf
         protected abstract string GetName(string identifier);
         public abstract string Pluralize(string identifier);
         public virtual string GetName(DescriptorProto definition)
-            => GetName(definition.Parent, GetName(definition.Name), definition.Name, false);
+            => GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         public virtual string GetName(EnumDescriptorProto definition)
-            => GetName(definition.Parent, GetName(definition.Name), definition.Name, false);
+            => GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         public virtual string GetName(EnumValueDescriptorProto definition) => AutoCapitalize(definition.Name);
         public virtual string GetName(FieldDescriptorProto definition)
         {

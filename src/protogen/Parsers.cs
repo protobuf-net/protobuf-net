@@ -12,32 +12,69 @@ namespace Google.Protobuf.Reflection
 {
 #pragma warning disable CS1591
 
+    interface IType
+    {
+        IType Parent { get; }
+        string FullyQualifiedName { get; }
+
+        IType Find(string name);
+    }
     partial class FileDescriptorSet
     {
+        internal List<string> importPaths = new List<string>();
+        public void AddImportPath(string path)
+        {
+            importPaths.Add(path);
+        }
         public Error[] GetErrors() => Error.GetArray(Errors);
         internal List<Error> Errors { get; } = new List<Error>();
 #if !NO_IO
-        public void Add(string name, System.IO.TextReader source = null)
-            => Add(name, source == null ? null : new TextReaderLineReader(source));
+        public bool Add(string name, System.IO.TextReader source = null, bool includeInOutput = false)
+            => Add(name, source == null ? null : new TextReaderLineReader(source), includeInOutput);
 #endif
-        internal void Add(string name, LineReader source = null)
+        internal bool Add(string name, LineReader source, bool includeInOutput)
         {
-            if (!TryResolve(name, out var descriptor))
+            if (TryResolve(name, out var descriptor))
             {
-                using (var reader = source ?? Open(name))
-                {
-                    descriptor = new FileDescriptorProto { Name = name };
-                    Files.Add(descriptor);
+                if (includeInOutput) descriptor.IncludeInOutput = true;
+                return true; // already exists, that counts as success
+            }
 
-                    descriptor.Parse(reader, Errors);
-                }
+            using (var reader = source ?? Open(name))
+            {
+                if (reader == null) return false; // not found
+
+                descriptor = new FileDescriptorProto
+                {
+                    Name = Path.GetFileName(name),
+                    IncludeInOutput = includeInOutput
+                };
+                Files.Add(descriptor);
+
+                descriptor.Parse(reader, Errors);
+                return true;
             }
         }
 #if NO_IO
         private LineReader Open(string name) => null;
 #else
         private LineReader Open(string name)
-            => new TextReaderLineReader(new System.IO.StreamReader(System.IO.File.OpenRead(name)));
+        {
+            var found = FindFile(name);
+            if (found == null) return null;
+            return new TextReaderLineReader(new StreamReader(File.OpenRead(found)));
+        }
+        string FindFile(string file)
+        {
+            if (File.Exists(file)) return file;
+            foreach (var path in importPaths)
+            {
+                var rel = Path.Combine(path, file);
+                if (File.Exists(rel)) return rel;
+            }
+            return null;
+        }
+
 #endif
 
         bool TryResolve(string name, out FileDescriptorProto descriptor)
@@ -45,11 +82,67 @@ namespace Google.Protobuf.Reflection
             descriptor = Files.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             return descriptor != null;
         }
-    }
-    partial class DescriptorProto : ISchemaObject, IHazNames
-    {
 
-        internal DescriptorProto Parent { get; set; }
+        private void ApplyImports()
+        {
+            bool didSomething;
+            do
+            {
+                didSomething = false;
+                var file = Files.FirstOrDefault(x => x.HasPendingImports);
+                if (file != null)
+                {
+                    // note that GetImports clears the flag
+                    foreach (var import in file.GetImports())
+                    {
+                        if (Add(import.Path))
+                        {
+                            didSomething = true;
+                        }
+                        else
+                        {
+                            Errors.Error(import.Token, $"unable to find: '{import.Path}'");
+                        }
+                    }
+                }
+            } while (didSomething);
+        }
+
+        public void Process()
+        {
+            ApplyImports();
+            foreach (var file in Files)
+            {
+                using (var ctx = new ParserContext(file, null, Errors))
+                {
+                    file.BuildTypeHierarchy(this, ctx);
+                }
+            }
+            foreach (var file in Files)
+            {
+                using (var ctx = new ParserContext(file, null, Errors))
+                {
+                    file.ResolveTypes(ctx);
+                }
+            }
+
+            Files.RemoveAll(x => !x.IncludeInOutput);
+        }
+
+        internal FileDescriptorProto GetFile(string path)
+            => Files.FirstOrDefault(x => string.Equals(x.Name, path, StringComparison.OrdinalIgnoreCase));
+    }
+    partial class DescriptorProto : ISchemaObject, IHazNames, IType
+    {
+        public override string ToString() => Name;
+        internal IType Parent { get; set; }
+        IType IType.Parent => Parent;
+        string IType.FullyQualifiedName => FullyQualifiedName;
+        IType IType.Find(string name)
+        {
+            return (IType)NestedTypes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? (IType)EnumTypes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        }
         internal string FullyQualifiedName { get; set; }
 
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out DescriptorProto obj)
@@ -354,8 +447,40 @@ namespace Google.Protobuf.Reflection
         bool ISchemaOptions.Deprecated { get { return false; } set { } }
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
     }
-    partial class FileDescriptorProto : ISchemaObject, IHazNames
+    partial class FileDescriptorProto : ISchemaObject, IHazNames, IType
     {
+        public override string ToString() => this.Name;
+        string IType.FullyQualifiedName => null;
+        IType IType.Parent => null;
+        IType IType.Find(string name)
+        {
+            return (IType)MessageTypes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? (IType)EnumTypes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+        }
+        internal bool HasPendingImports { get; private set; }
+        internal FileDescriptorSet Parent { get; private set; }
+        internal bool IncludeInOutput { get; set; }
+
+        internal IEnumerable<Import> GetImports()
+        {
+            HasPendingImports = false;
+            return _imports;
+        }
+        readonly List<Import> _imports = new List<Import>();
+        internal bool AddImport(string path, bool isPublic, Token token)
+        {
+            var existing = _imports.FirstOrDefault(x => string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase));
+            if (existing != null)
+            {
+                // we'll allow this to upgrade
+                if (isPublic) existing.IsPublic = true;
+                return false;
+            }
+            HasPendingImports = true;
+            _imports.Add(new Import { Path = path, IsPublic = isPublic, Token = token });
+            return true;
+        }
+
         internal const string SyntaxProto2 = "proto2", SyntaxProto3 = "proto3";
 
         void ISchemaObject.ReadOne(ParserContext ctx)
@@ -379,6 +504,21 @@ namespace Google.Protobuf.Reflection
             {
                 if (ServiceDescriptorProto.TryParse(ctx, out var obj))
                     Services.Add(obj);
+            }
+            else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "import"))
+            {
+                ctx.AbortState = AbortState.Statement;
+                bool isPublic = tokens.ConsumeIf(TokenType.AlphaNumeric, "public");
+                string path = tokens.Consume(TokenType.StringLiteral);
+
+                if (!AddImport(path, isPublic, tokens.Previous))
+                {
+                    ctx.Errors.Warn(tokens.Previous, $"duplicate import: '{path}'");
+                }
+                tokens.Consume(TokenType.Symbol, ";");
+                ctx.AbortState = AbortState.None;
+
+
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "syntax"))
             {
@@ -433,7 +573,6 @@ namespace Google.Protobuf.Reflection
                 ctx.Fill(this);
 
                 // finish up
-                FixupTypes(ctx);
                 if (string.IsNullOrWhiteSpace(Syntax))
                 {
                     ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'");
@@ -446,64 +585,125 @@ namespace Google.Protobuf.Reflection
         }
 
 
-        internal bool TryResolveEnum(string type, DescriptorProto parent, out EnumDescriptorProto @enum, out string fqn)
+        internal bool TryResolveEnum(string typeName, IType parent, out EnumDescriptorProto @enum, bool allowImports)
         {
-            while (parent != null)
+            if (TryResolveType(typeName, parent, out var type, allowImports))
             {
-                @enum = parent.EnumTypes.FirstOrDefault(x => x.Name == type);
-                if (@enum != null)
-                {
-                    fqn = @enum.FullyQualifiedName;
-                    return true;
-                }
-                parent = parent.Parent;
+                @enum = type as EnumDescriptorProto;
+                return @enum != null;
             }
-            @enum = EnumTypes.FirstOrDefault(x => x.Name == type);
-            if (@enum != null)
-            {
-                fqn = @enum.FullyQualifiedName;
-                return true;
-            }
-            fqn = null;
+            @enum = null;
             return false;
         }
-
-        internal bool TryResolveMessage(string typeName, DescriptorProto parent, out DescriptorProto message, out string fqn)
+        internal bool TryResolveMessage(string typeName, IType parent, out DescriptorProto message, bool allowImports)
         {
-            int split = typeName.IndexOf('.');
-            if (split > 0)
+            if (TryResolveType(typeName, parent, out var type, allowImports))
             {
-                // compound name; try to resolve the first part
-                var left = typeName.Substring(0, split).Trim();
-
-                if (TryResolveMessage(left, parent, out message, out fqn))
-                {
-                    parent = message;
-                    var right = typeName.Substring(split + 1).Trim();
-                    return TryResolveMessage(right, parent, out message, out fqn);
-                }
+                message = type as DescriptorProto;
+                return message != null;
+            }
+            message = null;
+            return false;
+        }
+        internal static bool TrySplit(string input, out string left, out string right)
+        {
+            var split = input.IndexOf('.');
+            if (split < 0)
+            {
+                left = right = null;
                 return false;
             }
+            left = input.Substring(0, split).Trim();
+            right = input.Substring(split + 1).Trim();
+            return true;
+        }
+        internal bool TryResolveType(string typeName, IType parent, out IType type, bool allowImports)
+        {
+            if (TrySplit(typeName, out var left, out var right))
+            {
+                // compound name; try to resolve the first part
+                if (parent is FileDescriptorProto)
+                {
+                    var fdp = (FileDescriptorProto)parent;
+                    if (!string.IsNullOrEmpty(fdp.Package))
+                    {
+                        // has a package name
+                        if (fdp.Package != left)
+                        {    // not the right package, or nothing more to the right
+                            type = null;
+                            return false;
+                        }
+                        var oldRight = right;
+                        if (!TrySplit(right, out left, out right))
+                        {
+                            // simple name
+                            type = parent.Find(oldRight);
+                            if (type != null) return true;
+                        }
+                    }
+                }
+                var next = parent?.Find(left);
+                if (next != null && TryResolveType(right, next, out type, false)) return true;
 
+                while (parent != null)
+                {
+                    if (TryResolveType(right, parent, out type, false)) return true;
+                    parent = parent.Parent;
+                }
+
+                // look at imports
+                if (allowImports)
+                {
+                    foreach (var import in _imports)
+                    {
+                        var file = Parent?.GetFile(import.Path);
+                        if (file == null) continue;
+
+                        // note we start again wit full type name here
+                        if (TryResolveType(typeName, file, out type, import.IsPublic))
+                        {
+                            import.Used = true;
+                            return true;
+                        }
+                    }
+                }
+
+                type = null;
+                return false;
+            }
             // simple name
             while (parent != null)
             {
-                message = parent.NestedTypes.FirstOrDefault(x => x.Name == typeName);
-                if (message != null)
+                type = parent.Find(typeName);
+                if (type != null)
                 {
-                    fqn = message.FullyQualifiedName;
                     return true;
                 }
                 parent = parent.Parent;
             }
-            message = MessageTypes.FirstOrDefault(x => x.Name == typeName);
-            if (message != null)
+
+            // look at imports in the root namespace (so: immediate children)
+            if (allowImports)
             {
-                fqn = message.FullyQualifiedName;
-                return true;
+                foreach (var import in _imports)
+                {
+                    var file = Parent?.GetFile(import.Path);
+                    if (file == null) continue;
+
+                    if (string.IsNullOrEmpty(file.Package))
+                    {
+                        type = ((IType)file).Find(typeName);
+                        if (type != null)
+                        {
+                            import.Used = true;
+                            return true;
+                        }
+                    }
+                }
             }
-            fqn = null;
+            type = null;
             return false;
+
         }
 
         static void SetParents(string prefix, EnumDescriptorProto parent)
@@ -532,29 +732,21 @@ namespace Google.Protobuf.Reflection
                 SetParents(fqn, child);
             }
         }
-        internal void FixupTypes(ParserContext ctx)
+        internal void BuildTypeHierarchy(FileDescriptorSet set, ParserContext ctx)
         {
             // build the tree starting at the root
+            Parent = set;
             var prefix = string.IsNullOrWhiteSpace(Package) ? "" : ("." + Package);
             foreach (var type in EnumTypes)
             {
+                type.Parent = this;
                 SetParents(prefix, type);
             }
             foreach (var type in MessageTypes)
             {
+                type.Parent = this;
                 SetParents(prefix, type);
             }
-
-            // now resolve everything
-            foreach (var type in MessageTypes)
-            {
-                ResolveFieldTypes(ctx, type);
-            }
-            foreach (var service in Services)
-            {
-                ResolveFieldTypes(ctx, service);
-            }
-            ResolveFieldTypes(ctx, Extensions, null);
         }
 
         static bool ShouldResolveType(FieldDescriptorProto.Type type)
@@ -570,21 +762,23 @@ namespace Google.Protobuf.Reflection
                     return false;
             }
         }
-        private void ResolveFieldTypes(ParserContext ctx, List<FieldDescriptorProto> extensions, DescriptorProto parent)
+        private void ResolveFieldTypes(ParserContext ctx, List<FieldDescriptorProto> extensions, IType parent)
         {
             foreach (var field in extensions)
             {
                 if (!string.IsNullOrEmpty(field.TypeName) && ShouldResolveType(field.type))
                 {
+                    // TODO: use TryResolveType once rather than twice
                     string fqn;
-                    if (TryResolveMessage(field.TypeName, parent, out var msg, out fqn))
+                    if (TryResolveMessage(field.TypeName, parent, out var msg, true))
                     {
                         if (field.type != FieldDescriptorProto.Type.TypeGroup)
                         {
                             field.type = FieldDescriptorProto.Type.TypeMessage;
                         }
+                        fqn = msg?.FullyQualifiedName;
                     }
-                    else if (TryResolveEnum(field.TypeName, parent, out var @enum, out fqn))
+                    else if (TryResolveEnum(field.TypeName, parent, out var @enum, true))
                     {
                         field.type = FieldDescriptorProto.Type.TypeEnum;
                         if (!string.IsNullOrWhiteSpace(field.DefaultValue)
@@ -592,6 +786,7 @@ namespace Google.Protobuf.Reflection
                         {
                             ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'");
                         }
+                        fqn = @enum?.FullyQualifiedName;
                     }
                     else
                     {
@@ -605,7 +800,11 @@ namespace Google.Protobuf.Reflection
                 if (!string.IsNullOrEmpty(field.Extendee))
                 {
                     string fqn;
-                    if (!TryResolveMessage(field.Extendee, parent, out var msg, out fqn))
+                    if (TryResolveMessage(field.Extendee, parent, out var msg, true))
+                    {
+                        fqn = msg?.FullyQualifiedName;
+                    }
+                    else
                     {
                         ctx.Errors.Add(field.TypeToken.TypeNotFound(field.Extendee));
                         fqn = field.Extendee;
@@ -640,16 +839,16 @@ namespace Google.Protobuf.Reflection
         {
             foreach (var method in service.Methods)
             {
-                if (!TryResolveMessage(method.InputType, null, out var msg, out string fqn))
+                if (!TryResolveMessage(method.InputType, this, out var msg, true))
                 {
                     ctx.Errors.Add(method.InputTypeToken.TypeNotFound(method.InputType));
                 }
-                method.InputType = fqn;
-                if (!TryResolveMessage(method.OutputType, null, out msg, out fqn))
+                method.InputType = msg?.FullyQualifiedName;
+                if (!TryResolveMessage(method.OutputType, this, out msg, true))
                 {
                     ctx.Errors.Add(method.OutputTypeToken.TypeNotFound(method.OutputType));
                 }
-                method.OutputType = fqn;
+                method.OutputType = msg?.FullyQualifiedName;
             }
         }
 
@@ -670,10 +869,34 @@ namespace Google.Protobuf.Reflection
             foreach (var type in EnumTypes) yield return type.Name;
         }
 
+        internal void ResolveTypes(ParserContext ctx)
+        {
+            foreach (var type in MessageTypes)
+            {
+                ResolveFieldTypes(ctx, type);
+            }
+            foreach (var service in Services)
+            {
+                ResolveFieldTypes(ctx, service);
+            }
+            ResolveFieldTypes(ctx, Extensions, this);
+
+            foreach (var import in _imports)
+            {
+                if (import.Used)
+                {
+                    Dependencies.Add(import.Path);
+                }
+            }
+        }
     }
-    partial class EnumDescriptorProto : ISchemaObject
+    partial class EnumDescriptorProto : ISchemaObject, IType
     {
-        internal DescriptorProto Parent { get; set; }
+        public override string ToString() => Name;
+        internal IType Parent { get; set; }
+        string IType.FullyQualifiedName => FullyQualifiedName;
+        IType IType.Parent => Parent;
+        IType IType.Find(string name) => null;
         internal string FullyQualifiedName { get; set; }
 
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out EnumDescriptorProto obj)
@@ -706,6 +929,7 @@ namespace Google.Protobuf.Reflection
     }
     partial class FieldDescriptorProto
     {
+        public override string ToString() => Name;
         internal const int MaxField = 536870911;
         internal const int FirstReservedField = 19000;
         internal const int LastReservedField = 19999;
@@ -1238,9 +1462,10 @@ namespace ProtoBuf
                 using (var reader = new StringLineReader(file.Text))
                 {
                     Console.WriteLine($"Parsing {file.Name}...");
-                    set.Add(file.Name, reader);
+                    set.Add(file.Name, reader, true);
                 }
             }
+            set.Process();
             var results = new List<CodeFile>();
             var newErrors = new List<Error>();
             foreach (var file in set.Files)
@@ -1270,6 +1495,14 @@ namespace ProtoBuf
         }
         public Error[] Errors { get; }
         public CodeFile[] Files { get; }
+    }
+
+    internal class Import
+    {
+        public string Path { get; set; }
+        public bool IsPublic { get; set; }
+        public Token Token { get; set; }
+        public bool Used { get; set; }
     }
     public class Error
     {
@@ -1631,7 +1864,7 @@ namespace ProtoBuf
         public Peekable<Token> Tokens { get; }
         public List<Error> Errors { get; }
 
-        public void Dispose() { Tokens.Dispose(); }
+        public void Dispose() { Tokens?.Dispose(); }
 
         internal void CheckNames(IHazNames parent, string name, Token token
 #if DEBUG && NETSTANDARD1_3
