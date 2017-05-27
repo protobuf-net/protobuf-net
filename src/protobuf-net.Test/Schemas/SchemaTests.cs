@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -36,15 +37,27 @@ namespace ProtoBuf.Schemas
                 psi.Arguments = $"--descriptor_set_out={protocBinPath} {path}";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
                 psi.UseShellExecute = false;
-                var output = new StringBuilder();
-                proc.ErrorDataReceived += (sender, args) => { lock (output) { output.AppendLine($"stderr: {args.Data}"); } };
-                proc.OutputDataReceived += (sender, args) => { lock (output) { output.AppendLine($"stdout: {args.Data}"); } };
                 proc.Start();
-                proc.WaitForExit();
-                exitCode = proc.ExitCode;
-                if (output.Length != 0)
+                var stdout = proc.StandardOutput.ReadToEndAsync();
+                var stderr = proc.StandardError.ReadToEndAsync();
+                if (!proc.WaitForExit(5000))
                 {
-                    _output.WriteLine(output.ToString());
+                    try { proc.Kill(); } catch { }
+                }
+                exitCode = proc.ExitCode;
+                string err = "", @out = "";
+                if (stdout.Wait(1000)) @out = stdout.Result;
+                if (stderr.Wait(1000)) err = stderr.Result;
+
+                if (!string.IsNullOrWhiteSpace(@out))
+                {
+                    _output.WriteLine("stdout: ");
+                    _output.WriteLine(@out);
+                }
+                if (!string.IsNullOrWhiteSpace(err))
+                {
+                    _output.WriteLine("stderr: ");
+                    _output.WriteLine(err);
                 }
             }
 
