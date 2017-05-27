@@ -6,6 +6,7 @@ using System;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using System.IO;
 
 namespace Google.Protobuf.Reflection
 {
@@ -15,7 +16,11 @@ namespace Google.Protobuf.Reflection
     {
         public Error[] GetErrors() => Error.GetArray(Errors);
         internal List<Error> Errors { get; } = new List<Error>();
+#if !NO_IO
         public void Add(string name, System.IO.TextReader source = null)
+            => Add(name, source == null ? null : new TextReaderLineReader(source));
+#endif
+        internal void Add(string name, LineReader source = null)
         {
             if (!TryResolve(name, out var descriptor))
             {
@@ -28,8 +33,12 @@ namespace Google.Protobuf.Reflection
                 }
             }
         }
-        private System.IO.TextReader Open(string name)
-            => new System.IO.StreamReader(System.IO.File.OpenRead(name));
+#if NO_IO
+        private LineReader Open(string name) => null;
+#else
+        private LineReader Open(string name)
+            => new TextReaderLineReader(new System.IO.StreamReader(System.IO.File.OpenRead(name)));
+#endif
 
         bool TryResolve(string name, out FileDescriptorProto descriptor)
         {
@@ -107,11 +116,11 @@ namespace Google.Protobuf.Reflection
             tokens.Consume(TokenType.Symbol, "<");
             var keyName = tokens.Consume(TokenType.AlphaNumeric);
             var keyToken = tokens.Previous;
-            if(FieldDescriptorProto.TryIdentifyType(keyName, out var keyType))
+            if (FieldDescriptorProto.TryIdentifyType(keyName, out var keyType))
             {
                 keyName = null;
             }
-            switch(keyType)
+            switch (keyType)
             {
                 case 0:
                 case FieldDescriptorProto.Type.TypeBytes:
@@ -125,7 +134,7 @@ namespace Google.Protobuf.Reflection
             tokens.Consume(TokenType.Symbol, ",");
             var valueName = tokens.Consume(TokenType.AlphaNumeric);
             var valueToken = tokens.Previous;
-            if(FieldDescriptorProto.TryIdentifyType(valueName, out var valueType))
+            if (FieldDescriptorProto.TryIdentifyType(valueName, out var valueType))
             {
                 valueName = null;
             }
@@ -407,10 +416,12 @@ namespace Google.Protobuf.Reflection
                 token.Throw();
             } // else EOF
         }
+#if !NO_IO
+        public void Parse(TextReader schema, List<Error> errors)
+            => Parse(new TextReaderLineReader(schema), errors);
+#endif
 
-
-
-        public void Parse(System.IO.TextReader schema, List<Error> errors)
+        internal void Parse(LineReader schema, List<Error> errors)
         {
             Syntax = "";
             using (var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize().RemoveCommentsAndWhitespace()), errors))
@@ -646,7 +657,7 @@ namespace Google.Protobuf.Reflection
         {
             ResolveFieldTypes(ctx, type.Fields, type);
             ResolveFieldTypes(ctx, type.Extensions, type);
-            foreach(var nested in type.NestedTypes)
+            foreach (var nested in type.NestedTypes)
             {
                 ResolveFieldTypes(ctx, nested);
             }
@@ -748,7 +759,7 @@ namespace Google.Protobuf.Reflection
             if (isGroup)
             {
                 if (isOneOf) NotAllowedOneOf(ctx);
-                else if(parentTyped == null)
+                else if (parentTyped == null)
                 {
                     ctx.Errors.Error(tokens.Previous, "group not allowed in this context");
                 }
@@ -1138,6 +1149,128 @@ namespace ProtoBuf
         public static void Error(this List<Error> errors, ParserException ex)
             => errors.Add(new Error(ex));
     }
+
+    public class CodeFile
+    {
+        public override string ToString() => Name;
+        public CodeFile(string name, string text)
+        {
+            Name = name;
+            Text = text;
+        }
+        public string Name { get; }
+        public string Text { get; }
+    }
+
+    internal abstract class LineWriter : IDisposable
+    {
+        public abstract void Write(string value);
+        public virtual void WriteLine() => Write("\r\n");
+        public virtual void WriteLine(string value)
+        {
+            Write(value);
+            WriteLine();
+        }
+        public virtual void Dispose() { }
+    }
+#if !NO_IO
+    internal sealed class TextWriterLineWriter : LineWriter
+    {
+        public TextWriterLineWriter(TextWriter buffer)
+        {
+            this.buffer = buffer;
+        }
+        private TextWriter buffer;
+        public override void Write(string value) => buffer.Write(value);
+        public override void WriteLine() => buffer.WriteLine();
+        public override void WriteLine(string value) => buffer.WriteLine(value);
+        public override void Dispose() { buffer?.Dispose(); buffer = null; }
+        public override string ToString() => buffer?.ToString();
+    }
+#endif
+    internal sealed class StringLineWriter : LineWriter
+    {
+        private StringBuilder buffer = new StringBuilder();
+        public override void Write(string value) => buffer.Append(value);
+        public override void WriteLine() => buffer.AppendLine();
+        public override void WriteLine(string value) => buffer.AppendLine(value);
+        public override void Dispose() { buffer = null; }
+        public override string ToString() => buffer?.ToString();
+    }
+    internal abstract class LineReader : IDisposable
+    {
+        public abstract string ReadLine();
+        public virtual void Dispose() { }
+    }
+    sealed class StringLineReader : LineReader
+    {
+        string[] lines;
+        static readonly string[] splits = { "\r\n", "\r", "\n" };
+        public StringLineReader(string text)
+        {
+            lines = text.Split(lines, StringSplitOptions.None);
+        }
+        int index;
+        public override string ReadLine() =>
+            index < lines.Length ? lines[index++] : null;
+    }
+#if !NO_IO
+    sealed class TextReaderLineReader : LineReader
+    {
+        TextReader reader;
+        public TextReaderLineReader(TextReader reader)
+        {
+            this.reader = reader;
+        }
+        public override void Dispose() => reader?.Dispose();
+        public override string ReadLine() => reader?.ReadLine();
+    }
+#endif
+    public static class CSharpCompiler
+    {
+        public static CompilerResult Compile(CodeFile file)
+            => Compile(new[] { file });
+        public static CompilerResult Compile(params CodeFile[] files)
+        {
+            var set = new FileDescriptorSet();
+            foreach (var file in files)
+            {
+                using (var reader = new StringLineReader(file.Text))
+                {
+                    Console.WriteLine($"Parsing {file.Name}...");
+                    set.Add(file.Name, reader);
+                }
+            }
+            var results = new List<CodeFile>();
+            var newErrors = new List<Error>();
+            foreach (var file in set.Files)
+            {
+                try
+                {
+                    var newName = file.Name + ".cs";
+                    results.Add(new CodeFile(newName,
+                        file.GenerateCSharp()));
+                }
+                catch (Exception ex)
+                {
+                    newErrors.Add(new Error(default(Token), ex.Message, true));
+                }
+            }
+            var errors = set.GetErrors();
+
+            return new CompilerResult(errors, results.ToArray());
+        }
+    }
+    public class CompilerResult
+    {
+        internal CompilerResult(Error[] errors, CodeFile[] files)
+        {
+            Errors = errors;
+            Files = files;
+        }
+        public Error[] Errors { get; }
+        public CodeFile[] Files { get; }
+    }
     public class Error
     {
         internal string ToString(bool includeType) => Text.Length == 0
@@ -1352,7 +1485,7 @@ namespace ProtoBuf
                 case FieldDescriptorProto.Type.TypeInt32:
                 case FieldDescriptorProto.Type.TypeSint32:
                     {
-                        if (int.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var val))
+                        if (int.TryParse(defaultValue, NumberStyles.Number & NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }
@@ -1511,7 +1644,7 @@ namespace ProtoBuf
                 Errors.Error(token, $"name '{name}' is already in use"
 #if DEBUG && NETSTANDARD1_3
              + $" ({caller})"
-#endif                    
+#endif
                     );
             }
         }

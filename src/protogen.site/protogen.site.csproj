@@ -14,57 +14,14 @@
   <ItemGroup>
     <Content Include="wwwroot\js\home.js" />
     <Content Include="wwwroot\js\proto3lang.js" />
-    <Content Include="wwwroot\js\protogen\Microsoft.Build.Framework, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\Microsoft.Build.Utilities.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\Microsoft.JScript, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\Microsoft.Transactions.Bridge, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\Microsoft.VisualBasic, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\Microsoft.VisualBasic.Activities.Compiler, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
     <Content Include="wwwroot\js\protogen\mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\protobuf-net, Version=2.3.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67.js" />
     <Content Include="wwwroot\js\protogen\protogen, Version=2.3.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67.js" />
-    <Content Include="wwwroot\js\protogen\protogen.dll.jsillog" />
     <Content Include="wwwroot\js\protogen\protogen.dll.manifest.js" />
     <Content Include="wwwroot\js\protogen\System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Activities, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35.js" />
-    <Content Include="wwwroot\js\protogen\System.Activities.DurableInstancing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35.js" />
-    <Content Include="wwwroot\js\protogen\System.ComponentModel.DataAnnotations, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35.js" />
     <Content Include="wwwroot\js\protogen\System.Configuration, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Configuration.Install, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
     <Content Include="wwwroot\js\protogen\System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Data, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Data.OracleClient, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Deployment, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.DirectoryServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.DirectoryServices.Protocols, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Drawing.Design, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.IdentityModel, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.IdentityModel.Selectors, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Management, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Messaging, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Net.Http, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
     <Content Include="wwwroot\js\protogen\System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Runtime.Caching, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Runtime.Remoting, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Runtime.Serialization, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.ServiceModel, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.ServiceModel.Activation, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35.js" />
-    <Content Include="wwwroot\js\protogen\System.ServiceModel.Activities, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35.js" />
-    <Content Include="wwwroot\js\protogen\System.ServiceModel.Internals, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35.js" />
-    <Content Include="wwwroot\js\protogen\System.ServiceProcess, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Transactions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Web, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Web.ApplicationServices, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35.js" />
-    <Content Include="wwwroot\js\protogen\System.Web.RegularExpressions, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Web.Services, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a.js" />
-    <Content Include="wwwroot\js\protogen\System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Xaml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Xaml.Hosting, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35.js" />
     <Content Include="wwwroot\js\protogen\System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
-    <Content Include="wwwroot\js\protogen\System.Xml.Linq, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
   </ItemGroup>
 
   <ItemGroup>

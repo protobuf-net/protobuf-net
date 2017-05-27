@@ -28,7 +28,7 @@
         appInsights.trackPageView();
     </script>
 </head>
-<body>
+<body onload="@(ViewData["OnLoad"])">
     <div class="container body-content">
         @RenderBody()
         <hr />

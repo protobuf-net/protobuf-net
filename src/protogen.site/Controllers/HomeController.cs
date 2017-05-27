@@ -13,9 +13,12 @@ namespace protogen.site.Controllers
 #endif
     public class HomeController : Controller
 	{
-		public IActionResult Index() => View();
+		public IActionResult Index() => View("Index", false);
 
-		[Route("/about")]
+        [Route("/jsil")]
+        public IActionResult ClientSide() => View("Index", true);
+
+        [Route("/about")]
 		public IActionResult About() => View();
 
 		public IActionResult Error() => View();
