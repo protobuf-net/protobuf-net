@@ -17,6 +17,10 @@ preview: [https://protogen.marcgravell.com/](https://protogen.marcgravell.com/)
 ## v2.2.1
 
 - critical bug fix [#256](https://github.com/mgravell/protobuf-net/issues/256) - length-based readers are failing
+- fix #241 - check all callback parameters (signature validation)
+- removed `[Obsolete]` markers left in place during 64-bit updates
+- release string interner earlier (keeps a possibly-large array reachable)
+- various documentation fixes (#184, #189, #216)
 
 ## v2.2.0
 
