@@ -349,7 +349,7 @@ namespace Google.Protobuf.Reflection
                         var conflict = Fields.FirstOrDefault(x => x.Name == name);
                         if (conflict != null)
                         {
-                            ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by feild {conflict.Number}");
+                            ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by field {conflict.Number}");
                         }
                         ReservedNames.Add(name);
 
@@ -1514,6 +1514,58 @@ namespace ProtoBuf
     }
     public class Error
     {
+        public static Error[] Parse(string stdout, string stderr)
+        {
+            if (string.IsNullOrWhiteSpace(stdout) && string.IsNullOrWhiteSpace(stderr))
+                return noErrors;
+
+            List<Error> errors = new List<Error>();
+            using(var reader = new StringReader(stdout))
+            {
+                Add(reader, errors);
+            }
+            using (var reader = new StringReader(stderr))
+            {
+                Add(reader, errors);
+            }
+            return errors.ToArray();
+        }
+        static void Add(TextReader lines, List<Error> errors)
+        {
+            string line;
+            while((line = lines.ReadLine()) != null)
+            {
+                var s = line;
+                bool isError = true;
+                int lineNumber = 1, columnNumber = 1;
+                if(s[0] == '[')
+                {
+                    int i = s.IndexOf(']');
+                    if (i > 0)
+                    {
+                        var prefix = line.Substring(1, i).Trim();
+                        s = line.Substring(i + 1).Trim();
+                        if(prefix.IndexOf("WARNING", StringComparison.OrdinalIgnoreCase) >= 0
+                            && prefix.IndexOf("ERROR", StringComparison.OrdinalIgnoreCase) < 0)
+                        {
+                            isError = false;
+                        }
+                    }
+                }
+                var match = Regex.Match(s, @"^([^:]+):([0-9]+):([0-9]+):\s+");
+                string file = "";
+                if(match.Success)
+                {
+                    file = match.Groups[1].Value;
+                    if (!int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out lineNumber))
+                        lineNumber = 1;
+                    if (!int.TryParse(match.Groups[3].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out columnNumber))
+                        columnNumber = 1;
+                    s = s.Substring(match.Length).Trim();
+                }
+                errors.Add(new Error(new Token(" ", lineNumber, columnNumber, TokenType.None, "", 0, file), s, isError));
+            }
+        }
         internal string ToString(bool includeType) => Text.Length == 0
                 ? $"{File}({LineNumber},{ColumnNumber}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}"
                 : $"{File}({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}";

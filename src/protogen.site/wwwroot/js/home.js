@@ -11,7 +11,10 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
     var oldDecorations = []
     document.getElementById("generatecsharp").addEventListener("click", function ()
     {
-        jQuery.post("/generate", "schema=" + editor.getValue({ preserveBOM: false, lineEnding: "\n" }), function (data, textStatus, jqXHR)
+        jQuery.post("/generate", {
+            schema: editor.getValue({ preserveBOM: false, lineEnding: "\n" }),
+            tooling: $('#tooling').find(":selected").val()
+        }, function(data, textStatus, jqXHR)
         {
             if (data === null || data === undefined)
             {

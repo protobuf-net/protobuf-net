@@ -1,6 +1,6 @@
-﻿@model bool
+﻿@model protogen.site.Controllers.HomeController.IndexModel
 @{
-    if (Model)
+    if (Model.UseJSIL)
     {
         ViewData["OnLoad"] = "onLoad()";
     }
@@ -10,7 +10,7 @@
 <a href="/about">Wait... what is this?</a>
 <section>
     <h3>.proto Schema (can be <a href="https://developers.google.com/protocol-buffers/docs/proto">proto2</a> or <a href="https://developers.google.com/protocol-buffers/docs/proto3">proto3</a>):</h3>
-    @if (Model)
+    @if (Model.UseJSIL)
     {
         <p><em>You're using the <a href="http://jsil.org/">JSIL</a> cross-compiled version! Yay! Sorry about the script size...</em> to use the AJAX version, <a href="/">click here</a></p>
     }
@@ -25,7 +25,28 @@
         <li>use fully qualified names when talking about the generated types</li>
         <li>intellisense comments</li>
     </ul>
-    <button id="generatecsharp">Generate</button>
+    <div>
+        <button id="generatecsharp">Generate</button>
+        <select id="tooling">
+            <optgroup label="protobuf-net">
+                <option value="" selected="selected">(protogen) C#</option>
+            </optgroup>
+            @if (Model.CanUseProtoc)
+            {
+                <optgroup label="@Model.ProtocVersion">
+                    @foreach (var option in protogen.site.Controllers.HomeController.ProtocTooling.Options)
+                    {
+                        <option value="@option.Tooling">(protoc) @option.Caption</option>
+                    }
+                    
+                </optgroup>
+            }
+        </select>
+        @if (!Model.CanUseProtoc)
+        {
+            <span>(sorry, protoc is not available: @Model.ProtocVersion)</span>
+        }
+    </div>
     <div id="protocontainer" style="width:100%; max-width:unset;height:600px;border:1px solid grey"></div>
     <script>
 
@@ -39,7 +60,7 @@
 <script src="~/lib/monaco-editor/min/vs/loader.js"></script>
 
 <script src="~/js/home.js" asp-append-version="true"></script>
-@if(Model)
+@if(Model.UseJSIL)
 {
 <script type="text/javascript">
     var jsilConfig = {
