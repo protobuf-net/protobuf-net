@@ -2,7 +2,11 @@
 
 Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net)
 
-[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/protobuf-net/donate)
+If you feel like supporting my efforts, I won't stop you:
+
+<a href='https://pledgie.com/campaigns/33946'><img alt='Click here to lend your support to: protobuf-net; fast binary serialization for .NET and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/33946.png?skin_name=chrome' border='0' ></a>
+
+If you can't, that's fine too.
 
 ## v3.* (future plans)
 
