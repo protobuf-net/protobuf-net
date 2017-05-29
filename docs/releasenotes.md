@@ -2,6 +2,17 @@
 
 Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net)
 
+If you prefer to build from source:
+
+    git clone https://github.com/mgravell/protobuf-net.git
+    cd protobuf-net\src\protobuf-net
+    dotnet restore
+    dotnet build -c Release
+
+(it will tell you where the dlls and package have been written)
+
+Alternatively, use Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) to build `src/protobuf-net.sln`
+
 If you feel like supporting my efforts, I won't stop you:
 
 <a href='https://pledgie.com/campaigns/33946'><img alt='Click here to lend your support to: protobuf-net; fast binary serialization for .NET and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/33946.png?skin_name=chrome' border='0' ></a>
