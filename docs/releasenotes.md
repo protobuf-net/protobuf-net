@@ -29,6 +29,10 @@ see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017
 
 preview: [https://protogen.marcgravell.com/](https://protogen.marcgravell.com/)
 
+## v2.2.2 (not yet released)
+
+- fix: `Type` members should work with `GetProto<T>` (as `string`)
+
 ## v2.2.1
 
 - critical bug fix [#256](https://github.com/mgravell/protobuf-net/issues/256) - length-based readers are failing; if you are using 2.2.0, please update as soon as possible (this bug was introduced in 2.2.0)

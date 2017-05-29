@@ -2019,6 +2019,7 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.TimeSpan: requiresBclImport = true; return "bcl.TimeSpan";
                     case ProtoTypeCode.Decimal: requiresBclImport = true; return "bcl.Decimal";
                     case ProtoTypeCode.Guid: requiresBclImport = true; return "bcl.Guid";
+                    case ProtoTypeCode.Type: requiresBclImport = false; return "string";
                     default: throw new NotSupportedException("No .proto map found for: " + effectiveType.FullName);
                 }
             }
