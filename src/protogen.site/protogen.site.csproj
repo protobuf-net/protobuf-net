@@ -9,11 +9,9 @@
 
   <ItemGroup>
     <None Remove="Properties\PublishProfiles\protogensite20170521042027 - Web Deploy.pubxml" />
-    <None Remove="protoc.exe" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="protoc.exe" />
     <Content Include="wwwroot\js\home.js" />
     <Content Include="wwwroot\js\proto3lang.js" />
     <Content Include="wwwroot\js\protogen\mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
@@ -24,6 +22,7 @@
     <Content Include="wwwroot\js\protogen\System.Core, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
     <Content Include="wwwroot\js\protogen\System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
     <Content Include="wwwroot\js\protogen\System.Xml, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089.js" />
+    <Content Include="wwwroot\protoc.exe" />
   </ItemGroup>
 
   <ItemGroup>

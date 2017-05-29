@@ -151,7 +151,7 @@ namespace protogen.site.Controllers
         }
         static int RunProtoc(IHostingEnvironment host, string arguments, string workingDir, out string stdout, out string stderr)
         {
-            var exePath = Path.Combine(host.ContentRootPath, "protoc.exe");
+            var exePath = Path.Combine(host.WebRootPath, "protoc.exe");
             if (!System.IO.File.Exists(exePath))
             {
                 throw new FileNotFoundException("protoc not found");
@@ -196,7 +196,7 @@ namespace protogen.site.Controllers
                 new ProtocTooling("java", "Java"),
                 new ProtocTooling("javanano", "Java Nano"),
                 new ProtocTooling("js", "JavaScript"),
-                new ProtocTooling("objc", "Objective C"),
+                new ProtocTooling("objc", "Objective-C"),
                 new ProtocTooling("php", "PHP"),
                 new ProtocTooling("python", "Python"),
                 new ProtocTooling("ruby", "Ruby"),
