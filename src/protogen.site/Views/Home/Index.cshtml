@@ -42,7 +42,11 @@
                 </optgroup>
             }
         </select>
-        @if (!Model.CanUseProtoc)
+        @if (Model.CanUseProtoc)
+        {
+            <span>(note: only single-file outputs work currently; need tabbed editor)</span>
+        }
+        else
         {
             <span>(sorry, protoc is not available: @Model.ProtocVersion)</span>
         }
