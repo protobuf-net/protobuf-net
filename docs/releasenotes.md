@@ -11,7 +11,7 @@ If you prefer to build from source:
 
 (it will tell you where the dlls and package have been written)
 
-Alternatively, use Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) to build `src/protobuf-net.sln`
+Alternatively, use Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) to build `src\protobuf-net.sln`
 
 If you feel like supporting my efforts, I won't stop you:
 
