@@ -8,26 +8,28 @@ namespace ProtoBuf
 
         public static bool operator ==(Token x, Token y)
         {
-            return x.Offset == y.Offset;
+            return x.Offset == y.Offset && x.File == y.File;
         }
         public static bool operator !=(Token x, Token y)
         {
-            return x.Offset != y.Offset;
+            return x.Offset != y.Offset || x.File != y.File;
         }
         public override int GetHashCode() => Offset;
         public override bool Equals(object obj) => (obj is Token) && ((Token)obj).Offset == this.Offset;
         public bool Equals(Token token) => token.Offset == this.Offset;
         public int Offset { get; }
         public int LineNumber { get; }
+        public string File { get; }
         public int ColumnNumber { get; }
         public TokenType Type { get; }
         public string Value { get; }
         public string LineContents { get; }
-        internal Token(string value, int lineNumber, int columnNumber, TokenType type, string lineContents, int offset)
+        internal Token(string value, int lineNumber, int columnNumber, TokenType type, string lineContents, int offset, string file)
         {
             Value = value;
             LineNumber = lineNumber;
             ColumnNumber = columnNumber;
+            File = file;
             Type = type;
             LineContents = lineContents;
             Offset = offset;

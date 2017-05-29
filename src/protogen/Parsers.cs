@@ -21,6 +21,8 @@ namespace Google.Protobuf.Reflection
     }
     partial class FileDescriptorSet
     {
+        public bool AllowImports { get; set; } = true;
+
         internal List<string> importPaths = new List<string>();
         public void AddImportPath(string path)
         {
@@ -51,7 +53,7 @@ namespace Google.Protobuf.Reflection
                 };
                 Files.Add(descriptor);
 
-                descriptor.Parse(reader, Errors);
+                descriptor.Parse(reader, Errors, name);
                 return true;
             }
         }
@@ -95,7 +97,11 @@ namespace Google.Protobuf.Reflection
                     // note that GetImports clears the flag
                     foreach (var import in file.GetImports())
                     {
-                        if (Add(import.Path))
+                        if(!AllowImports)
+                        {
+                            Errors.Error(import.Token, "imports are disabled");
+                        }
+                        else if (Add(import.Path))
                         {
                             didSomething = true;
                         }
@@ -459,8 +465,10 @@ namespace Google.Protobuf.Reflection
         }
         internal bool HasPendingImports { get; private set; }
         internal FileDescriptorSet Parent { get; private set; }
+
         internal bool IncludeInOutput { get; set; }
 
+        public bool HasImports() => _imports.Count != 0;
         internal IEnumerable<Import> GetImports()
         {
             HasPendingImports = false;
@@ -557,14 +565,14 @@ namespace Google.Protobuf.Reflection
             } // else EOF
         }
 #if !NO_IO
-        public void Parse(TextReader schema, List<Error> errors)
-            => Parse(new TextReaderLineReader(schema), errors);
+        public void Parse(TextReader schema, List<Error> errors, string file)
+            => Parse(new TextReaderLineReader(schema), errors, file);
 #endif
 
-        internal void Parse(LineReader schema, List<Error> errors)
+        internal void Parse(LineReader schema, List<Error> errors, string file)
         {
             Syntax = "";
-            using (var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize().RemoveCommentsAndWhitespace()), errors))
+            using (var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace()), errors))
             {
                 var tokens = ctx.Tokens;
                 tokens.Peek(out Token startOfFile); // want this for "stuff you didn't do" warnings
@@ -1507,8 +1515,8 @@ namespace ProtoBuf
     public class Error
     {
         internal string ToString(bool includeType) => Text.Length == 0
-                ? $"({LineNumber},{ColumnNumber}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}"
-                : $"({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}";
+                ? $"{File}({LineNumber},{ColumnNumber}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}"
+                : $"{File}({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}";
         public override string ToString() => ToString(true);
 
         internal static Error[] GetArray(List<Error> errors)
@@ -1520,6 +1528,7 @@ namespace ProtoBuf
         {
             ColumnNumber = token.ColumnNumber;
             LineNumber = token.LineNumber;
+            File = token.File;
             LineContents = token.LineContents;
             Message = message;
             IsError = isError;
@@ -1529,14 +1538,16 @@ namespace ProtoBuf
         {
             ColumnNumber = ex.ColumnNumber;
             LineNumber = ex.LineNumber;
+            File = ex.File;
             LineContents = ex.LineContents;
             Message = ex.Message;
             IsError = ex.IsError;
-            Text = ex.Text;
+            Text = ex.Text ?? "";
         }
         public bool IsWarning => !IsError;
 
         public bool IsError { get; }
+        public string File { get; }
         public string Text { get; }
         public string Message { get; }
         public string LineContents { get; }

@@ -35,6 +35,7 @@ namespace ProtoBuf
     {
         public int ColumnNumber { get; }
         public int LineNumber { get; }
+        public string File { get; }
         public string Text { get; }
         public string LineContents { get; }
         public bool IsError { get; }
@@ -43,6 +44,7 @@ namespace ProtoBuf
         {
             ColumnNumber = token.ColumnNumber;
             LineNumber = token.LineNumber;
+            File = token.File;
             LineContents = token.LineContents;
             Text = token.Value ?? "";
             IsError = isError;

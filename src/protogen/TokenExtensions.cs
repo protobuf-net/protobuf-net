@@ -197,7 +197,7 @@ namespace ProtoBuf
         static bool CanCombine(TokenType type, char prev, char next)
             => type != TokenType.Symbol || prev == next;
 
-        public static IEnumerable<Token> Tokenize(this LineReader reader)
+        public static IEnumerable<Token> Tokenize(this LineReader reader, string file)
         {
             var buffer = new StringBuilder();
 
@@ -218,7 +218,7 @@ namespace ProtoBuf
                     {
                         if (c == '"')
                         {
-                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++);
+                            yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++, file);
                             buffer.Clear();
                             type = TokenType.None;
                         }
@@ -238,7 +238,7 @@ namespace ProtoBuf
                         {
                             if (buffer.Length != 0)
                             {
-                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++);
+                                yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++, file);
                                 buffer.Clear();
                             }
                             type = newType;
@@ -254,7 +254,7 @@ namespace ProtoBuf
 
                 if (buffer.Length != 0)
                 {
-                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, lastLine, offset++);
+                    yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, lastLine, offset++, file);
                     buffer.Clear();
                 }
             }

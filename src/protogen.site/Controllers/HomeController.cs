@@ -52,27 +52,31 @@ namespace protogen.site.Controllers
 			{
 				return null;
 			}
-			try
+            var result = new GenerateResult();
+            try
 			{
 				using (var reader = new StringReader(schema))
 				{
-					var set = new FileDescriptorSet();
-					set.Add("my.proto", reader);
-					var parsed = set.Files.Single();
-					var errors = set.GetErrors();
-					var result = new GenerateResult();
-					if (errors.Length > 0)
-					{
-						result.ParserExceptions = errors;
-					}
-					result.Code = parsed.GenerateCSharp(errors: errors);
-					return result;
+                    var set = new FileDescriptorSet { AllowImports = false };
+                    set.Add("my.proto", reader);
+                    var parsed = set.Files.Single();
+
+                    
+                    set.Process();
+                    var errors = set.GetErrors();
+                        
+                    if (errors.Length > 0)
+                    {
+                        result.ParserExceptions = errors;
+                    }
+                    result.Code = parsed.GenerateCSharp(errors: errors);
 				}
 			}
 			catch (Exception ex)
 			{
-				return new GenerateResult() { Exception = ex };
+				result.Exception = ex;
 			}
+            return result;
 		}
 	}
 }

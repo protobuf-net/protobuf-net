@@ -38,22 +38,19 @@
 </section>
 <script src="~/lib/monaco-editor/min/vs/loader.js"></script>
 
+<script src="~/js/home.js" asp-append-version="true"></script>
 @if(Model)
 {
-<script src="~/js/home.js" asp-append-version="true"></script>
-
 <script type="text/javascript">
     var jsilConfig = {
         libraryRoot: '/js/jsil/',
         scriptRoot: '/js/protogen/',
         manifestRoot: '/js/protogen/',
         showProgressBar: true,
-        manifests: ['protogen.dll'] // gets as far as Loading '/js/protogen/protogen.dll.manifest.js'... (200 OK)
+        manifests: ['protogen.dll']
     };
-    var runMain = function () { // doesn't get invoked
-        console.log('> main');
-        window.asm = JSIL.GetAssembly("protogen", true); // (executed outside method) returns a stub with no content
-        console.log('< main');
+    var runMain = function () {
+        window.asm = JSIL.GetAssembly("protogen", true);
     };
 </script>
 <script src="~/js/jsil/jsil.js" asp-append-version="true"></script>
