@@ -8,7 +8,7 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
     });
     var codeViewer = null;
     var codeResultSection = document.getElementById("coderesult");
-    var oldDecorations = []
+    var oldDecorations = [];
     document.getElementById("generatecsharp").addEventListener("click", function ()
     {
         jQuery.post("/generate", {
@@ -21,20 +21,21 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
                 return;
             }
             var decorations = [];
-            if (data.code)
+            if (data.files && data.files.length)
             {
+                var code = data.files[0].text;
                 codeResultSection.style.display = "";
                 if (codeViewer === null)
                 {
                     codeViewer = monaco.editor.create(document.getElementById('csharpcontainer'), {
-                        value: data.code,
+                        value: code,
                         language: 'csharp',
                         readOnly: true
                     });
                 }
                 else
                 {
-                    codeViewer.setValue(data.code);
+                    codeViewer.setValue(code);
                 }
             }
             if (data.parserExceptions)

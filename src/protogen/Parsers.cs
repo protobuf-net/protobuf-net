@@ -31,7 +31,7 @@ namespace Google.Protobuf.Reflection
         public Error[] GetErrors() => Error.GetArray(Errors);
         internal List<Error> Errors { get; } = new List<Error>();
 #if !NO_IO
-        public bool Add(string name, System.IO.TextReader source = null, bool includeInOutput = false)
+        public bool Add(string name, bool includeInOutput, System.IO.TextReader source = null)
             => Add(name, source == null ? null : new TextReaderLineReader(source), includeInOutput);
 #endif
         internal bool Add(string name, LineReader source, bool includeInOutput)
@@ -97,11 +97,11 @@ namespace Google.Protobuf.Reflection
                     // note that GetImports clears the flag
                     foreach (var import in file.GetImports())
                     {
-                        if(!AllowImports)
+                        if (!AllowImports)
                         {
                             Errors.Error(import.Token, "imports are disabled");
                         }
-                        else if (Add(import.Path))
+                        else if (Add(import.Path, false))
                         {
                             didSomething = true;
                         }

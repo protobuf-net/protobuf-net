@@ -76,7 +76,7 @@ namespace protogen.site.Controllers
                 using (var reader = new StringReader(schema))
                 {
                     var set = new FileDescriptorSet { AllowImports = false };
-                    set.Add("my.proto", reader);
+                    set.Add("my.proto", true, reader);
                    
                     set.Process();
                     var errors = set.GetErrors();
