@@ -85,8 +85,8 @@ message SearchResponse {
 
 service SearchService {
   option deprecated = true;
-  rpc Search (SearchRequest) returns (SearchResponse);
-  rpc OldMethod (SearchRequest) returns (SearchResponse)
+  rpc Search (stream SearchRequest) returns (SearchResponse);
+  rpc OldMethod (SearchRequest) returns (stream SearchResponse)
   {
     option deprecated=true;
   }

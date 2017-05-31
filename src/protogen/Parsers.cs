@@ -1215,11 +1215,13 @@ namespace Google.Protobuf.Reflection
             tokens.Consume(TokenType.AlphaNumeric, "rpc");
             var name = tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, "(");
+            bool isInputStream = tokens.ConsumeIf(TokenType.AlphaNumeric, "stream");
             var inputTypeToken = tokens.Read();
             var inputType = tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, ")");
             tokens.Consume(TokenType.AlphaNumeric, "returns");
             tokens.Consume(TokenType.Symbol, "(");
+            bool isOutputStream = tokens.ConsumeIf(TokenType.AlphaNumeric, "stream");
             var outputTypeToken = tokens.Read();
             var outputType = tokens.Consume(TokenType.AlphaNumeric);
             tokens.Consume(TokenType.Symbol, ")");
@@ -1232,6 +1234,8 @@ namespace Google.Protobuf.Reflection
                 InputTypeToken = inputTypeToken,
                 OutputTypeToken = outputTypeToken
             };
+            if (isInputStream) method.ClientStreaming = true;
+            if (isOutputStream) method.ServerStreaming = true;
 
             if (tokens.Peek(out var token) && token.Is(TokenType.Symbol, "{"))
             {
