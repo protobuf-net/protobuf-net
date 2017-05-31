@@ -104,31 +104,10 @@ namespace ProtoBuf
             token.Assert(TokenType.AlphaNumeric);
             tokens.Consume();
             if (max.HasValue && token.Value == "max") return max.Value;
-            
-            if (!TryParseInt32(token.Value, out int val))
+
+            if (!int.TryParse(token.Value, NumberStyles.Integer | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int val))
                 token.Throw("Unable to parse integer");
             return val;
-        }
-        static bool TryParseInt32(string s, out int value)
-        { // int.TryParse not availabe in JSIL
-            value = 0;
-            if (s == null || s.Length == 0) return false;
-            int index = 0;
-            bool neg = false;
-            if(s[0] == '-')
-            {
-                if (s.Length == 1) return false;
-                neg = true;
-                index = 1;
-            }
-            for(;  index < s.Length; index++)
-            {
-                char c = s[index];
-                if (c < '0' || c > '9') return false;
-                value = (value * 10) + (c - '0');
-            }
-            if (neg) value = -value;
-            return true;
         }
 
         internal static string ConsumeString(this Peekable<Token> tokens)

@@ -1,23 +1,11 @@
 ﻿@model protogen.site.Controllers.HomeController.IndexModel
 @{
-    if (Model.UseJSIL)
-    {
-        ViewData["OnLoad"] = "onLoad()";
-    }
     ViewData["Title"] = "Generator";
 }
 <h2>@ViewData["Title"].</h2>
 <a href="/about">Wait... what is this?</a>
 <section>
     <h3>.proto Schema (can be <a href="https://developers.google.com/protocol-buffers/docs/proto">proto2</a> or <a href="https://developers.google.com/protocol-buffers/docs/proto3">proto3</a>):</h3>
-    @if (Model.UseJSIL)
-    {
-        <p><em>You're using the <a href="http://jsil.org/">JSIL</a> cross-compiled version! Yay! Sorry about the script size...</em> to use the AJAX version, <a href="/">click here</a></p>
-    }
-    else
-    {
-
-    }
     <p>(note: some features are still missing; dynamic, Struct, Timestamp, Duration, Any, Wrapper types, FieldMask, ListValue, Value, NullValue)</p>
     <p>Pending work items in generated code:</p>
     <ul>
@@ -64,19 +52,3 @@
 <script src="~/lib/monaco-editor/min/vs/loader.js"></script>
 
 <script src="~/js/home.js" asp-append-version="true"></script>
-@if(Model.UseJSIL)
-{
-<script type="text/javascript">
-    var jsilConfig = {
-        libraryRoot: '/js/jsil/',
-        scriptRoot: '/js/protogen/',
-        manifestRoot: '/js/protogen/',
-        showProgressBar: true,
-        manifests: ['protogen.dll']
-    };
-    var runMain = function () {
-        window.asm = JSIL.GetAssembly("protogen", true);
-    };
-</script>
-<script src="~/js/jsil/jsil.js" asp-append-version="true"></script>
-}

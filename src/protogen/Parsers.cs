@@ -1480,18 +1480,14 @@ namespace ProtoBuf
             set.Process();
             var results = new List<CodeFile>();
             var newErrors = new List<Error>();
-            foreach (var file in set.Files)
+
+            try
             {
-                try
-                {
-                    var newName = file.Name + ".cs";
-                    results.Add(new CodeFile(newName,
-                        file.GenerateCSharp()));
-                }
-                catch (Exception ex)
-                {
-                    newErrors.Add(new Error(default(Token), ex.Message, true));
-                }
+                results.AddRange(CSharpCodeGenerator.Default.Generate(set));
+            }
+            catch (Exception ex)
+            {
+                set.Errors.Add(new Error(default(Token), ex.Message, true));
             }
             var errors = set.GetErrors();
 

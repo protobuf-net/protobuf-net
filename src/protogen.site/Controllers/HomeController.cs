@@ -22,14 +22,9 @@ namespace protogen.site.Controllers
         {
             _host = host;
         }
-        public IActionResult Index() => Index(false);
-
-        [Route("/jsil")]
-        public IActionResult ClientSide() => Index(true);
-
-        private IActionResult Index(bool jsil)
+        public IActionResult Index()
         {
-            var model = new IndexModel { UseJSIL = jsil };
+            var model = new IndexModel();
             model.ProtocVersion = GetProtocVersion(_host, out var canUse);
             model.CanUseProtoc = canUse;
             return View("Index", model);
@@ -42,7 +37,7 @@ namespace protogen.site.Controllers
 
         public class GenerateResult
         {
-            public string Code
+            public CodeFile[] Files
             {
                 get;
                 set;
@@ -64,7 +59,6 @@ namespace protogen.site.Controllers
 
         public class IndexModel
         {
-            public bool UseJSIL { get; set; }
             public string ProtocVersion { get; set; }
             public bool CanUseProtoc { get; set; }
         }
@@ -83,9 +77,7 @@ namespace protogen.site.Controllers
                 {
                     var set = new FileDescriptorSet { AllowImports = false };
                     set.Add("my.proto", reader);
-                    var parsed = set.Files.Single();
-
-
+                   
                     set.Process();
                     var errors = set.GetErrors();
 
@@ -95,18 +87,18 @@ namespace protogen.site.Controllers
                         {
                             result.ParserExceptions = errors;
                         }
-                        result.Code = parsed.GenerateCSharp(errors: errors);
+                        result.Files = CSharpCodeGenerator.Default.Generate(set).ToArray();
                     }
                     else
                     {
                         // we're going to offer protoc! hold me...
                         if (errors.Length != 0 && schema.Contains("import"))
                         {
-                            result.Code = "code output disabled because of import";
+                            // code output disabled because of import
                         }
                         else
                         {
-                            result.Code = RunProtoc(_host, schema, tooling, out errors);
+                            result.Files = RunProtoc(_host, schema, tooling, out errors);
                             if (errors.Length > 0)
                             {
                                 result.ParserExceptions = errors;
@@ -203,7 +195,7 @@ namespace protogen.site.Controllers
             }.AsReadOnly();
             public static bool IsDefined(string tooling) => Options.Any(x => x.Tooling == tooling);
         }
-        private string RunProtoc(IHostingEnvironment host, string schema, string tooling, out Error[] errors)
+        private CodeFile[] RunProtoc(IHostingEnvironment host, string schema, string tooling, out Error[] errors)
         {
             var tmp = Path.GetTempPath();
             var session = Path.Combine(tmp, Guid.NewGuid().ToString());
@@ -215,27 +207,22 @@ namespace protogen.site.Controllers
                 var args = $"--{tooling}_out=\"{session}\" {file}";
                 int exitCode = RunProtoc(host, args, session, out var stdout, out var stderr);
                 errors = ProtoBuf.Error.Parse(stdout, stderr);
+
+                List<CodeFile> files = new List<CodeFile>();
                 if (exitCode == 0)
                 {
-                    string found = null;
                     foreach (var generated in Directory.EnumerateFiles(session))
                     {
-                        if (Path.GetFileName(generated) == file) continue; // that's our input!
-                        if (found != null)
-                        {
-                            return "(multiple files generated)";
-                        }
-                        found = generated;
+                        var name = Path.GetFileName(generated);
+                        if (name == file) continue; // that's our input!
+
+                        files.Add(new CodeFile(name, System.IO.File.ReadAllText(generated)));
                     }
-                    if (found == null)
-                    {
-                        return "(no file generated)";
-                    }
-                    return System.IO.File.ReadAllText(found);
+                    return files.ToArray();
                 }
                 else
                 {
-                    return "(protoc exited with an error)";
+                    return null;
                 }
             }
             finally

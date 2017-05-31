@@ -95,14 +95,11 @@ namespace ProtoBuf.Schemas
 
             var errors = set.GetErrors();
             Exception genError = null;
-            try
-            {
-                foreach (var file in set.Files)
+
+            try {
+                foreach (var file in CSharpCodeGenerator.Default.Generate(set))
                 {
-                    using (var codeFile = File.CreateText(Path.ChangeExtension(file.Name, "cs")))
-                    {
-                        file.GenerateCSharp(codeFile, errors: errors);
-                    }
+                    File.WriteAllText(Path.Combine(SchemaPath, file.Name), file.Text);
                 }
             }
             catch (Exception ex)
