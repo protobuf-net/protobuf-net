@@ -22,12 +22,13 @@ namespace ProtoBuf.Serializers
         bool IProtoSerializer.RequiresOldValue { get { return false; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
 
-        private readonly bool includeKind;
-        public DateTimeSerializer(ProtoBuf.Meta.TypeModel model)
+        private readonly bool includeKind, wellKnown;
+        public DateTimeSerializer(DataFormat dataFormat, ProtoBuf.Meta.TypeModel model)
         {
 #if FEAT_IKVM
             expectedType = model.MapType(typeof(DateTime));
 #endif
+            wellKnown = dataFormat == DataFormat.WellKnown;
             includeKind = model != null && model.SerializeDateTimeKind();
         }
 #if !FEAT_IKVM

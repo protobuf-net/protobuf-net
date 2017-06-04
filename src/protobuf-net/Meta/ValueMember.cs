@@ -421,9 +421,12 @@ namespace ProtoBuf.Meta
         {
             switch (format)
             {
+                
                 case DataFormat.Group: return WireType.StartGroup;
                 case DataFormat.FixedSize: return WireType.Fixed64;
-                case DataFormat.Default: return WireType.String;
+                case DataFormat.WellKnown:
+                case DataFormat.Default:
+                    return WireType.String;
                 default: throw new InvalidOperationException();
             }
         }
@@ -484,7 +487,7 @@ namespace ProtoBuf.Meta
                     return new BooleanSerializer(model);
                 case ProtoTypeCode.DateTime:
                     defaultWireType = GetDateTimeWireType(dataFormat);
-                    return new DateTimeSerializer(model);
+                    return new DateTimeSerializer(dataFormat, model);
                 case ProtoTypeCode.Decimal:
                     defaultWireType = WireType.String;
                     return new DecimalSerializer(model);
@@ -505,7 +508,7 @@ namespace ProtoBuf.Meta
                     return new UInt16Serializer(model);
                 case ProtoTypeCode.TimeSpan:
                     defaultWireType = GetDateTimeWireType(dataFormat);
-                    return new TimeSpanSerializer(model);
+                    return new TimeSpanSerializer(dataFormat, model);
                 case ProtoTypeCode.Guid:
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return new GuidSerializer(model);

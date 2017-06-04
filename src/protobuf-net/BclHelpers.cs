@@ -45,7 +45,6 @@ namespace ProtoBuf
 #endif
         }
 
-
 #if COREFX // this is inspired by DCS: https://github.com/dotnet/corefx/blob/c02d33b18398199f6acc17d375dab154e9a1df66/src/System.Private.DataContractSerialization/src/System/Runtime/Serialization/XmlFormatReaderGenerator.cs#L854-L894
         static Func<Type, object> getUninitializedObject;
         static internal object TryGetUninitializedObjectWithFormatterServices(Type type)
@@ -80,7 +79,7 @@ namespace ProtoBuf
 
 
         /// <summary>
-        /// Writes a TimeSpan to a protobuf stream
+        /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
@@ -161,7 +160,7 @@ namespace ProtoBuf
             }
         }
         /// <summary>
-        /// Parses a TimeSpan from a protobuf stream
+        /// Parses a TimeSpan from a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>        
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
@@ -171,6 +170,67 @@ namespace ProtoBuf
             if (ticks == long.MaxValue) return TimeSpan.MaxValue;
             return TimeSpan.FromTicks(ticks);
         }
+
+        /// <summary>
+        /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
+        /// </summary>
+        public static TimeSpan ReadDuration(TimeSpan value, ProtoReader source)
+        {
+            long seconds = ToDurationSeconds(value, out int nanos);
+            SubItemToken token = ProtoReader.StartSubItem(source);
+            int fieldNumber;
+            while ((fieldNumber = source.ReadFieldHeader()) > 0)
+            {
+                switch (fieldNumber)
+                {
+                    case 1:
+                        seconds = source.ReadInt64();
+                        break;
+                    case 2:
+                        nanos = source.ReadInt32();
+                        break;
+                    default:
+                        source.SkipField();
+                        break;
+                }
+            }
+            ProtoReader.EndSubItem(token, source);
+            return FromDurationSeconds(seconds, nanos);
+        }
+
+        /// <summary>
+        /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
+        /// </summary>
+        public static void WriteDuration(TimeSpan value, ProtoWriter dest)
+        {
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
+            var seconds = ToDurationSeconds(value, out int nanos);
+            if (seconds != 0)
+            {
+                ProtoWriter.WriteFieldHeader(1, WireType.Variant, dest);
+                ProtoWriter.WriteInt64(seconds, dest);
+            }
+            if(nanos != 0)
+            {
+                ProtoWriter.WriteFieldHeader(2, WireType.Variant, dest);
+                ProtoWriter.WriteInt32(nanos, dest);
+            }
+            ProtoWriter.EndSubItem(token, dest);
+        }
+        const long TicksPerNanoSecond = TimeSpan.TicksPerMillisecond / 1000; // == 10
+
+        static TimeSpan FromDurationSeconds(long seconds, int nanos)
+        {
+            long ticks = checked((seconds * TimeSpan.TicksPerSecond)
+                + (nanos * TicksPerNanoSecond));
+            return TimeSpan.FromTicks(ticks);
+        }
+        static long ToDurationSeconds(TimeSpan value, out int nanos)
+        {
+            nanos = (int)((value.Ticks % TimeSpan.TicksPerSecond) / TicksPerNanoSecond);
+            return value.Ticks / TimeSpan.TicksPerSecond;
+        }
+
         /// <summary>
         /// Parses a DateTime from a protobuf stream
         /// </summary>
