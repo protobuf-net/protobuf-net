@@ -30,7 +30,13 @@ namespace ProtoBuf.Schemas
             var time = when - epoch;
 
             var seconds = time.TotalSeconds > 0 ? (long)Math.Floor(time.TotalSeconds) : Math.Ceiling(time.TotalSeconds);
-            var nanos = (time.Milliseconds * 1000) + (time.Ticks % TimeSpan.TicksPerMillisecond) / 10;
+            var nanos = (int)(((time.Ticks % TimeSpan.TicksPerSecond) * 1000000)
+                / TimeSpan.TicksPerMillisecond);
+            if(nanos < 0)
+            {
+                seconds--;
+                nanos += 1000000000;
+            }
 
             // convert forwards and compare
             var hazDt = new HasDateTime { Value = when };
@@ -119,25 +125,28 @@ namespace ProtoBuf.Schemas
             Assert.Equal(value.Nanos, other.Nanos);
         }
 
-        private void AssertKnownValue(TimeSpan expected, Duration value)
+        private void AssertKnownValue(TimeSpan expected, Duration valueToSerialize, Duration valueToDeserialize = null)
         {
-            var obj = new HasDuration { Value = value };
+            if (valueToDeserialize == null)
+                valueToDeserialize = valueToSerialize; // assume they are te same
+
+            var obj = new HasDuration { Value = valueToSerialize };
             Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(runtime, obj).Value);
             Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(dynamicMethod, obj).Value);
             Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(fullyCompiled, obj).Value);
 
             var obj2 = new HasTimeSpan { Value = expected };
             var other = ChangeType<HasTimeSpan, HasDuration>(runtime, obj2).Value ?? new Duration();
-            Assert.Equal(value.Seconds, other.Seconds);
-            Assert.Equal(value.Nanos, other.Nanos);
+            Assert.Equal(valueToDeserialize.Seconds, other.Seconds);
+            Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
 
             other = ChangeType<HasTimeSpan, HasDuration>(dynamicMethod, obj2).Value ?? new Duration();
-            Assert.Equal(value.Seconds, other.Seconds);
-            Assert.Equal(value.Nanos, other.Nanos);
+            Assert.Equal(valueToDeserialize.Seconds, other.Seconds);
+            Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
 
             other = ChangeType<HasTimeSpan, HasDuration>(fullyCompiled, obj2).Value ?? new Duration();
-            Assert.Equal(value.Seconds, other.Seconds);
-            Assert.Equal(value.Nanos, other.Nanos);
+            Assert.Equal(valueToDeserialize.Seconds, other.Seconds);
+            Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
         }
 
         [Fact, Trait("kind", "well-known")]
@@ -149,22 +158,16 @@ namespace ProtoBuf.Schemas
             AssertKnownValue(TimeSpan.FromMilliseconds(-1), new Duration { Nanos = -1000000 });
             AssertKnownValue(TimeSpan.FromTicks(1), new Duration { Nanos = 100 });
             AssertKnownValue(TimeSpan.FromTicks(-1), new Duration { Nanos = -100 });
-
-        }
-
-        [Fact, Trait("kind", "well-known")]
-        public void Duration_UnexpectedValues() // prove implementation matches official version
-        {
-            // very confused - have emailed Jon
-            AssertKnownValue(TimeSpan.FromTicks(2), new Duration { Nanos = 250 });
-            AssertKnownValue(TimeSpan.FromTicks(-2), new Duration { Nanos = -250 });
+            AssertKnownValue(TimeSpan.FromTicks(2), new Duration { Nanos = 250 }, new Duration { Nanos = 200 });
+            AssertKnownValue(TimeSpan.FromTicks(-2), new Duration { Nanos = -250 }, new Duration { Nanos = -200 });
         }
 
         private void TimeSpan_WellKnownEquiv(TypeModel model, TimeSpan time)
         {
 
             var seconds = time.TotalSeconds > 0 ? (long)Math.Floor(time.TotalSeconds) : Math.Ceiling(time.TotalSeconds);
-            var nanos = (time.Milliseconds * 1000) + (time.Ticks % TimeSpan.TicksPerMillisecond) / 10;
+            var nanos = (int)(((time.Ticks % TimeSpan.TicksPerSecond) * 1000000)
+               / TimeSpan.TicksPerMillisecond);
 
             // convert forwards and compare
             var hazTs = new HasTimeSpan { Value = time };
