@@ -190,6 +190,7 @@ namespace ProtoBuf
 
 
             string defaultValue = null;
+            bool suppressDefaultAttribute = false;
             if (isOptional)
             {
                 defaultValue = obj.DefaultValue;
@@ -198,6 +199,15 @@ namespace ProtoBuf
                 {
                     defaultValue = string.IsNullOrEmpty(defaultValue) ? "\"\""
                         : ("@\"" + (defaultValue ?? "").Replace("\"", "\"\"") + "\"");
+                }
+                else if (obj.type == FieldDescriptorProto.Type.TypeMessage
+                    && obj.TypeName == WellKnownTypeTimestamp)
+                {
+                    if (string.IsNullOrEmpty(defaultValue))
+                    {
+                        defaultValue = "global::ProtoBuf.BclHelpers.TimestampEpoch";
+                        suppressDefaultAttribute = true;
+                    }
                 }
                 else if (obj.type == FieldDescriptorProto.Type.TypeDouble)
                 {
@@ -242,7 +252,7 @@ namespace ProtoBuf
                 tw.Write($", IsRequired = true");
             }
             tw.WriteLine(")]");
-            if (!isRepeated && !string.IsNullOrWhiteSpace(defaultValue))
+            if (!isRepeated && !string.IsNullOrWhiteSpace(defaultValue) && !suppressDefaultAttribute)
             {
                 ctx.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue})]");
             }
@@ -425,10 +435,10 @@ namespace ProtoBuf
                 case FieldDescriptorProto.Type.TypeMessage:
                     switch(field.TypeName)
                     {
-                        case ".google.protobuf.Timestamp":
+                        case WellKnownTypeTimestamp:
                             dataFormat = nameof(DataFormat.WellKnown);
                             return "global::System.DateTime";
-                        case ".google.protobuf.Duration":
+                        case WellKnownTypeDuration:
                             dataFormat = nameof(DataFormat.WellKnown);
                             return "global::System.TimeSpan";
                     }
@@ -443,5 +453,8 @@ namespace ProtoBuf
                     return field.TypeName;
             }
         }
+
+        const string WellKnownTypeTimestamp = ".google.protobuf.Timestamp",
+                     WellKnownTypeDuration = ".google.protobuf.Duration";
     }
 }

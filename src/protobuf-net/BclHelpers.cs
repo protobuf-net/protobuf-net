@@ -77,6 +77,11 @@ namespace ProtoBuf
             new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Local)
         };
 
+        /// <summary>
+        /// The default value for dates that are following google.protobuf.Timestamp semantics
+        /// </summary>
+        public static readonly DateTime TimestampEpoch = EpochOrigin[(int)DateTimeKind.Utc];
+
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
@@ -204,6 +209,10 @@ namespace ProtoBuf
         public static void WriteDuration(TimeSpan value, ProtoWriter dest)
         {
             var seconds = ToDurationSeconds(value, out int nanos);
+            WriteSecondsNanos(seconds, nanos, dest);
+        }
+        private static void WriteSecondsNanos(long seconds, int nanos, ProtoWriter dest)
+        {
             SubItemToken token = ProtoWriter.StartSubItem(null, dest);
             if (seconds != 0)
             {
@@ -226,9 +235,9 @@ namespace ProtoBuf
             // note: DateTime is only defined for just over 0000 to just below 10000;
             // TimeSpan has a range of +/- 10,675,199 days === 29k years;
             // so we can just use epoch time delta
-            var delta = value - EpochOrigin[(int)DateTimeKind.Utc];
+            var delta = value - TimestampEpoch;
             delta = ReadDuration(delta, source);
-            return EpochOrigin[(int)DateTimeKind.Utc] + delta;
+            return TimestampEpoch + delta;
         }
 
         /// <summary>
@@ -236,21 +245,29 @@ namespace ProtoBuf
         /// </summary>
         public static void WriteTimestamp(DateTime value, ProtoWriter dest)
         {
-            var delta = value - EpochOrigin[(int)DateTimeKind.Utc];
-            WriteDuration(delta, dest);
+            var seconds = ToDurationSeconds(value - TimestampEpoch, out int nanos);
+            
+            if (nanos < 0)
+            {   // from Timestamp.proto:
+                // "Negative second values with fractions must still have
+                // non -negative nanos values that count forward in time."
+                seconds--;
+                nanos += 1000000000;
+            }
+            WriteSecondsNanos(seconds, nanos, dest);
         }
-
-        const long TicksPerNanoSecond = TimeSpan.TicksPerMillisecond / 1000; // == 10
-
+        
         static TimeSpan FromDurationSeconds(long seconds, int nanos)
         {
+            
             long ticks = checked((seconds * TimeSpan.TicksPerSecond)
-                + (nanos * TicksPerNanoSecond));
+                + (nanos * TimeSpan.TicksPerMillisecond) / 1000000);
             return TimeSpan.FromTicks(ticks);
         }
         static long ToDurationSeconds(TimeSpan value, out int nanos)
         {
-            nanos = (int)((value.Ticks % TimeSpan.TicksPerSecond) / TicksPerNanoSecond);
+            nanos = (int)(((value.Ticks % TimeSpan.TicksPerSecond) * 1000000)
+                / TimeSpan.TicksPerMillisecond);
             return value.Ticks / TimeSpan.TicksPerSecond;
         }
 

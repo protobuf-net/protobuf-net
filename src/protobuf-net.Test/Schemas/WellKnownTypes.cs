@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+﻿using Google.Protobuf.WellKnownTypes;
+using ProtoBuf.Meta;
 using System;
 using System.Globalization;
 using System.IO;
@@ -19,7 +20,7 @@ namespace ProtoBuf.Schemas
         {
             // parse
             var when = DateTime.Parse(s, CultureInfo.InvariantCulture);
-            
+
             DateTime_WellKnownEquiv(runtime, when);
             DateTime_WellKnownEquiv(dynamicMethod, when);
             DateTime_WellKnownEquiv(fullyCompiled, when);
@@ -82,6 +83,83 @@ namespace ProtoBuf.Schemas
             TimeSpan_WellKnownEquiv(dynamicMethod, time);
             TimeSpan_WellKnownEquiv(fullyCompiled, time);
         }
+
+        [Fact, Trait("kind", "well-known")]
+        public void Timestamp_ExpectedValues() // prove implementation matches official version
+        {
+            DateTime utcMin = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc);
+            DateTime utcMax = DateTime.SpecifyKind(DateTime.MaxValue, DateTimeKind.Utc);
+            AssertKnownValue(new Timestamp { Seconds = -62135596800 }, utcMin);
+            AssertKnownValue(new Timestamp { Seconds = 253402300799, Nanos = 999999900 }, utcMax);
+            AssertKnownValue(new Timestamp(), new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            AssertKnownValue(new Timestamp { Nanos = 1000000 }, new DateTime(1970, 1, 1, 0, 0, 0, 1, DateTimeKind.Utc));
+            AssertKnownValue(new Timestamp { Seconds = 3600 }, new DateTime(1970, 1, 1, 1, 0, 0, DateTimeKind.Utc));
+            AssertKnownValue(new Timestamp { Seconds = -3600 }, new DateTime(1969, 12, 31, 23, 0, 0, DateTimeKind.Utc));
+            AssertKnownValue(new Timestamp { Seconds = -1, Nanos = 999000000 }, new DateTime(1969, 12, 31, 23, 59, 59, 999, DateTimeKind.Utc));
+        }
+
+        private void AssertKnownValue(Timestamp value, DateTime expected)
+        {
+            var obj = new HasTimestamp { Value = value };
+            Assert.Equal(expected, ChangeType<HasTimestamp, HasDateTime>(runtime, obj).Value);
+            Assert.Equal(expected, ChangeType<HasTimestamp, HasDateTime>(dynamicMethod, obj).Value);
+            Assert.Equal(expected, ChangeType<HasTimestamp, HasDateTime>(fullyCompiled, obj).Value);
+
+            var obj2 = new HasDateTime { Value = expected };
+            var other = ChangeType<HasDateTime, HasTimestamp>(runtime, obj2).Value ?? new Timestamp();
+            Assert.Equal(value.Seconds, other.Seconds);
+            Assert.Equal(value.Nanos, other.Nanos);
+
+            other = ChangeType<HasDateTime, HasTimestamp>(dynamicMethod, obj2).Value ?? new Timestamp();
+            Assert.Equal(value.Seconds, other.Seconds);
+            Assert.Equal(value.Nanos, other.Nanos);
+
+            other = ChangeType<HasDateTime, HasTimestamp>(fullyCompiled, obj2).Value ?? new Timestamp();
+            Assert.Equal(value.Seconds, other.Seconds);
+            Assert.Equal(value.Nanos, other.Nanos);
+        }
+
+        private void AssertKnownValue(TimeSpan expected, Duration value)
+        {
+            var obj = new HasDuration { Value = value };
+            Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(runtime, obj).Value);
+            Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(dynamicMethod, obj).Value);
+            Assert.Equal(expected, ChangeType<HasDuration, HasTimeSpan>(fullyCompiled, obj).Value);
+
+            var obj2 = new HasTimeSpan { Value = expected };
+            var other = ChangeType<HasTimeSpan, HasDuration>(runtime, obj2).Value ?? new Duration();
+            Assert.Equal(value.Seconds, other.Seconds);
+            Assert.Equal(value.Nanos, other.Nanos);
+
+            other = ChangeType<HasTimeSpan, HasDuration>(dynamicMethod, obj2).Value ?? new Duration();
+            Assert.Equal(value.Seconds, other.Seconds);
+            Assert.Equal(value.Nanos, other.Nanos);
+
+            other = ChangeType<HasTimeSpan, HasDuration>(fullyCompiled, obj2).Value ?? new Duration();
+            Assert.Equal(value.Seconds, other.Seconds);
+            Assert.Equal(value.Nanos, other.Nanos);
+        }
+
+        [Fact, Trait("kind", "well-known")]
+        public void Duration_ExpectedValues() // prove implementation matches official version
+        {
+            AssertKnownValue(TimeSpan.FromSeconds(1), new Duration { Seconds = 1 });
+            AssertKnownValue(TimeSpan.FromSeconds(-1), new Duration { Seconds = -1 });
+            AssertKnownValue(TimeSpan.FromMilliseconds(1), new Duration { Nanos = 1000000 });
+            AssertKnownValue(TimeSpan.FromMilliseconds(-1), new Duration { Nanos = -1000000 });
+            AssertKnownValue(TimeSpan.FromTicks(1), new Duration { Nanos = 100 });
+            AssertKnownValue(TimeSpan.FromTicks(-1), new Duration { Nanos = -100 });
+
+        }
+
+        [Fact, Trait("kind", "well-known")]
+        public void Duration_UnexpectedValues() // prove implementation matches official version
+        {
+            // very confused - have emailed Jon
+            AssertKnownValue(TimeSpan.FromTicks(2), new Duration { Nanos = 250 });
+            AssertKnownValue(TimeSpan.FromTicks(-2), new Duration { Nanos = -250 });
+        }
+
         private void TimeSpan_WellKnownEquiv(TypeModel model, TimeSpan time)
         {
 
@@ -120,7 +198,7 @@ namespace ProtoBuf.Schemas
     public class HasDateTime
     {
         [ProtoMember(1, DataFormat = DataFormat.WellKnown)]
-        public DateTime Value { get; set; }
+        public DateTime Value { get; set; } = BclHelpers.TimestampEpoch;
     }
 
     [ProtoContract]
