@@ -508,12 +508,12 @@ namespace ProtoBuf.Compiler
             LoadReaderWriter();
             EmitCall(method);            
         }
-        internal void EmitBasicRead(Type helperType, string methodName, Type expectedType, int argCount = 1)
+        internal void EmitBasicRead(Type helperType, string methodName, Type expectedType)
         {
             MethodInfo method = helperType.GetMethod(
                 methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (method == null || method.ReturnType != expectedType
-                || method.GetParameters().Length != argCount) throw new ArgumentException("methodName");
+                || method.GetParameters().Length != 1) throw new ArgumentException("methodName");
             LoadReaderWriter();
             EmitCall(method);
         }

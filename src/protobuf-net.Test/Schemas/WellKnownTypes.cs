@@ -7,12 +7,58 @@ using Xunit;
 
 namespace ProtoBuf.Schemas
 {
+    [Trait("kind", "well-known")]
     public class WellKnownTypes
     {
 
         static readonly DateTime epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        [Theory, Trait("kind", "well-known")]
+        [Fact]
+        public void DateTime_NullStaysNull()
+        {
+            var orig = new HasDateTime();
+            Assert.Null(orig.Value);
+
+            var hd = ChangeType<HasDateTime, HasTimestamp>(runtime, orig);
+            Assert.Null(hd.Value);
+            var clone = ChangeType<HasTimestamp, HasDateTime>(runtime, hd);
+            Assert.Null(clone.Value);
+
+            hd = ChangeType<HasDateTime, HasTimestamp>(dynamicMethod, orig);
+            Assert.Null(hd.Value);
+            clone = ChangeType<HasTimestamp, HasDateTime>(dynamicMethod, hd);
+            Assert.Null(clone.Value);
+
+            hd = ChangeType<HasDateTime, HasTimestamp>(fullyCompiled, orig);
+            Assert.Null(hd.Value);
+            clone = ChangeType<HasTimestamp, HasDateTime>(fullyCompiled, hd);
+            Assert.Null(clone.Value);
+        }
+
+
+        [Fact]
+        public void TimeSpan_NullStaysNull()
+        {
+            var orig = new HasTimeSpan();
+            Assert.Null(orig.Value);
+
+            var hd = ChangeType<HasTimeSpan, HasDuration>(runtime, orig);
+            Assert.Null(hd.Value);
+            var clone = ChangeType<HasDuration, HasTimeSpan>(runtime, hd);
+            Assert.Null(clone.Value);
+
+            hd = ChangeType<HasTimeSpan, HasDuration>(dynamicMethod, orig);
+            Assert.Null(hd.Value);
+            clone = ChangeType<HasDuration, HasTimeSpan>(dynamicMethod, hd);
+            Assert.Null(clone.Value);
+
+            hd = ChangeType<HasTimeSpan, HasDuration>(fullyCompiled, orig);
+            Assert.Null(hd.Value);
+            clone = ChangeType<HasDuration, HasTimeSpan>(fullyCompiled, hd);
+            Assert.Null(clone.Value);
+        }
+
+        [Theory]
         [InlineData("2017-01-15T01:30:15.01Z")]
         [InlineData("1970-01-15T00:00:00Z")]
         [InlineData("1930-01-15T00:00:00.00001Z")]
@@ -25,6 +71,7 @@ namespace ProtoBuf.Schemas
             DateTime_WellKnownEquiv(dynamicMethod, when);
             DateTime_WellKnownEquiv(fullyCompiled, when);
         }
+
         private void DateTime_WellKnownEquiv(TypeModel model, DateTime when)
         {
             var time = when - epoch;
@@ -71,7 +118,7 @@ namespace ProtoBuf.Schemas
             fullyCompiled = tmp.Compile();
         }
 
-        [Theory, Trait("kind", "well-known")]
+        [Theory]
         [InlineData("00:12:13.00032")]
         [InlineData("-00:12:13.00032")]
         [InlineData("00:12:13.10032")]
@@ -90,7 +137,7 @@ namespace ProtoBuf.Schemas
             TimeSpan_WellKnownEquiv(fullyCompiled, time);
         }
 
-        [Fact, Trait("kind", "well-known")]
+        [Fact]
         public void Timestamp_ExpectedValues() // prove implementation matches official version
         {
             DateTime utcMin = DateTime.SpecifyKind(DateTime.MinValue, DateTimeKind.Utc);
@@ -149,7 +196,7 @@ namespace ProtoBuf.Schemas
             Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
         }
 
-        [Fact, Trait("kind", "well-known")]
+        [Fact]
         public void Duration_ExpectedValues() // prove implementation matches official version
         {
             AssertKnownValue(TimeSpan.FromSeconds(1), new Duration { Seconds = 1 });
@@ -201,7 +248,7 @@ namespace ProtoBuf.Schemas
     public class HasDateTime
     {
         [ProtoMember(1, DataFormat = DataFormat.WellKnown)]
-        public DateTime Value { get; set; } = BclHelpers.TimestampEpoch;
+        public DateTime? Value { get; set; }
     }
 
     [ProtoContract]
@@ -215,7 +262,7 @@ namespace ProtoBuf.Schemas
     public class HasTimeSpan
     {
         [ProtoMember(1, DataFormat = DataFormat.WellKnown)]
-        public TimeSpan Value { get; set; }
+        public TimeSpan? Value { get; set; }
     }
 }
 

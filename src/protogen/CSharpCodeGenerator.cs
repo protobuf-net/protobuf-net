@@ -200,15 +200,6 @@ namespace ProtoBuf
                     defaultValue = string.IsNullOrEmpty(defaultValue) ? "\"\""
                         : ("@\"" + (defaultValue ?? "").Replace("\"", "\"\"") + "\"");
                 }
-                else if (obj.type == FieldDescriptorProto.Type.TypeMessage
-                    && obj.TypeName == WellKnownTypeTimestamp)
-                {
-                    if (string.IsNullOrEmpty(defaultValue))
-                    {
-                        defaultValue = "global::ProtoBuf.BclHelpers.TimestampEpoch";
-                        suppressDefaultAttribute = true;
-                    }
-                }
                 else if (obj.type == FieldDescriptorProto.Type.TypeDouble)
                 {
                     switch (defaultValue)
@@ -437,10 +428,10 @@ namespace ProtoBuf
                     {
                         case WellKnownTypeTimestamp:
                             dataFormat = nameof(DataFormat.WellKnown);
-                            return "global::System.DateTime";
+                            return "global::System.DateTime?";
                         case WellKnownTypeDuration:
                             dataFormat = nameof(DataFormat.WellKnown);
-                            return "global::System.TimeSpan";
+                            return "global::System.TimeSpan?";
                     }
                     var msgType = ctx.TryFind<DescriptorProto>(field.TypeName);
                     if (field.type == FieldDescriptorProto.Type.TypeGroup)

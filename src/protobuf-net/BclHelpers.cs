@@ -80,7 +80,7 @@ namespace ProtoBuf
         /// <summary>
         /// The default value for dates that are following google.protobuf.Timestamp semantics
         /// </summary>
-        public static readonly DateTime TimestampEpoch = EpochOrigin[(int)DateTimeKind.Utc];
+        private static readonly DateTime TimestampEpoch = EpochOrigin[(int)DateTimeKind.Utc];
 
 
         /// <summary>
@@ -179,9 +179,10 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
-        public static TimeSpan ReadDuration(TimeSpan value, ProtoReader source)
+        public static TimeSpan ReadDuration(ProtoReader source)
         {
-            long seconds = ToDurationSeconds(value, out int nanos);
+            long seconds = 0;
+            int nanos = 0;
             SubItemToken token = ProtoReader.StartSubItem(source);
             int fieldNumber;
             while ((fieldNumber = source.ReadFieldHeader()) > 0)
@@ -230,14 +231,12 @@ namespace ProtoBuf
         /// <summary>
         /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
-        public static DateTime ReadTimestamp(DateTime value, ProtoReader source)
+        public static DateTime ReadTimestamp(ProtoReader source)
         {
             // note: DateTime is only defined for just over 0000 to just below 10000;
             // TimeSpan has a range of +/- 10,675,199 days === 29k years;
             // so we can just use epoch time delta
-            var delta = value - TimestampEpoch;
-            delta = ReadDuration(delta, source);
-            return TimestampEpoch + delta;
+            return TimestampEpoch + ReadDuration(source);
         }
 
         /// <summary>
