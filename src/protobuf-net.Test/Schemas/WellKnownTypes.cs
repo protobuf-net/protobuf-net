@@ -28,8 +28,8 @@ namespace ProtoBuf.Schemas
         {
             var time = when - epoch;
 
-            var seconds = time.TotalSeconds;
-            var nanos = time.Milliseconds * 1000;
+            var seconds = time.TotalSeconds > 0 ? (long)Math.Floor(time.TotalSeconds) : Math.Ceiling(time.TotalSeconds);
+            var nanos = (time.Milliseconds * 1000) + (time.Ticks % TimeSpan.TicksPerMillisecond) / 10;
 
             // convert forwards and compare
             var hazDt = new HasDateTime { Value = when };
@@ -66,9 +66,12 @@ namespace ProtoBuf.Schemas
 
         [Theory, Trait("kind", "well-known")]
         [InlineData("00:12:13.00032")]
+        [InlineData("-00:12:13.00032")]
         [InlineData("00:12:13.10032")]
         [InlineData("00:12:13")]
+        [InlineData("-00:12:13")]
         [InlineData("00:00:00.00032")]
+        [InlineData("-00:00:00.00032")]
         [InlineData("00:00:00")]
         public void TimeSpan_WellKnownEquiv(string s)
         {
@@ -82,7 +85,7 @@ namespace ProtoBuf.Schemas
         private void TimeSpan_WellKnownEquiv(TypeModel model, TimeSpan time)
         {
 
-            var seconds = (long)Math.Floor(time.TotalSeconds);
+            var seconds = time.TotalSeconds > 0 ? (long)Math.Floor(time.TotalSeconds) : Math.Ceiling(time.TotalSeconds);
             var nanos = (time.Milliseconds * 1000) + (time.Ticks % TimeSpan.TicksPerMillisecond) / 10;
 
             // convert forwards and compare

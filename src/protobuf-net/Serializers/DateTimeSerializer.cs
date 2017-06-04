@@ -19,7 +19,7 @@ namespace ProtoBuf.Serializers
 #endif
         public Type ExpectedType { get { return expectedType; } }
 
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
+        bool IProtoSerializer.RequiresOldValue { get { return wellKnown; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
 
         private readonly bool includeKind, wellKnown;
@@ -34,12 +34,21 @@ namespace ProtoBuf.Serializers
 #if !FEAT_IKVM
         public object Read(object value, ProtoReader source)
         {
-            Helpers.DebugAssert(value == null); // since replaces
-            return BclHelpers.ReadDateTime(source);
+            if(wellKnown)
+            {
+                return BclHelpers.ReadTimestamp((DateTime)value, source);
+            }
+            else
+            {
+                Helpers.DebugAssert(value == null); // since replaces
+                return BclHelpers.ReadDateTime(source);
+            }            
         }
         public void Write(object value, ProtoWriter dest)
         {
-            if(includeKind)
+            if(wellKnown)
+                BclHelpers.WriteTimestamp((DateTime)value, dest);
+            else if(includeKind)
                 BclHelpers.WriteDateTimeWithKind((DateTime)value, dest);
             else
                 BclHelpers.WriteDateTime((DateTime)value, dest);
@@ -48,11 +57,16 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)), includeKind ? "WriteDateTimeWithKind" : "WriteDateTime", valueFrom);
+            ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)),
+                wellKnown ? nameof(BclHelpers.WriteTimestamp)
+                : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)), "ReadDateTime", ExpectedType);
+            if (wellKnown) ctx.LoadValue(valueFrom);
+            ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)),
+                wellKnown ? nameof(BclHelpers.ReadTimestamp) : nameof(BclHelpers.ReadDateTime),
+                ExpectedType, argCount: wellKnown ? 2 : 1);
         }
 #endif
 

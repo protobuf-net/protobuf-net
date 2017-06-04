@@ -203,20 +203,43 @@ namespace ProtoBuf
         /// </summary>
         public static void WriteDuration(TimeSpan value, ProtoWriter dest)
         {
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
             var seconds = ToDurationSeconds(value, out int nanos);
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
             if (seconds != 0)
             {
                 ProtoWriter.WriteFieldHeader(1, WireType.Variant, dest);
                 ProtoWriter.WriteInt64(seconds, dest);
             }
-            if(nanos != 0)
+            if (nanos != 0)
             {
                 ProtoWriter.WriteFieldHeader(2, WireType.Variant, dest);
                 ProtoWriter.WriteInt32(nanos, dest);
             }
             ProtoWriter.EndSubItem(token, dest);
         }
+
+        /// <summary>
+        /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
+        /// </summary>
+        public static DateTime ReadTimestamp(DateTime value, ProtoReader source)
+        {
+            // note: DateTime is only defined for just over 0000 to just below 10000;
+            // TimeSpan has a range of +/- 10,675,199 days === 29k years;
+            // so we can just use epoch time delta
+            var delta = value - EpochOrigin[(int)DateTimeKind.Utc];
+            delta = ReadDuration(delta, source);
+            return EpochOrigin[(int)DateTimeKind.Utc] + delta;
+        }
+
+        /// <summary>
+        /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
+        /// </summary>
+        public static void WriteTimestamp(DateTime value, ProtoWriter dest)
+        {
+            var delta = value - EpochOrigin[(int)DateTimeKind.Utc];
+            WriteDuration(delta, dest);
+        }
+
         const long TicksPerNanoSecond = TimeSpan.TicksPerMillisecond / 1000; // == 10
 
         static TimeSpan FromDurationSeconds(long seconds, int nanos)
