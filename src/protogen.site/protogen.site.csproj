@@ -15,6 +15,9 @@
     <Content Include="wwwroot\js\home.js" />
     <Content Include="wwwroot\js\proto3lang.js" />
     <Content Include="wwwroot\protoc.exe" />
+    <Content Include="wwwroot\protoc\google\protobuf\duration.proto" />
+    <Content Include="wwwroot\protoc\google\protobuf\timestamp.proto" />
+    <Content Include="wwwroot\protoc\protoc.exe" />
   </ItemGroup>
 
   <ItemGroup>
@@ -28,6 +31,11 @@
 
   <ItemGroup>
     <DotNetCliToolReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Tools" Version="1.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\protoc\google\protobuf\duration.proto" />
+    <None Include="wwwroot\protoc\google\protobuf\timestamp.proto" />
   </ItemGroup>
 
   <ItemGroup>

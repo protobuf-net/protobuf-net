@@ -423,6 +423,15 @@ namespace ProtoBuf
                     return enumType == null ? field.TypeName : ctx.NameNormalizer.GetName(enumType);
                 case FieldDescriptorProto.Type.TypeGroup:
                 case FieldDescriptorProto.Type.TypeMessage:
+                    switch(field.TypeName)
+                    {
+                        case ".google.protobuf.Timestamp":
+                            dataFormat = nameof(DataFormat.WellKnown);
+                            return "global::System.DateTime";
+                        case ".google.protobuf.Duration":
+                            dataFormat = nameof(DataFormat.WellKnown);
+                            return "global::System.TimeSpan";
+                    }
                     var msgType = ctx.TryFind<DescriptorProto>(field.TypeName);
                     if (field.type == FieldDescriptorProto.Type.TypeGroup)
                     {

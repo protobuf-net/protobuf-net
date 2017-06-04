@@ -21,7 +21,7 @@ namespace Google.Protobuf.Reflection
     }
     partial class FileDescriptorSet
     {
-        public bool AllowImports { get; set; } = true;
+        public Func<string, bool> ImportValidator { get; set; }
 
         internal List<string> importPaths = new List<string>();
         public void AddImportPath(string path)
@@ -30,6 +30,7 @@ namespace Google.Protobuf.Reflection
         }
         public Error[] GetErrors() => Error.GetArray(Errors);
         internal List<Error> Errors { get; } = new List<Error>();
+
 #if !NO_IO
         public bool Add(string name, bool includeInOutput, System.IO.TextReader source = null)
             => Add(name, source == null ? null : new TextReaderLineReader(source), includeInOutput);
@@ -49,6 +50,7 @@ namespace Google.Protobuf.Reflection
                 descriptor = new FileDescriptorProto
                 {
                     Name = Path.GetFileName(name),
+                    Path = name,
                     IncludeInOutput = includeInOutput
                 };
                 Files.Add(descriptor);
@@ -97,9 +99,9 @@ namespace Google.Protobuf.Reflection
                     // note that GetImports clears the flag
                     foreach (var import in file.GetImports())
                     {
-                        if (!AllowImports)
+                        if (!(ImportValidator?.Invoke(import.Path) ?? true))
                         {
-                            Errors.Error(import.Token, "imports are disabled");
+                            Errors.Error(import.Token, $"import of {import.Path} is disallowed");
                         }
                         else if (Add(import.Path, false))
                         {
@@ -136,7 +138,9 @@ namespace Google.Protobuf.Reflection
         }
 
         internal FileDescriptorProto GetFile(string path)
-            => Files.FirstOrDefault(x => string.Equals(x.Name, path, StringComparison.OrdinalIgnoreCase));
+            // try full match first, then name-only match
+            => Files.FirstOrDefault(x => string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase))
+            ?? Files.FirstOrDefault(x => string.Equals(x.Name, path, StringComparison.OrdinalIgnoreCase));
     }
     partial class DescriptorProto : ISchemaObject, IHazNames, IType
     {
@@ -455,7 +459,10 @@ namespace Google.Protobuf.Reflection
     }
     partial class FileDescriptorProto : ISchemaObject, IHazNames, IType
     {
-        public override string ToString() => this.Name;
+        public override string ToString() => Path;
+
+        internal string Path { get; set; }
+
         string IType.FullyQualifiedName => null;
         IType IType.Parent => null;
         IType IType.Find(string name)
@@ -625,8 +632,24 @@ namespace Google.Protobuf.Reflection
             right = input.Substring(split + 1).Trim();
             return true;
         }
-        internal bool TryResolveType(string typeName, IType parent, out IType type, bool allowImports)
+        internal bool TryResolveType(string typeName, IType parent, out IType type, bool allowImports, bool checkOwnPackage = true)
         {
+            bool TryResolveFromFile(FileDescriptorProto file, string tn, bool ai, out IType tp)
+            {
+                tp = null;
+                if (file == null) return false;
+
+                var pkg = file.Package;
+                if(!string.IsNullOrEmpty(pkg))
+                {
+                    if (!tn.StartsWith(pkg + ".")) return false; // wrong file
+
+                    tn = tn.Substring(pkg.Length + 1);
+                }
+
+                return TryResolveType(tn, file, out tp, ai, false);
+
+            }
             if (TrySplit(typeName, out var left, out var right))
             {
                 // compound name; try to resolve the first part
@@ -659,16 +682,15 @@ namespace Google.Protobuf.Reflection
                     parent = parent.Parent;
                 }
 
+                if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type)) return true;
+
                 // look at imports
                 if (allowImports)
                 {
                     foreach (var import in _imports)
                     {
                         var file = Parent?.GetFile(import.Path);
-                        if (file == null) continue;
-
-                        // note we start again wit full type name here
-                        if (TryResolveType(typeName, file, out type, import.IsPublic))
+                        if (TryResolveFromFile(file, typeName, import.IsPublic, out type))
                         {
                             import.Used = true;
                             return true;

@@ -75,9 +75,12 @@ namespace protogen.site.Controllers
             {
                 using (var reader = new StringReader(schema))
                 {
-                    var set = new FileDescriptorSet { AllowImports = false };
+                    var set = new FileDescriptorSet {
+                        ImportValidator = path => ValidateImport(path),
+                    };
+                    set.AddImportPath(Path.Combine(_host.WebRootPath, "protoc"));
                     set.Add("my.proto", true, reader);
-                   
+
                     set.Process();
                     var errors = set.GetErrors();
 
@@ -113,6 +116,34 @@ namespace protogen.site.Controllers
             }
             return result;
         }
+
+        Dictionary<string,string> legalImports = null;
+        readonly static char[] DirSeparators = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+
+        private bool ValidateImport(string path) => ResolveImport(path) != null;
+        private string ResolveImport(string path)
+        {
+            // only allow the things that we actively find under "protoc" on the web root,
+            // remembering to normalize our slashes; this means that c:\... or ../../ etc will
+            // all fail, as they are not in "legalImports"
+            if (legalImports == null)
+            {
+                var tmp = new Dictionary<string,string>();
+                var root = Path.Combine(_host.WebRootPath, "protoc");
+                foreach (var found in Directory.EnumerateFiles(root, "*.proto", SearchOption.AllDirectories))
+                {
+                    if (found.StartsWith(root))
+                    {
+                        tmp.Add(found.Substring(root.Length).TrimStart(DirSeparators)
+                            .Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), found);
+                    }
+                }
+                legalImports = tmp;
+            }
+            return legalImports.TryGetValue(path.Replace(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar),
+                out string actual) ? actual : null;
+        }
+
         static string protocVersion = null;
         static bool protocUsable;
         public static string GetProtocVersion(IHostingEnvironment host, out bool canUse)
@@ -143,7 +174,7 @@ namespace protogen.site.Controllers
         }
         static int RunProtoc(IHostingEnvironment host, string arguments, string workingDir, out string stdout, out string stderr)
         {
-            var exePath = Path.Combine(host.WebRootPath, "protoc.exe");
+            var exePath = Path.Combine(host.WebRootPath, "protoc\\protoc.exe");
             if (!System.IO.File.Exists(exePath))
             {
                 throw new FileNotFoundException("protoc not found");
@@ -204,7 +235,9 @@ namespace protogen.site.Controllers
             {
                 const string file = "my.proto";
                 System.IO.File.WriteAllText(Path.Combine(session, file), schema);
-                var args = $"--{tooling}_out=\"{session}\" {file}";
+
+                var includeRoot = Path.Combine(host.WebRootPath, "protoc");
+                var args = $"--{tooling}_out=\"{session}\" --proto_path=\"{includeRoot}\" {file}";
                 int exitCode = RunProtoc(host, args, session, out var stdout, out var stderr);
                 errors = ProtoBuf.Error.Parse(stdout, stderr);
 
