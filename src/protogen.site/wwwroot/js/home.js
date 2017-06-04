@@ -9,6 +9,27 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
     var codeViewer = null;
     var codeResultSection = document.getElementById("coderesult");
     var oldDecorations = [];
+
+    $(document).ready(function () {
+        var hash = window.location.hash;
+        if (hash.indexOf('#g') === 0 && hash.length > 2) {
+            
+            $.ajax({
+                url: 'https://api.github.com/gists/' + hash.substr(2),
+                type: 'GET',
+                dataType: 'jsonp'
+            }).success(function (gistdata) {
+                // This can be less complicated if you know the gist file name
+                var objects = [];
+                for (file in gistdata.data.files) {
+                    if (gistdata.data.files.hasOwnProperty(file)) {
+                        editor.setValue(gistdata.data.files[file].content);
+                        break;
+                    }
+                }
+            }).error(function (e) { });
+        }
+    });
     document.getElementById("generatecsharp").addEventListener("click", function ()
     {
         jQuery.post("/generate", {
