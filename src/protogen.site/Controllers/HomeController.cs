@@ -234,10 +234,11 @@ namespace protogen.site.Controllers
             try
             {
                 const string file = "my.proto";
-                System.IO.File.WriteAllText(Path.Combine(session, file), schema);
+                var fullPath = Path.Combine(session, file);
+                System.IO.File.WriteAllText(fullPath, schema);
 
                 var includeRoot = Path.Combine(host.WebRootPath, "protoc");
-                var args = $"--{tooling}_out=\"{session}\" --proto_path=\"{includeRoot}\" {file}";
+                var args = $"--{tooling}_out=\"{session}\" --proto_path=\"{session}\" --proto_path=\"{includeRoot}\" \"{fullPath}\"";
                 int exitCode = RunProtoc(host, args, session, out var stdout, out var stderr);
                 errors = ProtoBuf.Error.Parse(stdout, stderr);
 
