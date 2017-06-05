@@ -245,7 +245,7 @@ namespace protogen.site.Controllers
                 List<CodeFile> files = new List<CodeFile>();
                 if (exitCode == 0)
                 {
-                    foreach (var generated in Directory.EnumerateFiles(session))
+                    foreach (var generated in Directory.EnumerateFiles(session, "*.*", SearchOption.AllDirectories))
                     {
                         var name = Path.GetFileName(generated);
                         if (name == file) continue; // that's our input!
