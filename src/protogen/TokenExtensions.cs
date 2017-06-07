@@ -127,7 +127,11 @@ namespace ProtoBuf
             if (max.HasValue && token.Value == "max") return max.Value;
 
             int val;
-            if(token.Value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+
+            if (token.Value.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+                return -val;
+
+            if (token.Value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
                 return val;
 
             if (int.TryParse(token.Value, NumberStyles.Integer | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val))

@@ -143,7 +143,7 @@ namespace Google.Protobuf.Reflection
             // try full match first, then name-only match
             => Files.FirstOrDefault(x => string.Equals(x.Name, path, StringComparison.OrdinalIgnoreCase));
     }
-    partial class DescriptorProto : ISchemaObject, IHazNames, IType
+    partial class DescriptorProto : ISchemaObject, IType, IMessage
     {
         public byte[] ExtensionData
         {
@@ -151,7 +151,7 @@ namespace Google.Protobuf.Reflection
             set { DescriptorProto.SetExtensionData(this, value); }
         }
 
-        internal static byte[] GetExtensionData(IExtensible obj)
+        public static byte[] GetExtensionData(IExtensible obj)
         {
             var ext = obj?.GetExtensionObject(false);
             int len;
@@ -176,7 +176,7 @@ namespace Google.Protobuf.Reflection
                 ext.EndQuery(s);
             }
         }
-        internal static void SetExtensionData(IExtensible obj, byte[] data)
+        public static void SetExtensionData(IExtensible obj, byte[] data)
         {
             if (obj == null || data == null || data.Length == 0) return;
             var ext = obj.GetExtensionObject(true);
@@ -204,6 +204,8 @@ namespace Google.Protobuf.Reflection
                 ?? (IType)EnumTypes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
         internal string FullyQualifiedName { get; set; }
+
+        List<DescriptorProto> IMessage.Types => NestedTypes;
 
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out DescriptorProto obj)
         {
@@ -245,7 +247,7 @@ namespace Google.Protobuf.Reflection
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "extend"))
             {
-                FieldDescriptorProto.ParseExtensions(ctx, this, Extensions);
+                FieldDescriptorProto.ParseExtensions(ctx, this);
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "oneof"))
             {
@@ -261,6 +263,7 @@ namespace Google.Protobuf.Reflection
                     Fields.Add(obj);
             }
         }
+
 
         private void ParseMap(ParserContext ctx)
         {
@@ -512,8 +515,12 @@ namespace Google.Protobuf.Reflection
         bool ISchemaOptions.Deprecated { get { return false; } set { } }
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
     }
-    partial class FileDescriptorProto : ISchemaObject, IHazNames, IType
+    partial class FileDescriptorProto : ISchemaObject, IMessage, IType
     {
+        List<FieldDescriptorProto> IMessage.Fields => null;
+        List<FieldDescriptorProto> IMessage.Extensions => Extensions;
+        List<DescriptorProto> IMessage.Types => MessageTypes;
+
         public byte[] ExtensionData
         {
             get { return DescriptorProto.GetExtensionData(this); }
@@ -571,7 +578,7 @@ namespace Google.Protobuf.Reflection
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "extend"))
             {
-                FieldDescriptorProto.ParseExtensions(ctx, this, Extensions);
+                FieldDescriptorProto.ParseExtensions(ctx, this);
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "service"))
             {
@@ -824,10 +831,11 @@ namespace Google.Protobuf.Reflection
                     return false;
             }
         }
-        private void ResolveFieldTypes(ParserContext ctx, List<FieldDescriptorProto> extensions, IType parent)
+        private void ResolveTypes(ParserContext ctx, List<FieldDescriptorProto> fields, IType parent)
         {
-            foreach (var field in extensions)
+            foreach (var field in fields)
             {
+                ResolveOptions(ctx, field.Options);
                 if (!string.IsNullOrEmpty(field.TypeName) && ShouldResolveType(field.type))
                 {
                     // TODO: use TryResolveType once rather than twice
@@ -886,10 +894,12 @@ namespace Google.Protobuf.Reflection
             }
         }
 
-        private void ResolveFieldTypes(ParserContext ctx, ServiceDescriptorProto service)
+        private void ResolveTypes(ParserContext ctx, ServiceDescriptorProto service)
         {
+            ResolveOptions(ctx, service.Options);
             foreach (var method in service.Methods)
             {
+                ResolveOptions(ctx, method.Options);
                 if (!TryResolveMessage(method.InputType, this, out var msg, true))
                 {
                     ctx.Errors.Add(method.InputTypeToken.TypeNotFound(method.InputType));
@@ -903,13 +913,18 @@ namespace Google.Protobuf.Reflection
             }
         }
 
-        private void ResolveFieldTypes(ParserContext ctx, DescriptorProto type)
+        private void ResolveTypes(ParserContext ctx, DescriptorProto type)
         {
-            ResolveFieldTypes(ctx, type.Fields, type);
-            ResolveFieldTypes(ctx, type.Extensions, type);
+            ResolveOptions(ctx, type.Options);
+            ResolveTypes(ctx, type.Fields, type);
+            ResolveTypes(ctx, type.Extensions, type);
             foreach (var nested in type.NestedTypes)
             {
-                ResolveFieldTypes(ctx, nested);
+                ResolveTypes(ctx, nested);
+            }
+            foreach (var nested in type.EnumTypes)
+            {
+                ResolveTypes(ctx, nested);
             }
         }
 
@@ -922,15 +937,20 @@ namespace Google.Protobuf.Reflection
 
         internal void ResolveTypes(ParserContext ctx)
         {
+            ResolveOptions(ctx, Options);
             foreach (var type in MessageTypes)
             {
-                ResolveFieldTypes(ctx, type);
+                ResolveTypes(ctx, type);
+            }
+            foreach (var type in EnumTypes)
+            {
+                ResolveTypes(ctx, type);
             }
             foreach (var service in Services)
             {
-                ResolveFieldTypes(ctx, service);
+                ResolveTypes(ctx, service);
             }
-            ResolveFieldTypes(ctx, Extensions, this);
+            ResolveTypes(ctx, Extensions, this);
 
             foreach (var import in _imports)
             {
@@ -940,6 +960,27 @@ namespace Google.Protobuf.Reflection
                     ctx.Errors.Warn(import.Token, $"import not used: '{import.Path}'");
                 }
             }
+        }
+
+        private void ResolveTypes(ParserContext ctx, EnumDescriptorProto type)
+        {
+            ResolveOptions(ctx, type.Options);
+            foreach (var val in type.Values)
+            {
+                ResolveOptions(ctx, val.Options);
+            }
+        }
+
+        private void ResolveOptions(ParserContext ctx, ISchemaOptions options)
+        {
+            if (options == null) return;
+            foreach (var option in options.UninterpretedOptions)
+            {
+                var token = option.Names.LastOrDefault()?.Token ?? option.Token;
+                var fullName = string.Join(".", option.Names);
+                ctx.Errors.Warn(token, $"custom options not implemented: '{fullName}' = '{option.Token}'");
+            }
+            options.UninterpretedOptions.Clear();
         }
     }
     partial class EnumDescriptorProto : ISchemaObject, IType
@@ -1008,7 +1049,7 @@ namespace Google.Protobuf.Reflection
         internal DescriptorProto Parent { get; set; }
         internal Token TypeToken { get; set; }
 
-        internal static bool TryParse(ParserContext ctx, IHazNames parent, bool isOneOf, out FieldDescriptorProto field)
+        internal static bool TryParse(ParserContext ctx, IMessage parent, bool isOneOf, out FieldDescriptorProto field)
         {
             void NotAllowedOneOf(ParserContext context)
             {
@@ -1049,15 +1090,14 @@ namespace Google.Protobuf.Reflection
             }
             string typeName = tokens.Consume(TokenType.AlphaNumeric);
 
-            var parentTyped = parent as DescriptorProto;
             var isGroup = typeName == "group";
             if (isGroup)
             {
-                if (isOneOf) NotAllowedOneOf(ctx);
-                else if (parentTyped == null)
-                {
-                    ctx.Errors.Error(tokens.Previous, "group not allowed in this context");
-                }
+                //if (isOneOf) NotAllowedOneOf(ctx);
+                //else if (parentTyped == null)
+                //{
+                //    ctx.Errors.Error(tokens.Previous, "group not allowed in this context");
+                //}
                 ctx.AbortState = AbortState.Object;
             }
 
@@ -1076,6 +1116,7 @@ namespace Google.Protobuf.Reflection
                 ctx.Errors.Warn(numberToken, $"field numbers in the range {FirstReservedField}-{LastReservedField} are reserved; this may cause problems on many implementations");
             }
             ctx.CheckNames(parent, name, nameToken);
+            var parentTyped = parent as DescriptorProto;
             if (parentTyped != null)
             {
 
@@ -1112,7 +1153,7 @@ namespace Google.Protobuf.Reflection
                 {
                     grpType.Name = typeName;
                     ctx.CheckNames(parent, typeName, nameToken);
-                    parentTyped?.NestedTypes.Add(grpType);
+                    parent?.Types?.Add(grpType);
                 }
             }
             else if (TryIdentifyType(typeName, out type))
@@ -1201,15 +1242,17 @@ namespace Google.Protobuf.Reflection
             }
         }
 
-        internal static void ParseExtensions(ParserContext ctx, IHazNames parent, List<FieldDescriptorProto> extensions)
+        internal static void ParseExtensions(ParserContext ctx, IMessage message)
         {
             var extendee = ctx.Tokens.Consume(TokenType.AlphaNumeric);
-            var dummy = new DummyExtensions(extendee, extensions);
+            var dummy = new DummyExtensions(extendee, message);
             ctx.TryReadObjectImpl(dummy);
         }
-
-        class DummyExtensions : ISchemaObject, IHazNames
+        class DummyExtensions : ISchemaObject, IHazNames, IMessage
         {
+            List<DescriptorProto> IMessage.Types => message.Types;
+            List<FieldDescriptorProto> IMessage.Extensions => message.Extensions;
+            List<FieldDescriptorProto> IMessage.Fields => message.Fields;
             public byte[] ExtensionData
             {
                 get { return null; }
@@ -1217,7 +1260,12 @@ namespace Google.Protobuf.Reflection
             }
             IEnumerable<string> IHazNames.GetNames()
             {
-                foreach (var field in extensions) yield return field.Name;
+                var fields = message.Fields;
+                if (fields != null) {
+                    foreach (var field in fields) yield return field.Name;
+                }
+                foreach (var field in message.Extensions) yield return field.Name;
+                foreach (var type in message.Types) yield return type.Name;
             }
 
             void ISchemaObject.ReadOne(ParserContext ctx)
@@ -1226,20 +1274,27 @@ namespace Google.Protobuf.Reflection
                 if (TryParse(ctx, this, false, out var field))
                 {
                     field.Extendee = extendee;
-                    extensions.Add(field);
+                    message.Extensions.Add(field);
                 }
                 ctx.AbortState = AbortState.None;
             }
 
-            private List<FieldDescriptorProto> extensions;
+            private IMessage message;
             private string extendee;
 
-            public DummyExtensions(string extendee, List<FieldDescriptorProto> extensions)
+            public DummyExtensions(string extendee, IMessage message)
             {
                 this.extendee = extendee;
-                this.extensions = extensions;
+                this.message = message;
             }
         }
+    }
+
+    internal interface IMessage : IHazNames
+    {
+        List<DescriptorProto> Types { get; }
+        List<FieldDescriptorProto> Extensions { get; }
+        List<FieldDescriptorProto> Fields { get; }
     }
 
     partial class ServiceDescriptorProto : ISchemaObject
@@ -1384,6 +1439,16 @@ namespace Google.Protobuf.Reflection
     partial class ServiceOptions : ISchemaOptions
     {
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
+    }
+
+    partial class UninterpretedOption
+    {
+        partial class NamePart
+        {
+            public override string ToString() => name_part;
+            internal Token Token { get; set; }
+        }
+        internal Token Token { get; set; }
     }
     partial class EnumOptions : ISchemaOptions
     {
@@ -1767,21 +1832,23 @@ namespace ProtoBuf
             var keyToken = tokens.Previous;
 
             if (isExtension) tokens.Consume(TokenType.Symbol, ")");
-            var name = new UninterpretedOption.NamePart { IsExtension = isExtension, name_part = key };
+            var name = new UninterpretedOption.NamePart { IsExtension = isExtension, name_part = key, Token = keyToken };
 
             tokens.Consume(TokenType.Symbol, "=");
-            
+
             if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
                 if (obj == null) obj = new T();
                 while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
                 {
                     var subkey = tokens.Consume(TokenType.AlphaNumeric);
+                    var subKeyToken = tokens.Previous;
                     tokens.Consume(TokenType.Symbol, ":");
                     obj.UninterpretedOptions.Add(new UninterpretedOption
                     {
-                        Names = { name },
-                        AggregateValue = tokens.ConsumeString()
+                        Names = { name, new UninterpretedOption.NamePart { name_part = subkey, Token = subKeyToken } },
+                        AggregateValue = tokens.ConsumeString(),
+                        Token = tokens.Previous
                     });
                 }
             }
@@ -1824,7 +1891,8 @@ namespace ProtoBuf
                         obj.UninterpretedOptions.Add(new UninterpretedOption
                         {
                             Names = { name },
-                            AggregateValue = tokens.ConsumeString()
+                            AggregateValue = tokens.ConsumeString(),
+                            Token = tokens.Previous
                         });
                     }
                 }
@@ -1888,7 +1956,11 @@ namespace ProtoBuf
                 case FieldDescriptorProto.Type.TypeInt32:
                 case FieldDescriptorProto.Type.TypeSint32:
                     {
-                        if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
+                        if (defaultValue.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
+                        {
+                            defaultValue = (-val).ToString(CultureInfo.InvariantCulture);
+                        }
+                        else if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }
@@ -1922,7 +1994,15 @@ namespace ProtoBuf
                 case FieldDescriptorProto.Type.TypeInt64:
                 case FieldDescriptorProto.Type.TypeSint64:
                     {
-                        if (long.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var val))
+                        if (defaultValue.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(token.Value.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
+                        {
+                            defaultValue = (-val).ToString(CultureInfo.InvariantCulture);
+                        }
+                        else if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+                        {
+                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                        }
+                        else if (long.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }
@@ -1934,7 +2014,11 @@ namespace ProtoBuf
                     break;
                 case FieldDescriptorProto.Type.TypeUint64:
                     {
-                        if (ulong.TryParse(defaultValue, NumberStyles.Number & ~NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var val))
+                        if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && ulong.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
+                        {
+                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                        }
+                        else if (ulong.TryParse(defaultValue, NumberStyles.Number & ~NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }

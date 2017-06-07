@@ -24,6 +24,48 @@ namespace ProtoBuf.Schemas
                select new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", "") };
 
         [Fact]
+        public void CanRountripExtensionData()
+        {
+            var obj = new CanRountripExtensionData_WithFields { X = 1, Y = 2};
+            using (var ms = new MemoryStream())
+            {
+                Serializer.Serialize(ms, obj);
+                var a = BitConverter.ToString(ms.ToArray());
+                ms.Position = 0;
+                var raw = Serializer.Deserialize<CanRountripExtensionData_WithoutFields>(ms);
+                ms.Position = 0;
+                ms.SetLength(0);
+                Serializer.Serialize(ms, raw);
+                var b = BitConverter.ToString(ms.ToArray());
+
+                Assert.Equal(a, b);
+
+                var extData = raw.ExtensionData;
+                Assert.NotEqual(0, extData?.Length ?? 0);
+
+                extData = raw.ExtensionData;
+                Assert.NotEqual(0, extData?.Length ?? 0);
+            }
+        }
+        [ProtoContract]
+        class CanRountripExtensionData_WithFields
+        {
+            [ProtoMember(1)]
+            public int X { get; set; }
+            [ProtoMember(2)]
+            public int Y { get; set; }
+        }
+        [ProtoContract]
+        class CanRountripExtensionData_WithoutFields : Extensible
+        {
+            public byte[] ExtensionData
+            {
+                get { return DescriptorProto.GetExtensionData(this); }
+                set { DescriptorProto.SetExtensionData(this, value); }
+            }
+        }
+
+        [Fact]
         public void BasicCompileClientWorks()
         {
             var result = ProtoBuf.CSharpCompiler.Compile(new CodeFile("my.proto", "syntax=\"proto3\"; message Foo {}"));
