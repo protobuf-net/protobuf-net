@@ -37,6 +37,10 @@ namespace Google.Protobuf.Reflection
 #endif
         internal bool Add(string name, LineReader source, bool includeInOutput)
         {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentNullException(nameof(name));
+            if (Path.IsPathRooted(name) || name.Contains(".."))
+                throw new ArgumentException("Paths should be relative to the import paths, not rooted", nameof(name));
             if (TryResolve(name, out var descriptor))
             {
                 if (includeInOutput) descriptor.IncludeInOutput = true;
@@ -49,8 +53,7 @@ namespace Google.Protobuf.Reflection
 
                 descriptor = new FileDescriptorProto
                 {
-                    Name = Path.GetFileName(name),
-                    Path = name,
+                    Name = name,
                     IncludeInOutput = includeInOutput
                 };
                 Files.Add(descriptor);
@@ -70,7 +73,6 @@ namespace Google.Protobuf.Reflection
         }
         string FindFile(string file)
         {
-            if (File.Exists(file)) return file;
             foreach (var path in importPaths)
             {
                 var rel = Path.Combine(path, file);
@@ -139,8 +141,7 @@ namespace Google.Protobuf.Reflection
 
         internal FileDescriptorProto GetFile(string path)
             // try full match first, then name-only match
-            => Files.FirstOrDefault(x => string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase))
-            ?? Files.FirstOrDefault(x => string.Equals(x.Name, path, StringComparison.OrdinalIgnoreCase));
+            => Files.FirstOrDefault(x => string.Equals(x.Name, path, StringComparison.OrdinalIgnoreCase));
     }
     partial class DescriptorProto : ISchemaObject, IHazNames, IType
     {
@@ -459,9 +460,7 @@ namespace Google.Protobuf.Reflection
     }
     partial class FileDescriptorProto : ISchemaObject, IHazNames, IType
     {
-        public override string ToString() => Path;
-
-        internal string Path { get; set; }
+        public override string ToString() => Name;
 
         string IType.FullyQualifiedName => null;
         IType IType.Parent => null;
