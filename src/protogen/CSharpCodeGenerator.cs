@@ -234,7 +234,7 @@ namespace ProtoBuf
             {
                 tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
             }
-            if (obj.Options?.Packed ?? false)
+            if (obj.IsPacked(ctx.Syntax))
             {
                 tw.Write($", IsPacked = true");
             }

@@ -87,9 +87,44 @@ namespace ProtoBuf.Schemas
 
 
             set = new FileDescriptorSet();
-            
+
             set.AddImportPath(schemaPath);
-            set.Add(path, includeInOutput: true);
+            bool isProto3 = set.Add(path, includeInOutput: true) && set.Files[0].Syntax == "proto3";
+            if (isProto3)
+            {
+                using (var proc = new Process())
+                {
+                    var psi = proc.StartInfo;
+                    psi.FileName = "protoc";
+                    psi.Arguments = $"--csharp_out={Path.GetDirectoryName(protocBinPath)} {path}";
+                    psi.RedirectStandardError = psi.RedirectStandardOutput = true;
+                    psi.UseShellExecute = false;
+                    psi.WorkingDirectory = schemaPath;
+                    proc.Start();
+                    var stdout = proc.StandardOutput.ReadToEndAsync();
+                    var stderr = proc.StandardError.ReadToEndAsync();
+                    if (!proc.WaitForExit(5000))
+                    {
+                        try { proc.Kill(); } catch { }
+                    }
+                    exitCode = proc.ExitCode;
+                    string err = "", @out = "";
+                    if (stdout.Wait(1000)) @out = stdout.Result;
+                    if (stderr.Wait(1000)) err = stderr.Result;
+
+                    if (!string.IsNullOrWhiteSpace(@out))
+                    {
+                        _output.WriteLine("stdout (C#): ");
+                        _output.WriteLine(@out);
+                    }
+                    if (!string.IsNullOrWhiteSpace(err))
+                    {
+                        _output.WriteLine("stderr (C#): ");
+                        _output.WriteLine(err);
+                    }
+                    _output.WriteLine("exit code(C#): " + exitCode);
+                }
+            }
 
             set.Process();
 
@@ -101,10 +136,13 @@ namespace ProtoBuf.Schemas
             var errors = set.GetErrors();
             Exception genError = null;
 
-            try {
+            try
+            {
                 foreach (var file in CSharpCodeGenerator.Default.Generate(set))
                 {
-                    File.WriteAllText(Path.Combine(schemaPath, file.Name), file.Text);
+                    var newExtension = "parser." + Path.GetExtension(file.Name);
+                    var newFileName = Path.ChangeExtension(file.Name, newExtension);
+                    File.WriteAllText(Path.Combine(schemaPath, newFileName), file.Text);
                 }
             }
             catch (Exception ex)
@@ -120,7 +158,7 @@ namespace ProtoBuf.Schemas
                 Serializer.Serialize(file, set);
             }
 
-            
+
             if (errors.Any())
             {
                 _output.WriteLine("Parser errors:");

@@ -633,17 +633,19 @@ namespace Google.Protobuf.Reflection
         }
         internal bool TryResolveType(string typeName, IType parent, out IType type, bool allowImports, bool checkOwnPackage = true)
         {
-            bool TryResolveFromFile(FileDescriptorProto file, string tn, bool ai, out IType tp)
+            bool TryResolveFromFile(FileDescriptorProto file, string tn, bool ai, out IType tp, bool withPackageName)
             {
                 tp = null;
                 if (file == null) return false;
 
-                var pkg = file.Package;
-                if(!string.IsNullOrEmpty(pkg))
+                if (withPackageName)
                 {
+                    var pkg = file.Package;
+                    if (string.IsNullOrWhiteSpace(pkg)) return false; // we're only looking *with* packages right now
+
                     if (!tn.StartsWith(pkg + ".")) return false; // wrong file
 
-                    tn = tn.Substring(pkg.Length + 1);
+                    tn = tn.Substring(pkg.Length + 1); // and fully qualified (non-qualified is a second pass)
                 }
 
                 return TryResolveType(tn, file, out tp, ai, false);
@@ -651,28 +653,6 @@ namespace Google.Protobuf.Reflection
             }
             if (TrySplit(typeName, out var left, out var right))
             {
-                // compound name; try to resolve the first part
-                if (parent is FileDescriptorProto)
-                {
-                    var fdp = (FileDescriptorProto)parent;
-                    if (!string.IsNullOrEmpty(fdp.Package))
-                    {
-                        // has a package name
-                        if (fdp.Package != left)
-                        {    // not the right package, or nothing more to the right
-                            type = null;
-                            return false;
-                        }
-                        var oldRight = right;
-                        if (!TrySplit(right, out left, out right))
-                        {
-                            // simple name
-                            type = parent.Find(oldRight);
-                            if (type != null) return true;
-                        }
-                    }
-                }
-                
                 while (parent != null)
                 {
                     var next = parent?.Find(left);
@@ -680,53 +660,44 @@ namespace Google.Protobuf.Reflection
 
                     parent = parent.Parent;
                 }
-
-                if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type)) return true;
-
-                // look at imports
-                if (allowImports)
-                {
-                    foreach (var import in _imports)
-                    {
-                        var file = Parent?.GetFile(import.Path);
-                        if (TryResolveFromFile(file, typeName, import.IsPublic, out type))
-                        {
-                            import.Used = true;
-                            return true;
-                        }
-                    }
-                }
-
-                type = null;
-                return false;
             }
-            // simple name
-            while (parent != null)
+            else
             {
-                type = parent.Find(typeName);
-                if (type != null)
+                // simple name
+                while (parent != null)
                 {
-                    return true;
+                    type = parent.Find(typeName);
+                    if (type != null)
+                    {
+                        return true;
+                    }
+                    parent = parent.Parent;
                 }
-                parent = parent.Parent;
             }
 
-            // look at imports in the root namespace (so: immediate children)
+            if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type, true)) return true;
+
+            // look at imports
             if (allowImports)
             {
+                // check for the name including the package prefix
                 foreach (var import in _imports)
                 {
                     var file = Parent?.GetFile(import.Path);
-                    if (file == null) continue;
-
-                    if (string.IsNullOrEmpty(file.Package))
+                    if (TryResolveFromFile(file, typeName, import.IsPublic, out type, true))
                     {
-                        type = ((IType)file).Find(typeName);
-                        if (type != null)
-                        {
-                            import.Used = true;
-                            return true;
-                        }
+                        import.Used = true;
+                        return true;
+                    }
+                }
+                // now look without package prefix
+                foreach (var import in _imports)
+                {
+                    var file = Parent?.GetFile(import.Path);
+                    if (TryResolveFromFile(file, typeName, import.IsPublic, out type, false))
+                    {
+                        import.Used = true;
+                        return true;
                     }
                 }
             }
@@ -840,21 +811,10 @@ namespace Google.Protobuf.Reflection
                     }
                     field.Extendee = fqn;
                 }
-
-                bool canPack = FieldDescriptorProto.CanPack(field.type);
-                if (ctx.Syntax != FileDescriptorProto.SyntaxProto2 && canPack
-                    && field.label == FieldDescriptorProto.Label.LabelRepeated)
-                {
-                    // packed by default *if not explicitly specified*
-                    var opt = field.Options ?? (field.Options = new FieldOptions());
-                    if (!opt.ShouldSerializePacked())
-                    {
-                        opt.Packed = true;
-                    }
-                }
-
+                
                 if (field.Options?.Packed ?? false)
                 {
+                    bool canPack = FieldDescriptorProto.CanPack(field.type);
                     if (!canPack)
                     {
                         ctx.Errors.Error(field.TypeToken, $"field of type {field.type} cannot be packed");
@@ -912,9 +872,10 @@ namespace Google.Protobuf.Reflection
 
             foreach (var import in _imports)
             {
-                if (import.Used)
+                Dependencies.Add(import.Path); // protoc always includes it
+                if (!import.Used)
                 {
-                    Dependencies.Add(import.Path);
+                    ctx.Errors.Warn(import.Token, $"import not used: '{import.Path}'");
                 }
             }
         }
@@ -958,6 +919,20 @@ namespace Google.Protobuf.Reflection
     }
     partial class FieldDescriptorProto
     {
+        public bool IsPacked(string syntax)
+        {
+            if (label != Label.LabelRepeated) return false;
+
+            var exp = Options?.Packed;
+            if (exp.HasValue) return exp.GetValueOrDefault();
+
+            if (syntax != FileDescriptorProto.SyntaxProto2 && FieldDescriptorProto.CanPack(type))
+            {
+                return true;
+            }
+
+            return false;
+        }
         public override string ToString() => Name;
         internal const int MaxField = 536870911;
         internal const int FirstReservedField = 19000;
@@ -1528,6 +1503,7 @@ namespace ProtoBuf
 
     internal class Import
     {
+        public override string ToString() => Path;
         public string Path { get; set; }
         public bool IsPublic { get; set; }
         public Token Token { get; set; }
