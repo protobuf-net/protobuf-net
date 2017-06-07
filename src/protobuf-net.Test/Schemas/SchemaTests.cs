@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
@@ -19,8 +20,8 @@ namespace ProtoBuf.Schemas
 
         const string SchemaPath = "Schemas";
         public static IEnumerable<object[]> GetSchemas()
-            => from file in Directory.GetFiles(SchemaPath, "*.proto")
-               select new object[] { file.Replace('\\', '/') };
+            => from file in Directory.GetFiles(SchemaPath, "*.proto", SearchOption.AllDirectories)
+               select new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", "") };
 
         [Fact]
         public void BasicCompileClientWorks()
@@ -35,16 +36,17 @@ namespace ProtoBuf.Schemas
         {
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
             _output.WriteLine(schemaPath);
-            Assert.True(File.Exists(path));
-            var protocBinPath = Path.ChangeExtension(path, "protoc.bin");
+
+            var protocBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "protoc.bin"));
             int exitCode;
             using (var proc = new Process())
             {
                 var psi = proc.StartInfo;
                 psi.FileName = "protoc";
-                psi.Arguments = $"--descriptor_set_out={protocBinPath} {path} -I{SchemaPath}/";
+                psi.Arguments = $"--descriptor_set_out={protocBinPath} {path}";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
                 psi.UseShellExecute = false;
+                psi.WorkingDirectory = schemaPath;
                 proc.Start();
                 var stdout = proc.StandardOutput.ReadToEndAsync();
                 var stderr = proc.StandardError.ReadToEndAsync();
@@ -77,29 +79,70 @@ namespace ProtoBuf.Schemas
                 {
                     set = Serializer.Deserialize<FileDescriptorSet>(file);
                     protocJson = JsonConvert.SerializeObject(set, Formatting.Indented);
-                    jsonPath = Path.ChangeExtension(path, "protoc.json");
+                    jsonPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "protoc.json"));
                     File.WriteAllText(jsonPath, protocJson);
                 }
             }
 
+
+
             set = new FileDescriptorSet();
-            set.AddImportPath(SchemaPath);
-            set.Add(path, includeInOutput: true);
+
+            set.AddImportPath(schemaPath);
+            bool isProto3 = set.Add(path, includeInOutput: true) && set.Files[0].Syntax == "proto3";
+            if (isProto3)
+            {
+                using (var proc = new Process())
+                {
+                    var psi = proc.StartInfo;
+                    psi.FileName = "protoc";
+                    psi.Arguments = $"--csharp_out={Path.GetDirectoryName(protocBinPath)} {path}";
+                    psi.RedirectStandardError = psi.RedirectStandardOutput = true;
+                    psi.UseShellExecute = false;
+                    psi.WorkingDirectory = schemaPath;
+                    proc.Start();
+                    var stdout = proc.StandardOutput.ReadToEndAsync();
+                    var stderr = proc.StandardError.ReadToEndAsync();
+                    if (!proc.WaitForExit(5000))
+                    {
+                        try { proc.Kill(); } catch { }
+                    }
+                    exitCode = proc.ExitCode;
+                    string err = "", @out = "";
+                    if (stdout.Wait(1000)) @out = stdout.Result;
+                    if (stderr.Wait(1000)) err = stderr.Result;
+
+                    if (!string.IsNullOrWhiteSpace(@out))
+                    {
+                        _output.WriteLine("stdout (C#): ");
+                        _output.WriteLine(@out);
+                    }
+                    if (!string.IsNullOrWhiteSpace(err))
+                    {
+                        _output.WriteLine("stderr (C#): ");
+                        _output.WriteLine(err);
+                    }
+                    _output.WriteLine("exit code(C#): " + exitCode);
+                }
+            }
 
             set.Process();
 
 
             var parserJson = JsonConvert.SerializeObject(set, Formatting.Indented);
-            jsonPath = Path.ChangeExtension(path, "parser.json");
+            jsonPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.json"));
             File.WriteAllText(jsonPath, parserJson);
 
             var errors = set.GetErrors();
             Exception genError = null;
 
-            try {
+            try
+            {
                 foreach (var file in CSharpCodeGenerator.Default.Generate(set))
                 {
-                    File.WriteAllText(Path.Combine(SchemaPath, file.Name), file.Text);
+                    var newExtension = "parser." + Path.GetExtension(file.Name);
+                    var newFileName = Path.ChangeExtension(file.Name, newExtension);
+                    File.WriteAllText(Path.Combine(schemaPath, newFileName), file.Text);
                 }
             }
             catch (Exception ex)
@@ -109,13 +152,13 @@ namespace ProtoBuf.Schemas
                 _output.WriteLine(ex.StackTrace);
             }
 
-            var parserBinPath = Path.ChangeExtension(path, "parser.bin");
+            var parserBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.bin"));
             using (var file = File.Create(parserBinPath))
             {
                 Serializer.Serialize(file, set);
             }
 
-            
+
             if (errors.Any())
             {
                 _output.WriteLine("Parser errors:");

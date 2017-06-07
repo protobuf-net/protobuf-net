@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace ProtoBuf
@@ -16,7 +18,7 @@ namespace ProtoBuf
         }
         public static bool ConsumeIf(this Peekable<Token> tokens, TokenType type, string value)
         {
-            if(tokens.Peek(out var token) && token.Is(type, value))
+            if (tokens.Peek(out var token) && token.Is(type, value))
             {
                 tokens.Consume();
                 return true;
@@ -88,12 +90,31 @@ namespace ProtoBuf
             return s;
         }
 
+        static class EnumCache<T>
+        {
+            private static readonly Dictionary<string, T> lookup;
+            public static bool TryGet(string name, out T value) => lookup.TryGetValue(name, out value);
+            static EnumCache()
+            {
+                var fields = typeof(T).GetFields(BindingFlags.Static | BindingFlags.Public);
+                var tmp = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
+                foreach(var field in fields)
+                {
+                    string name = field.Name;
+                    var attrib = (ProtoEnumAttribute)field.GetCustomAttributes(false).FirstOrDefault();
+                    if(!string.IsNullOrWhiteSpace(attrib?.Name)) name = attrib.Name;
+                    var val = (T)field.GetValue(null);
+                    tmp.Add(name, val);
+                }
+                lookup = tmp;
+            }
+        }
         internal static T ConsumeEnum<T>(this Peekable<Token> tokens, bool ignoreCase = true) where T : struct
         {
             var token = tokens.Read();
             var value = tokens.ConsumeString();
 
-            if (!System.Enum.TryParse<T>(token.Value, ignoreCase, out T val))
+            if (!EnumCache<T>.TryGet(token.Value, out T val))
                 token.Throw("Unable to parse " + typeof(T).Name);
             return val;
         }
@@ -104,6 +125,12 @@ namespace ProtoBuf
             token.Assert(TokenType.AlphaNumeric);
             tokens.Consume();
             if (max.HasValue && token.Value == "max") return max.Value;
+
+            if(token.Value.StartsWith("0x"))
+            {   // hex
+                try { return Convert.ToInt32(token.Value.Substring(2), 16); }
+                catch { }
+            }
 
             if (!int.TryParse(token.Value, NumberStyles.Integer | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int val))
                 token.Throw("Unable to parse integer");
