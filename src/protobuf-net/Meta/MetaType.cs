@@ -1634,7 +1634,7 @@ namespace ProtoBuf.Meta
 
         internal EnumSerializer.EnumPair[] GetEnumMap()
         {
-            if (HasFlag(OPTIONS_EnumPassThru)) return null;
+            if (HasFlag(OPTIONS_EnumPassThru) || model.GlobalEnumPassthru) return null;
             EnumSerializer.EnumPair[] result = new EnumSerializer.EnumPair[fields.Count];
             for (int i = 0; i < result.Length; i++)
             {
