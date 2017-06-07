@@ -38,7 +38,8 @@ namespace ProtoBuf.Meta
            OPTIONS_UseImplicitZeroDefaults = 32,
            OPTIONS_AllowParseableTypes = 64,
            OPTIONS_AutoAddProtoContractTypesOnly = 128,
-           OPTIONS_IncludeDateTimeKind = 256;
+           OPTIONS_IncludeDateTimeKind = 256,
+           OPTIONS_GlobalEnumPassthru = 512;
         private bool GetOption(ushort option)
         {
             return (options & option) == option;
@@ -110,6 +111,12 @@ namespace ProtoBuf.Meta
         {
             get { return GetOption(OPTIONS_IncludeDateTimeKind); }
             set { SetOption(OPTIONS_IncludeDateTimeKind, value); }
+        }
+
+        public bool GlobalEnumPassthru
+        {
+            get { return GetOption(OPTIONS_GlobalEnumPassthru); }
+            set { SetOption(OPTIONS_GlobalEnumPassthru, value); }
         }
 
         /// <summary>
