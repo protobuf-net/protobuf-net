@@ -8,9 +8,17 @@ Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/p
 
 see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
 
-## v2.3 (work in progress)
+## v2.3.1 (future plans)
 
-- proto2/proto3 DSL processing tools to make a resurgance 
+- `dynamic` API over types known only via descriptors loaded at runtime
+
+## v2.3.1 (future plans)
+
+- build-time tooling
+
+## v2.3.0 (work in progress)
+
+- proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
 
 ## v2.2.0
 
