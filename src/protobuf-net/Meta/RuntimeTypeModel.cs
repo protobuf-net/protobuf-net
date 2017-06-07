@@ -306,6 +306,10 @@ namespace ProtoBuf.Meta
                     foreach (ValueMember member in metaType.Fields)
                     {
                         Type type = member.ItemType;
+                        if(member.IsMap)
+                        {
+                            member.ResolveMapTypes(out _, out _, out type); // don't need key-type
+                        }
                         if (type == null) type = member.MemberType;
                         WireType defaultWireType;
                         IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false);

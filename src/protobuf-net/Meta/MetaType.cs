@@ -1094,7 +1094,8 @@ namespace ProtoBuf.Meta
             result.OverwriteList = overwriteList;
             result.IsRequired = isRequired;
             result.Name = Helpers.IsNullOrEmpty(name) ? member.Name : name;
-            result.Member = backingMember ?? member;
+            result.Member = member;
+            result.BackingMember = backingMember;
             result.TagIsPinned = tagIsPinned;
             return result;
         }
@@ -1158,6 +1159,7 @@ namespace ProtoBuf.Meta
                     : null;
             if (vm != null)
             {
+                vm.BackingMember = normalizedAttribute.BackingMember;
 #if WINRT || COREFX
                 TypeInfo finalType = typeInfo;
 #else
@@ -1187,6 +1189,15 @@ namespace ProtoBuf.Meta
                     vm.AsReference = normalizedAttribute.AsReference;
                 }
                 vm.DynamicType = normalizedAttribute.DynamicType;
+                
+                if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoMapAttribute")) != null)
+                {
+                    object tmp;
+                    if (attrib.TryGet(nameof(ProtoMapAttribute.KeyFormat), out tmp)) vm.MapKeyFormat = (DataFormat)tmp;
+                    if (attrib.TryGet(nameof(ProtoMapAttribute.ValueFormat), out tmp)) vm.MapValueFormat = (DataFormat)tmp;
+                    vm.IsMap = true;
+                }
+
             }
             return vm;
         }
@@ -1569,7 +1580,7 @@ namespace ProtoBuf.Meta
                 if (member == null) return null;
                 foreach (ValueMember x in fields)
                 {
-                    if (x.Member == member) return x;
+                    if (x.Member == member || x.BackingMember == member) return x;
                 }
                 return null;
             }
@@ -1844,33 +1855,46 @@ namespace ProtoBuf.Meta
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
                 foreach (ValueMember member in fieldsArr)
                 {
-                    string ordinality = member.ItemType != null ? "repeated" : member.IsRequired ? "required" : "optional";
-                    NewLine(builder, indent + 1).Append(ordinality).Append(' ');
-                    if (member.DataFormat == DataFormat.Group) builder.Append("group ");
-                    string schemaTypeName = member.GetSchemaTypeName(true, ref requiresBclImport);
-                    builder.Append(schemaTypeName).Append(" ")
-                         .Append(member.Name).Append(" = ").Append(member.FieldNumber);
+                    string schemaTypeName;
+                    if (member.IsMap)
+                    {
+                        member.ResolveMapTypes(out var _, out var keyType, out var valueType);
 
-                    if(member.DefaultValue != null && member.IsRequired == false)
-                    {
-                        if (member.DefaultValue is string)
-                        {
-                            builder.Append(" [default = \"").Append(member.DefaultValue).Append("\"]");
-                        }
-                        else if(member.DefaultValue is bool)
-                        {   // need to be lower case (issue 304)
-                            builder.Append((bool)member.DefaultValue ? " [default = true]" : " [default = false]");
-                        }
-                        else
-                        {
-                            builder.Append(" [default = ").Append(member.DefaultValue).Append(']');
-                        }
+                        var keyTypeName = model.GetSchemaTypeName(keyType, member.MapKeyFormat, false, false, ref requiresBclImport);
+                        schemaTypeName = model.GetSchemaTypeName(valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref requiresBclImport);
+                        NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(",").Append(schemaTypeName).Append("> ")
+                            .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(";");
                     }
-                    if(member.ItemType != null && member.IsPacked)
+                    else
                     {
-                        builder.Append(" [packed=true]");
+                        string ordinality = member.ItemType != null ? "repeated" : member.IsRequired ? "required" : "optional";
+                        NewLine(builder, indent + 1).Append(ordinality).Append(' ');
+                        if (member.DataFormat == DataFormat.Group) builder.Append("group ");
+                        schemaTypeName = member.GetSchemaTypeName(true, ref requiresBclImport);
+                        builder.Append(schemaTypeName).Append(" ")
+                             .Append(member.Name).Append(" = ").Append(member.FieldNumber);
+
+                        if (member.DefaultValue != null && member.IsRequired == false)
+                        {
+                            if (member.DefaultValue is string)
+                            {
+                                builder.Append(" [default = \"").Append(member.DefaultValue).Append("\"]");
+                            }
+                            else if (member.DefaultValue is bool)
+                            {   // need to be lower case (issue 304)
+                                builder.Append((bool)member.DefaultValue ? " [default = true]" : " [default = false]");
+                            }
+                            else
+                            {
+                                builder.Append(" [default = ").Append(member.DefaultValue).Append(']');
+                            }
+                        }
+                        if (member.ItemType != null && member.IsPacked)
+                        {
+                            builder.Append(" [packed=true]");
+                        }
+                        builder.Append(';');                        
                     }
-                    builder.Append(';');
                     if (schemaTypeName == "bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
                     {
                         builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false, ref requiresBclImport));

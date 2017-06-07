@@ -8,7 +8,7 @@ namespace ProtoBuf
     /// than throwing an exception
     /// </summary>
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-    public class MapAttribute : Attribute
+    public class ProtoMapAttribute : Attribute
     {
         /// <summary>
         /// Describes the data-format used to store the key

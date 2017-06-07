@@ -259,7 +259,7 @@ namespace ProtoBuf
                         out var valueDataFormat, out var _);
 
                     bool first = true;
-                    tw = ctx.Write($"[global::ProtoBuf.Map");
+                    tw = ctx.Write($"[global::ProtoBuf.ProtoMap");
                     if (!string.IsNullOrWhiteSpace(keyDataFormat))
                     {
                         tw.Write($"{(first ? "(" : ", ")}KeyFormat = global::ProtoBuf.DataFormat.{keyDataFormat}");

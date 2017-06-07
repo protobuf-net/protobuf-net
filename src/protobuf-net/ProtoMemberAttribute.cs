@@ -54,7 +54,7 @@ namespace ProtoBuf
         }
 
 #if !NO_RUNTIME
-        internal MemberInfo Member;
+        internal MemberInfo Member, BackingMember;
         internal bool TagIsPinned;
 #endif
         /// <summary>
