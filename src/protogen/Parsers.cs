@@ -145,6 +145,55 @@ namespace Google.Protobuf.Reflection
     }
     partial class DescriptorProto : ISchemaObject, IHazNames, IType
     {
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
+
+        internal static byte[] GetExtensionData(IExtensible obj)
+        {
+            var ext = obj?.GetExtensionObject(false);
+            int len;
+            if (ext == null || (len = ext.GetLength()) == 0) return null;
+            var s = ext.BeginQuery();
+            try
+            {
+                if (s is MemoryStream) return ((MemoryStream)s).ToArray();
+
+                byte[] buffer = new byte[len];
+                int offset = 0, read;
+                while ((read = s.Read(buffer, offset, len)) > 0)
+                {
+                    offset += read;
+                    len -= read;
+                }
+                if (len != 0) throw new EndOfStreamException();
+                return buffer;
+            }
+            finally
+            {
+                ext.EndQuery(s);
+            }
+        }
+        internal static void SetExtensionData(IExtensible obj, byte[] data)
+        {
+            if (obj == null || data == null || data.Length == 0) return;
+            var ext = obj.GetExtensionObject(true);
+            (ext as IExtensionResettable)?.Reset();
+            var s = ext.BeginAppend();
+            try
+            {
+                s.Write(data, 0, data.Length);
+                ext.EndAppend(s, true);
+            }
+            catch
+            {
+                ext.EndAppend(s, false);
+                throw;
+            }
+        }
+
         public override string ToString() => Name;
         internal IType Parent { get; set; }
         IType IType.Parent => Parent;
@@ -420,6 +469,11 @@ namespace Google.Protobuf.Reflection
 
     partial class OneofDescriptorProto : ISchemaObject
     {
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
         internal DescriptorProto Parent { get; set; }
         internal static void Parse(ParserContext ctx, DescriptorProto parent)
         {
@@ -460,6 +514,11 @@ namespace Google.Protobuf.Reflection
     }
     partial class FileDescriptorProto : ISchemaObject, IHazNames, IType
     {
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
         public override string ToString() => Name;
 
         string IType.FullyQualifiedName => null;
@@ -814,7 +873,7 @@ namespace Google.Protobuf.Reflection
                     }
                     field.Extendee = fqn;
                 }
-                
+
                 if (field.Options?.Packed ?? false)
                 {
                     bool canPack = FieldDescriptorProto.CanPack(field.type);
@@ -885,6 +944,11 @@ namespace Google.Protobuf.Reflection
     }
     partial class EnumDescriptorProto : ISchemaObject, IType
     {
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
         public override string ToString() => Name;
         internal IType Parent { get; set; }
         string IType.FullyQualifiedName => FullyQualifiedName;
@@ -1081,7 +1145,7 @@ namespace Google.Protobuf.Reflection
         }
 
         internal static string GetJsonName(string name)
-            => Regex.Replace(name, "_([a-zA-Z])", match => match.Groups[1].Value.ToUpperInvariant());
+            => Regex.Replace(name, "_([0-9a-zA-Z])", match => match.Groups[1].Value.ToUpperInvariant());
 
 
         internal static bool CanPack(Type type)
@@ -1146,6 +1210,11 @@ namespace Google.Protobuf.Reflection
 
         class DummyExtensions : ISchemaObject, IHazNames
         {
+            public byte[] ExtensionData
+            {
+                get { return null; }
+                set { }
+            }
             IEnumerable<string> IHazNames.GetNames()
             {
                 foreach (var field in extensions) yield return field.Name;
@@ -1175,6 +1244,11 @@ namespace Google.Protobuf.Reflection
 
     partial class ServiceDescriptorProto : ISchemaObject
     {
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
         internal static bool TryParse(ParserContext ctx, out ServiceDescriptorProto obj)
         {
             var name = ctx.Tokens.Consume(TokenType.AlphaNumeric);
@@ -1205,6 +1279,11 @@ namespace Google.Protobuf.Reflection
 
     partial class MethodDescriptorProto : ISchemaObject
     {
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
         internal Token InputTypeToken { get; set; }
         internal Token OutputTypeToken { get; set; }
 
@@ -1520,7 +1599,7 @@ namespace ProtoBuf
                 return noErrors;
 
             List<Error> errors = new List<Error>();
-            using(var reader = new StringReader(stdout))
+            using (var reader = new StringReader(stdout))
             {
                 Add(reader, errors);
             }
@@ -1533,19 +1612,19 @@ namespace ProtoBuf
         static void Add(TextReader lines, List<Error> errors)
         {
             string line;
-            while((line = lines.ReadLine()) != null)
+            while ((line = lines.ReadLine()) != null)
             {
                 var s = line;
                 bool isError = true;
                 int lineNumber = 1, columnNumber = 1;
-                if(s[0] == '[')
+                if (s[0] == '[')
                 {
                     int i = s.IndexOf(']');
                     if (i > 0)
                     {
                         var prefix = line.Substring(1, i).Trim();
                         s = line.Substring(i + 1).Trim();
-                        if(prefix.IndexOf("WARNING", StringComparison.OrdinalIgnoreCase) >= 0
+                        if (prefix.IndexOf("WARNING", StringComparison.OrdinalIgnoreCase) >= 0
                             && prefix.IndexOf("ERROR", StringComparison.OrdinalIgnoreCase) < 0)
                         {
                             isError = false;
@@ -1554,7 +1633,7 @@ namespace ProtoBuf
                 }
                 var match = Regex.Match(s, @"^([^:]+):([0-9]+):([0-9]+):\s+");
                 string file = "";
-                if(match.Success)
+                if (match.Success)
                 {
                     file = match.Groups[1].Value;
                     if (!int.TryParse(match.Groups[2].Value, NumberStyles.Integer, CultureInfo.InvariantCulture, out lineNumber))
@@ -1625,6 +1704,8 @@ namespace ProtoBuf
     interface ISchemaObject
     {
         void ReadOne(ParserContext ctx);
+
+        byte[] ExtensionData { get; }
     }
     internal class ParserContext : IDisposable
     {
@@ -1681,45 +1762,71 @@ namespace ProtoBuf
         private void ReadOption<T>(ref T obj, object parent) where T : class, ISchemaOptions, new()
         {
             var tokens = Tokens;
+            bool isExtension = tokens.ConsumeIf(TokenType.Symbol, "(");
             string key = tokens.Consume(TokenType.AlphaNumeric);
             var keyToken = tokens.Previous;
-            tokens.Consume(TokenType.Symbol, "=");
 
-            var field = parent as FieldDescriptorProto;
-            bool isField = typeof(T) == typeof(FieldOptions) && field != null;
-            if (key == "default" && isField)
+            if (isExtension) tokens.Consume(TokenType.Symbol, ")");
+            var name = new UninterpretedOption.NamePart { IsExtension = isExtension, name_part = key };
+
+            tokens.Consume(TokenType.Symbol, "=");
+            
+            if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
-                string defaultValue = tokens.ConsumeString();
-                keyToken.RequireProto2(this);
-                ParseDefault(tokens.Previous, field.type, ref defaultValue);
-                if (defaultValue != null)
+                if (obj == null) obj = new T();
+                while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
                 {
-                    field.DefaultValue = defaultValue;
-                }
-            }
-            else if (key == "json_name" && isField)
-            {
-                string jsonName = tokens.ConsumeString();
-                if (string.Equals(jsonName, "none", StringComparison.OrdinalIgnoreCase) && tokens.Previous.Is(TokenType.StringLiteral))
-                {
-                    field.JsonName = jsonName;
-                }
-                else
-                {
-                    field.ResetJsonName();
+                    var subkey = tokens.Consume(TokenType.AlphaNumeric);
+                    tokens.Consume(TokenType.Symbol, ":");
+                    obj.UninterpretedOptions.Add(new UninterpretedOption
+                    {
+                        Names = { name },
+                        AggregateValue = tokens.ConsumeString()
+                    });
                 }
             }
             else
             {
-                if (obj == null) obj = new T();
-                if (key == "deprecated")
+
+                var field = parent as FieldDescriptorProto;
+                bool isField = typeof(T) == typeof(FieldOptions) && field != null;
+                if (key == "default" && isField)
                 {
-                    obj.Deprecated = tokens.ConsumeBoolean();
+                    string defaultValue = tokens.ConsumeString();
+                    keyToken.RequireProto2(this);
+                    ParseDefault(tokens.Previous, field.type, ref defaultValue);
+                    if (defaultValue != null)
+                    {
+                        field.DefaultValue = defaultValue;
+                    }
                 }
-                else if (!obj.ReadOne(this, key))
+                else if (key == "json_name" && isField)
                 {
-                    //TODO: something with uninterpreted options
-                    tokens.Consume(); // drop it on the floor
+                    string jsonName = tokens.ConsumeString();
+                    if (string.Equals(jsonName, "none", StringComparison.OrdinalIgnoreCase) && tokens.Previous.Is(TokenType.StringLiteral))
+                    {
+                        field.JsonName = jsonName;
+                    }
+                    else
+                    {
+                        field.ResetJsonName();
+                    }
+                }
+                else
+                {
+                    if (obj == null) obj = new T();
+                    if (key == "deprecated")
+                    {
+                        obj.Deprecated = tokens.ConsumeBoolean();
+                    }
+                    else if (!obj.ReadOne(this, key))
+                    {
+                        obj.UninterpretedOptions.Add(new UninterpretedOption
+                        {
+                            Names = { name },
+                            AggregateValue = tokens.ConsumeString()
+                        });
+                    }
                 }
             }
         }

@@ -156,7 +156,7 @@ namespace ProtoBuf
             var name = ctx.NameNormalizer.GetName(obj);
             ctx.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{obj.Name}"")]");
             WriteOptions(ctx, obj.Options);
-            ctx.WriteLine($"public partial class {Escape(name)}");
+            ctx.WriteLine($"public partial class {Escape(name)} : global::ProtoBuf.Extensible");
             ctx.WriteLine("{").Indent();
         }
 

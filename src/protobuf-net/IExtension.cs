@@ -44,4 +44,15 @@ namespace ProtoBuf
         /// <returns>The length of the binary stream representing unexpected data.</returns>
         int GetLength();
     }
+
+    /// <summary>
+    /// Provides the ability to remove all existing extension data
+    /// </summary>
+    public interface IExtensionResettable : IExtension
+    {
+        /// <summary>
+        /// Remove all existing extension data
+        /// </summary>
+        void Reset();
+    }
 }

@@ -6,9 +6,15 @@ namespace ProtoBuf
     /// <summary>
     /// Provides a simple buffer-based implementation of an <see cref="IExtension">extension</see> object.
     /// </summary>
-    public sealed class BufferExtension : IExtension
+    public sealed class BufferExtension : IExtension, IExtensionResettable
     {
         private byte[] buffer;
+
+
+        void IExtensionResettable.Reset()
+        {
+            buffer = null;
+        }
 
         int IExtension.GetLength()
         {
