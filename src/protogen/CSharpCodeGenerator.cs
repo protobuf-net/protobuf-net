@@ -128,7 +128,7 @@ namespace ProtoBuf
         protected override void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto obj, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            ctx.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{obj.Name}"")]");
+            ctx.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{obj.Name}"", EnumPassthru = true)]");
             WriteOptions(ctx, obj.Options);
             ctx.WriteLine($"public enum {Escape(name)}").WriteLine("{").Indent();
         }

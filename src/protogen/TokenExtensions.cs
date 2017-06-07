@@ -105,6 +105,12 @@ namespace ProtoBuf
             tokens.Consume();
             if (max.HasValue && token.Value == "max") return max.Value;
 
+            if(token.Value.StartsWith("0x"))
+            {   // hex
+                try { return Convert.ToInt32(token.Value.Substring(2), 16); }
+                catch { }
+            }
+
             if (!int.TryParse(token.Value, NumberStyles.Integer | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int val))
                 token.Throw("Unable to parse integer");
             return val;

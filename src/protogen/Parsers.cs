@@ -673,12 +673,12 @@ namespace Google.Protobuf.Reflection
                         }
                     }
                 }
-                var next = parent?.Find(left);
-                if (next != null && TryResolveType(right, next, out type, false)) return true;
-
+                
                 while (parent != null)
                 {
-                    if (TryResolveType(right, parent, out type, false)) return true;
+                    var next = parent?.Find(left);
+                    if (next != null && TryResolveType(right, next, out type, false)) return true;
+
                     parent = parent.Parent;
                 }
 
