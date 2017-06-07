@@ -631,6 +631,7 @@ namespace Google.Protobuf.Reflection
             right = input.Substring(split + 1).Trim();
             return true;
         }
+
         internal bool TryResolveType(string typeName, IType parent, out IType type, bool allowImports, bool checkOwnPackage = true)
         {
             bool TryResolveFromFile(FileDescriptorProto file, string tn, bool ai, out IType tp, bool withPackageName)
@@ -648,8 +649,7 @@ namespace Google.Protobuf.Reflection
                     tn = tn.Substring(pkg.Length + 1); // and fully qualified (non-qualified is a second pass)
                 }
 
-                return TryResolveType(tn, file, out tp, ai, false);
-
+                return file.TryResolveType(tn, file, out tp, ai, false);
             }
             if (TrySplit(typeName, out var left, out var right))
             {
@@ -678,23 +678,26 @@ namespace Google.Protobuf.Reflection
             if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type, true)) return true;
 
             // look at imports
-            if (allowImports)
+            // check for the name including the package prefix
+            foreach (var import in _imports)
             {
-                // check for the name including the package prefix
-                foreach (var import in _imports)
+                if (allowImports || import.IsPublic)
                 {
                     var file = Parent?.GetFile(import.Path);
-                    if (TryResolveFromFile(file, typeName, import.IsPublic, out type, true))
+                    if (TryResolveFromFile(file, typeName, false, out type, true))
                     {
                         import.Used = true;
                         return true;
                     }
                 }
-                // now look without package prefix
-                foreach (var import in _imports)
+            }
+            // now look without package prefix
+            foreach (var import in _imports)
+            {
+                if (allowImports || import.IsPublic)
                 {
                     var file = Parent?.GetFile(import.Path);
-                    if (TryResolveFromFile(file, typeName, import.IsPublic, out type, false))
+                    if (TryResolveFromFile(file, typeName, false, out type, false))
                     {
                         import.Used = true;
                         return true;
