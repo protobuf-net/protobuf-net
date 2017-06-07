@@ -126,15 +126,14 @@ namespace ProtoBuf
             tokens.Consume();
             if (max.HasValue && token.Value == "max") return max.Value;
 
-            if(token.Value.StartsWith("0x"))
-            {   // hex
-                try { return Convert.ToInt32(token.Value.Substring(2), 16); }
-                catch { }
-            }
+            int val;
+            if(token.Value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+                return val;
 
-            if (!int.TryParse(token.Value, NumberStyles.Integer | NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out int val))
-                token.Throw("Unable to parse integer");
-            return val;
+            if (int.TryParse(token.Value, NumberStyles.Integer | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val))
+                return val;
+
+            throw token.Throw("Unable to parse integer");
         }
 
         internal static string ConsumeString(this Peekable<Token> tokens)

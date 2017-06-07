@@ -1744,7 +1744,7 @@ namespace ProtoBuf
                         case "nan":
                             break;
                         default:
-                            if (double.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var val))
+                            if (double.TryParse(defaultValue, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var val))
                             {
                                 defaultValue = val.ToString(CultureInfo.InvariantCulture);
                             }
@@ -1763,7 +1763,7 @@ namespace ProtoBuf
                         case "nan":
                             break;
                         default:
-                            if (float.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out var val))
+                            if (float.TryParse(defaultValue, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var val))
                             {
                                 defaultValue = val.ToString(CultureInfo.InvariantCulture);
                             }
@@ -1778,7 +1778,11 @@ namespace ProtoBuf
                 case FieldDescriptorProto.Type.TypeInt32:
                 case FieldDescriptorProto.Type.TypeSint32:
                     {
-                        if (int.TryParse(defaultValue, NumberStyles.Number & NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var val))
+                        if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
+                        {
+                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                        }
+                        else if (int.TryParse(defaultValue, NumberStyles.Number | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }
@@ -1790,7 +1794,11 @@ namespace ProtoBuf
                     break;
                 case FieldDescriptorProto.Type.TypeUint32:
                     {
-                        if (uint.TryParse(defaultValue, NumberStyles.Number & ~NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var val))
+                        if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && uint.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
+                        {
+                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                        }
+                        else if (uint.TryParse(defaultValue, (NumberStyles.Number | NumberStyles.AllowExponent) & ~NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }
