@@ -366,13 +366,15 @@ namespace Google.Protobuf.Reflection
 
             while (true)
             {
-                int from = tokens.ConsumeInt32(FieldDescriptorProto.MaxField), to = from;
+                int from = tokens.ConsumeInt32(int.MaxValue), to = from;
                 if (tokens.Read().Is(TokenType.AlphaNumeric, "to"))
                 {
                     tokens.Consume();
-                    to = tokens.ConsumeInt32(FieldDescriptorProto.MaxField);
+                    to = tokens.ConsumeInt32(int.MaxValue);
                 }
-                ExtensionRanges.Add(new ExtensionRange { Start = from, End = to + 1 });
+                // the end is off by one
+                if (to != int.MaxValue) to++;
+                ExtensionRanges.Add(new ExtensionRange { Start = from, End = to });
 
                 if (tokens.ConsumeIf(TokenType.Symbol, ","))
                 {
@@ -717,7 +719,14 @@ namespace Google.Protobuf.Reflection
 
                 return file.TryResolveType(tn, file, out tp, ai, false);
             }
-            if (TrySplit(typeName, out var left, out var right))
+
+            bool isRooted = typeName.StartsWith(".");
+            if (isRooted)
+            {
+                // rooted
+                typeName = typeName.Substring(1); // remove the root
+            }
+            else if (TrySplit(typeName, out var left, out var right))
             {
                 while (parent != null)
                 {
@@ -757,16 +766,20 @@ namespace Google.Protobuf.Reflection
                     }
                 }
             }
-            // now look without package prefix
-            foreach (var import in _imports)
+
+            if (!isRooted)
             {
-                if (allowImports || import.IsPublic)
+                // now look without package prefix
+                foreach (var import in _imports)
                 {
-                    var file = Parent?.GetFile(import.Path);
-                    if (TryResolveFromFile(file, typeName, false, out type, false))
+                    if (allowImports || import.IsPublic)
                     {
-                        import.Used = true;
-                        return true;
+                        var file = Parent?.GetFile(import.Path);
+                        if (TryResolveFromFile(file, typeName, false, out type, false))
+                        {
+                            import.Used = true;
+                            return true;
+                        }
                     }
                 }
             }
@@ -1827,14 +1840,19 @@ namespace ProtoBuf
         private void ReadOption<T>(ref T obj, object parent) where T : class, ISchemaOptions, new()
         {
             var tokens = Tokens;
-            bool isExtension = tokens.ConsumeIf(TokenType.Symbol, "(");
-            string key = tokens.Consume(TokenType.AlphaNumeric);
-            var keyToken = tokens.Previous;
 
-            if (isExtension) tokens.Consume(TokenType.Symbol, ")");
-            var name = new UninterpretedOption.NamePart { IsExtension = isExtension, name_part = key, Token = keyToken };
+            var nameParts = new List<UninterpretedOption.NamePart>();
 
-            tokens.Consume(TokenType.Symbol, "=");
+            do
+            {
+                bool isExtension = tokens.ConsumeIf(TokenType.Symbol, "(");
+                string key = tokens.Consume(TokenType.AlphaNumeric);
+                var keyToken = tokens.Previous;
+                if (isExtension) tokens.Consume(TokenType.Symbol, ")");
+
+                var name = new UninterpretedOption.NamePart { IsExtension = isExtension, name_part = key, Token = keyToken };
+                nameParts.Add(name);
+            } while (!tokens.ConsumeIf(TokenType.Symbol, "="));
 
             if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
@@ -1844,12 +1862,15 @@ namespace ProtoBuf
                     var subkey = tokens.Consume(TokenType.AlphaNumeric);
                     var subKeyToken = tokens.Previous;
                     tokens.Consume(TokenType.Symbol, ":");
-                    obj.UninterpretedOptions.Add(new UninterpretedOption
+
+                    var newOption = new UninterpretedOption
                     {
-                        Names = { name, new UninterpretedOption.NamePart { name_part = subkey, Token = subKeyToken } },
                         AggregateValue = tokens.ConsumeString(),
                         Token = tokens.Previous
-                    });
+                    };
+                    newOption.Names.AddRange(nameParts);
+                    newOption.Names.Add(new UninterpretedOption.NamePart { name_part = subkey, Token = subKeyToken });
+                    obj.UninterpretedOptions.Add(newOption);
                 }
             }
             else
@@ -1857,10 +1878,11 @@ namespace ProtoBuf
 
                 var field = parent as FieldDescriptorProto;
                 bool isField = typeof(T) == typeof(FieldOptions) && field != null;
+                var key = (nameParts.Count == 1 && !nameParts[0].IsExtension) ? nameParts[0].name_part : null;
                 if (key == "default" && isField)
                 {
                     string defaultValue = tokens.ConsumeString(field.type == FieldDescriptorProto.Type.TypeBytes);
-                    keyToken.RequireProto2(this);
+                    nameParts[0].Token.RequireProto2(this);
                     ParseDefault(tokens.Previous, field.type, ref defaultValue);
                     if (defaultValue != null)
                     {
@@ -1879,14 +1901,15 @@ namespace ProtoBuf
                     {
                         obj.Deprecated = tokens.ConsumeBoolean();
                     }
-                    else if (!obj.ReadOne(this, key))
+                    else if (key == null || !obj.ReadOne(this, key))
                     {
-                        obj.UninterpretedOptions.Add(new UninterpretedOption
+                        var newOption = new UninterpretedOption
                         {
-                            Names = { name },
                             AggregateValue = tokens.ConsumeString(),
                             Token = tokens.Previous
-                        });
+                        };
+                        newOption.Names.AddRange(nameParts);
+                        obj.UninterpretedOptions.Add(newOption);
                     }
                 }
             }
