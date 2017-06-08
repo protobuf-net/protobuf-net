@@ -98,11 +98,11 @@ namespace ProtoBuf
             {
                 var fields = typeof(T).GetFields(BindingFlags.Static | BindingFlags.Public);
                 var tmp = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
-                foreach(var field in fields)
+                foreach (var field in fields)
                 {
                     string name = field.Name;
                     var attrib = (ProtoEnumAttribute)field.GetCustomAttributes(false).FirstOrDefault();
-                    if(!string.IsNullOrWhiteSpace(attrib?.Name)) name = attrib.Name;
+                    if (!string.IsNullOrWhiteSpace(attrib?.Name)) name = attrib.Name;
                     var val = (T)field.GetValue(null);
                     tmp.Add(name, val);
                 }
@@ -140,18 +140,256 @@ namespace ProtoBuf
             throw token.Throw("Unable to parse integer");
         }
 
-        internal static string ConsumeString(this Peekable<Token> tokens)
+        internal static string ConsumeString(this Peekable<Token> tokens, bool asBytes = false)
         {
             var token = tokens.Read();
             switch (token.Type)
             {
                 case TokenType.StringLiteral:
+                    MemoryStream ms = null;
+                    do
+                    {
+                        ReadStringBytes(ref ms, token.Value);
+                        tokens.Consume();
+                    } while (tokens.Peek(out token) && token.Type == TokenType.StringLiteral); // literal concat is a thing
+                    if (ms == null) return "";
+
+                    if (!asBytes)
+                    {
+#if NETSTANDARD1_3
+                        string s = ms.TryGetBuffer(out var segment)
+                            ? Encoding.UTF8.GetString(segment.Array, segment.Offset, segment.Count)
+                            : Encoding.UTF8.GetString(ms.ToArray());
+
+#else
+                        string s = Encoding.UTF8.GetString(ms.GetBuffer(), 0, (int)ms.Length);
+#endif
+                        return s.Replace("\\", @"\\")
+                            .Replace("\'", @"\'")
+                            .Replace("\"", @"\""")
+                            .Replace("\r", @"\r")
+                            .Replace("\n", @"\n")
+                            .Replace("\t", @"\t");
+                    }
+
+                    var sb = new StringBuilder((int)ms.Length);
+                    int b;
+                    ms.Position = 0;
+                    while ((b = ms.ReadByte()) >= 0)
+                    {
+                        switch (b)
+                        {
+                            case '\n': sb.Append(@"\n"); break;
+                            case '\r': sb.Append(@"\r"); break;
+                            case '\t': sb.Append(@"\t"); break;
+                            case '\'': sb.Append(@"\'"); break;
+                            case '\"': sb.Append(@"\"""); break;
+                            case '\\': sb.Append(@"\\"); break;
+                            default:
+                                if (b >= 32 && b < 127)
+                                {
+                                    sb.Append((char)b);
+                                }
+                                else
+                                {
+                                    // encode as 3-part octal
+                                    sb.Append('\\')
+                                          .Append((char)(((b >> 6) & 7) + (int)'0'))
+                                          .Append((char)(((b >> 3) & 7) + (int)'0'))
+                                          .Append((char)(((b >> 0) & 7) + (int)'0'));
+                                }
+                                break;
+                        }
+                    }
+                    return sb.ToString();
                 case TokenType.AlphaNumeric:
                     tokens.Consume();
                     return token.Value;
                 default:
                     throw token.Throw();
             }
+        }
+
+        // the normalized output *includes* the slashes, but expands octal to 3 places;
+        // it is the job of codegen to change this normalized form to the target language form
+        private static void ReadStringBytes(ref MemoryStream ms, string value)
+        {
+            void AppendAscii(MemoryStream target, string ascii)
+            {
+                foreach (char c in ascii)
+                    target.WriteByte(checked((byte)c));
+            }
+            void AppendByte(MemoryStream target, ref uint codePoint, ref int len)
+            {
+                if (len != 0)
+                {
+                    target.WriteByte(checked((byte)codePoint));
+                }
+                codePoint = 0;
+                len = 0;
+            }
+            unsafe void AppendNormalized(MemoryStream target, ref uint codePoint, ref int len)
+            {
+                if (len == 0)
+                {
+                    codePoint = 0;
+                    return;
+                }
+                byte* b = stackalloc byte[10];
+                char* c = stackalloc char[1];
+                c[0] = checked((char)codePoint);
+                int count = Encoding.UTF8.GetBytes(c, 1, b, 10);
+                for (int i = 0; i < count; i++)
+                {
+                    target.WriteByte(b[i]);
+                }
+            }
+            void AppendEscaped(MemoryStream target, char c)
+            {
+                uint codePoint;
+                switch (c)
+                {
+                    // encoded as octal
+                    case 'a': codePoint = '\a'; break;
+                    case 'b': codePoint = '\b'; break;
+                    case 'f': codePoint = '\f'; break;
+                    case 'v': codePoint = '\v'; break;
+                    case 't': codePoint = '\t'; break;
+                    case 'n': codePoint = '\n'; break;
+                    case 'r': codePoint = '\r'; break;
+
+                    case '\\':
+                    case '?':
+                    case '\'':
+                    case '\"':
+                        codePoint = c;
+                        break;
+                    default:
+                        codePoint = '?';
+                        break;
+                }
+                int len = 1;
+                AppendNormalized(target, ref codePoint, ref len);
+            }
+            bool GetHexValue(char c, out uint val, ref int len)
+            {
+                len++;
+                if (c >= '0' && c <= '9')
+                {
+                    val = (uint)c - (uint)'0';
+                    return true;
+                }
+                if (c >= 'a' && c <= 'f')
+                {
+                    val = 10 + (uint)c - (uint)'a';
+                    return true;
+                }
+                if (c >= 'A' && c <= 'F')
+                {
+                    val = 10 + (uint)c - (uint)'A';
+                    return true;
+                }
+                len--;
+                val = 0;
+                return false;
+            }
+
+            const int STATE_NORMAL = 0, STATE_ESCAPE = 1, STATE_OCTAL = 2, STATE_HEX = 3;
+            int state = STATE_NORMAL;
+            if (value == null || value.Length == 0) return;
+
+            if (ms == null) ms = new MemoryStream(value.Length);
+            uint escapedCodePoint = 0;
+            int escapeLength = 0;
+            foreach (char c in value)
+            {
+                switch (state)
+                {
+                    case STATE_ESCAPE:
+                        if (c >= '0' && c <= '7')
+                        {
+                            state = STATE_OCTAL;
+                            GetHexValue(c, out escapedCodePoint, ref escapeLength); // not a typo; all 1-char octal values are also the same in hex
+                        }
+                        else if (c == 'x')
+                        {
+                            state = STATE_HEX;
+                        }
+                        else if (c == 'u' || c == 'U')
+                        {
+                            throw new NotImplementedException("Unicode escape points: on my todo list");
+                        }
+                        else
+                        {
+                            state = STATE_NORMAL;
+                            AppendEscaped(ms, c);
+                        }
+                        break;
+                    case STATE_OCTAL:
+                        if (c >= '0' && c <= '7')
+                        {
+                            GetHexValue(c, out var x, ref escapeLength);
+                            escapedCodePoint = (escapedCodePoint << 3) | x;
+                            if (escapeLength == 3)
+                            {
+                                AppendByte(ms, ref escapedCodePoint, ref escapeLength);
+                                state = STATE_NORMAL;
+                            }
+                        }
+                        else
+                        {
+                            // not an octal char - regular append
+                            if (escapeLength == 0)
+                            {
+                                // include the malformed \x
+                                AppendAscii(ms, @"\x");
+                            }
+                            else
+                            {
+                                AppendByte(ms, ref escapedCodePoint, ref escapeLength);
+                            }
+                            state = STATE_NORMAL;
+                            goto case STATE_NORMAL;
+                        }
+                        break;
+                    case STATE_HEX:
+                        {
+                            if (GetHexValue(c, out var x, ref escapeLength))
+                            {
+                                escapedCodePoint = (escapedCodePoint << 4) | x;
+                                if (escapeLength == 2)
+                                {
+                                    AppendByte(ms, ref escapedCodePoint, ref escapeLength);
+                                    state = STATE_NORMAL;
+                                }
+                            }
+                            else
+                            {
+                                // not a hex char - regular append
+                                AppendByte(ms, ref escapedCodePoint, ref escapeLength);
+                                state = STATE_NORMAL;
+                                goto case STATE_NORMAL;
+                            }
+                        }
+                        break;
+                    case STATE_NORMAL:
+                        if (c == '\\')
+                        {
+                            state = STATE_ESCAPE;
+                        }
+                        else
+                        {
+                            uint codePoint = (uint)c;
+                            int len = 1;
+                            AppendNormalized(ms, ref codePoint, ref len);
+                        }
+                        break;
+                    default:
+                        throw new InvalidOperationException();
+                }
+            }
+            // append any trailing escaped data
+            AppendByte(ms, ref escapedCodePoint, ref escapeLength);
         }
 
         internal static bool ConsumeBoolean(this Peekable<Token> tokens)
@@ -169,7 +407,7 @@ namespace ProtoBuf
             if (c == '"') return TokenType.StringLiteral;
             if (char.IsWhiteSpace(c)) return TokenType.Whitespace;
             if (char.IsLetterOrDigit(c)) return TokenType.AlphaNumeric;
-            switch(c)
+            switch (c)
             {
                 case '_':
                 case '.':
@@ -220,12 +458,13 @@ namespace ProtoBuf
                 int columnNumber = 0, tokenStart = 1;
                 char lastChar = '\0';
                 TokenType type = TokenType.None;
+                bool isEscaped = false;
                 foreach (char c in line)
                 {
                     columnNumber++;
                     if (type == TokenType.StringLiteral)
                     {
-                        if (c == '"')
+                        if (c == '"' && !isEscaped)
                         {
                             yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++, file);
                             buffer.Clear();
@@ -234,6 +473,7 @@ namespace ProtoBuf
                         else
                         {
                             buffer.Append(c);
+                            isEscaped = !isEscaped && c == '\\'; // ends an existing escape or starts a new one
                         }
                     }
                     else

@@ -1184,9 +1184,9 @@ namespace Google.Protobuf.Reflection
             ctx.AbortState = AbortState.None;
             return true;
         }
-
+        static readonly char[] Underscores = { '_' };
         internal static string GetJsonName(string name)
-            => Regex.Replace(name, "_([0-9a-zA-Z])", match => match.Groups[1].Value.ToUpperInvariant());
+            => Regex.Replace(name, "_+([0-9a-zA-Z])", match => match.Groups[1].Value.ToUpperInvariant()).TrimEnd(Underscores);
 
 
         internal static bool CanPack(Type type)
@@ -1859,7 +1859,7 @@ namespace ProtoBuf
                 bool isField = typeof(T) == typeof(FieldOptions) && field != null;
                 if (key == "default" && isField)
                 {
-                    string defaultValue = tokens.ConsumeString();
+                    string defaultValue = tokens.ConsumeString(field.type == FieldDescriptorProto.Type.TypeBytes);
                     keyToken.RequireProto2(this);
                     ParseDefault(tokens.Previous, field.type, ref defaultValue);
                     if (defaultValue != null)
@@ -1870,14 +1870,7 @@ namespace ProtoBuf
                 else if (key == "json_name" && isField)
                 {
                     string jsonName = tokens.ConsumeString();
-                    if (string.Equals(jsonName, "none", StringComparison.OrdinalIgnoreCase) && tokens.Previous.Is(TokenType.StringLiteral))
-                    {
-                        field.JsonName = jsonName;
-                    }
-                    else
-                    {
-                        field.ResetJsonName();
-                    }
+                    field.JsonName = jsonName;
                 }
                 else
                 {
@@ -1924,7 +1917,7 @@ namespace ProtoBuf
                         default:
                             if (double.TryParse(defaultValue, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var val))
                             {
-                                defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                                defaultValue = Format(val);
                             }
                             else
                             {
@@ -1943,7 +1936,7 @@ namespace ProtoBuf
                         default:
                             if (float.TryParse(defaultValue, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var val))
                             {
-                                defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                                defaultValue = Format(val);
                             }
                             else
                             {
@@ -2017,6 +2010,7 @@ namespace ProtoBuf
                         if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && ulong.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
+
                         }
                         else if (ulong.TryParse(defaultValue, NumberStyles.Number & ~NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out val))
                         {
@@ -2030,6 +2024,35 @@ namespace ProtoBuf
                     break;
 
             }
+        }
+
+        static readonly char[] ExponentChars = { 'e', 'E' };
+        static readonly string[] ExponentFormats = { "e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9", "e10" };
+        static string Format(float val)
+        {
+            string s = val.ToString(CultureInfo.InvariantCulture);
+            if (s.IndexOfAny(ExponentChars) < 0) return s;
+
+            foreach(var format in ExponentFormats)
+            {
+                var tmp = val.ToString(format, CultureInfo.InvariantCulture);
+                if (float.TryParse(tmp, NumberStyles.Any, CultureInfo.InvariantCulture, out var x) && x == val) return tmp;
+            }
+            return val.ToString("e", CultureInfo.InvariantCulture);
+
+        }
+
+        static string Format(double val)
+        {
+            string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
+            if (s.IndexOfAny(ExponentChars) < 0) return s;
+
+            foreach (var format in ExponentFormats)
+            {
+                var tmp = val.ToString(format, CultureInfo.InvariantCulture);
+                if (double.TryParse(tmp, NumberStyles.Any, CultureInfo.InvariantCulture, out var x) && x == val) return tmp;
+            }
+            return val.ToString("e", CultureInfo.InvariantCulture);
         }
 
         public T ParseOptionBlock<T>(T obj, object parent = null) where T : class, ISchemaOptions, new()
