@@ -207,6 +207,8 @@ namespace Google.Protobuf.Reflection
 
         List<DescriptorProto> IMessage.Types => NestedTypes;
 
+        public int MaxField => (Options?.MessageSetWireFormat == true) ? int.MaxValue : FieldDescriptorProto.DefaultMaxField;
+
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out DescriptorProto obj)
         {
             var name = ctx.Tokens.Consume(TokenType.AlphaNumeric);
@@ -366,11 +368,11 @@ namespace Google.Protobuf.Reflection
 
             while (true)
             {
-                int from = tokens.ConsumeInt32(int.MaxValue), to = from;
+                int from = tokens.ConsumeInt32(MaxField), to = from;
                 if (tokens.Read().Is(TokenType.AlphaNumeric, "to"))
                 {
                     tokens.Consume();
-                    to = tokens.ConsumeInt32(int.MaxValue);
+                    to = tokens.ConsumeInt32(MaxField);
                 }
                 // the end is off by one
                 if (to != int.MaxValue) to++;
@@ -519,6 +521,7 @@ namespace Google.Protobuf.Reflection
     }
     partial class FileDescriptorProto : ISchemaObject, IMessage, IType
     {
+        int IMessage.MaxField => FieldDescriptorProto.DefaultMaxField;
         List<FieldDescriptorProto> IMessage.Fields => null;
         List<FieldDescriptorProto> IMessage.Extensions => Extensions;
         List<DescriptorProto> IMessage.Types => MessageTypes;
@@ -1055,12 +1058,14 @@ namespace Google.Protobuf.Reflection
             return false;
         }
         public override string ToString() => Name;
-        internal const int MaxField = 536870911;
+        internal const int DefaultMaxField = 536870911;
         internal const int FirstReservedField = 19000;
         internal const int LastReservedField = 19999;
 
         internal DescriptorProto Parent { get; set; }
         internal Token TypeToken { get; set; }
+
+        internal int MaxField => Parent?.MaxField ?? DefaultMaxField;
 
         internal static bool TryParse(ParserContext ctx, IMessage parent, bool isOneOf, out FieldDescriptorProto field)
         {
@@ -1120,9 +1125,9 @@ namespace Google.Protobuf.Reflection
             var number = tokens.ConsumeInt32();
             var numberToken = tokens.Previous;
 
-            if (number < 1 || number > MaxField)
+            if (number < 1 || number > parent.MaxField)
             {
-                ctx.Errors.Error(numberToken, $"field numbers must be in the range 1-{MaxField}");
+                ctx.Errors.Error(numberToken, $"field numbers must be in the range 1-{parent.MaxField}");
             }
             else if (number >= FirstReservedField && number <= LastReservedField)
             {
@@ -1263,6 +1268,7 @@ namespace Google.Protobuf.Reflection
         }
         class DummyExtensions : ISchemaObject, IHazNames, IMessage
         {
+            int IMessage.MaxField => message.MaxField;
             List<DescriptorProto> IMessage.Types => message.Types;
             List<FieldDescriptorProto> IMessage.Extensions => message.Extensions;
             List<FieldDescriptorProto> IMessage.Fields => message.Fields;
@@ -1305,6 +1311,7 @@ namespace Google.Protobuf.Reflection
 
     internal interface IMessage : IHazNames
     {
+        int MaxField { get; }
         List<DescriptorProto> Types { get; }
         List<FieldDescriptorProto> Extensions { get; }
         List<FieldDescriptorProto> Fields { get; }
