@@ -968,14 +968,22 @@ namespace Google.Protobuf.Reflection
             }
             ResolveTypes(ctx, Extensions, this);
 
+            List<int> publicDependencies = null;
             foreach (var import in _imports)
             {
                 Dependencies.Add(import.Path); // protoc always includes it
+                if(import.IsPublic)
+                {
+                    (publicDependencies ?? (publicDependencies = new List<int>())).Add(
+                        Dependencies.Count - 1);
+                }
                 if (!import.Used)
                 {
                     ctx.Errors.Warn(import.Token, $"import not used: '{import.Path}'");
                 }
             }
+            if (publicDependencies != null)
+                PublicDependencies = publicDependencies.ToArray();
         }
 
         private void ResolveTypes(ParserContext ctx, EnumDescriptorProto type)
