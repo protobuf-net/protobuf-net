@@ -21,6 +21,7 @@ namespace Google.Protobuf.Reflection
     }
     partial class FileDescriptorSet
     {
+        internal const string Namespace = ".google.protobuf.";
         public Func<string, bool> ImportValidator { get; set; }
 
         internal List<string> importPaths = new List<string>();
@@ -132,7 +133,14 @@ namespace Google.Protobuf.Reflection
             {
                 using (var ctx = new ParserContext(file, null, Errors))
                 {
-                    file.ResolveTypes(ctx);
+                    file.ResolveTypes(ctx, false);
+                }
+            }
+            foreach (var file in Files)
+            {
+                using (var ctx = new ParserContext(file, null, Errors))
+                {
+                    file.ResolveTypes(ctx, true);
                 }
             }
 
@@ -516,11 +524,26 @@ namespace Google.Protobuf.Reflection
     }
     partial class OneofOptions : ISchemaOptions
     {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(OneofOptions);
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
         bool ISchemaOptions.Deprecated { get { return false; } set { } }
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
     }
     partial class FileDescriptorProto : ISchemaObject, IMessage, IType
     {
+        internal static FileDescriptorProto GetFile(IType type)
+        {
+            while (type != null)
+            {
+                if (type is FileDescriptorProto) return (FileDescriptorProto)type;
+                type = type.Parent;
+            }
+            return null;
+        }
         int IMessage.MaxField => FieldDescriptorProto.DefaultMaxField;
         List<FieldDescriptorProto> IMessage.Fields => null;
         List<FieldDescriptorProto> IMessage.Extensions => Extensions;
@@ -531,6 +554,7 @@ namespace Google.Protobuf.Reflection
             get { return DescriptorProto.GetExtensionData(this); }
             set { DescriptorProto.SetExtensionData(this, value); }
         }
+
         public override string ToString() => Name;
 
         string IType.FullyQualifiedName => null;
@@ -702,7 +726,87 @@ namespace Google.Protobuf.Reflection
             right = input.Substring(split + 1).Trim();
             return true;
         }
+        internal static bool TrySplitLast(string input, out string left, out string right)
+        {
+            var split = input.LastIndexOf('.');
+            if (split < 0)
+            {
+                left = right = null;
+                return false;
+            }
+            left = input.Substring(0, split).Trim();
+            right = input.Substring(split + 1).Trim();
+            return true;
+        }
+        private bool TryResolveExtension(string extendee, string extension, out FieldDescriptorProto field, bool allowImports = true, bool checkOwnPackage = true)
+        {
+            bool TryResolveFromFile(FileDescriptorProto file, string ee, string ion, out FieldDescriptorProto fld, bool withPackageName, bool ai)
+            {
+                fld = null;
+                if (file == null) return false;
 
+                if (withPackageName)
+                {
+                    var pkg = file.Package;
+                    if (string.IsNullOrWhiteSpace(pkg)) return false; // we're only looking *with* packages right now
+
+                    if (!ion.StartsWith(pkg + ".")) return false; // wrong file
+
+                    ion = ion.Substring(pkg.Length + 1); // and fully qualified (non-qualified is a second pass)
+                }
+
+                return file.TryResolveExtension(ee, ion, out fld, ai, false);
+            }
+
+            bool isRooted = extension.StartsWith(".");
+            if (isRooted)
+            {
+                // rooted
+                extension = extension.Substring(1); // remove the root
+            }
+            if(TrySplitLast(extension, out var left, out var right))
+            {
+                if (TryResolveType(left, null, out var type, true, true))
+                {
+                    field = (type as DescriptorProto)?.Extensions?.FirstOrDefault(x => x.Extendee == extendee
+                        && x.Name == right);
+                    if (field != null) return true;
+                }
+            }
+            else
+            {
+                field = Extensions?.FirstOrDefault(x => x.Extendee == extendee && x.Name == extension);
+                if (field != null) return true;
+            }
+            if (checkOwnPackage)
+            {
+                if (TryResolveFromFile(this, extendee, extension, out field, true, false)) return true;
+                if (TryResolveFromFile(this, extendee, extension, out field, false, false)) return true;
+            }
+            if(allowImports)
+            {
+                foreach(var import in _imports)
+                {
+                    var file = Parent?.GetFile(import.Path);
+                    if (file != null)
+                    {
+                        if (TryResolveFromFile(file, extendee, extension, out field, true, import.IsPublic))
+                            return true;
+                    }
+                }
+                foreach (var import in _imports)
+                {
+                    var file = Parent?.GetFile(import.Path);
+                    if (file != null)
+                    {
+                        if (TryResolveFromFile(file, extendee, extension, out field, false, import.IsPublic))
+                            return true;
+                    }
+                }
+            }
+            field = null;
+            return false;
+        }
         internal bool TryResolveType(string typeName, IType parent, out IType type, bool allowImports, bool checkOwnPackage = true)
         {
             bool TryResolveFromFile(FileDescriptorProto file, string tn, bool ai, out IType tp, bool withPackageName)
@@ -847,100 +951,112 @@ namespace Google.Protobuf.Reflection
                     return false;
             }
         }
-        private void ResolveTypes(ParserContext ctx, List<FieldDescriptorProto> fields, IType parent)
+        private void ResolveTypes(ParserContext ctx, List<FieldDescriptorProto> fields, IType parent, bool options)
         {
             foreach (var field in fields)
             {
-                ResolveOptions(ctx, field.Options);
-                if (!string.IsNullOrEmpty(field.TypeName) && ShouldResolveType(field.type))
+                if (options) ResolveOptions(ctx, field.Options);
+                else
                 {
-                    // TODO: use TryResolveType once rather than twice
-                    string fqn;
-                    if (TryResolveMessage(field.TypeName, parent, out var msg, true))
+                    if (!string.IsNullOrEmpty(field.TypeName) && ShouldResolveType(field.type))
                     {
-                        if (field.type != FieldDescriptorProto.Type.TypeGroup)
+                        // TODO: use TryResolveType once rather than twice
+                        string fqn;
+                        if (TryResolveMessage(field.TypeName, parent, out var msg, true))
                         {
-                            field.type = FieldDescriptorProto.Type.TypeMessage;
+                            if (field.type != FieldDescriptorProto.Type.TypeGroup)
+                            {
+                                field.type = FieldDescriptorProto.Type.TypeMessage;
+                            }
+                            fqn = msg?.FullyQualifiedName;
                         }
-                        fqn = msg?.FullyQualifiedName;
-                    }
-                    else if (TryResolveEnum(field.TypeName, parent, out var @enum, true))
-                    {
-                        field.type = FieldDescriptorProto.Type.TypeEnum;
-                        if (!string.IsNullOrWhiteSpace(field.DefaultValue)
-                            & !@enum.Values.Any(x => x.Name == field.DefaultValue))
+                        else if (TryResolveEnum(field.TypeName, parent, out var @enum, true))
                         {
-                            ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'");
+                            field.type = FieldDescriptorProto.Type.TypeEnum;
+                            if (!string.IsNullOrWhiteSpace(field.DefaultValue)
+                                & !@enum.Values.Any(x => x.Name == field.DefaultValue))
+                            {
+                                ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'");
+                            }
+                            fqn = @enum?.FullyQualifiedName;
                         }
-                        fqn = @enum?.FullyQualifiedName;
+                        else
+                        {
+                            ctx.Errors.Add(field.TypeToken.TypeNotFound(field.TypeName));
+                            fqn = field.TypeName;
+                            field.type = FieldDescriptorProto.Type.TypeMessage; // just an assumption
+                        }
+                        field.TypeName = fqn;
                     }
-                    else
-                    {
-                        ctx.Errors.Add(field.TypeToken.TypeNotFound(field.TypeName));
-                        fqn = field.TypeName;
-                        field.type = FieldDescriptorProto.Type.TypeMessage; // just an assumption
-                    }
-                    field.TypeName = fqn;
-                }
 
-                if (!string.IsNullOrEmpty(field.Extendee))
-                {
-                    string fqn;
-                    if (TryResolveMessage(field.Extendee, parent, out var msg, true))
+                    if (!string.IsNullOrEmpty(field.Extendee))
                     {
-                        fqn = msg?.FullyQualifiedName;
+                        string fqn;
+                        if (TryResolveMessage(field.Extendee, parent, out var msg, true))
+                        {
+                            fqn = msg?.FullyQualifiedName;
+                        }
+                        else
+                        {
+                            ctx.Errors.Add(field.TypeToken.TypeNotFound(field.Extendee));
+                            fqn = field.Extendee;
+                        }
+                        field.Extendee = fqn;
                     }
-                    else
-                    {
-                        ctx.Errors.Add(field.TypeToken.TypeNotFound(field.Extendee));
-                        fqn = field.Extendee;
-                    }
-                    field.Extendee = fqn;
-                }
 
-                if (field.Options?.Packed ?? false)
-                {
-                    bool canPack = FieldDescriptorProto.CanPack(field.type);
-                    if (!canPack)
+                    if (field.Options?.Packed ?? false)
                     {
-                        ctx.Errors.Error(field.TypeToken, $"field of type {field.type} cannot be packed");
-                        field.Options.Packed = false;
+                        bool canPack = FieldDescriptorProto.CanPack(field.type);
+                        if (!canPack)
+                        {
+                            ctx.Errors.Error(field.TypeToken, $"field of type {field.type} cannot be packed");
+                            field.Options.Packed = false;
+                        }
                     }
                 }
             }
         }
 
-        private void ResolveTypes(ParserContext ctx, ServiceDescriptorProto service)
+        private void ResolveTypes(ParserContext ctx, ServiceDescriptorProto service, bool options)
         {
-            ResolveOptions(ctx, service.Options);
+            if(options) ResolveOptions(ctx, service.Options);
             foreach (var method in service.Methods)
             {
-                ResolveOptions(ctx, method.Options);
-                if (!TryResolveMessage(method.InputType, this, out var msg, true))
+                if (options) ResolveOptions(ctx, method.Options);
+                else
                 {
-                    ctx.Errors.Add(method.InputTypeToken.TypeNotFound(method.InputType));
+                    if (!TryResolveMessage(method.InputType, this, out var msg, true))
+                    {
+                        ctx.Errors.Add(method.InputTypeToken.TypeNotFound(method.InputType));
+                    }
+                    method.InputType = msg?.FullyQualifiedName;
+                    if (!TryResolveMessage(method.OutputType, this, out msg, true))
+                    {
+                        ctx.Errors.Add(method.OutputTypeToken.TypeNotFound(method.OutputType));
+                    }
+                    method.OutputType = msg?.FullyQualifiedName;
                 }
-                method.InputType = msg?.FullyQualifiedName;
-                if (!TryResolveMessage(method.OutputType, this, out msg, true))
-                {
-                    ctx.Errors.Add(method.OutputTypeToken.TypeNotFound(method.OutputType));
-                }
-                method.OutputType = msg?.FullyQualifiedName;
             }
         }
 
-        private void ResolveTypes(ParserContext ctx, DescriptorProto type)
+        private void ResolveTypes(ParserContext ctx, DescriptorProto type, bool options)
         {
-            ResolveOptions(ctx, type.Options);
-            ResolveTypes(ctx, type.Fields, type);
-            ResolveTypes(ctx, type.Extensions, type);
+            if (options)
+            {
+                ResolveOptions(ctx, type.Options);
+            }
+            else
+            {
+                ResolveTypes(ctx, type.Fields, type, options);
+                ResolveTypes(ctx, type.Extensions, type, options);
+            }
             foreach (var nested in type.NestedTypes)
             {
-                ResolveTypes(ctx, nested);
+                ResolveTypes(ctx, nested, options);
             }
             foreach (var nested in type.EnumTypes)
             {
-                ResolveTypes(ctx, nested);
+                ResolveTypes(ctx, nested, options);
             }
         }
 
@@ -950,23 +1066,22 @@ namespace Google.Protobuf.Reflection
             foreach (var type in MessageTypes) yield return type.Name;
             foreach (var type in EnumTypes) yield return type.Name;
         }
-
-        internal void ResolveTypes(ParserContext ctx)
+        internal void ResolveTypes(ParserContext ctx, bool options)
         {
-            ResolveOptions(ctx, Options);
+            if(options) ResolveOptions(ctx, Options);
             foreach (var type in MessageTypes)
             {
-                ResolveTypes(ctx, type);
+                ResolveTypes(ctx, type, options);
             }
             foreach (var type in EnumTypes)
             {
-                ResolveTypes(ctx, type);
+                ResolveTypes(ctx, type, options);
             }
             foreach (var service in Services)
             {
-                ResolveTypes(ctx, service);
+                ResolveTypes(ctx, service, options);
             }
-            ResolveTypes(ctx, Extensions, this);
+            ResolveTypes(ctx, Extensions, this, options);
 
             List<int> publicDependencies = null;
             foreach (var import in _imports)
@@ -986,27 +1101,110 @@ namespace Google.Protobuf.Reflection
                 PublicDependencies = publicDependencies.ToArray();
         }
 
-        private void ResolveTypes(ParserContext ctx, EnumDescriptorProto type)
+        private void ResolveTypes(ParserContext ctx, EnumDescriptorProto type, bool options)
         {
-            ResolveOptions(ctx, type.Options);
-            foreach (var val in type.Values)
+            if (options)
             {
-                ResolveOptions(ctx, val.Options);
+                ResolveOptions(ctx, type.Options);
+                foreach (var val in type.Values)
+                {
+                    ResolveOptions(ctx, val.Options);
+                }
             }
         }
 
         private void ResolveOptions(ParserContext ctx, ISchemaOptions options)
         {
             if (options == null) return;
-            foreach (var option in options.UninterpretedOptions)
+
+            if (options.UninterpretedOptions.Count != 0)
             {
-                var token = option.Names.LastOrDefault()?.Token ?? option.Token;
-                var fullName = string.Join(".", option.Names);
-                ctx.Errors.Warn(token, $"custom options not implemented: '{fullName}' = '{option.Token}'");
+                var extension = ((IExtensible)options).GetExtensionObject(true);
+                var target = extension.BeginAppend();
+                try
+                {
+                    Stack<SubItemToken> tokens = new Stack<SubItemToken>();
+                    using (var writer = new ProtoWriter(target, null, null))
+                    {
+                        foreach (var option in options.UninterpretedOptions)
+                        {
+                            tokens.Clear();
+                            // AppendOption(this, writer, tokens, ctx, options.Extendee, option);
+                            while (tokens.Count != 0)
+                            {
+                                var token = tokens.Pop();
+                                ProtoWriter.EndSubItem(token, writer);
+                            }
+                        }
+                    }
+                } finally
+                {
+                    extension.EndAppend(target, true);
+                }
+                options.UninterpretedOptions.Clear();
             }
-            options.UninterpretedOptions.Clear();
+            
+        }
+        private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, Stack<SubItemToken> tokens, ParserContext ctx, string extendee, UninterpretedOption option)
+        {
+            
+            for(int i = 0; i < option.Names.Count; i++)
+            {
+                var name = option.Names[i];
+                FieldDescriptorProto field;
+                if (name.IsExtension)
+                {
+                    if (!file.TryResolveExtension(extendee, name.name_part, out field)) field = null;
+                }
+                else
+                {
+                    if (file.TryResolveMessage(extendee, null, out var msg, true))
+                    {
+                        field = msg.Fields.FirstOrDefault(x => x.Name == name.name_part);
+                    }
+
+                    else
+                    {
+                        field = null;
+                    }
+                    
+                }
+
+                if (field == null)
+                {
+                    ctx.Errors.Error(name.Token, $"unable to resolve extension '{name.name_part}' for '{extendee}'");
+                    return;
+                }
+
+                if(i == option.Names.Count - 1)
+                {
+                    break; // process the actual value
+                }
+
+                switch(field.type)
+                {
+                    case FieldDescriptorProto.Type.TypeMessage:
+                        ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
+                        break;
+                    case FieldDescriptorProto.Type.TypeGroup:
+                        ProtoWriter.WriteFieldHeader(field.Number, WireType.StartGroup, writer);
+                        break;
+                    default:
+                        ctx.Errors.Error(name.Token, $"extension '{name.name_part}' for '{extendee}' is not a message/group");
+                        return;
+                }
+                tokens.Push(ProtoWriter.StartSubItem(null, writer));
+                extendee = field.TypeName;
+                file = FileDescriptorProto.GetFile(field.Parent as IType);
+            }
+
+
+            var token = option.Names.LastOrDefault()?.Token ?? option.Token;
+            var fullName = string.Join(".", option.Names);
+            ctx.Errors.Warn(token, $"custom options not implemented: '{fullName}' = '{option.Token}'");
         }
     }
+    
     partial class EnumDescriptorProto : ISchemaObject, IType
     {
         public byte[] ExtensionData
@@ -1070,7 +1268,7 @@ namespace Google.Protobuf.Reflection
         internal const int FirstReservedField = 19000;
         internal const int LastReservedField = 19999;
 
-        internal DescriptorProto Parent { get; set; }
+        internal IMessage Parent { get; set; }
         internal Token TypeToken { get; set; }
 
         internal int MaxField => Parent?.MaxField ?? DefaultMaxField;
@@ -1274,6 +1472,7 @@ namespace Google.Protobuf.Reflection
             var dummy = new DummyExtensions(extendee, message);
             ctx.TryReadObjectImpl(dummy);
         }
+
         class DummyExtensions : ISchemaObject, IHazNames, IMessage
         {
             int IMessage.MaxField => message.MaxField;
@@ -1439,6 +1638,7 @@ namespace Google.Protobuf.Reflection
     }
     partial class MessageOptions : ISchemaOptions
     {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(MessageOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
         {
             switch (key)
@@ -1452,9 +1652,15 @@ namespace Google.Protobuf.Reflection
                 default: return false;
             }
         }
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
     }
     partial class MethodOptions : ISchemaOptions
     {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(MethodOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
         {
             switch (key)
@@ -1463,10 +1669,22 @@ namespace Google.Protobuf.Reflection
                 default: return false;
             }
         }
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
     }
     partial class ServiceOptions : ISchemaOptions
     {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(ServiceOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
+
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
     }
 
     partial class UninterpretedOption
@@ -1480,6 +1698,7 @@ namespace Google.Protobuf.Reflection
     }
     partial class EnumOptions : ISchemaOptions
     {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(EnumOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
         {
             switch (key)
@@ -1488,14 +1707,26 @@ namespace Google.Protobuf.Reflection
                 default: return false;
             }
         }
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
     }
     partial class EnumValueOptions : ISchemaOptions
     {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(EnumValueOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
 
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
     }
     partial class FieldOptions : ISchemaOptions
     {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(FieldOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
         {
             switch (key)
@@ -1508,9 +1739,16 @@ namespace Google.Protobuf.Reflection
                 default: return false;
             }
         }
+
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
     }
     partial class FileOptions : ISchemaOptions
     {
+        string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(FileOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
         {
             switch (key)
@@ -1537,10 +1775,11 @@ namespace Google.Protobuf.Reflection
                 default: return false;
             }
         }
-    }
-    partial class OneofOptions
-    {
-
+        public byte[] ExtensionData
+        {
+            get { return DescriptorProto.GetExtensionData(this); }
+            set { DescriptorProto.SetExtensionData(this, value); }
+        }
     }
 
 #pragma warning restore CS1591
@@ -1787,6 +2026,8 @@ namespace ProtoBuf
         List<UninterpretedOption> UninterpretedOptions { get; }
         bool Deprecated { get; set; }
         bool ReadOne(ParserContext ctx, string key);
+        byte[] ExtensionData { get; set; }
+        string Extendee { get; }
     }
 
     interface IHazNames
@@ -1798,7 +2039,7 @@ namespace ProtoBuf
     {
         void ReadOne(ParserContext ctx);
 
-        byte[] ExtensionData { get; }
+        byte[] ExtensionData { get; set; }
     }
     internal class ParserContext : IDisposable
     {

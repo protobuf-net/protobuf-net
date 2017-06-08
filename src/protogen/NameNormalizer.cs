@@ -100,7 +100,7 @@ namespace ProtoBuf
             {
                 preferred = Pluralize(preferred);
             }
-            return GetName(definition.Parent, preferred, definition.Name, true);
+            return GetName(definition.Parent as DescriptorProto, preferred, definition.Name, true);
         }
 
         protected HashSet<string> BuildConflicts(DescriptorProto parent, bool includeDescendents)
