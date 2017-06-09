@@ -694,9 +694,9 @@ namespace Google.Protobuf.Reflection
         }
 
 
-        internal bool TryResolveEnum(string typeName, IType parent, out EnumDescriptorProto @enum, bool allowImports)
+        internal bool TryResolveEnum(string typeName, IType parent, out EnumDescriptorProto @enum, bool allowImports, bool treatAllAsPublic = false)
         {
-            if (TryResolveType(typeName, parent, out var type, allowImports))
+            if (TryResolveType(typeName, parent, out var type, allowImports, true, treatAllAsPublic))
             {
                 @enum = type as EnumDescriptorProto;
                 return @enum != null;
@@ -704,9 +704,9 @@ namespace Google.Protobuf.Reflection
             @enum = null;
             return false;
         }
-        internal bool TryResolveMessage(string typeName, IType parent, out DescriptorProto message, bool allowImports)
+        internal bool TryResolveMessage(string typeName, IType parent, out DescriptorProto message, bool allowImports, bool treatAllAsPublic = false)
         {
-            if (TryResolveType(typeName, parent, out var type, allowImports))
+            if (TryResolveType(typeName, parent, out var type, allowImports, true, treatAllAsPublic))
             {
                 message = type as DescriptorProto;
                 return message != null;
@@ -813,9 +813,9 @@ namespace Google.Protobuf.Reflection
             field = null;
             return false;
         }
-        internal bool TryResolveType(string typeName, IType parent, out IType type, bool allowImports, bool checkOwnPackage = true)
+        internal bool TryResolveType(string typeName, IType parent, out IType type, bool allowImports, bool checkOwnPackage = true, bool treatAllAsPublic = false)
         {
-            bool TryResolveFromFile(FileDescriptorProto file, string tn, bool ai, out IType tp, bool withPackageName)
+            bool TryResolveFromFile(FileDescriptorProto file, string tn, bool ai, out IType tp, bool withPackageName, bool taap)
             {
                 tp = null;
                 if (file == null) return false;
@@ -830,7 +830,7 @@ namespace Google.Protobuf.Reflection
                     tn = tn.Substring(pkg.Length + 1); // and fully qualified (non-qualified is a second pass)
                 }
 
-                return file.TryResolveType(tn, file, out tp, ai, false);
+                return file.TryResolveType(tn, file, out tp, ai, false, treatAllAsPublic);
             }
 
             bool isRooted = typeName.StartsWith(".");
@@ -844,7 +844,7 @@ namespace Google.Protobuf.Reflection
                 while (parent != null)
                 {
                     var next = parent?.Find(left);
-                    if (next != null && TryResolveType(right, next, out type, false)) return true;
+                    if (next != null && TryResolveType(right, next, out type, false, treatAllAsPublic)) return true;
 
                     parent = parent.Parent;
                 }
@@ -863,16 +863,16 @@ namespace Google.Protobuf.Reflection
                 }
             }
 
-            if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type, true)) return true;
+            if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type, true, treatAllAsPublic)) return true;
 
             // look at imports
             // check for the name including the package prefix
             foreach (var import in _imports)
             {
-                if (allowImports || import.IsPublic)
+                if (allowImports || import.IsPublic || treatAllAsPublic)
                 {
                     var file = Parent?.GetFile(import.Path);
-                    if (TryResolveFromFile(file, typeName, false, out type, true))
+                    if (TryResolveFromFile(file, typeName, false, out type, true, treatAllAsPublic))
                     {
                         import.Used = true;
                         return true;
@@ -880,22 +880,20 @@ namespace Google.Protobuf.Reflection
                 }
             }
 
-            if (!isRooted)
+            // now look without package prefix
+            foreach (var import in _imports)
             {
-                // now look without package prefix
-                foreach (var import in _imports)
+                if (allowImports || import.IsPublic || treatAllAsPublic)
                 {
-                    if (allowImports || import.IsPublic)
+                    var file = Parent?.GetFile(import.Path);
+                    if (TryResolveFromFile(file, typeName, false, out type, false, treatAllAsPublic))
                     {
-                        var file = Parent?.GetFile(import.Path);
-                        if (TryResolveFromFile(file, typeName, false, out type, false))
-                        {
-                            import.Used = true;
-                            return true;
-                        }
+                        import.Used = true;
+                        return true;
                     }
                 }
             }
+
             type = null;
             return false;
 
@@ -1147,19 +1145,20 @@ namespace Google.Protobuf.Reflection
                         foreach (var option in options.UninterpretedOptions)
                         {
                             AppendOption(this, writer, tokens, ctx, options.Extendee, option);
-                        }
+                        }                        
                     }
                 }
                 finally
                 {
                     extension.EndAppend(target, true);
+                    options.UninterpretedOptions.RemoveAll(x => x.Applied);
                 }
-                options.UninterpretedOptions.Clear();
             }
 
         }
         private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, Stack<SubItemToken> tokens, ParserContext ctx, string extendee, UninterpretedOption option)
         {
+            var currentFile = file;
             tokens.Clear();
             try
             {
@@ -1169,11 +1168,11 @@ namespace Google.Protobuf.Reflection
                     FieldDescriptorProto field;
                     if (name.IsExtension)
                     {
-                        if (!file.TryResolveExtension(extendee, name.name_part, out field)) field = null;
+                        if (!currentFile.TryResolveExtension(extendee, name.name_part, out field)) field = null;
                     }
                     else
                     {
-                        if (file.TryResolveMessage(extendee, null, out var msg, true))
+                        if (currentFile.TryResolveMessage(extendee, null, out var msg, true))
                         {
                             field = msg.Fields.FirstOrDefault(x => x.Name == name.name_part);
                         }
@@ -1198,6 +1197,27 @@ namespace Google.Protobuf.Reflection
                             case FieldDescriptorProto.Type.TypeString:
                                 ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
                                 ProtoWriter.WriteString(option.AggregateValue, writer);
+                                option.Applied = true;
+                                break;
+                            case FieldDescriptorProto.Type.TypeEnum:
+                                if(file.TryResolveEnum(field.TypeName, null, out var @enum, true, true))
+                                {
+                                    var found = @enum.Values.FirstOrDefault(x => x.Name == option.AggregateValue);
+                                    if(found == null)
+                                    {
+                                        ctx.Errors.Error(option.Token, $"invalid value for enum '{field.TypeName}': '{name.name_part}' = '{option.AggregateValue}'");
+                                    }
+                                    else
+                                    {
+                                        ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
+                                        ProtoWriter.WriteInt32(found.Number, writer);
+                                        option.Applied = true;
+                                    }
+                                }
+                                else
+                                {
+                                    ctx.Errors.Error(option.Token, $"unable to resolve enum '{field.TypeName}': '{name.name_part}' = '{option.AggregateValue}'");
+                                }
                                 break;
                             default:
                                 ctx.Errors.Warn(option.Token, $"{field.type} options not yet implemented: '{name.name_part}' = '{option.AggregateValue}'");
@@ -1221,7 +1241,7 @@ namespace Google.Protobuf.Reflection
                         }
                         tokens.Push(ProtoWriter.StartSubItem(null, writer));
                         extendee = field.TypeName;
-                        file = FileDescriptorProto.GetFile(field.Parent as IType);
+                        currentFile = FileDescriptorProto.GetFile(field.Parent as IType);
                     }
                 }                
             }
@@ -1727,6 +1747,7 @@ namespace Google.Protobuf.Reflection
             public override string ToString() => name_part;
             internal Token Token { get; set; }
         }
+        internal bool Applied { get; set; }
         internal Token Token { get; set; }
     }
     partial class EnumOptions : ISchemaOptions
