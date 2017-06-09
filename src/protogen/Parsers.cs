@@ -241,7 +241,7 @@ namespace Google.Protobuf.Reflection
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "option"))
             {
-                Options = ctx.ParseOptionStatement(Options);
+                Options = ctx.ParseOptionStatement(Options, this);
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "reserved"))
             {
@@ -501,7 +501,7 @@ namespace Google.Protobuf.Reflection
             var tokens = ctx.Tokens;
             if (tokens.ConsumeIf(TokenType.AlphaNumeric, "option"))
             {
-                Options = ctx.ParseOptionStatement(Options);
+                Options = ctx.ParseOptionStatement(Options, this);
             }
             else
             {
@@ -643,7 +643,7 @@ namespace Google.Protobuf.Reflection
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "option"))
             {
-                Options = ctx.ParseOptionStatement(Options);
+                Options = ctx.ParseOptionStatement(Options, this);
             }
             else if (tokens.Peek(out var token))
             {
@@ -908,6 +908,10 @@ namespace Google.Protobuf.Reflection
             {
                 child.Parent = parent;
                 SetParents(fqn, child);
+            }
+            foreach(var ext in parent.Extensions)
+            {
+                ext.Parent = parent;
             }
         }
         internal void BuildTypeHierarchy(FileDescriptorSet set, ParserContext ctx)
@@ -1329,7 +1333,7 @@ namespace Google.Protobuf.Reflection
             var tokens = ctx.Tokens;
             if (tokens.ConsumeIf(TokenType.AlphaNumeric, "option"))
             {
-                Options = ctx.ParseOptionStatement(Options);
+                Options = ctx.ParseOptionStatement(Options, this);
             }
             else
             {
@@ -1339,8 +1343,9 @@ namespace Google.Protobuf.Reflection
         }
 
     }
-    partial class FieldDescriptorProto
+    partial class FieldDescriptorProto : ISchemaObject
     {
+
         public bool IsPacked(string syntax)
         {
             if (label != Label.LabelRepeated) return false;
@@ -1565,6 +1570,8 @@ namespace Google.Protobuf.Reflection
             ctx.TryReadObjectImpl(dummy);
         }
 
+        void ISchemaObject.ReadOne(ParserContext ctx) => throw new InvalidOperationException();
+
         class DummyExtensions : ISchemaObject, IHazNames, IMessage
         {
             int IMessage.MaxField => message.MaxField;
@@ -1636,7 +1643,7 @@ namespace Google.Protobuf.Reflection
 
             if (tokens.ConsumeIf(TokenType.AlphaNumeric, "option"))
             {
-                Options = ctx.ParseOptionStatement(Options);
+                Options = ctx.ParseOptionStatement(Options, this);
             }
             else
             {
@@ -1695,7 +1702,7 @@ namespace Google.Protobuf.Reflection
         void ISchemaObject.ReadOne(ParserContext ctx)
         {
             ctx.Tokens.Consume(TokenType.AlphaNumeric, "option");
-            Options = ctx.ParseOptionStatement(Options);
+            Options = ctx.ParseOptionStatement(Options, this);
         }
     }
 
@@ -1774,7 +1781,7 @@ namespace Google.Protobuf.Reflection
     {
         partial class NamePart
         {
-            public override string ToString() => name_part;
+            public override string ToString() => IsExtension ? ("(" + name_part + ")") : name_part;
             internal Token Token { get; set; }
         }
         internal bool Applied { get; set; }
@@ -2175,40 +2182,34 @@ namespace ProtoBuf
                 }
             }
         }
-        private void ReadOption<T>(ref T obj, object parent) where T : class, ISchemaOptions, new()
+        
+        private void ReadOption<T>(ref T obj, ISchemaObject parent, List<UninterpretedOption.NamePart> existingNameParts = null) where T : class, ISchemaOptions, new()
         {
             var tokens = Tokens;
-
-            var nameParts = new List<UninterpretedOption.NamePart>();
+            bool isBlock = existingNameParts != null;
+            var nameParts = isBlock
+                ? new List<UninterpretedOption.NamePart>(existingNameParts) // create a clone we can append to
+                : new List<UninterpretedOption.NamePart>();
 
             do
             {
-                bool isExtension = tokens.ConsumeIf(TokenType.Symbol, "(");
+                bool isExtension = tokens.ConsumeIf(TokenType.Symbol, isBlock ? "[" : "(");
                 string key = tokens.Consume(TokenType.AlphaNumeric);
                 var keyToken = tokens.Previous;
-                if (isExtension) tokens.Consume(TokenType.Symbol, ")");
+                if (isExtension) tokens.Consume(TokenType.Symbol, isBlock ? "]" : ")");
 
                 var name = new UninterpretedOption.NamePart { IsExtension = isExtension, name_part = key, Token = keyToken };
                 nameParts.Add(name);
-            } while (!tokens.ConsumeIf(TokenType.Symbol, "="));
-
+            } while (!(
+            (isBlock && tokens.Is(TokenType.Symbol, "{"))
+            || tokens.ConsumeIf(TokenType.Symbol, isBlock ? ":" : "=")));
+            
             if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
                 if (obj == null) obj = new T();
                 while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
                 {
-                    var subkey = tokens.Consume(TokenType.AlphaNumeric);
-                    var subKeyToken = tokens.Previous;
-                    tokens.Consume(TokenType.Symbol, ":");
-
-                    var newOption = new UninterpretedOption
-                    {
-                        AggregateValue = tokens.ConsumeString(),
-                        Token = tokens.Previous
-                    };
-                    newOption.Names.AddRange(nameParts);
-                    newOption.Names.Add(new UninterpretedOption.NamePart { name_part = subkey, Token = subKeyToken });
-                    obj.UninterpretedOptions.Add(newOption);
+                    ReadOption(ref obj, parent, nameParts);
                 }
             }
             else
@@ -2216,8 +2217,8 @@ namespace ProtoBuf
 
                 var field = parent as FieldDescriptorProto;
                 bool isField = typeof(T) == typeof(FieldOptions) && field != null;
-                var key = (nameParts.Count == 1 && !nameParts[0].IsExtension) ? nameParts[0].name_part : null;
-                if (key == "default" && isField)
+                var singleKey = (nameParts.Count == 1 && !nameParts[0].IsExtension) ? nameParts[0].name_part : null;
+                if (singleKey == "default" && isField)
                 {
                     string defaultValue = tokens.ConsumeString(field.type == FieldDescriptorProto.Type.TypeBytes);
                     nameParts[0].Token.RequireProto2(this);
@@ -2227,7 +2228,7 @@ namespace ProtoBuf
                         field.DefaultValue = defaultValue;
                     }
                 }
-                else if (key == "json_name" && isField)
+                else if (singleKey == "json_name" && isField)
                 {
                     string jsonName = tokens.ConsumeString();
                     field.JsonName = jsonName;
@@ -2235,11 +2236,11 @@ namespace ProtoBuf
                 else
                 {
                     if (obj == null) obj = new T();
-                    if (key == "deprecated")
+                    if (singleKey == "deprecated")
                     {
                         obj.Deprecated = tokens.ConsumeBoolean();
                     }
-                    else if (key == null || !obj.ReadOne(this, key))
+                    else if (singleKey == null || !obj.ReadOne(this, singleKey))
                     {
                         var newOption = new UninterpretedOption
                         {
@@ -2416,7 +2417,7 @@ namespace ProtoBuf
             return val.ToString("e", CultureInfo.InvariantCulture);
         }
 
-        public T ParseOptionBlock<T>(T obj, object parent = null) where T : class, ISchemaOptions, new()
+        public T ParseOptionBlock<T>(T obj, ISchemaObject parent = null) where T : class, ISchemaOptions, new()
         {
             var tokens = Tokens;
             try
@@ -2443,7 +2444,7 @@ namespace ProtoBuf
             }
             return obj;
         }
-        public T ParseOptionStatement<T>(T obj, object parent = null) where T : class, ISchemaOptions, new()
+        public T ParseOptionStatement<T>(T obj, ISchemaObject parent) where T : class, ISchemaOptions, new()
         {
             var tokens = Tokens;
             try

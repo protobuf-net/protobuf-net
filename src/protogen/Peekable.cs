@@ -49,7 +49,6 @@ namespace ProtoBuf
             next = _peek;
             return true;
         }
-        public bool Is(Func<T, bool> predicate) => Peek(out T val) && predicate(val);
         public void Dispose() => _iter?.Dispose();
     }
 }

@@ -44,12 +44,18 @@ namespace ProtoBuf
         {
             if (value != null)
             {
-                if (type != Type || value != Value) Throw($"expected {type} '{value}'");
+                if (type != Type || value != Value)
+                {
+                    Throw($"expected {type} '{value}'");
+                }
 
             }
             else
             {
-                if (type != Type) Throw($"expected {type}");
+                if (type != Type)
+                {
+                    Throw($"expected {type}");
+                }
             }
         }
 

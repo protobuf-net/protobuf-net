@@ -10,6 +10,9 @@ namespace ProtoBuf
 {
     internal static class TokenExtensions
     {
+        public static bool Is(this Peekable<Token> tokens, TokenType type, string value = null)
+            => tokens.Peek(out var val) && val.Is(type, value);
+
         public static void Consume(this Peekable<Token> tokens, TokenType type, string value)
         {
             var token = tokens.Read();
@@ -404,7 +407,7 @@ namespace ProtoBuf
 
         static TokenType Identify(char c)
         {
-            if (c == '"') return TokenType.StringLiteral;
+            if (c == '"' || c == '\'') return TokenType.StringLiteral;
             if (char.IsWhiteSpace(c)) return TokenType.Whitespace;
             if (char.IsLetterOrDigit(c)) return TokenType.AlphaNumeric;
             switch (c)
@@ -420,19 +423,30 @@ namespace ProtoBuf
         public static IEnumerable<Token> RemoveCommentsAndWhitespace(this IEnumerable<Token> tokens)
         {
             int commentLineNumber = -1;
+            bool isBlockComment = false;
             foreach (var token in tokens)
             {
-                if (commentLineNumber == token.LineNumber)
+                if (isBlockComment)
+                {
+                    // swallow everything until the end of the block comment
+                    if (token.Is(TokenType.Symbol, "*/"))
+                        isBlockComment = false;
+                }
+                else if (commentLineNumber == token.LineNumber)
                 {
                     // swallow everything else on that line
                 }
-                else if (token.Type == TokenType.Whitespace)
+                else if (token.Is(TokenType.Whitespace))
                 {
                     continue;
                 }
-                else if (token.Type == TokenType.Symbol && token.Value.StartsWith("//"))
+                else if (token.Is(TokenType.Symbol, "//"))
                 {
                     commentLineNumber = token.LineNumber;
+                }
+                else if (token.Is(TokenType.Symbol, "/*"))
+                {
+                    isBlockComment = true;
                 }
                 else
                 {
@@ -441,8 +455,11 @@ namespace ProtoBuf
             }
         }
 
-        static bool CanCombine(TokenType type, char prev, char next)
-            => type != TokenType.Symbol || prev == next;
+        static bool CanCombine(TokenType type, int len, char prev, char next)
+            => type != TokenType.Symbol
+            || (len == 1 && prev == '/' && (next == '/' || next == '*'))
+            || (len == 1 && prev == '*' && next == '/');
+
 
         public static IEnumerable<Token> Tokenize(this LineReader reader, string file)
         {
@@ -456,7 +473,7 @@ namespace ProtoBuf
                 lastLine = line;
                 lineNumber++;
                 int columnNumber = 0, tokenStart = 1;
-                char lastChar = '\0';
+                char lastChar = '\0', stringType = '\0';
                 TokenType type = TokenType.None;
                 bool isEscaped = false;
                 foreach (char c in line)
@@ -464,7 +481,7 @@ namespace ProtoBuf
                     columnNumber++;
                     if (type == TokenType.StringLiteral)
                     {
-                        if (c == '"' && !isEscaped)
+                        if (c == stringType && !isEscaped)
                         {
                             yield return new Token(buffer.ToString(), lineNumber, tokenStart, type, line, offset++, file);
                             buffer.Clear();
@@ -479,7 +496,7 @@ namespace ProtoBuf
                     else
                     {
                         var newType = Identify(c);
-                        if (newType == type && CanCombine(type, lastChar, c))
+                        if (newType == type && CanCombine(type, buffer.Length, lastChar, c))
                         {
                             buffer.Append(c);
                         }
@@ -492,7 +509,11 @@ namespace ProtoBuf
                             }
                             type = newType;
                             tokenStart = columnNumber;
-                            if (newType != TokenType.StringLiteral)
+                            if (newType == TokenType.StringLiteral)
+                            {
+                                stringType = c;
+                            }
+                            else
                             {
                                 buffer.Append(c);
                             }

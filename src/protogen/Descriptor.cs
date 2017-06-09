@@ -975,6 +975,9 @@ namespace Google.Protobuf.Reflection
     [global::ProtoBuf.ProtoContract(Name = @"UninterpretedOption")]
     public partial class UninterpretedOption
     {
+        public override string ToString()
+            => string.Join(".", Names) + "=" + AggregateValue;
+
         [global::ProtoBuf.ProtoMember(2, Name = @"name")]
         public global::System.Collections.Generic.List<NamePart> Names { get; } = new global::System.Collections.Generic.List<NamePart>();
 
