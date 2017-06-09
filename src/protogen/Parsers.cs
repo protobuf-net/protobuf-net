@@ -1139,120 +1139,180 @@ namespace Google.Protobuf.Reflection
                 var target = extension.BeginAppend();
                 try
                 {
-                    Stack<SubItemToken> tokens = new Stack<SubItemToken>();
                     using (var writer = new ProtoWriter(target, null, null))
                     {
-                        foreach (var option in options.UninterpretedOptions)
+                        var hive = OptionHive.Build(options.UninterpretedOptions);
+                        foreach (var option in hive.Children)
                         {
-                            AppendOption(this, writer, tokens, ctx, options.Extendee, option);
-                        }                        
+                            AppendOption(this, writer, ctx, options.Extendee, option);
+                        }
                     }
+                    options.UninterpretedOptions.RemoveAll(x => x.Applied);
                 }
                 finally
                 {
                     extension.EndAppend(target, true);
-                    options.UninterpretedOptions.RemoveAll(x => x.Applied);
                 }
             }
 
         }
-        private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, Stack<SubItemToken> tokens, ParserContext ctx, string extendee, UninterpretedOption option)
+
+        class OptionHive
         {
-            var currentFile = file;
-            tokens.Clear();
-            try
+            public OptionHive(string name, bool isExtension, Token token)
             {
-                for (int i = 0; i < option.Names.Count; i++)
+                Name = name;
+                IsExtension = isExtension;
+                Token = token;
+            }
+            public override string ToString()
+            {
+                var sb = new StringBuilder();
+                Concat(sb);
+                return sb.ToString();
+            }
+            private void Concat(StringBuilder sb)
+            {
+                bool isFirst = true;
+                foreach(var value in Options)
                 {
-                    var name = option.Names[i];
-                    FieldDescriptorProto field;
-                    if (name.IsExtension)
+                    if (!isFirst) sb.Append(", ");
+                    isFirst = false;
+                    sb.Append(value);
+                }
+                foreach(var child in Children)
+                {
+                    if (!isFirst) sb.Append(", ");
+                    sb.Append(child.Name).Append("={");
+                    child.Concat(sb);
+                    sb.Append("}");
+                }
+            }
+            public bool IsExtension { get; }
+            public string Name { get; }
+            public Token Token { get; }
+            public List<UninterpretedOption> Options { get; } = new List<UninterpretedOption>();
+            public List<OptionHive> Children { get; } = new List<OptionHive>();
+
+            public static OptionHive Build(List<UninterpretedOption> options)
+            {
+                if(options == null || options.Count == 0) return null;
+
+                var root = new OptionHive(null, false, default(Token));
+                foreach(var option in options)
+                {
+                    var level = root;
+                    OptionHive nextLevel = null;
+                    foreach(var name in option.Names)
                     {
-                        if (!currentFile.TryResolveExtension(extendee, name.name_part, out field)) field = null;
-                    }
-                    else
-                    {
-                        if (currentFile.TryResolveMessage(extendee, null, out var msg, true))
+                        nextLevel = level.Children.FirstOrDefault(x => x.Name == name.name_part && x.IsExtension == name.IsExtension);
+                        if(nextLevel == null)
                         {
-                            field = msg.Fields.FirstOrDefault(x => x.Name == name.name_part);
+                            nextLevel = new OptionHive(name.name_part, name.IsExtension, name.Token);
+                            level.Children.Add(nextLevel);
                         }
+                        level = nextLevel;
+                    }
+                    level.Options.Add(option);
+                }
+                return root;
+            }
+        }
 
-                        else
+        private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, ParserContext ctx, string extendee, OptionHive option)
+        {
+            bool ShouldWrite(FieldDescriptorProto f, string v, string d)
+                => f.label != FieldDescriptorProto.Label.LabelOptional || v != (f.DefaultValue ?? d);
+
+            // resolve the field for this level
+            FieldDescriptorProto field;
+            if(option.IsExtension)
+            {
+                if (!file.TryResolveExtension(extendee, option.Name, out field)) field = null;
+            }
+            else if (file.TryResolveMessage(extendee, null, out var msg, true))
+            {
+                field = msg.Fields.FirstOrDefault(x => x.Name == option.Name);
+            }
+            else
+            {
+                field = null;
+            }
+
+            if (field == null)
+            {
+                ctx.Errors.Error(option.Token, $"unable to resolve custom option '{option.Name}' for '{extendee}'");
+                return;
+            }
+
+            switch(field.type)
+            {
+                case FieldDescriptorProto.Type.TypeMessage:
+                case FieldDescriptorProto.Type.TypeGroup:
+                    if(option.Children.Count != 0)
+                    {
+                        ProtoWriter.WriteFieldHeader(field.Number,
+                            field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
+                        var tok = ProtoWriter.StartSubItem(null, writer);
+
+                        var nextFile = GetFile(field.Parent as IType);
+                        foreach (var child in option.Children)
                         {
-                            field = null;
+                            AppendOption(nextFile, writer, ctx, field.TypeName, child);
                         }
-
+                        ProtoWriter.EndSubItem(tok, writer);
                     }
-
-                    if (field == null)
+                    foreach(var values in option.Options)
                     {
-                        ctx.Errors.Error(name.Token, $"unable to resolve extension '{name.name_part}' for '{extendee}'");
-                        return;
+                        ctx.Errors.Error(option.Token, $"unable to assign custom option '{option.Name}' for '{extendee}'");
                     }
-
-                    if (i == option.Names.Count - 1)
+                    break;
+                default:
+                    foreach(var child in option.Children)
                     {
-                        switch(field.type)
+                        ctx.Errors.Error(option.Token, $"unable to assign custom option '{child.Name}' for '{extendee}'");
+                    }
+                    foreach(var value in option.Options)
+                    {
+                        switch (field.type)
                         {
                             case FieldDescriptorProto.Type.TypeString:
-                                ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
-                                ProtoWriter.WriteString(option.AggregateValue, writer);
-                                option.Applied = true;
+                                if (ShouldWrite(field, value.AggregateValue, ""))
+                                {
+                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
+                                    ProtoWriter.WriteString(value.AggregateValue, writer);
+                                }
+                                value.Applied = true;
                                 break;
                             case FieldDescriptorProto.Type.TypeEnum:
-                                if(file.TryResolveEnum(field.TypeName, null, out var @enum, true, true))
+                                if (file.TryResolveEnum(field.TypeName, null, out var @enum, true, true))
                                 {
-                                    var found = @enum.Values.FirstOrDefault(x => x.Name == option.AggregateValue);
-                                    if(found == null)
+                                    var found = @enum.Values.FirstOrDefault(x => x.Name == value.AggregateValue);
+                                    if (found == null)
                                     {
-                                        ctx.Errors.Error(option.Token, $"invalid value for enum '{field.TypeName}': '{name.name_part}' = '{option.AggregateValue}'");
+                                        ctx.Errors.Error(option.Token, $"invalid value for enum '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
                                     }
                                     else
                                     {
-                                        ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
-                                        ProtoWriter.WriteInt32(found.Number, writer);
-                                        option.Applied = true;
+                                        if (ShouldWrite(field, value.AggregateValue, @enum.Values.FirstOrDefault()?.Name))
+                                        {
+                                            ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
+                                            ProtoWriter.WriteInt32(found.Number, writer);
+                                        }
+                                        value.Applied = true;
                                     }
                                 }
                                 else
                                 {
-                                    ctx.Errors.Error(option.Token, $"unable to resolve enum '{field.TypeName}': '{name.name_part}' = '{option.AggregateValue}'");
+                                    ctx.Errors.Error(option.Token, $"unable to resolve enum '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
                                 }
                                 break;
                             default:
-                                ctx.Errors.Warn(option.Token, $"{field.type} options not yet implemented: '{name.name_part}' = '{option.AggregateValue}'");
+                                ctx.Errors.Warn(option.Token, $"{field.type} options not yet implemented: '{option.Name}' = '{value.AggregateValue}'");
                                 break;
                         }
-                        break; // process the actual value
                     }
-                    else
-                    {
-                        switch (field.type)
-                        {
-                            case FieldDescriptorProto.Type.TypeMessage:
-                                ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
-                                break;
-                            case FieldDescriptorProto.Type.TypeGroup:
-                                ProtoWriter.WriteFieldHeader(field.Number, WireType.StartGroup, writer);
-                                break;
-                            default:
-                                ctx.Errors.Error(name.Token, $"extension '{name.name_part}' for '{extendee}' is not a message/group");
-                                return;
-                        }
-                        tokens.Push(ProtoWriter.StartSubItem(null, writer));
-                        extendee = field.TypeName;
-                        currentFile = FileDescriptorProto.GetFile(field.Parent as IType);
-                    }
-                }                
-            }
-            finally
-            {
-                // close any objects that we opened
-                while (tokens.Count != 0)
-                {
-                    var token = tokens.Pop();
-                    ProtoWriter.EndSubItem(token, writer);
-                }
+                    break;
             }
         }
     }
