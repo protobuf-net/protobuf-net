@@ -8,7 +8,7 @@ namespace Google.Protobuf.Reflection
 {
 
     [global::ProtoBuf.ProtoContract(Name = @"FileDescriptorSet")]
-    public partial class FileDescriptorSet : global::ProtoBuf.Extensible
+    public partial class FileDescriptorSet
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"file")]
         public global::System.Collections.Generic.List<FileDescriptorProto> Files { get; } = new global::System.Collections.Generic.List<FileDescriptorProto>();
@@ -16,7 +16,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"FileDescriptorProto")]
-    public partial class FileDescriptorProto : global::ProtoBuf.Extensible
+    public partial class FileDescriptorProto
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
@@ -81,7 +81,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"DescriptorProto")]
-    public partial class DescriptorProto : global::ProtoBuf.Extensible
+    public partial class DescriptorProto
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
@@ -122,7 +122,7 @@ namespace Google.Protobuf.Reflection
         public global::System.Collections.Generic.List<string> ReservedNames { get; } = new global::System.Collections.Generic.List<string>();
 
         [global::ProtoBuf.ProtoContract(Name = @"ExtensionRange")]
-        public partial class ExtensionRange : global::ProtoBuf.Extensible
+        public partial class ExtensionRange
         {
             [global::ProtoBuf.ProtoMember(1, Name = @"start")]
             public int Start
@@ -147,7 +147,7 @@ namespace Google.Protobuf.Reflection
         }
 
         [global::ProtoBuf.ProtoContract(Name = @"ReservedRange")]
-        public partial class ReservedRange : global::ProtoBuf.Extensible
+        public partial class ReservedRange
         {
             [global::ProtoBuf.ProtoMember(1, Name = @"start")]
             public int Start
@@ -174,7 +174,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"FieldDescriptorProto")]
-    public partial class FieldDescriptorProto : global::ProtoBuf.Extensible
+    public partial class FieldDescriptorProto
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
@@ -329,7 +329,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"OneofDescriptorProto")]
-    public partial class OneofDescriptorProto : global::ProtoBuf.Extensible
+    public partial class OneofDescriptorProto
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
@@ -348,7 +348,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"EnumDescriptorProto")]
-    public partial class EnumDescriptorProto : global::ProtoBuf.Extensible
+    public partial class EnumDescriptorProto
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
@@ -370,7 +370,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"EnumValueDescriptorProto")]
-    public partial class EnumValueDescriptorProto : global::ProtoBuf.Extensible
+    public partial class EnumValueDescriptorProto
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
@@ -399,7 +399,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"ServiceDescriptorProto")]
-    public partial class ServiceDescriptorProto : global::ProtoBuf.Extensible
+    public partial class ServiceDescriptorProto
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
@@ -421,7 +421,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"MethodDescriptorProto")]
-    public partial class MethodDescriptorProto : global::ProtoBuf.Extensible
+    public partial class MethodDescriptorProto
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
@@ -484,8 +484,12 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"FileOptions")]
-    public partial class FileOptions : global::ProtoBuf.Extensible
+    public partial class FileOptions : global::ProtoBuf.IExtensible
     {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
         [global::ProtoBuf.ProtoMember(1, Name = @"java_package")]
         [global::System.ComponentModel.DefaultValue("")]
         public string JavaPackage
@@ -679,8 +683,12 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"MessageOptions")]
-    public partial class MessageOptions : global::ProtoBuf.Extensible
+    public partial class MessageOptions : global::ProtoBuf.IExtensible
     {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
         [global::ProtoBuf.ProtoMember(1, Name = @"message_set_wire_format")]
         [global::System.ComponentModel.DefaultValue(false)]
         public bool MessageSetWireFormat
@@ -730,8 +738,12 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"FieldOptions")]
-    public partial class FieldOptions : global::ProtoBuf.Extensible
+    public partial class FieldOptions : global::ProtoBuf.IExtensible
     {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
         [global::ProtoBuf.ProtoMember(1, Name = @"ctype")]
         [global::System.ComponentModel.DefaultValue(CType.String)]
         public CType Ctype
@@ -825,16 +837,24 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"OneofOptions")]
-    public partial class OneofOptions : global::ProtoBuf.Extensible
+    public partial class OneofOptions : global::ProtoBuf.IExtensible
     {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
         [global::ProtoBuf.ProtoMember(999, Name = @"uninterpreted_option")]
         public global::System.Collections.Generic.List<UninterpretedOption> UninterpretedOptions { get; } = new global::System.Collections.Generic.List<UninterpretedOption>();
 
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"EnumOptions")]
-    public partial class EnumOptions : global::ProtoBuf.Extensible
+    public partial class EnumOptions : global::ProtoBuf.IExtensible
     {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
         [global::ProtoBuf.ProtoMember(2, Name = @"allow_alias")]
         public bool AllowAlias
         {
@@ -862,8 +882,12 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"EnumValueOptions")]
-    public partial class EnumValueOptions : global::ProtoBuf.Extensible
+    public partial class EnumValueOptions : global::ProtoBuf.IExtensible
     {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
         [global::ProtoBuf.ProtoMember(1, Name = @"deprecated")]
         [global::System.ComponentModel.DefaultValue(false)]
         public bool Deprecated
@@ -881,8 +905,12 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"ServiceOptions")]
-    public partial class ServiceOptions : global::ProtoBuf.Extensible
+    public partial class ServiceOptions : global::ProtoBuf.IExtensible
     {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
         [global::ProtoBuf.ProtoMember(33, Name = @"deprecated")]
         [global::System.ComponentModel.DefaultValue(false)]
         public bool Deprecated
@@ -900,8 +928,12 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"MethodOptions")]
-    public partial class MethodOptions : global::ProtoBuf.Extensible
+    public partial class MethodOptions : global::ProtoBuf.IExtensible
     {
+        private global::ProtoBuf.IExtension __pbn__extensionData;
+        global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
+            => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
+
         [global::ProtoBuf.ProtoMember(33, Name = @"deprecated")]
         [global::System.ComponentModel.DefaultValue(false)]
         public bool Deprecated
@@ -941,7 +973,7 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"UninterpretedOption")]
-    public partial class UninterpretedOption : global::ProtoBuf.Extensible
+    public partial class UninterpretedOption
     {
         [global::ProtoBuf.ProtoMember(2, Name = @"name")]
         public global::System.Collections.Generic.List<NamePart> Names { get; } = new global::System.Collections.Generic.List<NamePart>();
@@ -1009,7 +1041,7 @@ namespace Google.Protobuf.Reflection
         private string __pbn__AggregateValue;
 
         [global::ProtoBuf.ProtoContract(Name = @"NamePart")]
-        public partial class NamePart : global::ProtoBuf.Extensible
+        public partial class NamePart
         {
             [global::ProtoBuf.ProtoMember(1, Name = @"name_part", IsRequired = true)]
             public string name_part { get; set; }
@@ -1022,13 +1054,13 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"SourceCodeInfo")]
-    public partial class SourceCodeInfo : global::ProtoBuf.Extensible
+    public partial class SourceCodeInfo
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"location")]
         public global::System.Collections.Generic.List<Location> Locations { get; } = new global::System.Collections.Generic.List<Location>();
 
         [global::ProtoBuf.ProtoContract(Name = @"Location")]
-        public partial class Location : global::ProtoBuf.Extensible
+        public partial class Location
         {
             [global::ProtoBuf.ProtoMember(1, Name = @"path", IsPacked = true)]
             public int[] Paths { get; set; }
@@ -1066,13 +1098,13 @@ namespace Google.Protobuf.Reflection
     }
 
     [global::ProtoBuf.ProtoContract(Name = @"GeneratedCodeInfo")]
-    public partial class GeneratedCodeInfo : global::ProtoBuf.Extensible
+    public partial class GeneratedCodeInfo
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"annotation")]
         public global::System.Collections.Generic.List<Annotation> Annotations { get; } = new global::System.Collections.Generic.List<Annotation>();
 
         [global::ProtoBuf.ProtoContract(Name = @"Annotation")]
-        public partial class Annotation : global::ProtoBuf.Extensible
+        public partial class Annotation
         {
             [global::ProtoBuf.ProtoMember(1, Name = @"path", IsPacked = true)]
             public int[] Paths { get; set; }

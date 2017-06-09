@@ -153,12 +153,6 @@ namespace Google.Protobuf.Reflection
     }
     partial class DescriptorProto : ISchemaObject, IType, IMessage
     {
-        public byte[] ExtensionData
-        {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
-        }
-
         public static byte[] GetExtensionData(IExtensible obj)
         {
             var ext = obj?.GetExtensionObject(false);
@@ -215,7 +209,9 @@ namespace Google.Protobuf.Reflection
 
         List<DescriptorProto> IMessage.Types => NestedTypes;
 
-        public int MaxField => (Options?.MessageSetWireFormat == true) ? int.MaxValue : FieldDescriptorProto.DefaultMaxField;
+        internal int MaxField => (Options?.MessageSetWireFormat == true) ? int.MaxValue : FieldDescriptorProto.DefaultMaxField;
+        int IMessage.MaxField => MaxField;
+
 
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out DescriptorProto obj)
         {
@@ -484,11 +480,6 @@ namespace Google.Protobuf.Reflection
 
     partial class OneofDescriptorProto : ISchemaObject
     {
-        public byte[] ExtensionData
-        {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
-        }
         internal DescriptorProto Parent { get; set; }
         internal static void Parse(ParserContext ctx, DescriptorProto parent)
         {
@@ -548,12 +539,6 @@ namespace Google.Protobuf.Reflection
         List<FieldDescriptorProto> IMessage.Fields => null;
         List<FieldDescriptorProto> IMessage.Extensions => Extensions;
         List<DescriptorProto> IMessage.Types => MessageTypes;
-
-        public byte[] ExtensionData
-        {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
-        }
 
         public override string ToString() => Name;
 
@@ -1319,11 +1304,6 @@ namespace Google.Protobuf.Reflection
 
     partial class EnumDescriptorProto : ISchemaObject, IType
     {
-        public byte[] ExtensionData
-        {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
-        }
         public override string ToString() => Name;
         internal IType Parent { get; set; }
         string IType.FullyQualifiedName => FullyQualifiedName;
@@ -1639,11 +1619,6 @@ namespace Google.Protobuf.Reflection
 
     partial class ServiceDescriptorProto : ISchemaObject
     {
-        public byte[] ExtensionData
-        {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
-        }
         internal static bool TryParse(ParserContext ctx, out ServiceDescriptorProto obj)
         {
             var name = ctx.Tokens.Consume(TokenType.AlphaNumeric);
@@ -1674,11 +1649,6 @@ namespace Google.Protobuf.Reflection
 
     partial class MethodDescriptorProto : ISchemaObject
     {
-        public byte[] ExtensionData
-        {
-            get { return DescriptorProto.GetExtensionData(this); }
-            set { DescriptorProto.SetExtensionData(this, value); }
-        }
         internal Token InputTypeToken { get; set; }
         internal Token OutputTypeToken { get; set; }
 
@@ -2152,8 +2122,6 @@ namespace ProtoBuf
     interface ISchemaObject
     {
         void ReadOne(ParserContext ctx);
-
-        byte[] ExtensionData { get; set; }
     }
     internal class ParserContext : IDisposable
     {

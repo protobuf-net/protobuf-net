@@ -156,8 +156,16 @@ namespace ProtoBuf
             var name = ctx.NameNormalizer.GetName(obj);
             ctx.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{obj.Name}"")]");
             WriteOptions(ctx, obj.Options);
-            ctx.WriteLine($"public partial class {Escape(name)} : global::ProtoBuf.Extensible");
+            var tw = ctx.Write($"public partial class {Escape(name)}");
+            if(obj.ExtensionRanges.Count != 0) tw.Write(" : global::ProtoBuf.IExtensible");
+            tw.WriteLine();
             ctx.WriteLine("{").Indent();
+            if(obj.ExtensionRanges.Count != 0)
+            {
+                ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
+                    .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)").Indent()
+                    .WriteLine($"=> global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine();
+            }
         }
 
         private static void WriteOptions<T>(GeneratorContext ctx, T obj) where T : class, ISchemaOptions
