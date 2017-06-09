@@ -764,7 +764,7 @@ namespace Google.Protobuf.Reflection
                 // rooted
                 extension = extension.Substring(1); // remove the root
             }
-            if(TrySplitLast(extension, out var left, out var right))
+            if (TrySplitLast(extension, out var left, out var right))
             {
                 if (TryResolveType(left, null, out var type, true, true))
                 {
@@ -783,15 +783,18 @@ namespace Google.Protobuf.Reflection
                 if (TryResolveFromFile(this, extendee, extension, out field, true, false)) return true;
                 if (TryResolveFromFile(this, extendee, extension, out field, false, false)) return true;
             }
-            if(allowImports)
+            if (allowImports)
             {
-                foreach(var import in _imports)
+                foreach (var import in _imports)
                 {
                     var file = Parent?.GetFile(import.Path);
                     if (file != null)
                     {
                         if (TryResolveFromFile(file, extendee, extension, out field, true, import.IsPublic))
+                        {
+                            import.Used = true;
                             return true;
+                        }
                     }
                 }
                 foreach (var import in _imports)
@@ -800,7 +803,10 @@ namespace Google.Protobuf.Reflection
                     if (file != null)
                     {
                         if (TryResolveFromFile(file, extendee, extension, out field, false, import.IsPublic))
+                        {
+                            import.Used = true;
                             return true;
+                        }
                     }
                 }
             }
@@ -936,6 +942,10 @@ namespace Google.Protobuf.Reflection
                 type.Parent = this;
                 SetParents(prefix, type);
             }
+            foreach (var type in Extensions)
+            {
+                type.Parent = this;
+            }
         }
 
         static bool ShouldResolveType(FieldDescriptorProto.Type type)
@@ -1019,7 +1029,7 @@ namespace Google.Protobuf.Reflection
 
         private void ResolveTypes(ParserContext ctx, ServiceDescriptorProto service, bool options)
         {
-            if(options) ResolveOptions(ctx, service.Options);
+            if (options) ResolveOptions(ctx, service.Options);
             foreach (var method in service.Methods)
             {
                 if (options) ResolveOptions(ctx, method.Options);
@@ -1068,7 +1078,7 @@ namespace Google.Protobuf.Reflection
         }
         internal void ResolveTypes(ParserContext ctx, bool options)
         {
-            if(options) ResolveOptions(ctx, Options);
+            if (options) ResolveOptions(ctx, Options);
             foreach (var type in MessageTypes)
             {
                 ResolveTypes(ctx, type, options);
@@ -1083,22 +1093,30 @@ namespace Google.Protobuf.Reflection
             }
             ResolveTypes(ctx, Extensions, this, options);
 
-            List<int> publicDependencies = null;
-            foreach (var import in _imports)
+            if (options) // can only process deps on the second pass, once options have been resolved
             {
-                Dependencies.Add(import.Path); // protoc always includes it
-                if(import.IsPublic)
+                HashSet<string> publicDependencies = null;
+                foreach (var import in _imports)
                 {
-                    (publicDependencies ?? (publicDependencies = new List<int>())).Add(
-                        Dependencies.Count - 1);
+                    if (!Dependencies.Contains(import.Path))
+                        Dependencies.Add(import.Path);
+                    if (import.IsPublic)
+                    {
+                        (publicDependencies ?? (publicDependencies = new HashSet<string>())).Add(import.Path);
+                    }
+                    if (IncludeInOutput && !import.Used)
+                    {
+                        ctx.Errors.Warn(import.Token, $"import not used: '{import.Path}'");
+                    }
                 }
-                if (!import.Used)
+                // note that Dependencies should stay in declaration order to be consistent with protoc
+                if (publicDependencies != null)
                 {
-                    ctx.Errors.Warn(import.Token, $"import not used: '{import.Path}'");
+                    var arr = publicDependencies.Select(path => Dependencies.IndexOf(path)).ToArray();
+                    Array.Sort(arr);
+                    PublicDependencies = arr;
                 }
             }
-            if (publicDependencies != null)
-                PublicDependencies = publicDependencies.ToArray();
         }
 
         private void ResolveTypes(ParserContext ctx, EnumDescriptorProto type, bool options)
@@ -1128,83 +1146,97 @@ namespace Google.Protobuf.Reflection
                     {
                         foreach (var option in options.UninterpretedOptions)
                         {
-                            tokens.Clear();
-                            // AppendOption(this, writer, tokens, ctx, options.Extendee, option);
-                            while (tokens.Count != 0)
-                            {
-                                var token = tokens.Pop();
-                                ProtoWriter.EndSubItem(token, writer);
-                            }
+                            AppendOption(this, writer, tokens, ctx, options.Extendee, option);
                         }
                     }
-                } finally
+                }
+                finally
                 {
                     extension.EndAppend(target, true);
                 }
                 options.UninterpretedOptions.Clear();
             }
-            
+
         }
         private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, Stack<SubItemToken> tokens, ParserContext ctx, string extendee, UninterpretedOption option)
         {
-            
-            for(int i = 0; i < option.Names.Count; i++)
+            tokens.Clear();
+            try
             {
-                var name = option.Names[i];
-                FieldDescriptorProto field;
-                if (name.IsExtension)
+                for (int i = 0; i < option.Names.Count; i++)
                 {
-                    if (!file.TryResolveExtension(extendee, name.name_part, out field)) field = null;
-                }
-                else
-                {
-                    if (file.TryResolveMessage(extendee, null, out var msg, true))
+                    var name = option.Names[i];
+                    FieldDescriptorProto field;
+                    if (name.IsExtension)
                     {
-                        field = msg.Fields.FirstOrDefault(x => x.Name == name.name_part);
+                        if (!file.TryResolveExtension(extendee, name.name_part, out field)) field = null;
                     }
-
                     else
                     {
-                        field = null;
+                        if (file.TryResolveMessage(extendee, null, out var msg, true))
+                        {
+                            field = msg.Fields.FirstOrDefault(x => x.Name == name.name_part);
+                        }
+
+                        else
+                        {
+                            field = null;
+                        }
+
                     }
-                    
-                }
 
-                if (field == null)
-                {
-                    ctx.Errors.Error(name.Token, $"unable to resolve extension '{name.name_part}' for '{extendee}'");
-                    return;
-                }
-
-                if(i == option.Names.Count - 1)
-                {
-                    break; // process the actual value
-                }
-
-                switch(field.type)
-                {
-                    case FieldDescriptorProto.Type.TypeMessage:
-                        ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
-                        break;
-                    case FieldDescriptorProto.Type.TypeGroup:
-                        ProtoWriter.WriteFieldHeader(field.Number, WireType.StartGroup, writer);
-                        break;
-                    default:
-                        ctx.Errors.Error(name.Token, $"extension '{name.name_part}' for '{extendee}' is not a message/group");
+                    if (field == null)
+                    {
+                        ctx.Errors.Error(name.Token, $"unable to resolve extension '{name.name_part}' for '{extendee}'");
                         return;
-                }
-                tokens.Push(ProtoWriter.StartSubItem(null, writer));
-                extendee = field.TypeName;
-                file = FileDescriptorProto.GetFile(field.Parent as IType);
+                    }
+
+                    if (i == option.Names.Count - 1)
+                    {
+                        switch(field.type)
+                        {
+                            case FieldDescriptorProto.Type.TypeString:
+                                ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
+                                ProtoWriter.WriteString(option.AggregateValue, writer);
+                                break;
+                            default:
+                                ctx.Errors.Warn(option.Token, $"{field.type} options not yet implemented: '{name.name_part}' = '{option.AggregateValue}'");
+                                break;
+                        }
+                        break; // process the actual value
+                    }
+                    else
+                    {
+                        switch (field.type)
+                        {
+                            case FieldDescriptorProto.Type.TypeMessage:
+                                ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
+                                break;
+                            case FieldDescriptorProto.Type.TypeGroup:
+                                ProtoWriter.WriteFieldHeader(field.Number, WireType.StartGroup, writer);
+                                break;
+                            default:
+                                ctx.Errors.Error(name.Token, $"extension '{name.name_part}' for '{extendee}' is not a message/group");
+                                return;
+                        }
+                        tokens.Push(ProtoWriter.StartSubItem(null, writer));
+                        extendee = field.TypeName;
+                        file = FileDescriptorProto.GetFile(field.Parent as IType);
+                    }
+                }                
             }
-
-
-            var token = option.Names.LastOrDefault()?.Token ?? option.Token;
-            var fullName = string.Join(".", option.Names);
-            ctx.Errors.Warn(token, $"custom options not implemented: '{fullName}' = '{option.Token}'");
+            finally
+            {
+                // close any objects that we opened
+                while (tokens.Count != 0)
+                {
+                    var token = tokens.Pop();
+                    ProtoWriter.EndSubItem(token, writer);
+                }
+            }
         }
     }
-    
+
     partial class EnumDescriptorProto : ISchemaObject, IType
     {
         public byte[] ExtensionData
@@ -1487,7 +1519,8 @@ namespace Google.Protobuf.Reflection
             IEnumerable<string> IHazNames.GetNames()
             {
                 var fields = message.Fields;
-                if (fields != null) {
+                if (fields != null)
+                {
                     foreach (var field in fields) yield return field.Name;
                 }
                 foreach (var field in message.Extensions) yield return field.Name;
@@ -2312,7 +2345,7 @@ namespace ProtoBuf
             string s = val.ToString(CultureInfo.InvariantCulture);
             if (s.IndexOfAny(ExponentChars) < 0) return s;
 
-            foreach(var format in ExponentFormats)
+            foreach (var format in ExponentFormats)
             {
                 var tmp = val.ToString(format, CultureInfo.InvariantCulture);
                 if (float.TryParse(tmp, NumberStyles.Any, CultureInfo.InvariantCulture, out var x) && x == val) return tmp;

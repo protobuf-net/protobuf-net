@@ -81,7 +81,8 @@ namespace ProtoBuf.Schemas
         public void CompareProtoToParser(string path)
         {
             var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
-            _output.WriteLine(schemaPath);
+            _output.WriteLine(Path.GetDirectoryName(
+                Path.Combine(schemaPath, path).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)));
 
             var protocBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "protoc.bin"));
             int exitCode;
