@@ -5,6 +5,7 @@
     <Description>ProtoBuf DSL (proto2 / proto3) tools for protobuf-net</Description>
     <TargetFrameworks>net40;netstandard1.3</TargetFrameworks><!--net20;net35;-->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'jsil'">
     <TargetFrameworks>net40</TargetFrameworks>

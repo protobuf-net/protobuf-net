@@ -909,7 +909,7 @@ namespace Google.Protobuf.Reflection
                 child.Parent = parent;
                 SetParents(fqn, child);
             }
-            foreach(var ext in parent.Extensions)
+            foreach (var ext in parent.Extensions)
             {
                 ext.Parent = parent;
             }
@@ -1041,12 +1041,12 @@ namespace Google.Protobuf.Reflection
             if (options)
             {
                 ResolveOptions(ctx, type.Options);
+                foreach (var decl in type.OneofDecls)
+                    ResolveOptions(ctx, decl.Options);
             }
-            else
-            {
-                ResolveTypes(ctx, type.Fields, type, options);
-                ResolveTypes(ctx, type.Extensions, type, options);
-            }
+            
+            ResolveTypes(ctx, type.Fields, type, options);
+            ResolveTypes(ctx, type.Extensions, type, options);
             foreach (var nested in type.NestedTypes)
             {
                 ResolveTypes(ctx, nested, options);
@@ -1120,28 +1120,25 @@ namespace Google.Protobuf.Reflection
 
         private void ResolveOptions(ParserContext ctx, ISchemaOptions options)
         {
-            if (options == null) return;
-
-            if (options.UninterpretedOptions.Count != 0)
+            if (options == null || options.UninterpretedOptions.Count == 0) return;
+            
+            var extension = ((IExtensible)options).GetExtensionObject(true);
+            var target = extension.BeginAppend();
+            try
             {
-                var extension = ((IExtensible)options).GetExtensionObject(true);
-                var target = extension.BeginAppend();
-                try
+                using (var writer = new ProtoWriter(target, null, null))
                 {
-                    using (var writer = new ProtoWriter(target, null, null))
+                    var hive = OptionHive.Build(options.UninterpretedOptions);
+                    foreach (var option in hive.Children)
                     {
-                        var hive = OptionHive.Build(options.UninterpretedOptions);
-                        foreach (var option in hive.Children)
-                        {
-                            AppendOption(this, writer, ctx, options.Extendee, option);
-                        }
+                        AppendOption(this, writer, ctx, options.Extendee, option);
                     }
-                    options.UninterpretedOptions.RemoveAll(x => x.Applied);
                 }
-                finally
-                {
-                    extension.EndAppend(target, true);
-                }
+                options.UninterpretedOptions.RemoveAll(x => x.Applied);
+            }
+            finally
+            {
+                extension.EndAppend(target, true);
             }
 
         }
@@ -1163,13 +1160,13 @@ namespace Google.Protobuf.Reflection
             private void Concat(StringBuilder sb)
             {
                 bool isFirst = true;
-                foreach(var value in Options)
+                foreach (var value in Options)
                 {
                     if (!isFirst) sb.Append(", ");
                     isFirst = false;
                     sb.Append(value);
                 }
-                foreach(var child in Children)
+                foreach (var child in Children)
                 {
                     if (!isFirst) sb.Append(", ");
                     sb.Append(child.Name).Append("={");
@@ -1185,17 +1182,17 @@ namespace Google.Protobuf.Reflection
 
             public static OptionHive Build(List<UninterpretedOption> options)
             {
-                if(options == null || options.Count == 0) return null;
+                if (options == null || options.Count == 0) return null;
 
                 var root = new OptionHive(null, false, default(Token));
-                foreach(var option in options)
+                foreach (var option in options)
                 {
                     var level = root;
                     OptionHive nextLevel = null;
-                    foreach(var name in option.Names)
+                    foreach (var name in option.Names)
                     {
                         nextLevel = level.Children.FirstOrDefault(x => x.Name == name.name_part && x.IsExtension == name.IsExtension);
-                        if(nextLevel == null)
+                        if (nextLevel == null)
                         {
                             nextLevel = new OptionHive(name.name_part, name.IsExtension, name.Token);
                             level.Children.Add(nextLevel);
@@ -1215,7 +1212,7 @@ namespace Google.Protobuf.Reflection
 
             // resolve the field for this level
             FieldDescriptorProto field;
-            if(option.IsExtension)
+            if (option.IsExtension)
             {
                 if (!file.TryResolveExtension(extendee, option.Name, out field)) field = null;
             }
@@ -1234,11 +1231,11 @@ namespace Google.Protobuf.Reflection
                 return;
             }
 
-            switch(field.type)
+            switch (field.type)
             {
                 case FieldDescriptorProto.Type.TypeMessage:
                 case FieldDescriptorProto.Type.TypeGroup:
-                    if(option.Children.Count != 0)
+                    if (option.Children.Count != 0)
                     {
                         ProtoWriter.WriteFieldHeader(field.Number,
                             field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
@@ -1251,43 +1248,35 @@ namespace Google.Protobuf.Reflection
                         }
                         ProtoWriter.EndSubItem(tok, writer);
                     }
-                    foreach(var values in option.Options)
+                    foreach (var values in option.Options)
                     {
                         ctx.Errors.Error(option.Token, $"unable to assign custom option '{option.Name}' for '{extendee}'");
                     }
                     break;
                 default:
-                    foreach(var child in option.Children)
+                    foreach (var child in option.Children)
                     {
                         ctx.Errors.Error(option.Token, $"unable to assign custom option '{child.Name}' for '{extendee}'");
                     }
-                    foreach(var value in option.Options)
+                    foreach (var value in option.Options)
                     {
                         int i32;
                         switch (field.type)
                         {
-                            case FieldDescriptorProto.Type.TypeString:
-                                if (ShouldWrite(field, value.AggregateValue, ""))
-                                {
-                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
-                                    ProtoWriter.WriteString(value.AggregateValue, writer);
-                                }
-                                value.Applied = true;
-                                break;
                             case FieldDescriptorProto.Type.TypeFloat:
-                                if(!TokenExtensions.TryParseSingle(value.AggregateValue, out var f32))
+                                if (!TokenExtensions.TryParseSingle(value.AggregateValue, out var f32))
                                 {
                                     ctx.Errors.Error(option.Token, $"invalid value for floating point '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
                                     continue;
                                 }
-                                if(ShouldWrite(field, value.AggregateValue, "0"))
+                                if (ShouldWrite(field, value.AggregateValue, "0"))
                                 {
                                     ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed32, writer);
                                     ProtoWriter.WriteSingle(f32, writer);
                                 }
                                 break;
                             case FieldDescriptorProto.Type.TypeDouble:
-                                if (!TokenExtensions.TryParseSingle(value.AggregateValue, out var f64))
+                                if (!TokenExtensions.TryParseDouble(value.AggregateValue, out var f64))
                                 {
                                     ctx.Errors.Error(option.Token, $"invalid value for floating point '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
                                     continue;
@@ -1316,7 +1305,6 @@ namespace Google.Protobuf.Reflection
                                     ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
                                     ProtoWriter.WriteInt32(i32, writer);
                                 }
-                                value.Applied = true;
                                 break;
                             case FieldDescriptorProto.Type.TypeUint32:
                             case FieldDescriptorProto.Type.TypeFixed32:
@@ -1367,14 +1355,14 @@ namespace Google.Protobuf.Reflection
                             case FieldDescriptorProto.Type.TypeInt32:
                             case FieldDescriptorProto.Type.TypeSint32:
                             case FieldDescriptorProto.Type.TypeSfixed32:
-                                if(!TokenExtensions.TryParseInt32(value.AggregateValue, out i32))
+                                if (!TokenExtensions.TryParseInt32(value.AggregateValue, out i32))
                                 {
                                     ctx.Errors.Error(option.Token, $"invalid value for integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
                                     continue;
                                 }
                                 if (ShouldWrite(field, value.AggregateValue, "0"))
                                 {
-                                    switch(field.type)
+                                    switch (field.type)
                                     {
                                         case FieldDescriptorProto.Type.TypeInt32:
                                             ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
@@ -1423,6 +1411,7 @@ namespace Google.Protobuf.Reflection
                                     if (found == null)
                                     {
                                         ctx.Errors.Error(option.Token, $"invalid value for enum '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        continue;
                                     }
                                     else
                                     {
@@ -1431,21 +1420,88 @@ namespace Google.Protobuf.Reflection
                                             ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
                                             ProtoWriter.WriteInt32(found.Number, writer);
                                         }
-                                        value.Applied = true;
                                     }
                                 }
                                 else
                                 {
                                     ctx.Errors.Error(option.Token, $"unable to resolve enum '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                    continue;
+                                }
+                                break;
+                            case FieldDescriptorProto.Type.TypeString:
+                            case FieldDescriptorProto.Type.TypeBytes:
+                                if (ShouldWrite(field, value.AggregateValue, ""))
+                                {
+                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
+                                    if (value.AggregateValue == null || value.AggregateValue.IndexOf('\\') < 0)
+                                        ProtoWriter.WriteString(value.AggregateValue ?? "", writer);
+                                    else
+                                    {
+                                        using (var ms = new MemoryStream(value.AggregateValue.Length))
+                                        {
+                                            if (!LoadBytes(ms, value.AggregateValue))
+                                            {
+                                                ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                                continue;
+                                            }
+#if NETSTANDARD1_3
+                                            if (ms.TryGetBuffer(out var seg))
+                                                ProtoWriter.WriteBytes(seg.Array, seg.Offset, seg.Count, writer);
+                                            else
+                                                ProtoWriter.WriteBytes(ms.ToArray(), writer);
+#else
+                                            ProtoWriter.WriteBytes(ms.GetBuffer(),0, (int)ms.Length, writer);
+#endif
+                                        }
+                                    }
                                 }
                                 break;
                             default:
                                 ctx.Errors.Error(option.Token, $"{field.type} options not yet implemented: '{option.Name}' = '{value.AggregateValue}'");
-                                break;
+                                continue;
                         }
+                        value.Applied = true;
                     }
                     break;
             }
+        }
+
+        private static unsafe bool LoadBytes(Stream ms, string value)
+        {
+            bool isEscaped = false;
+            byte* b = stackalloc byte[10];
+            foreach (char c in value)
+            {
+                if (isEscaped)
+                {
+                    isEscaped = false;
+                    // only a few things remain escaped after ConsumeString:
+                    switch(c)
+                    {
+                        case '\\': ms.WriteByte((byte)'\\'); break;
+                        case '\'': ms.WriteByte((byte)'\''); break;
+                        case '"': ms.WriteByte((byte)'"'); break;
+                        case 'r': ms.WriteByte((byte)'\r'); break;
+                        case 'n': ms.WriteByte((byte)'\n'); break;
+                        case 't': ms.WriteByte((byte)'\t'); break;
+                        default: return false;
+                    }
+                }
+                else if (c == '\\')
+                {
+                    isEscaped = true;
+                }
+                else
+                {
+                    var x = c; // can't take address of readonly local
+                    int bytes = Encoding.UTF8.GetBytes(&x, 1, b, 10);
+                    for (int i = 0; i < bytes; i++)
+                    {
+                        ms.WriteByte(b[i]);
+                    }
+                }
+            }
+            return !isEscaped;
         }
     }
 
@@ -2343,20 +2399,20 @@ namespace ProtoBuf
                 var keyToken = tokens.Previous;
                 if (isExtension) tokens.Consume(TokenType.Symbol, isBlock ? "]" : ")");
 
-                if(!isExtension && key.StartsWith("."))
+                if (!isExtension && key.StartsWith("."))
                 {
                     key = key.TrimStart(Period);
                 }
 
                 key = key.Trim();
-                if(isExtension || nameParts.Count == 0 || key.IndexOf('.') < 0)
+                if (isExtension || nameParts.Count == 0 || key.IndexOf('.') < 0)
                 {
                     var name = new UninterpretedOption.NamePart { IsExtension = isExtension, name_part = key, Token = keyToken };
                     nameParts.Add(name);
                 }
                 else
                 {
-                    foreach(var part in key.Split(Period, StringSplitOptions.RemoveEmptyEntries))
+                    foreach (var part in key.Split(Period, StringSplitOptions.RemoveEmptyEntries))
                     {
                         var name = new UninterpretedOption.NamePart { IsExtension = false, name_part = part, Token = keyToken };
                         nameParts.Add(name);
@@ -2365,7 +2421,7 @@ namespace ProtoBuf
             } while (!(
             (isBlock && tokens.Is(TokenType.Symbol, "{"))
             || tokens.ConsumeIf(TokenType.Symbol, isBlock ? ":" : "=")));
-            
+
             if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
                 if (obj == null) obj = new T();
@@ -2473,7 +2529,7 @@ namespace ProtoBuf
                 case FieldDescriptorProto.Type.TypeInt32:
                 case FieldDescriptorProto.Type.TypeSint32:
                     {
-                        if(TokenExtensions.TryParseInt32(defaultValue, out var val))
+                        if (TokenExtensions.TryParseInt32(defaultValue, out var val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }

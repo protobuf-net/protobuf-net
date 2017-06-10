@@ -299,9 +299,8 @@ namespace ProtoBuf
                     return;
                 }
                 byte* b = stackalloc byte[10];
-                char* c = stackalloc char[1];
-                c[0] = checked((char)codePoint);
-                int count = Encoding.UTF8.GetBytes(c, 1, b, 10);
+                char c = checked((char)codePoint);
+                int count = Encoding.UTF8.GetBytes(&c, 1, b, 10);
                 for (int i = 0; i < count; i++)
                 {
                     target.WriteByte(b[i]);
