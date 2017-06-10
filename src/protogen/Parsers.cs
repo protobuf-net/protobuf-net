@@ -1129,10 +1129,11 @@ namespace Google.Protobuf.Reflection
                 using (var writer = new ProtoWriter(target, null, null))
                 {
                     var hive = OptionHive.Build(options.UninterpretedOptions);
-                    foreach (var option in hive.Children)
-                    {
-                        AppendOption(this, writer, ctx, options.Extendee, option);
-                    }
+
+                    // first pass is used to sort the fields so we write them in the right order
+                    AppendOptions(this, writer, ctx, options.Extendee, hive.Children, true, 0);
+                    // second pass applies the data
+                    AppendOptions(this, writer, ctx, options.Extendee, hive.Children, false, 0);
                 }
                 options.UninterpretedOptions.RemoveAll(x => x.Applied);
             }
@@ -1179,6 +1180,7 @@ namespace Google.Protobuf.Reflection
             public Token Token { get; }
             public List<UninterpretedOption> Options { get; } = new List<UninterpretedOption>();
             public List<OptionHive> Children { get; } = new List<OptionHive>();
+            public FieldDescriptorProto Field { get; set; }
 
             public static OptionHive Build(List<UninterpretedOption> options)
             {
@@ -1204,15 +1206,29 @@ namespace Google.Protobuf.Reflection
                 return root;
             }
         }
+        private static void AppendOptions(FileDescriptorProto file, ProtoWriter writer, ParserContext ctx, string extendee, List<OptionHive> options, bool resolveOnly, int depth)
+        {
+            foreach (var option in options)
+                AppendOption(file, writer, ctx, extendee, option, resolveOnly, depth);
 
-        private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, ParserContext ctx, string extendee, OptionHive option)
+            if (resolveOnly && depth != 0) // fun fact: proto writes root fields in *file* order, but sub-fields in *field* order
+            {
+                // ascending field order
+                options.Sort((x, y) => (x.Field?.Number ?? 0).CompareTo(y.Field?.Number ?? 0));
+            }
+        }
+        private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth)
         {
             bool ShouldWrite(FieldDescriptorProto f, string v, string d)
                 => f.label != FieldDescriptorProto.Label.LabelOptional || v != (f.DefaultValue ?? d);
 
             // resolve the field for this level
-            FieldDescriptorProto field;
-            if (option.IsExtension)
+            FieldDescriptorProto field = option.Field;
+            if(field != null)
+            {
+                // already resolved
+            }
+            else if (option.IsExtension)
             {
                 if (!file.TryResolveExtension(extendee, option.Name, out field)) field = null;
             }
@@ -1227,9 +1243,13 @@ namespace Google.Protobuf.Reflection
 
             if (field == null)
             {
-                ctx.Errors.Error(option.Token, $"unable to resolve custom option '{option.Name}' for '{extendee}'");
+                if (!resolveOnly)
+                {
+                    ctx.Errors.Error(option.Token, $"unable to resolve custom option '{option.Name}' for '{extendee}'");
+                }
                 return;
             }
+            option.Field = field;
 
             switch (field.type)
             {
@@ -1237,23 +1257,44 @@ namespace Google.Protobuf.Reflection
                 case FieldDescriptorProto.Type.TypeGroup:
                     if (option.Children.Count != 0)
                     {
-                        ProtoWriter.WriteFieldHeader(field.Number,
-                            field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
-                        var tok = ProtoWriter.StartSubItem(null, writer);
+                        var tok = default(SubItemToken);
+                        if (!resolveOnly)
+                        {
+                            ProtoWriter.WriteFieldHeader(field.Number,
+                                field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
+                            tok = ProtoWriter.StartSubItem(null, writer);
+                        }
 
                         var nextFile = GetFile(field.Parent as IType);
-                        foreach (var child in option.Children)
+                        AppendOptions(nextFile, writer, ctx, field.TypeName, option.Children, resolveOnly, depth + 1);
+
+                        if (!resolveOnly)
                         {
-                            AppendOption(nextFile, writer, ctx, field.TypeName, child);
+                            ProtoWriter.EndSubItem(tok, writer);
                         }
-                        ProtoWriter.EndSubItem(tok, writer);
                     }
-                    foreach (var values in option.Options)
+                    if (resolveOnly) return; // nothing more to do
+
+                    if (option.Options.Count == 1 && !option.Options.Single().ShouldSerializeAggregateValue())
                     {
-                        ctx.Errors.Error(option.Token, $"unable to assign custom option '{option.Name}' for '{extendee}'");
+                        // need to write an empty object to match protoc
+                        ProtoWriter.WriteFieldHeader(field.Number,
+                               field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
+                        var tok = ProtoWriter.StartSubItem(null, writer);
+                        ProtoWriter.EndSubItem(tok, writer);
+                        option.Options.Single().Applied = true;
+                    }
+                    else
+                    {
+                        foreach (var values in option.Options)
+                        {
+                            ctx.Errors.Error(option.Token, $"unable to assign custom option '{option.Name}' for '{extendee}'");
+                        }
                     }
                     break;
                 default:
+                    if(resolveOnly) return; // nothing more to do
+
                     foreach (var child in option.Children)
                     {
                         ctx.Errors.Error(option.Token, $"unable to assign custom option '{child.Name}' for '{extendee}'");
@@ -2425,9 +2466,17 @@ namespace ProtoBuf
             if (tokens.ConsumeIf(TokenType.Symbol, "{"))
             {
                 if (obj == null) obj = new T();
+                bool any = false;
                 while (!tokens.ConsumeIf(TokenType.Symbol, "}"))
                 {
                     ReadOption(ref obj, parent, nameParts);
+                    any = true;
+                }
+                if(!any)
+                {
+                    var newOption = new UninterpretedOption();
+                    newOption.Names.AddRange(nameParts);
+                    obj.UninterpretedOptions.Add(newOption);
                 }
             }
             else
