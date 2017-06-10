@@ -3,9 +3,14 @@
   <PropertyGroup>    
     <TargetFramework>netcoreapp1.1</TargetFramework>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <Configurations>Debug;Release;VS</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='VS|AnyCPU'">
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 

@@ -3,19 +3,24 @@
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks><!--net20;net35;-->
+    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks>
+    <!--net20;net35;-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants> <!-- new build tools spit these out -->
+    <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
+    <!-- new build tools spit these out -->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    
+
     <!-- this is how we will configure the builds relatively cleanly -->
     <ImportLibs>net</ImportLibs>
     <FeatureCompiler>true</FeatureCompiler>
     <FeatureServiceModel>true</FeatureServiceModel>
     <PlatformXmlSerializer>true</PlatformXmlSerializer>
     <PlatformBinaryFormatter>true</PlatformBinaryFormatter>
+    <Configurations>Debug;Release;VS</Configurations>
   </PropertyGroup>
-
+  <PropertyGroup Condition="'$(Configuration)' == 'VS'">
+    <TargetFrameworks>net40;netstandard1.3;net20;net35</TargetFrameworks>
+  </PropertyGroup>
   <!-- define configuration per-platform -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20'">
     <FeatureServiceModel>false</FeatureServiceModel>
@@ -28,16 +33,16 @@
 
   <!-- apply the configuration options (typical via defines that switch code flows) -->
   <PropertyGroup Condition="'$(FeatureCompiler)' == 'true'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER</DefineConstants>    
+    <DefineConstants>$(DefineConstants);FEAT_COMPILER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(FeatureServiceModel)' == 'true'">
-    <DefineConstants>$(DefineConstants);FEAT_SERVICEMODEL</DefineConstants>    
+    <DefineConstants>$(DefineConstants);FEAT_SERVICEMODEL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformXmlSerializer)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_XMLSERIALIZER</DefineConstants>    
+    <DefineConstants>$(DefineConstants);PLAT_XMLSERIALIZER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformBinaryFormatter)' == 'true'">
-    <DefineConstants>$(DefineConstants);PLAT_BINARYFORMATTER</DefineConstants>    
+    <DefineConstants>$(DefineConstants);PLAT_BINARYFORMATTER</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(ImportLibs)' == 'net'">
     <Reference Include="System" />
