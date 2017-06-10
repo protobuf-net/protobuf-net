@@ -121,25 +121,85 @@ namespace ProtoBuf
                 token.Throw("Unable to parse " + typeof(T).Name);
             return val;
         }
+        internal static bool TryParseUInt32(string token, out uint val, uint? max = null)
+        {
+            if (max.HasValue && token == "max")
+            {
+                val = max.GetValueOrDefault();
+                return true;
+            }
 
+            if (token.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && uint.TryParse(token.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+            {
+                return true;
+            }
+
+            return uint.TryParse(token, NumberStyles.Integer | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
+        }
+        internal static bool TryParseUInt64(string token, out ulong val, ulong? max = null)
+        {
+            if (max.HasValue && token == "max")
+            {
+                val = max.GetValueOrDefault();
+                return true;
+            }
+
+            if (token.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && ulong.TryParse(token.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+            {
+                return true;
+            }
+
+            return ulong.TryParse(token, NumberStyles.Integer | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
+        }
+        internal static bool TryParseInt32(string token, out int val, int? max = null)
+        {
+            if (max.HasValue && token == "max")
+            {
+                val = max.GetValueOrDefault();
+                return true;
+            }
+
+            if (token.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+            {
+                val = -val;
+                return true;
+            }
+
+            if (token.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+            {
+                return true;
+            }
+
+            return int.TryParse(token, NumberStyles.Integer | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
+        }
+        internal static bool TryParseInt64(string token, out long val, long? max = null)
+        {
+            if (max.HasValue && token == "max")
+            {
+                val = max.GetValueOrDefault();
+                return true;
+            }
+
+            if (token.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(token.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+            {
+                val = -val;
+                return true;
+            }
+
+            if (token.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(token.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
+            {
+                return true;
+            }
+
+            return long.TryParse(token, NumberStyles.Integer | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
+        }
         internal static int ConsumeInt32(this Peekable<Token> tokens, int? max = null)
         {
             var token = tokens.Read();
             token.Assert(TokenType.AlphaNumeric);
             tokens.Consume();
-            if (max.HasValue && token.Value == "max") return max.Value;
 
-            int val;
-
-            if (token.Value.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
-                return -val;
-
-            if (token.Value.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
-                return val;
-
-            if (int.TryParse(token.Value, NumberStyles.Integer | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val))
-                return val;
-
+            if (TryParseInt32(token.Value, out int val, max)) return val;
             throw token.Throw("Unable to parse integer");
         }
 
@@ -215,7 +275,7 @@ namespace ProtoBuf
 
         // the normalized output *includes* the slashes, but expands octal to 3 places;
         // it is the job of codegen to change this normalized form to the target language form
-        private static void ReadStringBytes(ref MemoryStream ms, string value)
+        internal static void ReadStringBytes(ref MemoryStream ms, string value)
         {
             void AppendAscii(MemoryStream target, string ascii)
             {
@@ -529,6 +589,44 @@ namespace ProtoBuf
                 }
             }
 
+        }
+        internal static bool TryParseSingle(string token, out float val)
+        {
+            if (token == "nan")
+            {
+                val = float.NaN;
+                return true;
+            }
+            if (token == "inf")
+            {
+                val = float.PositiveInfinity;
+                return true;
+            }
+            if (token == "-inf")
+            {
+                val = float.NegativeInfinity;
+                return true;
+            }
+            return float.TryParse(token, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
+        }
+        internal static bool TryParseDouble(string token, out double val)
+        {
+            if(token == "nan")
+            {
+                val = double.NaN;
+                return true;
+            }
+            if(token == "inf")
+            {
+                val = double.PositiveInfinity;
+                return true;
+            }
+            if(token == "-inf")
+            {
+                val = double.NegativeInfinity;
+                return true;
+            }
+            return double.TryParse(token, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val);
         }
     }
 }

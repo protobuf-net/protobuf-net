@@ -1263,6 +1263,7 @@ namespace Google.Protobuf.Reflection
                     }
                     foreach(var value in option.Options)
                     {
+                        int i32;
                         switch (field.type)
                         {
                             case FieldDescriptorProto.Type.TypeString:
@@ -1272,6 +1273,148 @@ namespace Google.Protobuf.Reflection
                                     ProtoWriter.WriteString(value.AggregateValue, writer);
                                 }
                                 value.Applied = true;
+                                break;
+                            case FieldDescriptorProto.Type.TypeFloat:
+                                if(!TokenExtensions.TryParseSingle(value.AggregateValue, out var f32))
+                                {
+                                    ctx.Errors.Error(option.Token, $"invalid value for floating point '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                    continue;
+                                }
+                                if(ShouldWrite(field, value.AggregateValue, "0"))
+                                {
+                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed32, writer);
+                                    ProtoWriter.WriteSingle(f32, writer);
+                                }
+                                break;
+                            case FieldDescriptorProto.Type.TypeDouble:
+                                if (!TokenExtensions.TryParseSingle(value.AggregateValue, out var f64))
+                                {
+                                    ctx.Errors.Error(option.Token, $"invalid value for floating point '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                    continue;
+                                }
+                                if (ShouldWrite(field, value.AggregateValue, "0"))
+                                {
+                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed64, writer);
+                                    ProtoWriter.WriteDouble(f64, writer);
+                                }
+                                break;
+                            case FieldDescriptorProto.Type.TypeBool:
+                                switch (value.AggregateValue)
+                                {
+                                    case "true":
+                                        i32 = 1;
+                                        break;
+                                    case "false":
+                                        i32 = 0;
+                                        break;
+                                    default:
+                                        ctx.Errors.Error(option.Token, $"invalid value for boolean '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        continue;
+                                }
+                                if (ShouldWrite(field, value.AggregateValue, "false"))
+                                {
+                                    ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
+                                    ProtoWriter.WriteInt32(i32, writer);
+                                }
+                                value.Applied = true;
+                                break;
+                            case FieldDescriptorProto.Type.TypeUint32:
+                            case FieldDescriptorProto.Type.TypeFixed32:
+                                {
+                                    if (!TokenExtensions.TryParseUInt32(value.AggregateValue, out var ui32))
+                                    {
+                                        ctx.Errors.Error(option.Token, $"invalid value for unsigned integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        continue;
+                                    }
+                                    if (ShouldWrite(field, value.AggregateValue, "0"))
+                                    {
+                                        switch (field.type)
+                                        {
+                                            case FieldDescriptorProto.Type.TypeUint32:
+                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
+                                                break;
+                                            case FieldDescriptorProto.Type.TypeFixed32:
+                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed32, writer);
+                                                break;
+                                        }
+                                        ProtoWriter.WriteUInt32(ui32, writer);
+                                    }
+                                }
+                                break;
+                            case FieldDescriptorProto.Type.TypeUint64:
+                            case FieldDescriptorProto.Type.TypeFixed64:
+                                {
+                                    if (!TokenExtensions.TryParseUInt64(value.AggregateValue, out var ui64))
+                                    {
+                                        ctx.Errors.Error(option.Token, $"invalid value for unsigned integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        continue;
+                                    }
+                                    if (ShouldWrite(field, value.AggregateValue, "0"))
+                                    {
+                                        switch (field.type)
+                                        {
+                                            case FieldDescriptorProto.Type.TypeUint64:
+                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
+                                                break;
+                                            case FieldDescriptorProto.Type.TypeFixed64:
+                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed64, writer);
+                                                break;
+                                        }
+                                        ProtoWriter.WriteUInt64(ui64, writer);
+                                    }
+                                }
+                                break;
+                            case FieldDescriptorProto.Type.TypeInt32:
+                            case FieldDescriptorProto.Type.TypeSint32:
+                            case FieldDescriptorProto.Type.TypeSfixed32:
+                                if(!TokenExtensions.TryParseInt32(value.AggregateValue, out i32))
+                                {
+                                    ctx.Errors.Error(option.Token, $"invalid value for integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                    continue;
+                                }
+                                if (ShouldWrite(field, value.AggregateValue, "0"))
+                                {
+                                    switch(field.type)
+                                    {
+                                        case FieldDescriptorProto.Type.TypeInt32:
+                                            ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
+                                            break;
+                                        case FieldDescriptorProto.Type.TypeSint32:
+                                            ProtoWriter.WriteFieldHeader(field.Number, WireType.SignedVariant, writer);
+                                            break;
+                                        case FieldDescriptorProto.Type.TypeSfixed32:
+                                            ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed32, writer);
+                                            break;
+                                    }
+                                    ProtoWriter.WriteInt32(i32, writer);
+                                }
+                                break;
+                            case FieldDescriptorProto.Type.TypeInt64:
+                            case FieldDescriptorProto.Type.TypeSint64:
+                            case FieldDescriptorProto.Type.TypeSfixed64:
+                                {
+                                    if (!TokenExtensions.TryParseInt64(value.AggregateValue, out var i64))
+                                    {
+                                        ctx.Errors.Error(option.Token, $"invalid value for integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        continue;
+                                    }
+                                    if (ShouldWrite(field, value.AggregateValue, "0"))
+                                    {
+                                        switch (field.type)
+                                        {
+                                            case FieldDescriptorProto.Type.TypeInt64:
+                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Variant, writer);
+                                                break;
+                                            case FieldDescriptorProto.Type.TypeSint64:
+                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.SignedVariant, writer);
+                                                break;
+                                            case FieldDescriptorProto.Type.TypeSfixed64:
+                                                ProtoWriter.WriteFieldHeader(field.Number, WireType.Fixed64, writer);
+                                                break;
+                                        }
+                                        ProtoWriter.WriteInt64(i64, writer);
+                                    }
+                                }
                                 break;
                             case FieldDescriptorProto.Type.TypeEnum:
                                 if (file.TryResolveEnum(field.TypeName, null, out var @enum, true, true))
@@ -1297,7 +1440,7 @@ namespace Google.Protobuf.Reflection
                                 }
                                 break;
                             default:
-                                ctx.Errors.Warn(option.Token, $"{field.type} options not yet implemented: '{option.Name}' = '{value.AggregateValue}'");
+                                ctx.Errors.Error(option.Token, $"{field.type} options not yet implemented: '{option.Name}' = '{value.AggregateValue}'");
                                 break;
                         }
                     }
@@ -2182,7 +2325,7 @@ namespace ProtoBuf
                 }
             }
         }
-        
+        static readonly char[] Period = { '.' };
         private void ReadOption<T>(ref T obj, ISchemaObject parent, List<UninterpretedOption.NamePart> existingNameParts = null) where T : class, ISchemaOptions, new()
         {
             var tokens = Tokens;
@@ -2193,13 +2336,32 @@ namespace ProtoBuf
 
             do
             {
+                if (nameParts.Count != 0) tokens.ConsumeIf(TokenType.Symbol, ".");
+
                 bool isExtension = tokens.ConsumeIf(TokenType.Symbol, isBlock ? "[" : "(");
                 string key = tokens.Consume(TokenType.AlphaNumeric);
                 var keyToken = tokens.Previous;
                 if (isExtension) tokens.Consume(TokenType.Symbol, isBlock ? "]" : ")");
 
-                var name = new UninterpretedOption.NamePart { IsExtension = isExtension, name_part = key, Token = keyToken };
-                nameParts.Add(name);
+                if(!isExtension && key.StartsWith("."))
+                {
+                    key = key.TrimStart(Period);
+                }
+
+                key = key.Trim();
+                if(isExtension || nameParts.Count == 0 || key.IndexOf('.') < 0)
+                {
+                    var name = new UninterpretedOption.NamePart { IsExtension = isExtension, name_part = key, Token = keyToken };
+                    nameParts.Add(name);
+                }
+                else
+                {
+                    foreach(var part in key.Split(Period, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var name = new UninterpretedOption.NamePart { IsExtension = false, name_part = part, Token = keyToken };
+                        nameParts.Add(name);
+                    }
+                }
             } while (!(
             (isBlock && tokens.Is(TokenType.Symbol, "{"))
             || tokens.ConsumeIf(TokenType.Symbol, isBlock ? ":" : "=")));
@@ -2277,7 +2439,7 @@ namespace ProtoBuf
                         case "nan":
                             break;
                         default:
-                            if (double.TryParse(defaultValue, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var val))
+                            if (TokenExtensions.TryParseDouble(defaultValue, out var val))
                             {
                                 defaultValue = Format(val);
                             }
@@ -2296,7 +2458,7 @@ namespace ProtoBuf
                         case "nan":
                             break;
                         default:
-                            if (float.TryParse(defaultValue, NumberStyles.Number | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var val))
+                            if (TokenExtensions.TryParseSingle(defaultValue, out var val))
                             {
                                 defaultValue = Format(val);
                             }
@@ -2307,19 +2469,11 @@ namespace ProtoBuf
                             break;
                     }
                     break;
-                case FieldDescriptorProto.Type.TypeFixed32:
+                case FieldDescriptorProto.Type.TypeSfixed32:
                 case FieldDescriptorProto.Type.TypeInt32:
                 case FieldDescriptorProto.Type.TypeSint32:
                     {
-                        if (defaultValue.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
-                        {
-                            defaultValue = (-val).ToString(CultureInfo.InvariantCulture);
-                        }
-                        else if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && int.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
-                        {
-                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
-                        }
-                        else if (int.TryParse(defaultValue, NumberStyles.Number | NumberStyles.AllowLeadingSign | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out val))
+                        if(TokenExtensions.TryParseInt32(defaultValue, out var val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }
@@ -2329,52 +2483,37 @@ namespace ProtoBuf
                         }
                     }
                     break;
+                case FieldDescriptorProto.Type.TypeFixed32:
                 case FieldDescriptorProto.Type.TypeUint32:
                     {
-                        if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && uint.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
-                        {
-                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
-                        }
-                        else if (uint.TryParse(defaultValue, (NumberStyles.Number | NumberStyles.AllowExponent) & ~NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out val))
+                        if (TokenExtensions.TryParseUInt32(defaultValue, out var val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }
                         else
                         {
                             Errors.Error(token, "invalid unsigned integer");
+                        }
+                    }
+                    break;
+                case FieldDescriptorProto.Type.TypeSfixed64:
+                case FieldDescriptorProto.Type.TypeInt64:
+                case FieldDescriptorProto.Type.TypeSint64:
+                    {
+                        if (TokenExtensions.TryParseInt64(defaultValue, out var val))
+                        {
+                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
+                        }
+                        else
+                        {
+                            Errors.Error(token, "invalid integer");
                         }
                     }
                     break;
                 case FieldDescriptorProto.Type.TypeFixed64:
-                case FieldDescriptorProto.Type.TypeInt64:
-                case FieldDescriptorProto.Type.TypeSint64:
-                    {
-                        if (defaultValue.StartsWith("-0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(token.Value.Substring(3), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
-                        {
-                            defaultValue = (-val).ToString(CultureInfo.InvariantCulture);
-                        }
-                        else if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && long.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out val))
-                        {
-                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
-                        }
-                        else if (long.TryParse(defaultValue, NumberStyles.Number, CultureInfo.InvariantCulture, out val))
-                        {
-                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
-                        }
-                        else
-                        {
-                            Errors.Error(token, "invalid integer");
-                        }
-                    }
-                    break;
                 case FieldDescriptorProto.Type.TypeUint64:
                     {
-                        if (defaultValue.StartsWith("0x", StringComparison.OrdinalIgnoreCase) && ulong.TryParse(token.Value.Substring(2), NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var val))
-                        {
-                            defaultValue = val.ToString(CultureInfo.InvariantCulture);
-
-                        }
-                        else if (ulong.TryParse(defaultValue, NumberStyles.Number & ~NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out val))
+                        if (TokenExtensions.TryParseUInt64(defaultValue, out var val))
                         {
                             defaultValue = val.ToString(CultureInfo.InvariantCulture);
                         }
@@ -2384,7 +2523,14 @@ namespace ProtoBuf
                         }
                     }
                     break;
-
+                case 0:
+                case FieldDescriptorProto.Type.TypeBytes:
+                case FieldDescriptorProto.Type.TypeString:
+                case FieldDescriptorProto.Type.TypeEnum:
+                    break;
+                default:
+                    Errors.Error(token, $"default value not handled: {type}={defaultValue}");
+                    break;
             }
         }
 
