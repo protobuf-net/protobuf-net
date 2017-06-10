@@ -1044,7 +1044,7 @@ namespace Google.Protobuf.Reflection
                 foreach (var decl in type.OneofDecls)
                     ResolveOptions(ctx, decl.Options);
             }
-            
+
             ResolveTypes(ctx, type.Fields, type, options);
             ResolveTypes(ctx, type.Extensions, type, options);
             foreach (var nested in type.NestedTypes)
@@ -1121,7 +1121,7 @@ namespace Google.Protobuf.Reflection
         private void ResolveOptions(ParserContext ctx, ISchemaOptions options)
         {
             if (options == null || options.UninterpretedOptions.Count == 0) return;
-            
+
             var extension = ((IExtensible)options).GetExtensionObject(true);
             var target = extension.BeginAppend();
             try
@@ -1131,9 +1131,9 @@ namespace Google.Protobuf.Reflection
                     var hive = OptionHive.Build(options.UninterpretedOptions);
 
                     // first pass is used to sort the fields so we write them in the right order
-                    AppendOptions(this, writer, ctx, options.Extendee, hive.Children, true, 0);
+                    AppendOptions(this, writer, ctx, options.Extendee, hive.Children, true, 0, false);
                     // second pass applies the data
-                    AppendOptions(this, writer, ctx, options.Extendee, hive.Children, false, 0);
+                    AppendOptions(this, writer, ctx, options.Extendee, hive.Children, false, 0, false);
                 }
                 options.UninterpretedOptions.RemoveAll(x => x.Applied);
             }
@@ -1206,10 +1206,10 @@ namespace Google.Protobuf.Reflection
                 return root;
             }
         }
-        private static void AppendOptions(FileDescriptorProto file, ProtoWriter writer, ParserContext ctx, string extendee, List<OptionHive> options, bool resolveOnly, int depth)
+        private static void AppendOptions(FileDescriptorProto file, ProtoWriter writer, ParserContext ctx, string extendee, List<OptionHive> options, bool resolveOnly, int depth, bool messageSet)
         {
             foreach (var option in options)
-                AppendOption(file, writer, ctx, extendee, option, resolveOnly, depth);
+                AppendOption(file, writer, ctx, extendee, option, resolveOnly, depth, messageSet);
 
             if (resolveOnly && depth != 0) // fun fact: proto writes root fields in *file* order, but sub-fields in *field* order
             {
@@ -1217,14 +1217,14 @@ namespace Google.Protobuf.Reflection
                 options.Sort((x, y) => (x.Field?.Number ?? 0).CompareTo(y.Field?.Number ?? 0));
             }
         }
-        private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth)
+        private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth, bool messageSet)
         {
             bool ShouldWrite(FieldDescriptorProto f, string v, string d)
                 => f.label != FieldDescriptorProto.Label.LabelOptional || v != (f.DefaultValue ?? d);
 
             // resolve the field for this level
             FieldDescriptorProto field = option.Field;
-            if(field != null)
+            if (field != null)
             {
                 // already resolved
             }
@@ -1255,21 +1255,46 @@ namespace Google.Protobuf.Reflection
             {
                 case FieldDescriptorProto.Type.TypeMessage:
                 case FieldDescriptorProto.Type.TypeGroup:
+                    var nextFile = GetFile(field.Parent as IType);
+                    var nextMessageSet = !resolveOnly && nextFile.TryResolveMessage(field.TypeName, null, out var fieldType, true)
+                        && (fieldType.Options?.MessageSetWireFormat ?? false);
+
                     if (option.Children.Count != 0)
                     {
-                        var tok = default(SubItemToken);
-                        if (!resolveOnly)
+                        if (resolveOnly)
+                        {
+                            AppendOptions(nextFile, writer, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
+                        }
+                        else if (messageSet)
                         {
                             ProtoWriter.WriteFieldHeader(field.Number,
                                 field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
-                            tok = ProtoWriter.StartSubItem(null, writer);
+                            var outer = ProtoWriter.StartSubItem(null, writer);
+
+                            ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer);
+                            var grp = ProtoWriter.StartSubItem(null, writer);
+
+                            ProtoWriter.WriteFieldHeader(2, WireType.Variant, writer);
+                            ProtoWriter.WriteInt32(field.Number, writer);
+
+                            ProtoWriter.WriteFieldHeader(3, WireType.String, writer);
+                            var payload = ProtoWriter.StartSubItem(null, writer);
+
+                            AppendOptions(nextFile, writer, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
+
+                            ProtoWriter.EndSubItem(payload, writer);
+                            ProtoWriter.EndSubItem(grp, writer);
+
+                            ProtoWriter.EndSubItem(outer, writer);
                         }
-
-                        var nextFile = GetFile(field.Parent as IType);
-                        AppendOptions(nextFile, writer, ctx, field.TypeName, option.Children, resolveOnly, depth + 1);
-
-                        if (!resolveOnly)
+                        else
                         {
+                            ProtoWriter.WriteFieldHeader(field.Number,
+                                field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
+                            var tok = ProtoWriter.StartSubItem(null, writer);
+
+                            AppendOptions(nextFile, writer, ctx, field.TypeName, option.Children, resolveOnly, depth + 1, nextMessageSet);
+
                             ProtoWriter.EndSubItem(tok, writer);
                         }
                     }
@@ -1277,6 +1302,10 @@ namespace Google.Protobuf.Reflection
 
                     if (option.Options.Count == 1 && !option.Options.Single().ShouldSerializeAggregateValue())
                     {
+                        if(messageSet)
+                        {
+                            System.Diagnostics.Debugger.Break();
+                        }
                         // need to write an empty object to match protoc
                         ProtoWriter.WriteFieldHeader(field.Number,
                                field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
@@ -1293,7 +1322,7 @@ namespace Google.Protobuf.Reflection
                     }
                     break;
                 default:
-                    if(resolveOnly) return; // nothing more to do
+                    if (resolveOnly) return; // nothing more to do
 
                     foreach (var child in option.Children)
                     {
@@ -1517,7 +1546,7 @@ namespace Google.Protobuf.Reflection
                 {
                     isEscaped = false;
                     // only a few things remain escaped after ConsumeString:
-                    switch(c)
+                    switch (c)
                     {
                         case '\\': ms.WriteByte((byte)'\\'); break;
                         case '\'': ms.WriteByte((byte)'\''); break;
@@ -2472,7 +2501,7 @@ namespace ProtoBuf
                     ReadOption(ref obj, parent, nameParts);
                     any = true;
                 }
-                if(!any)
+                if (!any)
                 {
                     var newOption = new UninterpretedOption();
                     newOption.Names.AddRange(nameParts);

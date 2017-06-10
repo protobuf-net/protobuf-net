@@ -24,6 +24,49 @@ namespace ProtoBuf.Schemas
                select new object[] { Regex.Replace(file.Replace('\\', '/'), "^Schemas/", "") };
 
         [Fact]
+        public void CanWriteMessageSetData()
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = new ProtoWriter(ms, null, null))
+                {
+                    ProtoWriter.WriteFieldHeader(5, WireType.String, writer);
+                    var tok = ProtoWriter.StartSubItem(null, writer);
+
+                    //ProtoWriter.WriteFieldHeader(15447542, WireType.String, writer);
+                    //var tok2 = ProtoWriter.StartSubItem(null, writer);
+
+                    //ProtoWriter.WriteFieldHeader(1, WireType.String, writer);
+                    //ProtoWriter.WriteString("EmbeddedMessageSetElement", writer);
+
+                    //ProtoWriter.EndSubItem(tok2, writer);
+
+                    ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer);
+                    var tok2 = ProtoWriter.StartSubItem(null, writer);
+
+                    ProtoWriter.WriteFieldHeader(2, WireType.Variant, writer);
+                    ProtoWriter.WriteInt32(15447542, writer);
+
+                    ProtoWriter.WriteFieldHeader(3, WireType.String, writer);
+                    var tok3 = ProtoWriter.StartSubItem(null, writer);
+
+                    ProtoWriter.WriteFieldHeader(1, WireType.String, writer);
+                    ProtoWriter.WriteString("EmbeddedMessageSetElement", writer);
+
+                    ProtoWriter.EndSubItem(tok3, writer);
+                    ProtoWriter.EndSubItem(tok2, writer);
+
+                    ProtoWriter.EndSubItem(tok, writer);
+                }
+
+                var hex = BitConverter.ToString(ms.ToArray(), 0, (int)ms.Length);
+                Assert.Equal("2A-24-0B-10-F6-EB-AE-07-1A-1B-0A-19"
+                           + "-45-6D-62-65-64-64-65-64-4D-65-73-73-61-67-65-53"
+                           + "-65-74-45-6C-65-6D-65-6E-74-0C", hex);
+            }
+        }
+
+        [Fact]
         public void CanRountripExtensionData()
         {
             var obj = new CanRountripExtensionData_WithFields { X = 1, Y = 2};
@@ -225,12 +268,20 @@ namespace ProtoBuf.Schemas
 
 
 
-            var parserHex = BitConverter.ToString(File.ReadAllBytes(parserBinPath));
+            var parserBytes = File.ReadAllBytes(parserBinPath);
+            using (var ms = new MemoryStream(parserBytes))
+            {
+                var selfLoad = Serializer.Deserialize<FileDescriptorSet>(ms);
+                var selfLoadJson = JsonConvert.SerializeObject(selfLoad, Formatting.Indented, jsonSettings);
+                // should still be the same! 
+                Assert.Equal(parserJson, selfLoadJson);
+            }
+            var parserHex = GetPrettyHex(parserBytes);
             File.WriteAllText(Path.ChangeExtension(parserBinPath, "parser.hex"), parserHex);
 
             if (exitCode == 0)
             {
-                var protocHex = BitConverter.ToString(File.ReadAllBytes(protocBinPath));
+                var protocHex = GetPrettyHex(File.ReadAllBytes(protocBinPath));
                 File.WriteAllText(Path.ChangeExtension(protocBinPath, "protoc.hex"), protocHex);
 
                 // compare results
@@ -244,6 +295,20 @@ namespace ProtoBuf.Schemas
         }
 
         public SchemaTests(ITestOutputHelper output) => _output = output;
+
+        public static string GetPrettyHex(byte[] bytes)
+        {
+            var sb = new StringBuilder();
+            int left = bytes.Length, offset = 0;
+            while(left > 0)
+            {
+                int take = Math.Min(left, 16);
+                sb.AppendLine(BitConverter.ToString(bytes, offset, take));
+                left -= take;
+                offset += take;
+            }
+            return sb.ToString();
+        }
 
     }
 }
