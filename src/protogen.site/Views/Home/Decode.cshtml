@@ -1,0 +1,93 @@
+﻿@model byte[]
+@functions {
+    long Zag(long value)
+    {
+        const long Int64Msb = ((long)1) << 63;
+        return (-(value & 0x01L)) ^ ((value >> 1) & ~Int64Msb);
+    }
+    double ToDouble(long val) => BitConverter.ToDouble(BitConverter.GetBytes(val), 0);
+    double ToSingle(int val) => BitConverter.ToSingle(BitConverter.GetBytes(val), 0);
+}
+@{
+    ViewData["Title"] = "Decode";
+}
+<h2>@ViewData["Title"].</h2>
+
+@if(Model != null)
+{
+    <div>
+    @try
+    {
+        using(var ms = new System.IO.MemoryStream(Model))
+        {
+            using(var reader = new ProtoBuf.ProtoReader(ms, null, null))
+            {
+                int field = reader.ReadFieldHeader();
+                if(field < 1)
+                {
+                    <p>invalid field: @(field)</p>
+                }
+                else
+                {
+                    int headerEnd = reader.Position;
+                    <p>@BitConverter.ToString(Model, 0, headerEnd) = field <b>@(field)</b>, type <b>@(reader.WireType)</b></p>
+                    switch(reader.WireType)
+                    {
+                      case ProtoBuf.WireType.Variant:
+                          var val = reader.ReadInt64();
+                          <p>@BitConverter.ToString(Model, headerEnd, reader.Position - headerEnd) = <b>@(val)</b> (raw) or <b>@(Zag(val))</b> (zigzag)</p>
+                          break;
+                      case ProtoBuf.WireType.StartGroup:
+                          reader.SkipField();
+                          <p>payload (inc. terminator) = @BitConverter.ToString(Model, headerEnd, reader.Position - headerEnd)</p>
+                          break;
+                      case ProtoBuf.WireType.String:
+                          var bytes = ProtoBuf.ProtoReader.AppendBytes(null, reader);
+                          var lenLen = reader.Position - bytes.Length - headerEnd;
+                          <p>@BitConverter.ToString(Model, headerEnd, lenLen) = length <b>@(bytes.Length)</b></p>
+                          <p>payload = @BitConverter.ToString(bytes)</p>
+                          <form method="post"><input type="hidden" name="hex" value="@(BitConverter.ToString(bytes))" /><input type="submit" value="decode" /></form>
+                          try {
+                              var s = System.Text.Encoding.UTF8.GetString(bytes);
+                              <p>as UTF8: @(s)</p>
+                          } catch{
+                              <p>(this does not look like text data)</p>
+                          }
+                          break;
+                      case ProtoBuf.WireType.Fixed64:
+                          var val64 = reader.ReadInt64();
+                          <p>@BitConverter.ToString(Model, headerEnd, reader.Position - headerEnd) = <b>@(val64)</b> (integer) or <b>@(ToDouble(val64))</b> (floating point)</p>
+                          break;
+                      case ProtoBuf.WireType.Fixed32:
+                          var val32 = reader.ReadInt32();
+                          <p>@BitConverter.ToString(Model, headerEnd, reader.Position - headerEnd) = <b>@(val32)</b> (integer) or <b>@(ToSingle(val32))</b> (floating point)</p>
+                          break;
+                      default:
+                          <p>unexpected wire-type: @(reader.WireType)</p>
+                          break;
+                    }
+                }
+                @if(reader.Position < Model.Length)
+                {
+                <p>remaining data: @BitConverter.ToString(Model, reader.Position, Model.Length - reader.Position)</p>
+                <form method="post"><input type="hidden" name="hex" value="@(BitConverter.ToString(Model, reader.Position, Model.Length - reader.Position))"/><input type="submit" value="decode"/></form>
+                }
+            }
+        }
+    }
+    catch(Exception ex)
+    {
+    <p>@(ex.Message)</p>
+    }
+    </div>
+}
+<p>Enter your encoded message as hex to display information about the first field; you may need to call this iteratively, subtracting pieces.</p>
+<form method="post">
+    <div><textarea rows="5" style="width:100%; max-width: unset" name="hex" type="text" placeholder="encoded hex">@(Model == null ? null : BitConverter.ToString(Model))</textarea></div>
+    <div><input type="submit" value="hex"/></div>
+</form>
+
+<form method="post">
+    <div><textarea rows="5" style="width:100%;  max-width: unset" name="base64" type="text" placeholder="encoded base64">@(Model == null ? null : Convert.ToBase64String(Model))</textarea></div>
+    <div><input type="submit" value="base-64"/></div>
+</form>

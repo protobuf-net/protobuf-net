@@ -62,6 +62,36 @@ namespace protogen.site.Controllers
             public string ProtocVersion { get; set; }
             public bool CanUseProtoc { get; set; }
         }
+
+        [Route("/decode")]
+        public ActionResult Decode(string hex = null, string base64 = null)
+        {
+            byte[] data = null;
+            try
+            {
+                if (hex != null) hex = hex.Trim();
+                if (base64 != null) base64 = base64.Trim();
+
+                if (!string.IsNullOrWhiteSpace(hex))
+                {
+                    hex = hex.Replace(" ", "").Replace("-", "");
+                    int len = hex.Length / 2;
+                    var tmp = new byte[len];
+                    for(int i = 0; i < len; i++)
+                    {
+                        tmp[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
+                    }
+                    data = tmp;
+                }
+                else if (!string.IsNullOrWhiteSpace(base64))
+                {
+                    data = Convert.FromBase64String(base64);
+                }
+            }
+            catch { }
+            return View(data);
+        }
+
         [Route("/generate")]
         [HttpPost]
         public GenerateResult Generate(string schema = null, string tooling = null)

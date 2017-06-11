@@ -2456,7 +2456,7 @@ namespace ProtoBuf
 
             do
             {
-                if (nameParts.Count != 0) tokens.ConsumeIf(TokenType.Symbol, ".");
+                if (nameParts.Count != 0) tokens.ConsumeIf(TokenType.AlphaNumeric, ".");
 
                 bool isExtension = tokens.ConsumeIf(TokenType.Symbol, isBlock ? "[" : "(");
                 string key = tokens.Consume(TokenType.AlphaNumeric);

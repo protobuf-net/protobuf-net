@@ -15,7 +15,6 @@
   <ItemGroup>
     <Content Include="wwwroot\js\home.js" />
     <Content Include="wwwroot\js\proto3lang.js" />
-    <Content Include="wwwroot\protoc.exe" />
     <Content Include="wwwroot\protoc\google\protobuf\duration.proto" />
     <Content Include="wwwroot\protoc\google\protobuf\timestamp.proto" />
     <Content Include="wwwroot\protoc\protoc.exe" />
