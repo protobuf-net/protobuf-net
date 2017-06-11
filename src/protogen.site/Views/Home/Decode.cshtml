@@ -8,7 +8,7 @@
 {
     <div>@Html.Partial("DecodeBytes", Model)</div>
 }
-<p>Enter your encoded message as hex to display information about the first field.</p>
+<p>This tool will pull apart arbitrary protobuf data (without requiring a schema), displaying the hierarchical content.</p>
 <form method="post">
     <div><textarea rows="5" style="width:100%; max-width: unset" name="hex" type="text" placeholder="encoded hex">@Model.AsHex()</textarea></div>
     <div><input type="submit" value="hex"/> <label for="hex_deep"><input id="hex_deep" type="checkbox" name="deep" value="true" checked="@Model.Deep" /> recursively</label></div>
