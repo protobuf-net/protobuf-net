@@ -1296,15 +1296,27 @@ namespace Google.Protobuf.Reflection
 
                     if (option.Options.Count == 1 && !option.Options.Single().ShouldSerializeAggregateValue())
                     {
+                        // need to write an empty object to match protoc
                         if (messageSet)
                         {
-                            System.Diagnostics.Debugger.Break();
+                            ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer);
+                            var grp = ProtoWriter.StartSubItem(null, writer);
+
+                            ProtoWriter.WriteFieldHeader(2, WireType.Variant, writer);
+                            ProtoWriter.WriteInt32(field.Number, writer);
+
+                            ProtoWriter.WriteFieldHeader(3, WireType.String, writer);
+                            var payload = ProtoWriter.StartSubItem(null, writer);
+                            ProtoWriter.EndSubItem(payload, writer);
+                            ProtoWriter.EndSubItem(grp, writer);
                         }
-                        // need to write an empty object to match protoc
-                        ProtoWriter.WriteFieldHeader(field.Number,
-                               field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
-                        var tok = ProtoWriter.StartSubItem(null, writer);
-                        ProtoWriter.EndSubItem(tok, writer);
+                        else
+                        {
+                            ProtoWriter.WriteFieldHeader(field.Number,
+                                   field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
+                            var payload = ProtoWriter.StartSubItem(null, writer);
+                            ProtoWriter.EndSubItem(payload, writer);
+                        }
                         option.Options.Single().Applied = true;
                     }
                     else
