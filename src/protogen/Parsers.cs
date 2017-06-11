@@ -1267,10 +1267,6 @@ namespace Google.Protobuf.Reflection
                         }
                         else if (messageSet)
                         {
-                            ProtoWriter.WriteFieldHeader(field.Number,
-                                field.type == FieldDescriptorProto.Type.TypeGroup ? WireType.StartGroup : WireType.String, writer);
-                            var outer = ProtoWriter.StartSubItem(null, writer);
-
                             ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer);
                             var grp = ProtoWriter.StartSubItem(null, writer);
 
@@ -1284,8 +1280,6 @@ namespace Google.Protobuf.Reflection
 
                             ProtoWriter.EndSubItem(payload, writer);
                             ProtoWriter.EndSubItem(grp, writer);
-
-                            ProtoWriter.EndSubItem(outer, writer);
                         }
                         else
                         {
@@ -1302,7 +1296,7 @@ namespace Google.Protobuf.Reflection
 
                     if (option.Options.Count == 1 && !option.Options.Single().ShouldSerializeAggregateValue())
                     {
-                        if(messageSet)
+                        if (messageSet)
                         {
                             System.Diagnostics.Debugger.Break();
                         }
@@ -1520,7 +1514,7 @@ namespace Google.Protobuf.Reflection
                                             else
                                                 ProtoWriter.WriteBytes(ms.ToArray(), writer);
 #else
-                                            ProtoWriter.WriteBytes(ms.GetBuffer(),0, (int)ms.Length, writer);
+                                            ProtoWriter.WriteBytes(ms.GetBuffer(), 0, (int)ms.Length, writer);
 #endif
                                         }
                                     }
