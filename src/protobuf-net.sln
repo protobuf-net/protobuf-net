@@ -13,6 +13,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protogen", "protogen\protog
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protogen.site", "protogen.site\protogen.site.csproj", "{DD294FF9-24C0-495F-A693-DF710865C90E}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81F2-C124-4C3D-BBD1-301247B55A77}"
+	ProjectSection(SolutionItems) = preProject
+		Tools\bcl.proto = Tools\bcl.proto
+		..\docs\releasenotes.md = ..\docs\releasenotes.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

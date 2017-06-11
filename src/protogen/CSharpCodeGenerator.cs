@@ -432,6 +432,11 @@ namespace ProtoBuf
                 case FieldDescriptorProto.Type.TypeBytes:
                     return "byte[]";
                 case FieldDescriptorProto.Type.TypeEnum:
+                    switch(field.TypeName)
+                    {
+                        case ".bcl.DateTime.DateTimeKind":
+                            return "global::System.DateTimeKind";
+                    }
                     var enumType = ctx.TryFind<EnumDescriptorProto>(field.TypeName);
                     return enumType == null ? field.TypeName : ctx.NameNormalizer.GetName(enumType);
                 case FieldDescriptorProto.Type.TypeGroup:
@@ -444,6 +449,14 @@ namespace ProtoBuf
                         case WellKnownTypeDuration:
                             dataFormat = nameof(DataFormat.WellKnown);
                             return "global::System.TimeSpan?";
+                        case ".bcl.DateTime":
+                            return "global::System.DateTime?";
+                        case ".bcl.TimeSpan":
+                            return "global::System.TimeSpan?";
+                        case ".bcl.Decimal":
+                            return "decimal?";
+                        case ".bcl.Guid":
+                            return "global::System.Guid?";
                     }
                     var msgType = ctx.TryFind<DescriptorProto>(field.TypeName);
                     if (field.type == FieldDescriptorProto.Type.TypeGroup)

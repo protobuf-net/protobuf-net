@@ -243,7 +243,7 @@ namespace ProtoBuf.Meta
             }
             if (requiresBclImport)
             {
-                headerBuilder.Append("import \"bcl.proto\"; // schema for protobuf-net's handling of core .NET types");
+                headerBuilder.Append("import \"protobuf-net/bcl.proto\"; // schema for protobuf-net's handling of core .NET types");
                 Helpers.AppendLine(headerBuilder);
             }
             return Helpers.AppendLine(headerBuilder.Append(bodyBuilder)).ToString();
