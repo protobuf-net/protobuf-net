@@ -4,17 +4,17 @@
 }
 <h2>@ViewData["Title"].</h2>
 
-@if(Model != null)
+@if(Model.ContainsValue)
 {
     <div>@Html.Partial("DecodeBytes", Model)</div>
 }
-<p>Enter your encoded message as hex to display information about the first field; you may need to call this iteratively, subtracting pieces.</p>
+<p>Enter your encoded message as hex to display information about the first field.</p>
 <form method="post">
-    <div><textarea rows="5" style="width:100%; max-width: unset" name="hex" type="text" placeholder="encoded hex">@(Model.Bytes == null ? null : BitConverter.ToString(Model.Bytes))</textarea></div>
-    <div><input type="submit" value="hex"/> <input type="checkbox" name="deep" value="true"/> recursively</div>
+    <div><textarea rows="5" style="width:100%; max-width: unset" name="hex" type="text" placeholder="encoded hex">@Model.AsHex()</textarea></div>
+    <div><input type="submit" value="hex"/> <label for="hex_deep"><input id="hex_deep" type="checkbox" name="deep" value="true" checked="@Model.Deep" /> recursively</label></div>
 </form>
 
 <form method="post">
-    <div><textarea rows="5" style="width:100%;  max-width: unset" name="base64" type="text" placeholder="encoded base64">@(Model.Bytes == null ? null : Convert.ToBase64String(Model.Bytes))</textarea></div>
-    <div><input type="submit" value="base-64"/> <input type="checkbox" name="deep" value="true" /> recursively</div>
+    <div><textarea rows="5" style="width:100%;  max-width: unset" name="base64" type="text" placeholder="encoded base64">@Model.AsBase64()</textarea></div>
+    <div><input type="submit" value="base-64"/> <label for="base64_deep"><input id="base64_deep" type="checkbox" name="deep" value="true" checked="@Model.Deep" /> recursively</label></div>
 </form>

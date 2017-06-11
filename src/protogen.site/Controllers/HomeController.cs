@@ -8,6 +8,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Hosting;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
+using System.Text;
 
 namespace protogen.site.Controllers
 {
@@ -64,7 +65,7 @@ namespace protogen.site.Controllers
         }
 
         [Route("/decode")]
-        public ActionResult Decode(string hex = null, string base64 = null, bool deep = false)
+        public ActionResult Decode(string hex = null, string base64 = null, bool deep = true)
         {
             byte[] data = null;
             try
@@ -77,7 +78,7 @@ namespace protogen.site.Controllers
                     hex = hex.Replace(" ", "").Replace("-", "");
                     int len = hex.Length / 2;
                     var tmp = new byte[len];
-                    for(int i = 0; i < len; i++)
+                    for (int i = 0; i < len; i++)
                     {
                         tmp[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
                     }
@@ -89,13 +90,66 @@ namespace protogen.site.Controllers
                 }
             }
             catch { }
-            return View(new DecodeModel { Bytes = data, Deep = deep });
+            return View(new DecodeModel(data, deep));
         }
 
         public class DecodeModel
         {
-            public byte[] Bytes { get; set; }
-            public bool Deep { get; set; }
+            private ArraySegment<byte> data;
+            public bool Deep { get; }
+
+            public int SkipField { get; }
+
+            private DecodeModel(byte[] data, bool deep, int offset, int count, int skipField = 0)
+            {
+                this.data = data == null
+                    ? default(ArraySegment<byte>)
+                    : new ArraySegment<byte>(data, offset, count);
+                Deep = deep;
+                SkipField = skipField;
+            }
+            public DecodeModel(byte[] data, bool deep) : this(data, deep, 0, data?.Length??0) { }
+
+            public string AsHex() => ContainsValue ? BitConverter.ToString(data.Array, data.Offset, data.Count) : null;
+
+            public string AsHex(int offset, int count) => ContainsValue ? BitConverter.ToString(data.Array, data.Offset + offset, count) : null;
+            public string AsBase64() => ContainsValue ? Convert.ToBase64String(data.Array, data.Offset, data.Count) : null;
+            public string AsString()
+            {
+                try
+                {
+                    return Encoding.UTF8.GetString(data.Array, data.Offset, data.Count);
+                }
+                catch { return null; }
+            }
+            public int Count => data.Count;
+            public ProtoReader GetReader()
+            {
+                var ms = new MemoryStream(data.Array, data.Offset, data.Count);
+                return new ProtoReader(ms, null, null);
+            }
+            public bool ContainsValue => data.Array != null;
+            public bool CouldBeProto()
+            {
+                if (!ContainsValue) return false;
+                try
+                {
+                    using (var reader = GetReader())
+                    {
+                        int field;
+                        while ((field = reader.ReadFieldHeader()) > 0)
+                        {
+                            reader.SkipField();
+                        }
+                    }
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+            public DecodeModel Slice(int offset, int count, int skipField = 0) => new DecodeModel(data.Array, Deep, data.Offset + offset, count, skipField);
         }
 
         [Route("/generate")]
@@ -111,7 +165,8 @@ namespace protogen.site.Controllers
             {
                 using (var reader = new StringReader(schema))
                 {
-                    var set = new FileDescriptorSet {
+                    var set = new FileDescriptorSet
+                    {
                         ImportValidator = path => ValidateImport(path),
                     };
                     set.AddImportPath(Path.Combine(_host.WebRootPath, "protoc"));
@@ -153,7 +208,7 @@ namespace protogen.site.Controllers
             return result;
         }
 
-        Dictionary<string,string> legalImports = null;
+        Dictionary<string, string> legalImports = null;
         readonly static char[] DirSeparators = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 
         private bool ValidateImport(string path) => ResolveImport(path) != null;
@@ -164,7 +219,7 @@ namespace protogen.site.Controllers
             // all fail, as they are not in "legalImports"
             if (legalImports == null)
             {
-                var tmp = new Dictionary<string,string>();
+                var tmp = new Dictionary<string, string>();
                 var root = Path.Combine(_host.WebRootPath, "protoc");
                 foreach (var found in Directory.EnumerateFiles(root, "*.proto", SearchOption.AllDirectories))
                 {
