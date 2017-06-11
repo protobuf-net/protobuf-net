@@ -22,6 +22,8 @@ namespace ProtoBuf
         {
             foreach (var file in set.Files)
             {
+                if (!file.IncludeInOutput) continue;
+
                 var fileName = Path.ChangeExtension(file.Name, DefaultFileExtension);
 
                 string generated;
@@ -32,9 +34,9 @@ namespace ProtoBuf
                     ctx.BuildTypeIndex(); // populates for TryFind<T>
                     WriteFile(ctx, file);
                     generated = buffer.ToString();
-                }               
+                }
                 yield return new CodeFile(fileName, generated);
-                
+
             }
 
         }
@@ -45,7 +47,7 @@ namespace ProtoBuf
             object state = null;
             WriteFileHeader(ctx, obj, ref state);
 
-            foreach(var inner in file.MessageTypes)
+            foreach (var inner in file.MessageTypes)
             {
                 WriteMessage(ctx, inner);
             }
@@ -53,7 +55,7 @@ namespace ProtoBuf
             {
                 WriteEnum(ctx, inner);
             }
-            foreach(var inner in file.Services)
+            foreach (var inner in file.Services)
             {
                 WriteService(ctx, inner);
             }
@@ -64,7 +66,7 @@ namespace ProtoBuf
         {
             object state = null;
             WriteServiceHeader(ctx, obj, ref state);
-            foreach(var inner in obj.Methods)
+            foreach (var inner in obj.Methods)
             {
                 WriteServiceMethod(ctx, inner, ref state);
             }
@@ -83,18 +85,18 @@ namespace ProtoBuf
         {
             object state = null;
             if (ShouldOmitMessage(ctx, obj, ref state)) return;
-            
+
             WriteMessageHeader(ctx, obj, ref state);
             var oneOfs = OneOfStub.Build(ctx, obj);
-            foreach(var inner in obj.Fields)
+            foreach (var inner in obj.Fields)
             {
                 WriteField(ctx, inner, ref state, oneOfs);
             }
-            foreach(var inner in obj.NestedTypes)
+            foreach (var inner in obj.NestedTypes)
             {
                 WriteMessage(ctx, inner);
             }
-            foreach(var inner in obj.EnumTypes)
+            foreach (var inner in obj.EnumTypes)
             {
                 WriteEnum(ctx, inner);
             }
@@ -110,13 +112,13 @@ namespace ProtoBuf
         {
             object state = null;
             WriteEnumHeader(ctx, obj, ref state);
-            foreach(var inner in obj.Values)
+            foreach (var inner in obj.Values)
             {
                 WriteEnumValue(ctx, inner, ref state);
             }
             WriteEnumFooter(ctx, obj, ref state);
         }
-         
+
         protected abstract void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto obj, ref object state);
         protected abstract void WriteEnumValue(GeneratorContext ctx, EnumValueDescriptorProto obj, ref object state);
         protected abstract void WriteEnumFooter(GeneratorContext ctx, EnumDescriptorProto obj, ref object state);
@@ -208,19 +210,43 @@ namespace ProtoBuf
                     }
                 }
                 {
+                    var processedFiles = new HashSet<string>();
+                    var pendingFiles = new Queue<FileDescriptorProto>();
+
                     _knownTypes.Clear();
-                    foreach (var @enum in File.EnumTypes)
+                    processedFiles.Add(File.Name);
+                    pendingFiles.Enqueue(File);
+
+                    while (pendingFiles.Count != 0)
                     {
-                        _knownTypes[@enum.FullyQualifiedName] = @enum;
-                    }
-                    foreach (var msg in File.MessageTypes)
-                    {
-                        AddMessage(msg);
+                        var file = pendingFiles.Dequeue();
+
+                        foreach (var @enum in file.EnumTypes)
+                        {
+                            _knownTypes[@enum.FullyQualifiedName] = @enum;
+                        }
+                        foreach (var msg in file.MessageTypes)
+                        {
+                            AddMessage(msg);
+                        }
+
+                        if (file.HasImports())
+                        {
+                            foreach (var import in file.GetImports())
+                            {
+                                if (processedFiles.Add(import.Path))
+                                {
+                                    var importFile = file.Parent.GetFile(import.Path);
+                                    if (importFile != null) pendingFiles.Enqueue(importFile);
+                                }
+                            }
+                        }
+
                     }
                 }
             }
         }
     }
 
-    
+
 }

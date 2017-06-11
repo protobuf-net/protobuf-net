@@ -100,7 +100,7 @@ namespace Google.Protobuf.Reflection
                 if (file != null)
                 {
                     // note that GetImports clears the flag
-                    foreach (var import in file.GetImports())
+                    foreach (var import in file.GetImports(true))
                     {
                         if (!(ImportValidator?.Invoke(import.Path) ?? true))
                         {
@@ -143,8 +143,29 @@ namespace Google.Protobuf.Reflection
                     file.ResolveTypes(ctx, true);
                 }
             }
+        }
 
-            Files.RemoveAll(x => !x.IncludeInOutput);
+        public T Serialize<T>(Func<FileDescriptorSet,object,T> customSerializer, bool includeImports, object state = null)
+        {
+            T result;
+            if (includeImports || Files.All(x => x.IncludeInOutput))
+            {
+                result = customSerializer(this, state);
+            }
+            else
+            {
+                var snapshort = Files.ToArray();
+                Files.RemoveAll(x => !x.IncludeInOutput);
+                result = customSerializer(this, state);
+                Files.Clear();
+                Files.AddRange(snapshort);
+            }
+            return result;
+        }
+
+        public void Serialize(Stream destination, bool includeImports)
+        {
+            Serialize((s,o) => { Serializer.Serialize((Stream)o, s); return true; }, includeImports, destination);
         }
 
         internal FileDescriptorProto GetFile(string path)
@@ -555,9 +576,12 @@ namespace Google.Protobuf.Reflection
         internal bool IncludeInOutput { get; set; }
 
         public bool HasImports() => _imports.Count != 0;
-        internal IEnumerable<Import> GetImports()
+        internal IEnumerable<Import> GetImports(bool resetPendingFlag = false)
         {
-            HasPendingImports = false;
+            if (resetPendingFlag)
+            {
+                HasPendingImports = false;
+            }
             return _imports;
         }
         readonly List<Import> _imports = new List<Import>();

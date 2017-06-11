@@ -33,14 +33,6 @@ namespace ProtoBuf.Schemas
                     ProtoWriter.WriteFieldHeader(5, WireType.String, writer);
                     var tok = ProtoWriter.StartSubItem(null, writer);
 
-                    //ProtoWriter.WriteFieldHeader(15447542, WireType.String, writer);
-                    //var tok2 = ProtoWriter.StartSubItem(null, writer);
-
-                    //ProtoWriter.WriteFieldHeader(1, WireType.String, writer);
-                    //ProtoWriter.WriteString("EmbeddedMessageSetElement", writer);
-
-                    //ProtoWriter.EndSubItem(tok2, writer);
-
                     ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer);
                     var tok2 = ProtoWriter.StartSubItem(null, writer);
 
@@ -217,10 +209,13 @@ namespace ProtoBuf.Schemas
 
             set.Process();
 
+            var parserBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.bin"));
+            using (var file = File.Create(parserBinPath))
+            {
+                set.Serialize(file, false);
+            }
 
-            var parserJson = JsonConvert.SerializeObject(set, Formatting.Indented, jsonSettings);
-            jsonPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.json"));
-            File.WriteAllText(jsonPath, parserJson);
+            var parserJson = set.Serialize((s, o) => JsonConvert.SerializeObject(s, Formatting.Indented, jsonSettings), false);
 
             var errors = set.GetErrors();
             Exception genError = null;
@@ -241,11 +236,10 @@ namespace ProtoBuf.Schemas
                 _output.WriteLine(ex.StackTrace);
             }
 
-            var parserBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.bin"));
-            using (var file = File.Create(parserBinPath))
-            {
-                Serializer.Serialize(file, set);
-            }
+
+
+            jsonPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.json"));
+            File.WriteAllText(jsonPath, parserJson);
 
 
             if (errors.Any())
