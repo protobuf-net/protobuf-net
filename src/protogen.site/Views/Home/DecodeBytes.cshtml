@@ -59,11 +59,22 @@
                     var lenLen = reader.Position - payloadBytes.Length - headerEnd;
                     <p>@Model.AsHex(headerEnd, lenLen) = length <b>@(payloadBytes.Length)</b></p>
                     var slice = new protogen.site.Controllers.HomeController.DecodeModel(payloadBytes, Model.Deep);
+                    if(slice.Count == 0)
+                    {
+                        <p>(empty payload)</p>
+                    }
+                    else if(slice.Count > 256)
+                    {
+                        <p>(@slice.Count bytes)</p>
+                    }
+                    else
+                    {
                     <p>payload = @slice.AsHex()</p>
                     var s = slice.AsString();
                     if(!string.IsNullOrEmpty(s))
                     {
                     <p>UTF8: @s</p>
+                    }
                     }
                     if(slice.Count == 0)
                     {}
@@ -95,12 +106,13 @@
             }
             start = reader.Position;
         }
-        @if(Model.SkipField > 0)
+        @if(Model.SkipField > 0 && start != 0)
         {
             ProtoBuf.ProtoReader.EndSubItem(tok, reader);
             int suffixLen = reader.Position - start;
             if(suffixLen != 0)
             {
+              <hr />
               <p>@Model.AsHex(start, suffixLen) = field <b>@(Model.SkipField)</b>, type <b>@(ProtoBuf.WireType.EndGroup)</b></p>
             }
         }
@@ -113,5 +125,5 @@
 }
 catch(Exception ex)
 {
-<p>@(ex.Message)</p>
+<p>error: @(ex.Message)</p>
 }

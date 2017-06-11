@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Hosting;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using System.Text;
+using Microsoft.AspNetCore.Http;
 
 namespace protogen.site.Controllers
 {
@@ -63,17 +64,27 @@ namespace protogen.site.Controllers
             public string ProtocVersion { get; set; }
             public bool CanUseProtoc { get; set; }
         }
-
+        public const int MaxFileLength = 1024 * 1024;
         [Route("/decode")]
-        public ActionResult Decode(string hex = null, string base64 = null, bool deep = true)
+        public ActionResult Decode(string hex = null, string base64 = null, IFormFile file = null, bool deep = true)
         {
             byte[] data = null;
             try
             {
+                
                 if (hex != null) hex = hex.Trim();
                 if (base64 != null) base64 = base64.Trim();
 
-                if (!string.IsNullOrWhiteSpace(hex))
+                if (file != null && file.Length <= MaxFileLength)
+                {
+                    using (var stream = file.OpenReadStream())
+                    using (var ms = new MemoryStream((int)file.Length))
+                    {
+                        stream.CopyTo(ms);
+                        data = ms.ToArray();
+                    }                        
+                }
+                else if (!string.IsNullOrWhiteSpace(hex))
                 {
                     hex = hex.Replace(" ", "").Replace("-", "");
                     int len = hex.Length / 2;
@@ -125,7 +136,7 @@ namespace protogen.site.Controllers
             public int Count => data.Count;
             public ProtoReader GetReader()
             {
-                var ms = new MemoryStream(data.Array, data.Offset, data.Count);
+                var ms = new MemoryStream(data.Array, data.Offset, data.Count, false);
                 return new ProtoReader(ms, null, null);
             }
             public bool ContainsValue => data.Array != null;
@@ -141,8 +152,8 @@ namespace protogen.site.Controllers
                         {
                             reader.SkipField();
                         }
+                        return reader.Position == Count; // MemoryStream will let you seek out of bounds!
                     }
-                    return true;
                 }
                 catch
                 {
