@@ -1,6 +1,9 @@
 ﻿using Google.Protobuf.Reflection;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace ProtoBuf
 {
@@ -105,7 +108,7 @@ namespace ProtoBuf
                .WriteLine("#pragma warning disable CS1591, CS0612, CS3021").WriteLine();
 
 
-            var @namespace = file.Options?.CsharpNamespace ?? file.Package;
+            var @namespace = ctx.NameNormalizer.GetName(file);
 
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
@@ -438,7 +441,7 @@ namespace ProtoBuf
                             return "global::System.DateTimeKind";
                     }
                     var enumType = ctx.TryFind<EnumDescriptorProto>(field.TypeName);
-                    return enumType == null ? field.TypeName : ctx.NameNormalizer.GetName(enumType);
+                    return MakeRelativeName(field, enumType, ctx.NameNormalizer);
                 case FieldDescriptorProto.Type.TypeGroup:
                 case FieldDescriptorProto.Type.TypeMessage:
                     switch(field.TypeName)
@@ -464,12 +467,127 @@ namespace ProtoBuf
                         dataFormat = nameof(DataFormat.Group);
                     }
                     isMap = msgType?.Options?.MapEntry ?? false;
-                    return msgType == null ? field.TypeName : ctx.NameNormalizer.GetName(msgType);
+                    return MakeRelativeName(field, msgType, ctx.NameNormalizer);
                 default:
                     return field.TypeName;
             }
         }
 
+        private string MakeRelativeName(FieldDescriptorProto field, IType target, NameNormalizer normalizer)
+        {
+            if (target == null) return Escape(field.TypeName); // the only thing we know
+
+            var declaringType = field.Parent;
+
+            if(declaringType is IType)
+            {
+                var name = FindNameFromCommonAncestor((IType)declaringType, target, normalizer);
+                if(!string.IsNullOrWhiteSpace(name)) return name;
+            }
+            return Escape(field.TypeName); // give up!
+        }
+
+        // k, what we do is; we have two types; each knows the parent, but nothing else, so:
+        // for each, use a stack to build the ancestry tree - the "top" of the stack will be the
+        // package, the bottom of the stack will be the type itself. They will often be stacks
+        // of different heights.
+        //
+        // Find how many is in the smallest stack; now take that many items, in turn, until we
+        // get something that is different (at which point, put that one back on the stack), or 
+        // we run out of items in one of the stacks.
+        //
+        // There are now two options:
+        // - we ran out of things in the "target" stack - in which case, they are common enough to not
+        //   need any resolution - just give back the fixed name
+        // - we have things left in the "target" stack - in which case we have found a common ancestor,
+        //   or the target is a descendent; either way, just concat what is left (including the package
+        //   if the package itself was different)
+        
+        private string FindNameFromCommonAncestor(IType declaring, IType target, NameNormalizer normalizer)
+        {
+            // trivial case; asking for self, or asking for immediate child
+            if(ReferenceEquals(declaring, target) || ReferenceEquals(declaring, target.Parent))
+            {
+                if (target is DescriptorProto) return Escape(normalizer.GetName((DescriptorProto)target));
+                if (target is EnumDescriptorProto) return Escape(normalizer.GetName((EnumDescriptorProto)target));
+                return null;
+            }
+
+            var origTarget = target;
+            var xStack = new Stack<IType>();
+            
+            while(declaring != null)
+            {
+                xStack.Push(declaring);
+                declaring = declaring.Parent;
+            }
+            var yStack = new Stack<IType>();
+
+            while (target != null)
+            {
+                yStack.Push(target);
+                target = target.Parent;
+            }
+            int lim = Math.Min(xStack.Count, yStack.Count);
+            for(int i = 0; i < lim; i++)
+            {
+                declaring = xStack.Peek();
+                target = yStack.Pop();
+                if(!ReferenceEquals(target, declaring))
+                {
+                    // special-case: if both are the package (file), and they have the same namespace: we're OK
+                    if (target is FileDescriptorProto && declaring is FileDescriptorProto &&
+                        normalizer.GetName((FileDescriptorProto)declaring) == normalizer.GetName((FileDescriptorProto)target))
+                    {
+                        // that's fine, keep going
+                    }
+                    else
+                    {
+                        // put it back
+                        yStack.Push(target);
+                        break;
+                    }
+                }
+            }
+            // if we used everything, then the target is an ancestor-or-self
+            if(yStack.Count == 0)
+            {
+                target = origTarget;
+                if (target is DescriptorProto) return Escape(normalizer.GetName((DescriptorProto)target));
+                if (target is EnumDescriptorProto) return Escape(normalizer.GetName((EnumDescriptorProto)target));
+                return null;
+            }
+
+            var sb = new StringBuilder();
+            while(yStack.Count != 0)
+            {
+                target = yStack.Pop();
+
+                string nextName;
+                if (target is FileDescriptorProto) nextName = normalizer.GetName((FileDescriptorProto)target);
+                else if (target is DescriptorProto) nextName = normalizer.GetName((DescriptorProto)target);
+                else if (target is EnumDescriptorProto) nextName = normalizer.GetName((EnumDescriptorProto)target);
+                else return null;
+
+                if(!string.IsNullOrWhiteSpace(nextName))
+                {
+                    if (sb.Length == 0 && target is FileDescriptorProto) sb.Append("global::");
+                    else if (sb.Length != 0) sb.Append('.');
+                    sb.Append(Escape(nextName));
+                }
+            }
+            return sb.ToString();
+        }
+
+        static bool IsAncestorOrSelf(IType parent, IType child)
+        {
+            while(parent != null)
+            {
+                if (ReferenceEquals(parent, child)) return true;
+                parent = parent.Parent;
+            }
+            return false;
+        }
         const string WellKnownTypeTimestamp = ".google.protobuf.Timestamp",
                      WellKnownTypeDuration = ".google.protobuf.Duration";
     }

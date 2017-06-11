@@ -88,6 +88,15 @@ namespace ProtoBuf
         public static NameNormalizer Null { get; } = new NullNormalizer();
         protected abstract string GetName(string identifier);
         public abstract string Pluralize(string identifier);
+
+        public virtual string GetName(FileDescriptorProto definition)
+        {
+            var ns = definition.Options?.CsharpNamespace;
+            if (string.IsNullOrWhiteSpace(ns)) ns = GetName(definition.Package);
+
+            return string.IsNullOrWhiteSpace(ns) ? null : ns;
+        }
+           
         public virtual string GetName(DescriptorProto definition)
             => GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         public virtual string GetName(EnumDescriptorProto definition)
