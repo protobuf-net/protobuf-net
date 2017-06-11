@@ -1,0 +1,11 @@
+﻿package ProtoBuf.Serializers;
+import "protobuf-net/bcl.proto"; // schema for protobuf-net's handling of core .NET types
+import "google/protobuf/Timestamp.proto";
+import "google/protobuf/Duration.proto";
+
+message HazTime {
+   optional .bcl.DateTime a = 1;
+   optional .google.protobuf.Timestamp b = 2;
+   optional .bcl.TimeSpan c = 3;
+   optional .google.protobuf.Duration d = 4;
+}

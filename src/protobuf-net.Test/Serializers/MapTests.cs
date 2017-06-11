@@ -80,6 +80,37 @@ message HazMapWithDataFormat {
         }
 
         [Fact]
+        public void TimeSchemaTypes()
+        {
+            var schema = Serializer.GetProto<HazTime>();
+            Assert.Equal(@"package ProtoBuf.Serializers;
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
+import ""google/protobuf/Timestamp.proto"";
+import ""google/protobuf/Duration.proto"";
+
+message HazTime {
+   optional .bcl.DateTime a = 1;
+   optional .google.protobuf.Timestamp b = 2;
+   optional .bcl.TimeSpan c = 3;
+   optional .google.protobuf.Duration d = 4;
+}
+", schema);
+        }
+
+        [ProtoContract]
+        public class HazTime
+        {
+            [ProtoMember(1)]
+            public DateTime a { get; set; }
+            [ProtoMember(2, DataFormat = DataFormat.WellKnown)]
+            public DateTime b { get; set; }
+            [ProtoMember(3)]
+            public TimeSpan c { get; set; }
+            [ProtoMember(4, DataFormat = DataFormat.WellKnown)]
+            public TimeSpan d { get; set; }
+        }
+
+        [Fact]
         public void RoundTripWithDataFormat()
         {
             var data = new HazMapWithDataFormat

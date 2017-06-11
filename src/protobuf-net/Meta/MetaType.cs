@@ -1763,7 +1763,7 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_IsGroup, value, true); }
         }
 
-        internal void WriteSchema(System.Text.StringBuilder builder, int indent, ref bool requiresBclImport)
+        internal void WriteSchema(System.Text.StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports)
         {
             if (surrogate != null) return; // nothing to write
 
@@ -1774,7 +1774,7 @@ namespace ProtoBuf.Meta
 
             if (IsList)
             {
-                string itemTypeName = model.GetSchemaTypeName(TypeModel.GetListItemType(model, type), DataFormat.Default, false, false, ref requiresBclImport);
+                string itemTypeName = model.GetSchemaTypeName(TypeModel.GetListItemType(model, type), DataFormat.Default, false, false, ref imports);
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
                 NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
                 NewLine(builder, indent).Append('}');
@@ -1798,7 +1798,7 @@ namespace ProtoBuf.Meta
                         {
                             throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
                         }
-                        NewLine(builder, indent + 1).Append("optional ").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false, ref requiresBclImport).Replace('.','_'))
+                        NewLine(builder, indent + 1).Append("optional ").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false, ref imports).Replace('.','_'))
                             .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
                     }
                     NewLine(builder, indent).Append('}');
@@ -1860,8 +1860,8 @@ namespace ProtoBuf.Meta
                     {
                         member.ResolveMapTypes(out var _, out var keyType, out var valueType);
 
-                        var keyTypeName = model.GetSchemaTypeName(keyType, member.MapKeyFormat, false, false, ref requiresBclImport);
-                        schemaTypeName = model.GetSchemaTypeName(valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref requiresBclImport);
+                        var keyTypeName = model.GetSchemaTypeName(keyType, member.MapKeyFormat, false, false, ref imports);
+                        schemaTypeName = model.GetSchemaTypeName(valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref imports);
                         NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(",").Append(schemaTypeName).Append("> ")
                             .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(";");
                     }
@@ -1870,7 +1870,7 @@ namespace ProtoBuf.Meta
                         string ordinality = member.ItemType != null ? "repeated" : member.IsRequired ? "required" : "optional";
                         NewLine(builder, indent + 1).Append(ordinality).Append(' ');
                         if (member.DataFormat == DataFormat.Group) builder.Append("group ");
-                        schemaTypeName = member.GetSchemaTypeName(true, ref requiresBclImport);
+                        schemaTypeName = member.GetSchemaTypeName(true, ref imports);
                         builder.Append(schemaTypeName).Append(" ")
                              .Append(member.Name).Append(" = ").Append(member.FieldNumber);
 
@@ -1879,6 +1879,10 @@ namespace ProtoBuf.Meta
                             if (member.DefaultValue is string)
                             {
                                 builder.Append(" [default = \"").Append(member.DefaultValue).Append("\"]");
+                            }
+                            else if (member.DefaultValue is TimeSpan)
+                            {
+                                // ignore
                             }
                             else if (member.DefaultValue is bool)
                             {   // need to be lower case (issue 304)
@@ -1897,7 +1901,7 @@ namespace ProtoBuf.Meta
                     }
                     if (schemaTypeName == "bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
                     {
-                        builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false, ref requiresBclImport));
+                        builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false, ref imports));
                     }
                 }
                 if (subTypes != null && subTypes.Count != 0)
