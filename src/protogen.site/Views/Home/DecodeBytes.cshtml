@@ -78,15 +78,18 @@
                     }
                     if(slice.Count == 0)
                     {}
-                    else if(Model.Deep && slice.CouldBeProto())
+                    else if(slice.CouldBeProto())
                     {
+                        if(Model.Deep)
+                        {
                         <div style="padding-left: 2em">
                         @Html.Partial("DecodeBytes", slice)
                         </div>
-                    }
-                    else
-                    {
+                        }
+                        else
+                        {
                         <form method="post"><input type="hidden" name="hex" value="@(slice.AsHex())" /><input type="submit" value="decode" /></form>
+                        }
                     }
                     }
                     break;
