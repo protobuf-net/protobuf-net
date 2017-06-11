@@ -211,6 +211,7 @@ namespace ProtoBuf.Meta
                 }
             }
 
+            headerBuilder.AppendLine(@"syntax = ""proto2"";");
             if (!Helpers.IsNullOrEmpty(package))
             {
                 headerBuilder.Append("package ").Append(package).Append(';');
@@ -248,12 +249,12 @@ namespace ProtoBuf.Meta
             }
             if ((imports & CommonImports.Timestamp) != 0)
             {
-                headerBuilder.Append("import \"google/protobuf/Timestamp.proto\";");
+                headerBuilder.Append("import \"google/protobuf/timestamp.proto\";");
                 Helpers.AppendLine(headerBuilder);
             }
             if ((imports & CommonImports.Duration) != 0)
             {
-                headerBuilder.Append("import \"google/protobuf/Duration.proto\";");
+                headerBuilder.Append("import \"google/protobuf/duration.proto\";");
                 Helpers.AppendLine(headerBuilder);
             }
             return Helpers.AppendLine(headerBuilder.Append(bodyBuilder)).ToString();

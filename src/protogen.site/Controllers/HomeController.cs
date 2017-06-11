@@ -230,7 +230,7 @@ namespace protogen.site.Controllers
             // all fail, as they are not in "legalImports"
             if (legalImports == null)
             {
-                var tmp = new Dictionary<string, string>();
+                var tmp = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 var root = Path.Combine(_host.WebRootPath, "protoc");
                 foreach (var found in Directory.EnumerateFiles(root, "*.proto", SearchOption.AllDirectories))
                 {

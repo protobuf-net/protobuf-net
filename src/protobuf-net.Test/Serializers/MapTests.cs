@@ -59,7 +59,8 @@ namespace ProtoBuf.Serializers
         public void GetMapSchema()
         {
             var schema = Serializer.GetProto<HazMap>();
-            Assert.Equal(@"package ProtoBuf.Serializers;
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
 
 message HazMap {
    map<int32,string> Lookup = 3;
@@ -71,7 +72,8 @@ message HazMap {
         public void GetMapWithDataFormatSchema()
         {
             var schema = Serializer.GetProto<HazMapWithDataFormat>();
-            Assert.Equal(@"package ProtoBuf.Serializers;
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
 
 message HazMapWithDataFormat {
    map<sint32,sint64> Lookup = 3;
@@ -83,10 +85,11 @@ message HazMapWithDataFormat {
         public void TimeSchemaTypes()
         {
             var schema = Serializer.GetProto<HazTime>();
-            Assert.Equal(@"package ProtoBuf.Serializers;
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
 import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
-import ""google/protobuf/Timestamp.proto"";
-import ""google/protobuf/Duration.proto"";
+import ""google/protobuf/timestamp.proto"";
+import ""google/protobuf/duration.proto"";
 
 message HazTime {
    optional .bcl.DateTime a = 1;
