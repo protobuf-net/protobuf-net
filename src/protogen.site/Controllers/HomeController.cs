@@ -64,7 +64,7 @@ namespace protogen.site.Controllers
         }
 
         [Route("/decode")]
-        public ActionResult Decode(string hex = null, string base64 = null)
+        public ActionResult Decode(string hex = null, string base64 = null, bool deep = false)
         {
             byte[] data = null;
             try
@@ -89,7 +89,13 @@ namespace protogen.site.Controllers
                 }
             }
             catch { }
-            return View(data);
+            return View(new DecodeModel { Bytes = data, Deep = deep });
+        }
+
+        public class DecodeModel
+        {
+            public byte[] Bytes { get; set; }
+            public bool Deep { get; set; }
         }
 
         [Route("/generate")]

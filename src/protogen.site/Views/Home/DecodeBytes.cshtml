@@ -1,0 +1,91 @@
+﻿@model protogen.site.Controllers.HomeController.DecodeModel
+@functions {
+    long Zag(long value)
+    {
+        const long Int64Msb = ((long)1) << 63;
+        return (-(value & 0x01L)) ^ ((value >> 1) & ~Int64Msb);
+    }
+    double ToDouble(long val) => BitConverter.ToDouble(BitConverter.GetBytes(val), 0);
+    double ToSingle(int val) => BitConverter.ToSingle(BitConverter.GetBytes(val), 0);
+}
+@{
+    Layout = "";
+}
+@try
+{
+    var bytes = Model.Bytes;
+    using(var ms = new System.IO.MemoryStream(bytes))
+    {
+        using(var reader = new ProtoBuf.ProtoReader(ms, null, null))
+        {
+            int field, start = 0;
+            while((field = reader.ReadFieldHeader()) > 0)
+            {
+                @if(start != 0)
+                {
+                    <hr/>
+                }
+                int headerEnd = reader.Position;
+                    
+                <p data-offset="@start">@BitConverter.ToString(bytes, start, headerEnd - start) = field <b>@(field)</b>, type <b>@(reader.WireType)</b></p>
+                switch(reader.WireType)
+                {
+                    case ProtoBuf.WireType.Variant:
+                        var val = reader.ReadInt64();
+                        <p>@BitConverter.ToString(bytes, headerEnd, reader.Position - headerEnd) = <b>@(val)</b> (raw) or <b>@(Zag(val))</b> (zigzag)</p>
+                        break;
+                    case ProtoBuf.WireType.StartGroup:
+                        reader.SkipField();
+                        <p>payload (inc. terminator) = @BitConverter.ToString(bytes, headerEnd, reader.Position - headerEnd)</p>
+                        <form method="post"><input type="hidden" name="hex" value="@(BitConverter.ToString(bytes, headerEnd, reader.Position - headerEnd))" /><input type="submit" value="decode" /></form>
+                        break;
+                    case ProtoBuf.WireType.String:
+                        var payloadBytes = ProtoBuf.ProtoReader.AppendBytes(null, reader);
+                        var lenLen = reader.Position - payloadBytes.Length - headerEnd;
+                        <p>@BitConverter.ToString(bytes, headerEnd, lenLen) = length <b>@(payloadBytes.Length)</b></p>
+                        <p>payload = @BitConverter.ToString(payloadBytes)</p>
+                        @if(Model.Deep)
+                        {
+                            <div style="padding-left: 2em">
+                            @Html.Partial("DecodeBytes", new protogen.site.Controllers.HomeController.DecodeModel { Bytes = payloadBytes, Deep = Model.Deep })
+                            </div>
+                        }
+                        else
+                        {
+                        <form method="post"><input type="hidden" name="hex" value="@(BitConverter.ToString(payloadBytes))" /><input type="submit" value="decode" /></form>
+                        try {
+                            var s = System.Text.Encoding.UTF8.GetString(payloadBytes);
+                            <p>as UTF8: @(s)</p>
+                        } catch{
+                            <p>(this does not look like text data)</p>
+                        }
+                        }
+                        break;
+                    case ProtoBuf.WireType.Fixed64:
+                        var val64 = reader.ReadInt64();
+                        <p>@BitConverter.ToString(bytes, headerEnd, reader.Position - headerEnd) = <b>@(val64)</b> (integer) or <b>@(ToDouble(val64))</b> (floating point)</p>
+                        break;
+                    case ProtoBuf.WireType.Fixed32:
+                        var val32 = reader.ReadInt32();
+                        <p>@BitConverter.ToString(bytes, headerEnd, reader.Position - headerEnd) = <b>@(val32)</b> (integer) or <b>@(ToSingle(val32))</b> (floating point)</p>
+                        break;
+                    case ProtoBuf.WireType.EndGroup:
+                        break;
+                    default:
+                        <p>unexpected wire-type: @(reader.WireType)</p>
+                        break;
+                }
+                start = reader.Position;
+            }
+            @if(reader.Position < bytes.Length)
+            {
+            <p>remaining data: @BitConverter.ToString(bytes, reader.Position, bytes.Length - reader.Position)</p>
+            <form method="post"><input type="hidden" name="hex" value="@(BitConverter.ToString(bytes, reader.Position, bytes.Length - reader.Position))"/><input type="submit" value="decode"/></form>
+            }
+        }
+    }
+}
+catch(Exception ex)
+{
+<p>@(ex.Message)</p>
+}

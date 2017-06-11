@@ -763,6 +763,7 @@ namespace Google.Protobuf.Reflection
                 field = Extensions?.FirstOrDefault(x => x.Extendee == extendee && x.Name == extension);
                 if (field != null) return true;
             }
+
             if (checkOwnPackage)
             {
                 if (TryResolveFromFile(this, extendee, extension, out field, true, false)) return true;
@@ -849,6 +850,7 @@ namespace Google.Protobuf.Reflection
             }
 
             if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type, true, treatAllAsPublic)) return true;
+            if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type, false, treatAllAsPublic)) return true;
 
             // look at imports
             // check for the name including the package prefix
