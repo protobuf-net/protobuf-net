@@ -4,6 +4,6 @@ syntax = "proto3";
 
 import "google/protobuf/descriptor.proto";
 
-package protobuf-net.protogen;
+package "protobuf-net.protogen";
 
 option csharp_namespace = "ProtoBuf.CustomOptions";
