@@ -42,9 +42,16 @@ namespace ProtoBuf
         /// </summary>
         /// <typeparam name="T">The type to generate a .proto definition for</typeparam>
         /// <returns>The .proto definition as a string</returns>
-        public static string GetProto<T>()
+        public static string GetProto<T>() => GetProto<T>(ProtoSyntax.Proto2);
+
+        /// <summary>
+        /// Suggest a .proto definition for the given type
+        /// </summary>
+        /// <typeparam name="T">The type to generate a .proto definition for</typeparam>
+        /// <returns>The .proto definition as a string</returns>
+        public static string GetProto<T>(ProtoSyntax syntax)
         {
-            return RuntimeTypeModel.Default.GetSchema(RuntimeTypeModel.Default.MapType(typeof(T)));
+            return RuntimeTypeModel.Default.GetSchema(RuntimeTypeModel.Default.MapType(typeof(T)), syntax);
         }
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.

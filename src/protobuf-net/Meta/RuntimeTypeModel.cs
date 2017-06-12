@@ -144,7 +144,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
-        public override string GetSchema(Type type)
+        public override string GetSchema(Type type, ProtoSyntax syntax)
         {
             BasicList requiredTypes = new BasicList();
             MetaType primaryType = null;
@@ -210,8 +210,18 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-
-            headerBuilder.AppendLine(@"syntax = ""proto2"";");
+            switch(syntax)
+            {
+                case ProtoSyntax.Proto2:
+                    headerBuilder.AppendLine(@"syntax = ""proto2"";");
+                    break;
+                case ProtoSyntax.Proto3:
+                    headerBuilder.AppendLine(@"syntax = ""proto3"";");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(syntax));
+            }
+            
             if (!Helpers.IsNullOrEmpty(package))
             {
                 headerBuilder.Append("package ").Append(package).Append(';');
@@ -229,7 +239,7 @@ namespace ProtoBuf.Meta
             if (isInbuiltType)
             {
                 Helpers.AppendLine(bodyBuilder).Append("message ").Append(type.Name).Append(" {");
-                MetaType.NewLine(bodyBuilder, 1).Append("optional ").Append(GetSchemaTypeName(type, DataFormat.Default, false, false, ref imports))
+                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(type, DataFormat.Default, false, false, ref imports))
                     .Append(" value = 1;");
                 Helpers.AppendLine(bodyBuilder).Append('}');
             }
@@ -239,7 +249,7 @@ namespace ProtoBuf.Meta
                 {
                     MetaType tmp = metaTypesArr[i];
                     if (tmp.IsList && tmp != primaryType) continue;
-                    tmp.WriteSchema(bodyBuilder, 0, ref imports);
+                    tmp.WriteSchema(bodyBuilder, 0, ref imports, syntax);
                 }
             }
             if ((imports & CommonImports.Bcl) != 0)

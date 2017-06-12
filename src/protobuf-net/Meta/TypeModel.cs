@@ -1571,10 +1571,18 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
-        public virtual string GetSchema(Type type)
+        public virtual string GetSchema(Type type) => GetSchema(type, ProtoSyntax.Proto2);
+
+        /// <summary>
+        /// Suggest a .proto definition for the given type
+        /// </summary>
+        /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
+        /// <returns>The .proto definition as a string</returns>
+        public virtual string GetSchema(Type type, ProtoSyntax syntax)
         {
             throw new NotSupportedException();
         }
+
 
         /// <summary>
         /// Used to provide custom services for writing and parsing type names when using dynamic types. Both parsing and formatting

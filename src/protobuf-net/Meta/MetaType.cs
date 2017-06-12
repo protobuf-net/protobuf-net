@@ -15,6 +15,7 @@ using IKVM.Reflection.Emit;
 using System.Reflection;
 #if FEAT_COMPILER
 using System.Reflection.Emit;
+using System.Globalization;
 #endif
 #endif
 
@@ -1763,7 +1764,7 @@ namespace ProtoBuf.Meta
             set { SetFlag(OPTIONS_IsGroup, value, true); }
         }
 
-        internal void WriteSchema(System.Text.StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports)
+        internal void WriteSchema(System.Text.StringBuilder builder, int indent, ref RuntimeTypeModel.CommonImports imports, ProtoSyntax syntax)
         {
             if (surrogate != null) return; // nothing to write
 
@@ -1798,7 +1799,7 @@ namespace ProtoBuf.Meta
                         {
                             throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
                         }
-                        NewLine(builder, indent + 1).Append("optional ").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false, ref imports).Replace('.','_'))
+                        NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false, ref imports).Replace('.','_'))
                             .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
                     }
                     NewLine(builder, indent).Append('}');
@@ -1867,14 +1868,14 @@ namespace ProtoBuf.Meta
                     }
                     else
                     {
-                        string ordinality = member.ItemType != null ? "repeated" : member.IsRequired ? "required" : "optional";
-                        NewLine(builder, indent + 1).Append(ordinality).Append(' ');
+                        string ordinality = member.ItemType != null ? "repeated " : (syntax == ProtoSyntax.Proto2 ? (member.IsRequired ? "required " : "optional ") : "");
+                        NewLine(builder, indent + 1).Append(ordinality);
                         if (member.DataFormat == DataFormat.Group) builder.Append("group ");
                         schemaTypeName = member.GetSchemaTypeName(true, ref imports);
                         builder.Append(schemaTypeName).Append(" ")
                              .Append(member.Name).Append(" = ").Append(member.FieldNumber);
 
-                        if (member.DefaultValue != null && member.IsRequired == false)
+                        if (syntax == ProtoSyntax.Proto2 && member.DefaultValue != null && member.IsRequired == false)
                         {
                             if (member.DefaultValue is string)
                             {
@@ -1893,11 +1894,37 @@ namespace ProtoBuf.Meta
                                 builder.Append(" [default = ").Append(member.DefaultValue).Append(']');
                             }
                         }
-                        if (member.ItemType != null && member.IsPacked)
+                        if (CanPack(member.ItemType))
                         {
-                            builder.Append(" [packed=true]");
+                            if(syntax == ProtoSyntax.Proto2)
+                            {
+                                if (member.IsPacked) builder.Append(" [packed = true]"); // disabled by default
+                            }
+                            else
+                            {
+                                if (!member.IsPacked) builder.Append(" [packed = false]"); // enabled by default
+                            }
                         }
-                        builder.Append(';');                        
+                        builder.Append(';');
+                        if (syntax != ProtoSyntax.Proto2 && member.DefaultValue != null && member.IsRequired == false)
+                        {
+                            if (member.DefaultValue is bool && (bool)member.DefaultValue == false)
+                            {
+                                // don't emit
+                            }
+                            else if (member.DefaultValue is string && (string)member.DefaultValue == "")
+                            {
+                                // don't emit
+                            }
+                            else if (Convert.ToString(member.DefaultValue, CultureInfo.InvariantCulture) == "0")
+                            {
+                                // don't emit
+                            }
+                            else
+                            {
+                                builder.Append(" // default value could not be applied: ").Append(member.DefaultValue);
+                            }
+                        }
                     }
                     if (schemaTypeName == "bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
                     {
@@ -1919,6 +1946,28 @@ namespace ProtoBuf.Meta
                 }
                 NewLine(builder, indent).Append('}');
             }
+        }
+
+        private static bool CanPack(Type type)
+        {
+            if (type == null) return false;
+            switch(Helpers.GetTypeCode(type))
+            {
+                case ProtoTypeCode.Boolean:
+                case ProtoTypeCode.Byte:
+                case ProtoTypeCode.Char:
+                case ProtoTypeCode.Double:
+                case ProtoTypeCode.Int16:
+                case ProtoTypeCode.Int32:
+                case ProtoTypeCode.Int64:
+                case ProtoTypeCode.SByte:
+                case ProtoTypeCode.Single:
+                case ProtoTypeCode.UInt16:
+                case ProtoTypeCode.UInt32:
+                case ProtoTypeCode.UInt64:
+                    return true;
+            }
+            return false;
         }
     }
 }

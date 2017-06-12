@@ -1,5 +1,5 @@
 [ ] custom options for netobjectproxy, asref / dynamic
-[ ] proto3 schema emit
+[x] proto3 schema emit
 [ ] enum auto pass-thru
 [ ] dependency tree emit
 [x] case insensitive files

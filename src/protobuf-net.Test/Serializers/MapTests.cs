@@ -29,7 +29,7 @@ namespace ProtoBuf.Serializers
 
             using (var ms = new MemoryStream())
             {
-                
+
                 Serializer.Serialize(ms, new HazMapEquiv
                 {
                     Lookup =
@@ -111,6 +111,48 @@ message HazTime {
             public TimeSpan c { get; set; }
             [ProtoMember(4, DataFormat = DataFormat.WellKnown)]
             public TimeSpan d { get; set; }
+        }
+        [Fact]
+        public void TestPackNonPackedSchemas_Proto2()
+        {
+            var schema = Serializer.GetProto<TestPackNonPackedSchemas>(ProtoSyntax.Proto2);
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+message TestPackNonPackedSchemas {
+   repeated int32 Packed = 1 [packed = true];
+   repeated float NonPacked = 2;
+   optional bool Boolean = 3 [default = false];
+}
+", schema);
+        }
+
+        [Fact]
+        public void TestPackNonPackedSchemas_Proto3()
+        {
+            var schema = Serializer.GetProto<TestPackNonPackedSchemas>(ProtoSyntax.Proto3);
+            Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Serializers;
+
+message TestPackNonPackedSchemas {
+   repeated int32 Packed = 1;
+   repeated float NonPacked = 2 [packed = false];
+   bool Boolean = 3;
+}
+", schema);
+        }
+
+        [ProtoContract]
+        public class TestPackNonPackedSchemas
+        {
+            [ProtoMember(1, IsPacked = true)]
+            public int[] Packed { get; set; }
+
+            [ProtoMember(2, IsPacked = false)]
+            public float[] NonPacked { get; set; }
+
+            [ProtoMember(3)]
+            public bool Boolean { get; set; }
         }
 
         [Fact]
