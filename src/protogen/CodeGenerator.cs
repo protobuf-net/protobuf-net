@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -210,7 +211,7 @@ namespace ProtoBuf
                     }
                 }
                 {
-                    var processedFiles = new HashSet<string>();
+                    var processedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                     var pendingFiles = new Queue<FileDescriptorProto>();
 
                     _knownTypes.Clear();

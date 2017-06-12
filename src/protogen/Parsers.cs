@@ -86,7 +86,7 @@ namespace Google.Protobuf.Reflection
 
         bool TryResolve(string name, out FileDescriptorProto descriptor)
         {
-            descriptor = Files.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            descriptor = Files.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
             return descriptor != null;
         }
 

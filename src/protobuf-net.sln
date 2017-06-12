@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 	ProjectSection(SolutionItems) = preProject
 		Tools\bcl.proto = Tools\bcl.proto
 		..\docs\releasenotes.md = ..\docs\releasenotes.md
+		TODO.txt = TODO.txt
 	EndProjectSection
 EndProject
 Global
