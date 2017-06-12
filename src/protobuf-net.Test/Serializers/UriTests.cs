@@ -80,6 +80,24 @@ namespace ProtoBuf.unittest.Serializers
             Assert.Equal(obj.Value, clone.Value);
         }
 
+        [Theory]
+        [InlineData("http://example.com", UriKind.Absolute)]
+        [InlineData("http://example.com/path/to/resource", UriKind.Absolute)]
+        [InlineData("http://example.com/path/to/resource with spaces/", UriKind.Absolute)]
+        [InlineData("http://example.com/path/to/resource%20with%20spaces%20encoded", UriKind.Absolute)]
+        [InlineData("http://example.com/withquerystring?param1=1&param2=second", UriKind.Absolute)]
+        [InlineData("http://example.com/withfragment?param=test#anchorname", UriKind.Absolute)]
+        [InlineData("/relative/path/to/file.txt", UriKind.Relative)]
+        [InlineData("/relative/path/to/file with spaces.txt", UriKind.Relative)]
+        [InlineData("/relative/path/to/file%20with%20spaces%20encoded.txt", UriKind.Relative)]
+        public void TestUriDirect(string uriString, UriKind uriKind)
+        {
+            var model = TypeModel.Create();
+
+            var obj = new Uri(uriString, uriKind);
+            Uri clone = (Uri)model.DeepClone(obj);
+            Assert.Equal(obj, clone);
+        }
 
         static RuntimeTypeModel CreateModel()
         {
