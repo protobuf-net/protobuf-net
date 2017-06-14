@@ -142,6 +142,54 @@ message TestPackNonPackedSchemas {
 ", schema);
         }
 
+        [Fact]
+        public void TestEnumProto_Proto2()
+        {
+            var schema = Serializer.GetProto<HazEnum>(ProtoSyntax.Proto2);
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+message HazEnum {
+   optional SomeEnum X = 1 [default = B];
+}
+enum SomeEnum {
+   B = 0;
+   A = 1;
+   C = 2;
+}
+", schema);
+        }
+
+        [Fact]
+        public void TestEnumProto_Proto3()
+        {
+            var schema = Serializer.GetProto<HazEnum>(ProtoSyntax.Proto3);
+            Assert.Equal(@"syntax = ""proto3"";
+package ProtoBuf.Serializers;
+
+message HazEnum {
+   SomeEnum X = 1;
+}
+enum SomeEnum {
+   B = 0;
+   A = 1;
+   C = 2;
+}
+", schema);
+        }
+
+        [ProtoContract]
+        public class HazEnum
+        {
+            [ProtoMember(1)]
+            public SomeEnum X { get; set; }
+            
+            public enum SomeEnum : short
+            {
+                A = 1, B = 0, C = 2
+            }
+        }
+
         [ProtoContract]
         public class TestPackNonPackedSchemas
         {

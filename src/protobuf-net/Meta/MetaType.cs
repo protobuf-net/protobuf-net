@@ -1845,8 +1845,26 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
+                    bool haveWrittenZero = false;
+                    if (syntax == ProtoSyntax.Proto3)
+                    {
+                        foreach (ValueMember member in fieldsArr)
+                        {
+                            if(member.FieldNumber == 0)
+                            {
+                                NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
+                                haveWrittenZero = true;
+                            }
+                        }
+                        if(!haveWrittenZero)
+                        {
+                            NewLine(builder, indent + 1).Append("ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)");
+                        }
+                    }
+                    // note array is already sorted, so zero would already be first
                     foreach (ValueMember member in fieldsArr)
                     {
+                        if (member.FieldNumber == 0 && haveWrittenZero) continue;
                         NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
                     }
                 }
@@ -1906,21 +1924,13 @@ namespace ProtoBuf.Meta
                             }
                         }
                         builder.Append(';');
-                        if (syntax != ProtoSyntax.Proto2 && member.DefaultValue != null && member.IsRequired == false)
+                        if (syntax != ProtoSyntax.Proto2 && member.DefaultValue != null && !member.IsRequired)
                         {
-                            if (member.DefaultValue is bool && (bool)member.DefaultValue == false)
+                            if (IsImplicitDefault(member.DefaultValue))
                             {
-                                // don't emit
+                                // don't emit; we're good
                             }
-                            else if (member.DefaultValue is string && (string)member.DefaultValue == "")
-                            {
-                                // don't emit
-                            }
-                            else if (Convert.ToString(member.DefaultValue, CultureInfo.InvariantCulture) == "0")
-                            {
-                                // don't emit
-                            }
-                            else
+                            else 
                             {
                                 builder.Append(" // default value could not be applied: ").Append(member.DefaultValue);
                             }
@@ -1946,6 +1956,35 @@ namespace ProtoBuf.Meta
                 }
                 NewLine(builder, indent).Append('}');
             }
+        }
+
+        private static bool IsImplicitDefault(object value)
+        {
+            try
+            {
+                if (value == null) return false;
+                switch (Helpers.GetTypeCode(value.GetType()))
+                {
+                    case ProtoTypeCode.Boolean: return ((bool)value) == false;
+                    case ProtoTypeCode.Byte: return ((byte)value) == (byte)0;
+                    case ProtoTypeCode.Char: return ((char)value) == (char)0;
+                    case ProtoTypeCode.DateTime: return ((DateTime)value) == default(DateTime);
+                    case ProtoTypeCode.Decimal: return ((decimal)value) == 0M;
+                    case ProtoTypeCode.Double: return ((double)value) == (double)0;
+                    case ProtoTypeCode.Int16: return ((short)value) == (short)0;
+                    case ProtoTypeCode.Int32: return ((int)value) == (int)0;
+                    case ProtoTypeCode.Int64: return ((long)value) == (long)0;
+                    case ProtoTypeCode.SByte: return ((sbyte)value) == (sbyte)0;
+                    case ProtoTypeCode.Single: return ((float)value) == (float)0;
+                    case ProtoTypeCode.String: return ((string)value) == "";
+                    case ProtoTypeCode.TimeSpan: return ((TimeSpan)value) == TimeSpan.Zero;
+                    case ProtoTypeCode.UInt16: return ((ushort)value) == (ushort)0;
+                    case ProtoTypeCode.UInt32: return ((uint)value) == (uint)0;
+                    case ProtoTypeCode.UInt64: return ((ulong)value) == (ulong)0;
+                }
+            }
+            catch { }
+            return false;
         }
 
         private static bool CanPack(Type type)
