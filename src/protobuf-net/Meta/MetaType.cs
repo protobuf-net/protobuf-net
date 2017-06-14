@@ -1190,13 +1190,23 @@ namespace ProtoBuf.Meta
                     vm.AsReference = normalizedAttribute.AsReference;
                 }
                 vm.DynamicType = normalizedAttribute.DynamicType;
-                
-                if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoMapAttribute")) != null)
+
+                vm.IsMap = vm.ResolveMapTypes(out var _, out var _, out var _);
+                if (vm.IsMap) // is it even *allowed* to be a map?
                 {
-                    object tmp;
-                    if (attrib.TryGet(nameof(ProtoMapAttribute.KeyFormat), out tmp)) vm.MapKeyFormat = (DataFormat)tmp;
-                    if (attrib.TryGet(nameof(ProtoMapAttribute.ValueFormat), out tmp)) vm.MapValueFormat = (DataFormat)tmp;
-                    vm.IsMap = true;
+                    if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoMapAttribute")) != null)
+                    {
+                        object tmp;
+                        if (attrib.TryGet(nameof(ProtoMapAttribute.DisableMap), out tmp) && (bool)tmp)
+                        {
+                            vm.IsMap = false;
+                        }
+                        else
+                        {
+                            if (attrib.TryGet(nameof(ProtoMapAttribute.KeyFormat), out tmp)) vm.MapKeyFormat = (DataFormat)tmp;
+                            if (attrib.TryGet(nameof(ProtoMapAttribute.ValueFormat), out tmp)) vm.MapValueFormat = (DataFormat)tmp;
+                        }
+                    }
                 }
 
             }

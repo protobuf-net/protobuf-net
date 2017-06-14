@@ -382,7 +382,7 @@ namespace ProtoBuf.Meta
         {
             if (serializer != null) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated");
         }
-        internal void ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
+        internal bool ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
         {
             dictionaryType = keyType = valueType = null;
             foreach (var iType in memberType.GetInterfaces())
@@ -395,13 +395,39 @@ namespace ProtoBuf.Meta
                 if (info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                 {
                     if (dictionaryType != null) throw new InvalidOperationException("Multiple dictionary interfaces implemented by type: " + memberType.FullName);
-                    dictionaryType = iType;
                     var typeArgs = iType.GetGenericArguments();
-                    keyType = typeArgs[0];
-                    valueType = typeArgs[1];
-                    return;
+
+                    if (IsValidMapKeyType(typeArgs[0]))
+                    {
+                        keyType = typeArgs[0];
+                        valueType = typeArgs[1];
+                        dictionaryType = iType;
+                    }
                 }
             }
+            return dictionaryType != null;
+        }
+
+        static bool IsValidMapKeyType(Type type)
+        {
+            if (type == null) return false;
+            switch(Helpers.GetTypeCode(type))
+            {
+                case ProtoTypeCode.Boolean:
+                case ProtoTypeCode.Byte:
+                case ProtoTypeCode.Char:
+                case ProtoTypeCode.Int16:
+                case ProtoTypeCode.Int32:
+                case ProtoTypeCode.Int64:
+                case ProtoTypeCode.String:
+
+                case ProtoTypeCode.SByte:
+                case ProtoTypeCode.UInt16:
+                case ProtoTypeCode.UInt32:
+                case ProtoTypeCode.UInt64:
+                    return true;
+            }
+            return false;
         }
         private IProtoSerializer BuildSerializer()
         {

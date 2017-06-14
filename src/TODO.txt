@@ -3,6 +3,7 @@
 [ ] enum auto pass-thru
 [ ] dependency tree emit
 [x] case insensitive files
-[ ] auto "map" with explicit opt-out
+[x] auto "map" with explicit opt-out
 [x] emit enums corectly using the elected value (if any)
 [x] move zero enum to first; invent if necessary on proto3
+[ ] map: emit IL

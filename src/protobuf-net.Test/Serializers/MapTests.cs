@@ -253,6 +253,70 @@ enum SomeEnum {
             [ProtoMember(3), ProtoMap]
             public Dictionary<int, string> Lookup { get; } = new Dictionary<int, string>();
         }
+        [Fact]
+        public void GetMapSchema_HazImplicitMap()
+        {
+            var schema = Serializer.GetProto<HazImplicitMap>();
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+message HazImplicitMap {
+   map<int32,string> Lookup = 3;
+}
+", schema);
+        }
+
+        [ProtoContract]
+        public class HazImplicitMap
+        {
+            [ProtoMember(3)]
+            public Dictionary<int, string> Lookup { get; } = new Dictionary<int, string>();
+        }
+
+        [Fact]
+        public void GetMapSchema_HazDisabledMap()
+        {
+            var schema = Serializer.GetProto<HazDisabledMap>();
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+message HazDisabledMap {
+   repeated KeyValuePair_Int32_String Lookup = 3;
+}
+message KeyValuePair_Int32_String {
+   optional int32 Key = 1;
+   optional string Value = 2;
+}
+", schema);
+        }
+        [ProtoContract]
+        public class HazDisabledMap
+        {
+            [ProtoMember(3), ProtoMap(DisableMap = true)]
+            public Dictionary<int, string> Lookup { get; } = new Dictionary<int, string>();
+        }
+        [Fact]
+        public void GetMapSchema_HazInvalidKeyTypeMap()
+        {
+            var schema = Serializer.GetProto<HazInvalidKeyTypeMap>();
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+message HazInvalidKeyTypeMap {
+   repeated KeyValuePair_Double_String Lookup = 3;
+}
+message KeyValuePair_Double_String {
+   optional double Key = 1;
+   optional string Value = 2;
+}
+", schema);
+        }
+        [ProtoContract]
+        public class HazInvalidKeyTypeMap
+        {
+            [ProtoMember(3), ProtoMap(DisableMap = true)]
+            public Dictionary<double, string> Lookup { get; } = new Dictionary<double, string>();
+        }
 
         [ProtoContract]
         public class HazMapEquiv

@@ -18,5 +18,12 @@ namespace ProtoBuf
         /// Describes the data-format used to store the value
         /// </summary>
         public DataFormat ValueFormat { get; set; }
+
+        /// <summary>
+        /// Disables "map" handling; dictionaries will use ".Add(key,value)" instead of  "[key] = value",
+        /// which means duplicate keys will cause an exception (instead of retaining the final value); if
+        /// a proto schema is emitted, it will be produced using "repeated" instead of "map"
+        /// </summary>
+        public bool DisableMap { get; set; }
     }
 }
