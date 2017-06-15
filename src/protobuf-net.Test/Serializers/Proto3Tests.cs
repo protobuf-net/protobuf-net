@@ -15,7 +15,18 @@ namespace ProtoBuf.Serializers
         public void HazBasicEnum_Schema()
         {
             var schema = Serializer.GetProto<HazBasicEnum>();
-            Assert.Equal("todo", schema);
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+message HazBasicEnum {
+   optional RegularEnum Value = 1 [default = A];
+}
+enum RegularEnum {
+   A = 0;
+   B = 1;
+   C = 2;
+}
+", schema);
         }
         [Fact]
         public void HazBasicEnum_WorksForKnownAndUnknownValues()
@@ -53,7 +64,18 @@ namespace ProtoBuf.Serializers
         public void HazCustomMappedEnum_Schema()
         {
             var schema = Serializer.GetProto<HazCustomMappedEnum>();
-            Assert.Equal("todo", schema);
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+message HazCustomMappedEnum {
+   optional MappedEnum Value = 1 [default = A];
+}
+enum MappedEnum {
+   B = 0;
+   A = 1;
+   C = 2;
+}
+", schema);
         }
         [Fact]
         public void HazCustomMappedEnum_WorksForKnownAndUnknownValues()
@@ -90,8 +112,20 @@ namespace ProtoBuf.Serializers
         [Fact]
         public void HazAliasedEnum_Schema()
         {
-            var schema = Serializer.GetProto<HazBasicEnum>();
-            Assert.Equal("todo", schema);
+            var schema = Serializer.GetProto<HazAliasedEnum>();
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+enum AliasedEnum {
+   option allow_alias = true;
+   A = 0;
+   B = 1;
+   C = 1;
+}
+message HazAliasedEnum {
+   optional AliasedEnum Value = 1 [default = A];
+}
+", schema);
         }
         [Fact]
         public void HazAliasedEnum_WorksForKnownAndUnknownValues()

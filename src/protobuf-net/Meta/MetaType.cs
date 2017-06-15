@@ -1,4 +1,5 @@
-﻿#if !NO_RUNTIME
+﻿using System.Linq;
+#if !NO_RUNTIME
 using System;
 using System.Collections;
 using System.Text;
@@ -16,6 +17,8 @@ using System.Reflection;
 #if FEAT_COMPILER
 using System.Reflection.Emit;
 using System.Globalization;
+using System.Collections.Generic;
+using System.Linq;
 #endif
 #endif
 
@@ -1873,26 +1876,29 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
+                    if(fieldsArr.Select(x => x.FieldNumber).Distinct().Count() < fieldsArr.Length)
+                    {   // duplicated value requires allow_alias
+                        NewLine(builder, indent + 1).Append("option allow_alias = true;");
+                    }
+
                     bool haveWrittenZero = false;
-                    if (syntax == ProtoSyntax.Proto3)
+                    // write zero values **first**
+                    foreach (ValueMember member in fieldsArr)
                     {
-                        foreach (ValueMember member in fieldsArr)
+                        if(member.FieldNumber == 0)
                         {
-                            if(member.FieldNumber == 0)
-                            {
-                                NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
-                                haveWrittenZero = true;
-                            }
+                            NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
+                            haveWrittenZero = true;
                         }
-                        if(!haveWrittenZero)
-                        {
-                            NewLine(builder, indent + 1).Append("ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)");
-                        }
+                    }
+                    if (syntax == ProtoSyntax.Proto3 && !haveWrittenZero)
+                    {
+                        NewLine(builder, indent + 1).Append("ZERO = 0; // proto3 requires a zero value as the first item (it can be named anything)");   
                     }
                     // note array is already sorted, so zero would already be first
                     foreach (ValueMember member in fieldsArr)
                     {
-                        if (member.FieldNumber == 0 && haveWrittenZero) continue;
+                        if (member.FieldNumber == 0) continue;
                         NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
                     }
                 }

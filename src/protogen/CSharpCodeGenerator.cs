@@ -131,7 +131,9 @@ namespace ProtoBuf
         protected override void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto obj, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            ctx.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{obj.Name}"", EnumPassthru = true)]");
+            var tw = ctx.Write($@"[global::ProtoBuf.ProtoContract(");
+            if (name != obj.Name) tw.Write($@"Name = @""{obj.Name}""");
+            tw.WriteLine(")]");
             WriteOptions(ctx, obj.Options);
             ctx.WriteLine($"public enum {Escape(name)}").WriteLine("{").Indent();
         }
@@ -144,7 +146,9 @@ namespace ProtoBuf
         protected override void WriteEnumValue(GeneratorContext ctx, EnumValueDescriptorProto obj, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            ctx.WriteLine($@"[global::ProtoBuf.ProtoEnum(Name = @""{obj.Name}"", Value = {obj.Number})]");
+            var tw = ctx.Write($@"[global::ProtoBuf.ProtoEnum(");
+            if (name != obj.Name) tw.Write($@"Name = @""{obj.Name}""");
+            tw.WriteLine(")]");
             WriteOptions(ctx, obj.Options);
             ctx.WriteLine($"{Escape(name)} = {obj.Number},");
         }
@@ -157,9 +161,11 @@ namespace ProtoBuf
         protected override void WriteMessageHeader(GeneratorContext ctx, DescriptorProto obj, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            ctx.WriteLine($@"[global::ProtoBuf.ProtoContract(Name = @""{obj.Name}"")]");
+            var tw = ctx.Write($@"[global::ProtoBuf.ProtoContract(");
+            if (name != obj.Name) tw.Write($@"Name = @""{obj.Name}""");
+            tw.WriteLine(")]");
             WriteOptions(ctx, obj.Options);
-            var tw = ctx.Write($"public partial class {Escape(name)}");
+            tw = ctx.Write($"public partial class {Escape(name)}");
             if(obj.ExtensionRanges.Count != 0) tw.Write(" : global::ProtoBuf.IExtensible");
             tw.WriteLine();
             ctx.WriteLine("{").Indent();
@@ -190,7 +196,11 @@ namespace ProtoBuf
         protected override void WriteField(GeneratorContext ctx, FieldDescriptorProto obj, ref object state, OneOfStub[] oneOfs)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            var tw = ctx.Write($@"[global::ProtoBuf.ProtoMember({obj.Number}, Name = @""{obj.Name}""");
+            var tw = ctx.Write($@"[global::ProtoBuf.ProtoMember({obj.Number}");
+            if(name != obj.Name)
+            {
+                tw.Write($@", Name = @""{obj.Name}""");
+            }
             bool isOptional = obj.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = obj.label == FieldDescriptorProto.Label.LabelRepeated;
 
