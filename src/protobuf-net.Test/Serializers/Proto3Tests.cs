@@ -61,6 +61,52 @@ enum RegularEnum {
 
 
         [Fact]
+        public void HazStrictEnum_Schema()
+        {
+            var schema = Serializer.GetProto<HazStrictEnum>();
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+message HazStrictEnum {
+   optional StrictEnum Value = 1 [default = A];
+}
+enum StrictEnum {
+   A = 0;
+   B = 1;
+   C = 2;
+}
+", schema);
+        }
+        [Fact]
+        public void HazStrictEnum_WorksForKnownAndUnknownValues()
+        {
+            var obj = Serializer.ChangeType<HazInteger, HazStrictEnum>(new HazInteger { Value = 0 });
+            Assert.Equal(StrictEnum.A, obj.Value);
+
+            obj = Serializer.ChangeType<HazInteger, HazStrictEnum>(new HazInteger { Value = 1 });
+            Assert.Equal(StrictEnum.B, obj.Value);
+
+            var ex = Assert.Throws<ProtoException>(() =>
+            {
+                obj = Serializer.ChangeType<HazInteger, HazStrictEnum>(new HazInteger { Value = 5 });
+            });
+            Assert.Equal("No ProtoBuf.Serializers.Proto3Tests+StrictEnum enum is mapped to the wire-value 5", ex.Message);
+        }
+
+        [ProtoContract]
+        public class HazStrictEnum
+        {
+            [ProtoMember(1)]
+            public StrictEnum Value { get; set; }
+        }
+        [ProtoContract(EnumPassthru = false)]
+        public enum StrictEnum
+        {
+            A, B, C
+        }
+
+
+        [Fact]
         public void HazCustomMappedEnum_Schema()
         {
             var schema = Serializer.GetProto<HazCustomMappedEnum>();
