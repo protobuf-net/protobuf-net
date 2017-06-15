@@ -19,6 +19,11 @@ see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017
 ## v2.3.0 (work in progress)
 
 - proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
+- proto3 schema generation
+- full support for `map<,>`, `Timestamp`, `Duration`
+- dictionaries are now "maps" by default - duplicated keys *replace* values rather than causing exceptions
+- support for one-of
+- enums are now "pass thru" whenever possible - unknown values will not normally cause exceptions
 
 ## v2.2.0
 

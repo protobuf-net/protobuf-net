@@ -1,15 +1,125 @@
-﻿using ProtoBuf.Meta;
+﻿
+using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using Xunit;
 
 namespace ProtoBuf.Serializers
 {
-    [Trait("kind", "maps")]
-    public class MapTests
+    [Trait("kind", "proto3")]
+    public class Proto3Tests
     {
+
+        [Fact]
+        public void HazBasicEnum_Schema()
+        {
+            var schema = Serializer.GetProto<HazBasicEnum>();
+            Assert.Equal("todo", schema);
+        }
+        [Fact]
+        public void HazBasicEnum_WorksForKnownAndUnknownValues()
+        {
+            var obj = Serializer.ChangeType<HazInteger, HazBasicEnum>(new HazInteger { Value = 0 });
+            Assert.Equal(RegularEnum.A, obj.Value);
+
+            obj = Serializer.ChangeType<HazInteger, HazBasicEnum>(new HazInteger { Value = 1 });
+            Assert.Equal(RegularEnum.B, obj.Value);
+
+            obj = Serializer.ChangeType<HazInteger, HazBasicEnum>(new HazInteger { Value = 5 });
+            Assert.Equal((RegularEnum)5, obj.Value);
+        }
+
+        [ProtoContract]
+        public class HazInteger
+        {
+            [ProtoMember(1, IsRequired = true)]
+            public int Value { get; set; }
+        }
+
+        [ProtoContract]
+        public class HazBasicEnum
+        {
+            [ProtoMember(1)]
+            public RegularEnum Value { get; set; }
+        }
+        public enum RegularEnum
+        {
+            A, B, C
+        }
+
+
+        [Fact]
+        public void HazCustomMappedEnum_Schema()
+        {
+            var schema = Serializer.GetProto<HazCustomMappedEnum>();
+            Assert.Equal("todo", schema);
+        }
+        [Fact]
+        public void HazCustomMappedEnum_WorksForKnownAndUnknownValues()
+        {
+            var obj = Serializer.ChangeType<HazInteger, HazCustomMappedEnum>(new HazInteger { Value = 0 });
+            Assert.Equal(MappedEnum.B, obj.Value);
+
+            obj = Serializer.ChangeType<HazInteger, HazCustomMappedEnum>(new HazInteger { Value = 1 });
+            Assert.Equal(MappedEnum.A, obj.Value);
+
+            var ex = Assert.Throws<ProtoException>(() =>
+            {
+                obj = Serializer.ChangeType<HazInteger, HazCustomMappedEnum>(new HazInteger { Value = 5 });
+            });
+            Assert.Equal("No ProtoBuf.Serializers.Proto3Tests+MappedEnum enum is mapped to the wire-value 5", ex.Message);
+        }
+
+        [ProtoContract]
+        public class HazCustomMappedEnum
+        {
+            [ProtoMember(1)]
+            public MappedEnum Value { get; set; }
+        }
+
+        public enum MappedEnum
+        {
+            [ProtoEnum(Value = 1)]
+            A,
+            [ProtoEnum(Value = 0)]
+            B,
+            C
+        }
+
+        [Fact]
+        public void HazAliasedEnum_Schema()
+        {
+            var schema = Serializer.GetProto<HazBasicEnum>();
+            Assert.Equal("todo", schema);
+        }
+        [Fact]
+        public void HazAliasedEnum_WorksForKnownAndUnknownValues()
+        {
+            var obj = Serializer.ChangeType<HazInteger, HazAliasedEnum>(new HazInteger { Value = 0 });
+            Assert.Equal(AliasedEnum.A, obj.Value);
+
+            obj = Serializer.ChangeType<HazInteger, HazAliasedEnum>(new HazInteger { Value = 1 });
+            Assert.Equal(AliasedEnum.C, obj.Value); // coube be B - identical
+
+            obj = Serializer.ChangeType<HazInteger, HazAliasedEnum>(new HazInteger { Value = 5 });
+            Assert.Equal((AliasedEnum)5, obj.Value);
+        }
+
+        [ProtoContract]
+        public class HazAliasedEnum
+        {
+            [ProtoMember(1)]
+            public AliasedEnum Value { get; set; }
+        }
+
+        public enum AliasedEnum
+        {
+            A = 0,
+            B = 1,
+            C = 1
+        }
+
         [Fact]
         public void RoundTripBasic()
         {
@@ -183,7 +293,7 @@ enum SomeEnum {
         {
             [ProtoMember(1)]
             public SomeEnum X { get; set; }
-            
+
             public enum SomeEnum : short
             {
                 A = 1, B = 0, C = 2
@@ -356,3 +466,5 @@ message KeyValuePair_Double_String {
         }
     }
 }
+
+

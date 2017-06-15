@@ -1,6 +1,6 @@
 [ ] custom options for netobjectproxy, asref / dynamic
 [x] proto3 schema emit
-[ ] enum auto pass-thru
+[x] enum auto pass-thru
 [ ] dependency tree emit
 [x] case insensitive files
 [x] auto "map" with explicit opt-out

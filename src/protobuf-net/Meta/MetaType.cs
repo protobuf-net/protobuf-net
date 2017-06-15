@@ -540,6 +540,8 @@ namespace ProtoBuf.Meta
             }
             bool isEnum = !EnumPassthru && Helpers.IsEnum(type);
             if(family ==  AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
+
+            bool enumShouldUseImplicitPassThru = isEnum;
             BasicList partialIgnores = null, partialMembers = null;
             int dataMemberOffset = 0, implicitFirstTag = 1;
             bool inferTagByName = model.InferTagFromNameDefault;
@@ -582,7 +584,7 @@ namespace ProtoBuf.Meta
 
                 if (fullAttributeTypeName == "ProtoBuf.ProtoPartialIgnoreAttribute")
                 {
-                    if (item.TryGet("MemberName", out tmp) && tmp != null)
+                    if (item.TryGet(nameof(ProtoPartialIgnoreAttribute.MemberName), out tmp) && tmp != null)
                     {
                         if (partialIgnores == null) partialIgnores = new BasicList();
                         partialIgnores.Add((string)tmp);
@@ -593,46 +595,48 @@ namespace ProtoBuf.Meta
                     if (partialMembers == null) partialMembers = new BasicList();
                     partialMembers.Add(item);
                 }
-
+                
                 if (fullAttributeTypeName == "ProtoBuf.ProtoContractAttribute")
                 {
-                    if (item.TryGet("Name", out tmp)) name = (string) tmp;
+                    if (item.TryGet(nameof(ProtoContractAttribute.Name), out tmp)) name = (string) tmp;
                     if (Helpers.IsEnum(type)) // note this is subtly different to isEnum; want to do this even if [Flags]
                     {
+
 #if !FEAT_IKVM
-                        // IKVM can't access EnumPassthruHasValue, but conveniently, InferTagFromName will only be returned if set via ctor or property
-                        if (item.TryGet("EnumPassthruHasValue", false, out tmp) && (bool)tmp)
+                        // IKVM can't access EnumPassthruHasValue, but conveniently, EnumPassthru will only be returned if set via ctor or property
+                        if (item.TryGet(nameof(ProtoContractAttribute.EnumPassthruHasValue), false, out tmp) && (bool)tmp)
 #endif
                         {
-                            if (item.TryGet("EnumPassthru", out tmp))
+                            if (item.TryGet(nameof(ProtoContractAttribute.EnumPassthru), out tmp))
                             {
                                 EnumPassthru = (bool)tmp;
+                                enumShouldUseImplicitPassThru = false;
                                 if (EnumPassthru) isEnum = false; // no longer treated as an enum
                             }
                         }
                     }
                     else
                     {
-                        if (item.TryGet("DataMemberOffset", out tmp)) dataMemberOffset = (int) tmp;
+                        if (item.TryGet(nameof(ProtoContractAttribute.DataMemberOffset), out tmp)) dataMemberOffset = (int) tmp;
 
 #if !FEAT_IKVM
                         // IKVM can't access InferTagFromNameHasValue, but conveniently, InferTagFromName will only be returned if set via ctor or property
-                        if (item.TryGet("InferTagFromNameHasValue", false, out tmp) && (bool) tmp)
+                        if (item.TryGet(nameof(ProtoContractAttribute.InferTagFromNameHasValue), false, out tmp) && (bool) tmp)
 #endif
                         {
-                            if (item.TryGet("InferTagFromName", out tmp)) inferTagByName = (bool) tmp;
+                            if (item.TryGet(nameof(ProtoContractAttribute.InferTagFromName), out tmp)) inferTagByName = (bool) tmp;
                         }
 
-                        if (item.TryGet("ImplicitFields", out tmp) && tmp != null)
+                        if (item.TryGet(nameof(ProtoContractAttribute.ImplicitFields), out tmp) && tmp != null)
                         {
                             implicitMode = (ImplicitFields) (int) tmp; // note that this uses the bizarre unboxing rules of enums/underlying-types
                         }
 
-                        if (item.TryGet("SkipConstructor", out tmp)) UseConstructor = !(bool) tmp;
-                        if (item.TryGet("IgnoreListHandling", out tmp)) IgnoreListHandling = (bool) tmp;
-                        if (item.TryGet("AsReferenceDefault", out tmp)) AsReferenceDefault = (bool) tmp;
-                        if (item.TryGet("ImplicitFirstTag", out tmp) && (int) tmp > 0) implicitFirstTag = (int) tmp;
-                        if (item.TryGet("IsGroup", out tmp)) IsGroup = (bool)tmp;
+                        if (item.TryGet(nameof(ProtoContractAttribute.SkipConstructor), out tmp)) UseConstructor = !(bool) tmp;
+                        if (item.TryGet(nameof(ProtoContractAttribute.IgnoreListHandling), out tmp)) IgnoreListHandling = (bool) tmp;
+                        if (item.TryGet(nameof(ProtoContractAttribute.AsReferenceDefault), out tmp)) AsReferenceDefault = (bool) tmp;
+                        if (item.TryGet(nameof(ProtoContractAttribute.ImplicitFirstTag), out tmp) && (int) tmp > 0) implicitFirstTag = (int) tmp;
+                        if (item.TryGet(nameof(ProtoContractAttribute.IsGroup), out tmp)) IsGroup = (bool)tmp;
                     }
                 }
 
@@ -674,7 +678,8 @@ namespace ProtoBuf.Meta
             MemberInfo[] foundList = type.GetMembers(isEnum ? BindingFlags.Public | BindingFlags.Static
                 : BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
 #endif
-                foreach (MemberInfo member in foundList)
+            bool hasConflictingEnumValue = false;
+            foreach (MemberInfo member in foundList)
             {
                 if (member.DeclaringType != type) continue;
                 if (member.IsDefined(model.MapType(typeof(ProtoIgnoreAttribute)), true)) continue;
@@ -707,7 +712,7 @@ namespace ProtoBuf.Meta
                     effectiveType = property.PropertyType;
                     isPublic = Helpers.GetGetMethod(property, false, false) != null;
                     isField = false;
-                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, backingField);
+                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue, backingField);
                 } else if ((field = member as FieldInfo) != null)
                 {
                     effectiveType = field.FieldType;
@@ -717,7 +722,7 @@ namespace ProtoBuf.Meta
                     { // only care about static things on enums; WinRT has a __value instance field!
                         continue;
                     }
-                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType);
+                    ApplyDefaultBehaviour_AddMembers(model, family, isEnum, partialMembers, dataMemberOffset, inferTagByName, implicitMode, members, member, ref forced, isPublic, isField, ref effectiveType, ref hasConflictingEnumValue);
                 } else if ((method = member as MethodInfo) != null)
                 {
                     if (isEnum) continue;
@@ -734,6 +739,12 @@ namespace ProtoBuf.Meta
                         CheckForCallback(method, memberAttribs, "System.Runtime.Serialization.OnDeserializedAttribute", ref callbacks, 7);
                     }
                 }
+            }
+
+            if(isEnum && enumShouldUseImplicitPassThru && !hasConflictingEnumValue)
+            {
+                EnumPassthru = true;
+                // but leave isEnum alone
             }
             ProtoMemberAttribute[] arr = new ProtoMemberAttribute[members.Count];
             members.CopyTo(arr, 0);
@@ -767,7 +778,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private static void ApplyDefaultBehaviour_AddMembers(TypeModel model, AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, BasicList members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, MemberInfo backingMember = null)
+        private static void ApplyDefaultBehaviour_AddMembers(TypeModel model, AttributeFamily family, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferTagByName, ImplicitFields implicitMode, BasicList members, MemberInfo member, ref bool forced, bool isPublic, bool isField, ref Type effectiveType, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
         {
             switch (implicitMode)
             {
@@ -787,7 +798,7 @@ namespace ProtoBuf.Meta
 #endif
             if (effectiveType != null)
             {
-                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(model, member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, backingMember);
+                ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(model, member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, ref hasConflictingEnumValue, backingMember);
                 if (normalizedAttribute != null) members.Add(normalizedAttribute);
             }
         }
@@ -956,7 +967,7 @@ namespace ProtoBuf.Meta
             return (value & required) == required;
         }
         
-        private static ProtoMemberAttribute NormalizeProtoMember(TypeModel model, MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName, MemberInfo backingMember = null)
+        private static ProtoMemberAttribute NormalizeProtoMember(TypeModel model, MemberInfo member, AttributeFamily family, bool forced, bool isEnum, BasicList partialMembers, int dataMemberOffset, bool inferByTagName, ref bool hasConflictingEnumValue, MemberInfo backingMember = null)
         {
             if (member == null || (family == AttributeFamily.None && !isEnum)) return null; // nix
             int fieldNumber = int.MinValue, minAcceptFieldNumber = inferByTagName ? -1 : 1;
@@ -984,17 +995,24 @@ namespace ProtoBuf.Meta
 #endif
                     if (attrib != null)
                     {
-                        GetFieldName(ref name, attrib, "Name");
+                        GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
 #if !FEAT_IKVM // IKVM can't access HasValue, but conveniently, Value will only be returned if set via ctor or property
                         if ((bool)Helpers.GetInstanceMethod(attrib.AttributeType
 #if WINRT || COREFX
                              .GetTypeInfo()
 #endif
-                            ,"HasValue").Invoke(attrib.Target, null))
+                            , nameof(ProtoEnumAttribute.HasValue)).Invoke(attrib.Target, null))
 #endif
                         {
                             object tmp;
-                            if(attrib.TryGet("Value", out tmp)) fieldNumber = (int)tmp;
+                            if (attrib.TryGet(nameof(ProtoEnumAttribute.Value), out tmp))
+                            {
+                                if(fieldNumber != (int)tmp)
+                                {
+                                    hasConflictingEnumValue = true;
+                                }   
+                                fieldNumber = (int)tmp;
+                            }
                         }
                     }
 
