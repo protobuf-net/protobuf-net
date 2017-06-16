@@ -133,7 +133,11 @@ namespace ProtoBuf
             source = null;
             model = null;
             BufferPool.ReleaseBufferToPool(ref ioBuffer);
-            if(stringInterner != null) stringInterner.Clear();
+            if (stringInterner != null)
+            {
+                stringInterner.Clear();
+                stringInterner = null;
+            }
             if(netCache != null) netCache.Clear();
         }
         internal int TryReadUInt32VariantWithoutMoving(bool trimNegative, out uint value)
@@ -479,7 +483,7 @@ namespace ProtoBuf
         }
 #else
         private System.Collections.Generic.Dictionary<string,string> stringInterner;
-                private string Intern(string value)
+        private string Intern(string value)
         {
             if (value == null) return null;
             if (value.Length == 0) return "";
@@ -983,9 +987,8 @@ namespace ProtoBuf
         /// reader to be created.
         /// </summary>
         public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber)
-#pragma warning disable 0618 // "32-bit"
             => ReadLengthPrefix(source, expectHeader, style, out fieldNumber, out int bytesRead);
-#pragma warning restore 0618
+
         /// <summary>
         /// Reads a little-endian encoded integer. An exception is thrown if the data is not all available.
         /// </summary>
@@ -1052,7 +1055,6 @@ namespace ProtoBuf
         /// Reads the length-prefix of a message from a stream without buffering additional data, allowing a fixed-length
         /// reader to be created.
         /// </summary>
-        [Obsolete("32-bit")]
         public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber, out int bytesRead)
         {
             if(style == PrefixStyle.None)
@@ -1149,13 +1151,13 @@ namespace ProtoBuf
             if (b < 0) { return 0; }
             value = (uint)b;
             if ((value & 0x80) == 0) { return 1; }
-
+            value &= 0x7F;
             int bytesRead = 1, shift = 7;
             while(bytesRead < 9)
             {
                 b = source.ReadByte();
                 if (b < 0) throw EoF(null);
-                value |= ((uint)b & 0x7F) << shift;
+                value |= ((ulong)b & 0x7F) << shift;
                 shift += 7;
 
                 if ((b & 0x80) == 0) return ++bytesRead;
@@ -1164,7 +1166,7 @@ namespace ProtoBuf
             if (b < 0) throw EoF(null);
             if((b & 1) == 0) // only use 1 bit from the last byte
             {
-                value |= ((uint)b & 0x7F) << shift;
+                value |= ((ulong)b & 0x7F) << shift;
                 return ++bytesRead;
             }
             throw new OverflowException();
@@ -1376,7 +1378,6 @@ namespace ProtoBuf
 
         #region RECYCLER
 
-        [Obsolete("32-bit")]
         internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, int len)
             => Create(source, model, context, (long)len);
         internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, long len)

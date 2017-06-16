@@ -2,7 +2,22 @@
 
 Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net)
 
-[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/protobuf-net/donate)
+If you prefer to build from source:
+
+    git clone https://github.com/mgravell/protobuf-net.git
+    cd protobuf-net\src\protobuf-net
+    dotnet restore
+    dotnet build -c Release
+
+(it will tell you where the dlls and package have been written)
+
+Alternatively, use Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) to build `src\protobuf-net.sln`
+
+If you feel like supporting my efforts, I won't stop you:
+
+<a href='https://pledgie.com/campaigns/33946'><img alt='Click here to lend your support to: protobuf-net; fast binary serialization for .NET and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/33946.png?skin_name=chrome' border='0' ></a>
+
+If you can't, that's fine too.
 
 ## v3.* (future plans)
 
@@ -10,11 +25,8 @@ see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017
 
 ## v2.3.1 (future plans)
 
-- `dynamic` API over types known only via descriptors loaded at runtime
-
-## v2.3.1 (future plans)
-
 - build-time tooling
+- `dynamic` API over types known only via descriptors loaded at runtime
 
 ## v2.3.0 (work in progress)
 
@@ -24,6 +36,18 @@ see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017
 - dictionaries are now "maps" by default - duplicated keys *replace* values rather than causing exceptions
 - support for one-of
 - enums are now "pass thru" whenever possible - unknown values will not normally cause exceptions
+
+## v2.2.2 (not yet released)
+
+- fix: `Type` members should work with `GetProto<T>` (as `string`)
+
+## v2.2.1
+
+- critical bug fix [#256](https://github.com/mgravell/protobuf-net/issues/256) - length-based readers are failing; if you are using 2.2.0, please update as soon as possible (this bug was introduced in 2.2.0)
+- fix #241 - check all callback parameters (signature validation)
+- removed `[Obsolete]` markers left in place during 64-bit updates
+- release string interner earlier (keeps a possibly-large array reachable)
+- various documentation fixes (#184, #189, #216)
 
 ## v2.2.0
 

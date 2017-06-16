@@ -2072,6 +2072,7 @@ namespace ProtoBuf.Meta
                         }
                     case ProtoTypeCode.Decimal: imports |= CommonImports.Bcl; return ".bcl.Decimal";
                     case ProtoTypeCode.Guid: imports |= CommonImports.Bcl; return ".bcl.Guid";
+                    case ProtoTypeCode.Type: return "string";
                     default: throw new NotSupportedException("No .proto map found for: " + effectiveType.FullName);
                 }
             }

@@ -377,9 +377,7 @@ namespace ProtoBuf
         public static bool TryReadLengthPrefix(Stream source, PrefixStyle style, out int length)
         {
             int fieldNumber, bytesRead;
-#pragma warning disable 0618 // 32-bit
             length = ProtoReader.ReadLengthPrefix(source, false, style, out fieldNumber, out bytesRead);
-#pragma warning restore 0618
             return bytesRead > 0;
         }
 

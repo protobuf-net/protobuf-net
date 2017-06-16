@@ -1,9 +1,17 @@
 # protobuf-net
 protobuf-net is a contract based serializer for .NET code, that happens to write data in the "protocol buffers" serialization format engineered by Google. The API, however, is very different to Google's, and follows typical .NET patterns (it is broadly comparable, in usage, to XmlSerializer, DataContractSerializer, etc). It should work for most .NET languages that write standard types and can use attributes.
 
-[![Donate](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/protobuf-net/donate)
+## Release Notes
 
-[Release Notes](http://mgravell.github.io/protobuf-net/releasenotes)
+[Change history and pending changes are here](http://mgravell.github.io/protobuf-net/releasenotes)
+
+## Donate
+
+If you feel like supporting my efforts, I won't stop you:
+
+<a href='https://pledgie.com/campaigns/33946'><img alt='Click here to lend your support to: protobuf-net; fast binary serialization for .NET and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/33946.png?skin_name=chrome' border='0' ></a>
+
+If you can't, that's fine too.
 
 ---
 
@@ -104,7 +112,7 @@ Inheritance must be explicitly declared, in a similar way that if must for XmlSe
 
 ```csharp
 [ProtoContract]
-[ProtoInclude(7, typeof(SomeDerivedType)]
+[ProtoInclude(7, typeof(SomeDerivedType))]
 class SomeBaseType {...}
 
 [ProtoContract]
