@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.CustomOptions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,6 +15,37 @@ namespace ProtoBuf
     }
     public abstract partial class CommonCodeGenerator : CodeGenerator
     {
+        private Access? GetAccess(IType parent)
+        {
+            if (parent is DescriptorProto)
+                return GetAccess((DescriptorProto)parent);
+            if (parent is EnumDescriptorProto)
+                return GetAccess((EnumDescriptorProto)parent);
+            if (parent is FileDescriptorProto)
+                return GetAccess((FileDescriptorProto)parent);
+            return null;
+        }
+        protected Access GetAccess(FileDescriptorProto obj)
+            => Extensions.GetOptions(obj?.Options)?.Access ?? Access.Public;
+
+        static Access? NullIfInherit(Access? access)
+            => access == Access.Inherit ? null : access;
+        protected Access GetAccess(DescriptorProto obj)
+            => NullIfInherit(Extensions.GetOptions(obj?.Options)?.Access)
+            ?? GetAccess(obj?.Parent) ?? Access.Public;
+
+        protected Access GetAccess(FieldDescriptorProto obj)
+            => NullIfInherit(Extensions.GetOptions(obj?.Options)?.Access)
+            ?? GetAccess(obj?.Parent as IType) ?? Access.Public;
+
+        protected Access GetAccess(EnumDescriptorProto obj)
+            => NullIfInherit(Extensions.GetOptions(obj?.Options)?.Access)
+                ?? GetAccess(obj?.Parent) ?? Access.Public;
+
+        public virtual string GetAccess(Access access)
+            => access.ToString();
+        
+
         public virtual string Indent => "    ";
 
         protected abstract string DefaultFileExtension { get; }
@@ -60,8 +92,26 @@ namespace ProtoBuf
             {
                 WriteService(ctx, inner);
             }
+            if(file.Extensions.Count != 0)
+            {
+                object extState = null;
+                WriteExtensionsHeader(ctx, file, ref extState);
+                foreach(var ext in file.Extensions)
+                {
+                    WriteExtension(ctx, ext);
+                }
+                WriteExtensionsFooter(ctx, file, ref extState);
+            }
             WriteFileFooter(ctx, obj, ref state);
         }
+
+        protected virtual void WriteExtension(GeneratorContext ctx, FieldDescriptorProto ext) { }
+
+        protected virtual void WriteExtensionsHeader(GeneratorContext ctx, FileDescriptorProto file, ref object state) { }
+        protected virtual void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto file, ref object state) { }
+
+        protected virtual void WriteExtensionsHeader(GeneratorContext ctx, DescriptorProto file, ref object state) { }
+        protected virtual void WriteExtensionsFooter(GeneratorContext ctx, DescriptorProto file, ref object state) { }
 
         protected virtual void WriteService(GeneratorContext ctx, ServiceDescriptorProto obj)
         {
@@ -100,6 +150,16 @@ namespace ProtoBuf
             foreach (var inner in obj.EnumTypes)
             {
                 WriteEnum(ctx, inner);
+            }
+            if (obj.Extensions.Count != 0)
+            {
+                object extState = null;
+                WriteExtensionsHeader(ctx, obj, ref extState);
+                foreach (var ext in obj.Extensions)
+                {
+                    WriteExtension(ctx, ext);
+                }
+                WriteExtensionsFooter(ctx, obj, ref extState);
             }
             WriteMessageFooter(ctx, obj, ref state);
         }

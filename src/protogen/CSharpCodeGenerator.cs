@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ProtoBuf.CustomOptions;
 
 namespace ProtoBuf
 {
@@ -135,7 +136,7 @@ namespace ProtoBuf
             if (name != obj.Name) tw.Write($@"Name = @""{obj.Name}""");
             tw.WriteLine(")]");
             WriteOptions(ctx, obj.Options);
-            ctx.WriteLine($"public enum {Escape(name)}").WriteLine("{").Indent();
+            ctx.WriteLine($"{GetAccess(GetAccess(obj))} enum {Escape(name)}").WriteLine("{").Indent();
         }
 
         protected override void WriteEnumFooter(GeneratorContext ctx, EnumDescriptorProto obj, ref object state)
@@ -165,7 +166,7 @@ namespace ProtoBuf
             if (name != obj.Name) tw.Write($@"Name = @""{obj.Name}""");
             tw.WriteLine(")]");
             WriteOptions(ctx, obj.Options);
-            tw = ctx.Write($"public partial class {Escape(name)}");
+            tw = ctx.Write($"{GetAccess(GetAccess(obj))} partial class {Escape(name)}");
             if(obj.ExtensionRanges.Count != 0) tw.Write(" : global::ProtoBuf.IExtensible");
             tw.WriteLine();
             ctx.WriteLine("{").Indent();
@@ -192,7 +193,16 @@ namespace ProtoBuf
 
         const string FieldPrefix = "__pbn__";
 
-
+        public override string GetAccess(Access access)
+        {
+            switch(access)
+            {
+                case Access.Internal: return "internal";
+                case Access.Public: return "public";
+                case Access.Private: return "private";
+                default: return base.GetAccess(access);
+            }
+        }
         protected override void WriteField(GeneratorContext ctx, FieldDescriptorProto obj, ref object state, OneOfStub[] oneOfs)
         {
             var name = ctx.NameNormalizer.GetName(obj);
@@ -296,15 +306,15 @@ namespace ProtoBuf
                         first = false;
                     }
                     tw.WriteLine(first ? "]" : ")]");
-                    ctx.WriteLine($"public global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
+                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
                 }
                 else if (UseArray(obj))
                 {
-                    ctx.WriteLine($"public {typeName}[] {Escape(name)} {{ get; set; }}");
+                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
                 else
                 {
-                    ctx.WriteLine($"public global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
+                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
             }
             else if (oneOf != null)
@@ -312,7 +322,7 @@ namespace ProtoBuf
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"default({typeName})" : defaultValue;
                 var fieldName = FieldPrefix + oneOf.OneOf.Name;
                 var storage = oneOf.GetStorage(obj.type);
-                ctx.WriteLine($"public {typeName} {Escape(name)}").WriteLine("{").Indent();
+                ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)}").WriteLine("{").Indent();
 
                 switch (obj.type)
                 {
@@ -330,8 +340,8 @@ namespace ProtoBuf
                 var unionType = oneOf.GetUnionType();
                 ctx.WriteLine($"set {{ {fieldName} = new global::ProtoBuf.{unionType}({obj.Number}, value); }}")
                     .Outdent().WriteLine("}")
-                    .WriteLine($"public bool ShouldSerialize{name}() => {fieldName}.Is({obj.Number});")
-                    .WriteLine($"public void Reset{name}() => global::ProtoBuf.{unionType}.Reset(ref {fieldName}, {obj.Number});");
+                    .WriteLine($"{GetAccess(GetAccess(obj))} bool ShouldSerialize{name}() => {fieldName}.Is({obj.Number});")
+                    .WriteLine($"{GetAccess(GetAccess(obj))} void Reset{name}() => global::ProtoBuf.{unionType}.Reset(ref {fieldName}, {obj.Number});");
 
                 if (oneOf.IsFirst())
                 {
@@ -353,7 +363,7 @@ namespace ProtoBuf
                         fieldType = typeName + "?";
                         break;
                 }
-                ctx.WriteLine($"public {typeName} {Escape(name)}").WriteLine("{").Indent();
+                ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)}").WriteLine("{").Indent();
                 tw = ctx.Write($"get {{ return {fieldName}");
                 if (!string.IsNullOrWhiteSpace(defaultValue))
                 {
@@ -367,18 +377,61 @@ namespace ProtoBuf
                 tw.WriteLine("; }");
                 ctx.WriteLine($"set {{ {fieldName} = value; }}")
                     .Outdent().WriteLine("}")
-                    .WriteLine($"public bool ShouldSerialize{name}() => {fieldName} != null;")
-                    .WriteLine($"public void Reset{name}() => {fieldName} = null;")
+                    .WriteLine($"{GetAccess(GetAccess(obj))} bool ShouldSerialize{name}() => {fieldName} != null;")
+                    .WriteLine($"{GetAccess(GetAccess(obj))} void Reset{name}() => {fieldName} = null;")
                     .WriteLine($"private {fieldType} {fieldName};");
             }
             else
             {
-                tw = ctx.Write($"public {typeName} {Escape(name)} {{ get; set; }}");
+                tw = ctx.Write($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)} {{ get; set; }}");
                 if (!string.IsNullOrWhiteSpace(defaultValue)) tw.Write($" = {defaultValue};");
                 tw.WriteLine();
             }
             ctx.WriteLine();
         }
+
+        protected override void WriteExtensionsHeader(GeneratorContext ctx, FileDescriptorProto obj, ref object state)
+        {
+            ctx.WriteLine($"{GetAccess(GetAccess(obj))} static class Extensions").WriteLine("{").Indent();
+        }
+        protected override void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto obj, ref object state)
+        {
+            ctx.Outdent().WriteLine("}");
+        }
+        protected override void WriteExtensionsHeader(GeneratorContext ctx, DescriptorProto obj, ref object state)
+        {
+            ctx.WriteLine($"{GetAccess(GetAccess(obj))} static class Extensions").WriteLine("{").Indent();
+        }
+        protected override void WriteExtensionsFooter(GeneratorContext ctx, DescriptorProto obj, ref object state)
+        {
+            ctx.Outdent().WriteLine("}");
+        }
+        protected override void WriteExtension(GeneratorContext ctx, FieldDescriptorProto field)
+        {
+            var type = GetTypeName(ctx, field, out string dataFormat, out bool isMap);
+
+            if (isMap)
+            {
+                ctx.WriteLine("#error map extensions not yet implemented");
+            }
+            else
+            {
+                var msg = ctx.TryFind<DescriptorProto>(field.Extendee);
+                var extendee = MakeRelativeName(field, msg, ctx.NameNormalizer);
+
+                string name = ctx.NameNormalizer.GetName(field);
+                var tw = ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({extendee} obj)")
+                    .Write($"=> obj == null ? default({type}) : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
+                if (!string.IsNullOrEmpty(dataFormat))
+                {
+                    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
+                    }
+                tw.WriteLine(");");
+                ctx.WriteLine();
+                //  GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
+            }
+        }
+
         private static bool UseArray(FieldDescriptorProto field)
         {
             switch (field.type)
