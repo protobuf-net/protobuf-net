@@ -621,7 +621,7 @@ message KeyValuePair_Double_String {
                 }
             });
             ms.Position = 0;
-            var obj = Serializer.Deserialize<ImplicitMap>(ms);
+            var obj = Serializer.Deserialize<ExplicitMap>(ms);
             Assert.Equal(3, obj.Items.Count);
             Assert.Equal("mno", obj.Items[1]);
             Assert.Equal("jkl", obj.Items[2]);
