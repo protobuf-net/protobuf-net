@@ -1908,6 +1908,7 @@ namespace ProtoBuf.Meta
                 foreach (ValueMember member in fieldsArr)
                 {
                     string schemaTypeName;
+                    bool hasOption = false;
                     if (member.IsMap)
                     {
                         member.ResolveMapTypes(out var _, out var keyType, out var valueType);
@@ -1930,7 +1931,7 @@ namespace ProtoBuf.Meta
                         {
                             if (member.DefaultValue is string)
                             {
-                                builder.Append(" [default = \"").Append(member.DefaultValue).Append("\"]");
+                                AddOption(builder, ref hasOption).Append("default = \"").Append(member.DefaultValue).Append("\"");
                             }
                             else if (member.DefaultValue is TimeSpan)
                             {
@@ -1938,25 +1939,35 @@ namespace ProtoBuf.Meta
                             }
                             else if (member.DefaultValue is bool)
                             {   // need to be lower case (issue 304)
-                                builder.Append((bool)member.DefaultValue ? " [default = true]" : " [default = false]");
+                                AddOption(builder, ref hasOption).Append((bool)member.DefaultValue ? "default = true" : "default = false");
                             }
                             else
                             {
-                                builder.Append(" [default = ").Append(member.DefaultValue).Append(']');
+                                AddOption(builder, ref hasOption).Append("default = ").Append(member.DefaultValue);
                             }
                         }
                         if (CanPack(member.ItemType))
                         {
                             if(syntax == ProtoSyntax.Proto2)
                             {
-                                if (member.IsPacked) builder.Append(" [packed = true]"); // disabled by default
+                                if (member.IsPacked) AddOption(builder, ref hasOption).Append("packed = true"); // disabled by default
                             }
                             else
                             {
-                                if (!member.IsPacked) builder.Append(" [packed = false]"); // enabled by default
+                                if (!member.IsPacked) AddOption(builder, ref hasOption).Append("packed = false"); // enabled by default
                             }
                         }
-                        builder.Append(';');
+                        if (member.AsReference)
+                        {
+                            imports |= RuntimeTypeModel.CommonImports.Protogen;
+                            AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).asRef = true");
+                        }
+                        if (member.DynamicType)
+                        {
+                            imports |= RuntimeTypeModel.CommonImports.Protogen;
+                            AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).dynamicType = true");
+                        }
+                        CloseOption(builder, ref hasOption).Append(';');
                         if (syntax != ProtoSyntax.Proto2 && member.DefaultValue != null && !member.IsRequired)
                         {
                             if (IsImplicitDefault(member.DefaultValue))
@@ -1969,7 +1980,7 @@ namespace ProtoBuf.Meta
                             }
                         }
                     }
-                    if (schemaTypeName == "bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
+                    if (schemaTypeName == ".bcl.NetObjectProxy" && member.AsReference && !member.DynamicType) // we know what it is; tell the user
                     {
                         builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false, ref imports));
                     }
@@ -1989,6 +2000,23 @@ namespace ProtoBuf.Meta
                 }
                 NewLine(builder, indent).Append('}');
             }
+        }
+
+        private static StringBuilder AddOption(StringBuilder builder, ref bool hasOption)
+        {
+            if (hasOption)
+                return builder.Append(", ");
+            hasOption = true;
+            return builder.Append(" [");
+        }
+        private static StringBuilder CloseOption(StringBuilder builder, ref bool hasOption)
+        {
+            if(hasOption)
+            {
+                hasOption = false;
+                return builder.Append("]");
+            }
+            return builder;
         }
 
         private static bool IsImplicitDefault(object value)

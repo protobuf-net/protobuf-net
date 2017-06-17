@@ -37,8 +37,8 @@ message ProtogenMessageOptions {
 message ProtogenFieldOptions {
   string name = 1;
   Access access = 2;
-  bool asRef = 3;
-  bool dynamicType = 4;
+  bool asRef = 3 [(.protobuf_net.fieldopt).name	= "AsReference"];
+  bool dynamicType = 4 [(.protobuf_net.fieldopt).name	= "DynamicType"];
 }
 message ProtogenEnumOptions {
   string name = 1;

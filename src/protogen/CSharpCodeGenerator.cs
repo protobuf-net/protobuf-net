@@ -211,6 +211,16 @@ namespace ProtoBuf
             {
                 tw.Write($@", Name = @""{obj.Name}""");
             }
+            var options = CustomOptions.Extensions.GetOptions(obj.Options);
+            if(options?.AsReference == true)
+            {
+                tw.Write($@", AsReference = true");
+            }
+            if (options?.DynamicType == true)
+            {
+                tw.Write($@", DynamicType = true");
+            }
+            
             bool isOptional = obj.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = obj.label == FieldDescriptorProto.Label.LabelRepeated;
 
@@ -515,6 +525,8 @@ namespace ProtoBuf
                         case WellKnownTypeDuration:
                             dataFormat = nameof(DataFormat.WellKnown);
                             return "global::System.TimeSpan?";
+                        case ".bcl.NetObjectProxy":
+                            return "object";
                         case ".bcl.DateTime":
                             return "global::System.DateTime?";
                         case ".bcl.TimeSpan":

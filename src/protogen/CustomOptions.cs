@@ -41,11 +41,11 @@ namespace ProtoBuf.CustomOptions
         [global::ProtoBuf.ProtoMember(2, Name = @"access")]
         internal Access Access { get; set; }
 
-        [global::ProtoBuf.ProtoMember(3)]
-        internal bool asRef { get; set; }
+        [global::ProtoBuf.ProtoMember(3, Name = @"asRef")]
+        internal bool AsReference { get; set; }
 
-        [global::ProtoBuf.ProtoMember(4)]
-        internal bool dynamicType { get; set; }
+        [global::ProtoBuf.ProtoMember(4, Name = @"dynamicType")]
+        internal bool DynamicType { get; set; }
 
     }
 

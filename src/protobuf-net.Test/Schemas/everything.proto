@@ -1,9 +1,7 @@
-﻿// NOT SHOWN
-//
-// import
-// custom options
+﻿syntax = "proto2";
 
-syntax = "proto2";
+import "protobuf-net/protogen.proto";
+import "protobuf-net/bcl.proto";
 
 // file comment
 
@@ -12,6 +10,11 @@ package AllTheThings;
 enum RootEnum {
 	A = 0;
 	B = 1 [deprecated = true];
+}
+message TestNetObject {
+  optional TestNetObject foo = 1 [(.protobuf_net.fieldopt).asRef = true];
+  optional TestNetObject barRef = 2 [(.protobuf_net.fieldopt).asRef = true];
+  optional bcl.NetObjectProxy barDyn = 3 [(.protobuf_net.fieldopt).dynamicType = true];
 }
 
 message MagicValues {

@@ -272,6 +272,27 @@ message HazMapWithDataFormat {
         }
 
         [Fact]
+        public void GetDynamicAsRefSchema()
+        {
+            var schema = Serializer.GetProto<HasRefDynamic>();
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
+import ""protobuf-net/protogen.proto""; // custom protobuf-net options
+
+message HasRefDynamic {
+   optional .bcl.NetObjectProxy Obj = 1 [(.protobuf_net.fieldopt).asRef = true, (.protobuf_net.fieldopt).dynamicType = true];
+}
+", schema);
+        }
+        [ProtoContract]
+        public class HasRefDynamic
+        {
+            [ProtoMember(1, AsReference = true, DynamicType = true)]
+            public HasRefDynamic Obj { get; set; }
+        }
+
+        [Fact]
         public void TimeSchemaTypes()
         {
             var schema = Serializer.GetProto<HazTime>();

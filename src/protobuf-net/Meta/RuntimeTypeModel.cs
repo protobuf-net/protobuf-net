@@ -257,6 +257,11 @@ namespace ProtoBuf.Meta
                 headerBuilder.Append("import \"protobuf-net/bcl.proto\"; // schema for protobuf-net's handling of core .NET types");
                 Helpers.AppendLine(headerBuilder);
             }
+            if ((imports & CommonImports.Protogen) != 0)
+            {
+                headerBuilder.Append("import \"protobuf-net/protogen.proto\"; // custom protobuf-net options");
+                Helpers.AppendLine(headerBuilder);
+            }
             if ((imports & CommonImports.Timestamp) != 0)
             {
                 headerBuilder.Append("import \"google/protobuf/timestamp.proto\";");
@@ -275,7 +280,8 @@ namespace ProtoBuf.Meta
             None = 0,
             Bcl = 1,
             Timestamp = 2,
-            Duration = 4
+            Duration = 4,
+            Protogen = 8
         }
         private void CascadeDependents(BasicList list, MetaType metaType)
         {
