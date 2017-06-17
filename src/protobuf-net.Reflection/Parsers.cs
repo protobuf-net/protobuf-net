@@ -196,7 +196,8 @@ namespace Google.Protobuf.Reflection
         {
             if (obj == null || data == null || data.Length == 0) return;
             var ext = obj.GetExtensionObject(true);
-            (ext as IExtensionResettable)?.Reset();
+            //TODO: reinstate after 2.3.0
+            // (ext as IExtensionResettable)?.Reset();
             var s = ext.BeginAppend();
             try
             {

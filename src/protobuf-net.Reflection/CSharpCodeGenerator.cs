@@ -528,10 +528,10 @@ namespace ProtoBuf.Reflection
                     switch(field.TypeName)
                     {
                         case WellKnownTypeTimestamp:
-                            dataFormat = nameof(DataFormat.WellKnown);
+                            dataFormat = "WellKnown";
                             return "global::System.DateTime?";
                         case WellKnownTypeDuration:
-                            dataFormat = nameof(DataFormat.WellKnown);
+                            dataFormat = "WellKnown";
                             return "global::System.TimeSpan?";
                         case ".bcl.NetObjectProxy":
                             return "object";

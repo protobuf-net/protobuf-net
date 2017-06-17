@@ -51,28 +51,28 @@ namespace ProtoBuf.Reflection
                 switch (type)
                 {
                     case FieldDescriptorProto.Type.TypeBool:
-                        return nameof(DiscriminatedUnion64Object.Boolean);
+                        return "Boolean";
                     case FieldDescriptorProto.Type.TypeInt32:
                     case FieldDescriptorProto.Type.TypeSfixed32:
                     case FieldDescriptorProto.Type.TypeSint32:
                     case FieldDescriptorProto.Type.TypeFixed32:
                     case FieldDescriptorProto.Type.TypeEnum:
-                        return nameof(DiscriminatedUnion64Object.Int32);
+                        return "Int32";
                     case FieldDescriptorProto.Type.TypeFloat:
-                        return nameof(DiscriminatedUnion64Object.Single);
+                        return "Single";
                     case FieldDescriptorProto.Type.TypeUint32:
-                        return nameof(DiscriminatedUnion64Object.UInt32);
+                        return "UInt32";
                     case FieldDescriptorProto.Type.TypeDouble:
-                        return nameof(DiscriminatedUnion64Object.Double);
+                        return "Double";
                     case FieldDescriptorProto.Type.TypeFixed64:
                     case FieldDescriptorProto.Type.TypeInt64:
                     case FieldDescriptorProto.Type.TypeSfixed64:
                     case FieldDescriptorProto.Type.TypeSint64:
-                        return nameof(DiscriminatedUnion64Object.Int64);
+                        return "Int64";
                     case FieldDescriptorProto.Type.TypeUint64:
-                        return nameof(DiscriminatedUnion64Object.UInt64);
+                        return "UInt64";
                     default:
-                        return nameof(DiscriminatedUnion64Object.Object);
+                        return "Object";
                 }
             }
             internal static OneOfStub[] Build(GeneratorContext context, DescriptorProto message)
@@ -108,13 +108,13 @@ namespace ProtoBuf.Reflection
             {
                 if (Count64 != 0)
                 {
-                    return CountRef == 0 ? nameof(DiscriminatedUnion64) : nameof(DiscriminatedUnion64Object);
+                    return CountRef == 0 ? "DiscriminatedUnion64" : "DiscriminatedUnion64Object";
                 }
                 if (Count32 != 0)
                 {
-                    return CountRef == 0 ? nameof(DiscriminatedUnion32) : nameof(DiscriminatedUnion32Object);
+                    return CountRef == 0 ? "DiscriminatedUnion32" : "DiscriminatedUnion32Object";
                 }
-                return nameof(DiscriminatedUnionObject);
+                return "DiscriminatedUnionObject";
             }
         }
     }
