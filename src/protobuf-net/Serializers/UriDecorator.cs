@@ -1,6 +1,7 @@
 ﻿#if !NO_RUNTIME
 using System;
 
+using ProtoBuf.Compiler;
 #if FEAT_IKVM
 using Type = IKVM.Reflection.Type;
 using IKVM.Reflection;
@@ -31,13 +32,14 @@ namespace ProtoBuf.Serializers
 #if !FEAT_IKVM
         public override void Write(object value, ProtoWriter dest)
         {
-            Tail.Write(((Uri)value).AbsoluteUri, dest);
+            Tail.Write(((Uri)value).OriginalString, dest);
         }
+
         public override object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // not expecting incoming
             string s = (string)Tail.Read(null, source);
-            return s.Length == 0 ? null : new Uri(s);
+            return s.Length == 0 ? null : new Uri(s, UriKind.RelativeOrAbsolute);
         }
 #endif
 
@@ -45,7 +47,7 @@ namespace ProtoBuf.Serializers
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue(valueFrom);
-            ctx.LoadValue(typeof(Uri).GetProperty("AbsoluteUri"));
+            ctx.LoadValue(typeof(Uri).GetProperty("OriginalString"));
             Tail.EmitWrite(ctx, null);
         }
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -59,9 +61,9 @@ namespace ProtoBuf.Serializers
             ctx.LoadNullRef();
             ctx.Branch(@end, true);
             ctx.MarkLabel(@nonEmpty);
-            ctx.EmitCtor(ctx.MapType(typeof(Uri)), ctx.MapType(typeof(string)));
+            ctx.LoadValue((int)UriKind.RelativeOrAbsolute);
+            ctx.EmitCtor(ctx.MapType(typeof(Uri)), ctx.MapType(typeof(string)), ctx.MapType(typeof(UriKind)));
             ctx.MarkLabel(@end);
-            
         }
 #endif 
     }
