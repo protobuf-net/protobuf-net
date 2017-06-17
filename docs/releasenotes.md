@@ -40,6 +40,8 @@ see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017
 ## v2.2.2 (not yet released)
 
 - fix: `Type` members should work with `GetProto<T>` (as `string`)
+- fix: issues with `Uri` handling (#162 via #261, thanks)
+- add build support for .NET 3.5 (#262)
 
 ## v2.2.1
 

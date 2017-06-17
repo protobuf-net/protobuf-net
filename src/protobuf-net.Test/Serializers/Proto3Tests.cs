@@ -565,6 +565,102 @@ message KeyValuePair_Double_String {
                 public long? Value { get; set; }
             }
         }
+
+        [Fact]
+        public void ImplicitMapLastMapWins()
+        {
+            var ms = new MemoryStream();
+            Serializer.Serialize(ms, new ListKVP
+            {
+                Items = {
+                    new KeyValuePair<int, string>(1, "abc"),
+                    new KeyValuePair<int, string>(2, "def"),
+                    new KeyValuePair<int, string>(3, "ghi"),
+                    new KeyValuePair<int, string>(2, "jkl"),
+                    new KeyValuePair<int, string>(1, "mno"),
+                }
+            });
+            ms.Position = 0;
+            var obj = Serializer.Deserialize<ImplicitMap>(ms);
+            Assert.Equal(3, obj.Items.Count);
+            Assert.Equal("mno", obj.Items[1]);
+            Assert.Equal("jkl", obj.Items[2]);
+            Assert.Equal("ghi", obj.Items[3]);
+        }
+
+        [Fact]
+        public void ExplicitMapLastMapWins()
+        {
+            var ms = new MemoryStream();
+            Serializer.Serialize(ms, new ListKVP
+            {
+                Items = {
+                    new KeyValuePair<int, string>(1, "abc"),
+                    new KeyValuePair<int, string>(2, "def"),
+                    new KeyValuePair<int, string>(3, "ghi"),
+                    new KeyValuePair<int, string>(2, "jkl"),
+                    new KeyValuePair<int, string>(1, "mno"),
+                }
+            });
+            ms.Position = 0;
+            var obj = Serializer.Deserialize<ImplicitMap>(ms);
+            Assert.Equal(3, obj.Items.Count);
+            Assert.Equal("mno", obj.Items[1]);
+            Assert.Equal("jkl", obj.Items[2]);
+            Assert.Equal("ghi", obj.Items[3]);
+        }
+
+        [Fact]
+        public void DisabledMapFails()
+        {
+            var ms = new MemoryStream();
+            Serializer.Serialize(ms, new ListKVP
+            {
+                Items = {
+                    new KeyValuePair<int, string>(1, "abc"),
+                    new KeyValuePair<int, string>(2, "def"),
+                    new KeyValuePair<int, string>(3, "ghi"),
+                    new KeyValuePair<int, string>(2, "jkl"),
+                    new KeyValuePair<int, string>(1, "mno"),
+                }
+            });
+            ms.Position = 0;
+            var ex = Assert.Throws<ArgumentException>(() =>
+                Serializer.Deserialize<DisabledMap>(ms)
+            );
+            Assert.Equal("An item with the same key has already been added. Key: 2", ex.Message);
+        }
+
+        [ProtoContract]
+        public class ListKVP
+        {
+            [ProtoMember(1)]
+            public List<KeyValuePair<int, string>> Items { get; }
+                = new List<KeyValuePair<int, string>>();
+        }
+
+        [ProtoContract]
+        public class ImplicitMap
+        {
+            [ProtoMember(1), ProtoMap]
+            public Dictionary<int, string> Items { get; }
+                = new Dictionary<int, string>();
+        }
+        [ProtoContract]
+        public class ExplicitMap
+        {
+            [ProtoMember(1), ProtoMap]
+            public Dictionary<int, string> Items { get; }
+                = new Dictionary<int, string>();
+        }
+        [ProtoContract]
+        public class DisabledMap
+        {
+            [ProtoMember(1)]
+            [ProtoMap(DisableMap = true)]
+            public Dictionary<int, string> Items { get; }
+                = new Dictionary<int, string>();
+        }
     }
 }
 
