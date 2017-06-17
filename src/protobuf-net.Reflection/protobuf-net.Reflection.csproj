@@ -3,7 +3,7 @@
     <VersionPrefix>0.9.0</VersionPrefix>
     <AssemblyName>protobuf-net.Reflection</AssemblyName>
     <Title>protobuf-net.Reflection</Title>
-    <Description>ProtoBuf DSL (proto2 / proto3) and desccriptor tools for protobuf-net</Description>
+    <Description>ProtoBuf DSL (proto2 / proto3) and descriptor tools for protobuf-net</Description>
     <TargetFrameworks>net40;netstandard1.3</TargetFrameworks><!--net20;net35;-->
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
