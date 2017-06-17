@@ -1,5 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
-using ProtoBuf.CustomOptions;
+using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,20 +26,20 @@ namespace ProtoBuf
             return null;
         }
         protected Access GetAccess(FileDescriptorProto obj)
-            => Extensions.GetOptions(obj?.Options)?.Access ?? Access.Public;
+            => obj?.Options?.GetOptions()?.Access ?? Access.Public;
 
         static Access? NullIfInherit(Access? access)
             => access == Access.Inherit ? null : access;
         protected Access GetAccess(DescriptorProto obj)
-            => NullIfInherit(Extensions.GetOptions(obj?.Options)?.Access)
+            => NullIfInherit(obj?.Options?.GetOptions()?.Access)
             ?? GetAccess(obj?.Parent) ?? Access.Public;
 
         protected Access GetAccess(FieldDescriptorProto obj)
-            => NullIfInherit(Extensions.GetOptions(obj?.Options)?.Access)
+            => NullIfInherit(obj?.Options?.GetOptions()?.Access)
             ?? GetAccess(obj?.Parent as IType) ?? Access.Public;
 
         protected Access GetAccess(EnumDescriptorProto obj)
-            => NullIfInherit(Extensions.GetOptions(obj?.Options)?.Access)
+            => NullIfInherit(obj?.Options?.GetOptions()?.Access)
                 ?? GetAccess(obj?.Parent) ?? Access.Public;
 
         public virtual string GetAccess(Access access)

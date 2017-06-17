@@ -6,7 +6,7 @@ import "google/protobuf/descriptor.proto";
 
 package protobuf_net;
 
-option csharp_namespace = "ProtoBuf.CustomOptions";
+option csharp_namespace = "ProtoBuf.Reflection";
 
 extend .google.protobuf.FileOptions      { ProtogenFileOptions		fileopt		= 1037 [(.protobuf_net.fieldopt).name	= "Options"]; }
 extend .google.protobuf.MessageOptions   { ProtogenMessageOptions	msgopt		= 1037 [(.protobuf_net.fieldopt).name	= "Options"]; }
@@ -29,10 +29,12 @@ enum Access {
 message ProtogenFileOptions {
   string namespace = 1;
   Access access = 2;
+  string extensions = 3 [(.protobuf_net.fieldopt).name	= "ExtensionTypeName"];
 }
 message ProtogenMessageOptions {
   string name = 1;
   Access access = 2;
+  string extensions = 3 [(.protobuf_net.fieldopt).name	= "ExtensionTypeName"];
 }
 message ProtogenFieldOptions {
   string name = 1;
@@ -56,5 +58,5 @@ message ProtogenMethodOptions {
 }
 
 option (.protobuf_net.fileopt) = {
-  access: INTERNAL
+  access: PUBLIC // mostly a test
 };

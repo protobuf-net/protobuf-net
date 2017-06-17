@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using ProtoBuf.CustomOptions;
+using ProtoBuf.Reflection;
 
 namespace ProtoBuf
 {
@@ -211,7 +211,7 @@ namespace ProtoBuf
             {
                 tw.Write($@", Name = @""{obj.Name}""");
             }
-            var options = CustomOptions.Extensions.GetOptions(obj.Options);
+            var options = obj.Options?.GetOptions();
             if(options?.AsReference == true)
             {
                 tw.Write($@", AsReference = true");
@@ -402,7 +402,9 @@ namespace ProtoBuf
 
         protected override void WriteExtensionsHeader(GeneratorContext ctx, FileDescriptorProto obj, ref object state)
         {
-            ctx.WriteLine($"{GetAccess(GetAccess(obj))} static class Extensions").WriteLine("{").Indent();
+            var name = obj?.Options?.GetOptions()?.ExtensionTypeName;
+            if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
+            ctx.WriteLine($"{GetAccess(GetAccess(obj))} static class {Escape(name)}").WriteLine("{").Indent();
         }
         protected override void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto obj, ref object state)
         {
@@ -410,7 +412,9 @@ namespace ProtoBuf
         }
         protected override void WriteExtensionsHeader(GeneratorContext ctx, DescriptorProto obj, ref object state)
         {
-            ctx.WriteLine($"{GetAccess(GetAccess(obj))} static class Extensions").WriteLine("{").Indent();
+            var name = obj?.Options?.GetOptions()?.ExtensionTypeName;
+            if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
+            ctx.WriteLine($"{GetAccess(GetAccess(obj))} static class {Escape(name)}").WriteLine("{").Indent();
         }
         protected override void WriteExtensionsFooter(GeneratorContext ctx, DescriptorProto obj, ref object state)
         {
@@ -424,13 +428,18 @@ namespace ProtoBuf
             {
                 ctx.WriteLine("#error map extensions not yet implemented");
             }
+            else if (field.label == FieldDescriptorProto.Label.LabelRepeated)
+            {
+                ctx.WriteLine("#error repeated extensions not yet implemented");
+            }
             else
             {
                 var msg = ctx.TryFind<DescriptorProto>(field.Extendee);
                 var extendee = MakeRelativeName(field, msg, ctx.NameNormalizer);
 
+                var @this = field.Parent is FileDescriptorProto ? "this " : "";
                 string name = ctx.NameNormalizer.GetName(field);
-                var tw = ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({extendee} obj)")
+                var tw = ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj)")
                     .Write($"=> obj == null ? default({type}) : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
                 if (!string.IsNullOrEmpty(dataFormat))
                 {

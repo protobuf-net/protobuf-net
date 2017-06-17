@@ -1,4 +1,5 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -91,7 +92,7 @@ namespace ProtoBuf
 
         public virtual string GetName(FileDescriptorProto definition)
         {
-            var ns = CustomOptions.Extensions.GetOptions(definition?.Options)?.Namespace;
+            var ns = definition?.Options?.GetOptions()?.Namespace;
             if (!string.IsNullOrWhiteSpace(ns)) return ns;
             ns = definition.Options?.CsharpNamespace;
             if (string.IsNullOrWhiteSpace(ns)) ns = GetName(definition.Package);
@@ -101,25 +102,25 @@ namespace ProtoBuf
 
         public virtual string GetName(DescriptorProto definition)
         {
-            var name = CustomOptions.Extensions.GetOptions(definition?.Options)?.Name;
+            var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
             return GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         }
         public virtual string GetName(EnumDescriptorProto definition)
         {
-            var name = CustomOptions.Extensions.GetOptions(definition?.Options)?.Name;
+            var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
             return GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         }
         public virtual string GetName(EnumValueDescriptorProto definition)
         {
-            var name = CustomOptions.Extensions.GetOptions(definition?.Options)?.Name;
+            var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
             return AutoCapitalize(definition.Name);
         }
         public virtual string GetName(FieldDescriptorProto definition)
         {
-            var name = CustomOptions.Extensions.GetOptions(definition?.Options)?.Name;
+            var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
             var preferred = GetName(definition.Name);
             if (definition.label == FieldDescriptorProto.Label.LabelRepeated)

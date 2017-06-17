@@ -4,90 +4,98 @@
 
 #pragma warning disable CS1591, CS0612, CS3021
 
-namespace ProtoBuf.CustomOptions
+namespace ProtoBuf.Reflection
 {
 
     [global::ProtoBuf.ProtoContract()]
-    internal partial class ProtogenFileOptions
+    public partial class ProtogenFileOptions
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"namespace")]
         [global::System.ComponentModel.DefaultValue("")]
-        internal string Namespace { get; set; } = "";
+        public string Namespace { get; set; } = "";
 
         [global::ProtoBuf.ProtoMember(2, Name = @"access")]
-        internal Access Access { get; set; }
+        public Access Access { get; set; }
+
+        [global::ProtoBuf.ProtoMember(3, Name = @"extensions")]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string ExtensionTypeName { get; set; } = "";
 
     }
 
     [global::ProtoBuf.ProtoContract()]
-    internal partial class ProtogenMessageOptions
+    public partial class ProtogenMessageOptions
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
-        internal string Name { get; set; } = "";
+        public string Name { get; set; } = "";
 
         [global::ProtoBuf.ProtoMember(2, Name = @"access")]
-        internal Access Access { get; set; }
+        public Access Access { get; set; }
+
+        [global::ProtoBuf.ProtoMember(3, Name = @"extensions")]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string ExtensionTypeName { get; set; } = "";
 
     }
 
     [global::ProtoBuf.ProtoContract()]
-    internal partial class ProtogenFieldOptions
+    public partial class ProtogenFieldOptions
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
-        internal string Name { get; set; } = "";
+        public string Name { get; set; } = "";
 
         [global::ProtoBuf.ProtoMember(2, Name = @"access")]
-        internal Access Access { get; set; }
+        public Access Access { get; set; }
 
         [global::ProtoBuf.ProtoMember(3, Name = @"asRef")]
-        internal bool AsReference { get; set; }
+        public bool AsReference { get; set; }
 
         [global::ProtoBuf.ProtoMember(4, Name = @"dynamicType")]
-        internal bool DynamicType { get; set; }
+        public bool DynamicType { get; set; }
 
     }
 
     [global::ProtoBuf.ProtoContract()]
-    internal partial class ProtogenEnumOptions
+    public partial class ProtogenEnumOptions
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
-        internal string Name { get; set; } = "";
+        public string Name { get; set; } = "";
 
         [global::ProtoBuf.ProtoMember(2, Name = @"access")]
-        internal Access Access { get; set; }
+        public Access Access { get; set; }
 
     }
 
     [global::ProtoBuf.ProtoContract()]
-    internal partial class ProtogenEnumValueOptions
+    public partial class ProtogenEnumValueOptions
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
-        internal string Name { get; set; } = "";
+        public string Name { get; set; } = "";
 
     }
 
     [global::ProtoBuf.ProtoContract()]
-    internal partial class ProtogenServiceOptions
+    public partial class ProtogenServiceOptions
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
-        internal string Name { get; set; } = "";
+        public string Name { get; set; } = "";
 
         [global::ProtoBuf.ProtoMember(2, Name = @"access")]
-        internal Access Access { get; set; }
+        public Access Access { get; set; }
 
     }
 
     [global::ProtoBuf.ProtoContract()]
-    internal partial class ProtogenMethodOptions
+    public partial class ProtogenMethodOptions
     {
         [global::ProtoBuf.ProtoMember(1, Name = @"name")]
         [global::System.ComponentModel.DefaultValue("")]
-        internal string Name { get; set; } = "";
+        public string Name { get; set; } = "";
 
     }
 
@@ -104,27 +112,27 @@ namespace ProtoBuf.CustomOptions
         Internal = 3,
     }
 
-    internal static class Extensions
+    public static class Extensions
     {
-        internal static ProtogenFileOptions GetOptions(global::Google.Protobuf.Reflection.FileOptions obj)
+        public static ProtogenFileOptions GetOptions(this global::Google.Protobuf.Reflection.FileOptions obj)
         => obj == null ? default(ProtogenFileOptions) : global::ProtoBuf.Extensible.GetValue<ProtogenFileOptions>(obj, 1037);
 
-        internal static ProtogenMessageOptions GetOptions(global::Google.Protobuf.Reflection.MessageOptions obj)
+        public static ProtogenMessageOptions GetOptions(this global::Google.Protobuf.Reflection.MessageOptions obj)
         => obj == null ? default(ProtogenMessageOptions) : global::ProtoBuf.Extensible.GetValue<ProtogenMessageOptions>(obj, 1037);
 
-        internal static ProtogenFieldOptions GetOptions(global::Google.Protobuf.Reflection.FieldOptions obj)
+        public static ProtogenFieldOptions GetOptions(this global::Google.Protobuf.Reflection.FieldOptions obj)
         => obj == null ? default(ProtogenFieldOptions) : global::ProtoBuf.Extensible.GetValue<ProtogenFieldOptions>(obj, 1037);
 
-        internal static ProtogenEnumOptions GetOptions(global::Google.Protobuf.Reflection.EnumOptions obj)
+        public static ProtogenEnumOptions GetOptions(this global::Google.Protobuf.Reflection.EnumOptions obj)
         => obj == null ? default(ProtogenEnumOptions) : global::ProtoBuf.Extensible.GetValue<ProtogenEnumOptions>(obj, 1037);
 
-        internal static ProtogenEnumValueOptions GetOptions(global::Google.Protobuf.Reflection.EnumValueOptions obj)
+        public static ProtogenEnumValueOptions GetOptions(this global::Google.Protobuf.Reflection.EnumValueOptions obj)
         => obj == null ? default(ProtogenEnumValueOptions) : global::ProtoBuf.Extensible.GetValue<ProtogenEnumValueOptions>(obj, 1037);
 
-        internal static ProtogenServiceOptions GetOptions(global::Google.Protobuf.Reflection.ServiceOptions obj)
+        public static ProtogenServiceOptions GetOptions(this global::Google.Protobuf.Reflection.ServiceOptions obj)
         => obj == null ? default(ProtogenServiceOptions) : global::ProtoBuf.Extensible.GetValue<ProtogenServiceOptions>(obj, 1037);
 
-        internal static ProtogenMethodOptions GetOptions(global::Google.Protobuf.Reflection.MethodOptions obj)
+        public static ProtogenMethodOptions GetOptions(this global::Google.Protobuf.Reflection.MethodOptions obj)
         => obj == null ? default(ProtogenMethodOptions) : global::ProtoBuf.Extensible.GetValue<ProtogenMethodOptions>(obj, 1037);
 
     }
