@@ -668,6 +668,12 @@ namespace ProtoBuf.Compiler
             TraceCompile(OpCodes.Newobj + ": " + ctor.DeclaringType);
         }
 
+        public void InitLocal(Type type, Compiler.Local target)
+        {
+            LoadAddress(target, type, evenIfClass: true); // for class, initobj is a load-null, store-indirect
+            il.Emit(OpCodes.Initobj, type);
+            TraceCompile(OpCodes.Initobj + ": " + type);
+        }
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
             Helpers.DebugAssert(type != null);
@@ -963,13 +969,13 @@ namespace ProtoBuf.Compiler
             LoadAddress(local, MapType(type));
         }
 #endif
-        internal void LoadAddress(Local local, Type type)
+        internal void LoadAddress(Local local, Type type, bool evenIfClass = false)
         {
-            if (Helpers.IsValueType(type))
+            if (evenIfClass || Helpers.IsValueType(type))
             {
                 if (local == null)
                 {
-                    throw new InvalidOperationException("Cannot load the address of a struct at the head of the stack");
+                    throw new InvalidOperationException("Cannot load the address of the head of the stack");
                 }
 
                 if (local == this.InputValue)

@@ -379,7 +379,7 @@ namespace ProtoBuf.Reflection
                         }
                         else if (c == 'u' || c == 'U')
                         {
-                            throw new NotImplementedException("Unicode escape points: on my todo list");
+                            throw new NotSupportedException("Unicode escape points: on my todo list");
                         }
                         else
                         {

@@ -1,8 +1,10 @@
 ﻿
 using ProtoBuf.Meta;
+using ProtoBuf.unittest;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using Xunit;
 
 namespace ProtoBuf.Serializers
@@ -199,6 +201,9 @@ message HazAliasedEnum {
             B = 1,
             C = 1
         }
+
+        [Fact]
+        public void CompileHazMap() => Compile<HazMap>(deleteOnSuccess: false);
 
         [Fact]
         public void RoundTripBasic()
@@ -462,7 +467,7 @@ enum SomeEnum {
         public class HazMap
         {
             [ProtoMember(3), ProtoMap]
-            public Dictionary<int, string> Lookup { get; } = new Dictionary<int, string>();
+            public Dictionary<int, string> Lookup { get; set; } = new Dictionary<int, string>();
         }
         [Fact]
         public void GetMapSchema_HazImplicitMap()
@@ -589,6 +594,19 @@ message KeyValuePair_Double_String {
         }
 
         [Fact]
+        public void CompileImplicitMap() => Compile<ImplicitMap>();
+
+        private static void Compile<T>([CallerMemberName] string name = null, bool deleteOnSuccess = true)
+        {
+            var model = TypeModel.Create();
+            model.Add(typeof(T), true);
+            var path = Path.ChangeExtension(name, "dll");
+            if (File.Exists(path)) File.Delete(path);
+            model.Compile(name, path);
+            PEVerify.Verify(path, 0, deleteOnSuccess);
+        }
+
+        [Fact]
         public void ExplicitMapLastMapWins()
         {
             var ms = new MemoryStream();
@@ -642,8 +660,8 @@ message KeyValuePair_Double_String {
         [ProtoContract]
         public class ImplicitMap
         {
-            [ProtoMember(1), ProtoMap]
-            public Dictionary<int, string> Items { get; }
+            [ProtoMember(1, OverwriteList = true), ProtoMap]
+            public Dictionary<int, string> Items { get; set; }
                 = new Dictionary<int, string>();
         }
         [ProtoContract]

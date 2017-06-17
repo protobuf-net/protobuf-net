@@ -316,17 +316,18 @@ namespace ProtoBuf.Serializers
         private static readonly System.Type ienumeratorType = typeof (IEnumerator), ienumerableType = typeof (IEnumerable);
 #endif
         protected MethodInfo GetEnumeratorInfo(TypeModel model, out MethodInfo moveNext, out MethodInfo current)
+            => GetEnumeratorInfo(model, ExpectedType, Tail.ExpectedType, out moveNext, out current);
+        internal static MethodInfo GetEnumeratorInfo(TypeModel model, Type expectedType, Type itemType, out MethodInfo moveNext, out MethodInfo current)
         {
 
 #if WINRT || COREFX
-            TypeInfo enumeratorType = null, iteratorType, expectedType = ExpectedType.GetTypeInfo();
+            TypeInfo enumeratorType = null, iteratorType;
 #else
-            Type enumeratorType = null, iteratorType, expectedType = ExpectedType;
+            Type enumeratorType = null, iteratorType;
 #endif
 
             // try a custom enumerator
             MethodInfo getEnumerator = Helpers.GetInstanceMethod(expectedType, "GetEnumerator", null);
-            Type itemType = Tail.ExpectedType;
 
             Type getReturnType = null;
             if (getEnumerator != null)
@@ -368,7 +369,11 @@ namespace ProtoBuf.Serializers
 #endif
             }
 ;
-            if (enumeratorType != null && enumeratorType.IsAssignableFrom(expectedType))
+            if (enumeratorType != null && enumeratorType.IsAssignableFrom(expectedType
+#if WINRT || COREFX
+                .GetTypeInfo()
+#endif
+                ))
             {
                 getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
                 getReturnType = getEnumerator.ReturnType;

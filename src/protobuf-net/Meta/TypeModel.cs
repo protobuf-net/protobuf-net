@@ -41,7 +41,7 @@ namespace ProtoBuf.Meta
         protected internal virtual Type MapType(System.Type type, bool demand)
         {
 #if FEAT_IKVM
-            throw new NotImplementedException(); // this should come from RuntimeTypeModel!
+            throw new NotSupportedException(); // this should come from RuntimeTypeModel!
 #else
             return type;
 #endif
@@ -1660,7 +1660,7 @@ namespace ProtoBuf.Meta
         internal virtual Type GetType(string fullName, Assembly context)
         {
 #if FEAT_IKVM
-            throw new NotImplementedException();
+            throw new NotSupportedException();
 #else
             return ResolveKnownType(fullName, this, context);
 #endif

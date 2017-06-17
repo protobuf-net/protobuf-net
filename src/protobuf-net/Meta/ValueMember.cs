@@ -385,12 +385,32 @@ namespace ProtoBuf.Meta
         internal bool ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
         {
             dictionaryType = keyType = valueType = null;
+
+#if WINRT || COREFX
+            var info = memberType.GetTypeInfo();
+#else
+            var info = memberType;
+#endif
+
+            if (info.IsInterface && info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+            {
+                var typeArgs = memberType.GetGenericArguments();
+
+                if (IsValidMapKeyType(typeArgs[0]))
+                {
+                    keyType = typeArgs[0];
+                    valueType = typeArgs[1];
+                    dictionaryType = memberType;
+                }
+                return false;
+            }
+
             foreach (var iType in memberType.GetInterfaces())
             {
 #if WINRT || COREFX
-                var info = iType.GetTypeInfo();
+                info = iType.GetTypeInfo();
 #else
-                        var info = iType;
+                info = iType;
 #endif
                 if (info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                 {
@@ -401,7 +421,7 @@ namespace ProtoBuf.Meta
                     {
                         keyType = typeArgs[0];
                         valueType = typeArgs[1];
-                        dictionaryType = iType;
+                        dictionaryType = memberType;
                     }
                 }
             }
@@ -457,7 +477,7 @@ namespace ProtoBuf.Meta
                         BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
                     if (ctors.Length != 1) throw new InvalidOperationException("Unable to resolve MapDecorator constructor");
                     ser = (IProtoSerializer)ctors[0].Invoke(new object[] {model, concreteType, keySer, valueSer, fieldNumber,
-                        DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String, keyWireType, valueWireType });
+                        DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String, keyWireType, valueWireType, OverwriteList });
                 }
                 else
                 {
