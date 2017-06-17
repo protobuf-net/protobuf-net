@@ -268,7 +268,7 @@ namespace ProtoBuf.Serializers
 
                 // while reader.TryReadFieldReader(fieldNumber)
                 ctx.LoadReaderWriter();
-                ctx.LoadValue(fieldNumber);
+                ctx.LoadValue(this.fieldNumber);
                 ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("TryReadFieldHeader"));
                 ctx.BranchIfTrue(redoFromStart, false);
 
