@@ -40,7 +40,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-    <ProjectReference Include="..\protogen\protogen.csproj" />
+    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
   </ItemGroup>
 
   <ItemGroup>

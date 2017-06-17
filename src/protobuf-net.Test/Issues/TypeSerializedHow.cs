@@ -40,7 +40,8 @@ namespace ProtoBuf.Issues
         public void TypeGeneratesProto()
         {
             var proto = Serializer.GetProto<ModelWithTypeMember>();
-            Assert.Equal(@"package ProtoBuf.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Issues;
 
 message ModelWithTypeMember {
    optional int32 Id = 1 [default = 0];

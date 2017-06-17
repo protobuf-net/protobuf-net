@@ -1,6 +1,6 @@
 ﻿using Google.Protobuf.Reflection;
 
-namespace ProtoBuf
+namespace ProtoBuf.Reflection
 {
     partial class CommonCodeGenerator
     {

@@ -1,10 +1,9 @@
 ﻿using Google.Protobuf.Reflection;
-using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace ProtoBuf
+namespace ProtoBuf.Reflection
 {
     public abstract class CodeGenerator
     {

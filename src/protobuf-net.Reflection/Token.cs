@@ -1,7 +1,7 @@
 ﻿using Google.Protobuf.Reflection;
 using System;
 
-namespace ProtoBuf
+namespace ProtoBuf.Reflection
 {
     internal struct Token
     {

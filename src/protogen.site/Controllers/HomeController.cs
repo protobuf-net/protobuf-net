@@ -1,15 +1,16 @@
-﻿using System;
-using System.IO;
-using System.Linq;
-using Google.Protobuf.Reflection;
+﻿using Google.Protobuf.Reflection;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProtoBuf;
-using System.Diagnostics;
-using Microsoft.AspNetCore.Hosting;
-using System.Collections.ObjectModel;
+using ProtoBuf.Reflection;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Text;
-using Microsoft.AspNetCore.Http;
 
 namespace protogen.site.Controllers
 {
@@ -342,7 +343,7 @@ namespace protogen.site.Controllers
                 var includeRoot = Path.Combine(host.WebRootPath, "protoc");
                 var args = $"--{tooling}_out=\"{session}\" --proto_path=\"{session}\" --proto_path=\"{includeRoot}\" \"{fullPath}\"";
                 int exitCode = RunProtoc(host, args, session, out var stdout, out var stderr);
-                errors = ProtoBuf.Error.Parse(stdout, stderr);
+                errors = ProtoBuf.Reflection.Error.Parse(stdout, stderr);
 
                 List<CodeFile> files = new List<CodeFile>();
                 if (exitCode == 0)

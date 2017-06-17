@@ -1,4 +1,4 @@
-﻿namespace ProtoBuf
+﻿namespace ProtoBuf.Reflection
 {
     internal enum TokenType
     {

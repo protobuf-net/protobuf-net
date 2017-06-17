@@ -1,11 +1,10 @@
 ﻿using Google.Protobuf.Reflection;
-using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 
-namespace ProtoBuf
+namespace ProtoBuf.Reflection
 {
 
     internal class ParserException : Exception

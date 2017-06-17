@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace ProtoBuf
+namespace ProtoBuf.Reflection
 {
     internal static class TokenExtensions
     {
@@ -520,7 +520,7 @@ namespace ProtoBuf
             || (len == 1 && prev == '*' && next == '/');
 
 
-        public static IEnumerable<Token> Tokenize(this LineReader reader, string file)
+        public static IEnumerable<Token> Tokenize(this TextReader reader, string file)
         {
             var buffer = new StringBuilder();
 

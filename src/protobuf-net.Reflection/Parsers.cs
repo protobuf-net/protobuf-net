@@ -1,12 +1,13 @@
 ﻿using Google.Protobuf.Reflection;
 using ProtoBuf;
-using System.Collections.Generic;
-using System.Linq;
+using ProtoBuf.Reflection;
 using System;
-using System.Text;
-using System.Text.RegularExpressions;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Google.Protobuf.Reflection
 {
@@ -32,11 +33,7 @@ namespace Google.Protobuf.Reflection
         public Error[] GetErrors() => Error.GetArray(Errors);
         internal List<Error> Errors { get; } = new List<Error>();
 
-#if !NO_IO
-        public bool Add(string name, bool includeInOutput, System.IO.TextReader source = null)
-            => Add(name, source == null ? null : new TextReaderLineReader(source), includeInOutput);
-#endif
-        internal bool Add(string name, LineReader source, bool includeInOutput)
+        public bool Add(string name, bool includeInOutput, TextReader source = null)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException(nameof(name));
@@ -63,14 +60,12 @@ namespace Google.Protobuf.Reflection
                 return true;
             }
         }
-#if NO_IO
-        private LineReader Open(string name) => null;
-#else
-        private LineReader Open(string name)
+
+        private TextReader Open(string name)
         {
             var found = FindFile(name);
             if (found == null) return null;
-            return new TextReaderLineReader(new StreamReader(File.OpenRead(found)));
+            return File.OpenText(found);
         }
         string FindFile(string file)
         {
@@ -81,8 +76,6 @@ namespace Google.Protobuf.Reflection
             }
             return null;
         }
-
-#endif
 
         bool TryResolve(string name, out FileDescriptorProto descriptor)
         {
@@ -674,12 +667,8 @@ namespace Google.Protobuf.Reflection
                 token.Throw();
             } // else EOF
         }
-#if !NO_IO
-        public void Parse(TextReader schema, List<Error> errors, string file)
-            => Parse(new TextReaderLineReader(schema), errors, file);
-#endif
 
-        internal void Parse(LineReader schema, List<Error> errors, string file)
+        public void Parse(TextReader schema, List<Error> errors, string file)
         {
             Syntax = "";
             using (var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace()), errors))
@@ -2176,7 +2165,7 @@ namespace Google.Protobuf.Reflection
 
 #pragma warning restore CS1591
 }
-namespace ProtoBuf
+namespace ProtoBuf.Reflection
 {
     internal static class ErrorExtensions
     {
@@ -2211,59 +2200,7 @@ namespace ProtoBuf
         }
         public virtual void Dispose() { }
     }
-#if !NO_IO
-    internal sealed class TextWriterLineWriter : LineWriter
-    {
-        public TextWriterLineWriter(TextWriter buffer)
-        {
-            this.buffer = buffer;
-        }
-        private TextWriter buffer;
-        public override void Write(string value) => buffer.Write(value);
-        public override void WriteLine() => buffer.WriteLine();
-        public override void WriteLine(string value) => buffer.WriteLine(value);
-        public override void Dispose() { buffer?.Dispose(); buffer = null; }
-        public override string ToString() => buffer?.ToString();
-    }
-#endif
-    internal sealed class StringLineWriter : LineWriter
-    {
-        private StringBuilder buffer = new StringBuilder();
-        public override void Write(string value) => buffer.Append(value);
-        public override void WriteLine() => buffer.AppendLine();
-        public override void WriteLine(string value) => buffer.AppendLine(value);
-        public override void Dispose() { buffer = null; }
-        public override string ToString() => buffer?.ToString();
-    }
-    internal abstract class LineReader : IDisposable
-    {
-        public abstract string ReadLine();
-        public virtual void Dispose() { }
-    }
-    sealed class StringLineReader : LineReader
-    {
-        string[] lines;
-        static readonly string[] splits = { "\r\n", "\r", "\n" };
-        public StringLineReader(string text)
-        {
-            lines = text.Split(lines, StringSplitOptions.None);
-        }
-        int index;
-        public override string ReadLine() =>
-            index < lines.Length ? lines[index++] : null;
-    }
-#if !NO_IO
-    sealed class TextReaderLineReader : LineReader
-    {
-        TextReader reader;
-        public TextReaderLineReader(TextReader reader)
-        {
-            this.reader = reader;
-        }
-        public override void Dispose() => reader?.Dispose();
-        public override string ReadLine() => reader?.ReadLine();
-    }
-#endif
+
     public static class CSharpCompiler
     {
         public static CompilerResult Compile(CodeFile file)
@@ -2273,10 +2210,10 @@ namespace ProtoBuf
             var set = new FileDescriptorSet();
             foreach (var file in files)
             {
-                using (var reader = new StringLineReader(file.Text))
+                using (var reader = new StringReader(file.Text))
                 {
                     Console.WriteLine($"Parsing {file.Name}...");
-                    set.Add(file.Name, reader, true);
+                    set.Add(file.Name, true, reader);
                 }
             }
             set.Process();

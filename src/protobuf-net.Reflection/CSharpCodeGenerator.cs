@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using ProtoBuf.Reflection;
 
-namespace ProtoBuf
+namespace ProtoBuf.Reflection
 {
     public class CSharpCodeGenerator : CommonCodeGenerator
     {

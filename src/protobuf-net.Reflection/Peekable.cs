@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 
-namespace ProtoBuf
+namespace ProtoBuf.Reflection
 {
     internal sealed class Peekable<T> : IDisposable
     {
