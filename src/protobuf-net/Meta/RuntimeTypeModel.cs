@@ -1610,11 +1610,12 @@ namespace ProtoBuf.Meta
             {
                 SerializerPair pair = methodPairs[index];
                 ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, pair.Type.Type, "SerializeImpl " + pair.Type.Type.Name);
-                ctx.CheckAccessibility(pair.Deserialize.ReturnType
+                MemberInfo returnType = pair.Deserialize.ReturnType
 #if COREFX
                     .GetTypeInfo()
 #endif
-                    );
+                    ;
+                ctx.CheckAccessibility(ref returnType);
                 pair.Type.Serializer.EmitWrite(ctx, ctx.InputValue);
                 ctx.Return();
 

@@ -203,7 +203,10 @@ message HazAliasedEnum {
         }
 
         [Fact]
-        public void CompileHazMap() => Compile<HazMap>(deleteOnSuccess: false);
+        public void CompileHazMap() => Compile<HazMap>();
+
+        [Fact]
+        public void CompileHazImplicitMap() => Compile<HazImplicitMap>();
 
         [Fact]
         public void RoundTripBasic()
@@ -485,7 +488,7 @@ message HazImplicitMap {
         [ProtoContract]
         public class HazImplicitMap
         {
-            [ProtoMember(3)]
+            [ProtoMember(3)] // leave this as {get;} = ... for the backing field test
             public Dictionary<int, string> Lookup { get; } = new Dictionary<int, string>();
         }
 
