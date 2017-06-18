@@ -176,9 +176,13 @@ namespace ProtoBuf.Reflection
         protected override void WriteEnumValue(GeneratorContext ctx, EnumValueDescriptorProto obj, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            var tw = ctx.Write($@"[global::ProtoBuf.ProtoEnum(");
-            if (name != obj.Name) tw.Write($@"Name = @""{obj.Name}""");
-            tw.WriteLine(")]");
+            if (name != obj.Name)
+            {
+                var tw = ctx.Write($@"[global::ProtoBuf.ProtoEnum(");
+                tw.Write($@"Name = @""{obj.Name}""");
+                tw.WriteLine(")]");
+            }
+            
             WriteOptions(ctx, obj.Options);
             ctx.WriteLine($"{Escape(name)} = {obj.Number},");
         }
@@ -201,7 +205,7 @@ namespace ProtoBuf.Reflection
             tw.WriteLine(")]");
             WriteOptions(ctx, obj.Options);
             tw = ctx.Write($"{GetAccess(GetAccess(obj))} partial class {Escape(name)}");
-            if(obj.ExtensionRanges.Count != 0) tw.Write(" : global::ProtoBuf.IExtensible");
+            if (obj.ExtensionRanges.Count != 0) tw.Write(" : global::ProtoBuf.IExtensible");
             tw.WriteLine();
             ctx.WriteLine("{").Indent();
             if (obj.Options?.MessageSetWireFormat == true)
@@ -232,7 +236,7 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public override string GetAccess(Access access)
         {
-            switch(access)
+            switch (access)
             {
                 case Access.Internal: return "internal";
                 case Access.Public: return "public";
@@ -247,12 +251,12 @@ namespace ProtoBuf.Reflection
         {
             var name = ctx.NameNormalizer.GetName(obj);
             var tw = ctx.Write($@"[global::ProtoBuf.ProtoMember({obj.Number}");
-            if(name != obj.Name)
+            if (name != obj.Name)
             {
                 tw.Write($@", Name = @""{obj.Name}""");
             }
             var options = obj.Options?.GetOptions();
-            if(options?.AsReference == true)
+            if (options?.AsReference == true)
             {
                 tw.Write($@", AsReference = true");
             }
@@ -260,7 +264,7 @@ namespace ProtoBuf.Reflection
             {
                 tw.Write($@", DynamicType = true");
             }
-            
+
             bool isOptional = obj.label == FieldDescriptorProto.Label.LabelOptional;
             bool isRepeated = obj.label == FieldDescriptorProto.Label.LabelRepeated;
 
@@ -275,8 +279,8 @@ namespace ProtoBuf.Reflection
 
 
             string defaultValue = null;
-            bool suppressDefaultAttribute = false;
-            if (isOptional)
+            bool suppressDefaultAttribute = !isOptional;
+            if (isOptional || obj.type == FieldDescriptorProto.Type.TypeEnum)
             {
                 defaultValue = obj.DefaultValue;
 
@@ -303,14 +307,35 @@ namespace ProtoBuf.Reflection
                         case "nan": defaultValue = "float.NaN"; break;
                     }
                 }
-                else if (!string.IsNullOrWhiteSpace(defaultValue) && obj.type == FieldDescriptorProto.Type.TypeEnum)
+                else if (obj.type == FieldDescriptorProto.Type.TypeEnum)
                 {
                     var enumType = ctx.TryFind<EnumDescriptorProto>(obj.TypeName);
                     if (enumType != null)
                     {
-                        var found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
-                        if (found != null) defaultValue = ctx.NameNormalizer.GetName(found);
-                        defaultValue = ctx.NameNormalizer.GetName(enumType) + "." + defaultValue;
+                        EnumValueDescriptorProto found = null;
+                        if (!string.IsNullOrEmpty(defaultValue))
+                        {
+                            found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
+                        }
+                        else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2)
+                        {
+                            // find the first one; if that is a zero, we don't need it after all
+                            found = enumType.Values.FirstOrDefault();
+                            if(found != null && found.Number == 0)
+                            {
+                                if(!isOptional) found = null; // we don't need it after all
+                            }
+                        }
+                        // for proto3 the default is 0, so no need to do anything - GetValueOrDefault() will do it all
+
+                        if (found != null)
+                        {
+                            defaultValue = ctx.NameNormalizer.GetName(found);
+                        }
+                        if (!string.IsNullOrWhiteSpace(defaultValue))
+                        {
+                            defaultValue = ctx.NameNormalizer.GetName(enumType) + "." + defaultValue;
+                        }
                     }
                 }
             }
@@ -498,7 +523,7 @@ namespace ProtoBuf.Reflection
                 if (!string.IsNullOrEmpty(dataFormat))
                 {
                     tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
-                    }
+                }
                 tw.WriteLine(");");
                 ctx.WriteLine();
                 //  GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
@@ -571,7 +596,7 @@ namespace ProtoBuf.Reflection
                 case FieldDescriptorProto.Type.TypeBytes:
                     return "byte[]";
                 case FieldDescriptorProto.Type.TypeEnum:
-                    switch(field.TypeName)
+                    switch (field.TypeName)
                     {
                         case ".bcl.DateTime.DateTimeKind":
                             return "global::System.DateTimeKind";
@@ -580,7 +605,7 @@ namespace ProtoBuf.Reflection
                     return MakeRelativeName(field, enumType, ctx.NameNormalizer);
                 case FieldDescriptorProto.Type.TypeGroup:
                 case FieldDescriptorProto.Type.TypeMessage:
-                    switch(field.TypeName)
+                    switch (field.TypeName)
                     {
                         case WellKnownTypeTimestamp:
                             dataFormat = "WellKnown";
@@ -617,10 +642,10 @@ namespace ProtoBuf.Reflection
 
             var declaringType = field.Parent;
 
-            if(declaringType is IType)
+            if (declaringType is IType)
             {
                 var name = FindNameFromCommonAncestor((IType)declaringType, target, normalizer);
-                if(!string.IsNullOrWhiteSpace(name)) return name;
+                if (!string.IsNullOrWhiteSpace(name)) return name;
             }
             return Escape(field.TypeName); // give up!
         }
@@ -640,11 +665,11 @@ namespace ProtoBuf.Reflection
         // - we have things left in the "target" stack - in which case we have found a common ancestor,
         //   or the target is a descendent; either way, just concat what is left (including the package
         //   if the package itself was different)
-        
+
         private string FindNameFromCommonAncestor(IType declaring, IType target, NameNormalizer normalizer)
         {
             // trivial case; asking for self, or asking for immediate child
-            if(ReferenceEquals(declaring, target) || ReferenceEquals(declaring, target.Parent))
+            if (ReferenceEquals(declaring, target) || ReferenceEquals(declaring, target.Parent))
             {
                 if (target is DescriptorProto) return Escape(normalizer.GetName((DescriptorProto)target));
                 if (target is EnumDescriptorProto) return Escape(normalizer.GetName((EnumDescriptorProto)target));
@@ -653,8 +678,8 @@ namespace ProtoBuf.Reflection
 
             var origTarget = target;
             var xStack = new Stack<IType>();
-            
-            while(declaring != null)
+
+            while (declaring != null)
             {
                 xStack.Push(declaring);
                 declaring = declaring.Parent;
@@ -667,11 +692,11 @@ namespace ProtoBuf.Reflection
                 target = target.Parent;
             }
             int lim = Math.Min(xStack.Count, yStack.Count);
-            for(int i = 0; i < lim; i++)
+            for (int i = 0; i < lim; i++)
             {
                 declaring = xStack.Peek();
                 target = yStack.Pop();
-                if(!ReferenceEquals(target, declaring))
+                if (!ReferenceEquals(target, declaring))
                 {
                     // special-case: if both are the package (file), and they have the same namespace: we're OK
                     if (target is FileDescriptorProto && declaring is FileDescriptorProto &&
@@ -688,7 +713,7 @@ namespace ProtoBuf.Reflection
                 }
             }
             // if we used everything, then the target is an ancestor-or-self
-            if(yStack.Count == 0)
+            if (yStack.Count == 0)
             {
                 target = origTarget;
                 if (target is DescriptorProto) return Escape(normalizer.GetName((DescriptorProto)target));
@@ -697,7 +722,7 @@ namespace ProtoBuf.Reflection
             }
 
             var sb = new StringBuilder();
-            while(yStack.Count != 0)
+            while (yStack.Count != 0)
             {
                 target = yStack.Pop();
 
@@ -707,7 +732,7 @@ namespace ProtoBuf.Reflection
                 else if (target is EnumDescriptorProto) nextName = normalizer.GetName((EnumDescriptorProto)target);
                 else return null;
 
-                if(!string.IsNullOrWhiteSpace(nextName))
+                if (!string.IsNullOrWhiteSpace(nextName))
                 {
                     if (sb.Length == 0 && target is FileDescriptorProto) sb.Append("global::");
                     else if (sb.Length != 0) sb.Append('.');
@@ -719,7 +744,7 @@ namespace ProtoBuf.Reflection
 
         static bool IsAncestorOrSelf(IType parent, IType child)
         {
-            while(parent != null)
+            while (parent != null)
             {
                 if (ReferenceEquals(parent, child)) return true;
                 parent = parent.Parent;
