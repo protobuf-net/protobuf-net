@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Reflection", "protobuf-net.Reflection\protobuf-net.Reflection.csproj", "{EDA3DD64-F60F-40C3-AEA2-8AFDA67AD32D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protogen", "protogen\protogen.csproj", "{54DD70D6-D607-4C55-9236-45F69F3D63A8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +59,12 @@ Global
 		{EDA3DD64-F60F-40C3-AEA2-8AFDA67AD32D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{EDA3DD64-F60F-40C3-AEA2-8AFDA67AD32D}.VS|Any CPU.ActiveCfg = VS|Any CPU
 		{EDA3DD64-F60F-40C3-AEA2-8AFDA67AD32D}.VS|Any CPU.Build.0 = VS|Any CPU
+		{54DD70D6-D607-4C55-9236-45F69F3D63A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54DD70D6-D607-4C55-9236-45F69F3D63A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{54DD70D6-D607-4C55-9236-45F69F3D63A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{54DD70D6-D607-4C55-9236-45F69F3D63A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54DD70D6-D607-4C55-9236-45F69F3D63A8}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{54DD70D6-D607-4C55-9236-45F69F3D63A8}.VS|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

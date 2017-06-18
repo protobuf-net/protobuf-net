@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "protogen": {
+      "commandName": "Project",
+      "commandLineArgs": "--csharp_out=. -Ic:\\code\\protobuf-net\\src\\protobuf-net.Test\\Schemas protogenUsage.proto"
+    }
+  }
+}
