@@ -144,6 +144,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
+        /// <param name="syntax">The .proto syntax to use</param>
         public override string GetSchema(Type type, ProtoSyntax syntax)
         {
             BasicList requiredTypes = new BasicList();

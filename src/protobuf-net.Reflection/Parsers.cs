@@ -2178,62 +2178,37 @@ namespace ProtoBuf.Reflection
             => errors.Add(new Error(ex));
     }
 
+    /// <summary>
+    /// Describes a generated file
+    /// </summary>
     public class CodeFile
     {
+        /// <summary>
+        /// Get a string representation of this instance
+        /// </summary>
+        /// <returns></returns>
         public override string ToString() => Name;
+        /// <summary>
+        /// Create a new CodeFile instance
+        /// </summary>
         public CodeFile(string name, string text)
         {
             Name = name;
             Text = text;
         }
+        /// <summary>
+        /// The name (including path if necessary) of this file
+        /// </summary>
         public string Name { get; }
+        /// <summary>
+        /// The contents of this file
+        /// </summary>
         public string Text { get; }
     }
 
-    internal abstract class LineWriter : IDisposable
-    {
-        public abstract void Write(string value);
-        public virtual void WriteLine() => Write("\r\n");
-        public virtual void WriteLine(string value)
-        {
-            Write(value);
-            WriteLine();
-        }
-        public virtual void Dispose() { }
-    }
-
-    public static class CSharpCompiler
-    {
-        public static CompilerResult Compile(CodeFile file)
-            => Compile(new[] { file });
-        public static CompilerResult Compile(params CodeFile[] files)
-        {
-            var set = new FileDescriptorSet();
-            foreach (var file in files)
-            {
-                using (var reader = new StringReader(file.Text))
-                {
-                    Console.WriteLine($"Parsing {file.Name}...");
-                    set.Add(file.Name, true, reader);
-                }
-            }
-            set.Process();
-            var results = new List<CodeFile>();
-            var newErrors = new List<Error>();
-
-            try
-            {
-                results.AddRange(CSharpCodeGenerator.Default.Generate(set));
-            }
-            catch (Exception ex)
-            {
-                set.Errors.Add(new Error(default(Token), ex.Message, true));
-            }
-            var errors = set.GetErrors();
-
-            return new CompilerResult(errors, results.ToArray());
-        }
-    }
+    /// <summary>
+    /// Represents the overall result of a compilation process
+    /// </summary>
     public class CompilerResult
     {
         internal CompilerResult(Error[] errors, CodeFile[] files)
@@ -2241,7 +2216,13 @@ namespace ProtoBuf.Reflection
             Errors = errors;
             Files = files;
         }
+        /// <summary>
+        /// The errors from this execution
+        /// </summary>
         public Error[] Errors { get; }
+        /// <summary>
+        /// The output files from this execution
+        /// </summary>
         public CodeFile[] Files { get; }
     }
 
@@ -2253,8 +2234,14 @@ namespace ProtoBuf.Reflection
         public Token Token { get; set; }
         public bool Used { get; set; }
     }
+    /// <summary>
+    /// Describes an error that occurred during processing
+    /// </summary>
     public class Error
     {
+        /// <summary>
+        /// Parse an error from a PROTOC error message
+        /// </summary>
         public static Error[] Parse(string stdout, string stderr)
         {
             if (string.IsNullOrWhiteSpace(stdout) && string.IsNullOrWhiteSpace(stderr))
@@ -2310,6 +2297,10 @@ namespace ProtoBuf.Reflection
         internal string ToString(bool includeType) => Text.Length == 0
                 ? $"{File}({LineNumber},{ColumnNumber}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}"
                 : $"{File}({LineNumber},{ColumnNumber},{LineNumber},{ColumnNumber + Text.Length}): {(includeType ? (IsError ? "error: " : "warning: ") : "")}{Message}";
+        /// <summary>
+        /// Get a text representation of this instance
+        /// </summary>
+        /// <returns></returns>
         public override string ToString() => ToString(true);
 
         internal static Error[] GetArray(List<Error> errors)
@@ -2337,14 +2328,37 @@ namespace ProtoBuf.Reflection
             IsError = ex.IsError;
             Text = ex.Text ?? "";
         }
+        /// <summary>
+        /// True if this instance represents a non-fatal warning
+        /// </summary>
         public bool IsWarning => !IsError;
-
+        /// <summary>
+        /// True if this instance represents a fatal error
+        /// </summary>
         public bool IsError { get; }
+        /// <summary>
+        /// The file in which this error was identified
+        /// </summary>
         public string File { get; }
+        /// <summary>
+        /// The source text relating to this error
+        /// </summary>
         public string Text { get; }
+        /// <summary>
+        /// The error message
+        /// </summary>
         public string Message { get; }
+        /// <summary>
+        /// The entire line contents in the source in which this error was located
+        /// </summary>
         public string LineContents { get; }
+        /// <summary>
+        /// The line number in which this error was located
+        /// </summary>
         public int LineNumber { get; }
+        /// <summary>
+        /// The column number in which this error was located
+        /// </summary>
         public int ColumnNumber { get; }
     }
     enum AbortState

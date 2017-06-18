@@ -892,7 +892,7 @@ namespace ProtoBuf.Compiler
                     }
 #endif
 
-                    }
+                }
             }
         }
 

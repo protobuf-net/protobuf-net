@@ -4,19 +4,24 @@ namespace ProtoBuf.Reflection
 {
     partial class CommonCodeGenerator
     {
+        /// <summary>
+        /// Represents the union summary of a one-of declaration
+        /// </summary>
         protected class OneOfStub
         {
+            /// <summary>
+            /// The underlying descriptor
+            /// </summary>
             public OneofDescriptorProto OneOf { get; }
 
-            internal OneOfStub(GeneratorContext context, OneofDescriptorProto decl)
+            internal OneOfStub(OneofDescriptorProto decl)
             {
                 OneOf = decl;
-                //context.
             }
-            public int Count32 { get; private set; }
-            public int Count64 { get; private set; }
-            public int CountRef { get; private set; }
-            public int CountTotal => CountRef + Count32 + Count64;
+            internal int Count32 { get; private set; }
+            internal int Count64 { get; private set; }
+            internal int CountRef { get; private set; }
+            internal int CountTotal => CountRef + Count32 + Count64;
 
             private void AccountFor(FieldDescriptorProto.Type type)
             {
@@ -82,7 +87,7 @@ namespace ProtoBuf.Reflection
                 int index = 0;
                 foreach (var decl in message.OneofDecls)
                 {
-                    stubs[index++] = new OneOfStub(context, decl);
+                    stubs[index++] = new OneOfStub(decl);
                 }
                 foreach (var field in message.Fields)
                 {
