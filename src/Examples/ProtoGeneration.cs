@@ -415,7 +415,8 @@ message UsesSurrogates {
 
             model = TypeModel.Create();
             string s = model.GetSchema(typeof(TestCase));
-            Assert.Equal(@"package Examples;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples;
 
 message A {
    optional int32 DataA = 1 [default = 0];

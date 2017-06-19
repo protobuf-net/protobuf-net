@@ -19,7 +19,8 @@ namespace Examples.Issues
 
             string schema = model.GetSchema(typeof (Foo));
 
-            Assert.Equal(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
 
 message Foo {
    repeated KeyValuePair_Int32_String Lookup = 1;

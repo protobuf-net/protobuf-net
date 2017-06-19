@@ -86,7 +86,7 @@ namespace Examples.Issues
             this.Number = number;
             this.Ticket = ticket;
         }
-        private Station() { }
+        public Station() { }
 
     }
 

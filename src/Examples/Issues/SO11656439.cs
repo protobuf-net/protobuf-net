@@ -117,7 +117,8 @@ namespace Examples.Issues
 
             var schema = model.GetSchema(null);
 
-            Assert.Equal(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
 
 message ListWrapper {
    repeated string BasicList = 1;

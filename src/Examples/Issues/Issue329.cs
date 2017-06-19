@@ -38,7 +38,6 @@ namespace Examples.Issues
         {
             string proto = Serializer.GetProto<Foo>();
             Assert.Equal(@"syntax = ""proto2"";
-
 package Examples.Issues;
 
 enum ETheoFlags {

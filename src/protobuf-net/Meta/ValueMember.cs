@@ -391,7 +391,10 @@ namespace ProtoBuf.Meta
 #else
             var info = memberType;
 #endif
-
+            if(ImmutableCollectionDecorator.IdentifyImmutable(model, MemberType, out _, out _, out _, out _))
+            {
+                return false;
+            }
             if (info.IsInterface && info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
             {
                 var typeArgs = memberType.GetGenericArguments();
