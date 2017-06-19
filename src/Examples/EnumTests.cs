@@ -48,6 +48,7 @@ namespace Examples.DesignIdeas
         public SomeEnum? Bar { get; set; }
     }
 
+    [ProtoContract(EnumPassthru = false)]
     enum NegEnum
     {
         A = -1, B = 0, C = 1
@@ -112,7 +113,8 @@ namespace Examples.DesignIdeas
 
             string proto = Serializer.GetProto<EnumFoo>();
 
-            Assert.Equal(@"package Examples.DesignIdeas;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.DesignIdeas;
 
 message EnumFoo {
    optional blah Bar = 1 [default = Default];
@@ -136,7 +138,8 @@ enum blah {
 
             string proto = model.GetSchema(typeof (NonNullValues));
 
-            Assert.Equal(@"package Examples.DesignIdeas;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.DesignIdeas;
 
 message NonNullValues {
    optional blah Foo = 1 [default = Default];
@@ -158,7 +161,8 @@ enum blah {
 
             string proto = Serializer.GetProto<NullValues>();
 
-            Assert.Equal(@"package Examples.DesignIdeas;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.DesignIdeas;
 
 message NullValues {
    optional blah Foo = 1 [default = Default];

@@ -36,7 +36,9 @@ namespace Examples
 
             string proto = Serializer.GetProto<EnumWrapper>();
 
-            string expected = @"package Examples;
+            string expected = @"syntax = ""proto2"";
+
+package Examples;
 
 message EnumWrapper {
    repeated int32 SubData = 1;
@@ -100,7 +102,9 @@ message EnumWrapper {
 
             string proto = Serializer.GetProto<EnumParentGroupWrapper>();
 
-            string expected = @"package Examples;
+            string expected = @"syntax = ""proto2"";
+
+package Examples;
 
 message EnumParentWrapper {
    optional group EnumWrapper Wrapper = 1;
@@ -179,7 +183,9 @@ message EnumWrapper {
 
             string proto = Serializer.GetProto<EnumParentStandardWrapper>();
 
-            string expected = @"package Examples;
+            string expected = @"syntax = ""proto2"";
+
+package Examples;
 
 message EnumParentWrapper {
    optional EnumWrapper Wrapper = 1;

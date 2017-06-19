@@ -37,7 +37,9 @@ namespace Examples.Issues
         public void FlagsEnumGeneration()
         {
             string proto = Serializer.GetProto<Foo>();
-            Assert.Equal(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+
+package Examples.Issues;
 
 enum ETheoFlags {
    // this is a composite/flags enumeration

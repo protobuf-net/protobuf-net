@@ -16,7 +16,9 @@ namespace Examples.Issues
 #pragma warning disable  0618
             string proto = Serializer.GetProto<Animal>();
 
-            Assert.Equal(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+
+package Examples.Issues;
 
 message Animal {
    optional int32 NumberOfLegs = 1 [default = 0];

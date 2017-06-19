@@ -117,11 +117,7 @@ namespace Examples
 #endif
             bool hasNonSerialized = all.Any(x => x.GetType().FullName == "System.NonSerializedAttribute");
 
-#if COREFX
-            Assert.False(hasNonSerialized); // just can't detect it currently; isn't spoofed as an attribute, and the metadata "notserialized" flag isn't available
-#else
             Assert.True(hasNonSerialized); // we can detect it in regular .net, though
-#endif
         }
         [Fact]
         public void TestAllFields()

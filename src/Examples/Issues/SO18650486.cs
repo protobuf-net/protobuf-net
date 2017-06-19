@@ -13,7 +13,7 @@ namespace Examples.Issues
     
     public class SO18650486
     {
-        [Fact]
+        [Fact, Trait("kind", "test harness fail")]
         public void Execute()
         {
             const int OuterLoop = 500;

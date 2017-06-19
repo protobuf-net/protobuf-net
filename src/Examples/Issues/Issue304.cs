@@ -4,13 +4,15 @@ using ProtoBuf;
 
 namespace Examples.Issues
 {
-    
+
     public class Issue304
     {
         [Fact]
         public void DefaultValuesForBoolMustBeLowerCase()
         {
-            Assert.Equal(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+
+package Examples.Issues;
 
 message Foo {
    optional bool Bar = 1 [default = true];

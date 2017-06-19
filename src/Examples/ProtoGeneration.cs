@@ -63,7 +63,8 @@ message abc {
 
             string proto = Serializer.GetProto<MyClass>();
 
-            Assert.Equal(@"
+            Assert.Equal(@"syntax = ""proto2"";
+
 message MyClass {
    optional string TestString = 1 [default = ""Test Test TEst""];
 }
@@ -75,7 +76,9 @@ message MyClass {
         {
             string proto = Serializer.GetProto<ProtoGenerationTypes.BrokenProto.ExampleContract>();
 
-            Assert.Equal(@"package ProtoGenerationTypes.BrokenProto;
+            Assert.Equal(@"syntax = ""proto2"";
+
+package ProtoGenerationTypes.BrokenProto;
 
 message ExampleContract {
    repeated Info ListOfInfo = 1;
@@ -108,7 +111,9 @@ message Type2 {
         {
             string proto = Serializer.GetProto<ProtoGenerationTypes.SelfGenericProto.EvilParent>();
 
-            Assert.Equal(@"package ProtoGenerationTypes.SelfGenericProto;
+            Assert.Equal(@"syntax = ""proto2"";
+
+package ProtoGenerationTypes.SelfGenericProto;
 
 message EvilGeneric_EvilParent {
    optional int32 X = 1 [default = 0];
@@ -151,7 +156,8 @@ message MySurrogate {
         public void ProtoForPrimitiveListsShouldGenerateSchema()
         {
             string proto = Serializer.GetProto<List<int>>();
-            Assert.Equal(@"
+            Assert.Equal(@"syntax = ""proto2"";
+
 message List_Int32 {
    repeated int32 items = 1;
 }
@@ -162,7 +168,8 @@ message List_Int32 {
         public void ProtoForPrimitiveShouldGenerateSchema()
         {
             string proto = Serializer.GetProto<int>();
-            Assert.Equal(@"
+            Assert.Equal(@"syntax = ""proto2"";
+
 message Int32 {
    optional int32 value = 1;
 }
@@ -172,7 +179,8 @@ message Int32 {
         public void ProtoForNullablePrimitiveShouldGenerateSchema()
         {
             string proto = Serializer.GetProto<int?>();
-            Assert.Equal(@"
+            Assert.Equal(@"syntax = ""proto2"";
+
 message Int32 {
    optional int32 value = 1;
 }
@@ -182,7 +190,8 @@ message Int32 {
         public void ProtoForDictionaryShouldGenerateSchema()
         {
             string proto = Serializer.GetProto<Dictionary<string,int>>();
-            Assert.Equal(@"
+            Assert.Equal(@"syntax = ""proto2"";
+
 message Dictionary_String_Int32 {
    repeated KeyValuePair_String_Int32 items = 1;
 }
@@ -196,7 +205,9 @@ message KeyValuePair_String_Int32 {
         public void ProtoForDictionaryShouldIncludeSchemasForContainedTypes()
         {
             string proto = Serializer.GetProto<Dictionary<string, MySurrogate>>();
-            Assert.Equal(@"package Examples;
+            Assert.Equal(@"syntax = ""proto2"";
+
+package Examples;
 
 message Dictionary_String_MySurrogate {
    repeated KeyValuePair_String_MySurrogate items = 1;
@@ -214,7 +225,9 @@ message MySurrogate {
         public void InheritanceShouldCiteBaseType()
         {
             string proto = Serializer.GetProto<Dictionary<string, Cat>>();
-            Assert.Equal(@"package Examples;
+            Assert.Equal(@"syntax = ""proto2"";
+
+package Examples;
 
 message Animal {
    // the following represent sub-types; at most 1 should have a value
@@ -253,7 +266,9 @@ Parameter name: type");
         {
             string proto = Serializer.GetProto<ProtoGenerationTypes.BclImports.HasPrimitives>();
 
-            Assert.Equal(@"package ProtoGenerationTypes.BclImports;
+            Assert.Equal(@"syntax = ""proto2"";
+
+package ProtoGenerationTypes.BclImports;
 import ""bcl.proto""; // schema for protobuf-net's handling of core .NET types
 
 message HasPrimitives {
