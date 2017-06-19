@@ -19,14 +19,20 @@ If you feel like supporting my efforts, I won't stop you:
 
 If you can't, that's fine too.
 
-## v3.* (future plans)
+## v3.* (not yet started)
 
-see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
+- see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
+- gRPC?
 
-## v2.3.1 (future plans)
+## v2.4.0 (not yet started)
 
 - build-time tooling
 - `dynamic` API over types known only via descriptors loaded at runtime
+- `Any` support
+
+## v2.3.1 (not yet started)
+
+- preserve comments from .proto in schema emit (#263)
 
 ## v2.3.0 (work in progress)
 
