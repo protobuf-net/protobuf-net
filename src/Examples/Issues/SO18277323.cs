@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO18277323
     {
         [ProtoContract]
@@ -99,39 +99,39 @@ namespace Examples.Issues
         }
         private void CheckObject(BaseResponse obj)
         {
-            Assert.IsNotNull(obj);
-            Assert.IsInstanceOfType(typeof(SourceTableResponse), obj);
-            Assert.IsTrue(obj.Success);
-            Assert.AreEqual("ok", obj.Error);
+            Assert.NotNull(obj);
+            Assert.IsType(typeof(SourceTableResponse), obj);
+            Assert.True(obj.Success);
+            Assert.Equal("ok", obj.Error);
             SourceTableResponse typed = (SourceTableResponse)obj;
-            Assert.IsNotNull(typed.FieldValuesByTableName);
-            Assert.AreEqual(1, typed.FieldValuesByTableName.Count);
+            Assert.NotNull(typed.FieldValuesByTableName);
+            Assert.Equal(1, typed.FieldValuesByTableName.Count);
             var pair = typed.FieldValuesByTableName.Single();
-            Assert.AreEqual("abc", pair.Key);
+            Assert.Equal("abc", pair.Key);
             var dict = pair.Value;
-            Assert.IsNotNull(dict);
-            Assert.AreEqual(1, dict.Count);
+            Assert.NotNull(dict);
+            Assert.Equal(1, dict.Count);
             var innerPair = dict.Single();
-            Assert.AreEqual("def", innerPair.Key);
-            Assert.AreEqual("ghi", innerPair.Value);
+            Assert.Equal("def", innerPair.Key);
+            Assert.Equal("ghi", innerPair.Value);
         }
         private void CheckObject(CustomBaseResponse obj)
         {
-            Assert.IsNotNull(obj);
-            Assert.IsInstanceOfType(typeof(CustomSourceTableResponse), obj);
-            Assert.IsTrue(obj.Success);
-            Assert.AreEqual("ok", obj.Error);
+            Assert.NotNull(obj);
+            Assert.IsType(typeof(CustomSourceTableResponse), obj);
+            Assert.True(obj.Success);
+            Assert.Equal("ok", obj.Error);
             CustomSourceTableResponse typed = (CustomSourceTableResponse)obj;
-            Assert.IsNotNull(typed.FieldValuesByTableName);
-            Assert.AreEqual(1, typed.FieldValuesByTableName.Count);
+            Assert.NotNull(typed.FieldValuesByTableName);
+            Assert.Equal(1, typed.FieldValuesByTableName.Count);
             var pair = typed.FieldValuesByTableName.Single();
-            Assert.AreEqual("abc", pair.TableName);
+            Assert.Equal("abc", pair.TableName);
             var dict = pair.FieldValues;
-            Assert.IsNotNull(dict);
-            Assert.AreEqual(1, dict.Count);
+            Assert.NotNull(dict);
+            Assert.Equal(1, dict.Count);
             var innerPair = dict.Single();
-            Assert.AreEqual("def", innerPair.Name);
-            Assert.AreEqual("ghi", innerPair.Value);
+            Assert.Equal("def", innerPair.Name);
+            Assert.Equal("ghi", innerPair.Value);
         }
         static RuntimeTypeModel CreateModel()
         {
@@ -139,21 +139,21 @@ namespace Examples.Issues
             model.AutoCompile = false;
             return model;
         }
-        [Test]
+        [Fact]
         public void ExecuteSimple()
         {
             using (var ms = new MemoryStream())
             {
                 var model = CreateModel();
                 model.Serialize(ms, CreateSimpleObj());
-                Assert.AreEqual("1A-13-0A-11-0A-03-61-62-63-12-0A-0A-03-64-65-66-12-03-67-68-69-08-01-12-02-6F-6B", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
+                Assert.Equal("1A-13-0A-11-0A-03-61-62-63-12-0A-0A-03-64-65-66-12-03-67-68-69-08-01-12-02-6F-6B", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
                 ms.Position = 0;
                 var clone = (BaseResponse)model.Deserialize(ms, null, typeof(BaseResponse));
                 CheckObject(clone);
             }
         }
 
-        [Test]
+        [Fact]
         public void ExecuteCustom()
         {
             using (var ms = new MemoryStream())
@@ -163,7 +163,7 @@ namespace Examples.Issues
                 model.ForwardsOnly = true;
 #endif
                 model.Serialize(ms, CreateCustomObj());
-                Assert.AreEqual("1B-0B-0A-03-61-62-63-13-0A-03-64-65-66-12-03-67-68-69-14-0C-1C-08-01-12-02-6F-6B", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
+                Assert.Equal("1B-0B-0A-03-61-62-63-13-0A-03-64-65-66-12-03-67-68-69-14-0C-1C-08-01-12-02-6F-6B", BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length));
                 ms.Position = 0;
                 var clone = (CustomBaseResponse)model.Deserialize(ms, null, typeof(CustomBaseResponse));
                 CheckObject(clone);

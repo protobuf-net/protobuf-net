@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace test
@@ -40,11 +40,11 @@ namespace test
         }
     }
 
-    [TestFixture]
+    
     public class SO6478579
     {
         
-        [Test]
+        [Fact]
         public void TestMethod()
         {
             Coordinates c = new Coordinates();
@@ -54,7 +54,7 @@ namespace test
             MemoryStream mStream = new MemoryStream();
             Serializer.Serialize(mStream, c);
 
-            Assert.AreEqual(10960823, mStream.Length); 
+            Assert.Equal(10960823, mStream.Length); 
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -10,10 +10,10 @@ using System.Threading.Tasks;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue354
     {
-        [Test]
+        [Fact]
         public void SerializeConcurrent()
         {
             var model = RuntimeTypeModel.Create();
@@ -26,7 +26,7 @@ namespace Examples.Issues
             PEVerify.AssertValid("Issue354.dll");
         }
 
-        //[Test, Ignore("these have never been supported")] // concurrent stack is getting inverted; is this normal?
+        //[Fact, Ignore("these have never been supported")] // concurrent stack is getting inverted; is this normal?
         //public void TestRegularStackQueue()
         //{
         //    var orig = new NonConcurrent();
@@ -41,12 +41,12 @@ namespace Examples.Issues
         //}
         //static void TestRegular(NonConcurrent data, string caption)
         //{
-        //    Assert.AreEqual(2, data.Queue.Count, caption);
-        //    Assert.AreEqual(2, data.Stack.Count, caption);
-        //    Assert.AreEqual(1, data.Queue.Dequeue(), caption);
-        //    Assert.AreEqual(2, data.Queue.Dequeue(), caption);
-        //    Assert.AreEqual(4, data.Stack.Pop(), caption);
-        //    Assert.AreEqual(3, data.Stack.Pop(), caption);
+        //    Assert.Equal(2, data.Queue.Count, caption);
+        //    Assert.Equal(2, data.Stack.Count, caption);
+        //    Assert.Equal(1, data.Queue.Dequeue(), caption);
+        //    Assert.Equal(2, data.Queue.Dequeue(), caption);
+        //    Assert.Equal(4, data.Stack.Pop(), caption);
+        //    Assert.Equal(3, data.Stack.Pop(), caption);
         //}
         //[ProtoContract]
         //public class NonConcurrent
@@ -63,7 +63,7 @@ namespace Examples.Issues
         //    }
         //}
 
-        [Test]
+        [Fact]
         public void TestInitialData()
         { // check that our test matches the generated data
             var orig = CreateData();
@@ -73,7 +73,7 @@ namespace Examples.Issues
         {
             var orig = CreateData();
             var clone = (CanHazConcurrent)model.DeepClone(orig);
-            Assert.AreNotEqual(clone, orig);
+            Assert.NotEqual(clone, orig);
             
             TestData(clone, caption);
         }
@@ -98,30 +98,30 @@ namespace Examples.Issues
         static void TestData(CanHazConcurrent data, string caption)
         {
             //int val;
-            //Assert.AreEqual(2, data.Queue.Count, caption + ":Queue.Count");
-            //Assert.IsTrue(data.Queue.TryDequeue(out val), caption + ":Queue - try 1");
-            //Assert.AreEqual(1, val, caption + ":Queue - val 1");
-            //Assert.IsTrue(data.Queue.TryDequeue(out val), caption + ":Queue - try 2");
-            //Assert.AreEqual(2, val, caption + ":Queue - val 2");
-            //Assert.IsFalse(data.Queue.TryDequeue(out val), caption + ":Queue - try 3");
+            //Assert.Equal(2, data.Queue.Count, caption + ":Queue.Count");
+            //Assert.True(data.Queue.TryDequeue(out val), caption + ":Queue - try 1");
+            //Assert.Equal(1, val, caption + ":Queue - val 1");
+            //Assert.True(data.Queue.TryDequeue(out val), caption + ":Queue - try 2");
+            //Assert.Equal(2, val, caption + ":Queue - val 2");
+            //Assert.False(data.Queue.TryDequeue(out val), caption + ":Queue - try 3");
 
-            Assert.AreEqual(2, data.Bag.Count, caption + ":Bag.Count");
-            Assert.IsTrue(data.Bag.Contains("abc"), caption + ":Bag - try 1");
-            Assert.IsTrue(data.Bag.Contains("def"), caption + ":Bag - try 2");
+            Assert.Equal(2, data.Bag.Count); //, caption + ":Bag.Count");
+            Assert.True(data.Bag.Contains("abc")); //, caption + ":Bag - try 1");
+            Assert.True(data.Bag.Contains("def")); //, caption + ":Bag - try 2");
 
-            Assert.AreEqual(2, data.Dictionary.Count, caption + ":Dictionary.Count");
+            Assert.Equal(2, data.Dictionary.Count); //, caption + ":Dictionary.Count");
             string s;
-            Assert.IsTrue(data.Dictionary.TryGetValue(1, out s), caption + ":Dictionary - try 1");
-            Assert.AreEqual("abc", s, caption + ":Dictionary - val 1");
-            Assert.IsTrue(data.Dictionary.TryGetValue(2, out s), caption + ":Dictionary - try 2");
-            Assert.AreEqual("def", s, caption + ":Dictionary - val 2");
+            Assert.True(data.Dictionary.TryGetValue(1, out s)); //, caption + ":Dictionary - try 1");
+            Assert.Equal("abc", s); //, caption + ":Dictionary - val 1");
+            Assert.True(data.Dictionary.TryGetValue(2, out s)); //, caption + ":Dictionary - try 2");
+            Assert.Equal("def", s); //, caption + ":Dictionary - val 2");
 
-            //Assert.AreEqual(2, data.Stack.Count, caption + ":Stack.Count");
-            //Assert.IsTrue(data.Stack.TryPop(out val), caption + ":Stack - try 1");
-            //Assert.AreEqual(2, val, caption + ":Stack - val 1");
-            //Assert.IsTrue(data.Stack.TryPop(out val), caption + ":Stack - try 1");
-            //Assert.AreEqual(1, val, caption + ":Stack - val 2");
-            //Assert.IsFalse(data.Queue.TryDequeue(out val), caption + ":Stack - try 1");
+            //Assert.Equal(2, data.Stack.Count, caption + ":Stack.Count");
+            //Assert.True(data.Stack.TryPop(out val), caption + ":Stack - try 1");
+            //Assert.Equal(2, val, caption + ":Stack - val 1");
+            //Assert.True(data.Stack.TryPop(out val), caption + ":Stack - try 1");
+            //Assert.Equal(1, val, caption + ":Stack - val 2");
+            //Assert.False(data.Queue.TryDequeue(out val), caption + ":Stack - try 1");
         }
 
         [ProtoContract]

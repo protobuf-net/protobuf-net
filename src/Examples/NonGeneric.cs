@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using System.Runtime.Serialization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System;
 
@@ -11,20 +11,20 @@ namespace Examples
         [DataMember(Order=1)]
         public int Value {get;set;}
     }
-    [TestFixture]
+    
     public class NonGeneric
     {
-        [Test]
+        [Fact]
         public void TestDeepClone()
         {
             NonGenericBasic ngb = new NonGenericBasic { Value = 123 },
                 clone = (NonGenericBasic) Serializer.NonGeneric.DeepClone(ngb);
 
-            Assert.AreNotSame(ngb, clone);
-            Assert.AreEqual(ngb.Value, clone.Value);
+            Assert.NotSame(ngb, clone);
+            Assert.Equal(ngb.Value, clone.Value);
         }
 
-        [Test]
+        [Fact]
         public void TestManualCloneViaSerializeDeserialize()
         {
             NonGenericBasic ngb = new NonGenericBasic { Value = 123 }, clone;
@@ -35,8 +35,8 @@ namespace Examples
                 clone = (NonGenericBasic)Serializer.NonGeneric.Deserialize(
                     ngb.GetType(), ms);
             }
-            Assert.AreNotSame(ngb, clone);
-            Assert.AreEqual(ngb.Value, clone.Value);
+            Assert.NotSame(ngb, clone);
+            Assert.Equal(ngb.Value, clone.Value);
         }
 
 

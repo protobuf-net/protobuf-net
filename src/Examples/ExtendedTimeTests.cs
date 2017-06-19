@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.ComponentModel;
 using System.Runtime.Serialization;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class ExtendedTimeTests
     {
         [ProtoContract]
@@ -61,26 +61,26 @@ namespace Examples
         {
             get { return new DateTime(2008, 09, 15, 08, 19, 35).AddTicks(354); }
         }
-        [Test]
+        [Fact]
         public void TickPrecisionTimeSpanTest()
         {
             DateTime dt = KnownTimeWithTicks;
             TimeSpan ts = KnownTimeWithTicks - new DateTime(2008, 1, 1);
             TimeSpanString val = new TimeSpanString { When = ts },
                 clone = Serializer.DeepClone(val);
-            Assert.AreEqual(ts, clone.When);
+            Assert.Equal(ts, clone.When);
         }
-        [Test]
+        [Fact]
         public void TickPrecisionDateTimeTest()
         {
             DateTime dt = KnownTimeWithTicks;
 
             DateTimeString val = new DateTimeString { When = dt },
                 clone = Serializer.DeepClone(val);
-            Assert.AreEqual(dt, clone.When);
+            Assert.Equal(dt, clone.When);
         }
 
-        [Test]
+        [Fact]
         public void TestDateTimeTicks()
         {
             TestDate(DateTime.Now);
@@ -93,7 +93,7 @@ namespace Examples
             }
         }
 
-        [Test]
+        [Fact]
         public void TestFixedOnly()
         {
             var when = new DateTime(2010, 05, 17, 8, 30, 0);
@@ -101,7 +101,7 @@ namespace Examples
             DateTimeFixed val = new DateTimeFixed { When = when };
             var i64 = Serializer.ChangeType<DateTimeFixed, Int64Fixed>(val);
             long ticks = (when - origin).Ticks;
-            Assert.AreEqual(ticks, i64.Value, "Wire value:" + when.ToString());
+            Assert.Equal(ticks, i64.Value); //, "Wire value:" + when.ToString());
         }
 
 
@@ -120,18 +120,18 @@ namespace Examples
             bits[0] = 9;
 
             Int64Fixed i64 = new Int64Fixed { Value = ticks };
-            Assert.IsTrue(Program.CheckBytes(i64, bits));
+            Assert.True(Program.CheckBytes(i64, bits));
 
             Int64Fixed i64Clone = Serializer.DeepClone(i64);
-            Assert.AreEqual(ticks, i64Clone.Value, "Int64 roundtrip:" + ticks.ToString() + " (" + when.ToString() + ")");
+            Assert.Equal(ticks, i64Clone.Value); //, "Int64 roundtrip:" + ticks.ToString() + " (" + when.ToString() + ")");
 
             DateTimeFixed val = new DateTimeFixed { When = when},
                 clone = ProtoBuf.Serializer.DeepClone(val);
-            Assert.AreEqual(val.When, clone.When, "DateTime roundtrip:" + when.ToString());
+            Assert.Equal(val.When, clone.When); //, "DateTime roundtrip:" + when.ToString());
 
             i64 = Serializer.ChangeType<DateTimeFixed, Int64Fixed>(val);
             
-            Assert.AreEqual(ticks, i64.Value, "Wire value:" + when.ToString());
+            Assert.Equal(ticks, i64.Value); //, "Wire value:" + when.ToString());
 
         }
     }

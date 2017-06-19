@@ -1,10 +1,10 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO17040488
     {
         [ProtoContract(UseProtoMembersOnly = true)]
@@ -50,13 +50,13 @@ namespace Examples.Issues
                 new ProtoObjectDTO { Order = 2, Value = new Bar { B = "abc" }},
             };
             var clone = (ProtoObjectDTO[])model.DeepClone(args);
-            Assert.AreEqual(2, clone.Length, caption + ":length");
-            Assert.AreEqual(1, clone[0].Order, caption + ":order");
-            Assert.AreEqual(2, clone[1].Order, caption + ":order");
-            Assert.IsInstanceOfType(typeof(Foo), clone[0].Value, caption + ":type");
-            Assert.IsInstanceOfType(typeof(Bar), clone[1].Value, caption + ":type");
-            Assert.AreEqual(123, ((Foo)clone[0].Value).A, caption + ":value");
-            Assert.AreEqual("abc", ((Bar)clone[1].Value).B, caption + ":value");
+            Assert.Equal(2, clone.Length); //, caption + ":length");
+            Assert.Equal(1, clone[0].Order); //, caption + ":order");
+            Assert.Equal(2, clone[1].Order); //, caption + ":order");
+            Assert.IsType(typeof(Foo), clone[0].Value); //, caption + ":type");
+            Assert.IsType(typeof(Bar), clone[1].Value); //, caption + ":type");
+            Assert.Equal(123, ((Foo)clone[0].Value).A); //, caption + ":value");
+            Assert.Equal("abc", ((Bar)clone[1].Value).B); //, caption + ":value");
         }
     }
 }

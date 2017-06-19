@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue367
     {
         [ProtoContract]
@@ -19,7 +19,7 @@ namespace Examples.Issues
         }
 
 #if DEBUG
-        [Test]
+        [Fact]
         public void LockContention_DTO()
         {
             var model = TypeModel.Create();
@@ -37,11 +37,11 @@ namespace Examples.Issues
                 tasks.Add(Task.Factory.StartNew(() => serialize(new TestClass { Id = Guid.NewGuid().ToString() })));
             }
             Task.WaitAll(tasks.ToArray());
-            Assert.LessOrEqual(1, 2, "because I always get this backwards");
-            Assert.LessOrEqual(model.LockCount, 50);
+            Assert.True(1 <= 2); //, "because I always get this backwards");
+            Assert.True(model.LockCount <= 50);
         }
 
-        [Test]
+        [Fact]
         public void LockContention_BasicType()
         {
             var model = TypeModel.Create();
@@ -59,11 +59,11 @@ namespace Examples.Issues
                 tasks.Add(Task.Factory.StartNew(() => serialize(Guid.NewGuid().ToString())));
             }
             Task.WaitAll(tasks.ToArray());
-            Assert.LessOrEqual(1, 2, "because I always get this backwards");
-            Assert.LessOrEqual(model.LockCount, 50);
+            Assert.True(1 <= 2); //, "because I always get this backwards");
+            Assert.True(model.LockCount <= 50);
         }
 
-        [Test]
+        [Fact]
         public void LockContention_Dictionary()
         {
             var model = TypeModel.Create();
@@ -85,8 +85,8 @@ namespace Examples.Issues
                 tasks.Add(Task.Factory.StartNew(state => serialize(state.ToString()), d));
             }
             Task.WaitAll(tasks.ToArray());
-            Assert.LessOrEqual(1, 2, "because I always get this backwards");
-            Assert.LessOrEqual(model.LockCount, 50);
+            Assert.True(1 <= 2); //, "because I always get this backwards");
+            Assert.True(model.LockCount <= 50);
         }
 #endif
     }

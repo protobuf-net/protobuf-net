@@ -1,10 +1,10 @@
 ﻿using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO11657482
     {
         [ProtoContract]
@@ -25,7 +25,7 @@ namespace Examples.Issues
             public Base Base { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void TestMethod1()
         {
             var value = new Aggregate { Base = new Derived() };
@@ -35,7 +35,7 @@ namespace Examples.Issues
                 stream.Position = 0;
 
                 var obj = Serializer.Deserialize<Aggregate>(stream);
-                Assert.AreEqual(typeof(Derived), obj.Base.GetType());
+                Assert.Equal(typeof(Derived), obj.Base.GetType());
             }
         }
     }

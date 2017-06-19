@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue191
     {
         [ProtoContract]
@@ -27,7 +27,7 @@ namespace Examples.Issues
                 this.dict2 = new Dictionary<long, string>();
             }
         }
-        [Test]
+        [Fact]
         public void Execute()
         {
             var model = TypeModel.Create();
@@ -43,16 +43,16 @@ namespace Examples.Issues
         public void RoundtripEmptyDictionaryShouldNotNullThem(TypeModel model, string scenario)
         {
             var orig = new Test();
-            Assert.IsNotNull(orig.dict, scenario);
-            Assert.AreEqual(0, orig.dict.Count, scenario);
-            Assert.IsNotNull(orig.dict2, scenario);
-            Assert.AreEqual(0, orig.dict2.Count, scenario);
+            Assert.NotNull(orig.dict); //, scenario);
+            Assert.Equal(0, orig.dict.Count); //, scenario);
+            Assert.NotNull(orig.dict2); //, scenario);
+            Assert.Equal(0, orig.dict2.Count); //, scenario);
 
             var clone = (Test)model.DeepClone(orig);
-            Assert.IsNotNull(clone.dict, scenario);
-            Assert.AreEqual(0, clone.dict.Count, scenario);
-            Assert.IsNotNull(clone.dict2, scenario);
-            Assert.AreEqual(0, clone.dict2.Count, scenario);
+            Assert.NotNull(clone.dict); //, scenario);
+            Assert.Equal(0, clone.dict.Count); //, scenario);
+            Assert.NotNull(clone.dict2); //, scenario);
+            Assert.Equal(0, clone.dict2.Count); //, scenario);
 
         }
     }

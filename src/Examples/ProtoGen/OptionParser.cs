@@ -1,136 +1,136 @@
 ﻿#if !NO_CODEGEN
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.CodeGenerator;
 using System;
 
 namespace Examples.ProtoGen
 {
-    [TestFixture]
+    
     public class OptionParser
     {
-        [Test]
+        [Fact]
         public void TestMainHelp()
         {
-            Assert.AreNotEqual(0, CommandLineOptions.Main("/?"));
+            Assert.NotEqual(0, CommandLineOptions.Main("/?"));
         }
 
-        [Test]
+        [Fact]
         public void TestTemplateHelp()
         {
-            Assert.AreNotEqual(0, CommandLineOptions.Main("-p:help"));
+            Assert.NotEqual(0, CommandLineOptions.Main("-p:help"));
         }
 
-        [Test]
+        [Fact]
         public void TestCompileDescriptorAndWriteMainDescriptorCS_Success()
         {
-            Assert.AreEqual(0, CommandLineOptions.Main(@"-i:ProtoGen/descriptor.proto", "-i:protobuf-net.proto", "-o:descriptor.cs"));
+            Assert.Equal(0, CommandLineOptions.Main(@"-i:ProtoGen/descriptor.proto", "-i:protobuf-net.proto", "-o:descriptor.cs"));
         }
 
 
 
-        [Test]
+        [Fact]
         public void TestMainStupid()
         {
-            Assert.AreNotEqual(0, CommandLineOptions.Main("-t:notexist", "-p:help"));
+            Assert.AreEqual(0, CommandLineOptions.Main("-t:notexist", "-p:help"));
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Fact, ExpectedException(typeof(ArgumentNullException))]
         public void TestNullWriter()
         {
             CommandLineOptions.Parse(null);
         }
 
-        [Test]
+        [Fact]
         public void TestEmptyCommandShowsHelp()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out);
-            Assert.IsTrue(opt.ShowHelp);
-            Assert.IsTrue(opt.ShowLogo);
+            Assert.True(opt.ShowHelp);
+            Assert.True(opt.ShowLogo);
         }
 
-        [Test]
+        [Fact]
         public void TestQuietCommand()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-q");
-            Assert.IsTrue(opt.ShowHelp);
-            Assert.IsFalse(opt.ShowLogo);
+            Assert.True(opt.ShowHelp);
+            Assert.False(opt.ShowLogo);
         }
 
-        [Test]
+        [Fact]
         public void TestSingleInputOnly()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo");
-            Assert.AreEqual(1, opt.InPaths.Count);
-            Assert.AreEqual("foo", opt.InPaths[0]);
-            Assert.IsFalse(opt.ShowHelp);
-            Assert.AreEqual(CommandLineOptions.TemplateCSharp, opt.Template);
-            Assert.AreEqual("", opt.OutPath);
+            Assert.Equal(1, opt.InPaths.Count);
+            Assert.Equal("foo", opt.InPaths[0]);
+            Assert.False(opt.ShowHelp);
+            Assert.Equal(CommandLineOptions.TemplateCSharp, opt.Template);
+            Assert.Equal("", opt.OutPath);
         }
 
-        [Test]
+        [Fact]
         public void TestDefaultNamespace()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:a.proto");
-            Assert.IsNull(opt.DefaultNamespace);
+            Assert.Null(opt.DefaultNamespace);
 
             opt = CommandLineOptions.Parse(Console.Out, "-i:a.proto", "-ns:");
-            Assert.AreEqual("", opt.DefaultNamespace);
+            Assert.Equal("", opt.DefaultNamespace);
 
             opt = CommandLineOptions.Parse(Console.Out, "-i:a.proto", "-ns:Foo");
-            Assert.AreEqual("Foo", opt.DefaultNamespace);
+            Assert.Equal("Foo", opt.DefaultNamespace);
         }
 
-        [Test]
+        [Fact]
         public void TestSingleInputWithTemplate()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "-t:bespoke");
-            Assert.AreEqual(1, opt.InPaths.Count);
-            Assert.AreEqual("foo", opt.InPaths[0]);
-            Assert.IsFalse(opt.ShowHelp);
-            Assert.AreEqual("bespoke", opt.Template);
-            Assert.AreEqual("", opt.OutPath);
+            Assert.Equal(1, opt.InPaths.Count);
+            Assert.Equal("foo", opt.InPaths[0]);
+            Assert.False(opt.ShowHelp);
+            Assert.Equal("bespoke", opt.Template);
+            Assert.Equal("", opt.OutPath);
         }
 
-        [Test]
+        [Fact]
         public void TestSingleInputWithSingleOutput()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "-o:bar");
-            Assert.AreEqual(1, opt.InPaths.Count);
-            Assert.AreEqual("foo", opt.InPaths[0]);
-            Assert.IsFalse(opt.ShowHelp);
-            Assert.AreEqual(CommandLineOptions.TemplateCSharp, opt.Template);
-            Assert.AreEqual("bar", opt.OutPath);
+            Assert.Equal(1, opt.InPaths.Count);
+            Assert.Equal("foo", opt.InPaths[0]);
+            Assert.False(opt.ShowHelp);
+            Assert.Equal(CommandLineOptions.TemplateCSharp, opt.Template);
+            Assert.Equal("bar", opt.OutPath);
         }
 
-        [Test]
+        [Fact]
         public void TestSingleInputWithMultipleOutput()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "-o:bar", "-o:blop");
-            Assert.IsTrue(opt.ShowHelp);
+            Assert.True(opt.ShowHelp);
         }
 
 
-        [Test]
+        [Fact]
         public void TestMultipleInputOnly()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "-i:bar", "-i:blop");
-            Assert.AreEqual(3, opt.InPaths.Count);
-            Assert.AreEqual("foo", opt.InPaths[0]);
-            Assert.AreEqual("bar", opt.InPaths[1]);
-            Assert.AreEqual("blop", opt.InPaths[2]);
-            Assert.IsFalse(opt.ShowHelp);
-            Assert.AreEqual(CommandLineOptions.TemplateCSharp, opt.Template);
-            Assert.AreEqual("", opt.OutPath);
+            Assert.Equal(3, opt.InPaths.Count);
+            Assert.Equal("foo", opt.InPaths[0]);
+            Assert.Equal("bar", opt.InPaths[1]);
+            Assert.Equal("blop", opt.InPaths[2]);
+            Assert.False(opt.ShowHelp);
+            Assert.Equal(CommandLineOptions.TemplateCSharp, opt.Template);
+            Assert.Equal("", opt.OutPath);
         }
 
-        [Test]
+        [Fact]
         public void TestInputWithHelpQuestion()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "/?");
-            Assert.IsTrue(opt.ShowHelp);
+            Assert.True(opt.ShowHelp);
         }
 
-        [Test]
+        [Fact]
         public void TestInputWithTemplateHelp()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-p:help");
@@ -141,45 +141,45 @@ namespace Examples.ProtoGen
             }
             catch
             {
-                Assert.AreEqual(1, opt.MessageCount);
+                Assert.Equal(1, opt.MessageCount);
             }
         }
 
-        [Test]
+        [Fact]
         public void TestInputWithHelpDashH()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "-h");
-            Assert.IsTrue(opt.ShowHelp);
+            Assert.True(opt.ShowHelp);
         }
 
-        [Test]
+        [Fact]
         public void TestInputWithGibberish()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "-gibber");
-            Assert.IsTrue(opt.ShowHelp);
+            Assert.True(opt.ShowHelp);
         }
 
-        [Test]
+        [Fact]
         public void TestInputWithValuelessParameter()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "-p:abc");
-            Assert.AreEqual("true", opt.XsltOptions.GetParam("abc", ""));
+            Assert.Equal("true", opt.XsltOptions.GetParam("abc", ""));
         }
 
-        [Test, ExpectedException(typeof(ArgumentException))]
+        [Fact, ExpectedException(typeof(ArgumentException))]
         public void TestInputWithRepeatedValuelessParameter()
         {
             CommandLineOptions.Parse(Console.Out, "-i:foo", "-p:abc", "-p:abc");
         }
 
-        [Test]
+        [Fact]
         public void TestInputWithValuedParameter()
         {
             CommandLineOptions opt = CommandLineOptions.Parse(Console.Out, "-i:foo", "-p:abc=def");
-            Assert.AreEqual("def", opt.XsltOptions.GetParam("abc", ""));
+            Assert.Equal("def", opt.XsltOptions.GetParam("abc", ""));
         }
 
-        [Test, ExpectedException(typeof(ArgumentException))]
+        [Fact, ExpectedException(typeof(ArgumentException))]
         public void TestInputWithRepeatedValuedParameter()
         {
             CommandLineOptions.Parse(Console.Out, "-i:foo", "-p:abc=def", "-p:abc=ghi");

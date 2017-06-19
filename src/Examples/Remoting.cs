@@ -4,7 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples
@@ -69,29 +69,29 @@ namespace Examples
             Serializer.Merge<BrokenDeserEntity>(info, null);
         }
     }
-    [TestFixture]
+    
     public class RemotingTests
     {
-        [Test]
+        [Fact]
         public void TestClone()
         {
             using (MemoryStream ms = new MemoryStream())
             {
                 RemotingEntity obj = new RemotingEntity {Value = 12345};
-                Assert.IsFalse(obj.WasDeserialized);
-                Assert.IsFalse(obj.WasSerialized);
+                Assert.False(obj.WasDeserialized);
+                Assert.False(obj.WasSerialized);
                 BinaryFormatter bf = new BinaryFormatter();
                 bf.Serialize(ms, obj);
-                Assert.IsTrue(obj.WasSerialized);
+                Assert.True(obj.WasSerialized);
                 ms.Position = 0;
                 RemotingEntity clone = (RemotingEntity) bf.Deserialize(ms);
-                Assert.IsFalse(clone.WasSerialized);
-                Assert.IsTrue(clone.WasDeserialized);
-                Assert.AreEqual(obj.Value, clone.Value);
+                Assert.False(clone.WasSerialized);
+                Assert.True(clone.WasDeserialized);
+                Assert.Equal(obj.Value, clone.Value);
                 
             }
         }
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Fact, ExpectedException(typeof(ArgumentNullException))]
         public void TestSerNullItem()
         {
             BrokenSerEntity obj = new BrokenSerEntity { Value = 12345 };
@@ -101,14 +101,14 @@ namespace Examples
                 bf.Serialize(ms, obj);
             }
         }
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Fact, ExpectedException(typeof(ArgumentNullException))]
         public void TestSerNullContext()
         {
             RemotingEntity obj = new RemotingEntity {Value = 12345};
             Serializer.Serialize((SerializationInfo)null, obj);
 
         }
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Fact, ExpectedException(typeof(ArgumentNullException))]
         public void TestDeSerNullItem()
         {
 
@@ -129,7 +129,7 @@ namespace Examples
                 }
             }
         }
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Fact, ExpectedException(typeof(ArgumentNullException))]
         public void TestDeSerNullContext()
         {
             RemotingEntity obj = new RemotingEntity { Value = 12345 };

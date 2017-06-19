@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO11080108
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             byte[] buffer = { 9, 8, 5, 26, 5, 24, 238, 98, 32, 1 };
@@ -21,10 +21,10 @@ namespace Examples.Issues
                 int len = ProtoReader.DirectReadVarintInt32(ms);
                 var resp = (Response)model.Deserialize(ms, null, typeof(Response), len);
 
-                Assert.AreEqual(5, resp.Type);
-                Assert.AreEqual(1, resp.v3dDelta.Count);
-                Assert.AreEqual(12654, resp.v3dDelta[0].ask);
-                Assert.AreEqual(1, resp.v3dDelta[0].askSize);
+                Assert.Equal(5, resp.Type);
+                Assert.Equal(1, resp.v3dDelta.Count);
+                Assert.Equal(12654, resp.v3dDelta[0].ask);
+                Assert.Equal(1, resp.v3dDelta[0].askSize);
             }
         }
         [ProtoContract]

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO14540862
     {
         [ProtoContract]
@@ -30,7 +30,7 @@ namespace Examples.Issues
             public string DerivedFirstProperty { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
 #if COREFX
@@ -61,9 +61,9 @@ namespace Examples.Issues
             reflectionSpecificMethodInfo.Invoke(null, new object[] { reflectionStream, derived, PrefixStyle.Base128 });
             getTypeSpecificMethodInfo.Invoke(null, new object[] { getTypeStream, derived, PrefixStyle.Base128 });
 
-            Assert.AreEqual(37, (int)reflectionStream.Length, "loaded dynamically");
-            Assert.AreEqual(37, (int)getTypeStream.Length, "loaded statically");
-            
+            Assert.Equal(37, (int)reflectionStream.Length); //, "loaded dynamically");
+            Assert.Equal(37, (int)getTypeStream.Length); //, "loaded statically");
+
         }
     }
 }

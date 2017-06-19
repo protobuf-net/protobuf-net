@@ -1,14 +1,14 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO19161823
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             RuntimeTypeModel.Default.Add(typeof(IDummy), false)
@@ -24,7 +24,7 @@ namespace Examples.Issues
             using (var file = File.OpenRead("test.bin"))
             {
                 container = Serializer.Deserialize<Container>(file);
-                Assert.AreEqual(3, container.Data.Positive);
+                Assert.Equal(3, container.Data.Positive);
             }
         }
         // Outside of the project, cannot be changed

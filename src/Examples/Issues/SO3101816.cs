@@ -3,13 +3,13 @@
 //using System.IO;
 //using System.Linq;
 //using System.Text;
-//using NUnit.Framework;
+//using Xunit;
 //using ProtoBuf;
 //using ProtoBuf.Meta;
 
 //namespace Examples.Issues
 //{
-//    [TestFixture]
+//    
 //    public class SO3101816
 //    {
 //        [ProtoContract]
@@ -31,7 +31,7 @@
 //        }
 
 
-//        [Test]
+//        [Fact]
 //        public void Test()
 //        {
 //            var a = new A { B = new B() };

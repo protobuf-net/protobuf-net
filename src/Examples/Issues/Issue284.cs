@@ -1,14 +1,14 @@
 ﻿using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue284
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>

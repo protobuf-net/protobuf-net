@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.SimpleStream
 {
-    [TestFixture]
+    
     public class Collections
     {
 
@@ -39,7 +39,7 @@ namespace Examples.SimpleStream
             return foo;
         }
 
-        [Test]
+        [Fact]
         public void RunWrappedCollectionTest()
         {
             FooContainer fooContainer = new FooContainer(), cloneContainer;
@@ -48,27 +48,27 @@ namespace Examples.SimpleStream
 
             cloneContainer = Serializer.DeepClone(fooContainer);
             clone = cloneContainer.Foo;
-            Assert.IsNotNull(cloneContainer, "Clone Container");
-            Assert.IsTrue(CompareFoos(foo, clone));
+            Assert.NotNull(cloneContainer); //, "Clone Container");
+            Assert.True(CompareFoos(foo, clone));
         }
 
-        [Test]
+        [Fact]
         public void RunNakedCollectionTest()
         {
             Foo foo = GetFullFoo(), clone = Serializer.DeepClone(foo);
-            Assert.IsTrue(CompareFoos(foo, clone));            
+            Assert.True(CompareFoos(foo, clone));            
         }
 
         private static bool CompareFoos(Foo original, Foo clone) {
-            Assert.IsNotNull(original, "Original");
-            Assert.IsNotNull(clone, "Clone");
-            Assert.AreEqual(original.Bars.Count, clone.Bars.Count, "Item count");
+            Assert.NotNull(original); //, "Original");
+            Assert.NotNull(clone); //, "Clone");
+            Assert.Equal(original.Bars.Count, clone.Bars.Count); //, "Item count");
             if (original == null || clone == null ||
                 original.Bars.Count != clone.Bars.Count) return false;
             int count = clone.Bars.Count;
             for (int i = 0; i < count; i++)
             {
-                Assert.AreEqual(original.Bars[i].Value, clone.Bars[i].Value, "Value mismatch");
+                Assert.Equal(original.Bars[i].Value, clone.Bars[i].Value); //, "Value mismatch");
                 if (original.Bars[i].Value != clone.Bars[i].Value) return false;
             }
             return true;

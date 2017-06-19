@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
-using NUnit.Framework;
-using NUnit.Framework.SyntaxHelpers;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class ComparisonToNDCS
     {
         static List<BasicDto> GetTestData()
@@ -28,7 +27,7 @@ namespace Examples
             return list;
         }
 #if !NO_WCF
-        [Test]
+        [Fact]
         public void CompareBasicTypeForBandwidth()
         {
             var list = GetTestData();
@@ -45,8 +44,8 @@ namespace Examples
                 ndcs = ms.Length;
                 //Debug.WriteLine(ndcs);
             }
-            Assert.Less(0, 1); // double check! (at least one test API has this reversed)
-            Assert.Less(pb, ndcs / 5);
+            Assert.True(0 < 1); // double check! (at least one test API has this reversed)
+            Assert.True(pb <( ndcs / 5));
         }
 #endif
         [DataContract]

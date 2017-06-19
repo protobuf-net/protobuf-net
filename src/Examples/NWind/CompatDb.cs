@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if !COREFX
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Linq.Mapping;
@@ -672,3 +673,4 @@ namespace DAL
         }
     }
 }
+#endif

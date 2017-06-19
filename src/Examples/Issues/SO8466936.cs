@@ -3,17 +3,17 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Runtime.Serialization;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO8466936
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             var model = RuntimeTypeModel.Create();
@@ -29,9 +29,9 @@ namespace Examples.Issues
         {
             var foo = new Bar<int> {BaseValue = 123, Value = 456};
             var clone = (Bar<int>) model.DeepClone(foo);
-            Assert.IsInstanceOfType(typeof(Bar<int>), clone, caption);
-            Assert.AreEqual(123, clone.BaseValue, caption);
-            Assert.AreEqual(456, clone.Value, caption);
+            Assert.IsType(typeof(Bar<int>), clone); //, caption);
+            Assert.Equal(123, clone.BaseValue); //, caption);
+            Assert.Equal(456, clone.Value); //, caption);
         }
 
         [ProtoContract]

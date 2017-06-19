@@ -7,7 +7,7 @@ using Examples.SimpleStream;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Reflection;
-using NUnit.Framework;
+using Xunit;
 
 namespace Examples
 {
@@ -25,13 +25,13 @@ namespace Examples
         }
 #endif
 
-        static void Main() {
-#if !COREFX
-            Console.WriteLine("CLR: " + Environment.Version);
+//        static void Main() {
+//#if !COREFX
+//            Console.WriteLine("CLR: " + Environment.Version);
 
-            new NWindTests().PerfTestDb();
-#endif
-        }
+//            new NWindTests().PerfTestDb();
+//#endif
+//        }
 
         //static void Main2() {
         //    SimpleStreamDemo demo = new SimpleStreamDemo();
@@ -121,35 +121,14 @@ namespace Examples
         public static void ExpectFailure<TException>(Action action, string message = null)
             where TException : Exception
         {
-            try
-            {
-                action();
-                Assert.Fail("expected " + typeof(TException).Name);
-            } catch(Exception ex)
-            {
-                if (!(ex is TException))
-                {
-                    Assert.IsInstanceOfType(typeof(TException), ex);
-                }
-                if (message != null) Assert.AreEqual(message, ex.Message);
-            }
+            var ex = Assert.Throws<TException>(action);
+            if (message != null) Assert.Equal(message, ex.Message);
         }
         public static void ExpectFailure<TException>(Action action, Func<TException, bool> check)
             where TException : Exception
         {
-            try
-            {
-                action();
-                Assert.Fail();
-            }
-            catch (Exception ex)
-            {
-                if (!(ex is TException))
-                {
-                    Assert.IsInstanceOfType(typeof(TException), ex);
-                }                
-                Assert.IsTrue(check((TException)ex));
-            }
+            var ex = Assert.Throws<TException>(action);
+            if (check != null) Assert.True(check(ex));
         }
     }
 }

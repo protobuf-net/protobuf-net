@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO8093623
     {
         [ProtoContract]
@@ -41,7 +41,7 @@ namespace Examples.Issues
             public int Balls;
         }
 
-        [Test]
+        [Fact]
         public void TestExpectedResultFromGeneratedTypes()
         {
             var model = RuntimeTypeModel.Create();
@@ -60,14 +60,14 @@ namespace Examples.Issues
             using (var ms = new MemoryStream())
             {
                 model.Serialize(ms, a);
-                Assert.IsTrue(ms.ToArray().SequenceEqual(new byte[] { 08, 10, 82, 2, 16, 23 }), message);
+                Assert.True(ms.ToArray().SequenceEqual(new byte[] { 08, 10, 82, 2, 16, 23 }), message);
                 ms.Position = 0;
                 var clone = (A_generated)model.Deserialize(ms, null, typeof(A_generated));
-                Assert.AreEqual(10, clone.Age, message);
-                Assert.AreEqual(23, clone.b.Balls, message);
+                Assert.Equal(10, clone.Age); //, message);
+                Assert.Equal(23, clone.b.Balls); //, message);
             }
         }
-        [Test]
+        [Fact]
         public void TestSubclassDeserializes()
         {
             var model = RuntimeTypeModel.Create();
@@ -86,9 +86,9 @@ namespace Examples.Issues
             using (var ms = new MemoryStream(new byte[] {08, 10, 82, 2, 16, 23}))
             {
                 var clone = (A)model.Deserialize(ms, null, typeof(A));
-                Assert.AreEqual(10, clone.Age, message);
+                Assert.Equal(10, clone.Age); //, message);
                 B b = (B) clone;
-                Assert.AreEqual(23, b.Balls, message);
+                Assert.Equal(23, b.Balls); //, message);
             }
         }
     }

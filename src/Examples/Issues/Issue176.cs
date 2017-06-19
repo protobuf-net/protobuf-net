@@ -6,7 +6,7 @@ using System.Linq;
 
 using DAL;
 
-using NUnit.Framework;
+using Xunit;
 
 using ProtoBuf.Meta;
 using System.Data.Linq;
@@ -14,10 +14,10 @@ using System.Collections;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue176
     {
-        [Test]
+        [Fact]
         public void TestOrderLineGetDeserializedAndAttachedToOrder()
         {
 
@@ -32,10 +32,10 @@ namespace Examples.Issues
             DbMetrics("From File", orders);
 
             var roundTrippedOrders = (List<Order>)ordersModel.DeepClone(orders);
-            Assert.AreNotSame(orders, roundTrippedOrders);
+            Assert.NotSame(orders, roundTrippedOrders);
             DbMetrics("Round trip", roundTrippedOrders);
-            Assert.AreEqual(orders.SelectMany(o => o.Lines).Count(),
-                roundTrippedOrders.SelectMany(o => o.Lines).Count(), "total count");
+            Assert.Equal(orders.SelectMany(o => o.Lines).Count(),
+                roundTrippedOrders.SelectMany(o => o.Lines).Count()); //, "total count");
         }
 
         static void DbMetrics(string caption, IEnumerable<Order> orders)

@@ -5,16 +5,16 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO1930209
     {
-        [Test]
+        [Fact]
         public void ExecuteSimpleNestedShouldNotBuffer()
         {
             var model = TypeModel.Create();
@@ -23,9 +23,9 @@ namespace Examples.Issues
 #endif
             var obj = new BasicData {C = new C {Field1 = "abc", Field2 = "def"}};
             var clone = (BasicData)model.DeepClone(obj);
-            Assert.AreEqual("abc", clone.C.Field1);
-            Assert.AreEqual("def", clone.C.Field2);
-            Assert.AreNotSame(obj, clone);
+            Assert.Equal("abc", clone.C.Field1);
+            Assert.Equal("def", clone.C.Field2);
+            Assert.NotSame(obj, clone);
         }
 
         [ProtoContract]
@@ -35,7 +35,7 @@ namespace Examples.Issues
             public C C { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void ExecuteDeeplyNestedShouldNotBuffer()
         {
             var model = TypeModel.Create();
@@ -78,7 +78,7 @@ namespace Examples.Issues
             Console.WriteLine("{0}ms", watch.ElapsedMilliseconds);
             int chk1 = GetCheckSum(orig), chk2 = GetCheckSum(clone);
             Console.WriteLine("Checksum: {0} vs {1}", chk1, chk2);
-            Assert.AreEqual(chk1, chk2);
+            Assert.Equal(chk1, chk2);
             Console.WriteLine("All done...");
         }
 

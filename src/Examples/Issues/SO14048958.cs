@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -6,7 +6,7 @@ using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO14048958
     {
         [Flags]
@@ -45,9 +45,9 @@ namespace Examples.Issues
             {
                 model.Serialize(ms, obj);
                 ms.Position = 0;
-                Assert.AreEqual(3, ms.Length);
+                Assert.Equal(3, ms.Length);
                 var clone = (Foo)model.Deserialize(ms, null, typeof(Foo));
-                Assert.AreEqual(Status.All, clone.Status);
+                Assert.Equal(Status.All, clone.Status);
             }
         }
     }

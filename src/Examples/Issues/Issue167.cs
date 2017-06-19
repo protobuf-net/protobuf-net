@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using System;
 using System.Collections;
@@ -7,10 +7,10 @@ using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue167
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             var test = new Problematic();

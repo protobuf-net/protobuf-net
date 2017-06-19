@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue203
     {
         [ProtoContract(SkipConstructor = true)]
@@ -48,7 +48,7 @@ namespace Examples.Issues
             public string SomeField;
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             for (int i = 0; i < 5; i++)
@@ -61,7 +61,7 @@ namespace Examples.Issues
                 m.SomeList.Add(u);
 
                 var clone = Serializer.DeepClone(m);
-                Assert.AreNotSame(m, clone);
+                Assert.NotSame(m, clone);
             }
         }
     }

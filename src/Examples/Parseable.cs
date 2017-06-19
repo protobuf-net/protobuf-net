@@ -1,5 +1,5 @@
 ﻿using System.Net;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
@@ -12,10 +12,10 @@ namespace Examples
         public IPAddress Address { get; set; }
     }
 
-    [TestFixture]
+    
     public class Parseable
     {
-        [Test]
+        [Fact]
         public void TestIPAddess()
         {
             var model = TypeModel.Create();
@@ -23,13 +23,13 @@ namespace Examples
             WithIP obj = new WithIP { Address = IPAddress.Parse("100.90.80.100") },
                 clone = (WithIP) model.DeepClone(obj);
 
-            Assert.AreEqual(obj.Address, clone.Address);
+            Assert.Equal(obj.Address, clone.Address);
 
             obj.Address = null;
             clone = (WithIP)model.DeepClone(obj);
 
-            Assert.IsNull(obj.Address, "obj");
-            Assert.IsNull(clone.Address, "clone");
+            Assert.Null(obj.Address); //, "obj");
+            Assert.Null(clone.Address); //, "clone");
 
         }
     }

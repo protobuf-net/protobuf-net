@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO11317045
     {
         [ProtoContract]
@@ -40,7 +40,7 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             var a = new A();
@@ -69,19 +69,19 @@ namespace Examples.Issues
         {
             int sum = original.B.Data.Sum(x => x.Sum(b => (int)b));
             var clone = (A)model.DeepClone(original);
-            Assert.IsInstanceOfType(typeof(A), clone);
-            Assert.IsInstanceOfType(typeof(B), clone.B);
-            Assert.AreEqual(sum, clone.B.Data.Sum(x => x.Sum(b => (int)b)));
+            Assert.IsType(typeof(A), clone);
+            Assert.IsType(typeof(B), clone.B);
+            Assert.Equal(sum, clone.B.Data.Sum(x => x.Sum(b => (int)b)));
         }
 
 
-        [Test]
+        [Fact]
         public void TestProtoIncludeWithStringKnownTypeName()
         {
             NamedProtoInclude.Foo foo = new NamedProtoInclude.Bar();
             var clone = Serializer.DeepClone(foo);
 
-            Assert.IsInstanceOfType(typeof(NamedProtoInclude.Bar), foo);
+            Assert.IsType(typeof(NamedProtoInclude.Bar), foo);
         }
 
     }

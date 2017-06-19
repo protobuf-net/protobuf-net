@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue202
     {
         [ProtoContract]
@@ -85,7 +85,7 @@ namespace Examples.Issues
                 b = new List<string>();
             }
         }
-        [Test]
+        [Fact]
         public void Execute()
         {
             //Test Data
@@ -136,7 +136,7 @@ namespace Examples.Issues
             byte[] bfp = msfp.ToArray();
             byte[] bff = msff.ToArray();
 
-            Assert.AreEqual(18, bpp.Length);
+            Assert.Equal(18, bpp.Length);
 
             if (bpp.Length != bpf.Length)
                 throw new InvalidDataException("Length does not match");
@@ -154,7 +154,7 @@ namespace Examples.Issues
             StringWriter after = new StringWriter();
             Deserialize(bpp, after);
 
-            Assert.AreEqual(before.ToString(), after.ToString());
+            Assert.Equal(before.ToString(), after.ToString());
 
         }
 

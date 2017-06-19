@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO18695728
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
              RuntimeTypeModel.Default[typeof(WebSyncedObject)].AddSubType(10, typeof(GPSReading));
@@ -22,9 +22,9 @@ namespace Examples.Issues
              };
              var clone = Serializer.DeepClone(list);
 
-             Assert.AreEqual(2, clone.Count);
-             Assert.IsInstanceOfType(typeof(GPSReading), clone[0]);
-             Assert.IsInstanceOfType(typeof(TemperatureReading), clone[1]);
+             Assert.Equal(2, clone.Count);
+             Assert.IsType(typeof(GPSReading), clone[0]);
+             Assert.IsType(typeof(TemperatureReading), clone[1]);
         }
         [ProtoContract]
         public abstract class WebSyncedObject

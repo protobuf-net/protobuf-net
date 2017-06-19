@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class Tuples
     {
-        [Test]
+        [Fact]
         public void TestComplexNestedTupleWithCrazyMovingParts()
         {
             
@@ -35,47 +35,47 @@ namespace Examples
 
             var clone = (Tuple<int, Tuple<int, int, int, int, int, int, int, Tuple<List<Tuple<float, float>>>>[], bool>)model.DeepClone(obj);
 
-            Assert.AreEqual(123, clone.Item1);
-            Assert.AreEqual(2, clone.Item2.Length);
-            Assert.AreEqual(1, clone.Item2[0].Item1);
-            Assert.AreEqual(2, clone.Item2[0].Item2);
-            Assert.AreEqual(3, clone.Item2[0].Item3);
-            Assert.AreEqual(4, clone.Item2[0].Item4);
-            Assert.AreEqual(5, clone.Item2[0].Item5);
-            Assert.AreEqual(6, clone.Item2[0].Item6);
-            Assert.AreEqual(7, clone.Item2[0].Item7);
-            Assert.AreEqual(Tuple.Create(1F,2F), clone.Item2[0].Rest.Item1.Single());
-            Assert.AreEqual(9, clone.Item2[1].Item1);
-            Assert.AreEqual(10, clone.Item2[1].Item2);
-            Assert.AreEqual(11, clone.Item2[1].Item3);
-            Assert.AreEqual(12, clone.Item2[1].Item4);
-            Assert.AreEqual(13, clone.Item2[1].Item5);
-            Assert.AreEqual(14, clone.Item2[1].Item6);
-            Assert.AreEqual(15, clone.Item2[1].Item7);
-            Assert.AreEqual(Tuple.Create(3F, 4F), clone.Item2[1].Rest.Item1.Single());
-            Assert.AreEqual(true, clone.Item3);
+            Assert.Equal(123, clone.Item1);
+            Assert.Equal(2, clone.Item2.Length);
+            Assert.Equal(1, clone.Item2[0].Item1);
+            Assert.Equal(2, clone.Item2[0].Item2);
+            Assert.Equal(3, clone.Item2[0].Item3);
+            Assert.Equal(4, clone.Item2[0].Item4);
+            Assert.Equal(5, clone.Item2[0].Item5);
+            Assert.Equal(6, clone.Item2[0].Item6);
+            Assert.Equal(7, clone.Item2[0].Item7);
+            Assert.Equal(Tuple.Create(1F,2F), clone.Item2[0].Rest.Item1.Single());
+            Assert.Equal(9, clone.Item2[1].Item1);
+            Assert.Equal(10, clone.Item2[1].Item2);
+            Assert.Equal(11, clone.Item2[1].Item3);
+            Assert.Equal(12, clone.Item2[1].Item4);
+            Assert.Equal(13, clone.Item2[1].Item5);
+            Assert.Equal(14, clone.Item2[1].Item6);
+            Assert.Equal(15, clone.Item2[1].Item7);
+            Assert.Equal(Tuple.Create(3F, 4F), clone.Item2[1].Rest.Item1.Single());
+            Assert.Equal(true, clone.Item3);
         }
 
 
-        [Test]
+        [Fact]
         public void TestInt_IntArray_Dictionary()
         {
             var data = new Dictionary<int, int[]> { { 1, new[] { 2, 3 } }, { 4, new[] { 5, 6, 7 } } };
             var model = TypeModel.Create();
             model.CompileInPlace();
             var clone = (Dictionary<int, int[]>)model.DeepClone(data);
-            Assert.AreEqual(2, clone.Count);
-            Assert.IsTrue(clone[1].SequenceEqual(new[] { 2, 3 }));
-            Assert.IsTrue(clone[4].SequenceEqual(new[] { 5, 6, 7 }));
+            Assert.Equal(2, clone.Count);
+            Assert.True(clone[1].SequenceEqual(new[] { 2, 3 }));
+            Assert.True(clone[4].SequenceEqual(new[] { 5, 6, 7 }));
         }
 
-        [Test]
+        [Fact]
         public void TestMonoKeyValuePair()
         {
             var original = new WithQuasiMutableTuple {Value = new QuasiMutableTuple(123, "abc")};
             var clone = Serializer.DeepClone(original);
-            Assert.AreEqual(123, clone.Value.Foo);
-            Assert.AreEqual("abc", clone.Value.Bar);
+            Assert.Equal(123, clone.Value.Foo);
+            Assert.Equal("abc", clone.Value.Bar);
         }
         // the mono version of KeyValuePair<,> has private setters
         public struct QuasiMutableTuple

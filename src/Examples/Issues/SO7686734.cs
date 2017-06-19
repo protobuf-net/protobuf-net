@@ -4,12 +4,12 @@ using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO7686734
     {
         [DataContract]
@@ -51,7 +51,7 @@ namespace Examples.Issues
             return ProtoBuf.Serializer.NonGeneric.Deserialize(targetType, stream);
         }
 
-        [Test]
+        [Fact]
         public void protobuf_serialization_can_deserialized_guids()
         {
             RuntimeTypeModel.Default[typeof(GatewayPageEvent)].AddSubType(3, typeof(GatewayPageAddedToSite));
@@ -59,17 +59,17 @@ namespace Examples.Issues
                                       {GatewayPageId = Guid.NewGuid(), SiteCode = "dls", Url = "test"};
             var serializedMessage = Serialize(originalMessage);
             var @event = (GatewayPageAddedToSite) Deserialize(serializedMessage, typeof (GatewayPageAddedToSite));
-            Assert.AreEqual(originalMessage.GatewayPageId, @event.GatewayPageId);
+            Assert.Equal(originalMessage.GatewayPageId, @event.GatewayPageId);
         }
 
 
-        [Test]
+        [Fact]
         public void guids_work_fine()
         {
             var original = Guid.NewGuid();
             var serialized = Serialize(original);
             var deserialized = (Guid) Deserialize(serialized, typeof (Guid));
-            Assert.AreEqual(original, deserialized);
+            Assert.Equal(original, deserialized);
         }
     }
 }

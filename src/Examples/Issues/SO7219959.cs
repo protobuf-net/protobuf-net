@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO7219959
     {
-        [Test]
+        [Fact]
         public void Test()
         {
             Family family = new Family();

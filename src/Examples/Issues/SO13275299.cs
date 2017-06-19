@@ -1,12 +1,12 @@
 ﻿#if !COREFX
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO13275299
     {
         [ProtoContract]
@@ -21,7 +21,7 @@ namespace Examples.Issues
             [ProtoMember(1)]
             public List<System.Windows.Point> Points { get; set; }
         }
-        [Test]
+        [Fact]
         public void TestSystemDrawingPoint()
         {
             var model = RuntimeTypeModel.Create();
@@ -32,7 +32,7 @@ namespace Examples.Issues
             ExecSystemDrawing(model, "CompileInPlace");
             ExecSystemDrawing(model.Compile(), "Compile");
         }
-        [Test]
+        [Fact]
         public void TestSystemWindowsPoint()
         {
             var model = RuntimeTypeModel.Create();
@@ -56,13 +56,13 @@ namespace Examples.Issues
                 }
             };
             var clone = (Foo)typeModel.DeepClone(obj);
-            Assert.AreEqual(3, clone.Points.Count, caption);
-            Assert.AreEqual(1, clone.Points[0].X, caption);
-            Assert.AreEqual(2, clone.Points[0].Y, caption);
-            Assert.AreEqual(3, clone.Points[1].X, caption);
-            Assert.AreEqual(4, clone.Points[1].Y, caption);
-            Assert.AreEqual(5, clone.Points[2].X, caption);
-            Assert.AreEqual(6, clone.Points[2].Y, caption);
+            Assert.Equal(3, clone.Points.Count); //, caption);
+            Assert.Equal(1, clone.Points[0].X); //, caption);
+            Assert.Equal(2, clone.Points[0].Y); //, caption);
+            Assert.Equal(3, clone.Points[1].X); //, caption);
+            Assert.Equal(4, clone.Points[1].Y); //, caption);
+            Assert.Equal(5, clone.Points[2].X); //, caption);
+            Assert.Equal(6, clone.Points[2].Y); //, caption);
         }
         private void ExecSystemWindows(TypeModel typeModel, string caption)
         {
@@ -76,13 +76,13 @@ namespace Examples.Issues
                 }
             };
             var clone = (Bar)typeModel.DeepClone(obj);
-            Assert.AreEqual(3, clone.Points.Count, caption);
-            Assert.AreEqual(1, clone.Points[0].X, caption);
-            Assert.AreEqual(2, clone.Points[0].Y, caption);
-            Assert.AreEqual(3, clone.Points[1].X, caption);
-            Assert.AreEqual(4, clone.Points[1].Y, caption);
-            Assert.AreEqual(5, clone.Points[2].X, caption);
-            Assert.AreEqual(6, clone.Points[2].Y, caption);
+            Assert.Equal(3, clone.Points.Count); //, caption);
+            Assert.Equal(1, clone.Points[0].X); //, caption);
+            Assert.Equal(2, clone.Points[0].Y); //, caption);
+            Assert.Equal(3, clone.Points[1].X); //, caption);
+            Assert.Equal(4, clone.Points[1].Y); //, caption);
+            Assert.Equal(5, clone.Points[2].X); //, caption);
+            Assert.Equal(6, clone.Points[2].Y); //, caption);
         }
     }
 

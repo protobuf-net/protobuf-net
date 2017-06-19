@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO11730610
     {
         [ProtoContract]
@@ -51,7 +51,7 @@ namespace Examples.Issues
             //...  
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             var resp = new SomeResponse
@@ -69,14 +69,14 @@ namespace Examples.Issues
             ((IDataRow) resp.Rows[2]).Evil = 3;
 
             var clone = Serializer.DeepClone(resp);
-            Assert.AreEqual(3, clone.Rows.Count);
-            Assert.AreEqual(456, clone.Rows[0].Value);
-            Assert.AreEqual("def", clone.Rows[1].Name);
-            Assert.AreEqual(131415, clone.Rows[2].SomeId);
+            Assert.Equal(3, clone.Rows.Count);
+            Assert.Equal(456, clone.Rows[0].Value);
+            Assert.Equal("def", clone.Rows[1].Name);
+            Assert.Equal(131415, clone.Rows[2].SomeId);
 
-            Assert.AreEqual(1, ((IDataRow) resp.Rows[0]).Evil);
-            Assert.AreEqual(2, ((IDataRow) resp.Rows[1]).Evil);
-            Assert.AreEqual(3, ((IDataRow) resp.Rows[2]).Evil);
+            Assert.Equal(1, ((IDataRow) resp.Rows[0]).Evil);
+            Assert.Equal(2, ((IDataRow) resp.Rows[1]).Evil);
+            Assert.Equal(3, ((IDataRow) resp.Rows[2]).Evil);
         }
 
         //// But, if the response is defined as follows then the WCF deserializes correcty and ALWAYS.

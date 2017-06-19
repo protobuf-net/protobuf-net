@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Globalization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue222
     {
-        [Test]
+        [Fact]
         public void TestNonNullableDateTimeOffsetViaSurrogate()
         {
             var foo = new Foo {X = DateTimeOffset.Now};
@@ -18,16 +18,16 @@ namespace Examples.Issues
             model.AutoCompile = false;
             
             var clone = (Foo)model.DeepClone(foo);
-            Assert.AreEqual(foo.X, clone.X, "runtime");
+            Assert.Equal(foo.X, clone.X); //, "runtime");
 
             model.CompileInPlace();
             clone = (Foo)model.DeepClone(foo);
-            Assert.AreEqual(foo.X, clone.X, "CompileInPlace");
+            Assert.Equal(foo.X, clone.X); //, "CompileInPlace");
 
             clone = (Foo)model.Compile().DeepClone(foo);
-            Assert.AreEqual(foo.X, clone.X, "Compile");
+            Assert.Equal(foo.X, clone.X); //, "Compile");
         }
-        [Test]
+        [Fact]
         public void TestNullableDateTimeOffsetViaSurrogate()
         {
             var bar = new Bar { X = DateTimeOffset.Now };
@@ -36,14 +36,14 @@ namespace Examples.Issues
             model.AutoCompile = false;
 
             var clone = (Bar)model.DeepClone(bar);
-            Assert.AreEqual(bar.X, clone.X, "runtime");
+            Assert.Equal(bar.X, clone.X); //, "runtime");
 
             model.CompileInPlace();
             clone = (Bar)model.DeepClone(bar);
-            Assert.AreEqual(bar.X, clone.X, "CompileInPlace");
+            Assert.Equal(bar.X, clone.X); //, "CompileInPlace");
 
             clone = (Bar)model.Compile().DeepClone(bar);
-            Assert.AreEqual(bar.X, clone.X, "Compile");
+            Assert.Equal(bar.X, clone.X); //, "Compile");
         }
         [ProtoContract]
         public class Foo

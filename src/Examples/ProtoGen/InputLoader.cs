@@ -2,42 +2,42 @@
 using System;
 using System.Diagnostics;
 using google.protobuf;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.CodeGenerator;
 
 namespace Examples.ProtoGen
 {
-    [TestFixture]
+    
     public class InputLoader
     {
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Fact, ExpectedException(typeof(ArgumentNullException))]
         public void TestNullFileSet()
         {
             InputFileLoader.Merge(null, "abc", Console.Error);
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Fact, ExpectedException(typeof(ArgumentNullException))]
         public void TestNullPath()
         {
             FileDescriptorSet files = new FileDescriptorSet();
             InputFileLoader.Merge(files, null, Console.Error);
         }
 
-        [Test, ExpectedException(typeof(ArgumentNullException))]
+        [Fact, ExpectedException(typeof(ArgumentNullException))]
         public void TestEmptyPath()
         {
             FileDescriptorSet files = new FileDescriptorSet();
             InputFileLoader.Merge(files, "", Console.Error);
         }
 
-        [Test, ExpectedException(typeof(ProtoParseException))]
+        [Fact, ExpectedException(typeof(ProtoParseException))]
         public void TestMissingInput()
         {
             FileDescriptorSet files = new FileDescriptorSet();
             InputFileLoader.Merge(files, @"ProtoGen\NoneSuch.bin", Console.Error);
         }
 
-        [Test]
+        [Fact]
         public void TestBinaryInput()
         {
             // compile .proto to .bin
@@ -45,23 +45,23 @@ namespace Examples.ProtoGen
 
             // process .bin
             FileDescriptorSet files = new FileDescriptorSet();
-            Assert.AreEqual(0, files.file.Count);
+            Assert.Equal(0, files.file.Count);
             InputFileLoader.Merge(files, @"ProtoGen\descriptor.bin", Console.Error);
-            Assert.AreEqual(1, files.file.Count);
+            Assert.Equal(1, files.file.Count);
         }
 
-        [Test]
+        [Fact]
         public void TestProtoInput()
         {
             FileDescriptorSet files = new FileDescriptorSet();
-            Assert.AreEqual(0, files.file.Count);
+            Assert.Equal(0, files.file.Count);
             InputFileLoader.Merge(files, @"ProtoGen\descriptor.proto", Console.Error);
-            Assert.AreEqual(1, files.file.Count);
+            Assert.Equal(1, files.file.Count);
         }
 
 
 
-        [Test]
+        [Fact]
         public void TestGarbageInput()
         {
             FileDescriptorSet files = new FileDescriptorSet();

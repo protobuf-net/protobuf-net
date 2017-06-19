@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Xml;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
@@ -12,45 +12,45 @@ using ProtoBuf.Meta;
 namespace Examples
 {
     using ProtoBuf.ServiceModel;
-    [TestFixture]
+    
     public class WcfProtoBridge
     {
-        [Test]
+        [Fact]
         public void TestBasicType()
         {
             var obj = new Foo {Bar = 123};
             var clone = (Foo)RoundTrip(obj);
-            Assert.AreEqual(123, clone.Bar);
+            Assert.Equal(123, clone.Bar);
         }
-        [Test]
+        [Fact]
         public void TestBasicTypeWithDefaultValues()
         {
             var obj = new Foo { Bar = 0 };
             var clone = (Foo)RoundTrip(obj);
-            Assert.AreEqual(0, clone.Bar);
+            Assert.Equal(0, clone.Bar);
         }
-        [Test]
+        [Fact]
         public void TestListType()
         {
             var obj = new List<Foo>{new Foo { Bar = 123 }};
             var clone = (List<Foo>)RoundTrip(obj);
-            Assert.AreEqual(1, clone.Count);
-            Assert.AreEqual(123, clone[0].Bar);
+            Assert.Equal(1, clone.Count);
+            Assert.Equal(123, clone[0].Bar);
         }
 
-        [Test]
+        [Fact]
         public void TestEmptyListType()
         {
             var obj = new List<Foo> {  };
             var clone = (List<Foo>)RoundTrip(obj);
-            Assert.AreEqual(0, clone.Count);
+            Assert.Equal(0, clone.Count);
         }
         static object RoundTrip(object obj)
         {
-            Assert.IsNotNull(obj, "obj");
+            Assert.NotNull(obj); //, "obj");
             var model = RuntimeTypeModel.Create();
             var ser = XmlProtoSerializer.TryCreate(model, obj.GetType());
-            Assert.IsNotNull(ser, "ser");
+            Assert.NotNull(ser, "ser");
             using(var ms = new MemoryStream())
             {
                 ser.WriteObject(ms, obj);
@@ -59,11 +59,11 @@ namespace Examples
                 object clone;
                 using (var reader = XmlReader.Create(ms))
                 {
-                    Assert.IsTrue(ser.IsStartObject(reader));
+                    Assert.True(ser.IsStartObject(reader));
                     clone = ser.ReadObject(reader);
                 }
-                Assert.IsNotNull(clone, "clone");
-                Assert.AreNotSame(obj, clone);
+                Assert.NotNull(clone); //, "clone");
+                Assert.NotSame(obj, clone);
                 return clone;
             }
         }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using Examples;
 
@@ -46,10 +46,10 @@ namespace Issue41
         [ProtoMember(2, Name = "PropBB")]
         public string PropBB { get; set; }
     }
-    [TestFixture]
+    
     public class Issue41Rig
     {
-        [Test]
+        [Fact]
         public void Issue41TestOriginalSubClassShouldComplainAboutDuplicateTags()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -58,7 +58,7 @@ namespace Issue41
             });
         }
 
-        [Test]
+        [Fact]
         public void Issue41TestOriginalBaseClassShouldComplainAboutDuplicateTags()
         {
             Program.ExpectFailure<InvalidOperationException>(() => { 
@@ -66,7 +66,7 @@ namespace Issue41
             });
         }
 
-        [Test]
+        [Fact]
         public void Issue41InheritedPropertiesAsBaseClass()
         {
             B b = new B {PropA = "a", PropB = "b", PropAB = "ab", PropBB = "bb"};
@@ -75,13 +75,13 @@ namespace Issue41
               Serializer.Serialize<A>(s, b);
               s.Position = 0;
               B bb = (B)Serializer.Deserialize<A>(s);
-              Assert.AreEqual(b.PropA, bb.PropA, "PropA");
-              Assert.AreEqual(b.PropB, bb.PropB, "PropB");
-              Assert.AreEqual(b.PropAB, bb.PropAB, "PropAB");
-              Assert.AreEqual(b.PropBB, bb.PropBB, "PropBB");
+              Assert.Equal(b.PropA, bb.PropA); //, "PropA");
+              Assert.Equal(b.PropB, bb.PropB); //, "PropB");
+              Assert.Equal(b.PropAB, bb.PropAB); //, "PropAB");
+              Assert.Equal(b.PropBB, bb.PropBB); //, "PropBB");
             }
         }
-        [Test]
+        [Fact]
         public void Issue41InheritedPropertiesAsSubClass()
         {
             B b = new B { PropA = "a", PropB = "b", PropAB = "ab", PropBB = "bb" };
@@ -90,10 +90,10 @@ namespace Issue41
                 Serializer.Serialize<B>(s, b);
                 s.Position = 0;
                 B bb = Serializer.Deserialize<B>(s);
-                Assert.AreEqual(b.PropA, bb.PropA, "PropA");
-                Assert.AreEqual(b.PropB, bb.PropB, "PropB");
-                Assert.AreEqual(b.PropAB, bb.PropAB, "PropAB");
-                Assert.AreEqual(b.PropBB, bb.PropBB, "PropBB");
+                Assert.Equal(b.PropA, bb.PropA); //, "PropA");
+                Assert.Equal(b.PropB, bb.PropB); //, "PropB");
+                Assert.Equal(b.PropAB, bb.PropAB); //, "PropAB");
+                Assert.Equal(b.PropBB, bb.PropBB); //, "PropBB");
             }
         }
     }

@@ -1,15 +1,15 @@
 ﻿using System;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class UnwrappedOuters
     {
-        [Test]
+        [Fact]
         public void TestNakedByteArray()
         {
             Random rand = new Random(12345);
@@ -21,10 +21,10 @@ namespace Examples
                 ms.Position = 0;
                 clone = Serializer.Deserialize<byte[]>(ms);
             }
-            Assert.IsTrue(data.SequenceEqual(clone));
+            Assert.True(data.SequenceEqual(clone));
         }
 
-        [Test]
+        [Fact]
         public void TestNakedString()
         {
             Random rand = new Random(12345);
@@ -37,7 +37,7 @@ namespace Examples
                 clone = Convert.FromBase64String(Serializer.Deserialize<string>(ms));
             }
             
-            Assert.IsTrue(data.SequenceEqual(clone));
+            Assert.True(data.SequenceEqual(clone));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -6,10 +6,10 @@ using System.Threading;
 using System.Reflection;
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO14532116
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             
@@ -26,7 +26,7 @@ namespace Examples.Issues
             PEVerify.AssertValid("SO14532116.dll");
 
             int newCount = Count;
-            Assert.AreEqual(oldCount + 3, newCount);
+            Assert.Equal(oldCount + 3, newCount);
         }
 
         [ProtoContract]
@@ -51,8 +51,8 @@ namespace Examples.Issues
             int oldCount = Count;
             var clone = (Foo)model.DeepClone(obj);
             int newCount = Count;
-            Assert.AreEqual(oldCount + 1, newCount);
-            Assert.AreEqual(123, clone.X);
+            Assert.Equal(oldCount + 1, newCount);
+            Assert.Equal(123, clone.X);
         }
 
         private static int count;

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
@@ -8,41 +8,41 @@ using System.Threading.Tasks;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO18663361
     {
-        [Test]
+        [Fact]
         public void ExecuteFloat()
         {
             var obj = new MarketDataEntry_Float { EntryPrice = 123.45F };
             var clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(123.45F, clone.EntryPrice);
+            Assert.Equal(123.45F, clone.EntryPrice);
         }
 
-        [Test]
+        [Fact]
         public void ExecuteDouble()
         {
             var obj = new MarketDataEntry_Double { EntryPrice = 123.45 };
             var clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(123.45, clone.EntryPrice);
+            Assert.Equal(123.45, clone.EntryPrice);
         }
 
-        [Test]
+        [Fact]
         public void ExecuteDecimal()
         {
             var obj = new MarketDataEntry_Decimal { EntryPrice = 123.45M };
             var clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(123.45M, clone.EntryPrice);
+            Assert.Equal(123.45M, clone.EntryPrice);
         }
 
-        [Test]
+        [Fact]
         public void ExecuteFloat2()
         {
             Program.ExpectFailure<Exception>(() =>
             {
                 var obj = new CreditMarketDataEntry_Float { EntryPrice = 123.45F };
                 var clone = Serializer.DeepClone(obj);
-                Assert.AreEqual(123.45F, clone.EntryPrice);
+                Assert.Equal(123.45F, clone.EntryPrice);
             }, ex =>
             {
                 if (ex is InvalidOperationException && ex.InnerException != null) ex = ex.InnerException;
@@ -52,14 +52,14 @@ namespace Examples.Issues
             });
         }
 
-        [Test]
+        [Fact]
         public void ExecuteDouble2()
         {
             Program.ExpectFailure<Exception>(() =>
             {
                 var obj = new CreditMarketDataEntry_Double { EntryPrice = 123.45 };
                 var clone = Serializer.DeepClone(obj);
-                Assert.AreEqual(123.45, clone.EntryPrice);
+                Assert.Equal(123.45, clone.EntryPrice);
             }, ex =>
             {
                 if (ex is InvalidOperationException && ex.InnerException != null) ex = ex.InnerException;
@@ -69,14 +69,14 @@ namespace Examples.Issues
             });
         }
 
-        [Test]
+        [Fact]
         public void ExecuteDecimal2()
         {
             Program.ExpectFailure<Exception>(() =>
             {
                 var obj = new CreditMarketDataEntry_Decimal { EntryPrice = 123.45M };
                 var clone = Serializer.DeepClone(obj);
-                Assert.AreEqual(123.45M, clone.EntryPrice);
+                Assert.Equal(123.45M, clone.EntryPrice);
             }, ex =>
             {
                 if (ex is InvalidOperationException && ex.InnerException != null) ex = ex.InnerException;

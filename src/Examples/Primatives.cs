@@ -2,80 +2,80 @@
 using System.ComponentModel;
 using System.IO;
 using System.Runtime.Serialization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class PrimativeTests {
 
-        [Test]
+        [Fact]
         public void TestDateTimeZero()
         {
             Primatives p = new Primatives { TestDateTime = new DateTime(1970,1,1) };
-            Assert.AreEqual(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
+            Assert.Equal(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
         }
 
-        [Test]
+        [Fact]
         public void TestDateTimeOrigin()
         {
             // zero
             DateTime origin = new DateTime(1970, 1, 1);
             int len;
 
-            Assert.AreEqual(origin, TestDateTime(origin, out len));
-            Assert.AreEqual(2, len, "0 len");
-            Assert.AreEqual(origin.AddDays(1), TestDateTime(origin.AddDays(1), out len));
-            Assert.AreEqual(4, len, "+1 len");
-            Assert.AreEqual(origin.AddDays(-1), TestDateTime(origin.AddDays(-1), out len));
-            Assert.AreEqual(4, len, "-1 len");
+            Assert.Equal(origin, TestDateTime(origin, out len));
+            Assert.Equal(2, len); //, "0 len");
+            Assert.Equal(origin.AddDays(1), TestDateTime(origin.AddDays(1), out len));
+            Assert.Equal(4, len); //, "+1 len");
+            Assert.Equal(origin.AddDays(-1), TestDateTime(origin.AddDays(-1), out len));
+            Assert.Equal(4, len); //, "-1 len");
         }
 
-        [Test]
+        [Fact]
         public void TestTimeSpanZero()
         {
             int len;
             TimeSpan ts = TimeSpan.Zero;
-            Assert.AreEqual(ts, TestTimeSpan(ts, out len));
-            Assert.AreEqual(0, len, "0 len");
+            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            Assert.Equal(0, len); //, "0 len");
         }
 
-        [Test]
+        [Fact]
         public void TestTimeSpan36Hours()
         {
             int len;
             TimeSpan ts = new TimeSpan(36,0,0);
-            Assert.AreEqual(ts, TestTimeSpan(ts, out len));
-            Assert.AreEqual(6, len, "+36 hour len");
+            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            Assert.Equal(6, len); //, "+36 hour len");
         }
 
-        [Test]
+        [Fact]
         public void TestTimeSpanMinus3Hours()
         {
             int len;
             TimeSpan ts = new TimeSpan(0,-3, 0);
-            Assert.AreEqual(ts, TestTimeSpan(ts, out len));
-            Assert.AreEqual(6, len, "-3 hour len");
+            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            Assert.Equal(6, len); //, "-3 hour len");
         }
 
-        [Test]
+        [Fact]
         public void TestTimeSpanMinValue()
         {
             int len;
             TimeSpan ts = TimeSpan.MinValue;
-            Assert.AreEqual(ts, TestTimeSpan(ts, out len));
-            Assert.AreEqual(6, len, "min len");
+            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            Assert.Equal(6, len); //, "min len");
         }
         
-        [Test]
+        [Fact]
         public void TestTimeSpanMaxValue()
         {
             int len;
             TimeSpan ts = TimeSpan.MaxValue;
-            Assert.AreEqual(ts, TestTimeSpan(ts, out len));
-            Assert.AreEqual(6, len, "max len");
+            Assert.Equal(ts, TestTimeSpan(ts, out len));
+            Assert.Equal(6, len); //, "max len");
         }
         [ProtoContract]
         class DateTimeOnly
@@ -100,37 +100,37 @@ namespace Examples
             public TimeSpan HowLong { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void TestTimeSpanDefaulted()
         {
             TimeSpanDefaulted def = new TimeSpanDefaulted(),
                 clone = Serializer.DeepClone(def);
-            Assert.AreEqual(def.HowLong, clone.HowLong);
+            Assert.Equal(def.HowLong, clone.HowLong);
 
             def.HowLong = new TimeSpan(0, 0, 0);
             clone = Serializer.DeepClone(def);
-            Assert.AreEqual(def.HowLong, clone.HowLong);
+            Assert.Equal(def.HowLong, clone.HowLong);
 
             Serializer.PrepareSerializer<TimeSpanDefaulted>();
             def = new TimeSpanDefaulted();
             clone = Serializer.DeepClone(def);
-            Assert.AreEqual(def.HowLong, clone.HowLong);
+            Assert.Equal(def.HowLong, clone.HowLong);
 
             def.HowLong = new TimeSpan(0, 0, 0);
             clone = Serializer.DeepClone(def);
-            Assert.AreEqual(def.HowLong, clone.HowLong);
+            Assert.Equal(def.HowLong, clone.HowLong);
         }
 
-        [Test]
+        [Fact]
         public void TestValueTimeUnit()
         {
             TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
                 0x08, 0x08, // tag 1; value: 4 (zigzag)
                 0x10, 0x01); // tag 2; unit: hour
 
-            Assert.AreEqual(new TimeSpan(4, 0, 0), ts.HowLong);
+            Assert.Equal(new TimeSpan(4, 0, 0), ts.HowLong);
         }
-        [Test]
+        [Fact]
         public void TestInvalidTimeUnit() {
             Program.ExpectFailure<ProtoException>(() =>
             {
@@ -139,22 +139,22 @@ namespace Examples
                     0x10, 0x4A); // tag 2; unit: invalid
             });
         }
-        [Test]
+        [Fact]
         public void TestValidMinMax()
         {
             TimeSpanOnly ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
                     0x08, 0x02, // tag 1; value: 1 (zigzag)
                     0x10, 0x0F); // tag 2; min/max
 
-            Assert.AreEqual(TimeSpan.MaxValue, ts.HowLong);
+            Assert.Equal(TimeSpan.MaxValue, ts.HowLong);
 
             ts = Program.Build<TimeSpanOnly>(0x0A, 0x04, // tag 1 string, 4 bytes
                 0x08, 0x01, // tag 1; value: -1 (zigzag)
                 0x10, 0x0F); // tag 2; min/max
 
-            Assert.AreEqual(TimeSpan.MinValue, ts.HowLong);
+            Assert.Equal(TimeSpan.MinValue, ts.HowLong);
         }
-        [Test]
+        [Fact]
         public void TestInvalidMinMax()
         {
             Program.ExpectFailure<ProtoException>(() =>
@@ -189,84 +189,84 @@ namespace Examples
         }
 
 
-        [Test]
+        [Fact]
         public void TestDateTimeMinValue()
         {
             Primatives p = new Primatives { TestDateTime = DateTime.MinValue };
-            Assert.AreEqual(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
+            Assert.Equal(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
         }
-        [Test]
+        [Fact]
         public void TestDateTimeMaxValue()
         {
             Primatives p = new Primatives { TestDateTime = DateTime.MaxValue };
-            Assert.AreEqual(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
+            Assert.Equal(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
         }
-        [Test]
+        [Fact]
         public void TestDateTimeNowMillis() {
             Primatives p = new Primatives { TestDateTime = NowToMillisecond };
-            Assert.AreEqual(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
+            Assert.Equal(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
         }
-        [Test]
+        [Fact]
         public void TestDateTimeNowMillisGrouped()
         {
             PrimativeGrouped p = new PrimativeGrouped { When = NowToMillisecond };
-            Assert.AreEqual(p.When, Serializer.DeepClone(p).When);
+            Assert.Equal(p.When, Serializer.DeepClone(p).When);
         }
 
-        [Test]
+        [Fact]
         public void TestDateTimeNowMillisGroupedWrapped()
         {
             PrimativeGroupedWrapper p = new PrimativeGroupedWrapper { Child = { When = NowToMillisecond } };
-            Assert.AreEqual(p.Child.When, Serializer.DeepClone(p).Child.When);
+            Assert.Equal(p.Child.When, Serializer.DeepClone(p).Child.When);
         }
 
-        [Test]
+        [Fact]
         public void TestDateTimeNowMillisNonGroupedWrapped()
         {
             PrimativeNonGroupedWrapper p = new PrimativeNonGroupedWrapper { Child = { When = NowToMillisecond } };
-            Assert.AreEqual(p.Child.When, Serializer.DeepClone(p).Child.When);
+            Assert.Equal(p.Child.When, Serializer.DeepClone(p).Child.When);
         }
 
-        [Test]
+        [Fact]
         public void TestTimeSpanGrouped()
         {
             PrimativeGrouped p = new PrimativeGrouped { HowLong = TimeSpan.FromSeconds(123456)};
-            Assert.AreEqual(p.HowLong, Serializer.DeepClone(p).HowLong);
+            Assert.Equal(p.HowLong, Serializer.DeepClone(p).HowLong);
         }
 
-        [Test]
+        [Fact]
         public void TestTimeSpanGroupedWrapped()
         {
             PrimativeGroupedWrapper p = new PrimativeGroupedWrapper { Child = { HowLong = TimeSpan.FromSeconds(123456) } };
-            Assert.AreEqual(p.Child.HowLong, Serializer.DeepClone(p).Child.HowLong);
+            Assert.Equal(p.Child.HowLong, Serializer.DeepClone(p).Child.HowLong);
         }
 
-        [Test]
+        [Fact]
         public void TestTimeSpanNonGroupedWrapped()
         {
             PrimativeNonGroupedWrapper p = new PrimativeNonGroupedWrapper { Child = { HowLong = TimeSpan.FromSeconds(123456) } };
-            Assert.AreEqual(p.Child.HowLong, Serializer.DeepClone(p).Child.HowLong);
+            Assert.Equal(p.Child.HowLong, Serializer.DeepClone(p).Child.HowLong);
         }
 
-        [Test]
+        [Fact]
         public void TestDecimalGrouped()
         {
             PrimativeGrouped p = new PrimativeGrouped { HowMuch = 123.4567M };
-            Assert.AreEqual(p.HowMuch, Serializer.DeepClone(p).HowMuch);
+            Assert.Equal(p.HowMuch, Serializer.DeepClone(p).HowMuch);
         }
 
-        [Test]
+        [Fact]
         public void TestDecimalGroupedWrapped()
         {
             PrimativeGroupedWrapper p = new PrimativeGroupedWrapper { Child = { HowMuch = 123.4567M } };
-            Assert.AreEqual(p.Child.HowMuch, Serializer.DeepClone(p).Child.HowMuch);
+            Assert.Equal(p.Child.HowMuch, Serializer.DeepClone(p).Child.HowMuch);
         }
 
-        [Test]
+        [Fact]
         public void TestDecimalNonGroupedWrapped()
         {
             PrimativeNonGroupedWrapper p = new PrimativeNonGroupedWrapper { Child = { HowMuch = 123.4567M } };
-            Assert.AreEqual(p.Child.HowMuch, Serializer.DeepClone(p).Child.HowMuch);
+            Assert.Equal(p.Child.HowMuch, Serializer.DeepClone(p).Child.HowMuch);
         }
 
         [ProtoContract]
@@ -299,132 +299,132 @@ namespace Examples
             public PrimativeGrouped Child { get; private set; }
         }
 
-        [Test]
+        [Fact]
         public void TestDateTimeNowSeconds()
         {
             Primatives p = new Primatives { TestDateTime = NowToSecond };
-            Assert.AreEqual(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
+            Assert.Equal(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
         }
 
-        [Test]
+        [Fact]
         public void TestDateTimeToday()
         {
             Primatives p = new Primatives { TestDateTime = DateTime.Today };
-            Assert.AreEqual(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
+            Assert.Equal(p.TestDateTime, Serializer.DeepClone(p).TestDateTime);
         }
-        [Test]
+        [Fact]
         public void TestBoolean()
         {
             Primatives p = new Primatives { TestBoolean = true };
-            Assert.AreEqual(p.TestBoolean, Serializer.DeepClone(p).TestBoolean);
+            Assert.Equal(p.TestBoolean, Serializer.DeepClone(p).TestBoolean);
             p.TestBoolean = false;
-            Assert.AreEqual(p.TestBoolean, Serializer.DeepClone(p).TestBoolean);
+            Assert.Equal(p.TestBoolean, Serializer.DeepClone(p).TestBoolean);
         }
-        [Test]
+        [Fact]
         public void TestString()
         {
             Primatives p = new Primatives();
             p.TestString = "";
-            Assert.AreEqual(p.TestString, Serializer.DeepClone(p).TestString, "Empty");
+            Assert.Equal(p.TestString, Serializer.DeepClone(p).TestString); //, "Empty");
             p.TestString = "foo";
-            Assert.AreEqual(p.TestString, Serializer.DeepClone(p).TestString, "Non-empty");
+            Assert.Equal(p.TestString, Serializer.DeepClone(p).TestString); //, "Non-empty");
             p.TestString = null;
-            Assert.AreEqual(p.TestString, Serializer.DeepClone(p).TestString, "Null");
+            Assert.Equal(p.TestString, Serializer.DeepClone(p).TestString); //, "Null");
         }
 
 
-        [Test]
+        [Fact]
         public void TestDecimalUnits()
         {
             Primatives p = new Primatives { TestDecimalDefault = decimal.Zero};
-            Assert.AreEqual(p.TestDecimalDefault, Serializer.DeepClone(p).TestDecimalDefault);
+            Assert.Equal(p.TestDecimalDefault, Serializer.DeepClone(p).TestDecimalDefault);
 
             p.TestDecimalDefault = decimal.MinusOne;
-            Assert.AreEqual(p.TestDecimalDefault, Serializer.DeepClone(p).TestDecimalDefault);
+            Assert.Equal(p.TestDecimalDefault, Serializer.DeepClone(p).TestDecimalDefault);
 
             p.TestDecimalDefault = decimal.One;
-            Assert.AreEqual(p.TestDecimalDefault, Serializer.DeepClone(p).TestDecimalDefault);
+            Assert.Equal(p.TestDecimalDefault, Serializer.DeepClone(p).TestDecimalDefault);
 
             p = Program.Build<Primatives>(0x1A, 0x00);
-            Assert.AreEqual(decimal.Zero, p.TestDecimalDefault);
+            Assert.Equal(decimal.Zero, p.TestDecimalDefault);
 
             p = Program.Build<Primatives>();
-            Assert.AreEqual(29M, p.TestDecimalDefault);
+            Assert.Equal(29M, p.TestDecimalDefault);
         }
 
-        [Test]
+        [Fact]
         public void TestDecimalExtremes()
         {
             Primatives p = new Primatives(), clone;
 
             p.TestDecimalDefault = decimal.MaxValue;
             clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Max");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Max");
 
             p.TestDecimalDefault = decimal.MaxValue - 1234.5M;
             clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Nearly max");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Nearly max");
 
             p.TestDecimalDefault = decimal.MinValue;
             clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Min");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Min");
 
             p.TestDecimalDefault = decimal.MinValue + 1234.5M;
             clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Nearly min");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Nearly min");
 
             p.TestDecimalDefault = 0.00000000000000000000000123M;
             clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Very small +ve");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Very small +ve");
 
             p.TestDecimalDefault = -p.TestDecimalDefault;
             clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Very small -ve");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Very small -ve");
         }
-        [Test]
+        [Fact]
         public void TestDecimal()
         {
             Primatives p = new Primatives();
             p.TestDecimalDefault = 123456.789M; //p.TestDecimalTwos = p.TestDecimalZigZag = 
 
             Primatives clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault,clone.TestDecimalDefault, "Default +ve");
-            //Assert.AreEqual(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos +ve");
-            //Assert.AreEqual(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag +ve");
+            Assert.Equal(p.TestDecimalDefault,clone.TestDecimalDefault); //, "Default +ve");
+            //Assert.Equal(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos +ve");
+            //Assert.Equal(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag +ve");
 
             p.TestDecimalDefault = -123456.789M; //p.TestDecimalTwos = p.TestDecimalZigZag = 
             clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Default -ve");
-            //Assert.AreEqual(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos -ve");
-            //Assert.AreEqual(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag -ve");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Default -ve");
+            //Assert.Equal(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos -ve");
+            //Assert.Equal(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag -ve");
 
             p.TestDecimalDefault = 0; // p.TestDecimalTwos = p.TestDecimalZigZag = 0;
             clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Default 0");
-            //Assert.AreEqual(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos 0");
-            //Assert.AreEqual(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag 0");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Default 0");
+            //Assert.Equal(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos 0");
+            //Assert.Equal(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag 0");
 
             p.TestDecimalDefault = decimal.Parse("0.000"); // p.TestDecimalTwos = p.TestDecimalZigZag =
              clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Default 0.000");
-            //Assert.AreEqual(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos 0.000");
-            //Assert.AreEqual(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag 0.000");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Default 0.000");
+            //Assert.Equal(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos 0.000");
+            //Assert.Equal(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag 0.000");
 
             p.TestDecimalDefault = decimal.Parse("1.000"); //p.TestDecimalTwos = p.TestDecimalZigZag = 
             clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalDefault, clone.TestDecimalDefault, "Default 1.000");
-            //Assert.AreEqual(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos 1.000");
-            //Assert.AreEqual(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag 1.000");
+            Assert.Equal(p.TestDecimalDefault, clone.TestDecimalDefault); //, "Default 1.000");
+            //Assert.Equal(p.TestDecimalTwos, clone.TestDecimalTwos, "Twos 1.000");
+            //Assert.Equal(p.TestDecimalZigZag, clone.TestDecimalZigZag, "ZigZag 1.000");
 
         }
         /*
-        [Test]
+        [Fact]
         public void TestZigZagNeg()
         {
 
             Primatives p = new Primatives { TestDecimalZigZag = -123456.789M },
                 clone = Serializer.DeepClone(p);
-            Assert.AreEqual(p.TestDecimalZigZag, clone.TestDecimalZigZag);
+            Assert.Equal(p.TestDecimalZigZag, clone.TestDecimalZigZag);
         }
         */
         static DateTime NowToMillisecond
@@ -446,28 +446,28 @@ namespace Examples
             }
         }
 
-        [Test]
+        [Fact]
         public void TestChars()
         {
             for (char c = char.MinValue; c < char.MaxValue; c++)
             {
-                Assert.AreEqual(c, TestChar(c));
+                Assert.Equal(c, TestChar(c));
             }
         }
 
-        [Test]
+        [Fact]
         public void TestEmptyUri()
         {
-            Assert.AreEqual(null, TestUri(null), "null");
+            Assert.Equal(null, TestUri(null)); //, "null");
 
         }
-        [Test]
+        [Fact]
         public void TestNonEmptyUri() {
             Uri uri = new Uri("http://test.example.com/demo");
-            Assert.AreEqual(uri, TestUri(uri), "not null");
+            Assert.Equal(uri, TestUri(uri)); //, "not null");
         }
 
-        [Test]
+        [Fact]
         public void TestNonEmptyUriAllCompilationModes()
         {
             var model = TypeModel.Create();
@@ -475,19 +475,19 @@ namespace Examples
             UriData test = new UriData { Foo = new Uri("http://test.example.com/demo") };
 
             UriData clone = (UriData) model.DeepClone(test);
-            Assert.AreEqual(test.Foo, clone.Foo, "Runtime");
+            Assert.Equal(test.Foo, clone.Foo); //, "Runtime");
 
             var compiled = model.Compile("TestNonEmptyUriAllCompilationModes", "TestNonEmptyUriAllCompilationModes.dll");
             PEVerify.AssertValid("TestNonEmptyUriAllCompilationModes.dll");
             model.CompileInPlace();
             clone = (UriData)model.DeepClone(test);
-            Assert.AreEqual(test.Foo, clone.Foo, "CompileInPlace");
+            Assert.Equal(test.Foo, clone.Foo); //, "CompileInPlace");
 
             clone = (UriData)compiled.DeepClone(test);
-            Assert.AreEqual(test.Foo, clone.Foo, "CompileIn");
+            Assert.Equal(test.Foo, clone.Foo); //, "CompileIn");
         }
 
-        [Test]
+        [Fact]
         public void TestNonEmptyUriWithDefaultAllCompilationModes()
         {
             var model = TypeModel.Create();
@@ -496,29 +496,29 @@ namespace Examples
                 defaulted = new UriDataWithDefault { Foo = new Uri("http://abc") };
 
             UriDataWithDefault clone = (UriDataWithDefault)model.DeepClone(test);
-            Assert.AreEqual(test.Foo, clone.Foo, "Runtime");
+            Assert.Equal(test.Foo, clone.Foo); //, "Runtime");
             clone = (UriDataWithDefault)model.DeepClone(defaulted);
-            Assert.AreEqual(defaulted.Foo, clone.Foo, "Runtime");
+            Assert.Equal(defaulted.Foo, clone.Foo); //, "Runtime");
 
             var compiled = model.Compile("TestNonEmptyUriWithDefaultAllCompilationModes", "TestNonEmptyUriWithDefaultAllCompilationModes.dll");
             PEVerify.AssertValid("TestNonEmptyUriWithDefaultAllCompilationModes.dll");
             model.CompileInPlace();
             clone = (UriDataWithDefault)model.DeepClone(test);
-            Assert.AreEqual(test.Foo, clone.Foo, "CompileInPlace");
+            Assert.Equal(test.Foo, clone.Foo); //, "CompileInPlace");
             clone = (UriDataWithDefault)model.DeepClone(defaulted);
-            Assert.AreEqual(defaulted.Foo, clone.Foo, "CompileInPlace");
+            Assert.Equal(defaulted.Foo, clone.Foo); //, "CompileInPlace");
 
             clone = (UriDataWithDefault)compiled.DeepClone(test);
-            Assert.AreEqual(test.Foo, clone.Foo, "Compile");
+            Assert.Equal(test.Foo, clone.Foo); //, "Compile");
             clone = (UriDataWithDefault)compiled.DeepClone(defaulted);
-            Assert.AreEqual(defaulted.Foo, clone.Foo, "Compile");
+            Assert.Equal(defaulted.Foo, clone.Foo); //, "Compile");
         }
 
-        [Test]
+        [Fact]
         public void TestEncodedUri()
         {
             Uri uri = new Uri("http://www.example.com/for%2bbar");
-            Assert.AreEqual(uri, TestUri(uri), "null");
+            Assert.Equal(uri, TestUri(uri)); //, "null");
         }
         static Uri TestUri(Uri value)
         {
@@ -528,49 +528,49 @@ namespace Examples
         {
             return Serializer.DeepClone(new CharData { Foo = value }).Foo;
         }
-        [Test]
+        [Fact]
         public void TestByteTwos()
         {
-            Assert.AreEqual(0, TestByteTwos(0));
+            Assert.Equal(0, TestByteTwos(0));
             byte value = 1;
             for (int i = 0; i < 8; i++)
             {
-                Assert.AreEqual(value, TestByteTwos(value));
+                Assert.Equal(value, TestByteTwos(value));
                 value <<= 1;
             }
         }
 
-        [Test]
+        [Fact]
         public void TestSByteTwos()
         {
-            Assert.AreEqual(0, TestSByteTwos(0));
+            Assert.Equal(0, TestSByteTwos(0));
             sbyte value = 1;
             for (int i = 0; i < 7; i++)
             {
-                Assert.AreEqual(value, TestSByteTwos(value));
+                Assert.Equal(value, TestSByteTwos(value));
                 value <<= 1;
             }
             value = -1;
             for (int i = 0; i < 7; i++)
             {
-                Assert.AreEqual(value, TestSByteTwos(value));
+                Assert.Equal(value, TestSByteTwos(value));
                 value <<= 1;
             }
         }
-        [Test]
+        [Fact]
         public void TestSByteZigZag()
         {
-            Assert.AreEqual(0, TestSByteZigZag(0));
+            Assert.Equal(0, TestSByteZigZag(0));
             sbyte value = 1;
             for (int i = 0; i < 7; i++)
             {
-                Assert.AreEqual(value, TestSByteZigZag(value));
+                Assert.Equal(value, TestSByteZigZag(value));
                 value <<= 1;
             }
             value = -1;
             for (int i = 0; i < 7; i++)
             {
-                Assert.AreEqual(value, TestSByteZigZag(value));
+                Assert.Equal(value, TestSByteZigZag(value));
                 value <<= 1;
             }
         }

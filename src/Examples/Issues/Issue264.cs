@@ -1,13 +1,13 @@
 ﻿using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue264
     {
-        [Test]
+        [Fact]
         public void TestNakedDecimals()
         {
             Test(123.45M);
@@ -15,7 +15,7 @@ namespace Examples.Issues
             Test(decimal.MinValue);
             Test(decimal.MaxValue);
         }
-        [Test]
+        [Fact]
         public void TestNakedDoubles()
         {
             Test(123.45D);
@@ -23,7 +23,7 @@ namespace Examples.Issues
             Test(double.MinValue);
             Test(double.MaxValue);
         }
-        [Test]
+        [Fact]
         public void TestNakedFloats()
         {
             Test(123.45F);
@@ -34,13 +34,13 @@ namespace Examples.Issues
         static void Test<T>(T value)
         {
             T result = Serializer.DeepClone<T>(value);
-            Assert.AreEqual(value, result, value.ToString() + ":DeepClone");
-            using(var ms = new MemoryStream())
+            Assert.Equal(value, result); //, value.ToString() + ":DeepClone");
+            using (var ms = new MemoryStream())
             {
                 Serializer.Serialize<T>(ms, value);
                 ms.Position = 0;
                 result = Serializer.Deserialize<T>(ms);
-                Assert.AreEqual(value, result, value.ToString() + ":Serialize/Deserialize");
+                Assert.Equal(value, result); //, value.ToString() + ":Serialize/Deserialize");
             }
         }
 

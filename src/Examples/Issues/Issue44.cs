@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -10,23 +10,23 @@ using System.Reflection;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue44
     {
-        [Test]
+        [Fact]
         public void DateTimeKind_NotSerializedByDefault()
         {
             var model = TypeModel.Create();
             model.AutoCompile = false;
-            Assert.AreEqual(false, model.IncludeDateTimeKind);
+            Assert.Equal(false, model.IncludeDateTimeKind);
         }
 
-        [Test]
+        [Fact]
         public void  DateTimeKind_SerializedElectively_Enabled()
         {
             DateTimeKind_SerializedElectively(true, "DateTimeKind_SerializedElectively_Enabled");
         }
-        [Test]
+        [Fact]
         public void DateTimeKind_SerializedElectively_Disabled()
         {
             DateTimeKind_SerializedElectively(false, "DateTimeKind_SerializedElectively_Disabled");
@@ -47,13 +47,13 @@ namespace Examples.Issues
             CompareDates(original, clone, includeDateTimeKind, "CompileInPlace");
 
             TypeModel compiled = model.Compile();
-            Assert.AreEqual(includeDateTimeKind, SerializeDateTimeKind(compiled));
+            Assert.Equal(includeDateTimeKind, SerializeDateTimeKind(compiled));
 
             clone = (HazTime)compiled.DeepClone(original);
             CompareDates(original, clone, includeDateTimeKind, "Compile");
 
             compiled = model.Compile(name, name + ".dll");
-            Assert.AreEqual(includeDateTimeKind, SerializeDateTimeKind(compiled));
+            Assert.Equal(includeDateTimeKind, SerializeDateTimeKind(compiled));
             clone = (HazTime)compiled.DeepClone(original);
             CompareDates(original, clone, includeDateTimeKind, "Compile-dll");
             PEVerify.AssertValid(name + ".dll");
@@ -73,9 +73,9 @@ namespace Examples.Issues
 
         static void CompareDates(DateTime expected, DateTime actual, DateTimeKind expectedKind, string caption)
         {
-            Assert.AreEqual(expectedKind, actual.Kind, caption);
-            Assert.AreEqual(expected.Date, actual.Date, caption);
-            Assert.AreEqual(expected.TimeOfDay, actual.TimeOfDay, caption);
+            Assert.Equal(expectedKind, actual.Kind); //, caption);
+            Assert.Equal(expected.Date, actual.Date); //, caption);
+            Assert.Equal(expected.TimeOfDay, actual.TimeOfDay); //, caption);
         }
 
         [ProtoContract]

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -6,10 +6,10 @@ using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO16838287
     {
-        [Test]
+        [Fact]
         public void ExecuteRuntime()
         {
             var model = GetModel();
@@ -19,7 +19,7 @@ namespace Examples.Issues
                 Execute(model, 1, 0, 18, "Runtime");
             }); // ICollection<T>.Add(T)
         }
-        [Test]
+        [Fact]
         public void ExecuteCompileInPlace()
         {
 
@@ -31,7 +31,7 @@ namespace Examples.Issues
                 Execute(model, 1, 0, 18, "CompileInPlace");
             }); // ICollection<T>.Add(T)
         }
-        [Test]
+        [Fact]
         public void ExecuteCompile()
         {
             var model = GetModel();
@@ -43,7 +43,7 @@ namespace Examples.Issues
             }); // ICollection<T>.Add(T)
         }
         
-        [Test]
+        [Fact]
         public void VerifyCompile()
         {
             var model = GetModel();
@@ -60,10 +60,10 @@ namespace Examples.Issues
             var seg2 = clone.Data;
             var data2 = seg2.Array;
 
-            Assert.AreEqual(offset, seg2.Offset, caption);
-            Assert.AreEqual(count, seg2.Count, caption);
-            Assert.AreEqual(data.Length, data2.Length, caption);
-            Assert.AreEqual(BitConverter.ToString(data), BitConverter.ToString(data2), caption);
+            Assert.Equal(offset, seg2.Offset); //, caption);
+            Assert.Equal(count, seg2.Count); //, caption);
+            Assert.Equal(data.Length, data2.Length); //, caption);
+            Assert.Equal(BitConverter.ToString(data), BitConverter.ToString(data2)); //, caption);
         }
         static RuntimeTypeModel GetModel()
         {

@@ -6,7 +6,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization.Formatters.Soap;
 using System.Text;
 using System.Xml.Serialization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.Runtime.Serialization;
 using System.ComponentModel;
@@ -23,31 +23,31 @@ using Serializer = ProtoBuf.Serializer;
 namespace Examples.SimpleStream
 {
 
-    [TestFixture]
+    
     public class SimpleStreamDemo
     {
 
-        [Test]
+        [Fact]
         public void FirstSample()
         {
             Test1 t1 = new Test1 { A = 150 };
-            Assert.IsTrue(Program.CheckBytes(t1, 0x08, 0x96, 0x01));
+            Assert.True(Program.CheckBytes(t1, 0x08, 0x96, 0x01));
         }
-        [Test]
+        [Fact]
         public void StringSample()
         {
             Test2 t2 = new Test2 { B = "testing" };
-            Assert.IsTrue(Program.CheckBytes(t2, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+            Assert.True(Program.CheckBytes(t2, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
-        [Test]
+        [Fact]
         public void MultiByteUTF8()
         {
             Test2 t2 = new Test2 { B = "Toms Spezialitäten" },
                 clone = Serializer.DeepClone(t2);
-            Assert.AreEqual(t2.B, clone.B);
+            Assert.Equal(t2.B, clone.B);
 
         }
-        [Test]
+        [Fact]
         public void MultiByteUTF8Len128() // started failing...
         {
             Test2 t2 = new Test2 { B = new string('ä', 128) };
@@ -56,26 +56,26 @@ namespace Examples.SimpleStream
             ms.Position = 0;
             byte[] raw = ms.ToArray();
             Test2 clone = Serializer.Deserialize<Test2>(ms);
-            Assert.IsNotNull(clone);
-            Assert.AreEqual(t2.B, clone.B);
+            Assert.NotNull(clone);
+            Assert.Equal(t2.B, clone.B);
         }
 
-        [Test]
+        [Fact]
         public void MultiByteUTF8KnownProblemLength()
         {   // 513 triggers buffer resize; specific problem case (i.e. bug)
             char mb = 'ä';
-            Assert.AreEqual(2, Encoding.UTF8.GetByteCount(new char[] { mb }), "is multibyte");
+            Assert.Equal(2, Encoding.UTF8.GetByteCount(new char[] { mb }), "is multibyte");
             int i = 513;
             Test2 t2 = new Test2 { B = new string(mb, i) },
              clone = Serializer.DeepClone(t2);
-            Assert.AreEqual(i, t2.B.Length, "len");
-            Assert.AreEqual(t2.B, clone.B, "Count: " + i.ToString());
+            Assert.Equal(i, t2.B.Length, "len");
+            Assert.Equal(t2.B, clone.B, "Count: " + i.ToString());
         }
-        [Test]
+        [Fact]
         public void MultiByteUTF8VariousLengths()
         {
             char mb = 'ä';
-            Assert.AreEqual(2, Encoding.UTF8.GetByteCount(new char[] { mb }), "is multibyte");
+            Assert.Equal(2, Encoding.UTF8.GetByteCount(new char[] { mb }), "is multibyte");
 
             for (int i = 0; i < 1024 * 8; i+=3)
             {
@@ -83,8 +83,8 @@ namespace Examples.SimpleStream
                 {
                     Test2 t2 = new Test2 { B = new string(mb, i) },
                         clone = Serializer.DeepClone(t2);
-                    Assert.AreEqual(i, t2.B.Length, "len");
-                    Assert.AreEqual(t2.B, clone.B, "Count: " + i.ToString());
+                    Assert.Equal(i, t2.B.Length, "len");
+                    Assert.Equal(t2.B, clone.B, "Count: " + i.ToString());
                 }
                 catch (Exception ex)
                 {
@@ -94,49 +94,49 @@ namespace Examples.SimpleStream
             }
         }
 
-        [Test]
+        [Fact]
         public void EmbeddedMessageSample()
         {
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
-            Assert.IsTrue(Program.CheckBytes(t3, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.True(Program.CheckBytes(t3, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
         public void PerfTestSimple(int count, bool runLegacy)
         {
             Test1 t1 = new Test1 { A = 150 };
-            Assert.IsTrue(LoadTestItem(t1, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x08, 0x96, 0x01));
+            Assert.True(LoadTestItem(t1, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x08, 0x96, 0x01));
         }
         public void PerfTestString(int count, bool runLegacy)
         {
             Test2 t2 = new Test2 { B = "testing" };
-            Assert.IsTrue(LoadTestItem(t2, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
+            Assert.True(LoadTestItem(t2, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x12, 0x07, 0x74, 0x65, 0x73, 0x74, 0x69, 0x6e, 0x67));
         }
         public void PerfTestEmbedded(int count, bool runLegacy)
         {
             Test3 t3 = new Test3 { C = new Test1 { A = 150 } };
-            Assert.IsTrue(LoadTestItem(t3, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.True(LoadTestItem(t3, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
-        [Test]
+        [Fact]
         public void PerfTestEnumOnce()
         {
             Test4 t4 = new Test4 { D = TestEnum.D };
-            Assert.IsTrue(Program.CheckBytes(t4, 0x20, 0x03));
-            Assert.AreEqual(t4.D, Serializer.DeepClone(t4).D);
+            Assert.True(Program.CheckBytes(t4, 0x20, 0x03));
+            Assert.Equal(t4.D, Serializer.DeepClone(t4).D);
 
         }
 
         public void PerfTestEnum(int count, bool runLegacy)
         {
             Test4 t4 = new Test4 { D = TestEnum.D };
-            Assert.IsTrue(LoadTestItem(t4, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x20, 0x03));
+            Assert.True(LoadTestItem(t4, count, count, runLegacy, runLegacy, runLegacy, true, runLegacy, false, 0x20, 0x03));
         }
 
 
-        [Test]
+        [Fact]
         public void TestArray()
         {
-            Assert.IsTrue(PerfTestArray(1, false));
+            Assert.True(PerfTestArray(1, false));
         }
         public bool PerfTestArray(int count, bool log)
         {
@@ -182,22 +182,22 @@ namespace Examples.SimpleStream
             [ProtoMember(2)]
             public int Bar { get; set; }
         }
-        [Test]
+        [Fact]
         public void FieldsWrongOrder()
         {
             TwoFields t1 = Program.Build<TwoFields>(0x08, 0x96, 0x01, 0x10, 0x82, 0x01);
-            Assert.AreEqual(150, t1.Foo, "Foo, ascending");
-            Assert.AreEqual(130, t1.Bar, "Bar, ascending");
+            Assert.Equal(150, t1.Foo); //, "Foo, ascending");
+            Assert.Equal(130, t1.Bar); //, "Bar, ascending");
             t1 = Program.Build<TwoFields>(0x10, 0x82, 0x01, 0x08, 0x96, 0x01);
-            Assert.AreEqual(150, t1.Foo, "Foo, descending");
-            Assert.AreEqual(130, t1.Bar, "Bar, descending");
+            Assert.Equal(150, t1.Foo); //, "Foo, descending");
+            Assert.Equal(130, t1.Bar); //, "Bar, descending");
         }
 
-        [Test]
+        [Fact]
         public void MultipleSameField()
         {
             Test1 t1 = Program.Build<Test1>(0x08, 0x96, 0x01, 0x08, 0x82, 0x01);
-            Assert.AreEqual(130, t1.A);
+            Assert.Equal(130, t1.A);
         }
 
         [ProtoContract]
@@ -207,18 +207,18 @@ namespace Examples.SimpleStream
             public byte[] Foo { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void Blob()
         {
             ItemWithBlob blob = new ItemWithBlob(), clone = Serializer.DeepClone(blob);
-            Assert.IsTrue(Program.CheckBytes(blob, new byte[0]), "Empty serialization");
-            Assert.IsTrue(Program.ArraysEqual(blob.Foo, clone.Foo), "Clone should be empty");
+            Assert.True(Program.CheckBytes(blob, new byte[0]), "Empty serialization");
+            Assert.True(Program.ArraysEqual(blob.Foo, clone.Foo), "Clone should be empty");
 
             blob.Foo = new byte[] { 0x01, 0x02, 0x03 };
             clone = Serializer.DeepClone(blob);
-            Assert.IsTrue(Program.ArraysEqual(blob.Foo, clone.Foo), "Clone should match");
+            Assert.True(Program.ArraysEqual(blob.Foo, clone.Foo), "Clone should match");
 
-            Assert.IsTrue(Program.CheckBytes(blob, 0x0A, 0x03, 0x01, 0x02, 0x03), "Stream should match");
+            Assert.True(Program.CheckBytes(blob, 0x0A, 0x03, 0x01, 0x02, 0x03), "Stream should match");
         }
 
         public enum SomeEnum
@@ -243,47 +243,47 @@ namespace Examples.SimpleStream
             public SomeEnum? Enum { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void TestDuffEnum()
         {
             SomeEnumEntity dee = new SomeEnumEntity { Enum = SomeEnum.Foo };
-            Assert.IsTrue(Program.CheckBytes(dee, 0x10, 0x03));
+            Assert.True(Program.CheckBytes(dee, 0x10, 0x03));
         }
-        [Test, ExpectedException(typeof(ProtoException))]
+        [Fact, ExpectedException(typeof(ProtoException))]
         public void TestSerializeUndefinedEnum()
         {
             SomeEnumEntity dee = new SomeEnumEntity { Enum = 0 };
             Serializer.Serialize(Stream.Null, dee);
         }
-        [Test]
+        [Fact]
         public void TestDeserializeUndefinedEnum()
         { // this looks insane but is correct; it drops data on the floor to match the expected
             //
 
             var see = Program.Build<SomeEnumEntity>(0x10, 0x09);
-            Assert.AreEqual(SomeEnum.Bar, see.Enum);
+            Assert.Equal(SomeEnum.Bar, see.Enum);
         }
-        [Test]
+        [Fact]
         public void TestDeserializeDefinedEnumWithoutDefault()
         {
             var see = Program.Build<SomeEnumEntityWithoutDefault>(0x10, 0x03);
-            Assert.IsTrue(see.Enum.HasValue);
-            Assert.AreEqual(SomeEnum.Foo, see.Enum.Value);
+            Assert.True(see.Enum.HasValue);
+            Assert.Equal(SomeEnum.Foo, see.Enum.Value);
 
         }
-        [Test]
+        [Fact]
         public void TestDeserializeUndefinedEnumWithoutDefault()
         {
             // check we can deserialize with the extra data
             var see = Program.Build<SomeEnumEntityWithoutDefault>(0x10, 0x09);
 
             // shouldn't set the property
-            Assert.IsFalse(see.Enum.HasValue);
+            Assert.False(see.Enum.HasValue);
 
             // data should be available via extension API
             int val;
-            Assert.IsTrue(Extensible.TryGetValue<int>(see, 2, DataFormat.Default, true, out val));
-            Assert.AreEqual(9, val);
+            Assert.True(Extensible.TryGetValue<int>(see, 2, DataFormat.Default, true, out val));
+            Assert.Equal(9, val);
 
             // and check it re-serializes OK
             Program.CheckBytes(see, 0x10, 0x09);
@@ -293,7 +293,7 @@ namespace Examples.SimpleStream
         {
             public int X { get; set; }
         }
-        [Test, ExpectedException(typeof(InvalidOperationException))]
+        [Fact, ExpectedException(typeof(InvalidOperationException))]
         public void TestNotAContract()
         {
             NotAContract nac = new NotAContract { X = 4 };
@@ -306,7 +306,7 @@ namespace Examples.SimpleStream
             string name = typeof(T).Name;
             Console.WriteLine("\t{0}", name);
             Stopwatch serializeWatch, deserializeWatch;
-            T pbClone, psClone = null;
+            T pbClone; //, psClone = null;
             Console.WriteLine("\t(times based on {0} iterations ({1} for .proto))", count, protoCount);
             Console.WriteLine("||*Serializer*||*size*||*serialize*||*deserialize*||");
             byte[] pbnetBuffer;

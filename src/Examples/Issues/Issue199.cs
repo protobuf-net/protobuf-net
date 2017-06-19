@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue199
     {
         [ProtoContract]
@@ -23,7 +23,7 @@ namespace Examples.Issues
             public bool Value { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void CompareWithWithoutImplicitDefaults()
         {
             var with = TypeModel.Create();
@@ -40,7 +40,7 @@ namespace Examples.Issues
             Test(with.Compile(), without.Compile(), "Compile");
         }
 
-        [Test]
+        [Fact]
         public void TryToDisableDefualtsOnDefault()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -48,30 +48,30 @@ namespace Examples.Issues
                 RuntimeTypeModel.Default.UseImplicitZeroDefaults = false;
             });
         }
-        [Test]
+        [Fact]
         public void CanEnalbeDefualtsOnDefault()
         {
             RuntimeTypeModel.Default.UseImplicitZeroDefaults = true;
-            Assert.IsTrue(RuntimeTypeModel.Default.UseImplicitZeroDefaults);
+            Assert.True(RuntimeTypeModel.Default.UseImplicitZeroDefaults);
         }
         static void Test(TypeModel with, TypeModel without, string message)
         {
             var obj = new DodgyDefault { Value = false };
 
             DodgyDefault c1 = (DodgyDefault)with.DeepClone(obj);
-            Assert.IsTrue(c1.Value, message);
+            Assert.True(c1.Value, message);
             DodgyDefault c2 = (DodgyDefault)without.DeepClone(obj);
-            Assert.IsFalse(c2.Value, message);
+            Assert.False(c2.Value, message);
 
             using (var ms = new MemoryStream())
             {
                 with.Serialize(ms, obj);
-                Assert.AreEqual(0, ms.Length, message);
+                Assert.Equal(0, ms.Length); //, message);
             }
             using (var ms = new MemoryStream())
             {
                 without.Serialize(ms, obj);
-                Assert.AreEqual(2, ms.Length, message);
+                Assert.Equal(2, ms.Length); //, message);
             }
         }
     }

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue295
     {
         [ProtoContract(SkipConstructor = true)]
@@ -32,7 +32,7 @@ namespace Examples.Issues
             public Asset Blowers { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             Asset asset = new Plant {Blowers = new Asset(), ChildAssets = {new Plant()}};

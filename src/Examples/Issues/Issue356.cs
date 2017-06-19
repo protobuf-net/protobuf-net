@@ -6,7 +6,7 @@ namespace test
     using System;
     using System.IO;
     using System.Xml.Serialization;
-    using NUnit.Framework;
+    using Xunit;
     using ProtoBuf;
     using Examples;
     [XmlType]
@@ -46,10 +46,10 @@ namespace test
         }
     }
 
-    [TestFixture]
+    
     public class TestIncorrectStream
     {
-        [Test]
+        [Fact]
         public void TestDeserializationFromXml()
         {
             Program.ExpectFailure<ProtoException>(() =>
@@ -58,7 +58,7 @@ namespace test
                 original.ToDefaults();
 
                 // assert that Equals routine works
-                Assert.Equals(original, original);
+                Assert.Equal(original, original);
 
                 // serialize to XML text
                 StringBuilder sb = new StringBuilder();
@@ -69,10 +69,10 @@ namespace test
 
                 // use XML text as input stream for XML deserialization
                 byte[] bytes = Encoding.Unicode.GetBytes(sb.ToString());
-                Assert.Greater(bytes.Length, 0);
+                Assert.True(bytes.Length > 0);
                 MemoryStream ms = new MemoryStream(bytes);
                 SimpleObject fromXml = (SimpleObject)xmlSerializer.Deserialize(ms);
-                Assert.Equals(original, fromXml);
+                Assert.Equal(original, fromXml);
 
                 // rewind the stream and deserialize using Protobuf
                 ms.Seek(0L, SeekOrigin.Begin);
@@ -80,7 +80,7 @@ namespace test
 
                 // either deserialization from XML works or
                 // it should not give an object instance (either return null or throw Exception)
-                Assert.IsTrue(fromProtobuf == null || original.Equals(fromProtobuf), "equiv objects");
+                Assert.True(fromProtobuf == null || original.Equals(fromProtobuf), "equiv objects");
             }, "Unexpected end-group in source data; this usually means the source data is corrupt");
         }
     }

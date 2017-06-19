@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples
@@ -25,37 +25,37 @@ namespace Examples
         IList<string> Data { get; }
     }
 
-    [TestFixture]
+    
     public class ListAsInterfaceTests
     {
-        [Test]
+        [Fact]
         public void TestInitialized()
         {
             TestList<DataWithListInitialized>(new DataWithListInitialized());
         }
 
-        [Test]
+        [Fact]
         public void TestUninitialized()
         {
             TestList<DataWithListUninitialized>(new DataWithListUninitialized { Data = new List<string>() });
         }
-        [Test]
+        [Fact]
         public void TestDefaultListType()
         {
             IList<string> data = new List<string>();
             data.Add("abc");
             var clone = Serializer.DeepClone(data);
-            Assert.IsNotNull(clone);
-            Assert.AreNotSame(data, clone);
-            Assert.AreEqual(1, clone.Count);
-            Assert.AreEqual("abc", clone[0]);
+            Assert.NotNull(clone);
+            Assert.NotSame(data, clone);
+            Assert.Equal(1, clone.Count);
+            Assert.Equal("abc", clone[0]);
         }
 
         static void TestList<T>(T original) where T : class, IDataWithList
         {
-            Assert.IsNotNull(original, "original should be initialized");
-            Assert.IsNotNull(original.Data, "original.Data should be initialized");
-            Assert.AreEqual(0, original.Data.Count, "original.Data should be empty");
+            Assert.NotNull(original); //, "original should be initialized");
+            Assert.NotNull(original.Data); //, "original.Data should be initialized");
+            Assert.Equal(0, original.Data.Count); //, "original.Data should be empty");
 
             original.Data.Add("abc");
             original.Data.Add("def");
@@ -64,12 +64,12 @@ namespace Examples
 
             var clone = Serializer.DeepClone<T>(original);
 
-            Assert.IsNotNull(clone, "clone");
-            Assert.AreNotSame(original, clone);
+            Assert.NotNull(clone); //, "clone");
+            Assert.NotSame(original, clone);
 
-            Assert.IsNotNull(clone.Data, "clone.Data");
-            Assert.AreEqual(original.Data.Count, clone.Data.Count, "clone.Data.Count");
-            Assert.IsTrue(Enumerable.SequenceEqual(original.Data, clone.Data), "SequenceEqual");
+            Assert.NotNull(clone.Data); //, "clone.Data");
+            Assert.Equal(original.Data.Count, clone.Data.Count); //, "clone.Data.Count");
+            Assert.True(Enumerable.SequenceEqual(original.Data, clone.Data)); //, "SequenceEqual");
 
         }
     }

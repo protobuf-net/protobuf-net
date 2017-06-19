@@ -1,5 +1,5 @@
 ﻿
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
@@ -8,7 +8,7 @@ namespace Examples.Issues
     using System.IO;
     using ProtoBuf;
 
-    [TestFixture]
+    
     public class SO7333233
     {
         [ProtoContract]
@@ -99,7 +99,7 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public  void Execute()
         {
             // note these are unrelated networks, so we can use the same field-numbers

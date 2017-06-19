@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO11564914
     {
-        [Test]
+        [Fact]
         public void SerializeFromProtobufCSharpPortShouldGiveUsefulMessage()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -20,7 +20,7 @@ namespace Examples.Issues
                 Serializer.Serialize(Stream.Null, obj);
             }, "Are you mixing protobuf-net and protobuf-csharp-port? See http://stackoverflow.com/q/11564914; type: Examples.Issues.SO11564914+BlockHeader");
         }
-        [Test]
+        [Fact]
         public void DeserializeFromProtobufCSharpPortShouldGiveUsefulMessage()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>

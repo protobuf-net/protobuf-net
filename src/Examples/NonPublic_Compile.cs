@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class NonPublic_Compile
     {
         private static void Compile<T>()
@@ -17,14 +17,16 @@ namespace Examples
             model.Add(typeof(T), true);
             string name = typeof(T).Name + "Serializer", path = name + ".dll";
             model.Compile(name, path);
-            PEVerify.AssertValid(path);
-            Assert.Fail("Should have failed");
+            Assert.Throws<Exception>(() =>
+            {
+                PEVerify.AssertValid(path);
+            });
         }
         [ProtoContract]
         private class PrivateType
         {
         }
-        [Test]
+        [Fact]
         public void PrivateTypeShouldFail()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -39,7 +41,7 @@ namespace Examples
             {
             }
         }
-        [Test]
+        [Fact]
         public void IndirectlyPrivateTypeShouldFail()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -53,7 +55,7 @@ namespace Examples
             [ProtoBeforeSerialization]
             private void OnDeserialize() { }
         }
-        [Test]
+        [Fact]
         public void PrivateCallbackShouldFail()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -70,7 +72,7 @@ namespace Examples
             private int Foo;
 #pragma warning restore 0169
         }
-        [Test]
+        [Fact]
         public void PrivateFieldShouldFail()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -84,7 +86,7 @@ namespace Examples
             [ProtoMember(1)]
             private int Foo { get; set; }
         }
-        [Test]
+        [Fact]
         public void PrivatePropertyShouldFail()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -98,7 +100,7 @@ namespace Examples
             [ProtoMember(1)]
             public int Foo { private get; set; }
         }
-        [Test]
+        [Fact]
         public void PrivatePropertyGetShouldFail()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -112,7 +114,7 @@ namespace Examples
             [ProtoMember(1)]
             public int Foo { get; private set; }
         }
-        [Test]
+        [Fact]
         public void PrivatePropertySetShouldFail()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -128,7 +130,7 @@ namespace Examples
 
             private bool ShouldSerializeFoo() { return true; }
         }
-        [Test]
+        [Fact]
         public void PrivateConditionalSetShouldFail()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -143,7 +145,7 @@ namespace Examples
             [ProtoMember(1)]
             public int Foo { get; set; }
         }
-        [Test]
+        [Fact]
         public void PrivateConstructorShouldFail()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>

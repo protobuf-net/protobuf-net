@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples
@@ -103,7 +103,7 @@ namespace Examples
         public double Value { get; set; }
     }
 
-    [TestFixture]
+    
     public class ValueWrapperTests
     {
         static byte[] GetBytes<T>(T item)
@@ -112,40 +112,40 @@ namespace Examples
             Serializer.Serialize(ms, item);
             return ms.ToArray();
         }
-        [Test]
+        [Fact]
         public void TestRaw()
         {
-            Assert.IsTrue(Program.CheckBytes(new FieldData()), "Empty");
-            Assert.AreEqual(null, Serializer.DeepClone(new FieldData()).Value);
+            Assert.True(Program.CheckBytes(new FieldData()), "Empty");
+            Assert.Equal(null, Serializer.DeepClone(new FieldData()).Value);
 
         }
-        [Test]
+        [Fact]
         public void TestInt32()
         {
 
-            Assert.IsTrue(Program.CheckBytes(new FieldData {Value = 123},
+            Assert.True(Program.CheckBytes(new FieldData {Value = 123},
                                              GetBytes(new Int32Simple {Value = 123})), "Int32");
-            Assert.AreEqual(123, Serializer.DeepClone(new FieldData(123)).Value);
+            Assert.Equal(123, Serializer.DeepClone(new FieldData(123)).Value);
         }
-        [Test]
+        [Fact]
         public void TestSingle()
         {
-            Assert.IsTrue(Program.CheckBytes(new FieldData {Value = 123.45F},
+            Assert.True(Program.CheckBytes(new FieldData {Value = 123.45F},
                                              GetBytes(new SingleSimple {Value = 123.45F})), "Single");
-            Assert.AreEqual(123.45F, Serializer.DeepClone(new FieldData(123.45F)).Value);
+            Assert.Equal(123.45F, Serializer.DeepClone(new FieldData(123.45F)).Value);
 
         }
-        [Test]
+        [Fact]
         public void TestDouble()
         {
-            Assert.IsTrue(Program.CheckBytes(new FieldData { Value = 123.45 },
+            Assert.True(Program.CheckBytes(new FieldData { Value = 123.45 },
                 GetBytes(new DoubleSimple { Value = 123.45 })), "Double");
-            Assert.AreEqual(123.45, Serializer.DeepClone(new FieldData(123.45)).Value);
+            Assert.Equal(123.45, Serializer.DeepClone(new FieldData(123.45)).Value);
         }
 
     }
 
-    [TestFixture]
+    
     public class ValueWrapperTestsViaNullable
     {
         static byte[] GetBytes<T>(T item)
@@ -154,36 +154,36 @@ namespace Examples
             Serializer.Serialize(ms, item);
             return ms.ToArray();
         }
-        [Test]
+        [Fact]
         public void TestRaw()
         {
-            Assert.IsTrue(Program.CheckBytes(new FieldDataViaNullable()), "Empty");
-            Assert.AreEqual(null, Serializer.DeepClone(new FieldDataViaNullable()).Value);
+            Assert.True(Program.CheckBytes(new FieldDataViaNullable()), "Empty");
+            Assert.Equal(null, Serializer.DeepClone(new FieldDataViaNullable()).Value);
 
         }
 
-        [Test]
+        [Fact]
         public void TestInt32()
         {
 
-            Assert.IsTrue(Program.CheckBytes(new FieldDataViaNullable {Value = 123},
+            Assert.True(Program.CheckBytes(new FieldDataViaNullable {Value = 123},
                                              GetBytes(new Int32Simple {Value = 123})), "Int32");
-            Assert.AreEqual(123, Serializer.DeepClone(new FieldDataViaNullable(123)).Value);
+            Assert.Equal(123, Serializer.DeepClone(new FieldDataViaNullable(123)).Value);
         }
-        [Test]
+        [Fact]
         public void TestSingle()
         {
-            Assert.IsTrue(Program.CheckBytes(new FieldDataViaNullable {Value = 123.45F},
+            Assert.True(Program.CheckBytes(new FieldDataViaNullable {Value = 123.45F},
                                              GetBytes(new SingleSimple {Value = 123.45F})), "Single");
-            Assert.AreEqual(123.45F, Serializer.DeepClone(new FieldDataViaNullable(123.45F)).Value);
+            Assert.Equal(123.45F, Serializer.DeepClone(new FieldDataViaNullable(123.45F)).Value);
 
         }
-        [Test]
+        [Fact]
         public void TestDouble()
         {
-            Assert.IsTrue(Program.CheckBytes(new FieldDataViaNullable { Value = 123.45 },
+            Assert.True(Program.CheckBytes(new FieldDataViaNullable { Value = 123.45 },
                 GetBytes(new DoubleSimple { Value = 123.45 })), "Double");
-            Assert.AreEqual(123.45, Serializer.DeepClone(new FieldDataViaNullable(123.45)).Value);
+            Assert.Equal(123.45, Serializer.DeepClone(new FieldDataViaNullable(123.45)).Value);
         }
 
     }

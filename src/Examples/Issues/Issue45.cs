@@ -1,16 +1,16 @@
 ﻿#if !COREFX
 using System.Reflection;
-using NUnit.Framework;
+using Xunit;
 using System;
 using ProtoBuf;
 using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class LateLoadedTests
     {
-        [Test]
+        [Fact]
         public void TestLateLoad()
         {
             const string dllPath = "LateLoaded.dll";
@@ -21,7 +21,7 @@ namespace Examples.Issues
             }
             Assembly assembly = Assembly.LoadFrom(dllPath);
             Type type = assembly.GetType("LateLoaded.Foo");
-            Assert.IsNotNull(type, "Resolve type");
+            Assert.NotNull(type); //, "Resolve type");
 
             object obj = Activator.CreateInstance(type);
             const string EXPECTED = "Some value";
@@ -30,11 +30,11 @@ namespace Examples.Issues
             MethodInfo method = typeof(Serializer).GetMethod("DeepClone").MakeGenericMethod(type);
 
             object clone = method.Invoke(null, new object[] { obj });
-            Assert.IsNotNull(clone, "Create clone");
-            Assert.AreNotSame(obj, clone, "Clone different instance");
-            Assert.IsInstanceOfType(type, clone, "Clone correct type");
+            Assert.NotNull(clone); //, "Create clone");
+            Assert.NotSame(obj, clone); //, "Clone different instance");
+            Assert.IsType(type, clone); //, "Clone correct type");
             object value = type.GetProperty("BaseProp").GetValue(clone, null);
-            Assert.AreEqual(EXPECTED, value, "Clone value");
+            Assert.Equal(EXPECTED, value); //, "Clone value");
         }
 
         static LateLoadedTests()

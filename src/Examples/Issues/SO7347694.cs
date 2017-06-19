@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO7347694
     {
         [ProtoContract]
@@ -30,7 +30,7 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public void SerializeTheEasyWay()
         {
             var list = GetListOfThings();
@@ -46,9 +46,9 @@ namespace Examples.Issues
             {
                 list = ProtoBuf.Serializer.Deserialize<MyDto>(fs);
 
-                Assert.AreEqual(3, list.Things.Count);
-                Assert.AreNotSame(list.Things[0], list.Things[1]);
-                Assert.AreSame(list.Things[0], list.Things[2]);
+                Assert.Equal(3, list.Things.Count);
+                Assert.NotSame(list.Things[0], list.Things[1]);
+                Assert.Same(list.Things[0], list.Things[2]);
 
                 fs.Close();
             }

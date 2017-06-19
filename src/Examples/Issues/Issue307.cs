@@ -1,5 +1,5 @@
 ﻿using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 #if !NO_WCF
@@ -8,7 +8,7 @@ using ProtoBuf.ServiceModel;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue307
     {
         public enum Foo
@@ -24,7 +24,7 @@ namespace Examples.Issues
             public Foo Foo { get; set; }
         }
 #if !NO_WCF
-        [Test]
+        [Fact]
         public void TestRoundTripWrappedEnum()
         {
             var ser = new XmlProtoSerializer(RuntimeTypeModel.Default, typeof(FooWrapper));
@@ -33,9 +33,9 @@ namespace Examples.Issues
             ms.Position = 0;
             var clone = (FooWrapper)ser.ReadObject(ms);
 
-            Assert.AreEqual(Foo.B, clone.Foo);
+            Assert.Equal(Foo.B, clone.Foo);
         }
-        [Test]
+        [Fact]
         public void TestRoundTripNakedEnum()
         {
             var ser = new XmlProtoSerializer(RuntimeTypeModel.Default, typeof (Foo));
@@ -44,7 +44,7 @@ namespace Examples.Issues
             ms.Position = 0;
             var clone = (Foo)ser.ReadObject(ms);
 
-            Assert.AreEqual(Foo.B, clone);
+            Assert.Equal(Foo.B, clone);
 
         }
 #endif

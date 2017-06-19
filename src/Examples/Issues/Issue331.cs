@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -9,7 +9,7 @@ using System.Text;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue331
     {
         [ProtoContract]
@@ -54,31 +54,31 @@ namespace Examples.Issues
             return model;
         }
 
-        [Test]
+        [Fact]
         public void CanCreateModel_DerivedFirst()
         {
-            Assert.IsNotNull(CreateModel(false));
+            Assert.NotNull(CreateModel(false));
         }
-        [Test]
+        [Fact]
         public void TestRuntime_DerivedFirst()
         {
             var model = CreateModel(false);
             CheckModel(model);
         }
-        [Test]
+        [Fact]
         public void TestCompileInPlace_DerivedFirst()
         {
             var model = CreateModel(false);
             model.CompileInPlace();
             CheckModel(model);
         }
-        [Test]
+        [Fact]
         public void TestCompile_DerivedFirst()
         {
             var model = CreateModel(false);
             CheckModel(model.Compile());
         }
-        [Test]
+        [Fact]
         public void TestCompile_PEVerify_DerivedFirst()
         {
             var model = CreateModel(false);
@@ -88,37 +88,37 @@ namespace Examples.Issues
 #if !COREFX
             PEVerify.AssertValid("Issue331_DerivedFirst.dll");
             var type = Type.GetType("Issue331_DerivedFirst, Issue331_DerivedFirst");
-            Assert.IsNotNull(type, "resolve type");
+            Assert.NotNull(type); //, "resolve type");
             ser = (TypeModel)Activator.CreateInstance(type);
             CheckModel(ser);
 #endif
         }
 
-        [Test]
+        [Fact]
         public void CanCreateModel_BaseFirst()
         {
-            Assert.IsNotNull(CreateModel(true));
+            Assert.NotNull(CreateModel(true));
         }
-        [Test]
+        [Fact]
         public void TestRuntime_BaseFirst()
         {
             var model = CreateModel(true);
             CheckModel(model);
         }
-        [Test]
+        [Fact]
         public void TestCompileInPlace_BaseFirst()
         {
             var model = CreateModel(true);
             model.CompileInPlace();
             CheckModel(model);
         }
-        [Test]
+        [Fact]
         public void TestCompile_BaseFirst()
         {
             var model = CreateModel(true);
             CheckModel(model.Compile());
         }
-        [Test]
+        [Fact]
         public void TestCompile_PEVerify_BaseFirst()
         {
             var model = CreateModel(true);
@@ -128,7 +128,7 @@ namespace Examples.Issues
 #if !COREFX
             PEVerify.AssertValid("Issue331_BaseFirst.dll");
             var type = Type.GetType("Issue331_BaseFirst, Issue331_BaseFirst");
-            Assert.IsNotNull(type, "resolve type");
+            Assert.NotNull(type); //, "resolve type");
             ser = (TypeModel)Activator.CreateInstance(type);
             CheckModel(ser);
 #endif
@@ -149,13 +149,13 @@ namespace Examples.Issues
                 }
             };
             var clone = (Tree)model.DeepClone(obj);
-            Assert.AreEqual(1, clone.RootNode.Id);
-            Assert.IsNotNull(clone.RootNode.ChildNodes);
-            Assert.AreEqual(2, clone.RootNode.ChildNodes.Count);
-            Assert.AreEqual(2, clone.RootNode.ChildNodes[0].Id);
-            Assert.AreEqual(3, clone.RootNode.ChildNodes[1].Id);
-            Assert.IsNull(clone.RootNode.ChildNodes[0].ChildNodes);
-            Assert.IsNull(clone.RootNode.ChildNodes[1].ChildNodes);
+            Assert.Equal(1, clone.RootNode.Id);
+            Assert.NotNull(clone.RootNode.ChildNodes);
+            Assert.Equal(2, clone.RootNode.ChildNodes.Count);
+            Assert.Equal(2, clone.RootNode.ChildNodes[0].Id);
+            Assert.Equal(3, clone.RootNode.ChildNodes[1].Id);
+            Assert.Null(clone.RootNode.ChildNodes[0].ChildNodes);
+            Assert.Null(clone.RootNode.ChildNodes[1].ChildNodes);
         }
     }
 }
