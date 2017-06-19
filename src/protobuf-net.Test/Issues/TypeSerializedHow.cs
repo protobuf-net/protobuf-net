@@ -33,7 +33,7 @@ namespace ProtoBuf.Issues
 
             var clone = Serializer.ChangeType<ModelWithTypeMember,EquivModel>(obj);
             Assert.Equal(123, clone.Id);
-            Assert.Equal("System.Uri, System.Private.Uri, Version=4.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", clone.SomeType);
+            Assert.Equal(typeof(Uri).AssemblyQualifiedName, clone.SomeType);
         }
 
         [Fact]
