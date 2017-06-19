@@ -157,7 +157,7 @@ namespace ProtoBuf.Serializers
 
                     ctx.LoadAddress(kvp, itemType);
                     ctx.EmitCall(value, itemType);
-                    ctx.WriteNullCheckedTail(typeof(TKey), Tail, null);
+                    ctx.WriteNullCheckedTail(typeof(TValue), Tail, null);
 
                     ctx.LoadValue(token);
                     ctx.LoadReaderWriter();
