@@ -1,0 +1,14 @@
+﻿syntax = "proto3";
+import "protobuf-net/bcl.proto";
+import "google/protobuf/Timestamp.proto";
+import "google/protobuf/Duration.proto";
+
+message Foo {
+  oneof my_union {
+    .google.protobuf.Timestamp t = 1;
+	.google.protobuf.Duration d = 2;
+	.bcl.Guid g = 3;
+	int64 x = 4;
+	// string v = 5;
+  }
+}

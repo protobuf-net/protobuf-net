@@ -20,10 +20,11 @@ namespace ProtoBuf.Reflection
             }
             internal int Count32 { get; private set; }
             internal int Count64 { get; private set; }
+            internal int Count128 { get; private set; }
             internal int CountRef { get; private set; }
             internal int CountTotal => CountRef + Count32 + Count64;
 
-            private void AccountFor(FieldDescriptorProto.Type type)
+            private void AccountFor(FieldDescriptorProto.Type type, string typeName)
             {
                 switch (type)
                 {
@@ -46,12 +47,27 @@ namespace ProtoBuf.Reflection
                         Count32++;
                         Count64++;
                         break;
+                    case FieldDescriptorProto.Type.TypeMessage:
+                        switch(typeName)
+                        {
+                            case ".google.protobuf.Timestamp":
+                            case ".google.protobuf.Duration":
+                                Count64++;
+                                break;
+                            case ".bcl.Guid":
+                                Count128++;
+                                break;
+                            default:
+                                CountRef++;
+                                break;
+                        }
+                        break;
                     default:
                         CountRef++;
                         break;
                 }
             }
-            internal string GetStorage(FieldDescriptorProto.Type type)
+            internal string GetStorage(FieldDescriptorProto.Type type, string typeName)
             {
                 switch (type)
                 {
@@ -76,6 +92,18 @@ namespace ProtoBuf.Reflection
                         return "Int64";
                     case FieldDescriptorProto.Type.TypeUint64:
                         return "UInt64";
+                    case FieldDescriptorProto.Type.TypeMessage:
+                        switch (typeName)
+                        {
+                            case ".google.protobuf.Timestamp":
+                                return "DateTime";
+                            case ".google.protobuf.Duration":
+                                return "TimeSpan";
+                            case ".bcl.Guid":
+                                return "Guid";
+                            default:
+                                return "Object";
+                        }
                     default:
                         return "Object";
                 }
@@ -93,7 +121,7 @@ namespace ProtoBuf.Reflection
                 {
                     if (field.ShouldSerializeOneofIndex())
                     {
-                        stubs[field.OneofIndex].AccountFor(field.type);
+                        stubs[field.OneofIndex].AccountFor(field.type, field.TypeName);
                     }
                 }
                 return stubs;
@@ -111,6 +139,10 @@ namespace ProtoBuf.Reflection
 
             internal string GetUnionType()
             {
+                if (Count128 != 0)
+                {
+                    return CountRef == 0 ? "DiscriminatedUnion128" : "DiscriminatedUnion128Object";
+                }
                 if (Count64 != 0)
                 {
                     return CountRef == 0 ? "DiscriminatedUnion64" : "DiscriminatedUnion64Object";

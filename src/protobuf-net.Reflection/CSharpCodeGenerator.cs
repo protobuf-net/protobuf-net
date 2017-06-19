@@ -396,7 +396,7 @@ namespace ProtoBuf.Reflection
             {
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"default({typeName})" : defaultValue;
                 var fieldName = FieldPrefix + oneOf.OneOf.Name;
-                var storage = oneOf.GetStorage(obj.type);
+                var storage = oneOf.GetStorage(obj.type, obj.TypeName);
                 ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)}").WriteLine("{").Indent();
 
                 switch (obj.type)
