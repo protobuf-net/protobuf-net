@@ -154,7 +154,7 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128Object(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion128Object(int discriminator, object value) : this(discriminator) { Object = value; }
+        public DiscriminatedUnion128Object(int discriminator, object value) : this(value != null ? discriminator : ~0) { Object = value; }
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128Object(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: ~0) { DateTime = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
@@ -296,7 +296,7 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion64Object(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion64Object(int discriminator, object value) : this(discriminator) { Object = value; }
+        public DiscriminatedUnion64Object(int discriminator, object value) : this(value != null ? discriminator : ~0) { Object = value; }
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion64Object(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: ~0) { DateTime = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
@@ -384,7 +384,7 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion32Object(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion32Object(int discriminator, object value) : this(discriminator) { Object = value; }
+        public DiscriminatedUnion32Object(int discriminator, object value) : this(value != null ? discriminator : ~0) { Object = value; }
 
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnion32Object value, int discriminator)
