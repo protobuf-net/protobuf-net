@@ -1463,7 +1463,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public static void ThrowCannotCreateInstance(Type type)
         {
-            throw new ProtoException("No parameterless constructor found for " + (type == null ? "(null)" : type.Name));
+            throw new ProtoException("No parameterless constructor found for " + (type == null ? "(null)" : type.FullName));
         }
 
         internal static string SerializeType(TypeModel model, System.Type type)

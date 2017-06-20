@@ -53,7 +53,36 @@ namespace Examples.Issues
             {
                 WithoutParameterlessCtor obj = new WithoutParameterlessCtor(123);
                 Serializer.DeepClone(obj);
-            }, "No parameterless constructor found for WithoutParameterlessCtor");
+            }, "No parameterless constructor found for Examples.Issues.WithoutParameterlessCtor");
+        }
+
+        [Fact]
+        public void CheckMeaningfulErrorIfNoParameterlessCtor_Interface()
+        {
+            Program.ExpectFailure<ProtoException>(() =>
+            {
+                HazGenericInterface obj = new HazGenericInterface { Data = new Foo(12) };
+                Serializer.DeepClone(obj);
+            }, "No parameterless constructor found for Examples.Issues.Issue26+Foo");
+        }
+
+        [ProtoContract]
+        public class HazGenericInterface
+        {
+            [ProtoMember(1)]
+            public IFoo<int> Data { get;set;}
+        }
+        [ProtoContract]
+        [ProtoInclude(2, typeof(Foo))]
+        public interface IFoo<T>
+        {
+            [ProtoMember(1)]
+            T Item { get; set; }
+        }
+        public class Foo : IFoo<int>
+        {
+            public Foo(int value) { Item = value; }
+            public int Item { get; set; }
         }
 
         [Fact]
