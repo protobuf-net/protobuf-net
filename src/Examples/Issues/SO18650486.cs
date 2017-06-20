@@ -13,10 +13,14 @@ namespace Examples.Issues
     
     public class SO18650486
     {
-        [Fact(Skip = "breaking test harness; investigate"), Trait("kind", "test harness fail")]
+        [Fact] //(Skip = "breaking test harness; investigate"), Trait("kind", "test harness fail")]
         public void Execute()
         {
+#if DEBUG
+            const int OuterLoop = 5;
+#else
             const int OuterLoop = 500;
+#endif
             var model = TypeModel.Create();
             model.AutoCompile = false;
             // Execute(OuterLoop, model, "RT");
