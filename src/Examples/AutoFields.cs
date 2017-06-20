@@ -146,28 +146,26 @@ namespace Examples
             Assert.Equal(101, bar.E_private); //, "E: post");
             Assert.Equal(0, bar.F_ignoreDirect); //, "F: post");
             Assert.Equal(0, bar.G_ignoreIndirect); //, "G: post");
-#if COREFX
-            Assert.Equal(104, bar.H_nonSerialized); //, "H: post");
-#else
+//#if COREFX
+//            Assert.Equal(104, bar.H_nonSerialized); //, "H: post");
+//#else
             Assert.Equal(0, bar.H_nonSerialized); //, "H: post");
-#endif
+//#endif
             Assert.Equal(105, bar.X_explicitField); //, "X: post");
             Assert.Equal(106, bar.Z_explicitProperty); //, "Z: post");
 
             ImplicitFieldPOCOEquiv equiv = Serializer.ChangeType<ImplicitFieldPOCO, ImplicitFieldPOCOEquiv>(foo);
-#if COREFX // change in H being serialized/not moves everything around
-            Assert.Equal(100, equiv.D); //, "D: equiv");
-            Assert.Equal(104, equiv.E); //, "E: equiv");
-            Assert.Equal(105, equiv.X); //, "X: equiv");
-            Assert.Equal(106, equiv.Z); //, "Z: equiv");
-#else
+//#if COREFX // change in H being serialized/not moves everything around
+//            Assert.Equal(100, equiv.D); //, "D: equiv");
+//            Assert.Equal(104, equiv.E); //, "E: equiv");
+//            Assert.Equal(105, equiv.X); //, "X: equiv");
+//            Assert.Equal(106, equiv.Z); //, "Z: equiv");
+//#else
             Assert.Equal(100, equiv.D); //, "D: equiv");
             Assert.Equal(101, equiv.E); //, "E: equiv");
             Assert.Equal(105, equiv.X); //, "X: equiv");
             Assert.Equal(106, equiv.Z); //, "Z: equiv");
-#endif
-
-
+//#endif
         }
 
         [ProtoContract]

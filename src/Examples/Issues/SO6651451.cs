@@ -61,7 +61,6 @@ namespace Examples.Issues
         [Fact]
         public void RunTest()
         {
-            Program.ExpectFailure<InvalidOperationException>(() => { 
             //Serialization Logic:
             RuntimeTypeModel.Default[typeof(SerializeClass)].SetSurrogate(typeof(SerializeClassSurrogate));
 
@@ -92,7 +91,6 @@ namespace Examples.Issues
                 Assert.Same(deserialized.MyDictionary["def"], deserialized.MyDictionary["abc"]);
                 Assert.Same(deserialized.MyList[0], deserialized.MyList[1]);
             }
-            }, "AsReference cannot be used with value-types; please see http://stackoverflow.com/q/14436606/");
         }
 
     }
