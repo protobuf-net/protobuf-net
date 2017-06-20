@@ -2,15 +2,18 @@ Source
 -
 
 The solution is intended to be built with Visual Studio 2017; the .csproj *should* work with `dotnet`, however, the support for .NET 2.0/3.5 (the `net20` / `net35` targets) is not currently great in `dotnet`.
-If you only have access to the `dotnet` command line, just remove the `net20`/`net35` targets from the .csproj, then run:
+If you wish to build with the `dotnet` command line (but without `net20` / `net35` support), then run:
 
+    dotnet restore
     dotnet build
 
 or
 
+    dotnet restore
     dotnet build -c Release
 
-However, it is much easier if you just use Visual Studio 2017, which [can be downloaded here](https://www.visualstudio.com/downloads/). I haven't tried it, but it *should* work with the "Community" edition, which is free.
+You may find it easier to use Visual Studio 2017, which [can be downloaded here](https://www.visualstudio.com/downloads/). I haven't tried it, but it *should* work with the "Community" edition, which is free.
+To include the `net20` / `net35` targets: switch to the `VS` configuration.
 
 Binaries
 -
