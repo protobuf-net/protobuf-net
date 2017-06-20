@@ -27,6 +27,7 @@ namespace Examples.Issues
             public A A { get; set; }
 
             [ProtoMember(2, AsReference = true)]
+            [ProtoMap(DisableMap = true)]
             public Dictionary<int, A> Items { get; set; }
 
             public B()
@@ -227,9 +228,12 @@ namespace Examples.Issues
         [Fact]
         public void AreObjectReferencesSameAfterDeserialization()
         {
-            var model = TypeModel.Create();
-            model.AutoCompile = false;
-            ExecuteAllModes(model);
+            Program.ExpectFailure<InvalidOperationException>(() =>
+            {
+                var model = TypeModel.Create();
+                model.AutoCompile = false;
+                ExecuteAllModes(model);
+            }, "AsReference cannot be used with value-types; please see http://stackoverflow.com/q/14436606/");
         }
 
         static B CreateB()

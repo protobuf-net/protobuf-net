@@ -482,6 +482,10 @@ namespace ProtoBuf.Meta
                         concreteType = memberType;
                     }
                     var keySer = TryGetCoreSerializer(model, MapKeyFormat, keyType, out var keyWireType, false, false, false, false);
+                    if(!AsReference)
+                    {
+                        AsReference = MetaType.GetAsReferenceDefault(model, valueType);
+                    }
                     var valueSer = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
 
                     var ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetConstructors(
