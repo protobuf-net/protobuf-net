@@ -38,7 +38,8 @@ namespace Examples
             string proto = model.GetSchema(typeof(Test2));
 
             Assert.Equal(
-@"package Examples;
+@"syntax = ""proto2"";
+package Examples;
 
 message abc {
    required uint32 ghi = 2;
@@ -77,7 +78,6 @@ message MyClass {
             string proto = Serializer.GetProto<ProtoGenerationTypes.BrokenProto.ExampleContract>();
 
             Assert.Equal(@"syntax = ""proto2"";
-
 package ProtoGenerationTypes.BrokenProto;
 
 message ExampleContract {
@@ -128,7 +128,8 @@ message EvilParent {
         public void ProtoForContractListsShouldGenerateSchema()
         {
             string proto = GetSurrogateModel().GetSchema(typeof(List<MySurrogate>));
-            Assert.Equal(@"package Examples;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples;
 
 message List_MySurrogate {
    repeated MySurrogate items = 1;
@@ -226,7 +227,6 @@ message MySurrogate {
         {
             string proto = Serializer.GetProto<Dictionary<string, Cat>>();
             Assert.Equal(@"syntax = ""proto2"";
-
 package Examples;
 
 message Animal {
@@ -267,12 +267,11 @@ Parameter name: type");
             string proto = Serializer.GetProto<ProtoGenerationTypes.BclImports.HasPrimitives>();
 
             Assert.Equal(@"syntax = ""proto2"";
-
 package ProtoGenerationTypes.BclImports;
-import ""bcl.proto""; // schema for protobuf-net's handling of core .NET types
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
 
 message HasPrimitives {
-   optional bcl.DateTime When = 1;
+   optional .bcl.DateTime When = 1;
 }
 ", proto);
         }
@@ -294,7 +293,8 @@ message HasPrimitives {
             
             string proto = GetSurrogateModel().GetSchema(typeof(MySurrogate));
 
-            Assert.Equal(@"package Examples;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples;
 
 message MySurrogate {
 }
@@ -305,7 +305,8 @@ message MySurrogate {
         {
             string proto = GetSurrogateModel().GetSchema(typeof(MyNonSurrogate));
 
-            Assert.Equal(@"package Examples;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples;
 
 message MySurrogate {
 }
@@ -316,7 +317,8 @@ message MySurrogate {
         {
             string proto = GetSurrogateModel().GetSchema(typeof(UsesSurrogates));
 
-            Assert.Equal(@"package Examples;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples;
 
 message MySurrogate {
 }
@@ -331,7 +333,8 @@ message UsesSurrogates {
         {
             string proto = GetSurrogateModel().GetSchema(null);
 
-            Assert.Equal(@"package Examples;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples;
 
 message MySurrogate {
 }

@@ -23,7 +23,6 @@ namespace Examples.Issues
             string s = Serializer.GetProto<AnimationCode>();
 
             Assert.Equal(@"syntax = ""proto2"";
-
 package Examples.Issues;
 
 enum AnimationCode {

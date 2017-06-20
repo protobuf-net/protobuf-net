@@ -22,7 +22,8 @@ namespace Examples.Issues
         {
             var model = GetModel();
             Assert.Equal(
-                @"package Examples.Issues;
+                @"syntax = ""proto2"";
+package Examples.Issues;
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
@@ -47,7 +48,8 @@ message vegetable {
             var model = (RuntimeTypeModel)GetModel();
             model.Add(typeof (Examples.Issues.CompletelyUnrelated.Mineral), true);
             Assert.Equal(
-                @"
+                @"syntax = ""proto2"";
+
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
    // the following represent sub-types; at most 1 should have a value
@@ -72,7 +74,8 @@ message vegetable {
         {
             var model = GetModel();
             Assert.Equal(
-                @"package Examples.Issues;
+                @"syntax = ""proto2"";
+package Examples.Issues;
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
@@ -93,7 +96,8 @@ message cat {
         {
             var model = GetModel();
             Assert.Equal(
-                @"package Examples.Issues;
+                @"syntax = ""proto2"";
+package Examples.Issues;
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];

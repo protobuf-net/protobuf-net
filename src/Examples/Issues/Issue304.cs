@@ -11,7 +11,6 @@ namespace Examples.Issues
         public void DefaultValuesForBoolMustBeLowerCase()
         {
             Assert.Equal(@"syntax = ""proto2"";
-
 package Examples.Issues;
 
 message Foo {

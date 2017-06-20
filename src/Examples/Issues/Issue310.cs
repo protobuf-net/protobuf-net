@@ -17,7 +17,6 @@ namespace Examples.Issues
             string proto = Serializer.GetProto<Animal>();
 
             Assert.Equal(@"syntax = ""proto2"";
-
 package Examples.Issues;
 
 message Animal {

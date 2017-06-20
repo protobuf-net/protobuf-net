@@ -45,7 +45,7 @@ namespace Examples.Issues
         {
             [ProtoMember(1, AsReference = true)] internal Parent Parent;
 
-            private Child()
+            public Child()
             {
             }
 
@@ -63,7 +63,7 @@ namespace Examples.Issues
             /// <summary>
             /// ProtoBuf deserialization constructor (fails here)
             /// </summary>
-            private Parent()
+            public Parent()
             {
                 Initialize();
             }

@@ -130,18 +130,20 @@ namespace Examples.Issues
 
             string schema = model.GetSchema(null);
 
-            Assert.Equal(@"package Examples.Issues;
-import ""bcl.proto""; // schema for protobuf-net's handling of core .NET types
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
+import ""protobuf-net/protogen.proto""; // custom protobuf-net options
 
 message Assemblage {
    optional PartCollectionSurrogate Parts = 1;
 }
 message Part {
-   optional bcl.NetObjectProxy Whole = 1; // reference-tracked Whole
+   optional .bcl.NetObjectProxy Whole = 1 [(.protobuf_net.fieldopt).asRef = true]; // reference-tracked Whole
 }
 message PartCollectionSurrogate {
-   repeated bcl.NetObjectProxy Collection = 1; // reference-tracked Part
-   optional bcl.NetObjectProxy Whole = 2; // reference-tracked Whole
+   repeated .bcl.NetObjectProxy Collection = 1 [(.protobuf_net.fieldopt).asRef = true]; // reference-tracked Part
+   optional .bcl.NetObjectProxy Whole = 2 [(.protobuf_net.fieldopt).asRef = true]; // reference-tracked Whole
 }
 message Whole {
    optional PartCollectionSurrogate Parts = 1;

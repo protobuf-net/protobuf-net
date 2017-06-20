@@ -23,11 +23,7 @@ namespace Examples.Issues
 package Examples.Issues;
 
 message Foo {
-   repeated KeyValuePair_Int32_String Lookup = 1;
-}
-message KeyValuePair_Int32_String {
-   optional int32 Key = 1;
-   optional string Value = 2;
+   map<int32,string> Lookup = 1;
 }
 ", schema);
         }
