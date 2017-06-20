@@ -26,7 +26,9 @@ namespace ProtoBuf.Reflection
             IsError = isError;
         }
     }
-
+    /// <summary>
+    /// Provides general purpose name suggestions
+    /// </summary>
     public abstract class NameNormalizer
     {
         private class NullNormalizer : NameNormalizer

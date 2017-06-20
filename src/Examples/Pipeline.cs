@@ -103,7 +103,6 @@ message EnumWrapper {
             string proto = Serializer.GetProto<EnumParentGroupWrapper>();
 
             string expected = @"syntax = ""proto2"";
-
 package Examples;
 
 message EnumParentWrapper {
@@ -184,7 +183,6 @@ message EnumWrapper {
             string proto = Serializer.GetProto<EnumParentStandardWrapper>();
 
             string expected = @"syntax = ""proto2"";
-
 package Examples;
 
 message EnumParentWrapper {
