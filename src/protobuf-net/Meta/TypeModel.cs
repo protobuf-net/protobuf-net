@@ -680,7 +680,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
         public object Deserialize(Stream source, object value, System.Type type, int length, SerializationContext context)
-            => Deserialize(source, value, type, length == int.MaxValue ? long.MaxValue : (long)value);
+            => Deserialize(source, value, type, length == int.MaxValue ? long.MaxValue : (long)value, context);
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
