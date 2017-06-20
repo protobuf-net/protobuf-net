@@ -107,12 +107,11 @@ message Type2 {
         }
 
         [Fact]
-        public void SelfReferntialGenericsShouldNotExplode()
+        public void SelfReferentialGenericsShouldNotExplode()
         {
             string proto = Serializer.GetProto<ProtoGenerationTypes.SelfGenericProto.EvilParent>();
 
             Assert.Equal(@"syntax = ""proto2"";
-
 package ProtoGenerationTypes.SelfGenericProto;
 
 message EvilGeneric_EvilParent {
@@ -143,7 +142,8 @@ message MySurrogate {
         public void ProtoForContractViaSurrogateListsShouldGenerateSchema()
         {
             string proto = GetSurrogateModel().GetSchema(typeof(List<MyNonSurrogate>));
-            Assert.Equal(@"package Examples;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples;
 
 message List_MyNonSurrogate {
    repeated MySurrogate items = 1;
@@ -207,7 +207,6 @@ message KeyValuePair_String_Int32 {
         {
             string proto = Serializer.GetProto<Dictionary<string, MySurrogate>>();
             Assert.Equal(@"syntax = ""proto2"";
-
 package Examples;
 
 message Dictionary_String_MySurrogate {
