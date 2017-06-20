@@ -99,7 +99,7 @@ namespace Examples.Issues
             Assert.True(Program.CheckBytes(value, model, 0x08, 0x03, 0x08, 0x04, 0x08, 0x05));
             var clone = (E[]) model.DeepClone(value);
             Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
-            Assert.Throws<Exception>(() => { value.SequenceEqual(clone); });
+            value.SequenceEqual(clone);
         }
     }
 }

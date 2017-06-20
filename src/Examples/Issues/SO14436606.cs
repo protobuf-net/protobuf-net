@@ -227,12 +227,9 @@ namespace Examples.Issues
         [Fact]
         public void AreObjectReferencesSameAfterDeserialization()
         {
-            Program.ExpectFailure<InvalidOperationException>(() =>
-            {
-                var model = TypeModel.Create();
-                model.AutoCompile = false;
-                ExecuteAllModes(model);
-            }, "AsReference cannot be used with value-types; please see http://stackoverflow.com/q/14436606/");
+            var model = TypeModel.Create();
+            model.AutoCompile = false;
+            ExecuteAllModes(model);
         }
 
         static B CreateB()

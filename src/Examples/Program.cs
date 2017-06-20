@@ -121,14 +121,28 @@ namespace Examples
         public static void ExpectFailure<TException>(Action action, string message = null)
             where TException : Exception
         {
-            var ex = Assert.Throws<TException>(action);
-            if (message != null) Assert.Equal(message, ex.Message);
+            try
+            {
+                action();
+                Assert.Equal("throw", "ok");
+            }
+            catch (TException ex)
+            {
+                if (message != null) Assert.Equal(message, ex.Message);
+            }
         }
         public static void ExpectFailure<TException>(Action action, Func<TException, bool> check)
             where TException : Exception
         {
-            var ex = Assert.Throws<TException>(action);
-            if (check != null) Assert.True(check(ex));
+            try
+            {
+                action();
+                Assert.Equal("throw", "ok");
+            }
+            catch(TException ex)
+            {
+                if (check != null) Assert.True(check(ex));
+            }            
         }
     }
 }

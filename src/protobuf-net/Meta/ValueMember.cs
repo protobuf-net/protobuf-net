@@ -428,6 +428,14 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
+            if (dictionaryType == null) return false;
+
+            // (note we checked the key type already)
+            // not a map if value is repeated
+            Type itemType = null, defaultType = null;
+            model.ResolveListTypes(valueType, ref itemType, ref defaultType);
+            if (itemType != null) return false;
+
             return dictionaryType != null;
         }
 

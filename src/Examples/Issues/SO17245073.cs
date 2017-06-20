@@ -12,10 +12,10 @@ namespace Examples.Issues
         public void Exec()
         {
             var model = TypeModel.Create();
-            Assert.False(model[typeof(A)].EnumPassthru, "A");
+            Assert.True(model[typeof(A)].EnumPassthru, "A");
             Assert.True(model[typeof(B)].EnumPassthru, "B");
 
-            Assert.False(model[typeof(C)].EnumPassthru, "C");
+            Assert.True(model[typeof(C)].EnumPassthru, "C");
             Assert.True(model[typeof(D)].EnumPassthru, "D");
 
             Assert.True(model[typeof(E)].EnumPassthru, "E");
