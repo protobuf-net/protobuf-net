@@ -24,7 +24,8 @@ namespace Examples.Issues
 
             string proto = runtimeTypeModel.GetSchema(null);
 
-            Assert.Equal(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
 
 message BinarySerializationSurrogate_MyException {
    optional bytes objectData = 1;

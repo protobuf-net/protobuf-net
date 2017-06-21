@@ -37,7 +37,6 @@ namespace Examples
             string proto = Serializer.GetProto<EnumWrapper>();
 
             string expected = @"syntax = ""proto2"";
-
 package Examples;
 
 message EnumWrapper {

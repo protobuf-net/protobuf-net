@@ -120,6 +120,8 @@ namespace ProtoBuf.Schemas
             _output.WriteLine(Path.GetDirectoryName(
                 Path.Combine(schemaPath, path).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar)));
 
+            bool includeComments = IncludeComments(path);
+
             var protocBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "protoc.bin"));
             int exitCode;
             using (var proc = new Process())
@@ -127,6 +129,7 @@ namespace ProtoBuf.Schemas
                 var psi = proc.StartInfo;
                 psi.FileName = "protoc";
                 psi.Arguments = $"--descriptor_set_out={protocBinPath} {path}";
+                if (includeComments) psi.Arguments += " --include_source_info";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
                 psi.UseShellExecute = false;
                 psi.WorkingDirectory = schemaPath;
@@ -298,6 +301,17 @@ namespace ProtoBuf.Schemas
 
 
             Assert.Null(genError);
+        }
+
+        private static bool IncludeComments(string path)
+        {
+            switch(path)
+            {
+                //case "everything.proto":
+                //    return true;
+                default:
+                    return false;
+            }
         }
 
         public SchemaTests(ITestOutputHelper output) => _output = output;

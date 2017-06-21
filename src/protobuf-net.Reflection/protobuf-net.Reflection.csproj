@@ -4,19 +4,18 @@
     <AssemblyName>protobuf-net.Reflection</AssemblyName>
     <Title>protobuf-net.Reflection</Title>
     <Description>ProtoBuf DSL (proto2 / proto3) and descriptor tools for protobuf-net</Description>
-    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks><!--net20;net35;-->
+    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Configurations>Debug;Release;VS</Configurations>
   </PropertyGroup>
-  <!-- TODO: activate after 2.3.0 drops -->
-  <!--<PropertyGroup Condition="'$(Configuration)' == 'VS'">
+  <PropertyGroup Condition="'$(Configuration)' == 'VS'">
+    <!--
     <TargetFrameworks>net40;netstandard1.3;net20;net35</TargetFrameworks>
-  </PropertyGroup>-->
+    -->
+  </PropertyGroup>
   <ItemGroup>
-    <!-- TODO: switch to project reference after 2.3.0 drops -->
-    <!--<ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />-->
-    <PackageReference Include="protobuf-net" Version="2.1.0" />
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <None Include="CodeGenerator.OneOfStub.cs" />
   </ItemGroup>
 </Project>

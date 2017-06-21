@@ -196,8 +196,7 @@ namespace Google.Protobuf.Reflection
         {
             if (obj == null || data == null || data.Length == 0) return;
             var ext = obj.GetExtensionObject(true);
-            //TODO: reinstate after 2.3.0
-            // (ext as IExtensionResettable)?.Reset();
+            (ext as IExtensionResettable)?.Reset();
             var s = ext.BeginAppend();
             try
             {
@@ -1728,8 +1727,7 @@ namespace Google.Protobuf.Reflection
                 ctx.Errors.Warn(numberToken, $"field numbers in the range {FirstReservedField}-{LastReservedField} are reserved; this may cause problems on many implementations");
             }
             ctx.CheckNames(parent, name, nameToken);
-            var parentTyped = parent as DescriptorProto;
-            if (parentTyped != null)
+            if (parent is DescriptorProto parentTyped)
             {
 
                 var conflict = parentTyped.Fields.FirstOrDefault(x => x.Number == number);

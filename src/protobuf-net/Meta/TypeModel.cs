@@ -104,9 +104,8 @@ namespace ProtoBuf.Meta
             if (type == null) { type = value.GetType(); }
 
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
-            int modelKey;
             // note the "ref type" here normalizes against proxies
-            WireType wireType = GetWireType(typecode, format, ref type, out modelKey);
+            WireType wireType = GetWireType(typecode, format, ref type, out int modelKey);
 
 
             if (modelKey >= 0)
@@ -172,11 +171,11 @@ namespace ProtoBuf.Meta
             Helpers.DebugAssert(wireType == WireType.None);
 
             // now attempt to handle sequences (including arrays and lists)
-            IEnumerable sequence = value as IEnumerable;
-            if (sequence != null)
+            if (value is IEnumerable sequence)
             {
                 if (isInsideList) throw CreateNestedListsNotSupported();
-                foreach (object item in sequence) {
+                foreach (object item in sequence)
+                {
                     if (item == null) { throw new NullReferenceException(); }
                     if (!TrySerializeAuxiliaryType(writer, null, format, tag, item, true))
                     {
@@ -331,12 +330,11 @@ namespace ProtoBuf.Meta
             {
                 throw new InvalidOperationException("A type must be provided unless base-128 prefixing is being used in combination with a resolver");
             }
-            int actualField;
             do
             {
-                
+
                 bool expectPrefix = expectedField > 0 || resolver != null;
-                len = ProtoReader.ReadLongLengthPrefix(source, expectPrefix, style, out actualField, out int tmpBytesRead);
+                len = ProtoReader.ReadLongLengthPrefix(source, expectPrefix, style, out int actualField, out int tmpBytesRead);
                 if (tmpBytesRead == 0) return value;
                 bytesRead += tmpBytesRead;
                 if (len < 0) return value;
@@ -965,8 +963,7 @@ namespace ProtoBuf.Meta
 #if !FEAT_IKVM
         private bool TryDeserializeList(TypeModel model, ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
         {
-            bool isList;
-            MethodInfo addMethod = TypeModel.ResolveListAdd(model, listType, itemType, out isList);
+            MethodInfo addMethod = TypeModel.ResolveListAdd(model, listType, itemType, out bool isList);
             if (addMethod == null) throw new NotSupportedException("Unknown list variant: " + listType.FullName);
             bool found = false;
             object nextItem = null;
@@ -1110,8 +1107,7 @@ namespace ProtoBuf.Meta
             if (type == null) throw new ArgumentNullException("type");
             Type itemType = null;
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
-            int modelKey;
-            WireType wiretype = GetWireType(typecode, format, ref type, out modelKey);
+            WireType wiretype = GetWireType(typecode, format, ref type, out int modelKey);
 
             bool found = false;
             if (wiretype == WireType.None)
@@ -1379,13 +1375,13 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-            int modelKey;
-            if (type == typeof(byte[])) {
+            if (type == typeof(byte[]))
+            {
                 byte[] orig = (byte[])value, clone = new byte[orig.Length];
                 Helpers.BlockCopy(orig, 0, clone, 0, orig.Length);
                 return clone;
             }
-            else if (GetWireType(Helpers.GetTypeCode(type), DataFormat.Default, ref type, out modelKey) != WireType.None && modelKey < 0)
+            else if (GetWireType(Helpers.GetTypeCode(type), DataFormat.Default, ref type, out int modelKey) != WireType.None && modelKey < 0)
             {   // immutable; just return the original value
                 return value;
             }
@@ -1604,10 +1600,8 @@ namespace ProtoBuf.Meta
             private readonly Type type;
             internal Formatter(TypeModel model, Type type)
             {
-                if (model == null) throw new ArgumentNullException("model");
-                if (type == null) throw new ArgumentNullException("type");
-                this.model = model;
-                this.type = type;
+                this.model = model ?? throw new ArgumentNullException("model");
+                this.type = type ?? throw new ArgumentNullException("type");
             }
             private System.Runtime.Serialization.SerializationBinder binder;
             public System.Runtime.Serialization.SerializationBinder Binder
@@ -1689,7 +1683,7 @@ namespace ProtoBuf.Meta
 #if !(WINRT || FEAT_IKVM || COREFX)
                 if (assembly == null) assembly = Assembly.GetCallingAssembly();
 #endif
-                Type type = assembly == null ? null : assembly.GetType(fullName);
+                Type type = assembly?.GetType(fullName);
                 if (type != null) return type;
             }
             catch { }

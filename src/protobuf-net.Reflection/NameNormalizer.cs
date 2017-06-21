@@ -151,6 +151,9 @@ namespace ProtoBuf.Reflection
             }
             return conflicts;
         }
+        /// <summary>
+        /// Get the preferred name for an element
+        /// </summary>
         protected virtual string GetName(DescriptorProto parent, string preferred, string fallback, bool includeDescendents)
         {
             var conflicts = BuildConflicts(parent, includeDescendents);

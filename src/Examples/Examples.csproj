@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks>
+    <TargetFrameworks>net452;netcoreapp1.1</TargetFrameworks>
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
@@ -18,6 +18,9 @@
   <PropertyGroup Condition="$(TargetFramework)=='net452'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT</DefineConstants>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="..\Tools\nwind.proto.bin" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.2.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.2.0" />
@@ -57,7 +60,10 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    
+
+    <None Update="../Tools/nwind.proto.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup Condition="'$(LibImport)'=='core'">
     <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
@@ -77,5 +83,8 @@
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="..\Tools\nwind.proto.bin" Link="nwind.proto.bin" />
   </ItemGroup>
 </Project>
