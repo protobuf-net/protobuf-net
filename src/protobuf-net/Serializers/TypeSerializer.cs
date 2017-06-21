@@ -44,9 +44,9 @@ namespace ProtoBuf.Serializers
 
             Helpers.Sort(fieldNumbers, serializers);
             bool hasSubTypes = false;
-            for (int i = 1; i < fieldNumbers.Length; i++)
+            for (int i = 0; i < fieldNumbers.Length; i++)
             {
-                if (fieldNumbers[i] == fieldNumbers[i - 1]) throw new InvalidOperationException("Duplicate field-number detected; " +
+                if(i != 0 && fieldNumbers[i] == fieldNumbers[i - 1]) throw new InvalidOperationException("Duplicate field-number detected; " +
                            fieldNumbers[i].ToString() + " on: " + forType.FullName);
                 if(!hasSubTypes && serializers[i].ExpectedType != forType)
                 {

@@ -1,59 +1,50 @@
-﻿using System;
+﻿#if !COREFX
+using System;
 using System.Collections.Generic;
 using System.Data.Linq;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
-
-#if !XUNIT
-namespace NUnit.Framework
-{
-    public sealed class IgnoreTestAttribute : IgnoreAttribute
-    {
-        public IgnoreTestAttribute(string reason) : base(reason) { }
-    }
-}
-#endif
 
 namespace Examples.Issues
 {
 
-    [TestFixture]
+    
     public class Issue297
     {
     // also asked: http://stackoverflow.com/q/11134370
-        [Test]
+        [Fact]
         public void TestInt32()
         {
             Node<int> tree = new Node<int>.RootNode("abc",1), clone;
-            var children = tree.getChildren();
+            var children = tree.GetChildren();
             children.Add(new Node<int>("abc/def", 2));
             children.Add(new Node<int>("abc/ghi", 3));
-            Assert.AreEqual(2, tree.getChildren().Count);
+            Assert.Equal(2, tree.GetChildren().Count);
 
             using(var ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, tree);
-                Assert.Greater(1, 0); // I always get these args the wrong way around, so always check!
-                Assert.Greater(ms.Length, 0);
+                Assert.True(1 > 0); // I always get these args the wrong way around, so always check!
+                Assert.True(ms.Length > 0);
                 ms.Position = 0;
                 clone = Serializer.Deserialize<Node<int>>(ms);
             }
-            Assert.IsInstanceOfType(typeof(Node<int>.RootNode), clone);
-            Assert.AreEqual("abc", clone.Key);
-            Assert.AreEqual(1, clone.Value);
-            children = clone.getChildren();
-            Assert.AreEqual(2, children.Count);
+            Assert.IsType(typeof(Node<int>.RootNode), clone);
+            Assert.Equal("abc", clone.Key);
+            Assert.Equal(1, clone.Value);
+            children = clone.GetChildren();
+            Assert.Equal(2, children.Count);
 
-            Assert.IsFalse(children[0].HasChildren);
-            Assert.AreEqual("abc/def", children[0].Key);
-            Assert.AreEqual(2, children[0].Value);
+            Assert.False(children[0].HasChildren);
+            Assert.Equal("abc/def", children[0].Key);
+            Assert.Equal(2, children[0].Value);
 
-            Assert.IsFalse(children[1].HasChildren);
-            Assert.AreEqual("abc/ghi", children[1].Key);
-            Assert.AreEqual(3, children[1].Value);
+            Assert.False(children[1].HasChildren);
+            Assert.Equal("abc/ghi", children[1].Key);
+            Assert.Equal(3, children[1].Value);
         }
 
         static Issue297()
@@ -63,103 +54,103 @@ namespace Examples.Issues
             RuntimeTypeModel.Default.Add(typeof(Node<SomeNewType>), true).AddSubType(4, typeof(Node<SomeNewType>.RootNode));
         }
 
-        [Test]
+        [Fact]
         public void TestMyDTO()
         {
             Node<MyDto> tree = new Node<MyDto>.RootNode("abc", new MyDto { Value =  1}), clone;
-            var children = tree.getChildren();
+            var children = tree.GetChildren();
             children.Add(new Node<MyDto>("abc/def", new MyDto { Value =  2}));
             children.Add(new Node<MyDto>("abc/ghi", new MyDto { Value =  3}));
-            Assert.AreEqual(2, tree.getChildren().Count);
+            Assert.Equal(2, tree.GetChildren().Count);
 
             using (var ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, tree);
-                Assert.Greater(1, 0); // I always get these args the wrong way around, so always check!
-                Assert.Greater(ms.Length, 0);
+                Assert.True(1 > 0); // I always get these args the wrong way around, so always check!
+                Assert.True(ms.Length > 0);
                 ms.Position = 0;
                 clone = Serializer.Deserialize<Node<MyDto>>(ms);
             }
-            Assert.IsInstanceOfType(typeof(Node<MyDto>.RootNode), clone);
-            Assert.AreEqual("abc", clone.Key);
-            Assert.AreEqual(1, clone.Value.Value);
-            children = clone.getChildren();
-            Assert.AreEqual(2, children.Count);
+            Assert.IsType(typeof(Node<MyDto>.RootNode), clone);
+            Assert.Equal("abc", clone.Key);
+            Assert.Equal(1, clone.Value.Value);
+            children = clone.GetChildren();
+            Assert.Equal(2, children.Count);
 
-            Assert.IsFalse(children[0].HasChildren);
-            Assert.AreEqual("abc/def", children[0].Key);
-            Assert.AreEqual(2, children[0].Value.Value);
+            Assert.False(children[0].HasChildren);
+            Assert.Equal("abc/def", children[0].Key);
+            Assert.Equal(2, children[0].Value.Value);
 
-            Assert.IsFalse(children[1].HasChildren);
-            Assert.AreEqual("abc/ghi", children[1].Key);
-            Assert.AreEqual(3, children[1].Value.Value);
+            Assert.False(children[1].HasChildren);
+            Assert.Equal("abc/ghi", children[1].Key);
+            Assert.Equal(3, children[1].Value.Value);
         }
 
-        [IgnoreTest("Needs attention")]
+        [Fact(Skip="Needs attention")]
         public void TestListMyDTO()
         {
             Program.ExpectFailure<NullReferenceException>(() =>
             {
                 Node<List<MyDto>> tree = new Node<List<MyDto>>.RootNode("abc", new List<MyDto> { new MyDto { Value = 1 } }), clone;
-                var children = tree.getChildren();
+                var children = tree.GetChildren();
                 children.Add(new Node<List<MyDto>>("abc/def", new List<MyDto> { new MyDto { Value = 2 } }));
                 children.Add(new Node<List<MyDto>>("abc/ghi", new List<MyDto> { new MyDto { Value = 3 } }));
-                Assert.AreEqual(2, tree.getChildren().Count);
+                Assert.Equal(2, tree.GetChildren().Count);
 
                 using (var ms = new MemoryStream())
                 {
                     Serializer.Serialize(ms, tree);
-                    Assert.Greater(1, 0); // I always get these args the wrong way around, so always check!
-                    Assert.Greater(ms.Length, 0, "stream length");
+                    Assert.True(1 > 0); // I always get these args the wrong way around, so always check!
+                    Assert.True(ms.Length > 0); //, "stream length");
                     ms.Position = 0;
                     clone = Serializer.Deserialize<Node<List<MyDto>>>(ms);
                 }
 
-                Assert.AreEqual("abc", clone.Key);
-                Assert.AreEqual(1, clone.Value.Single().Value);
-                children = clone.getChildren();
-                Assert.AreEqual(2, children.Count);
+                Assert.Equal("abc", clone.Key);
+                Assert.Equal(1, clone.Value.Single().Value);
+                children = clone.GetChildren();
+                Assert.Equal(2, children.Count);
 
-                Assert.IsFalse(children[0].HasChildren);
-                Assert.AreEqual("abc/def", children[0].Key);
-                Assert.AreEqual(2, children[0].Value.Single().Value);
+                Assert.False(children[0].HasChildren);
+                Assert.Equal("abc/def", children[0].Key);
+                Assert.Equal(2, children[0].Value.Single().Value);
 
-                Assert.IsFalse(children[1].HasChildren);
-                Assert.AreEqual("abc/ghi", children[1].Key);
-                Assert.AreEqual(3, children[1].Value.Single().Value);
+                Assert.False(children[1].HasChildren);
+                Assert.Equal("abc/ghi", children[1].Key);
+                Assert.Equal(3, children[1].Value.Single().Value);
             }, "Nested or jagged lists and arrays are not supported");
         }
 
-        [Test]
+        [Fact]
         public void TestSomeNewType()
         {
             Node<SomeNewType> tree = new Node<SomeNewType>.RootNode("abc", new SomeNewType { Items = { new MyDto { Value = 1 } }}), clone;
-            var children = tree.getChildren();
+            var children = tree.GetChildren();
             children.Add(new Node<SomeNewType>("abc/def", new SomeNewType { Items = { new MyDto { Value = 2 } } }));
             children.Add(new Node<SomeNewType>("abc/ghi", new SomeNewType { Items = { new MyDto { Value = 3 } } }));
-            Assert.AreEqual(2, tree.getChildren().Count);
+            Assert.Equal(2, tree.GetChildren().Count);
 
             using (var ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, tree);
-                Assert.Greater(1, 0); // I always get these args the wrong way around, so always check!
-                Assert.Greater(ms.Length, 0);
+                Assert.True(1 > 0); // I always get these args the wrong way around, so always check!
+                Assert.True(ms.Length > 0);
                 ms.Position = 0;
                 clone = Serializer.Deserialize<Node<SomeNewType>>(ms);
             }
 
-            Assert.AreEqual("abc", clone.Key);
-            Assert.AreEqual(1, clone.Value.Items.Single().Value);
-            children = clone.getChildren();
-            Assert.AreEqual(2, children.Count);
+            Assert.Equal("abc", clone.Key);
+            Assert.Equal(1, clone.Value.Items.Single().Value);
+            children = clone.GetChildren();
+            Assert.Equal(2, children.Count);
 
-            Assert.IsFalse(children[0].HasChildren);
-            Assert.AreEqual("abc/def", children[0].Key);
-            Assert.AreEqual(2, children[0].Value.Items.Single().Value);
+            Assert.False(children[0].HasChildren);
+            Assert.Equal("abc/def", children[0].Key);
+            Assert.Equal(2, children[0].Value.Items.Single().Value);
 
-            Assert.IsFalse(children[1].HasChildren);
-            Assert.AreEqual("abc/ghi", children[1].Key);
-            Assert.AreEqual(3, children[1].Value.Items.Single().Value);
+            Assert.False(children[1].HasChildren);
+            Assert.Equal("abc/ghi", children[1].Key);
+            Assert.Equal(3, children[1].Value.Items.Single().Value);
         }
 
         [ProtoContract]
@@ -460,7 +451,7 @@ namespace Examples.Issues
                 return new RootNode();
             }
 
-            public List<Node<T>> getChildren()
+            public List<Node<T>> GetChildren()
             {
                 return children;
             }
@@ -485,3 +476,4 @@ namespace Examples.Issues
         }
     }
 }
+#endif

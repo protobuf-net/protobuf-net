@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue192
     {
         [ProtoContract]
@@ -20,7 +20,7 @@ namespace Examples.Issues
             public List<SomeType>[] List { get; set; }
         }
         // the important thing is that this error is identical to the one from SerializeWrappedDeepList
-        [Test]
+        [Fact]
         public void SerializeDeepList()
         {
             Program.ExpectFailure<NotSupportedException>(() =>
@@ -29,7 +29,7 @@ namespace Examples.Issues
                 Serializer.Serialize(Stream.Null, list);
             }, "Nested or jagged lists and arrays are not supported");
         }
-        [Test]
+        [Fact]
         public void DeserializeDeepList()
         {
             Program.ExpectFailure<NotSupportedException>(() =>
@@ -37,7 +37,7 @@ namespace Examples.Issues
                 Serializer.Deserialize<List<SomeType>[]>(Stream.Null);
             }, "Nested or jagged lists and arrays are not supported");
         }
-        [Test]
+        [Fact]
         public void SerializeWrappedDeepList()
         {
             Program.ExpectFailure<NotSupportedException>(() =>

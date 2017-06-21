@@ -1,14 +1,14 @@
 ﻿using System;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue302
     {
-        [Test]
+        [Fact]
         public void RoundTripUInt32EnumValue()
         {
             var model = TypeModel.Create();
@@ -16,17 +16,17 @@ namespace Examples.Issues
             var foo = new Foo {Value = StateEnum.Deleted};
 
             var clone = (Foo)model.DeepClone(foo);
-            Assert.AreEqual(StateEnum.Deleted, clone.Value, "Runtime");
+            Assert.Equal(StateEnum.Deleted, clone.Value); //, "Runtime");
 
             model.Compile("Issue302", "Issue302.dll");
             PEVerify.AssertValid("Issue302.dll");
 
             model.CompileInPlace();
             clone = (Foo)model.DeepClone(foo);
-            Assert.AreEqual(StateEnum.Deleted, clone.Value, "CompileInPlace");
+            Assert.Equal(StateEnum.Deleted, clone.Value); //, "CompileInPlace");
 
             clone = (Foo)model.Compile().DeepClone(foo);
-            Assert.AreEqual(StateEnum.Deleted, clone.Value, "Compile");
+            Assert.Equal(StateEnum.Deleted, clone.Value); //, "Compile");
         }
 
         [ProtoContract]

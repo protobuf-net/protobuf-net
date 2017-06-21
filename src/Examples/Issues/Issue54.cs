@@ -1,11 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue54
     {
         [ProtoContract]
@@ -16,7 +16,7 @@ namespace Examples.Issues
         }
 
 
-        [Test]
+        [Fact]
         public void TestNestedLists()
         {
             Test54 obj = new Test54
@@ -27,15 +27,15 @@ namespace Examples.Issues
                 {678.90F, new List<int> {4,5,6}},
             }
             }, clone = Serializer.DeepClone(obj);
-            Assert.AreNotSame(obj, clone);
-            Assert.IsNotNull(clone.Lists);
-            Assert.AreEqual(obj.Lists.Count, clone.Lists.Count);
+            Assert.NotSame(obj, clone);
+            Assert.NotNull(clone.Lists);
+            Assert.Equal(obj.Lists.Count, clone.Lists.Count);
             foreach (var key in obj.Lists.Keys)
             {
-                Assert.IsTrue(clone.Lists.ContainsKey(key), key.ToString());
+                Assert.True(clone.Lists.ContainsKey(key), key.ToString());
                 var list = clone.Lists[key];
-                Assert.IsNotNull(list, key.ToString());
-                Assert.IsTrue(obj.Lists[key].SequenceEqual(list), key.ToString());
+                Assert.NotNull(list); //, key.ToString());
+                Assert.True(obj.Lists[key].SequenceEqual(list), key.ToString());
             }
         }
 

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -14,7 +14,7 @@ using System.Xml.Serialization;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO7793527
     {
         [ProtoContract]
@@ -38,25 +38,25 @@ namespace Examples.Issues
 
         }
 
-        [Test]
+        [Fact]
         public void AutoConfigOfModel()
         {
             var model = TypeModel.Create();
             var member = model[typeof(Foo)][1];
-            Assert.AreEqual(typeof(Bar), member.ItemType);
-            Assert.AreEqual(typeof(List<Bar>), member.DefaultType);
+            Assert.Equal(typeof(Bar), member.ItemType);
+            Assert.Equal(typeof(List<Bar>), member.DefaultType);
         }
-        [Test]
+        [Fact]
         public void DefaultToListT()
         {
             var obj = new Foo { Bars = new Bar[] { new Bar { }, new Bar { } } };
 
             var clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(2, clone.Bars.Count);
-            Assert.IsInstanceOfType(typeof(List<Bar>), clone.Bars);
+            Assert.Equal(2, clone.Bars.Count);
+            Assert.IsType(typeof(List<Bar>), clone.Bars);
         }
 
-        [Test]
+        [Fact]
         public void DataContractSerializer_DoesSupportNakedEnumerables()
         {
             var ser = new DataContractSerializer(typeof(FooEnumerable));
@@ -65,11 +65,11 @@ namespace Examples.Issues
                 ser.WriteObject(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
                 ms.Position = 0;
                 var clone = (FooEnumerable)ser.ReadObject(ms);
-                Assert.IsNotNull(clone.Bars);
-                Assert.AreEqual(1, clone.Bars.Count());
+                Assert.NotNull(clone.Bars);
+                Assert.Equal(1, clone.Bars.Count());
             }
         }
-        [Test]
+        [Fact]
         public void XmlSerializer_DoesntSupportNakedEnumerables()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -80,13 +80,13 @@ namespace Examples.Issues
                     ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
                     ms.Position = 0;
                     var clone = (FooEnumerable)ser.Deserialize(ms);
-                    Assert.IsNotNull(clone.Bars);
-                    Assert.AreEqual(1, clone.Bars.Count());
+                    Assert.NotNull(clone.Bars);
+                    Assert.Equal(1, clone.Bars.Count());
                 }
             });
         }
 #if !COREFX
-        [Test]
+        [Fact]
         public void JavaScriptSerializer_DoesSupportNakedEnumerables()
         {
             var ser = new JavaScriptSerializer();
@@ -95,13 +95,13 @@ namespace Examples.Issues
                 string s = ser.Serialize(new FooEnumerable { Bars = new[] { new Bar { } } });
                 ms.Position = 0;
                 var clone = (FooEnumerable)ser.Deserialize(s, typeof(FooEnumerable));
-                Assert.IsNotNull(clone.Bars);
-                Assert.AreEqual(1, clone.Bars.Count());
+                Assert.NotNull(clone.Bars);
+                Assert.Equal(1, clone.Bars.Count());
             }
         }
 #endif
 
-        [Test]
+        [Fact]
         public void ProtobufNet_DoesSupportNakedEnumerables()
         {
             var ser = TypeModel.Create();
@@ -110,8 +110,8 @@ namespace Examples.Issues
                 ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });
                 ms.Position = 0;
                 var clone = (FooEnumerable)ser.Deserialize(ms, null, typeof(FooEnumerable));
-                Assert.IsNotNull(clone.Bars);
-                Assert.AreEqual(1, clone.Bars.Count());
+                Assert.NotNull(clone.Bars);
+                Assert.Equal(1, clone.Bars.Count());
             }
         }
 
@@ -142,7 +142,7 @@ namespace Examples.Issues
         [ProtoContract]
         public class PublishedGoal { [ProtoMember(1)] public int X { get; set; } }
 
-        [Test]
+        [Fact]
         public void TestPlanningModelWithEnumerables()
         {
             var obj = new GoalPlanningModel1
@@ -160,7 +160,7 @@ namespace Examples.Issues
             PEVerify.AssertValid("TestPlanningModelWithEnumerables.dll");
         }
 
-        [Test]
+        [Fact]
         public void TestPlanningModelWithLists()
         {
             var obj = new GoalPlanningModel2
@@ -181,18 +181,18 @@ namespace Examples.Issues
         private static void Verify(GoalPlanningModel2 obj, TypeModel model, string caption)
         {
             var clone = (GoalPlanningModel2)model.DeepClone(obj);
-            Assert.IsNull(clone.PublishedGoals, caption + ":published");
-            Assert.IsNotNull(clone.ProposedGoals, caption + ":proposed");
-            Assert.AreEqual(1, clone.ProposedGoals.Count, caption + ":count");
-            Assert.AreEqual(23, clone.ProposedGoals[0].X, caption + ":X");
+            Assert.Null(clone.PublishedGoals); //, caption + ":published");
+            Assert.NotNull(clone.ProposedGoals); //, caption + ":proposed");
+            Assert.Equal(1, clone.ProposedGoals.Count); //, caption + ":count");
+            Assert.Equal(23, clone.ProposedGoals[0].X); //, caption + ":X");
         }
         private static void Verify(GoalPlanningModel1 obj, TypeModel model, string caption)
         {
             var clone = (GoalPlanningModel1)model.DeepClone(obj);
-            Assert.IsNull(clone.PublishedGoals, caption + ":published");
-            Assert.IsNotNull(clone.ProposedGoals, caption + ":proposed");
-            Assert.AreEqual(1, clone.ProposedGoals.Count(), caption + ":count");
-            Assert.AreEqual(23, clone.ProposedGoals.Single().X, caption + ":X");
+            Assert.Null(clone.PublishedGoals); //, caption + ":published");
+            Assert.NotNull(clone.ProposedGoals); //, caption + ":proposed");
+            Assert.Equal(1, clone.ProposedGoals.Count()); //, caption + ":count");
+            Assert.Equal(23, clone.ProposedGoals.Single().X); //, caption + ":X");
         }
     }
 }

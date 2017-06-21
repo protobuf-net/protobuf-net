@@ -1,14 +1,14 @@
 ﻿using System;
-using NUnit.Framework;
+using Xunit;
 
 namespace ProtoBuf
 {
-    [TestFixture]
+    
     public class PartialClasses
     {
 
 
-        [Test]
+        [Fact]
         public void TestPartial()
         {
             PartialData orig = new PartialData {
@@ -18,15 +18,15 @@ namespace ProtoBuf
                 HowMuchNotSerialized = 123.456M
             },  clone = Serializer.DeepClone(orig);
 
-            Assert.IsNotNull(orig, "original");
-            Assert.IsNotNull(clone, "clone");
-            Assert.AreEqual(orig.Name, clone.Name, "name");
-            Assert.AreEqual(orig.Number, clone.Number, "number");
-            Assert.AreEqual(orig.When, clone.When, "when");
-            Assert.AreEqual(0.0M, clone.HowMuchNotSerialized, "how much");
+            Assert.NotNull(orig); //, "original");
+            Assert.NotNull(clone); //, "clone");
+            Assert.Equal(orig.Name, clone.Name); //, "name");
+            Assert.Equal(orig.Number, clone.Number); //, "number");
+            Assert.Equal(orig.When, clone.When); //, "when");
+            Assert.Equal(0.0M, clone.HowMuchNotSerialized); //, "how much");
         }
 
-        [Test]
+        [Fact]
         public void TestSubClass()
         {
             SubClassData orig = new SubClassData
@@ -37,12 +37,12 @@ namespace ProtoBuf
                 HowMuchNotSerialized = 123.456M
             }, clone = (SubClassData)Serializer.DeepClone<PartialData>(orig);
 
-            Assert.IsNotNull(orig, "original");
-            Assert.IsNotNull(clone, "clone");
-            Assert.AreEqual(orig.Name, clone.Name, "name");
-            Assert.AreEqual(orig.Number, clone.Number, "number");
-            Assert.AreEqual(orig.When, clone.When, "when");
-            Assert.AreEqual(0.0M, clone.HowMuchNotSerialized, "how much");
+            Assert.NotNull(orig); //, "original");
+            Assert.NotNull(clone); //, "clone");
+            Assert.Equal(orig.Name, clone.Name); //, "name");
+            Assert.Equal(orig.Number, clone.Number); //, "number");
+            Assert.Equal(orig.When, clone.When); //, "when");
+            Assert.Equal(0.0M, clone.HowMuchNotSerialized); //, "how much");
         }
     }
 

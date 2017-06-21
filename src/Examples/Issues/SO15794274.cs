@@ -1,20 +1,22 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.IO;
+#if !COREFX
 using System.Runtime.Serialization.Formatters.Binary;
+#endif
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO15794274
     {
-        [IgnoreTest("this looks really painful; have tried sharded cache - cripples perf")]
+        [Fact(Skip = "this looks really painful; have tried sharded cache - cripples perf")]
         public void Execute()
         {
-            Assert.AreEqual(8, IntPtr.Size);
+            Assert.Equal(8, IntPtr.Size);
 
             int numberOfTrees = 250;
             int nodesPrTree = 200000;
@@ -43,7 +45,7 @@ namespace Examples.Issues
                 int cloneChk = 0;
                 clone.AddGraph(graph, ref cloneChk);
 
-                Assert.AreEqual(origChk, cloneChk);
+                Assert.Equal(origChk, cloneChk);
             }
 
             Console.ReadLine();

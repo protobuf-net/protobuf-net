@@ -1,12 +1,13 @@
 ﻿
 using System;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
+using System.Linq;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue265
     {
         public enum E
@@ -25,7 +26,7 @@ namespace Examples.Issues
             public E[] Bar { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void ShouldSerializeEnumArrayMember()
         {
             var model = TypeModel.Create();
@@ -42,23 +43,23 @@ namespace Examples.Issues
         {
             var value = new Foo {Bar = new E[] {E.V0, E.V1, E.V2}};
 
-            Assert.IsTrue(Program.CheckBytes(value, model, 0x18, 0x03, 0x18, 0x04, 0x18, 0x05));
+            Assert.True(Program.CheckBytes(value, model, 0x18, 0x03, 0x18, 0x04, 0x18, 0x05));
             var clone = (Foo) model.DeepClone(value);
-            Assert.AreEqual("V0,V1,V2", string.Join(",", clone.Bar), "clone");
+            Assert.Equal("V0,V1,V2", string.Join(",", clone.Bar)); //, "clone");
         }
 
-        [Test]
+        [Fact]
         public void VerifyThatIntsAreHandledAppropriatelyForComparison()
         {
             var model = TypeModel.Create();
             model.AutoCompile = false;
             var orig = new int[] {3, 4, 5};
-            Assert.IsTrue(Program.CheckBytes(orig, model, 0x08, 0x03, 0x08, 0x04, 0x08, 0x05));
+            Assert.True(Program.CheckBytes(orig, model, 0x08, 0x03, 0x08, 0x04, 0x08, 0x05));
             var clone = (int[])model.DeepClone(orig);
-            Assert.AreEqual("3,4,5", string.Join(",", clone), "clone");
+            Assert.Equal("3,4,5", string.Join(",", clone)); //, "clone");
         }
 
-        [Test]
+        [Fact]
         public void ShouldSerializeIndividualEnum()
         {
             var model = TypeModel.Create();
@@ -74,11 +75,11 @@ namespace Examples.Issues
         private static void TestIndividual(TypeModel model)
         {
             var value = E.V1;
-            Assert.IsTrue(Program.CheckBytes(value, model, 0x08, 0x04));
-            Assert.AreEqual(value, model.DeepClone(value));
+            Assert.True(Program.CheckBytes(value, model, 0x08, 0x04));
+            Assert.Equal(value, model.DeepClone(value));
         }
 
-        [Test]
+        [Fact]
         public void ShouldSerializeArrayOfEnums()
         {
             var model = TypeModel.Create();
@@ -94,11 +95,11 @@ namespace Examples.Issues
         private static void TestArray(TypeModel model)
         {
             var value = new[] {E.V0, E.V1, E.V2};
-            Assert.AreEqual("V0,V1,V2", string.Join(",", value), "original");
-            Assert.IsTrue(Program.CheckBytes(value, model, 0x08, 0x03, 0x08, 0x04, 0x08, 0x05));
+            Assert.Equal("V0,V1,V2", string.Join(",", value)); //, "original");
+            Assert.True(Program.CheckBytes(value, model, 0x08, 0x03, 0x08, 0x04, 0x08, 0x05));
             var clone = (E[]) model.DeepClone(value);
-            Assert.AreEqual("V0,V1,V2", string.Join(",", clone), "clone");
-            CollectionAssert.AreEqual(value, clone);
+            Assert.Equal("V0,V1,V2", string.Join(",", clone)); //, "clone");
+            value.SequenceEqual(clone);
         }
     }
 }

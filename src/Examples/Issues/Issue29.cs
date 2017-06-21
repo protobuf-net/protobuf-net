@@ -5,16 +5,16 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using ProtoBuf;
-using NUnit.Framework;
+using Xunit;
 using System.IO;
 
 namespace Examples.Issue29
 {
     
-    [TestFixture]
+    
     public class TestIssue29
     {
-        [Test]
+        [Fact]
         public void TestDeepClone()
         {
             Person person = Person.Create();
@@ -22,7 +22,7 @@ namespace Examples.Issue29
             CheckEqual(person, clone);
         }
 
-        [Test]
+        [Fact]
         public void TestMemoryStream()
         {
             Person person = Person.Create(), clone;
@@ -48,7 +48,7 @@ namespace Examples.Issue29
             Debug.WriteLine(sb, caption);
         }
 
-        [Test]
+        [Fact]
         public void TestToDisk()
         {
             Person person = Person.Create(), clone;
@@ -70,14 +70,14 @@ namespace Examples.Issue29
         }
 
         static void CheckEqual(Person person, Person clone) {
-            Assert.AreNotSame(person,clone);
-            Assert.AreEqual(person.FirstName, clone.FirstName, "FirstName");
-            Assert.AreEqual(person.LastName, clone.LastName, "LastName");
-            Assert.AreEqual(person.Aliases.Count, clone.Aliases.Count, "Aliases.Count");
-            for(int i = 0 ; i < person.Aliases.Count ; i++)
+            Assert.NotSame(person,clone);
+            Assert.Equal(person.FirstName, clone.FirstName); //, "FirstName");
+            Assert.Equal(person.LastName, clone.LastName); //, "LastName");
+            Assert.Equal(person.Aliases.Count, clone.Aliases.Count); //, "Aliases.Count");
+            for (int i = 0 ; i < person.Aliases.Count ; i++)
             {
-                Assert.AreEqual(person.Aliases[i].GetType(), clone.Aliases[i].GetType(), "Type: " + i);
-                Assert.AreEqual(person.Aliases[i].AliasName, clone.Aliases[i].AliasName, "AliasName: " + i);
+                Assert.Equal(person.Aliases[i].GetType(), clone.Aliases[i].GetType()); //, "Type: " + i);
+                Assert.Equal(person.Aliases[i].AliasName, clone.Aliases[i].AliasName); //, "AliasName: " + i);
             }
         }
     }

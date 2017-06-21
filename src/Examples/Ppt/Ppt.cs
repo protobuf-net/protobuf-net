@@ -1,6 +1,7 @@
 ﻿using System.Runtime.Serialization;
+#if !COREFX
 using System.ServiceModel;
-
+#endif
 namespace Examples.Ppt
 {
     [DataContract]

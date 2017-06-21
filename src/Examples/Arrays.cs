@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Linq;
@@ -73,28 +73,28 @@ namespace Examples
         public int[] Values = { 1, 2, 3 };
     }
 
-    [TestFixture]
+    
     public class ArrayTests
     {
         [ProtoContract]
         class Foo { }
-        [Test]
+        [Fact]
         public void DeserializeNakedArray()
         {
             var arr = new Foo[0];
             var model = TypeModel.Create();
             Foo[] foo = (Foo[])model.DeepClone(arr);
-            Assert.AreEqual(0, foo.Length);
+            Assert.Equal(0, foo.Length);
         }
-        [Test]
+        [Fact]
         public void DeserializeBusyArray()
         {
             var arr = new Foo[3] { new Foo(), new Foo(), new Foo() };
             var model = TypeModel.Create();
             Foo[] foo = (Foo[])model.DeepClone(arr);
-            Assert.AreEqual(3, foo.Length);
+            Assert.Equal(3, foo.Length);
         }
-        [Test]
+        [Fact]
         public void TestOverwriteVersusAppend()
         {
             var orig = new WithAndWithoutOverwrite { Append = new[] {7,8}, Overwrite = new[] { 9,10}};
@@ -103,20 +103,20 @@ namespace Examples
             model.Add(typeof(WithAndWithoutOverwrite), true);
 
             var clone = (WithAndWithoutOverwrite)model.DeepClone(orig);
-            Assert.IsTrue(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, Runtime");
-            Assert.IsTrue(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, Runtime");
+            Assert.True(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, Runtime");
+            Assert.True(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, Runtime");
 
             model.CompileInPlace();
             clone = (WithAndWithoutOverwrite)model.DeepClone(orig);
-            Assert.IsTrue(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, CompileInPlace");
-            Assert.IsTrue(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, CompileInPlace");
+            Assert.True(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, CompileInPlace");
+            Assert.True(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, CompileInPlace");
 
             clone = (WithAndWithoutOverwrite)(model.Compile()).DeepClone(orig);
-            Assert.IsTrue(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, Compile");
-            Assert.IsTrue(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, Compile");
+            Assert.True(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, Compile");
+            Assert.True(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, Compile");
         }
 
-        [Test]
+        [Fact]
         public void TestSkipConstructor()
         {
             var orig = new WithSkipConstructor { Values = new[] { 4, 5 } };
@@ -125,80 +125,74 @@ namespace Examples
             model.Add(typeof(WithSkipConstructor), true);
 
             var clone = (WithSkipConstructor)model.DeepClone(orig);
-            Assert.IsTrue(clone.Values.SequenceEqual(new[] { 4, 5 }), "Runtime");
+            Assert.True(clone.Values.SequenceEqual(new[] { 4, 5 }), "Runtime");
 
             model.CompileInPlace();
             clone = (WithSkipConstructor)model.DeepClone(orig);
-            Assert.IsTrue(clone.Values.SequenceEqual(new[] { 4, 5 }), "CompileInPlace");
+            Assert.True(clone.Values.SequenceEqual(new[] { 4, 5 }), "CompileInPlace");
 
             clone = (WithSkipConstructor)(model.Compile()).DeepClone(orig);
-            Assert.IsTrue(clone.Values.SequenceEqual(new[] { 4, 5 }), "Compile");
+            Assert.True(clone.Values.SequenceEqual(new[] { 4, 5 }), "Compile");
         }
 
-        [Test]
+        [Fact]
         public void TestPrimativeArray()
         {
             Prim p = new Prim { Values = new[] { "abc", "def", "ghi", "jkl" } },
                 clone = Serializer.DeepClone(p);
 
             string[] oldArr = p.Values, newArr = clone.Values;
-            Assert.AreEqual(oldArr.Length, newArr.Length);
+            Assert.Equal(oldArr.Length, newArr.Length);
             for (int i = 0; i < oldArr.Length; i++)
             {
-                Assert.AreEqual(oldArr[i], newArr[i], "Item " + i.ToString());
+                Assert.Equal(oldArr[i], newArr[i]); //, "Item " + i.ToString());
             }
         }
 
-        [Test]
+        [Fact]
         public void TestMultidimArray()
         {
-            try {
+            Assert.Throws<NotSupportedException>(() =>
+            {
                 MultiDim md = new MultiDim { Values = new int[1, 2] { { 3, 4 } } };
                 Serializer.DeepClone(md);
-                Assert.Fail();
-            }
-            catch (NotSupportedException) { }
+            });
         }
 
-        [Test]
+        [Fact]
         public void TestArrayArray()
         {
-            try {
+            Assert.Throws<NotSupportedException>(() =>
+            {
                 Serializer.DeepClone(new ArrayArray());
-                Assert.Fail();
-            }
-            catch (NotSupportedException) { }
+            });
         }
-        [Test]
+        [Fact]
         public void TestArrayList()
         {
-            try {
+            Assert.Throws<NotSupportedException>(() =>
+            {
                 Serializer.DeepClone(new ArrayList());
-                Assert.Fail();
-            }
-            catch (NotSupportedException) { }
+            });
         }
-        [Test]
+        [Fact]
         public void TestListArray()
         {
-            try {
+            Assert.Throws<NotSupportedException>(() =>
+            {
                 Serializer.DeepClone(new ListArray());
-                Assert.Fail();
-            }
-            catch (NotSupportedException) { }
+            });
         }
-        [Test]
+        [Fact]
         public void TestListList()
         {
-            try {
+            Assert.Throws<NotSupportedException>(() => {
                 Serializer.DeepClone(new ListList());
-                Assert.Fail();
-            }
-            catch (NotSupportedException) { }
+            });
         }
 
 
-        [Test]
+        [Fact]
         public void TestObjectArray()
         {
             Node node = new Node
@@ -211,7 +205,7 @@ namespace Examples
             VerifyNodeTree(node);
         }
 
-        // [Test] known variation...
+        // [Fact] known variation...
         public void TestEmptyArray()
         {
             Node node = new Node
@@ -222,7 +216,7 @@ namespace Examples
             VerifyNodeTree(node);
         }
 
-        [Test]
+        [Fact]
         public void TestNullArray()
         {
             Node node = new Node
@@ -233,7 +227,7 @@ namespace Examples
             VerifyNodeTree(node);
         }
 
-        [Test]
+        [Fact]
         public void TestDuplicateNonRecursive()
         {
             Node child = new Node { Key = 17 };
@@ -241,21 +235,19 @@ namespace Examples
             VerifyNodeTree(parent);
         }
 
-        [Test]
+        [Fact]
         public void TestDuplicateRecursive()
         {
-            try
+            Assert.Throws<ProtoException>(() =>
             {
                 Node child = new Node { Key = 17 };
                 Node parent = new Node { Nodes = new[] { child, child, child } };
                 child.Nodes = new[] { parent };
                 VerifyNodeTree(parent);
-                Assert.Fail();
-            }
-            catch (ProtoException) { }
+            });
         }
 
-        [Test]
+        [Fact]
         public void TestNestedArray()
         {
             Node node = new Node
@@ -283,7 +275,7 @@ namespace Examples
             VerifyNodeTree(node);
         }
 
-        [Test]
+        [Fact]
         public void TestStringArray()
         {
             var foo = new List<string> { "abc", "def", "ghi" };
@@ -316,7 +308,7 @@ namespace Examples
                 set;
             }
         }
-        [Test]
+        [Fact]
         public void TestEmptyArrays()
         {
             Tst t = new Tst();
@@ -332,7 +324,7 @@ namespace Examples
             Node clone = Serializer.DeepClone(node);
             string msg;
             bool eq = AreEqual(node, clone, out msg);
-            Assert.IsTrue(eq, msg);
+            Assert.True(eq, msg);
         }
 
         static bool AreEqual(Node x, Node y, out string msg)

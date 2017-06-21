@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.IO;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO6115986
     {
         public interface IYObject
@@ -30,7 +30,7 @@ namespace Examples.Issues
         {
             public IYObject Y { get; set; }
         }
-        [Test]
+        [Fact]
         public void Execute()
         {
             var m = TypeModel.Create();
@@ -44,13 +44,13 @@ namespace Examples.Issues
                 m.Serialize(ms, d);
                 ms.Position = 0;
                 var d2 = (D)m.Deserialize(ms, null, typeof(D));
-                Assert.AreEqual("a",d2.Y.X);
-                Assert.AreEqual(123, d2.Y.Z);
+                Assert.Equal("a",d2.Y.X);
+                Assert.Equal(123, d2.Y.Z);
             }
         }
     }
 
-    [TestFixture]
+    
     public class SO6115986_WithAttributes
     {
         [ProtoContract, ProtoInclude(1, typeof(YObject))]
@@ -75,7 +75,7 @@ namespace Examples.Issues
             [ProtoMember(1)]
             public IYObject Y { get; set; }
         }
-        [Test]
+        [Fact]
         public void Execute()
         {
             var m = TypeModel.Create();
@@ -86,8 +86,8 @@ namespace Examples.Issues
                 m.Serialize(ms, d);
                 ms.Position = 0;
                 var d2 = (D)m.Deserialize(ms, null, typeof(D));
-                Assert.AreEqual("a", d2.Y.X);
-                Assert.AreEqual(123, d2.Y.Z);
+                Assert.Equal("a", d2.Y.X);
+                Assert.Equal(123, d2.Y.Z);
             }
         }
     }

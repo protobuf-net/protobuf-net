@@ -1,15 +1,15 @@
 ﻿using System;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class AutoTuple
     {
-        [Test]
+        [Fact]
         public void TestHasTuplesWrapped()
         {
             var model = RuntimeTypeModel.Create();
@@ -19,8 +19,8 @@ namespace Examples
 
             CheckBytes(model, obj, "0A 07 08 7B 12 03 61 62 63", "runtime");
             var clone = (HasTuples) model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Value.Foo, "runtime");
-            Assert.AreEqual("abc", clone.Value.Bar, "runtime");
+            Assert.Equal(123, clone.Value.Foo); //, "runtime");
+            Assert.Equal("abc", clone.Value.Bar); //, "runtime");
 
             model.Compile("TestHasTuplesWrapped", "TestHasTuplesWrapped.dll");
             PEVerify.AssertValid("TestHasTuplesWrapped.dll");
@@ -28,24 +28,24 @@ namespace Examples
             model.CompileInPlace();
             CheckBytes(model, obj, "0A 07 08 7B 12 03 61 62 63", "CompileInPlace");
             clone = (HasTuples) model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Value.Foo, "CompileInPlace");
-            Assert.AreEqual("abc", clone.Value.Bar, "CompileInPlace");
+            Assert.Equal(123, clone.Value.Foo); //, "CompileInPlace");
+            Assert.Equal("abc", clone.Value.Bar); //, "CompileInPlace");
 
             var compiled = model.Compile();
             CheckBytes(compiled, obj, "0A 07 08 7B 12 03 61 62 63", "Compile");
             clone = (HasTuples)compiled.DeepClone(obj);
-            Assert.AreEqual(123, clone.Value.Foo, "Compile");
-            Assert.AreEqual("abc", clone.Value.Bar, "Compile");
+            Assert.Equal(123, clone.Value.Foo); //, "Compile");
+            Assert.Equal("abc", clone.Value.Bar); //, "Compile");
         }
         void CheckBytes(TypeModel model, object obj, string expected, string message)
         {
             using(var ms = new MemoryStream())
             {
                 model.Serialize(ms, obj);
-                Assert.AreEqual(expected, Program.GetByteString(ms.ToArray()), message);
+                Assert.Equal(expected, Program.GetByteString(ms.ToArray())); //, message);
             }
         }
-        [Test]
+        [Fact]
         public void TestHasTuplesNaked()
         {
             var model = RuntimeTypeModel.Create();
@@ -55,8 +55,8 @@ namespace Examples
 
             CheckBytes(model, obj, "08 7B 12 03 61 62 63", "runtime");
             var clone = (BasicTuple)model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Foo, "runtime");
-            Assert.AreEqual("abc", clone.Bar, "runtime");
+            Assert.Equal(123, clone.Foo); //, "runtime");
+            Assert.Equal("abc", clone.Bar); //, "runtime");
 
             model.Compile("TestHasTuplesNaked", "TestHasTuplesNaked.dll");
             PEVerify.AssertValid("TestHasTuplesNaked.dll");
@@ -64,16 +64,16 @@ namespace Examples
             model.CompileInPlace();
             CheckBytes(model, obj, "08 7B 12 03 61 62 63", "CompileInPlace");
             clone = (BasicTuple)model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Foo, "CompileInPlace");
-            Assert.AreEqual("abc", clone.Bar, "CompileInPlace");
+            Assert.Equal(123, clone.Foo); //, "CompileInPlace");
+            Assert.Equal("abc", clone.Bar); //, "CompileInPlace");
 
             var compiled = model.Compile();
             CheckBytes(compiled, obj, "08 7B 12 03 61 62 63", "Compile");
             clone = (BasicTuple)compiled.DeepClone(obj);
-            Assert.AreEqual(123, clone.Foo, "Compile");
-            Assert.AreEqual("abc", clone.Bar, "Compile");
+            Assert.Equal(123, clone.Foo); //, "Compile");
+            Assert.Equal("abc", clone.Bar); //, "Compile");
         }
-        [Test]
+        [Fact]
         public void TestHasTuplesReversedOrderNaked()
         {
             var model = RuntimeTypeModel.Create();
@@ -83,8 +83,8 @@ namespace Examples
 
             CheckBytes(model, obj, "0A 03 61 62 63 10 7B", "runtime");
             var clone = (BasicTupleReversedOrder)model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Foo, "runtime");
-            Assert.AreEqual("abc", clone.Bar, "runtime");
+            Assert.Equal(123, clone.Foo); //, "runtime");
+            Assert.Equal("abc", clone.Bar); //, "runtime");
 
             model.Compile("BasicTupleReversedOrder", "BasicTupleReversedOrder.dll");
             PEVerify.AssertValid("BasicTupleReversedOrder.dll");
@@ -92,18 +92,18 @@ namespace Examples
             model.CompileInPlace();
             CheckBytes(model, obj, "0A 03 61 62 63 10 7B", "CompileInPlace");
             clone = (BasicTupleReversedOrder)model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Foo, "CompileInPlace");
-            Assert.AreEqual("abc", clone.Bar, "CompileInPlace");
+            Assert.Equal(123, clone.Foo); //, "CompileInPlace");
+            Assert.Equal("abc", clone.Bar); //, "CompileInPlace");
 
             var compiled = model.Compile();
             CheckBytes(compiled, obj, "0A 03 61 62 63 10 7B", "Compile");
             clone = (BasicTupleReversedOrder)compiled.DeepClone(obj);
-            Assert.AreEqual(123, clone.Foo, "Compile");
-            Assert.AreEqual("abc", clone.Bar, "Compile");
+            Assert.Equal(123, clone.Foo); //, "Compile");
+            Assert.Equal("abc", clone.Bar); //, "Compile");
         }
 
 
-        [Test]
+        [Fact]
         public void TestInbuiltTupleNaked()
         {
             var model = RuntimeTypeModel.Create();
@@ -113,8 +113,8 @@ namespace Examples
 
             CheckBytes(model, obj, "08 7B 12 03 61 62 63", "runtime");
             var clone = (Tuple<int,string>)model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Item1, "runtime");
-            Assert.AreEqual("abc", clone.Item2, "runtime");
+            Assert.Equal(123, clone.Item1); //, "runtime");
+            Assert.Equal("abc", clone.Item2); //, "runtime");
 
             model.Compile("TestInbuiltTupleNaked", "TestInbuiltTupleNaked.dll");
             PEVerify.AssertValid("TestInbuiltTupleNaked.dll");
@@ -122,18 +122,18 @@ namespace Examples
             model.CompileInPlace();
             CheckBytes(model, obj, "08 7B 12 03 61 62 63", "CompileInPlace");
             clone = (Tuple<int, string>)model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Item1, "CompileInPlace");
-            Assert.AreEqual("abc", clone.Item2, "CompileInPlace");
+            Assert.Equal(123, clone.Item1); //, "CompileInPlace");
+            Assert.Equal("abc", clone.Item2); //, "CompileInPlace");
 
             var compiled = model.Compile();
             CheckBytes(compiled, obj, "08 7B 12 03 61 62 63", "Compile");
             clone = (Tuple<int, string>)compiled.DeepClone(obj);
-            Assert.AreEqual(123, clone.Item1, "Compile");
-            Assert.AreEqual("abc", clone.Item2, "Compile");
+            Assert.Equal(123, clone.Item1); //, "Compile");
+            Assert.Equal("abc", clone.Item2); //, "Compile");
         }
 
 
-        [Test]
+        [Fact]
         public void TestAnonTypeAsTuple()
         {
             var model = RuntimeTypeModel.Create();
@@ -143,14 +143,14 @@ namespace Examples
 
             CheckBytes(model, obj, "08 7B 12 03 61 62 63", "runtime");
             dynamic clone = model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Foo, "runtime");
-            Assert.AreEqual("abc", clone.Bar, "runtime");
+            Assert.Equal(123, clone.Foo); //, "runtime");
+            Assert.Equal("abc", clone.Bar); //, "runtime");
 
             model.CompileInPlace();
             CheckBytes(model, obj, "08 7B 12 03 61 62 63", "CompileInPlace");
             clone = model.DeepClone(obj);
-            Assert.AreEqual(123, clone.Foo, "CompileInPlace");
-            Assert.AreEqual("abc", clone.Bar, "CompileInPlace");
+            Assert.Equal(123, clone.Foo); //, "CompileInPlace");
+            Assert.Equal("abc", clone.Bar); //, "CompileInPlace");
 
             // note: Compile() won't work, as anon-types are internal
         }

@@ -2,40 +2,40 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO11656439
     {
-        [Test]
+        [Fact]
         public void BasicStringListShouldRoundTrip()
         {
             var list = new List<string> {"abc"};
             var clone = Serializer.DeepClone(list);
-            Assert.AreEqual(1, clone.Count);
-            Assert.AreEqual("abc", clone[0]);
+            Assert.Equal(1, clone.Count);
+            Assert.Equal("abc", clone[0]);
         }
 
         public class MyList : List<string>{}
         
-        [Test]
+        [Fact]
         public void ListSubclassShouldRoundTrip()
         {
             var list = new MyList { "abc" };
             var clone = Serializer.DeepClone(list);
-            Assert.AreEqual(1, clone.Count);
-            Assert.AreEqual("abc", clone[0]);
+            Assert.Equal(1, clone.Count);
+            Assert.Equal("abc", clone[0]);
         }
 
         [ProtoContract]
         public class MyContractList : List<string> { }
 
-        [Test]
+        [Fact]
         public void ContractListSubclassShouldRoundTrip()
         {
             // this test is larger because it wasn't working; neeeded
@@ -56,12 +56,12 @@ namespace Examples.Issues
             using (var ms = new MemoryStream())
             {
                 model.Serialize(ms, list);
-                Assert.Greater(2, 0, "sanity check:" + caption);
-                Assert.Greater(ms.Length, 0, "data should be written:" + caption);
+                Assert.True(2 > 0); //, "sanity check:" + caption);
+                Assert.True(ms.Length >  0); //, "data should be written:" + caption);
                 ms.Position = 0;
                 var clone = (MyContractList) model.Deserialize(ms,null, typeof(MyContractList));
-                Assert.AreEqual(1, clone.Count, "count:" + caption);
-                Assert.AreEqual("abc", clone[0], "payload:" + caption);
+                Assert.Equal(1, clone.Count); //, "count:" + caption);
+                Assert.Equal("abc", clone[0]); //, "payload:" + caption);
             }
         }
 
@@ -76,40 +76,40 @@ namespace Examples.Issues
             public MyContractList MyContractList { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void TestBasicListAsMember()
         {
             var obj = new ListWrapper { BasicList = new List<string> { "abc" } };
             var clone = Serializer.DeepClone(obj);
-            Assert.IsNull(clone.MyList);
-            Assert.IsNull(clone.MyContractList);
-            Assert.AreEqual(1, clone.BasicList.Count);
-            Assert.AreEqual("abc", clone.BasicList[0]);
+            Assert.Null(clone.MyList);
+            Assert.Null(clone.MyContractList);
+            Assert.Equal(1, clone.BasicList.Count);
+            Assert.Equal("abc", clone.BasicList[0]);
         }
 
-        [Test]
+        [Fact]
         public void TestMyListAsMember()
         {
             var obj = new ListWrapper { MyList = new MyList { "abc" } };
             var clone = Serializer.DeepClone(obj);
-            Assert.IsNull(clone.BasicList);
-            Assert.IsNull(clone.MyContractList);
-            Assert.AreEqual(1, clone.MyList.Count);
-            Assert.AreEqual("abc", clone.MyList[0]);
+            Assert.Null(clone.BasicList);
+            Assert.Null(clone.MyContractList);
+            Assert.Equal(1, clone.MyList.Count);
+            Assert.Equal("abc", clone.MyList[0]);
         }
 
-        [Test]
+        [Fact]
         public void TestMyContractListAsMember()
         {
             var obj = new ListWrapper { MyContractList = new MyContractList { "abc" } };
             var clone = Serializer.DeepClone(obj);
-            Assert.IsNull(clone.BasicList);
-            Assert.IsNull(clone.MyList);
-            Assert.AreEqual(1, clone.MyContractList.Count);
-            Assert.AreEqual("abc", clone.MyContractList[0]);
+            Assert.Null(clone.BasicList);
+            Assert.Null(clone.MyList);
+            Assert.Equal(1, clone.MyContractList.Count);
+            Assert.Equal("abc", clone.MyContractList[0]);
         }
 
-        [Test]
+        [Fact]
         public void SanityCheckListWrapper()
         {
             var model = TypeModel.Create();
@@ -117,7 +117,8 @@ namespace Examples.Issues
 
             var schema = model.GetSchema(null);
 
-            Assert.AreEqual(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
 
 message ListWrapper {
    repeated string BasicList = 1;

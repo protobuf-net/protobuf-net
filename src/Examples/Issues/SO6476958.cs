@@ -2,12 +2,12 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO6476958
     {
         [ProtoContract]
@@ -40,27 +40,27 @@ namespace Examples.Issues
             public string B { get; set; }
 
         }
-        [Test]
+        [Fact]
         public void TestBasicDuplicatedString()
         {
             BasicDuplicatedString foo = new BasicDuplicatedString(), clone;
             foo.A = new string('a', 40);
             foo.B = new string('a', 40);
-            Assert.AreNotSame(foo.A, foo.B); // different string refs
+            Assert.NotSame(foo.A, foo.B); // different string refs
 
             using (var ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, foo);
-                Assert.AreEqual(50, ms.Length);
+                Assert.Equal(50, ms.Length);
                 ms.Position = 0;
                 clone = Serializer.Deserialize<BasicDuplicatedString>(ms);
             }
-            Assert.AreEqual(foo.A, clone.A);
-            Assert.AreEqual(foo.B, clone.B);
-            Assert.AreSame(clone.A, clone.B);
+            Assert.Equal(foo.A, clone.A);
+            Assert.Equal(foo.B, clone.B);
+            Assert.Same(clone.A, clone.B);
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             var m = TypeModel.Create();

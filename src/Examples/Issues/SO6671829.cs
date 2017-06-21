@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ProtoBuf;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO6671829
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             var model = TypeModel.Create();
@@ -29,12 +29,12 @@ namespace Examples.Issues
             ms.Position = 0;
             var flatB = Serializer.Deserialize<flat.B>(ms);
 
-            Assert.AreEqual("prop1", hb.prop1);
-            Assert.AreEqual("prop2", hb.prop2);
-            Assert.AreEqual("prop1", flatB.prop1);
-            Assert.AreEqual("prop2", flatB.prop2);
-            Assert.AreEqual("prop1=prop1, prop2=prop2", hb.ToString());
-            Assert.AreEqual("prop1=prop1, prop2=prop2", flatB.ToString());
+            Assert.Equal("prop1", hb.prop1);
+            Assert.Equal("prop2", hb.prop2);
+            Assert.Equal("prop1", flatB.prop1);
+            Assert.Equal("prop2", flatB.prop2);
+            Assert.Equal("prop1=prop1, prop2=prop2", hb.ToString());
+            Assert.Equal("prop1=prop1, prop2=prop2", flatB.ToString());
         }
         class hierarchy
         {

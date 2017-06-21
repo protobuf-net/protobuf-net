@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO3083847
     {
-        [Test]
+        [Fact]
         public void Roundtrip()
         {
             CacheData data = new CacheData
@@ -29,21 +29,21 @@ namespace Examples.Issues
                         }
             };
             var clone = Serializer.DeepClone(data);
-            Assert.AreNotSame(data,clone);
-            Assert.IsNotNull(clone.Bar, "Bar");
-            Assert.IsNotNull(clone.YYY, "YYY");
-            Assert.AreEqual(2, clone.Bar.Count, "Bar");
-            Assert.AreEqual(3, clone.YYY.Count, "YYY");
+            Assert.NotSame(data,clone);
+            Assert.NotNull(clone.Bar); //, "Bar");
+            Assert.NotNull(clone.YYY); //, "YYY");
+            Assert.Equal(2, clone.Bar.Count); //, "Bar");
+            Assert.Equal(3, clone.YYY.Count); //, "YYY");
             var bar = clone.Bar[0];
-            Assert.IsTrue(bar.ID == 123 && bar.Name == "abc" && bar.Value == 234);
+            Assert.True(bar.ID == 123 && bar.Name == "abc" && bar.Value == 234);
             bar = clone.Bar[1];
-            Assert.IsTrue(bar.ID == 345 && bar.Name == "bcd" && bar.Value == 456);
+            Assert.True(bar.ID == 345 && bar.Name == "bcd" && bar.Value == 456);
             var yyy = clone.YYY[0];
-            Assert.IsTrue(yyy.ID == 567 && yyy.Name == "cde" && yyy.Value == "def");
+            Assert.True(yyy.ID == 567 && yyy.Name == "cde" && yyy.Value == "def");
             yyy = clone.YYY[1];
-            Assert.IsTrue(yyy.ID == 678 && yyy.Name == "efg" && yyy.Value == "fgh");
+            Assert.True(yyy.ID == 678 && yyy.Name == "efg" && yyy.Value == "fgh");
             yyy = clone.YYY[2];
-            Assert.IsTrue(yyy.ID == 789 && yyy.Name == "ghi" && yyy.Value == "hij");
+            Assert.True(yyy.ID == 789 && yyy.Name == "ghi" && yyy.Value == "hij");
         }
 
         [DataContract]

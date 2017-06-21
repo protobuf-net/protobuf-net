@@ -1,13 +1,13 @@
 ﻿using System;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Collections.Generic;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO6230449
     {
         [ProtoContract]
@@ -17,7 +17,7 @@ namespace Examples.Issues
             public int Bar { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             using (var ms = new MemoryStream())
@@ -28,7 +28,7 @@ namespace Examples.Issues
                 Serializer.SerializeWithLengthPrefix(ms, new Foo { Bar = 3 }, PrefixStyle.Base128, 0);
 
                 ms.Position = 0;
-                Assert.AreEqual(9, ms.Length, "3 lengths, 3 headers, 3 values");
+                Assert.Equal(9, ms.Length); //, "3 lengths, 3 headers, 3 values");
 
                 // read the length prefix and use that to limit each call
                 TypeModel model = RuntimeTypeModel.Default;
@@ -41,13 +41,13 @@ namespace Examples.Issues
 
                     foos.Add((Foo)model.Deserialize(ms, null, typeof(Foo), len));
 
-                    Assert.IsTrue(foos.Count <= 3, "too much data! (manual)");
+                    Assert.True(foos.Count <= 3, "too much data! (manual)");
                 } while (bytesRead > 0);
 
-                Assert.AreEqual(3, foos.Count);
-                Assert.AreEqual(1, foos[0].Bar);
-                Assert.AreEqual(2, foos[1].Bar);
-                Assert.AreEqual(3, foos[2].Bar);
+                Assert.Equal(3, foos.Count);
+                Assert.Equal(1, foos[0].Bar);
+                Assert.Equal(2, foos[1].Bar);
+                Assert.Equal(3, foos[2].Bar);
 
                 // do it using DeserializeItems
                 ms.Position = 0;
@@ -56,12 +56,12 @@ namespace Examples.Issues
                 foreach (var obj in model.DeserializeItems<Foo>(ms, PrefixStyle.Base128, 0))
                 {
                     foos.Add(obj);
-                    Assert.IsTrue(foos.Count <= 3, "too much data! (foreach)");
+                    Assert.True(foos.Count <= 3, "too much data! (foreach)");
                 }
-                Assert.AreEqual(3, foos.Count);
-                Assert.AreEqual(1, foos[0].Bar);
-                Assert.AreEqual(2, foos[1].Bar);
-                Assert.AreEqual(3, foos[2].Bar);
+                Assert.Equal(3, foos.Count);
+                Assert.Equal(1, foos[0].Bar);
+                Assert.Equal(2, foos[1].Bar);
+                Assert.Equal(3, foos[2].Bar);
             }
         }
     }

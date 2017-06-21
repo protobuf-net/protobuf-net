@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -10,7 +10,7 @@ using System.Text;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO14436606
     {
         [Serializable]
@@ -27,6 +27,7 @@ namespace Examples.Issues
             public A A { get; set; }
 
             [ProtoMember(2, AsReference = true)]
+            [ProtoMap(DisableMap = true)]
             public Dictionary<int, A> Items { get; set; }
 
             public B()
@@ -72,23 +73,23 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public void VerifyModelViaDefaultRef_AFirst()
         {
             var model = CreateDefaultRefModel(true);
-            Assert.IsTrue(model[typeof(A_WithDefaultRef)].AsReferenceDefault, "A:AsReferenceDefault - A first");
-            Assert.IsTrue(model[typeof(B_WithDefaultRef)][1].AsReference, "B.A:AsReference  - A first");
+            Assert.True(model[typeof(A_WithDefaultRef)].AsReferenceDefault, "A:AsReferenceDefault - A first");
+            Assert.True(model[typeof(B_WithDefaultRef)][1].AsReference, "B.A:AsReference  - A first");
 
         }
-        [Test]
+        [Fact]
         public void VerifyModelViaDefaultRef_BFirst()
         {
             var model = CreateDefaultRefModel(false);
-            Assert.IsTrue(model[typeof(A_WithDefaultRef)].AsReferenceDefault, "A:AsReferenceDefault - B first");
-            Assert.IsTrue(model[typeof(B_WithDefaultRef)][1].AsReference, "B.A:AsReference  - B first");
+            Assert.True(model[typeof(A_WithDefaultRef)].AsReferenceDefault, "A:AsReferenceDefault - B first");
+            Assert.True(model[typeof(B_WithDefaultRef)][1].AsReference, "B.A:AsReference  - B first");
         }
 
-        [Test]
+        [Fact]
         public void ThreeApproachesAreCompatible()
         {
             string surrogate, fields, defaultRef_AFirst, defaultRef_BFirst;
@@ -114,19 +115,19 @@ namespace Examples.Issues
                 fields = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
             }
 
-            Assert.AreEqual(surrogate, fields, "fields vs surrogate");
-            Assert.AreEqual(surrogate, defaultRef_AFirst, "default-ref (A-first) vs surrogate");
-            Assert.AreEqual(surrogate, defaultRef_BFirst, "default-ref (B-first) vs surrogate");
+            Assert.Equal(surrogate, fields); //, "fields vs surrogate");
+            Assert.Equal(surrogate, defaultRef_AFirst); //, "default-ref (A-first) vs surrogate");
+            Assert.Equal(surrogate, defaultRef_BFirst); //, "default-ref (B-first) vs surrogate");
         }
 
-        [Test]
+        [Fact]
         public void ExecuteHackedViaDefaultRef()
         {
             ExecuteAllModes_WithDefaultRef(CreateDefaultRefModel(true), "ExecuteHackedViaDefaultRef - A first");
             ExecuteAllModes_WithDefaultRef(CreateDefaultRefModel(false), "ExecuteHackedViaDefaultRef - B first");
         }
 
-        [Test]
+        [Fact]
         public void ExecuteHackedViaFields()
         {
             ExecuteAllModes(CreateFieldsModel(), standalone: false);
@@ -171,7 +172,7 @@ namespace Examples.Issues
             return model;
         }
 
-        [Test]
+        [Fact]
         public void ExecuteHackedViaSurrogate()
         {
             ExecuteAllModes(CreateSurrogateModel());
@@ -213,7 +214,7 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public void TuplesAsReference()
         {
             var obj = new C();
@@ -221,10 +222,10 @@ namespace Examples.Issues
             obj.Items.Add(t);
             obj.Items.Add(t);
             var clone = Serializer.DeepClone(obj);
-            Assert.AreSame(clone.Items[0], clone.Items[1]);
+            Assert.Same(clone.Items[0], clone.Items[1]);
         }
 
-        [Test]
+        [Fact]
         public void AreObjectReferencesSameAfterDeserialization()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -249,11 +250,11 @@ namespace Examples.Issues
         {
             var b = CreateB();
 
-            Assert.AreSame(b.A, b.Items[1], caption + ":Original");
+            Assert.Same(b.A, b.Items[1]); //, caption + ":Original");
 
             B deserializedB = (B)model.DeepClone(b);
 
-            Assert.AreSame(deserializedB.A, deserializedB.Items[1], caption + ":Clone");
+            Assert.Same(deserializedB.A, deserializedB.Items[1]); //, caption + ":Clone");
         }
         static B_WithDefaultRef CreateB_WithDefaultRef()
         {
@@ -269,11 +270,11 @@ namespace Examples.Issues
         {
             var b = CreateB_WithDefaultRef();
 
-            Assert.AreSame(b.A, b.Items[1], caption + ":Original");
+            Assert.Same(b.A, b.Items[1]); //, caption + ":Original");
 
             B_WithDefaultRef deserializedB = (B_WithDefaultRef)model.DeepClone(b);
 
-            Assert.AreSame(deserializedB.A, deserializedB.Items[1], caption + ":Clone");
+            Assert.Same(deserializedB.A, deserializedB.Items[1]); //, caption + ":Clone");
         }
     }
 }

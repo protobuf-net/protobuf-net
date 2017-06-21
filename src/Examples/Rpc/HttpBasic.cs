@@ -2,7 +2,7 @@
 //using System.Linq;
 //using System.ServiceModel;
 //using DAL;
-//using NUnit.Framework;
+//using Xunit;
 //using ProtoBuf;
 //using ProtoBuf.ServiceModel.Client;
 //using ProtoBuf.ServiceModel.Server;
@@ -61,7 +61,7 @@
 //        }
 //    }
 
-//    [TestFixture]
+//    
 //    public class HttpWithLambda
 //    {
 //        private HttpServer server;
@@ -86,7 +86,7 @@
 //        }
 
 
-//        [Test]
+//        [Fact]
 //        public void TestPing() {
 //            using (var client = CreateClient())
 //            {
@@ -94,16 +94,16 @@
 //            }
 //        }
 
-//        [Test]
+//        [Fact]
 //        public void TestSwapArgs()
 //        {
 //            using (var client = CreateClient())
 //            {
 //                int i = 13, j = 0;
 //                int sum = client.Invoke(svc => svc.Test(27, ref i, out j));
-//                Assert.AreEqual(27, i);
-//                Assert.AreEqual(13, j);
-//                Assert.AreEqual(40, sum);
+//                Assert.Equal(27, i);
+//                Assert.Equal(13, j);
+//                Assert.Equal(40, sum);
 //            }
 //        }
 
@@ -114,7 +114,7 @@
 //        }
 //    }
 
-//    [TestFixture]
+//    
 //    public class HttpBasic
 //    {
 //        const string HTTP_PREFIX = "http://localhost:8080/myapp/";
@@ -126,29 +126,29 @@
 //                ViaHttp());
 //        }
 
-//        [Test, ExpectedException(typeof(ArgumentNullException))]
+//        [Fact, ExpectedException(typeof(ArgumentNullException))]
 //        public void TestNullTransport()
 //        {
 //            new ProtoClient<IBasicService>(null);
 //        }
 //        class NotAContract { }
-//        [Test, ExpectedException(typeof(ArgumentException))]
+//        [Fact, ExpectedException(typeof(ArgumentException))]
 //        public void TestNotAContract() {
 //            new ProtoClient<NotAContract>(ViaHttp());
 //        }
 
-//        [Test]
+//        [Fact]
 //        public void TestCreationAndDispoesWithBoth() {
 //           using(ClientViaHttp<IBasicService>()) {}
 //        }
 
-//        [Test]
+//        [Fact]
 //        public void TestCreateDisposeClient()
 //        {
 //            using (var client = new BasicServiceHttpClient()) { }
 //        }
 
-//        [Test]
+//        [Fact]
 //        public void StartStopServer()
 //        {
 //            using (var server = CreateServer())
@@ -165,7 +165,7 @@
 //            return server;
 //        }
 
-//        [Test]
+//        [Fact]
 //        public void TestCallTestMethodWithNull()
 //        {
 //            using (var server = CreateServer())
@@ -173,11 +173,11 @@
 //            {
 //                server.Start();
 //                var result = client.TestMethod(null);
-//                Assert.IsNull(result);
+//                Assert.Null(result);
 //            }
 //        }
 
-//        [Test]
+//        [Fact]
 //        public void TestCallTestMethodWithDatabase()
 //        {
 //            using (var server = CreateServer())
@@ -187,17 +187,17 @@
 //                DAL.Database request = NWindTests.LoadDatabaseFromFile<DAL.Database>();
 //                DAL.Database response = client.TestMethod(request);
 
-//                Assert.IsNotNull(response);
-//                Assert.AreNotSame(request, response);
+//                Assert.NotNull(response);
+//                Assert.NotSame(request, response);
 
-//                Assert.AreEqual(request.Orders.Count, response.Orders.Count, "Orders");
-//                Assert.AreEqual(
+//                Assert.Equal(request.Orders.Count, response.Orders.Count, "Orders");
+//                Assert.Equal(
 //                    request.Orders.SelectMany(ord => ord.Lines).Count(),
 //                    response.Orders.SelectMany(ord => ord.Lines).Count(), "Lines");
-//                Assert.AreEqual(
+//                Assert.Equal(
 //                    request.Orders.SelectMany(ord => ord.Lines).Sum(line => line.Quantity),
 //                    response.Orders.SelectMany(ord => ord.Lines).Sum(line => line.Quantity), "Quantity");
-//                Assert.AreEqual(
+//                Assert.Equal(
 //                    request.Orders.SelectMany(ord => ord.Lines).Sum(line => line.Quantity * line.UnitPrice),
 //                    response.Orders.SelectMany(ord => ord.Lines).Sum(line => line.Quantity * line.UnitPrice), "Value");
 

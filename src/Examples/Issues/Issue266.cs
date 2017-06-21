@@ -2,35 +2,35 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue266
     {
-        [Test]
+        [Fact]
         public void TestNakedNullableInt32Deserialize()
         {
             int? i = Serializer.Deserialize<int?>(Stream.Null);
-            Assert.IsNull(i);
+            Assert.Null(i);
         }
-        [Test]
+        [Fact]
         public void TestWrappedNullableEnumDeserialize()
         {
             Bar bar = Serializer.Deserialize<Bar>(Stream.Null);
-            Assert.IsNull(bar.Foo);
+            Assert.Null(bar.Foo);
         }
-        [Test]
+        [Fact]
         public void TestNakedNullableEnumDeserialize()
         {
             Foo? foo = Serializer.Deserialize<Foo?>(Stream.Null);
-            Assert.IsNull(foo);
+            Assert.Null(foo);
         }
-        [Test]
+        [Fact]
         public void TestNakedDirectFoo()
         {
             Foo orig = Foo.B, result;
@@ -40,7 +40,7 @@ namespace Examples.Issues
                 ms.Position = 0;
                 result = (Foo) RuntimeTypeModel.Default.Deserialize(ms, null, typeof (Foo));
             }
-            Assert.AreEqual(orig, result);
+            Assert.Equal(orig, result);
         }
 
         public enum Foo

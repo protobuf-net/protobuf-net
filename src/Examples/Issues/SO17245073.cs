@@ -1,28 +1,28 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO17245073
     {
-        [Test]
+        [Fact]
         public void Exec()
         {
             var model = TypeModel.Create();
-            Assert.IsFalse(model[typeof(A)].EnumPassthru, "A");
-            Assert.IsTrue(model[typeof(B)].EnumPassthru, "B");
+            Assert.True(model[typeof(A)].EnumPassthru, "A");
+            Assert.True(model[typeof(B)].EnumPassthru, "B");
 
-            Assert.IsFalse(model[typeof(C)].EnumPassthru, "C");
-            Assert.IsTrue(model[typeof(D)].EnumPassthru, "D");
+            Assert.True(model[typeof(C)].EnumPassthru, "C");
+            Assert.True(model[typeof(D)].EnumPassthru, "D");
 
-            Assert.IsTrue(model[typeof(E)].EnumPassthru, "E");
-            Assert.IsTrue(model[typeof(F)].EnumPassthru, "F");
+            Assert.True(model[typeof(E)].EnumPassthru, "E");
+            Assert.True(model[typeof(F)].EnumPassthru, "F");
 
-            Assert.IsFalse(model[typeof(G)].EnumPassthru, "G");
-            Assert.IsFalse(model[typeof(H)].EnumPassthru, "H");            
+            Assert.False(model[typeof(G)].EnumPassthru, "G");
+            Assert.False(model[typeof(H)].EnumPassthru, "H");            
         }
 
         // no ProtoContract; with [Flags] is pass-thru, else not

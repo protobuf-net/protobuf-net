@@ -8,7 +8,7 @@ using System.Data.Linq;
 using System.IO;
 using System.Linq;
 
-using NUnit.Framework;
+using Xunit;
 using ProtoSharp.Core;
 using Serializer = ProtoBuf.Serializer;
 using Examples;
@@ -49,7 +49,7 @@ namespace DAL
 #endif
     }
 #if !COREFX
-    [TestFixture]
+    
     public class NWindTests
     {
         static readonly string[] nwindPaths = { @"NWind\nwind.proto.bin", @"Tools\nwind.proto.bin", @"nwind.proto.bin" };
@@ -71,7 +71,7 @@ namespace DAL
             }
         }
         
-        [Test]
+        [Fact]
         public void LoadTestDefaultModel()
         {
             Database db = LoadDatabaseFromFile<Database>(RuntimeTypeModel.Default);
@@ -79,7 +79,7 @@ namespace DAL
 
         }
 
-        [Test]
+        [Fact]
         public void LoadTestCustomModel()
         {
             var model = TypeModel.Create();
@@ -101,7 +101,7 @@ namespace DAL
             DbMetrics("Database", db);
         }
 
-        [Test]
+        [Fact]
         public void PerfTestDb()
         {
             byte[] blob = File.ReadAllBytes(NWindTests.GetNWindBinPath());
@@ -131,7 +131,7 @@ namespace DAL
             }
         }
 
-        [Test]
+        [Fact]
         public void TestProtoGen()
         {
             // just show it can do *something*!

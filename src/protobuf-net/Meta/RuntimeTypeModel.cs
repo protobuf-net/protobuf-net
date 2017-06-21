@@ -144,7 +144,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="type">The type to generate a .proto definition for, or <c>null</c> to generate a .proto that represents the entire model</param>
         /// <returns>The .proto definition as a string</returns>
-        public override string GetSchema(Type type)
+        /// <param name="syntax">The .proto syntax to use</param>
+        public override string GetSchema(Type type, ProtoSyntax syntax)
         {
             BasicList requiredTypes = new BasicList();
             MetaType primaryType = null;
@@ -210,14 +211,25 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-
+            switch(syntax)
+            {
+                case ProtoSyntax.Proto2:
+                    headerBuilder.AppendLine(@"syntax = ""proto2"";");
+                    break;
+                case ProtoSyntax.Proto3:
+                    headerBuilder.AppendLine(@"syntax = ""proto3"";");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(syntax));
+            }
+            
             if (!Helpers.IsNullOrEmpty(package))
             {
                 headerBuilder.Append("package ").Append(package).Append(';');
                 Helpers.AppendLine(headerBuilder);
             }
 
-            bool requiresBclImport = false;
+            var imports = CommonImports.None;
             StringBuilder bodyBuilder = new StringBuilder();
             // sort them by schema-name
             MetaType[] metaTypesArr = new MetaType[requiredTypes.Count];
@@ -228,7 +240,7 @@ namespace ProtoBuf.Meta
             if (isInbuiltType)
             {
                 Helpers.AppendLine(bodyBuilder).Append("message ").Append(type.Name).Append(" {");
-                MetaType.NewLine(bodyBuilder, 1).Append("optional ").Append(GetSchemaTypeName(type, DataFormat.Default, false, false, ref requiresBclImport))
+                MetaType.NewLine(bodyBuilder, 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(GetSchemaTypeName(type, DataFormat.Default, false, false, ref imports))
                     .Append(" value = 1;");
                 Helpers.AppendLine(bodyBuilder).Append('}');
             }
@@ -238,15 +250,39 @@ namespace ProtoBuf.Meta
                 {
                     MetaType tmp = metaTypesArr[i];
                     if (tmp.IsList && tmp != primaryType) continue;
-                    tmp.WriteSchema(bodyBuilder, 0, ref requiresBclImport);
+                    tmp.WriteSchema(bodyBuilder, 0, ref imports, syntax);
                 }
             }
-            if (requiresBclImport)
+            if ((imports & CommonImports.Bcl) != 0)
             {
-                headerBuilder.Append("import \"bcl.proto\"; // schema for protobuf-net's handling of core .NET types");
+                headerBuilder.Append("import \"protobuf-net/bcl.proto\"; // schema for protobuf-net's handling of core .NET types");
+                Helpers.AppendLine(headerBuilder);
+            }
+            if ((imports & CommonImports.Protogen) != 0)
+            {
+                headerBuilder.Append("import \"protobuf-net/protogen.proto\"; // custom protobuf-net options");
+                Helpers.AppendLine(headerBuilder);
+            }
+            if ((imports & CommonImports.Timestamp) != 0)
+            {
+                headerBuilder.Append("import \"google/protobuf/timestamp.proto\";");
+                Helpers.AppendLine(headerBuilder);
+            }
+            if ((imports & CommonImports.Duration) != 0)
+            {
+                headerBuilder.Append("import \"google/protobuf/duration.proto\";");
                 Helpers.AppendLine(headerBuilder);
             }
             return Helpers.AppendLine(headerBuilder.Append(bodyBuilder)).ToString();
+        }
+        [Flags]
+        internal enum CommonImports
+        {
+            None = 0,
+            Bcl = 1,
+            Timestamp = 2,
+            Duration = 4,
+            Protogen = 8
         }
         private void CascadeDependents(BasicList list, MetaType metaType)
         {
@@ -306,6 +342,10 @@ namespace ProtoBuf.Meta
                     foreach (ValueMember member in metaType.Fields)
                     {
                         Type type = member.ItemType;
+                        if(member.IsMap)
+                        {
+                            member.ResolveMapTypes(out _, out _, out type); // don't need key-type
+                        }
                         if (type == null) type = member.MemberType;
                         WireType defaultWireType;
                         IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false);
@@ -1571,11 +1611,12 @@ namespace ProtoBuf.Meta
             {
                 SerializerPair pair = methodPairs[index];
                 ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, pair.Type.Type, "SerializeImpl " + pair.Type.Type.Name);
-                ctx.CheckAccessibility(pair.Deserialize.ReturnType
+                MemberInfo returnType = pair.Deserialize.ReturnType
 #if COREFX
                     .GetTypeInfo()
 #endif
-                    );
+                    ;
+                ctx.CheckAccessibility(ref returnType);
                 pair.Type.Serializer.EmitWrite(ctx, ctx.InputValue);
                 ctx.Return();
 
@@ -1950,7 +1991,7 @@ namespace ProtoBuf.Meta
         }
 #endif
 
-        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref bool requiresBclImport)
+        internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
         {
             Type tmp = Helpers.GetUnderlyingType(effectiveType);
             if (tmp != null) effectiveType = tmp;
@@ -1963,8 +2004,8 @@ namespace ProtoBuf.Meta
             {   // model type
                 if (asReference || dynamicType)
                 {
-                    requiresBclImport = true;
-                    return "bcl.NetObjectProxy";
+                    imports |= CommonImports.Bcl;
+                    return ".bcl.NetObjectProxy";
                 }
                 return this[effectiveType].GetSurrogateOrBaseOrSelf(true).GetSchemaTypeName();
             }
@@ -1972,8 +2013,8 @@ namespace ProtoBuf.Meta
             {
                 if (ser is ParseableSerializer)
                 {
-                    if (asReference) requiresBclImport = true;
-                    return asReference ? "bcl.NetObjectProxy" : "string";
+                    if (asReference) imports |= CommonImports.Bcl;
+                    return asReference ? ".bcl.NetObjectProxy" : "string";
                 }
 
                 switch (Helpers.GetTypeCode(effectiveType))
@@ -1982,8 +2023,8 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Single: return "float";
                     case ProtoTypeCode.Double: return "double";
                     case ProtoTypeCode.String:
-                        if (asReference) requiresBclImport = true;
-                        return asReference ? "bcl.NetObjectProxy" : "string";
+                        if (asReference) imports |= CommonImports.Bcl;
+                        return asReference ? ".bcl.NetObjectProxy" : "string";
                     case ProtoTypeCode.Byte:
                     case ProtoTypeCode.Char:
                     case ProtoTypeCode.UInt16:
@@ -2015,11 +2056,31 @@ namespace ProtoBuf.Meta
                             case DataFormat.FixedSize: return "sfixed64";
                             default: return "int64";
                         }
-                    case ProtoTypeCode.DateTime: requiresBclImport = true; return "bcl.DateTime";
-                    case ProtoTypeCode.TimeSpan: requiresBclImport = true; return "bcl.TimeSpan";
-                    case ProtoTypeCode.Decimal: requiresBclImport = true; return "bcl.Decimal";
-                    case ProtoTypeCode.Guid: requiresBclImport = true; return "bcl.Guid";
-                    case ProtoTypeCode.Type: requiresBclImport = false; return "string";
+                    case ProtoTypeCode.DateTime:
+                        switch (dataFormat)
+                        {
+                            case DataFormat.FixedSize: return "sint64";
+                            case DataFormat.WellKnown:
+                                imports |= CommonImports.Timestamp;
+                                return ".google.protobuf.Timestamp";
+                            default:
+                                imports |= CommonImports.Bcl;
+                                return ".bcl.DateTime";
+                        }
+                    case ProtoTypeCode.TimeSpan:
+                        switch(dataFormat)
+                        {
+                            case DataFormat.FixedSize: return "sint64";
+                            case DataFormat.WellKnown:
+                                imports |= CommonImports.Duration;
+                                return ".google.protobuf.Duration";
+                            default:
+                                imports |= CommonImports.Bcl;
+                                return ".bcl.TimeSpan";
+                        }
+                    case ProtoTypeCode.Decimal: imports |= CommonImports.Bcl; return ".bcl.Decimal";
+                    case ProtoTypeCode.Guid: imports |= CommonImports.Bcl; return ".bcl.Guid";
+                    case ProtoTypeCode.Type: return "string";
                     default: throw new NotSupportedException("No .proto map found for: " + effectiveType.FullName);
                 }
             }

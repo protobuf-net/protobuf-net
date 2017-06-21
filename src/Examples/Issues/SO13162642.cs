@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
@@ -7,10 +7,10 @@ using System.Linq;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO13162642
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             using (var f = File.Create("Data.protobuf"))
@@ -25,7 +25,7 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public void ExecuteWorkaround()
         {
             using (var f = File.Create("Data.protobuf"))

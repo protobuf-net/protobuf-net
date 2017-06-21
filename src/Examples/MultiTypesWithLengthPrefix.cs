@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class MultiTypesWithLengthPrefix
     {
-        [Test]
+        [Fact]
         public void TestRoundTripMultiTypes()
         {
             using (MemoryStream ms = new MemoryStream())
@@ -23,11 +23,11 @@ namespace Examples
 
                 ms.Position = 0;
 
-                Assert.AreEqual(123, ReadNext(ms));
-                Assert.AreEqual("Fred", ((Person)ReadNext(ms)).Name);
-                Assert.AreEqual("abc", ReadNext(ms));
-                Assert.AreEqual("12 Lamb Lane", ((Address)ReadNext(ms)).Line1);
-                Assert.IsNull(ReadNext(ms));
+                Assert.Equal(123, ReadNext(ms));
+                Assert.Equal("Fred", ((Person)ReadNext(ms)).Name);
+                Assert.Equal("abc", ReadNext(ms));
+                Assert.Equal("12 Lamb Lane", ((Address)ReadNext(ms)).Line1);
+                Assert.Null(ReadNext(ms));
             }
         }
         static readonly IDictionary<int, Type> typeLookup = new Dictionary<int, Type>

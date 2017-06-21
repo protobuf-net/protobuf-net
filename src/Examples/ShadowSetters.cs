@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class ShadowSetters
     {
         [ProtoContract]
@@ -26,7 +26,7 @@ namespace Examples
             public int SetterWithUnrelatedSet { get { return blap; } set { blap = value; } }
             public void SetSetterWithUnrelatedSet(string value) { throw new InvalidOperationException("shouldn't have called this"); }
         }
-        [Test]
+        [Fact]
         public void RoundTripWithShadow()
         {
             var orig = new TypeWithShadowSetter();
@@ -34,9 +34,9 @@ namespace Examples
             orig.SetSetterWeDontWantToInvoke(456);
             orig.SetterWithUnrelatedSet = 789;
             var clone = Serializer.DeepClone(orig);
-            Assert.AreEqual(123, clone.NoSetter);
-            Assert.AreEqual(456, clone.SetterWeDontWantToInvoke);
-            Assert.AreEqual(789, clone.SetterWithUnrelatedSet);
+            Assert.Equal(123, clone.NoSetter);
+            Assert.Equal(456, clone.SetterWeDontWantToInvoke);
+            Assert.Equal(789, clone.SetterWithUnrelatedSet);
         }
     }
 }

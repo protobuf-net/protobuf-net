@@ -1,11 +1,11 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.IO;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class InternerTests
     {
         [ProtoContract]
@@ -33,7 +33,7 @@ namespace Examples
 
             return new ProtoReader(ms, model, null);
         }
-        [Test]
+        [Fact]
         public void ByDefaultStringsShouldBeInterned()
         {
             Foo foo;
@@ -41,12 +41,12 @@ namespace Examples
             {
                 foo = (Foo)reader.Model.Deserialize(reader, null, typeof(Foo));
             }
-            Assert.AreEqual("abc", foo.Bar, "Bar");
-            Assert.AreEqual("abc", foo.Blap, "Blap");
+            Assert.Equal("abc", foo.Bar); //, "Bar");
+            Assert.Equal("abc", foo.Blap); //, "Blap");
 
-            Assert.IsTrue(ReferenceEquals(foo.Bar, foo.Blap));
+            Assert.True(ReferenceEquals(foo.Bar, foo.Blap));
         }
-        [Test]
+        [Fact]
         public void ExplicitEnabledStringsShouldBeInterned()
         {
             Foo foo;
@@ -55,12 +55,12 @@ namespace Examples
                 reader.InternStrings = true;
                 foo = (Foo)reader.Model.Deserialize(reader, null, typeof(Foo));
             }
-            Assert.AreEqual("abc", foo.Bar, "Bar");
-            Assert.AreEqual("abc", foo.Blap, "Blap");
+            Assert.Equal("abc", foo.Bar); //, "Bar");
+            Assert.Equal("abc", foo.Blap); //, "Blap");
 
-            Assert.IsTrue(ReferenceEquals(foo.Bar, foo.Blap));
+            Assert.True(ReferenceEquals(foo.Bar, foo.Blap));
         }
-        [Test]
+        [Fact]
         public void ExplicitDisabledStringsShouldNotBeInterned()
         {
             Foo foo;
@@ -69,10 +69,10 @@ namespace Examples
                 reader.InternStrings = false;
                 foo = (Foo)reader.Model.Deserialize(reader, null, typeof(Foo));
             }
-            Assert.AreEqual("abc", foo.Bar, "Bar");
-            Assert.AreEqual("abc", foo.Blap, "Blap");
+            Assert.Equal("abc", foo.Bar); //, "Bar");
+            Assert.Equal("abc", foo.Blap); //, "Blap");
 
-            Assert.IsFalse(ReferenceEquals(foo.Bar, foo.Blap));
+            Assert.False(ReferenceEquals(foo.Bar, foo.Blap));
         }
 
     }

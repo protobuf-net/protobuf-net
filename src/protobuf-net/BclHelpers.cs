@@ -45,7 +45,6 @@ namespace ProtoBuf
 #endif
         }
 
-
 #if COREFX // this is inspired by DCS: https://github.com/dotnet/corefx/blob/c02d33b18398199f6acc17d375dab154e9a1df66/src/System.Private.DataContractSerialization/src/System/Runtime/Serialization/XmlFormatReaderGenerator.cs#L854-L894
         static Func<Type, object> getUninitializedObject;
         static internal object TryGetUninitializedObjectWithFormatterServices(Type type)
@@ -78,9 +77,14 @@ namespace ProtoBuf
             new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Local)
         };
 
+        /// <summary>
+        /// The default value for dates that are following google.protobuf.Timestamp semantics
+        /// </summary>
+        private static readonly DateTime TimestampEpoch = EpochOrigin[(int)DateTimeKind.Utc];
+
 
         /// <summary>
-        /// Writes a TimeSpan to a protobuf stream
+        /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
@@ -161,7 +165,7 @@ namespace ProtoBuf
             }
         }
         /// <summary>
-        /// Parses a TimeSpan from a protobuf stream
+        /// Parses a TimeSpan from a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>        
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
@@ -171,6 +175,101 @@ namespace ProtoBuf
             if (ticks == long.MaxValue) return TimeSpan.MaxValue;
             return TimeSpan.FromTicks(ticks);
         }
+
+        /// <summary>
+        /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
+        /// </summary>
+        public static TimeSpan ReadDuration(ProtoReader source)
+        {
+            long seconds = 0;
+            int nanos = 0;
+            SubItemToken token = ProtoReader.StartSubItem(source);
+            int fieldNumber;
+            while ((fieldNumber = source.ReadFieldHeader()) > 0)
+            {
+                switch (fieldNumber)
+                {
+                    case 1:
+                        seconds = source.ReadInt64();
+                        break;
+                    case 2:
+                        nanos = source.ReadInt32();
+                        break;
+                    default:
+                        source.SkipField();
+                        break;
+                }
+            }
+            ProtoReader.EndSubItem(token, source);
+            return FromDurationSeconds(seconds, nanos);
+        }
+
+        /// <summary>
+        /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
+        /// </summary>
+        public static void WriteDuration(TimeSpan value, ProtoWriter dest)
+        {
+            var seconds = ToDurationSeconds(value, out int nanos);
+            WriteSecondsNanos(seconds, nanos, dest);
+        }
+        private static void WriteSecondsNanos(long seconds, int nanos, ProtoWriter dest)
+        {
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
+            if (seconds != 0)
+            {
+                ProtoWriter.WriteFieldHeader(1, WireType.Variant, dest);
+                ProtoWriter.WriteInt64(seconds, dest);
+            }
+            if (nanos != 0)
+            {
+                ProtoWriter.WriteFieldHeader(2, WireType.Variant, dest);
+                ProtoWriter.WriteInt32(nanos, dest);
+            }
+            ProtoWriter.EndSubItem(token, dest);
+        }
+
+        /// <summary>
+        /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
+        /// </summary>
+        public static DateTime ReadTimestamp(ProtoReader source)
+        {
+            // note: DateTime is only defined for just over 0000 to just below 10000;
+            // TimeSpan has a range of +/- 10,675,199 days === 29k years;
+            // so we can just use epoch time delta
+            return TimestampEpoch + ReadDuration(source);
+        }
+
+        /// <summary>
+        /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
+        /// </summary>
+        public static void WriteTimestamp(DateTime value, ProtoWriter dest)
+        {
+            var seconds = ToDurationSeconds(value - TimestampEpoch, out int nanos);
+            
+            if (nanos < 0)
+            {   // from Timestamp.proto:
+                // "Negative second values with fractions must still have
+                // non -negative nanos values that count forward in time."
+                seconds--;
+                nanos += 1000000000;
+            }
+            WriteSecondsNanos(seconds, nanos, dest);
+        }
+        
+        static TimeSpan FromDurationSeconds(long seconds, int nanos)
+        {
+            
+            long ticks = checked((seconds * TimeSpan.TicksPerSecond)
+                + (nanos * TimeSpan.TicksPerMillisecond) / 1000000);
+            return TimeSpan.FromTicks(ticks);
+        }
+        static long ToDurationSeconds(TimeSpan value, out int nanos)
+        {
+            nanos = (int)(((value.Ticks % TimeSpan.TicksPerSecond) * 1000000)
+                / TimeSpan.TicksPerMillisecond);
+            return value.Ticks / TimeSpan.TicksPerSecond;
+        }
+
         /// <summary>
         /// Parses a DateTime from a protobuf stream
         /// </summary>

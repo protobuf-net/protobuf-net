@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO6109616
     {
         [ProtoContract]
@@ -25,7 +25,7 @@ namespace Examples.Issues
             [ProtoMember(1)]
             public int Y;
         }
-        [Test]
+        [Fact]
         public void Execute()
         {
             TypeModel model = RuntimeTypeModel.Default;
@@ -48,8 +48,8 @@ namespace Examples.Issues
                 object b2 = model.DeserializeWithLengthPrefix(ms, null, null, PrefixStyle.Base128, 0, key => tagToType[key]);
                 object c2 = model.DeserializeWithLengthPrefix(ms, null, null, PrefixStyle.Base128, 0, key => tagToType[key]);
                 
-                Assert.AreEqual(((B)b).Y, ((B)b2).Y);
-                Assert.AreEqual(((C)c).Y, ((C)c2).Y);
+                Assert.Equal(((B)b).Y, ((B)b2).Y);
+                Assert.Equal(((C)c).Y, ((C)c2).Y);
             }
         }
     }

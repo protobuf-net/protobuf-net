@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO9408133
     {
         [ProtoContract] public class Ship
@@ -43,7 +43,7 @@ namespace Examples.Issues
             public SomeType Value { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void TestImplicitSetup()
         {
             var model = RuntimeTypeModel.Create();
@@ -61,7 +61,7 @@ namespace Examples.Issues
             Test(model, obj1, obj2, "CompileInPlace");
             Test(model.Compile(), obj1, obj2, "Compile");
         }
-        [Test]
+        [Fact]
         public void TestStupidSetup()
         {
             Program.ExpectFailure<ArgumentException>(() =>
@@ -73,7 +73,7 @@ namespace Examples.Issues
                 model.Add(typeof(ResourceNode<SomeType>), false).AddSubType(1, typeof(SomeType));
             }, ex => ex.Message.Contains("SomeType is not a valid sub-type of"));
         }
-        [Test]
+        [Fact]
         public void TestExplicitSetup()
         {
             var model = RuntimeTypeModel.Create();
@@ -101,8 +101,8 @@ namespace Examples.Issues
                 var clone1 = (ShipResource) model.DeepClone(obj1);
                 var clone2 = (SomeResource) model.DeepClone(obj2);
 
-                Assert.AreEqual(obj1.Value.Foo, clone1.Value.Foo, caption + ":Foo");
-                Assert.AreEqual(obj2.Value.Bar, clone2.Value.Bar, caption + ":Bar");
+                Assert.Equal(obj1.Value.Foo, clone1.Value.Foo); //, caption + ":Foo");
+                Assert.Equal(obj2.Value.Bar, clone2.Value.Bar); //, caption + ":Bar");
             } catch(Exception ex)
             {
                 throw new Exception(caption + ":" + ex.Message, ex);

@@ -15,6 +15,7 @@ namespace ProtoBuf.Meta
         [Obsolete("Please use AttributeType instead")]
         new public Type GetType() { return AttributeType; }
 #endif
+        public override string ToString() => AttributeType?.FullName ?? "";
         public abstract bool TryGet(string key, bool publicOnly, out object value);
         public bool TryGet(string key, out object value)
         {

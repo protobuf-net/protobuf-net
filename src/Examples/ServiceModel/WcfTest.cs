@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.ServiceModel;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.ServiceModel;
 
 namespace Examples.ServiceModel
@@ -83,7 +83,7 @@ namespace Examples.ServiceModel
     }
 
 
-    [TestFixture]
+    
     public class WcfTest
     {
         ServiceHost host;
@@ -121,57 +121,57 @@ namespace Examples.ServiceModel
         {
             return new WcfProxy<IMyService>();
         }
-        [Test]
+        [Fact]
         public void Ping()
         {
             using (var proxy = GetProxy())
             {
-                Assert.IsTrue(proxy.Service.Ping());
+                Assert.True(proxy.Service.Ping());
             }
         }
 
-        [Test]
+        [Fact]
         public void RoundTripTrivial()
         {
             using(var proxy = GetProxy())
             {
                 var data = proxy.Service.UsingProtoItem(new MyData {});
-                Assert.IsNotNull(data);
+                Assert.NotNull(data);
             }
         }
-        [Test]
+        [Fact]
         public void SimpleTypesRegular()
         {
             using (var proxy = GetProxy())
             {
-                Assert.AreEqual("27", proxy.Service.SimpleTypesRegular(27));
+                Assert.Equal("27", proxy.Service.SimpleTypesRegular(27));
             }
         }
 
-        [Test]
+        [Fact]
         public void SimpleTypesProto()
         {
             using (var proxy = GetProxy())
             {
-                Assert.AreEqual("27", proxy.Service.SimpleTypesProto(27));
+                Assert.Equal("27", proxy.Service.SimpleTypesProto(27));
             }
         }
 
-        [Test]
+        [Fact]
         public void WcfRegularNullToNull()
         {
             using (var proxy = GetProxy())
             {
-                Assert.IsNull(proxy.Service.RegularWcfItem(null));
+                Assert.Null(proxy.Service.RegularWcfItem(null));
             }
         }
 
-        [Test]
+        [Fact]
         public void WcfProtoNullToNull()
         {
             using (var proxy = GetProxy())
             {
-                Assert.IsNull(proxy.Service.UsingProtoItem(null));
+                Assert.Null(proxy.Service.UsingProtoItem(null));
             }
         }
 
@@ -191,24 +191,24 @@ namespace Examples.ServiceModel
         }
         static void CheckListResult(MyData[] arr)
         {
-            Assert.IsNotNull(arr, "Null");
-            Assert.AreEqual(5, arr.Length, "Length");
+            Assert.NotNull(arr, "Null");
+            Assert.Equal(5, arr.Length, "Length");
             for (int j = 0; j < arr.Length; j++)
             {
                 MyData item = arr[j];
-                Assert.IsNotNull(item, "Null: " + j.ToString());
-                Assert.IsNotNull(item.SubData, "SubData Null: " + j.ToString());
-                Assert.AreEqual(50, item.SubData.Count, "SubData Count: " + j.ToString());
+                Assert.NotNull(item, "Null: " + j.ToString());
+                Assert.NotNull(item.SubData, "SubData Null: " + j.ToString());
+                Assert.Equal(50, item.SubData.Count, "SubData Count: " + j.ToString());
                 for (int i = 0; i < item.SubData.Count; i++)
                 {
                     var subItem = item.SubData[i];
-                    Assert.IsNotNull(subItem, i.ToString());
-                    Assert.AreEqual(i, subItem.Number, "Number: " + i.ToString());
-                    Assert.AreEqual("item " + i.ToString(), subItem.Name, "Name: " + i.ToString());
+                    Assert.NotNull(subItem, i.ToString());
+                    Assert.Equal(i, subItem.Number, "Number: " + i.ToString());
+                    Assert.Equal("item " + i.ToString(), subItem.Name, "Name: " + i.ToString());
                 }
             }
         }
-        [Test]
+        [Fact]
         public void RegularWcfList()
         {
             using (var proxy = GetProxy())
@@ -217,7 +217,7 @@ namespace Examples.ServiceModel
                 CheckListResult(arr);
             }
         }
-        [Test]
+        [Fact]
         public void ProtoList()
         {
             using (var proxy = GetProxy())
@@ -227,31 +227,31 @@ namespace Examples.ServiceModel
             }
         }
 
-        [Test]
+        [Fact]
         public void ProtoListEmpty()
         {
             using (var proxy = GetProxy())
             {
                 var emptyList = new List<MyData>();
                 MyData[] arr = proxy.Service.UsingProtoList(emptyList);
-                Assert.IsNotNull(arr);
-                Assert.AreEqual(0, arr.Length);
+                Assert.NotNull(arr);
+                Assert.Equal(0, arr.Length);
             }
         }
 
-        [Test]
+        [Fact]
         public void ProtoItemEmpty()
         {
             using (var proxy = GetProxy())
             {
                 var emptyItem = new MyData();
                 MyData result = proxy.Service.UsingProtoItem(emptyItem);
-                Assert.IsNotNull(result);
-                Assert.AreEqual(0, result.SubData.Count);
+                Assert.NotNull(result);
+                Assert.Equal(0, result.SubData.Count);
             }
         }
 
-        [Test]
+        [Fact]
         public void RunWcfTest()
         {
             // generate some data:
@@ -277,22 +277,22 @@ namespace Examples.ServiceModel
                 watchRegular.Stop();
                 Console.WriteLine("WCF: Regular took: {0}", watchRegular.ElapsedMilliseconds);
 
-                Assert.AreEqual(data.SubData.Count, dataProto.SubData.Count, "Proto count");
-                Assert.AreEqual(data.SubData.Count, dataRegular.SubData.Count, "Regular count");
+                Assert.Equal(data.SubData.Count, dataProto.SubData.Count, "Proto count");
+                Assert.Equal(data.SubData.Count, dataRegular.SubData.Count, "Regular count");
                 for (int i = 0; i < data.SubData.Count; i++)
                 {
-                    Assert.AreEqual(data.SubData[i].Name, dataProto.SubData[i].Name, "Proto name");
-                    Assert.AreEqual(data.SubData[i].Number, dataProto.SubData[i].Number, "Proto number");
-                    Assert.AreEqual(data.SubData[i].Name, dataRegular.SubData[i].Name, "Regular name");
-                    Assert.AreEqual(data.SubData[i].Number, dataRegular.SubData[i].Number, "Regular number");
+                    Assert.Equal(data.SubData[i].Name, dataProto.SubData[i].Name, "Proto name");
+                    Assert.Equal(data.SubData[i].Number, dataProto.SubData[i].Number, "Proto number");
+                    Assert.Equal(data.SubData[i].Name, dataRegular.SubData[i].Name, "Regular name");
+                    Assert.Equal(data.SubData[i].Number, dataRegular.SubData[i].Number, "Regular number");
                 }
                 Console.WriteLine(string.Format("Validated: {0}", data.SubData.Count));
 
-                Assert.Less(watchProto.ElapsedMilliseconds, watchRegular.ElapsedMilliseconds, "Proto should be quicker");
+                Assert.True(watchProto.ElapsedMilliseconds < watchRegular.ElapsedMilliseconds); //, "Proto should be quicker");
             }
         }
 
-        [Test]
+        [Fact]
         public void TestComplexPermutations()
         {
             MyData trivial = new MyData(), nonTrivial = new MyData { SubData = { new MySubData { Number = 12345 } } };
@@ -304,19 +304,19 @@ namespace Examples.ServiceModel
                 int i = 0;
                 try
                 {
-                    Assert.AreEqual(0, proxy.Service.ComplexMethod(null, null, null, null));
+                    Assert.Equal(0, proxy.Service.ComplexMethod(null, null, null, null));
                     i++;
-                    Assert.AreEqual(10, proxy.Service.ComplexMethod(fourItems, nonTrivial, nonTrivial, fourItems));
+                    Assert.Equal(10, proxy.Service.ComplexMethod(fourItems, nonTrivial, nonTrivial, fourItems));
                     i++;
-                    Assert.AreEqual(2, proxy.Service.ComplexMethod(null, trivial, nonTrivial, null));
+                    Assert.Equal(2, proxy.Service.ComplexMethod(null, trivial, nonTrivial, null));
                     i++;
-                    Assert.AreEqual(1, proxy.Service.ComplexMethod(null, trivial, null, empty));
+                    Assert.Equal(1, proxy.Service.ComplexMethod(null, trivial, null, empty));
                     i++;
-                    Assert.AreEqual(5, proxy.Service.ComplexMethod(fourItems, trivial, null, empty));
+                    Assert.Equal(5, proxy.Service.ComplexMethod(fourItems, trivial, null, empty));
                     i++;
-                    Assert.AreEqual(9, proxy.Service.ComplexMethod(fourItems, trivial, null, fourItems));
+                    Assert.Equal(9, proxy.Service.ComplexMethod(fourItems, trivial, null, fourItems));
                     i++;
-                    Assert.AreEqual(8, proxy.Service.ComplexMethod(fourItems, null, null, fourItems));
+                    Assert.Equal(8, proxy.Service.ComplexMethod(fourItems, null, null, fourItems));
                 } catch
                 {
                     Debug.WriteLine(i);

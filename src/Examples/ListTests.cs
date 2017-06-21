@@ -1,9 +1,8 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using Examples.Ppt;
 using System.Collections.Generic;
 using ProtoBuf;
 using System.Linq;
-using NUnit.Framework.SyntaxHelpers;
 using System;
 using System.IO;
 using System.Collections;
@@ -64,10 +63,10 @@ namespace Examples
 
     class MyList : List<Entity> { }
 
-    [TestFixture]
+    
     public class ListTests
     {
-        [Test]
+        [Fact]
         public void ListOfByteArray()
         {
             var data = new List<byte[]> {
@@ -78,15 +77,15 @@ namespace Examples
             };
             var clone = Serializer.DeepClone(data);
 
-            Assert.AreNotSame(data, clone);
-            Assert.AreEqual(4, clone.Count);
-            Assert.IsTrue(data[0].SequenceEqual(clone[0]));
-            Assert.IsTrue(data[1].SequenceEqual(clone[1]));
-            Assert.IsTrue(data[2].SequenceEqual(clone[2]));
-            Assert.IsTrue(data[3].SequenceEqual(clone[3]));
+            Assert.NotSame(data, clone);
+            Assert.Equal(4, clone.Count);
+            Assert.True(data[0].SequenceEqual(clone[0]));
+            Assert.True(data[1].SequenceEqual(clone[1]));
+            Assert.True(data[2].SequenceEqual(clone[2]));
+            Assert.True(data[3].SequenceEqual(clone[3]));
         }
 
-        [Test]
+        [Fact]
         public void JaggedByteArray()
         {
             var data = new[] {
@@ -96,70 +95,70 @@ namespace Examples
             };
             var clone = Serializer.DeepClone(data);
 
-            Assert.AreNotSame(data, clone);
-            Assert.AreEqual(3, clone.Length);
-            Assert.IsTrue(data[0].SequenceEqual(clone[0]));
-            Assert.IsTrue(data[1].SequenceEqual(clone[1]));
-            Assert.IsTrue(data[2].SequenceEqual(clone[2]));
+            Assert.NotSame(data, clone);
+            Assert.Equal(3, clone.Length);
+            Assert.True(data[0].SequenceEqual(clone[0]));
+            Assert.True(data[1].SequenceEqual(clone[1]));
+            Assert.True(data[2].SequenceEqual(clone[2]));
         }
 
 
-        [Test]
+        [Fact]
         public void TestUnpackedIntListLayout()
         {
             EntityWithUnpackedInts item = new EntityWithUnpackedInts {
                 Items = {1,2,3,4,5,1000}
             };
-            Assert.IsTrue(Program.CheckBytes(item, 08, 01, 08, 02, 08, 03, 08, 04, 08, 05, 08, 0xE8, 07));
+            Assert.True(Program.CheckBytes(item, 08, 01, 08, 02, 08, 03, 08, 04, 08, 05, 08, 0xE8, 07));
 
             var clone = Serializer.DeepClone(item);
-            Assert.AreNotSame(item.Items, clone.Items);
-            Assert.IsTrue(item.Items.SequenceEqual(clone.Items));
+            Assert.NotSame(item.Items, clone.Items);
+            Assert.True(item.Items.SequenceEqual(clone.Items));
         }
 
-        [Test]
+        [Fact]
         public void TestUnpackedIntArrayLayout()
         {
             EntityWithUnpackedInts item = new EntityWithUnpackedInts
             {
                 ItemArray = new int[] { 1, 2, 3, 4, 5, 1000 }
             };
-            Assert.IsTrue(Program.CheckBytes(item, 0x18, 01, 0x18, 02, 0x18, 03, 0x18, 04, 0x18, 05, 0x18, 0xE8, 07));
+            Assert.True(Program.CheckBytes(item, 0x18, 01, 0x18, 02, 0x18, 03, 0x18, 04, 0x18, 05, 0x18, 0xE8, 07));
 
             var clone = Serializer.DeepClone(item);
-            Assert.AreNotSame(item.ItemArray, clone.ItemArray);
-            Assert.IsTrue(item.ItemArray.SequenceEqual(clone.ItemArray));
+            Assert.NotSame(item.ItemArray, clone.ItemArray);
+            Assert.True(item.ItemArray.SequenceEqual(clone.ItemArray));
         }
 
-        [Test]
+        [Fact]
         public void TestUnpackedIntCustomLayout()
         {
             EntityWithUnpackedInts item = new EntityWithUnpackedInts
             {
                 Custom = new CustomEnumerable { 1, 2, 3, 4, 5, 1000 }
             };
-            Assert.IsTrue(Program.CheckBytes(item, 0x20, 01, 0x20, 02, 0x20, 03, 0x20, 04, 0x20, 05, 0x20, 0xE8, 07));
+            Assert.True(Program.CheckBytes(item, 0x20, 01, 0x20, 02, 0x20, 03, 0x20, 04, 0x20, 05, 0x20, 0xE8, 07));
 
             var clone = Serializer.DeepClone(item);
-            Assert.AreNotSame(item.Custom, clone.Custom);
-            Assert.IsTrue(item.Custom.SequenceEqual(clone.Custom));
+            Assert.NotSame(item.Custom, clone.Custom);
+            Assert.True(item.Custom.SequenceEqual(clone.Custom));
         }
 
-        [Test]
+        [Fact]
         public void TestPackedIntListLayout()
         {
             EntityWithPackedInts item = new EntityWithPackedInts
             {
                 List = { 1, 2, 3, 4, 5, 1000}
             };
-            Assert.IsTrue(Program.CheckBytes(item, 0x0A, 07, 01, 02, 03, 04, 05, 0xE8, 07));
+            Assert.True(Program.CheckBytes(item, 0x0A, 07, 01, 02, 03, 04, 05, 0xE8, 07));
 
             var clone = Serializer.DeepClone(item);
-            Assert.AreNotSame(item.List, clone.List);
-            Assert.IsTrue(item.List.SequenceEqual(clone.List));
+            Assert.NotSame(item.List, clone.List);
+            Assert.True(item.List.SequenceEqual(clone.List));
         }
 
-        [Test]
+        [Fact]
         public void TestPackedIntArrayLayout()
         {
             EntityWithPackedInts item = new EntityWithPackedInts
@@ -167,14 +166,14 @@ namespace Examples
                 ItemArray = new int[] { 1, 2, 3, 4, 5, 1000 }
             };
             item.ClearList();
-            Assert.IsTrue(Program.CheckBytes(item, 0x1A, 07, 01, 02, 03, 04, 05, 0xE8, 07));
+            Assert.True(Program.CheckBytes(item, 0x1A, 07, 01, 02, 03, 04, 05, 0xE8, 07));
 
             var clone = Serializer.DeepClone(item);
-            Assert.AreNotSame(item.ItemArray, clone.ItemArray);
-            Assert.IsTrue(item.ItemArray.SequenceEqual(clone.ItemArray));
+            Assert.NotSame(item.ItemArray, clone.ItemArray);
+            Assert.True(item.ItemArray.SequenceEqual(clone.ItemArray));
         }
 
-        [Test]
+        [Fact]
         public void TestPackedIntCustomLayout()
         {
             EntityWithPackedInts item = new EntityWithPackedInts
@@ -182,15 +181,15 @@ namespace Examples
                 Custom = new CustomEnumerable { 1, 2, 3, 4, 5, 1000 }
             };
             item.ClearList();
-            Assert.IsTrue(Program.CheckBytes(item, 0x22, 07, 01, 02, 03, 04, 05, 0xE8, 07));
+            Assert.True(Program.CheckBytes(item, 0x22, 07, 01, 02, 03, 04, 05, 0xE8, 07));
 
             var clone = Serializer.DeepClone(item);
-            Assert.AreNotSame(item.Custom, clone.Custom);
-            Assert.IsTrue(item.Custom.SequenceEqual(clone.Custom));
+            Assert.NotSame(item.Custom, clone.Custom);
+            Assert.True(item.Custom.SequenceEqual(clone.Custom));
         }
 
 
-        [Test]
+        [Fact]
         public void SerializePackedDeserializeUnpacked()
         {
             EntityWithPackedInts item = new EntityWithPackedInts
@@ -198,11 +197,11 @@ namespace Examples
                 List = { 1, 2, 3, 4, 5, 1000 }
             };
             EntityWithUnpackedInts clone = Serializer.ChangeType<EntityWithPackedInts, EntityWithUnpackedInts>(item);
-            Assert.AreNotSame(item.List, clone.Items);
-            Assert.IsTrue(item.List.SequenceEqual(clone.Items));
+            Assert.NotSame(item.List, clone.Items);
+            Assert.True(item.List.SequenceEqual(clone.Items));
         }
 
-        [Test]
+        [Fact]
         public void SerializeUnpackedSerializePacked()
         {
             EntityWithUnpackedInts item = new EntityWithUnpackedInts
@@ -210,145 +209,145 @@ namespace Examples
                 Items = { 1, 2, 3, 4, 5, 1000 }
             };
             EntityWithPackedInts clone = Serializer.ChangeType<EntityWithUnpackedInts, EntityWithPackedInts>(item);
-            Assert.AreNotSame(item.Items, clone.List);
-            Assert.IsTrue(item.Items.SequenceEqual(clone.List));
+            Assert.NotSame(item.Items, clone.List);
+            Assert.True(item.Items.SequenceEqual(clone.List));
         }
 
-        [Test]
+        [Fact]
         public void UnpackedNullOrEmptyListDeserializesAsNull()
         {
             var item = new EntityWithUnpackedInts();
-            Assert.IsNull(item.ItemsNoDefault);
+            Assert.Null(item.ItemsNoDefault);
             var clone = Serializer.DeepClone(item);
-            Assert.IsNull(clone.ItemsNoDefault);
+            Assert.Null(clone.ItemsNoDefault);
 
             item.ItemsNoDefault = new List<int>();
             clone = Serializer.DeepClone(item);
-            Assert.IsNull(clone.ItemsNoDefault);
+            Assert.Null(clone.ItemsNoDefault);
 
             item.ItemsNoDefault.Add(123);
             clone = Serializer.DeepClone(item);
-            Assert.IsNotNull(clone.ItemsNoDefault);
-            Assert.AreEqual(1, clone.ItemsNoDefault.Count);
-            Assert.AreEqual(123, clone.ItemsNoDefault[0]);
+            Assert.NotNull(clone.ItemsNoDefault);
+            Assert.Equal(1, clone.ItemsNoDefault.Count);
+            Assert.Equal(123, clone.ItemsNoDefault[0]);
         }
 
-        [Test]
+        [Fact]
         public void PackedEmptyListDeserializesAsEmpty()
         {
             var item = new EntityWithPackedInts();
-            Assert.IsNull(item.ListNoDefault);
+            Assert.Null(item.ListNoDefault);
             var clone = Serializer.DeepClone(item);
-            Assert.IsNull(clone.ListNoDefault);
+            Assert.Null(clone.ListNoDefault);
            
             item.ListNoDefault = new List<int>();
             clone = Serializer.DeepClone(item);
-            Assert.IsNotNull(clone.ListNoDefault);
-            Assert.AreEqual(0, clone.ListNoDefault.Count);
+            Assert.NotNull(clone.ListNoDefault);
+            Assert.Equal(0, clone.ListNoDefault.Count);
            
             item.ListNoDefault.Add(123);
             clone = Serializer.DeepClone(item);
-            Assert.IsNotNull(clone.ListNoDefault);
-            Assert.AreEqual(1, clone.ListNoDefault.Count);
-            Assert.AreEqual(123, clone.ListNoDefault[0]);
+            Assert.NotNull(clone.ListNoDefault);
+            Assert.Equal(1, clone.ListNoDefault.Count);
+            Assert.Equal(123, clone.ListNoDefault[0]);
         }
 
-        [Test]
+        [Fact]
         public void UnpackedNullOrEmptyArrayDeserializesAsNull()
         {
             var item = new EntityWithUnpackedInts();
-            Assert.IsNull(item.ItemArray);
+            Assert.Null(item.ItemArray);
             var clone = Serializer.DeepClone(item);
-            Assert.IsNull(clone.ItemArray);
+            Assert.Null(clone.ItemArray);
 
             item.ItemArray = new int[0];
             clone = Serializer.DeepClone(item);
-            Assert.IsNull(clone.ItemArray);
+            Assert.Null(clone.ItemArray);
 
             item.ItemArray = new int[1] { 123 };
             clone = Serializer.DeepClone(item);
-            Assert.IsNotNull(clone.ItemArray);
-            Assert.AreEqual(1, clone.ItemArray.Length);
-            Assert.AreEqual(123, clone.ItemArray[0]);
+            Assert.NotNull(clone.ItemArray);
+            Assert.Equal(1, clone.ItemArray.Length);
+            Assert.Equal(123, clone.ItemArray[0]);
 
             
         }
 
 
-        [Test]
+        [Fact]
         public void PackedEmptyArrayDeserializesAsEmpty()
         {
             var item = new EntityWithPackedInts();
-            Assert.IsNull(item.ItemArray);
+            Assert.Null(item.ItemArray);
             var clone = Serializer.DeepClone(item);
-            Assert.IsNull(clone.ItemArray);
+            Assert.Null(clone.ItemArray);
 
             item.ItemArray = new int[0];
             clone = Serializer.DeepClone(item);
-            Assert.IsNotNull(clone.ItemArray);
-            Assert.AreEqual(0, clone.ItemArray.Length);
+            Assert.NotNull(clone.ItemArray);
+            Assert.Equal(0, clone.ItemArray.Length);
 
             item.ItemArray = new int[1] { 123 };
             clone = Serializer.DeepClone(item);
-            Assert.IsNotNull(clone.ItemArray);
-            Assert.AreEqual(1, clone.ItemArray.Length);
-            Assert.AreEqual(123, clone.ItemArray[0]);
+            Assert.NotNull(clone.ItemArray);
+            Assert.Equal(1, clone.ItemArray.Length);
+            Assert.Equal(123, clone.ItemArray[0]);
         }
 
-        [Test]
+        [Fact]
         public void UnpackedNullOrEmptyCustomDeserializesAsNull()
         {
             var item = new EntityWithUnpackedInts();
-            Assert.IsNull(item.Custom);
+            Assert.Null(item.Custom);
             var clone = Serializer.DeepClone(item);
-            Assert.IsNull(clone.Custom);
+            Assert.Null(clone.Custom);
 
             item.Custom = new CustomEnumerable();
             clone = Serializer.DeepClone(item);
-            Assert.IsNull(clone.Custom);
+            Assert.Null(clone.Custom);
 
             item.Custom.Add(123);
             clone = Serializer.DeepClone(item);
-            Assert.IsNotNull(clone.Custom);
-            Assert.AreEqual(123, item.Custom.Single());
+            Assert.NotNull(clone.Custom);
+            Assert.Equal(123, item.Custom.Single());
         }
 
-        [Test]
+        [Fact]
         public void PackedEmptyCustomDeserializesAsEmpty()
         {
             var item = new EntityWithPackedInts();
-            Assert.IsNull(item.Custom);
+            Assert.Null(item.Custom);
             var clone = Serializer.DeepClone(item);
-            Assert.IsNull(clone.Custom);
+            Assert.Null(clone.Custom);
 
             item.Custom = new CustomEnumerable();
             clone = Serializer.DeepClone(item);
-            Assert.IsNotNull(clone.Custom);
-            Assert.AreEqual(0, clone.Custom.Count());
+            Assert.NotNull(clone.Custom);
+            Assert.Equal(0, clone.Custom.Count());
 
             item.Custom.Add(123);
             clone = Serializer.DeepClone(item);
-            Assert.IsNotNull(clone.Custom);
-            Assert.AreEqual(123, item.Custom.Single());
+            Assert.NotNull(clone.Custom);
+            Assert.Equal(123, item.Custom.Single());
         }
 
-        [Test]
+        [Fact]
         public void TestEmtpyBasicListOfEntity()
         {
             var foos = new List<Entity>();
             var clone = Serializer.DeepClone(foos);
-            Assert.IsNotNull(clone);
+            Assert.NotNull(clone);
         }
 
-        [Test]
+        [Fact]
         public void TestEmptyMyListOfEntity()
         {
             var foos = new MyList();
             var clone = Serializer.DeepClone(foos);
-            Assert.IsNotNull(clone);
+            Assert.NotNull(clone);
         }
 
-        [Test]
+        [Fact]
         public void TestNonEmtpyBasicListOfEntity()
         {
             var foos = new List<Entity>
@@ -357,15 +356,15 @@ namespace Examples
                 new Entity { Foo = "def"},
             };
             var clone = Serializer.DeepClone(foos);
-            Assert.IsNotNull(clone);
-            Assert.AreNotSame(foos, clone);
-            Assert.AreEqual(foos.GetType(), clone.GetType());
-            Assert.AreEqual(2, clone.Count);
-            Assert.AreEqual(foos[0].Foo, clone[0].Foo);
-            Assert.AreEqual(foos[1].Foo, clone[1].Foo);
+            Assert.NotNull(clone);
+            Assert.NotSame(foos, clone);
+            Assert.Equal(foos.GetType(), clone.GetType());
+            Assert.Equal(2, clone.Count);
+            Assert.Equal(foos[0].Foo, clone[0].Foo);
+            Assert.Equal(foos[1].Foo, clone[1].Foo);
         }
 
-        [Test]
+        [Fact]
         public void TestNonEmptyMyListOfEntity()
         {
             var foos = new MyList() 
@@ -374,15 +373,15 @@ namespace Examples
                 new Entity { Foo = "def"},
             };
             var clone = Serializer.DeepClone(foos);
-            Assert.IsNotNull(clone);
-            Assert.AreNotSame(foos, clone);
-            Assert.AreEqual(foos.GetType(), clone.GetType());
-            Assert.AreEqual(2, clone.Count);
-            Assert.AreEqual(foos[0].Foo, clone[0].Foo);
-            Assert.AreEqual(foos[1].Foo, clone[1].Foo);
+            Assert.NotNull(clone);
+            Assert.NotSame(foos, clone);
+            Assert.Equal(foos.GetType(), clone.GetType());
+            Assert.Equal(2, clone.Count);
+            Assert.Equal(foos[0].Foo, clone[0].Foo);
+            Assert.Equal(foos[1].Foo, clone[1].Foo);
         }
 
-        [Test]
+        [Fact]
         public void TestCompositeDictionary()
         {
             DictionaryTestEntity obj = new DictionaryTestEntity
@@ -396,13 +395,13 @@ namespace Examples
                 }
             }, clone = Serializer.DeepClone(obj);
 
-            Assert.IsNotNull(clone);
-            Assert.AreNotSame(clone, obj);
-            Assert.AreEqual("bar", clone.Foo);
-            Assert.AreEqual(3, clone.Stuff.Count);
-            Assert.AreEqual(123, clone.Stuff["abc"].Value);
-            Assert.AreEqual(DateTime.Today, clone.Stuff["def"].Value);
-            Assert.AreEqual("hello world", clone.Stuff["ghi"].Value);
+            Assert.NotNull(clone);
+            Assert.NotSame(clone, obj);
+            Assert.Equal("bar", clone.Foo);
+            Assert.Equal(3, clone.Stuff.Count);
+            Assert.Equal(123, clone.Stuff["abc"].Value);
+            Assert.Equal(DateTime.Today, clone.Stuff["def"].Value);
+            Assert.Equal("hello world", clone.Stuff["ghi"].Value);
         }
 
         [ProtoContract]
@@ -455,13 +454,13 @@ namespace Examples
             }
         }
 
-        [Test]
+        [Fact]
         public void TestListBytes()
         {
             List<Test3> list = new List<Test3> { new Test3 { C = new Test1 { A= 150} } };
-            Assert.IsTrue(Program.CheckBytes(list, 0x0A, 0x05, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.True(Program.CheckBytes(list, 0x0A, 0x05, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
-        [Test]
+        [Fact]
         public void TestListContents()
         {
             List<Test3> list = new List<Test3>
@@ -492,14 +491,14 @@ namespace Examples
             public void Add(Test3 item) { items.Add(item); }
         }
 
-        [Test]
+        [Fact]
         public void TestEnumerableBytes()
         {
             Test3Enumerable list = new Test3Enumerable { new Test3 { C = new Test1 { A = 150 } } };
-            Assert.IsTrue(Program.CheckBytes(list, 0x0A, 0x05, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.True(Program.CheckBytes(list, 0x0A, 0x05, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
-        [Test]
+        [Fact]
         public void TestEnumerableContents()
         {
             Test3Enumerable items = new Test3Enumerable
@@ -513,14 +512,14 @@ namespace Examples
             CheckLists(items, clone);
         }
 
-        [Test]
+        [Fact]
         public void TestArrayBytes()
         {
             Test3[] list = new Test3[] { new Test3 { C = new Test1 { A = 150 } } };
-            Assert.IsTrue(Program.CheckBytes(list, 0x0A, 0x05, 0x1a, 0x03, 0x08, 0x96, 0x01));
+            Assert.True(Program.CheckBytes(list, 0x0A, 0x05, 0x1a, 0x03, 0x08, 0x96, 0x01));
         }
 
-        [Test]
+        [Fact]
         public void TestArrayContents()
         {
             Test3[] arr = new Test3[]
@@ -534,7 +533,7 @@ namespace Examples
             CheckLists(arr, clone);
         }
 
-        [Test]
+        [Fact]
         public void TestPackedArrayString()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -548,7 +547,7 @@ namespace Examples
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
             public string[] Items { get; set; }
         }
-        [Test]
+        [Fact]
         public void TestPackedListDateTime()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -562,7 +561,7 @@ namespace Examples
             [ProtoMember(1, Options = MemberSerializationOptions.Packed)]
             public List<DateTime> Items { get; set; }
         }
-        [Test]
+        [Fact]
         public void TestPackedCustomOfSubMessage()
         {
             Program.ExpectFailure<InvalidOperationException>(() => { 
@@ -605,30 +604,30 @@ namespace Examples
         }
         static void CheckLists(IEnumerable<Test3> original, IEnumerable<Test3> clone)
         {
-            Assert.IsTrue(original.SequenceEqual(clone,new Test3Comparer()));
+            Assert.True(original.SequenceEqual(clone,new Test3Comparer()));
         }
 
-        [Test]
+        [Fact]
         public void CheckNakedLinkedListCanRoundtrip()
         {
             var list = new LinkedList<BasicItem>();
             list.AddLast(new BasicItem{Value="abc"});
             list.AddLast(new BasicItem{Value="def"});
             var clone = Serializer.DeepClone(list);
-            Assert.AreEqual(2, clone.Count);
-            Assert.AreEqual("abc", clone.First.Value.Value);
-            Assert.AreEqual("def", clone.Last.Value.Value);
+            Assert.Equal(2, clone.Count);
+            Assert.Equal("abc", clone.First.Value.Value);
+            Assert.Equal("def", clone.Last.Value.Value);
         }
-        [Test]
+        [Fact]
         public void CheckWrappedLinkedListCanRoundtrip()
         {
             var wrapper = new WithLinkedList();
             wrapper.Items.AddLast(new BasicItem { Value = "abc" });
             wrapper.Items.AddLast(new BasicItem { Value = "def" });
             var clone = Serializer.DeepClone(wrapper);
-            Assert.AreEqual(2, clone.Items.Count);
-            Assert.AreEqual("abc", clone.Items.First.Value.Value);
-            Assert.AreEqual("def", clone.Items.Last.Value.Value);
+            Assert.Equal(2, clone.Items.Count);
+            Assert.Equal("abc", clone.Items.First.Value.Value);
+            Assert.Equal("def", clone.Items.Last.Value.Value);
         }
         [ProtoContract]
         class BasicItem

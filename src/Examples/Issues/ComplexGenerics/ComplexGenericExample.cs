@@ -7,35 +7,35 @@ namespace Examples.Issues.ComplexGenerics
 
     using ProtoBuf;
     using System.Data;
-    using NUnit.Framework;
+    using Xunit;
     using System;
     using System.ComponentModel;
     using System.IO;
 
-    [TestFixture]
+    
     public class ComplexGenericTest
     {
-        [Test]
+        [Fact]
         public void TestX()
         {
             Query query = new X { Result = "abc" };
-            Assert.AreEqual(typeof(string), query.GetQueryType());
+            Assert.Equal(typeof(string), query.GetQueryType());
             Query clone = Serializer.DeepClone<Query>(query);
-            Assert.IsNotNull(clone);
-            Assert.AreNotSame(clone, query);
-            Assert.IsInstanceOfType(query.GetType(), clone);
-            Assert.AreEqual(((X)query).Result, ((X)clone).Result);
+            Assert.NotNull(clone);
+            Assert.NotSame(clone, query);
+            Assert.IsType(query.GetType(), clone);
+            Assert.Equal(((X)query).Result, ((X)clone).Result);
         }
-        [Test]
+        [Fact]
         public void TestY()
         {
             Query query = new Y { Result = 1234};
-            Assert.AreEqual(typeof(int), query.GetQueryType());
+            Assert.Equal(typeof(int), query.GetQueryType());
             Query clone = Serializer.DeepClone<Query>(query);
-            Assert.IsNotNull(clone);
-            Assert.AreNotSame(clone, query);
-            Assert.IsInstanceOfType(query.GetType(), clone);
-            Assert.AreEqual(((Y)query).Result, ((Y)clone).Result);
+            Assert.NotNull(clone);
+            Assert.NotSame(clone, query);
+            Assert.IsType(query.GetType(), clone);
+            Assert.Equal(((Y)query).Result, ((Y)clone).Result);
         }
         
     }

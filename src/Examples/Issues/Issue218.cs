@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue218
     {
         [ProtoContract]
@@ -20,7 +20,7 @@ namespace Examples.Issues
             [ProtoMember(2)]
             public string Title { get; set; }
         }
-        [Test]
+        [Fact]
         public void Execute()
         {
 
@@ -29,20 +29,20 @@ namespace Examples.Issues
             var obj = new Test() {Title = "MyTitle", BackgroundImageToUpload = new byte[0]};
 
             var clone = (Test)typeModel.DeepClone(obj);
-            Assert.IsNotNull(clone.BackgroundImageToUpload, "Runtime");
-            Assert.AreEqual(0, clone.BackgroundImageToUpload.Length, "Runtime");
-            Assert.AreEqual("MyTitle", clone.Title, "Runtime");
+            Assert.NotNull(clone.BackgroundImageToUpload); //, "Runtime");
+            Assert.Equal(0, clone.BackgroundImageToUpload.Length); //, "Runtime");
+            Assert.Equal("MyTitle", clone.Title); //, "Runtime");
 
             typeModel.CompileInPlace();
             clone = (Test)typeModel.DeepClone(obj);
-            Assert.IsNotNull(clone.BackgroundImageToUpload, "CompileInPlace");
-            Assert.AreEqual(0, clone.BackgroundImageToUpload.Length, "CompileInPlace");
-            Assert.AreEqual("MyTitle", clone.Title, "CompileInPlace");
+            Assert.NotNull(clone.BackgroundImageToUpload); //, "CompileInPlace");
+            Assert.Equal(0, clone.BackgroundImageToUpload.Length); //, "CompileInPlace");
+            Assert.Equal("MyTitle", clone.Title); //, "CompileInPlace");
 
             clone = (Test)typeModel.Compile().DeepClone(obj);
-            Assert.IsNotNull(clone.BackgroundImageToUpload, "Compile");
-            Assert.AreEqual(0, clone.BackgroundImageToUpload.Length, "Compile");
-            Assert.AreEqual("MyTitle", clone.Title, "Compile");
+            Assert.NotNull(clone.BackgroundImageToUpload); //, "Compile");
+            Assert.Equal(0, clone.BackgroundImageToUpload.Length); //, "Compile");
+            Assert.Equal("MyTitle", clone.Title); //, "Compile");
 
         }
     }

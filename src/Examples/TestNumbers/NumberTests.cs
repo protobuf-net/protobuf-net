@@ -2,7 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.TestNumbers
@@ -76,114 +76,114 @@ namespace Examples.TestNumbers
     }
 
 
-    [TestFixture]
+    
     public class SignTests
     {
-        [Test]
+        [Fact]
         public void RoundTripBigPosativeZigZagInt64()
         {
             ZigZagInt64 obj = new ZigZagInt64 { Foo = 123456789 },
                 clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(obj.Foo, clone.Foo);
+            Assert.Equal(obj.Foo, clone.Foo);
         }
 
-        [Test]
+        [Fact]
         public void RoundTripBigPosativeZigZagInt64ForDateTime()
         {
             // this test to simulate a typical DateTime value
             ZigZagInt64 obj = new ZigZagInt64 { Foo = 1216669168515 },
                 clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(obj.Foo, clone.Foo);
+            Assert.Equal(obj.Foo, clone.Foo);
         }
         
-        [Test]
+        [Fact]
         public void RoundTripBigNegativeZigZagInt64() {
             ZigZagInt64 obj = new ZigZagInt64 { Foo = -123456789 },
                 clone = Serializer.DeepClone(obj);
             clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(obj.Foo, clone.Foo);
+            Assert.Equal(obj.Foo, clone.Foo);
         }
 
-        [Test]
+        [Fact]
         public void TestSignTwosComplementInt32_0()
         {
-            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 0 }, 0x08, 0x00), "0");
+            Assert.True(Program.CheckBytes(new TwosComplementInt32 { Foo = 0 }, 0x08, 0x00), "0");
         }
-        [Test]
+        [Fact]
         public void TestSignTwosComplementInt32_Default()
         {
-            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 123456 }), "123456");
+            Assert.True(Program.CheckBytes(new TwosComplementInt32 { Foo = 123456 }), "123456");
         }
-        [Test]
+        [Fact]
         public void TestSignTwosComplementInt32_1()
         {
-            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 1 }, 0x08, 0x01), "+1");
+            Assert.True(Program.CheckBytes(new TwosComplementInt32 { Foo = 1 }, 0x08, 0x01), "+1");
         }
-        [Test]
+        [Fact]
         public void TestSignTwosComplementInt32_2()
         {
-            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = 2 }, 0x08, 0x02), "+2");
+            Assert.True(Program.CheckBytes(new TwosComplementInt32 { Foo = 2 }, 0x08, 0x02), "+2");
         }
-        [Test]
+        [Fact]
         public void TestSignTwosComplementInt32_m1()
         {
-            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-1");
+            Assert.True(Program.CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-1");
         }
-        [Test]
+        [Fact]
         public void TestSignTwosComplementInt32_m2()
         {
-            Assert.IsTrue(Program.CheckBytes(new TwosComplementInt32 { Foo = -2 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-2");
+            Assert.True(Program.CheckBytes(new TwosComplementInt32 { Foo = -2 }, 0x08, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-2");
         }
-        [Test]
+        [Fact]
         public void TestSignZigZagInt32_0()
         {
-            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 0 }, 0x08, 0x00), "0");
+            Assert.True(Program.CheckBytes(new ZigZagInt32 { Foo = 0 }, 0x08, 0x00), "0");
         }
-        [Test]
+        [Fact]
         public void TestSignZigZagInt32_Default()
         {
-            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 123456 }), "123456");
+            Assert.True(Program.CheckBytes(new ZigZagInt32 { Foo = 123456 }), "123456");
         }
-        [Test]
+        [Fact]
         public void TestSignZigZagInt32_1()
         {
-            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 1 }, 0x08, 0x02), "+1");
+            Assert.True(Program.CheckBytes(new ZigZagInt32 { Foo = 1 }, 0x08, 0x02), "+1");
         }
-        [Test]
+        [Fact]
         public void TestSignZigZagInt32_2()
         {
-            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = 2 }, 0x08, 0x04), "+2");
+            Assert.True(Program.CheckBytes(new ZigZagInt32 { Foo = 2 }, 0x08, 0x04), "+2");
         }
-        [Test]
+        [Fact]
         public void TestSignZigZagInt32_m1()
         {
-            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = -1 }, 0x08, 0x01), "-1");
+            Assert.True(Program.CheckBytes(new ZigZagInt32 { Foo = -1 }, 0x08, 0x01), "-1");
         }
-        [Test]
+        [Fact]
         public void TestSignZigZagInt32_m2()
         {
-            Assert.IsTrue(Program.CheckBytes(new ZigZagInt32 { Foo = -2 }, 0x08, 0x03), "-2");
+            Assert.True(Program.CheckBytes(new ZigZagInt32 { Foo = -2 }, 0x08, 0x03), "-2");
         }        
-        [Test]
+        [Fact]
         public void TestSignZigZagInt32_2147483647()
         {
             // encoding doc gives numbers in terms of uint equivalent
             ZigZagInt32 zz = new ZigZagInt32 { Foo = 2147483647 }, clone = Serializer.DeepClone(zz);
-            Assert.AreEqual(zz.Foo, clone.Foo, "Roundtrip");
+            Assert.Equal(zz.Foo, clone.Foo); //, "Roundtrip");
             TwosComplementUInt32 tc = Serializer.ChangeType<ZigZagInt32, TwosComplementUInt32>(zz);
-            Assert.AreEqual(4294967294, tc.Foo);
+            Assert.Equal(4294967294, tc.Foo);
         }
-        [Test]
+        [Fact]
         public void TestSignZigZagInt32_m2147483648()
         {
             // encoding doc gives numbers in terms of uint equivalent
             ZigZagInt32 zz = new ZigZagInt32 { Foo = -2147483648 }, clone = Serializer.DeepClone(zz);
-            Assert.AreEqual(zz.Foo, clone.Foo, "Roundtrip");
+            Assert.Equal(zz.Foo, clone.Foo); //, "Roundtrip");
             TwosComplementUInt32 tc = Serializer.ChangeType<ZigZagInt32, TwosComplementUInt32>(zz);
-            Assert.AreEqual(4294967295, tc.Foo);
+            Assert.Equal(4294967295, tc.Foo);
         }
 
-        [Test]
+        [Fact]
         public void TestEOF()
         {
             Program.ExpectFailure<EndOfStreamException>(() =>
@@ -192,7 +192,7 @@ namespace Examples.TestNumbers
             });
         }
 
-        [Test]
+        [Fact]
         public void TestOverflow()
         {
             Program.ExpectFailure<OverflowException>(() =>
@@ -201,7 +201,7 @@ namespace Examples.TestNumbers
             });
         }
 
-        [Test]
+        [Fact]
         public void SweepBitsInt32()
         {
             NumRig rig = new NumRig();
@@ -221,53 +221,47 @@ namespace Examples.TestNumbers
                         = val;
 
                     NumRig clone = Serializer.DeepClone(rig);
-                    Assert.AreEqual(val, rig.Int32Default);
-                    Assert.AreEqual(val, rig.Int32FixedSize);
-                    Assert.AreEqual(val, rig.Int32TwosComplement);
-                    Assert.AreEqual(val, rig.Int32ZigZag);
-                    Assert.AreEqual(SUCCESS, rig.Foo);
+                    Assert.Equal(val, rig.Int32Default);
+                    Assert.Equal(val, rig.Int32FixedSize);
+                    Assert.Equal(val, rig.Int32TwosComplement);
+                    Assert.Equal(val, rig.Int32ZigZag);
+                    Assert.Equal(SUCCESS, rig.Foo);
                 }
             }
         }
 
-        [Test]
+        [Fact]
         public void SweepBitsInt64KnownTricky()
         {
-            try
-            {
-                int i = 31, j = 31;
-                long bigBit = i == 0 ? 0 : (1 << i - 1);
-                long smallBit = 1 << j;
-                long val = bigBit | smallBit;
-                NumRig rig = new NumRig();
-                rig.Int64Default // 9 => 72
-                    = rig.Int64FixedSize // 12 => 97?
-                    = rig.Int64TwosComplement // 11 => 88
-                    = rig.Int64ZigZag // 10 => 80
-                    = val;
-                const string SUCCESS = "bar";
-                rig.Foo = SUCCESS; // to help test stream ending prematurely
+            
+            int i = 31, j = 31;
+            long bigBit = i == 0 ? 0 : (1 << i - 1);
+            long smallBit = 1 << j;
+            long val = bigBit | smallBit;
+            NumRig rig = new NumRig();
+            rig.Int64Default // 9 => 72
+                = rig.Int64FixedSize // 12 => 97?
+                = rig.Int64TwosComplement // 11 => 88
+                = rig.Int64ZigZag // 10 => 80
+                = val;
+            const string SUCCESS = "bar";
+            rig.Foo = SUCCESS; // to help test stream ending prematurely
 
-                MemoryStream ms = new MemoryStream();
-                Serializer.Serialize(ms, rig);
-                byte[] raw = ms.ToArray();
-                ms.Position = 0;
-                NumRig clone = Serializer.Deserialize<NumRig>(ms);
+            MemoryStream ms = new MemoryStream();
+            Serializer.Serialize(ms, rig);
+            byte[] raw = ms.ToArray();
+            ms.Position = 0;
+            NumRig clone = Serializer.Deserialize<NumRig>(ms);
 
-                Assert.AreEqual(val, clone.Int64Default, "Default");
-                Assert.AreEqual(val, clone.Int64FixedSize, "FixedSize");
-                Assert.AreEqual(val, clone.Int64ZigZag, "ZigZag");
-                Assert.AreEqual(val, clone.Int64TwosComplement, "TwosComplement");
-                Assert.AreEqual(SUCCESS, clone.Foo, "EOF check");
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.StackTrace);
-                Assert.Fail(ex.Message);
-            }
+            Assert.Equal(val, clone.Int64Default); //, "Default");
+            Assert.Equal(val, clone.Int64FixedSize); //, "FixedSize");
+            Assert.Equal(val, clone.Int64ZigZag); //, "ZigZag");
+            Assert.Equal(val, clone.Int64TwosComplement); //, "TwosComplement");
+            Assert.Equal(SUCCESS, clone.Foo); //, "EOF check");
+            
         }
 
-        [Test]
+        [Fact]
         public void SweepBitsInt64()
         {
             NumRig rig = new NumRig();
@@ -287,11 +281,11 @@ namespace Examples.TestNumbers
                         = val;
 
                     NumRig clone = Serializer.DeepClone(rig);
-                    Assert.AreEqual(val, clone.Int64Default, "Default");
-                    Assert.AreEqual(val, clone.Int64FixedSize, "FixedSize");
-                    Assert.AreEqual(val, clone.Int64ZigZag, "ZigZag");
-                    Assert.AreEqual(val, clone.Int64TwosComplement, "TwosComplement");
-                    Assert.AreEqual(SUCCESS, clone.Foo, "EOF check: " + val.ToString());
+                    Assert.Equal(val, clone.Int64Default); //, "Default");
+                    Assert.Equal(val, clone.Int64FixedSize); //, "FixedSize");
+                    Assert.Equal(val, clone.Int64ZigZag); //, "ZigZag");
+                    Assert.Equal(val, clone.Int64TwosComplement); //, "TwosComplement");
+                    Assert.Equal(SUCCESS, clone.Foo); //, "EOF check: " + val.ToString());
                 }
             }
         }

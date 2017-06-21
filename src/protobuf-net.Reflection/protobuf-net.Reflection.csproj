@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <VersionPrefix>$(ProtoGenVersion)</VersionPrefix>
+    <AssemblyName>protobuf-net.Reflection</AssemblyName>
+    <Title>protobuf-net.Reflection</Title>
+    <Description>ProtoBuf DSL (proto2 / proto3) and descriptor tools for protobuf-net</Description>
+    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Configurations>Debug;Release;VS</Configurations>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'VS'">
+    <!--
+    <TargetFrameworks>net40;netstandard1.3;net20;net35</TargetFrameworks>
+    -->
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <None Include="CodeGenerator.OneOfStub.cs" />
+  </ItemGroup>
+</Project>

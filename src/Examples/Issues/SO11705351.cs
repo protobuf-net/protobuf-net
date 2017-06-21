@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.IO;
 using ProtoBuf;
 using ProtoBuf.Meta;
-using NUnit.Framework;
+using Xunit;
 
 namespace Examples.Issues
 {
     // note that some additional changes were needed beyond what is shown on SO
     // in order to fully test standalone compilation / PEVerify; mainly due to
     // public readonly fields, which protobuf-net will still try and mutate
-    [TestFixture] 
+     
     public class SO11705351
     {
         [ProtoContract]
@@ -88,7 +88,7 @@ namespace Examples.Issues
             assemblage.Parts.Add(part);
             return assemblage;
         }
-        [Test]
+        [Fact]
         public void Execute()
         {
             var model = GetModel();
@@ -101,33 +101,28 @@ namespace Examples.Issues
         }
         private static void Execute(TypeModel model, string caption)
         {
-            try
+            
+            using (var stream = new MemoryStream())
             {
-                using (var stream = new MemoryStream())
                 {
-                    {
-                        var assemblage = GetData();
-                        model.Serialize(stream, assemblage);
-                    }
-
-                    stream.Position = 0;
-
-                    var obj = (Assemblage) model.Deserialize(stream, null, typeof (Assemblage));
-                    {
-                        var assemblage = obj;
-                        var whole = assemblage.Parts[0].Whole;
-
-                        Assert.AreSame(assemblage.Parts[0].Whole, whole.Parts[0].Whole, "Whole:" + caption);
-                        Assert.AreSame(assemblage.Parts[0], whole.Parts[0], "Part:" + caption);
-                    }
+                    var assemblage = GetData();
+                    model.Serialize(stream, assemblage);
                 }
-            } catch(Exception ex)
-            {
-                Assert.Fail(ex.Message + ":" + caption);
+
+                stream.Position = 0;
+
+                var obj = (Assemblage) model.Deserialize(stream, null, typeof (Assemblage));
+                {
+                    var assemblage = obj;
+                    var whole = assemblage.Parts[0].Whole;
+
+                    Assert.Same(assemblage.Parts[0].Whole, whole.Parts[0].Whole); //, "Whole:" + caption);
+                    Assert.Same(assemblage.Parts[0], whole.Parts[0]); //, "Part:" + caption);
+                }
             }
         }
 
-        [Test]
+        [Fact]
         public void CheckSchema()
         {
             var model = GetModel();
@@ -135,18 +130,20 @@ namespace Examples.Issues
 
             string schema = model.GetSchema(null);
 
-            Assert.AreEqual(@"package Examples.Issues;
-import ""bcl.proto""; // schema for protobuf-net's handling of core .NET types
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
+import ""protobuf-net/bcl.proto""; // schema for protobuf-net's handling of core .NET types
+import ""protobuf-net/protogen.proto""; // custom protobuf-net options
 
 message Assemblage {
    optional PartCollectionSurrogate Parts = 1;
 }
 message Part {
-   optional bcl.NetObjectProxy Whole = 1; // reference-tracked Whole
+   optional .bcl.NetObjectProxy Whole = 1 [(.protobuf_net.fieldopt).asRef = true]; // reference-tracked Whole
 }
 message PartCollectionSurrogate {
-   repeated bcl.NetObjectProxy Collection = 1; // reference-tracked Part
-   optional bcl.NetObjectProxy Whole = 2; // reference-tracked Whole
+   repeated .bcl.NetObjectProxy Collection = 1 [(.protobuf_net.fieldopt).asRef = true]; // reference-tracked Part
+   optional .bcl.NetObjectProxy Whole = 2 [(.protobuf_net.fieldopt).asRef = true]; // reference-tracked Whole
 }
 message Whole {
    optional PartCollectionSurrogate Parts = 1;

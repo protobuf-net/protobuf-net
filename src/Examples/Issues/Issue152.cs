@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue152
     {
-        [Test]
+        [Fact]
         public void ExecuteWithOverwrite()
         {
             var a1 = new IntArray { Arr = new int[] { 5, 6, 7 }, List = new List<int> { 8, 9, 10 } };
@@ -32,7 +32,7 @@ namespace Examples.Issues
             AssertSequence(clone.List, "Compile:List", 8, 9, 10);
         }
 
-        [Test]
+        [Fact]
         public void ExecuteWithAppend()
         {
             var a1 = new IntArray { Arr = new int[] { 5, 6, 7 }, List = new List<int> { 8, 9, 10 } };
@@ -58,11 +58,11 @@ namespace Examples.Issues
 
         static void AssertSequence(IList<int> sequence, string caption, params int[] expected)
         {
-            Assert.IsNotNull(sequence, caption + ":null sequence");
-            Assert.AreEqual(expected.Length, sequence.Count, caption + " count");
-            for(int i = 0 ; i < expected.Length ; i++)
+            Assert.NotNull(sequence); //, caption + ":null sequence");
+            Assert.Equal(expected.Length, sequence.Count); //, caption + " count");
+            for (int i = 0 ; i < expected.Length ; i++)
             {
-                Assert.AreEqual(expected[i], sequence[i], caption + ":" + i);
+                Assert.Equal(expected[i], sequence[i]); //, caption + ":" + i);
             }
         }
 

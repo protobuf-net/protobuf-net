@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Data.SqlClient;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class TypeTests
     {
         [ProtoContract]
@@ -17,7 +17,7 @@ namespace Examples
             public Type Type { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void ShouldRoundtripTypeWithoutEvent()
         {
             var model = RuntimeTypeModel.Create();
@@ -25,7 +25,7 @@ namespace Examples
             var orig = new MyModel {Type = typeof (SqlCommand)};
 
             var clone = (MyModel) model.DeepClone(orig);
-            Assert.AreSame(typeof(SqlCommand), clone.Type);
+            Assert.Same(typeof(SqlCommand), clone.Type);
 
             string s = typeof (SqlCommand).AssemblyQualifiedName;
             byte[] expected = new byte[Encoding.UTF8.GetByteCount(s) + 2];
@@ -36,16 +36,16 @@ namespace Examples
 
             model.CompileInPlace();
             clone = (MyModel)model.DeepClone(orig);
-            Assert.AreSame(typeof(SqlCommand), clone.Type);
+            Assert.Same(typeof(SqlCommand), clone.Type);
             Program.CheckBytes(orig, model, expected);
 
             var compiled = model.Compile();
             clone = (MyModel)compiled.DeepClone(orig);
-            Assert.AreSame(typeof(SqlCommand), clone.Type);
+            Assert.Same(typeof(SqlCommand), clone.Type);
             Program.CheckBytes(orig, compiled, expected);
         }
 
-        [Test]
+        [Fact]
         public void ShouldRoundtripTypeWithEvent()
         {
             var model = RuntimeTypeModel.Create();
@@ -54,7 +54,7 @@ namespace Examples
             var orig = new MyModel { Type = typeof(SqlCommand) };
 
             var clone = (MyModel)model.DeepClone(orig);
-            Assert.AreSame(typeof(SqlCommand), clone.Type);
+            Assert.Same(typeof(SqlCommand), clone.Type);
 
             string s = "abc";
             byte[] expected = new byte[Encoding.UTF8.GetByteCount(s) + 2];
@@ -65,13 +65,13 @@ namespace Examples
 
             model.CompileInPlace();
             clone = (MyModel)model.DeepClone(orig);
-            Assert.AreSame(typeof(SqlCommand), clone.Type);
+            Assert.Same(typeof(SqlCommand), clone.Type);
             Program.CheckBytes(orig, model, expected);
 
             var compiled = model.Compile();
             compiled.DynamicTypeFormatting += new TypeFormatEventHandler(model_DynamicTypeFormatting);
             clone = (MyModel)compiled.DeepClone(orig);
-            Assert.AreSame(typeof(SqlCommand), clone.Type);
+            Assert.Same(typeof(SqlCommand), clone.Type);
             Program.CheckBytes(orig, compiled, expected);
             
         }

@@ -33,14 +33,15 @@ namespace ProtoBuf.Issues
 
             var clone = Serializer.ChangeType<ModelWithTypeMember,EquivModel>(obj);
             Assert.Equal(123, clone.Id);
-            Assert.Equal("System.Uri, System.Private.Uri, Version=4.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a", clone.SomeType);
+            Assert.Equal(typeof(Uri).AssemblyQualifiedName, clone.SomeType);
         }
 
         [Fact]
         public void TypeGeneratesProto()
         {
             var proto = Serializer.GetProto<ModelWithTypeMember>();
-            Assert.Equal(@"package ProtoBuf.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Issues;
 
 message ModelWithTypeMember {
    optional int32 Id = 1 [default = 0];

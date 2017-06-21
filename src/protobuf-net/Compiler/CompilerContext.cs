@@ -550,7 +550,8 @@ namespace ProtoBuf.Compiler
         public void EmitCall(MethodInfo method, Type targetType)
         {
             Helpers.DebugAssert(method != null);
-            CheckAccessibility(method);
+            MemberInfo member = method;
+            CheckAccessibility(ref member);
             OpCode opcode;
             if (method.IsStatic || Helpers.IsValueType(method.DeclaringType))
             {
@@ -663,11 +664,18 @@ namespace ProtoBuf.Compiler
         public void EmitCtor(ConstructorInfo ctor)
         {
             if (ctor == null) throw new ArgumentNullException("ctor");
-            CheckAccessibility(ctor);
+            MemberInfo ctorMember = ctor;
+            CheckAccessibility(ref ctorMember);
             il.Emit(OpCodes.Newobj, ctor);
             TraceCompile(OpCodes.Newobj + ": " + ctor.DeclaringType);
         }
 
+        public void InitLocal(Type type, Compiler.Local target)
+        {
+            LoadAddress(target, type, evenIfClass: true); // for class, initobj is a load-null, store-indirect
+            il.Emit(OpCodes.Initobj, type);
+            TraceCompile(OpCodes.Initobj + ": " + type);
+        }
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
             Helpers.DebugAssert(type != null);
@@ -755,7 +763,7 @@ namespace ProtoBuf.Compiler
             return isTrusted;
 #endif
         }
-        internal void CheckAccessibility(MemberInfo member)
+        internal void CheckAccessibility(ref MemberInfo member)
         {
             if (member == null)
             {
@@ -766,6 +774,12 @@ namespace ProtoBuf.Compiler
 #endif
             if (!NonPublic)
             {
+                if(member is FieldInfo && member.Name.StartsWith("<") & member.Name.EndsWith(">k__BackingField"))
+                {
+                    var propName = member.Name.Substring(1, member.Name.Length - 17);
+                    var prop = member.DeclaringType.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+                    if (prop != null) member = prop;
+                }
                 bool isPublic;
 #if COREFX
                 if (member is TypeInfo)
@@ -878,16 +892,24 @@ namespace ProtoBuf.Compiler
                     }
 #endif
 
-                    }
+                }
             }
         }
 
         public void LoadValue(FieldInfo field)
         {
-            CheckAccessibility(field);
-            OpCode code = field.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld;
-            il.Emit(code, field);
-            TraceCompile(code + ": " + field + " on " + field.DeclaringType);
+            MemberInfo member = field;
+            CheckAccessibility(ref member);
+            if (member is PropertyInfo)
+            {
+                LoadValue((PropertyInfo)member);
+            }
+            else
+            {
+                OpCode code = field.IsStatic ? OpCodes.Ldsfld : OpCodes.Ldfld;
+                il.Emit(code, field);
+                TraceCompile(code + ": " + field + " on " + field.DeclaringType);
+            }
         }
 #if FEAT_IKVM
         public void StoreValue(System.Reflection.FieldInfo field)
@@ -909,19 +931,30 @@ namespace ProtoBuf.Compiler
 #endif
         public void StoreValue(FieldInfo field)
         {
-            CheckAccessibility(field);
-            OpCode code = field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld;
-            il.Emit(code, field);
-            TraceCompile(code + ": " + field + " on " + field.DeclaringType);
+            MemberInfo member = field;
+            CheckAccessibility(ref member);
+            if (member is PropertyInfo)
+            {
+                StoreValue((PropertyInfo)member);
+            }
+            else
+            {
+                OpCode code = field.IsStatic ? OpCodes.Stsfld : OpCodes.Stfld;
+                il.Emit(code, field);
+                TraceCompile(code + ": " + field + " on " + field.DeclaringType);
+            }
         }
+        
         public void LoadValue(PropertyInfo property)
         {
-            CheckAccessibility(property);
+            MemberInfo member = property;
+            CheckAccessibility(ref member);
             EmitCall(Helpers.GetGetMethod(property, true, true));
         }
         public void StoreValue(PropertyInfo property)
         {
-            CheckAccessibility(property);
+            MemberInfo member = property;
+            CheckAccessibility(ref member);
             EmitCall(Helpers.GetSetMethod(property, true, true));
         }
 
@@ -963,13 +996,13 @@ namespace ProtoBuf.Compiler
             LoadAddress(local, MapType(type));
         }
 #endif
-        internal void LoadAddress(Local local, Type type)
+        internal void LoadAddress(Local local, Type type, bool evenIfClass = false)
         {
-            if (Helpers.IsValueType(type))
+            if (evenIfClass || Helpers.IsValueType(type))
             {
                 if (local == null)
                 {
-                    throw new InvalidOperationException("Cannot load the address of a struct at the head of the stack");
+                    throw new InvalidOperationException("Cannot load the address of the head of the stack");
                 }
 
                 if (local == this.InputValue)

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using System.IO;
 using ProtoBuf;
 using System.Linq;
@@ -7,7 +7,7 @@ using System.Diagnostics;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class ItemsWithLengthPrefix
     {
         static Stream WriteData(int tag, PrefixStyle style, params int[] values)
@@ -32,7 +32,7 @@ namespace Examples
                     Debugger.Break();
                 }
                 Foo foo = Serializer.DeserializeWithLengthPrefix<Foo>(source, style, tag);
-                Assert.AreEqual(value, foo.Value);
+                Assert.Equal(value, foo.Value);
                 count++;
             }
             return count;
@@ -41,10 +41,10 @@ namespace Examples
         static int ReadStreaming(Stream source, int tag, PrefixStyle style, params int[] values)
         {
             var list = Serializer.DeserializeItems<int>(source, style, tag).ToList();
-            Assert.AreEqual(values.Length, list.Count, "Count");
+            Assert.Equal(values.Length, list.Count); //, "Count");
             for (int i = 0; i < values.Length; i++ )
             {
-                Assert.AreEqual(values[i], list[i], "Index " + i + ", value " + values[i]);
+                Assert.Equal(values[i], list[i]); //, "Index " + i + ", value " + values[i]);
             }
             return values.Length;
         }
@@ -64,43 +64,43 @@ namespace Examples
             }
         }
 
-        [Test]
+        [Fact]
         public void ReadIndividuallyFixedLength()
         {
-            Assert.AreEqual(8, CheckIndividually(0, PrefixStyle.Fixed32, -2,-1,0,1,2,3,4,5));
+            Assert.Equal(8, CheckIndividually(0, PrefixStyle.Fixed32, -2,-1,0,1,2,3,4,5));
         }
 
-        [Test]
+        [Fact]
         public void ReadIndividuallyBase128NoTag()
         {
-            Assert.AreEqual(8, CheckIndividually(0, PrefixStyle.Base128, -2, -1, 0, 1, 2, 3, 4, 5));
+            Assert.Equal(8, CheckIndividually(0, PrefixStyle.Base128, -2, -1, 0, 1, 2, 3, 4, 5));
         }
 
-        [Test]
+        [Fact]
         public void ReadIndividuallyBase128Tag()
         {
-            Assert.AreEqual(8, CheckIndividually(2, PrefixStyle.Base128, -2, -1, 0, 1, 2, 3, 4, 5));
+            Assert.Equal(8, CheckIndividually(2, PrefixStyle.Base128, -2, -1, 0, 1, 2, 3, 4, 5));
         }
 
-        [Test]
+        [Fact]
         public void ReadStreamingFixedLength()
         {
-            Assert.AreEqual(8, CheckStreaming(0, PrefixStyle.Fixed32, -2, -1, 0, 1, 2, 3, 4, 5));
+            Assert.Equal(8, CheckStreaming(0, PrefixStyle.Fixed32, -2, -1, 0, 1, 2, 3, 4, 5));
         }
 
-        [Test]
+        [Fact]
         public void ReadStreamingBase128NoTag()
         {
-            Assert.AreEqual(8, CheckStreaming(0, PrefixStyle.Base128, -2, -1, 0, 1, 2, 3, 4, 5));
+            Assert.Equal(8, CheckStreaming(0, PrefixStyle.Base128, -2, -1, 0, 1, 2, 3, 4, 5));
         }
 
-        [Test]
+        [Fact]
         public void ReadStreamingBase128Tag()
         {
-            Assert.AreEqual(8, CheckStreaming(2, PrefixStyle.Base128, -2, -1, 0, 1, 2, 3, 4, 5));
+            Assert.Equal(8, CheckStreaming(2, PrefixStyle.Base128, -2, -1, 0, 1, 2, 3, 4, 5));
         }
 
-        [Test]
+        [Fact]
         public void ReadStreamingParentFixedLength()
         {
             MemoryStream ms = new MemoryStream();
@@ -110,12 +110,12 @@ namespace Examples
             Serializer.SerializeWithLengthPrefix<IMLParent>(ms, c = InheritanceMidLevel.CreateChild(400, 500, 600), PrefixStyle.Fixed32);
             ms.Position = 0;
             var list = Serializer.DeserializeItems<IMLParent>(ms, PrefixStyle.Fixed32, 0).ToList();
-            Assert.AreEqual(3, list.Count, "Count");
+            Assert.Equal(3, list.Count); //, "Count");
             InheritanceMidLevel.CheckParent(a, list[0]);
             InheritanceMidLevel.CheckParent(b, list[1]);
             InheritanceMidLevel.CheckParent(c, list[2]);
         }
-        [Test]
+        [Fact]
         public void ReadStreamingParentBase128Tag()
         {
             MemoryStream ms = new MemoryStream();
@@ -125,13 +125,13 @@ namespace Examples
             Serializer.SerializeWithLengthPrefix<IMLParent>(ms, c = InheritanceMidLevel.CreateChild(400, 500, 600), PrefixStyle.Base128, 3);
             ms.Position = 0;
             var list = Serializer.DeserializeItems<IMLParent>(ms, PrefixStyle.Base128, 3).ToList();
-            Assert.AreEqual(3, list.Count, "Count");
+            Assert.Equal(3, list.Count); //, "Count");
             InheritanceMidLevel.CheckParent(a, list[0]);
             InheritanceMidLevel.CheckParent(b, list[1]);
             InheritanceMidLevel.CheckParent(c, list[2]);
         }
 
-        [Test]
+        [Fact]
         public void ReadStreamingParentBase128NoTag()
         {
             MemoryStream ms = new MemoryStream();
@@ -141,14 +141,14 @@ namespace Examples
             Serializer.SerializeWithLengthPrefix<IMLParent>(ms, c = InheritanceMidLevel.CreateChild(400, 500, 600), PrefixStyle.Base128, 0);
             ms.Position = 0;
             var list = Serializer.DeserializeItems<IMLParent>(ms, PrefixStyle.Base128, 0).ToList();
-            Assert.AreEqual(3, list.Count, "Count");
+            Assert.Equal(3, list.Count); //, "Count");
             InheritanceMidLevel.CheckParent(a, list[0]);
             InheritanceMidLevel.CheckParent(b, list[1]);
             InheritanceMidLevel.CheckParent(c, list[2]);
         }
 
 
-        [Test]
+        [Fact]
         public void ReadStreamingChildFixedLength()
         {
             MemoryStream ms = new MemoryStream();
@@ -158,12 +158,12 @@ namespace Examples
             Serializer.SerializeWithLengthPrefix<IMLChild>(ms, c = InheritanceMidLevel.CreateChild(400, 500, 600), PrefixStyle.Fixed32);
             ms.Position = 0;
             var list = Serializer.DeserializeItems<IMLChild>(ms, PrefixStyle.Fixed32, 0).ToList();
-            Assert.AreEqual(3, list.Count, "Count");
+            Assert.Equal(3, list.Count); //, "Count");
             InheritanceMidLevel.CheckChild(a, list[0]);
             InheritanceMidLevel.CheckChild(b, list[1]);
             InheritanceMidLevel.CheckChild(c, list[2]);
         }
-        [Test]
+        [Fact]
         public void ReadStreamingChildBase128Tag()
         {
             MemoryStream ms = new MemoryStream();
@@ -173,13 +173,13 @@ namespace Examples
             Serializer.SerializeWithLengthPrefix<IMLChild>(ms, c = InheritanceMidLevel.CreateChild(400, 500, 600), PrefixStyle.Base128, 3);
             ms.Position = 0;
             var list = Serializer.DeserializeItems<IMLChild>(ms, PrefixStyle.Base128, 3).ToList();
-            Assert.AreEqual(3, list.Count, "Count");
+            Assert.Equal(3, list.Count); //, "Count");
             InheritanceMidLevel.CheckChild(a, list[0]);
             InheritanceMidLevel.CheckChild(b, list[1]);
             InheritanceMidLevel.CheckChild(c, list[2]);
         }
 
-        [Test]
+        [Fact]
         public void ReadStreamingChildBase128NoTag()
         {
             MemoryStream ms = new MemoryStream();
@@ -189,13 +189,13 @@ namespace Examples
             Serializer.SerializeWithLengthPrefix<IMLChild>(ms, c = InheritanceMidLevel.CreateChild(400, 500, 600), PrefixStyle.Base128, 0);
             ms.Position = 0;
             var list = Serializer.DeserializeItems<IMLChild>(ms, PrefixStyle.Base128, 0).ToList();
-            Assert.AreEqual(3, list.Count, "Count");
+            Assert.Equal(3, list.Count); //, "Count");
             InheritanceMidLevel.CheckChild(a, list[0]);
             InheritanceMidLevel.CheckChild(b, list[1]);
             InheritanceMidLevel.CheckChild(c, list[2]);
         }
 
-        [Test]
+        [Fact]
         public void TestEmptyStreams()
         {
             TestEmptyStreams<int>();
@@ -205,13 +205,13 @@ namespace Examples
 
         static void TestEmptyStreams<T>()
         {
-            Assert.IsFalse(Serializer.DeserializeItems<T>(Stream.Null, PrefixStyle.Fixed32, 0).Any());
-            Assert.IsFalse(Serializer.DeserializeItems<T>(Stream.Null, PrefixStyle.Base128, 0).Any());
-            Assert.IsFalse(Serializer.DeserializeItems<T>(Stream.Null, PrefixStyle.Base128, 1).Any());
+            Assert.False(Serializer.DeserializeItems<T>(Stream.Null, PrefixStyle.Fixed32, 0).Any());
+            Assert.False(Serializer.DeserializeItems<T>(Stream.Null, PrefixStyle.Base128, 0).Any());
+            Assert.False(Serializer.DeserializeItems<T>(Stream.Null, PrefixStyle.Base128, 1).Any());
 
-            Assert.IsFalse(Serializer.DeserializeItems<T>(new MemoryStream(), PrefixStyle.Fixed32, 0).Any());
-            Assert.IsFalse(Serializer.DeserializeItems<T>(new MemoryStream(), PrefixStyle.Base128, 0).Any());
-            Assert.IsFalse(Serializer.DeserializeItems<T>(new MemoryStream(), PrefixStyle.Base128, 1).Any());
+            Assert.False(Serializer.DeserializeItems<T>(new MemoryStream(), PrefixStyle.Fixed32, 0).Any());
+            Assert.False(Serializer.DeserializeItems<T>(new MemoryStream(), PrefixStyle.Base128, 0).Any());
+            Assert.False(Serializer.DeserializeItems<T>(new MemoryStream(), PrefixStyle.Base128, 1).Any());
         }
     }
 }

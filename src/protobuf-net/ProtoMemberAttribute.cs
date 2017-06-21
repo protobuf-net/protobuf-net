@@ -54,7 +54,7 @@ namespace ProtoBuf
         }
 
 #if !NO_RUNTIME
-        internal MemberInfo Member;
+        internal MemberInfo Member, BackingMember;
         internal bool TagIsPinned;
 #endif
         /// <summary>
@@ -219,7 +219,9 @@ namespace ProtoBuf
         public ProtoPartialMemberAttribute(int tag, string memberName)
             : base(tag)
         {
+#if !NO_RUNTIME
             if (Helpers.IsNullOrEmpty(memberName)) throw new ArgumentNullException("memberName");
+#endif
             this.memberName = memberName;
         }
         /// <summary>

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 
@@ -12,21 +12,21 @@ namespace Examples.Issues
     /// a non-public (but parameterless) constructor can be used instead, and a better
     /// error message is returned if you get it wrong.
     /// </summary>
-    [TestFixture]
+    
     public class Issue26
     {
-        [Test]
+        [Fact]
         public void RoundTripCStation()
         {
             Station cs = new Station(1,2),
                 clone = Serializer.DeepClone(cs);
-            Assert.AreNotSame(cs, clone);
-            Assert.IsNotNull(clone);
-            Assert.AreEqual(cs.Number, clone.Number);
-            Assert.AreEqual(cs.Ticket, clone.Ticket);
+            Assert.NotSame(cs, clone);
+            Assert.NotNull(clone);
+            Assert.Equal(cs.Number, clone.Number);
+            Assert.Equal(cs.Ticket, clone.Ticket);
         }
 
-        [Test]
+        [Fact]
         public void RoundTripCListStations()
         {
             StationList list = new StationList
@@ -37,26 +37,55 @@ namespace Examples.Issues
                     new Station(3,4)
                 }
             }, clone = Serializer.DeepClone(list);
-            Assert.AreNotSame(list, clone);
-            Assert.IsNotNull(clone);
-            Assert.AreEqual(2, clone.Stations.Count, "Count");
-            Assert.AreEqual(1, clone.Stations[0].Number);
-            Assert.AreEqual(2, clone.Stations[0].Ticket);
-            Assert.AreEqual(3, clone.Stations[1].Number);
-            Assert.AreEqual(4, clone.Stations[1].Ticket);
+            Assert.NotSame(list, clone);
+            Assert.NotNull(clone);
+            Assert.Equal(2, clone.Stations.Count); //, "Count");
+            Assert.Equal(1, clone.Stations[0].Number);
+            Assert.Equal(2, clone.Stations[0].Ticket);
+            Assert.Equal(3, clone.Stations[1].Number);
+            Assert.Equal(4, clone.Stations[1].Ticket);
         }
 
-        [Test]
+        [Fact]
         public void CheckMeaningfulErrorIfNoParameterlessCtor()
         {
             Program.ExpectFailure<ProtoException>(() =>
             {
                 WithoutParameterlessCtor obj = new WithoutParameterlessCtor(123);
                 Serializer.DeepClone(obj);
-            }, "No parameterless constructor found for WithoutParameterlessCtor");
+            }, "No parameterless constructor found for Examples.Issues.WithoutParameterlessCtor");
         }
 
-        [Test]
+        [Fact]
+        public void CheckMeaningfulErrorIfNoParameterlessCtor_Interface()
+        {
+            Program.ExpectFailure<ProtoException>(() =>
+            {
+                HazGenericInterface obj = new HazGenericInterface { Data = new Foo(12) };
+                Serializer.DeepClone(obj);
+            }, "No parameterless constructor found for Examples.Issues.Issue26+Foo");
+        }
+
+        [ProtoContract]
+        public class HazGenericInterface
+        {
+            [ProtoMember(1)]
+            public IFoo<int> Data { get;set;}
+        }
+        [ProtoContract]
+        [ProtoInclude(2, typeof(Foo))]
+        public interface IFoo<T>
+        {
+            [ProtoMember(1)]
+            T Item { get; set; }
+        }
+        public class Foo : IFoo<int>
+        {
+            public Foo(int value) { Item = value; }
+            public int Item { get; set; }
+        }
+
+        [Fact]
         public void TestMergeWithoutParameterlessCtor()
         {
             WithoutParameterlessCtor obj = new WithoutParameterlessCtor(123),
@@ -67,7 +96,7 @@ namespace Examples.Issues
                 ms.Position = 0;
                 Serializer.Merge(ms, clone);
             }
-            Assert.AreEqual(obj.Foo, clone.Foo);
+            Assert.Equal(obj.Foo, clone.Foo);
         }
         
     }
@@ -86,7 +115,7 @@ namespace Examples.Issues
             this.Number = number;
             this.Ticket = ticket;
         }
-        private Station() { }
+        public Station() { }
 
     }
 

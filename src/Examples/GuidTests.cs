@@ -1,6 +1,7 @@
-﻿using System;
+﻿#if !COREFX
+using System;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.Data.Linq.Mapping;
 using System.ComponentModel;
@@ -40,7 +41,7 @@ namespace Examples
         public System.Guid GUID { get; set; }
     }
 
-    [TestFixture]
+    
     public class GuidTests
     {
         public static int Measure<T>(T value)
@@ -51,77 +52,77 @@ namespace Examples
                 return (int)ms.Length;
             }
         }
-        [Test]
+        [Fact]
         public void TestPartialWithGuid()
         {
             var user = new User();
             var clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(0, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(0, Measure(user));
 
             user = new User { GUID = new Guid("00112233445566778899AABBCCDDEEFF") };
             clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(21, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(21, Measure(user));
 
             Serializer.PrepareSerializer<User>();
 
             user = new User();
             clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(0, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(0, Measure(user));
 
             user = new User { GUID = new Guid("00112233445566778899AABBCCDDEEFF") };
             clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(21, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(21, Measure(user));
 
 
         }
 
-        [Test]
+        [Fact]
         public void TestGuidWithCrazyDefault()
         {
             var user = new UserWithCrazyDefault();
             var clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(0, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(0, Measure(user));
 
             user = new UserWithCrazyDefault { GUID = new Guid("00112233445566778899AABBCCDDEEFF") };
             clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(21, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(21, Measure(user));
 
             user = new UserWithCrazyDefault { GUID = Guid.Empty };
             clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(3, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(3, Measure(user));
 
             Serializer.PrepareSerializer<UserWithCrazyDefault>();
 
             user = new UserWithCrazyDefault();
             clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(0, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(0, Measure(user));
 
             user = new UserWithCrazyDefault { GUID = new Guid("00112233445566778899AABBCCDDEEFF") };
             clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(21, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(21, Measure(user));
 
             user = new UserWithCrazyDefault { GUID = Guid.Empty };
             clone = Serializer.DeepClone(user);
-            Assert.AreEqual(user.GUID, clone.GUID);
-            Assert.AreEqual(3, Measure(user));
+            Assert.Equal(user.GUID, clone.GUID);
+            Assert.Equal(3, Measure(user));
         }
 
-        [Test]
+        [Fact]
         public void TestGuidLayout()
         {
             var guid = new Guid("00112233445566778899AABBCCDDEEFF");
             var msBlob = guid.ToByteArray();
             var msHex = BitConverter.ToString(msBlob);
-            Assert.AreEqual("33-22-11-00-55-44-77-66-88-99-AA-BB-CC-DD-EE-FF", msHex);
+            Assert.Equal("33-22-11-00-55-44-77-66-88-99-AA-BB-CC-DD-EE-FF", msHex);
 
             var obj = new GuidLayout { Value = guid };
             using (var ms = new MemoryStream())
@@ -135,7 +136,7 @@ namespace Examples
                   // 11 = field 2, fixed-length 64 bit
                   // 88-99-AA-BB-CC-DD-EE-FF
 
-                Assert.AreEqual(
+                Assert.Equal(
                     "0A-12-09-33-22-11-00-55-44-77-66-11-88-99-AA-BB-CC-DD-EE-FF",
                     hex
                     );
@@ -149,7 +150,7 @@ namespace Examples
             public Guid Value { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void TestDeserializeEmptyWide()
         {
             GuidData data = Program.Build<GuidData>(
@@ -157,42 +158,43 @@ namespace Examples
                 0x09, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, //1:fixed64:0
                 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 //2:fixed64:0
                 );
-            Assert.AreEqual(Guid.Empty, data.Bar);
+            Assert.Equal(Guid.Empty, data.Bar);
         }
-        [Test]
+        [Fact]
         public void TestDeserializeEmptyShort()
         {
             GuidData data = Program.Build<GuidData>(
                 0x0A, 0x00 // prop 1, string:0
                 );
-            Assert.AreEqual(Guid.Empty, data.Bar);
+            Assert.Equal(Guid.Empty, data.Bar);
         }
-        [Test]
+        [Fact]
         public void TestEmptyGuid() {
             GuidData foo = new GuidData { Bar = Guid.Empty };
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, foo);
-                Assert.AreEqual(0, ms.Length); // 1 tag, 1 length (0)
+                Assert.Equal(0, ms.Length); // 1 tag, 1 length (0)
                 ms.Position = 0;
                 GuidData clone = Serializer.Deserialize<GuidData>(ms);
-                Assert.AreEqual(foo.Bar, clone.Bar);
+                Assert.Equal(foo.Bar, clone.Bar);
             }
         }
 
 
-        [Test]
+        [Fact]
         public void TestNonEmptyGuid()
         {
             GuidData foo = new GuidData { Bar = Guid.NewGuid() };
             using (MemoryStream ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, foo);
-                Assert.AreEqual(20, ms.Length); 
+                Assert.Equal(20, ms.Length); 
                 ms.Position = 0;
                 GuidData clone = Serializer.Deserialize<GuidData>(ms);
-                Assert.AreEqual(foo.Bar, clone.Bar);
+                Assert.Equal(foo.Bar, clone.Bar);
             }
         }
     }
 }
+#endif

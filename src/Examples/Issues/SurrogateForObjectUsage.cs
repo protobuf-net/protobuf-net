@@ -1,10 +1,10 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SurrogateForObjectUsage
     {
         public class Param
@@ -63,7 +63,7 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public void CreateSuggorateModel()
         {
             // configure model (do once at app startup)
@@ -85,16 +85,16 @@ namespace Examples.Issues
             // note the fallowing is the same as Serializer.DeepClone, since
             // model === RuntimeTypeModel.Default
             var clone = (Param) model.DeepClone(param);
-            Assert.AreNotSame(clone, param, "Different instance");
-            Assert.IsInstanceOfType(typeof(FloatData), clone.Item, "Data type");
+            Assert.NotSame(clone, param); //, "Different instance");
+            Assert.IsType(typeof(FloatData), clone.Item); //, "Data type");
             var data = (FloatData) clone.Item;
-            Assert.AreEqual(123.45F, data.AdjustValue);
-            Assert.AreEqual(2, data.Ranges.Length);
-            Assert.AreEqual(1.0F, data.Ranges[0]);
-            Assert.AreEqual(2.4F, data.Ranges[1]);
-            Assert.AreEqual(2, data.Values.Length);
-            Assert.AreEqual(7.21F, data.Values[0]);
-            Assert.AreEqual(19.2F, data.Values[1]);
+            Assert.Equal(123.45F, data.AdjustValue);
+            Assert.Equal(2, data.Ranges.Length);
+            Assert.Equal(1.0F, data.Ranges[0]);
+            Assert.Equal(2.4F, data.Ranges[1]);
+            Assert.Equal(2, data.Values.Length);
+            Assert.Equal(7.21F, data.Values[0]);
+            Assert.Equal(19.2F, data.Values[1]);
 
         }
 

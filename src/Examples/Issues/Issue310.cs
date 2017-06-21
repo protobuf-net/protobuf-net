@@ -2,21 +2,22 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue310
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
 #pragma warning disable  0618
             string proto = Serializer.GetProto<Animal>();
 
-            Assert.AreEqual(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
 
 message Animal {
    optional int32 NumberOfLegs = 1 [default = 0];

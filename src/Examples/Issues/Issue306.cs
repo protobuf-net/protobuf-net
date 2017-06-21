@@ -2,16 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue306
     {
-        [Test]
+        [Fact]
         public void TestTuple()
         {
             var model = TypeModel.Create();
@@ -19,14 +19,11 @@ namespace Examples.Issues
 
             string schema = model.GetSchema(typeof (Foo));
 
-            Assert.AreEqual(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
 
 message Foo {
-   repeated KeyValuePair_Int32_String Lookup = 1;
-}
-message KeyValuePair_Int32_String {
-   optional int32 Key = 1;
-   optional string Value = 2;
+   map<int32,string> Lookup = 1;
 }
 ", schema);
         }

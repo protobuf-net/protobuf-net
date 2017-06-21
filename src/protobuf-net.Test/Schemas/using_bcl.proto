@@ -1,0 +1,11 @@
+﻿syntax = "proto3";
+
+import "protobuf-net/bcl.proto";
+
+message Foo {
+  bcl.TimeSpan time = 1;
+  bcl.DateTime date = 2;
+  bcl.DateTime.DateTimeKind kind = 3;
+  bcl.Guid guid = 4;
+  bcl.Decimal decimal = 5;
+}

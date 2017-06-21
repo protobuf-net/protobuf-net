@@ -1,5 +1,5 @@
 ﻿using System.Runtime.Serialization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 
@@ -13,29 +13,29 @@ namespace Examples.Issues
     /// This is a workaround, simply intended to show an alternative construction, i.e.
     /// wrapping the structs with a class during serialization.
     /// </summary>
-    [TestFixture]
+    
     public class Issue27
     {
-        [Test]
+        [Fact]
         public void Roundtrip()
         {
             KeyPair<int, string> pair = new KeyPair<int, string>(1, "abc");
 
             KeyPair<int,string> clone = Serializer.DeepClone<KeyPairProxy<int,string>>(pair);
-            Assert.AreEqual(pair.Key1, clone.Key1);
-            Assert.AreEqual(pair.Key2, clone.Key2);
+            Assert.Equal(pair.Key1, clone.Key1);
+            Assert.Equal(pair.Key2, clone.Key2);
         }
 
-        [Test]
+        [Fact]
         public void TestWrapped()
         {
             Foo foo = new Foo { Pair = new KeyPair<int, string>(1, "abc") };
-            Assert.AreEqual(1, foo.Pair.Key1, "Key1 - orig");
-            Assert.AreEqual("abc", foo.Pair.Key2, "Key2 - orig");
+            Assert.Equal(1, foo.Pair.Key1); //, "Key1 - orig");
+            Assert.Equal("abc", foo.Pair.Key2); //, "Key2 - orig");
 
             var clone = Serializer.DeepClone(foo);
-            Assert.AreEqual(1, clone.Pair.Key1, "Key1 - clone");
-            Assert.AreEqual("abc", clone.Pair.Key2, "Key2 - clone");
+            Assert.Equal(1, clone.Pair.Key1); //, "Key1 - clone");
+            Assert.Equal("abc", clone.Pair.Key2); //, "Key2 - clone");
         }
     }
     [DataContract]

@@ -6,7 +6,7 @@ using System.Text;
 using System.Runtime.Serialization;
 using ProtoBuf;
 using ProtoBuf.Meta;
-using NUnit.Framework;
+using Xunit;
 
 namespace Examples
 {
@@ -43,10 +43,10 @@ namespace Examples
         ISurrogateSelector IFormatter.SurrogateSelector { get; set; }
 #endif
     }
-    [TestFixture]
+    
     public class TestDynamicFormatter
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             var formatter = new DynamicIFormatter();
@@ -55,7 +55,7 @@ namespace Examples
                 formatter.Serialize(ms, new Foo { Bar = 12345 });
                 ms.Position = 0;
                 Foo clone = (Foo) formatter.Deserialize(ms);
-                Assert.AreEqual(12345, clone.Bar);
+                Assert.Equal(12345, clone.Bar);
             }
         }
         [ProtoContract]

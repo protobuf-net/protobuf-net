@@ -3,16 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class DeserializeExtensible
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             var model = TypeModel.Create();
@@ -32,7 +32,7 @@ namespace Examples.Issues
                 ms.Position = 0;
                 small = (SmallType) model.Deserialize(ms, null, typeof(SmallType));
             }
-            Assert.IsNotNull(small, caption);
+            Assert.NotNull(small); //, caption);
         }
         [ProtoContract]
         public class LargeType {

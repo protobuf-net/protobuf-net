@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using System.IO;
+#if !COREFX
 using System.Runtime.Serialization.Formatters.Binary;
+#endif
 using System.Diagnostics;
 using System.Xml.Serialization;
 using System.Reflection.Emit;
@@ -14,7 +16,7 @@ using ProtoBuf;
 namespace TestMediaBrowser
 {
 
-    #region test data
+#region test data
 
     enum Fur { smooth, fluffy }
 
@@ -91,7 +93,7 @@ namespace TestMediaBrowser
         [ProtoMember(1)]
         public List<Animal> animals;
         [ProtoMember(2)]
-        public List<MisterNullable> nullables { get; set; }
+        public List<MisterNullable> Nullables { get; set; }
     }
     [ProtoContract]
     class DateTimeClass
@@ -115,120 +117,128 @@ namespace TestMediaBrowser
         public Nesty Nesty2 { get; set; }
     }
 
-    #endregion
+#endregion
 
-    [TestFixture]
+    
     public class TestSerialization
     {
 
-        [Test]
+        [Fact]
         public void TestSerializerShouldSupportNulls()
         {
             var nestor = new Nestor();
             var clone = Serializer.DeepClone(nestor);
-            Assert.IsNull(clone.nesty);
-            Assert.IsNull(clone.Nesty2);
+            Assert.Null(clone.nesty);
+            Assert.Null(clone.Nesty2);
         }
 
-        [Test]
+        [Fact]
         public void TestSerializerSupportForNestedObjects()
         {
-            var nestor = new Nestor();
-            nestor.nesty = new Nesty() { i = 99 };
-            nestor.Nesty2 = new Nesty() { i = 100 };
+            var nestor = new Nestor
+            {
+                nesty = new Nesty() { i = 99 },
+                Nesty2 = new Nesty() { i = 100 }
+            };
 
             var clone = Serializer.DeepClone(nestor);
 
-            Assert.AreEqual(99, clone.nesty.i);
-            Assert.AreEqual(100, clone.Nesty2.i);
+            Assert.Equal(99, clone.nesty.i);
+            Assert.Equal(100, clone.Nesty2.i);
 
         }
 
 
-        [Test]
+        [Fact]
         public void TestUninitializedDatetimePersistance()
         {
             var original = new DateTimeClass();
             var copy = Serializer.DeepClone(original);
-            Assert.AreEqual(original.Date, copy.Date);
+            Assert.Equal(original.Date, copy.Date);
         }
 
-        [Test]
+        [Fact]
         public void TestInheritedClone()
         {
             Thing original = new Animal();
-            Assert.IsInstanceOfType(typeof(Animal), Serializer.DeepClone(original));
+            Assert.IsType(typeof(Animal), Serializer.DeepClone(original));
         }
         /*
-        [Test]
+        [Fact]
         public void TestMergeDoesNotInventFields()
         {
             Series series = new Series();
             Series other = new Series();
             Serializer.Merge(series, other);
 
-            Assert.IsNull(series.TVDBSeriesId);
-            Assert.IsNull(other.TVDBSeriesId);
+            Assert.Null(series.TVDBSeriesId);
+            Assert.Null(other.TVDBSeriesId);
         }*/
 
-        [IgnoreTest("This works differently by design; perhaps reverse order?")]
+        [Fact(Skip = "This works differently by design; perhaps reverse order?")]
         public void TestMerging()
         {
-            var source = new MisterNullable(11);
-            source.Weight = 100;
+            var source = new MisterNullable(11)
+            {
+                Weight = 100
+            };
             MemoryStream ms = new MemoryStream();
             Serializer.Serialize(ms, source);
             ms.Position = 0;
             var target = new MisterNullable(22);
 
             target = Serializer.Merge(ms, target);
-            Assert.AreEqual(100, target.Weight);
-            Assert.AreEqual(22, target.Age);
+            Assert.Equal(100, target.Weight);
+            Assert.Equal(22, target.Age);
         }
 
-        [Test]
+        [Fact]
         public void TestListPersistance()
         {
-            Listy l = new Listy();
-            l.animals = new List<Animal>();
-            l.animals.Add(new Dog());
-            l.animals.Add(new Animal());
+            Listy l = new Listy
+            {
+                animals = new List<Animal>
+                {
+                    new Dog(),
+                    new Animal()
+                }
+            };
 
             var copy = Serializer.DeepClone(l);
-            Assert.AreEqual(2, copy.animals.Count());
-            Assert.AreEqual(copy.animals[0].GetType(), typeof(Dog));
+            Assert.Equal(2, copy.animals.Count());
+            Assert.Equal(copy.animals[0].GetType(), typeof(Dog));
         }
 
-        [Test]
+        [Fact]
         public void TestNullableSerialization()
         {
             var nullable = new MisterNullable(99) { Weight = 2.2 };
             var copy = Serializer.DeepClone(nullable);
 
-            Assert.AreEqual(nullable.Weight, copy.Weight);
-            Assert.AreEqual(nullable.Age, copy.Age);
+            Assert.Equal(nullable.Weight, copy.Weight);
+            Assert.Equal(nullable.Age, copy.Age);
 
             nullable.Weight = null;
 
             copy = Serializer.DeepClone(nullable);
-            Assert.IsNull(copy.Weight);
+            Assert.Null(copy.Weight);
         }
 
-        [Test]
+        [Fact]
         public void TestInheritedSerialization()
         {
             var dog = new Dog() { Fur = Fur.smooth, Age = 99, DontSaveMe = "bla" };
 
             var clone = Serializer.DeepClone(dog);
 
-            Assert.AreEqual(dog.Fur, clone.Fur);
-            Assert.AreEqual(dog.Age, clone.Age);
-            Assert.AreEqual(dog.Legs, clone.Legs);
-            Assert.AreEqual(dog.Weight, clone.Weight);
-            Assert.IsNull(clone.DontSaveMe);
+            Assert.Equal(dog.Fur, clone.Fur);
+            Assert.Equal(dog.Age, clone.Age);
+            Assert.Equal(dog.Legs, clone.Legs);
+            Assert.Equal(dog.Weight, clone.Weight);
+            Assert.Null(clone.DontSaveMe);
         }
         /*
-        [Test]
+        [Fact]
         public void TestLateBoundSerialization()
         {
             DummyPersistanceObject foo = new DummyPersistanceObject() { Bar1 = 111, Bar2 = "hello" };
@@ -239,7 +249,7 @@ namespace TestMediaBrowser
                 ms.Position = 0;
                 foo2 = Serializer.Deserialize<DummyPersistanceObject>(ms);
             }
-            Assert.AreEqual(foo, foo2);
+            Assert.Equal(foo, foo2);
         }
 
          */
@@ -277,7 +287,7 @@ namespace TestMediaBrowser
             }
         }
 
-        [Test]
+        [Fact]
         public void TestSerializer()
         {
             DummyPersistanceObject foo = new DummyPersistanceObject() { Bar1 = 111, Bar2 = "hello" };
@@ -288,10 +298,10 @@ namespace TestMediaBrowser
                 ms.Position = 0;
                 foo2 = GenericSerializer<DummyPersistanceObject>.Deserialize(ms);
             }
-            Assert.AreEqual(foo, foo2);
+            Assert.Equal(foo, foo2);
         }
 
-        [Test]
+        [Fact]
         public void BenchmarkPerformance()
         {
             List<DummyPersistanceObject> list = new List<DummyPersistanceObject>();

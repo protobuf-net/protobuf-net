@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.IO;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO6174298
     {
         [ProtoContract]
@@ -36,7 +36,7 @@ namespace Examples.Issues
             public Node Right { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             var model = TypeModel.Create();
@@ -61,7 +61,7 @@ namespace Examples.Issues
             }
 
             var clone = (Node)model.DeepClone(head);
-            Assert.AreEqual(head.Count(), clone.Count(), caption);
+            Assert.Equal(head.Count(), clone.Count()); //, caption);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -12,52 +12,52 @@ using System.Threading.Tasks;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class ImmutableCollections
     {
         #region Dictionary
-        [Test]
+        [Fact]
         public void Dictionary_ImmutableConcreteProperties()
         {
             TestDictionaryImpl<ImmutableConcreteProperties>();
         }
 
-        [Test]
+        [Fact]
         public void Dictionary_ImmutableConcreteFields()
         {
             TestDictionaryImpl<ImmutableConcreteFields>();
         }
-        [Test]
+        [Fact]
         public void Dictionary_ImmutableInterfaceProperties()
         {
             TestDictionaryImpl<ImmutableInterfaceProperties>();
         }
 
-        [Test]
+        [Fact]
         public void Dictionary_ImmutableInterfaceFields()
         {
             TestDictionaryImpl<ImmutableInterfaceFields>();
         }
         #endregion
         #region List
-        [Test]
+        [Fact]
         public void List_ImmutableConcreteProperties()
         {
             TestListImpl<ImmutableConcreteProperties>();
         }
 
-        [Test]
+        [Fact]
         public void List_ImmutableConcreteFields()
         {
             TestListImpl<ImmutableConcreteFields>();
         }
-        [Test]
+        [Fact]
         public void List_ImmutableInterfaceProperties()
         {
             TestListImpl<ImmutableInterfaceProperties>();
         }
 
-        [Test]
+        [Fact]
         public void List_ImmutableInterfaceFields()
         {
             TestListImpl<ImmutableInterfaceFields>();
@@ -65,13 +65,13 @@ namespace Examples
         #endregion
 
         //#region Array
-        //[Test]
+        //[Fact]
         //public void Array_ImmutableConcreteProperties()
         //{
         //    TestArrayImpl<ImmutableConcreteProperties>();
         //}
 
-        //[Test]
+        //[Fact]
         //public void Array_ImmutableConcreteFields()
         //{
         //    TestArrayImpl<ImmutableConcreteFields>();
@@ -79,24 +79,24 @@ namespace Examples
         //#endregion
 
         #region HashSet
-        [Test]
+        [Fact]
         public void HashSet_ImmutableConcreteProperties()
         {
             TestHashSetImpl<ImmutableConcreteProperties>();
         }
 
-        [Test]
+        [Fact]
         public void HashSet_ImmutableConcreteFields()
         {
             TestHashSetImpl<ImmutableConcreteFields>();
         }
-        [Test]
+        [Fact]
         public void HashSet_ImmutableInterfaceProperties()
         {
             TestHashSetImpl<ImmutableInterfaceProperties>();
         }
 
-        [Test]
+        [Fact]
         public void HashSet_ImmutableInterfaceFields()
         {
             TestHashSetImpl<ImmutableInterfaceFields>();
@@ -106,7 +106,7 @@ namespace Examples
         #endregion
 
         #region SortedSet
-        [Test]
+        [Fact]
         public void SortedSet_ImmutableConcreteProperties()
         {
             TestSortedSetImpl<ImmutableConcreteProperties>();
@@ -114,7 +114,7 @@ namespace Examples
 
 
 
-        [Test]
+        [Fact]
         public void SortedSet_ImmutableConcreteFields()
         {
             TestSortedSetImpl<ImmutableConcreteFields>();
@@ -123,13 +123,13 @@ namespace Examples
         #endregion
 
         #region SortedDictionary
-        [Test]
+        [Fact]
         public void SortedDictionary_ImmutableConcreteProperties()
         {
             TestSortedDictionaryImpl<ImmutableConcreteProperties>();
         }
 
-        [Test]
+        [Fact]
         public void SortedDictionary_ImmutableConcreteFields()
         {
             TestSortedDictionaryImpl<ImmutableConcreteFields>();
@@ -179,11 +179,11 @@ namespace Examples
                 {
                     throw new ProtoException(caption + ":deserialize", ex);
                 }
-                Assert.AreEqual(4, clone.Dictionary.Count, caption);
-                Assert.AreEqual("a", clone.Dictionary[1], caption);
-                Assert.AreEqual("b", clone.Dictionary[2], caption);
-                Assert.AreEqual("c", clone.Dictionary[3], caption);
-                Assert.AreEqual("d", clone.Dictionary[4], caption);
+                Assert.Equal(4, clone.Dictionary.Count); //, caption);
+                Assert.Equal("a", clone.Dictionary[1]); //, caption);
+                Assert.Equal("b", clone.Dictionary[2]); //, caption);
+                Assert.Equal("c", clone.Dictionary[3]); //, caption);
+                Assert.Equal("d", clone.Dictionary[4]); //, caption);
             }
         }
 
@@ -243,19 +243,19 @@ namespace Examples
         {
             if (expected == null)
             {
-                Assert.IsNull(actual, caption);
+                Assert.Null(actual); //, caption);
                 return;
             }
-            if (expected != null) Assert.IsNotNull(actual, caption);
+            if (expected != null) Assert.NotNull(actual); //, caption);
 
-            Assert.AreNotSame(expected, actual, caption);
+            Assert.NotSame(expected, actual); //, caption);
 
             var expArr = expected.ToArray();
             var actArr = actual.ToArray();
-            Assert.AreEqual(expArr.Length, actArr.Length, caption + ":length");
-            for(int i = 0 ; i < actArr.Length ; i++)
+            Assert.Equal(expArr.Length, actArr.Length); //, caption + ":length");
+            for (int i = 0 ; i < actArr.Length ; i++)
             {
-                Assert.AreEqual(expArr[i], actArr[i], caption + ":" + i);
+                Assert.Equal(expArr[i], actArr[i]); //, caption + ":" + i);
             }
         }
 
@@ -352,10 +352,10 @@ namespace Examples
                 {
                     throw new ProtoException(caption + ":deserialize", ex);
                 }
-                Assert.AreEqual(3, clone.HashSet.Count, caption);
-                Assert.IsTrue(clone.HashSet.Contains(1), caption);
-                Assert.IsTrue(clone.HashSet.Contains(2), caption);
-                Assert.IsTrue(clone.HashSet.Contains(3), caption);
+                Assert.Equal(3, clone.HashSet.Count); //, caption);
+                Assert.True(clone.HashSet.Contains(1)); //, caption);
+                Assert.True(clone.HashSet.Contains(2)); //, caption);
+                Assert.True(clone.HashSet.Contains(3)); //, caption);
             }
         }
         private static void TestSortedSetImpl<T>([CallerMemberName] string name = null)
@@ -446,10 +446,10 @@ namespace Examples
                 {
                     throw new ProtoException(caption + ":deserialize", ex);
                 }
-                Assert.AreEqual(3, clone.SortedDictionary.Count, caption);
-                Assert.AreEqual("a", clone.SortedDictionary[1], caption);
-                Assert.AreEqual("b", clone.SortedDictionary[2], caption);
-                Assert.AreEqual("c", clone.SortedDictionary[3], caption);
+                Assert.Equal(3, clone.SortedDictionary.Count); //, caption);
+                Assert.Equal("a", clone.SortedDictionary[1]); //, caption);
+                Assert.Equal("b", clone.SortedDictionary[2]); //, caption);
+                Assert.Equal("c", clone.SortedDictionary[3]); //, caption);
                 AssertSequence(new[] { 1, 2, 3 }, clone.SortedDictionary.Keys, caption);
             }
         }

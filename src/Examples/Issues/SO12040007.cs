@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO12040007
     {
         [ProtoContract]
@@ -20,176 +20,176 @@ namespace Examples.Issues
 
         public struct NonContractStruct { }
 
-        [Test]
+        [Fact]
         public void BasicVersusContract()
         {
             var model = TypeModel.Create();
-            Assert.IsTrue(model.CanSerialize(typeof(int)), "int Any");
-            Assert.IsTrue(model.CanSerializeBasicType(typeof(int)), "int BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(int)), "int ContractType");
+            Assert.True(model.CanSerialize(typeof(int)), "int Any");
+            Assert.True(model.CanSerializeBasicType(typeof(int)), "int BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(int)), "int ContractType");
 
-            Assert.IsTrue(model.CanSerialize(typeof(ContractClass)), "ContractClass Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(ContractClass)), "ContractClass BasicType");
-            Assert.IsTrue(model.CanSerializeContractType(typeof(ContractClass)), "ContractClass ContractType");
+            Assert.True(model.CanSerialize(typeof(ContractClass)), "ContractClass Any");
+            Assert.False(model.CanSerializeBasicType(typeof(ContractClass)), "ContractClass BasicType");
+            Assert.True(model.CanSerializeContractType(typeof(ContractClass)), "ContractClass ContractType");
 
-            Assert.IsFalse(model.CanSerialize(typeof(NonContractClass)), "NonContractClass Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(NonContractClass)), "NonContractClass BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(NonContractClass)), "NonContractClass ContractType");
+            Assert.False(model.CanSerialize(typeof(NonContractClass)), "NonContractClass Any");
+            Assert.False(model.CanSerializeBasicType(typeof(NonContractClass)), "NonContractClass BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(NonContractClass)), "NonContractClass ContractType");
 
-            Assert.IsTrue(model.CanSerialize(typeof(ContractStruct)), "ContractStruct Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(ContractStruct)), "ContractStruct BasicType");
-            Assert.IsTrue(model.CanSerializeContractType(typeof(ContractStruct)), "ContractStruct ContractType");
+            Assert.True(model.CanSerialize(typeof(ContractStruct)), "ContractStruct Any");
+            Assert.False(model.CanSerializeBasicType(typeof(ContractStruct)), "ContractStruct BasicType");
+            Assert.True(model.CanSerializeContractType(typeof(ContractStruct)), "ContractStruct ContractType");
 
-            Assert.IsTrue(model.CanSerialize(typeof(ContractStruct?)), "ContractStruct? Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(ContractStruct?)), "ContractStruct? BasicType");
-            Assert.IsTrue(model.CanSerializeContractType(typeof(ContractStruct?)), "ContractStruct? ContractType");
+            Assert.True(model.CanSerialize(typeof(ContractStruct?)), "ContractStruct? Any");
+            Assert.False(model.CanSerializeBasicType(typeof(ContractStruct?)), "ContractStruct? BasicType");
+            Assert.True(model.CanSerializeContractType(typeof(ContractStruct?)), "ContractStruct? ContractType");
 
-            Assert.IsFalse(model.CanSerialize(typeof(NonContractStruct)), "NonContractStruct Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(NonContractStruct)), "NonContractStruct BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(NonContractStruct)), "NonContractStruct ContractType");
+            Assert.False(model.CanSerialize(typeof(NonContractStruct)), "NonContractStruct Any");
+            Assert.False(model.CanSerializeBasicType(typeof(NonContractStruct)), "NonContractStruct BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(NonContractStruct)), "NonContractStruct ContractType");
 
-            Assert.IsFalse(model.CanSerialize(typeof(NonContractStruct?)), "NonContractStruct? Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(NonContractStruct?)), "NonContractStruct? BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(NonContractStruct?)), "NonContractStruct? ContractType");
+            Assert.False(model.CanSerialize(typeof(NonContractStruct?)), "NonContractStruct? Any");
+            Assert.False(model.CanSerializeBasicType(typeof(NonContractStruct?)), "NonContractStruct? BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(NonContractStruct?)), "NonContractStruct? ContractType");
         }
 
-        [Test]
+        [Fact]
         public void BasicVersusContractArrays()
         {
             var model = TypeModel.Create();
-            Assert.IsTrue(model.CanSerialize(typeof(int[])), "int Any");
-            Assert.IsTrue(model.CanSerializeBasicType(typeof(int[])), "int BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(int[])), "int ContractType");
+            Assert.True(model.CanSerialize(typeof(int[])), "int Any");
+            Assert.True(model.CanSerializeBasicType(typeof(int[])), "int BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(int[])), "int ContractType");
 
-            Assert.IsTrue(model.CanSerialize(typeof(ContractClass[])), "ContractClass Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(ContractClass[])), "ContractClass BasicType");
-            Assert.IsTrue(model.CanSerializeContractType(typeof(ContractClass[])), "ContractClass ContractType");
+            Assert.True(model.CanSerialize(typeof(ContractClass[])), "ContractClass Any");
+            Assert.False(model.CanSerializeBasicType(typeof(ContractClass[])), "ContractClass BasicType");
+            Assert.True(model.CanSerializeContractType(typeof(ContractClass[])), "ContractClass ContractType");
 
-            Assert.IsFalse(model.CanSerialize(typeof(NonContractClass[])), "NonContractClass Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(NonContractClass[])), "NonContractClass BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(NonContractClass[])), "NonContractClass ContractType");
+            Assert.False(model.CanSerialize(typeof(NonContractClass[])), "NonContractClass Any");
+            Assert.False(model.CanSerializeBasicType(typeof(NonContractClass[])), "NonContractClass BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(NonContractClass[])), "NonContractClass ContractType");
 
-            Assert.IsTrue(model.CanSerialize(typeof(ContractStruct[])), "ContractStruct Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(ContractStruct[])), "ContractStruct BasicType");
-            Assert.IsTrue(model.CanSerializeContractType(typeof(ContractStruct[])), "ContractStruct ContractType");
+            Assert.True(model.CanSerialize(typeof(ContractStruct[])), "ContractStruct Any");
+            Assert.False(model.CanSerializeBasicType(typeof(ContractStruct[])), "ContractStruct BasicType");
+            Assert.True(model.CanSerializeContractType(typeof(ContractStruct[])), "ContractStruct ContractType");
 
-            Assert.IsTrue(model.CanSerialize(typeof(ContractStruct?[])), "ContractStruct? Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(ContractStruct?[])), "ContractStruct? BasicType");
-            Assert.IsTrue(model.CanSerializeContractType(typeof(ContractStruct?[])), "ContractStruct? ContractType");
+            Assert.True(model.CanSerialize(typeof(ContractStruct?[])), "ContractStruct? Any");
+            Assert.False(model.CanSerializeBasicType(typeof(ContractStruct?[])), "ContractStruct? BasicType");
+            Assert.True(model.CanSerializeContractType(typeof(ContractStruct?[])), "ContractStruct? ContractType");
 
-            Assert.IsFalse(model.CanSerialize(typeof(NonContractStruct[])), "NonContractStruct Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(NonContractStruct[])), "NonContractStruct BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(NonContractStruct[])), "NonContractStruct ContractType");
+            Assert.False(model.CanSerialize(typeof(NonContractStruct[])), "NonContractStruct Any");
+            Assert.False(model.CanSerializeBasicType(typeof(NonContractStruct[])), "NonContractStruct BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(NonContractStruct[])), "NonContractStruct ContractType");
 
-            Assert.IsFalse(model.CanSerialize(typeof(NonContractStruct?[])), "NonContractStruct? Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(NonContractStruct?[])), "NonContractStruct? BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(NonContractStruct?[])), "NonContractStruct? ContractType");
+            Assert.False(model.CanSerialize(typeof(NonContractStruct?[])), "NonContractStruct? Any");
+            Assert.False(model.CanSerializeBasicType(typeof(NonContractStruct?[])), "NonContractStruct? BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(NonContractStruct?[])), "NonContractStruct? ContractType");
         }
 
-        [Test]
+        [Fact]
         public void BasicVersusContractLists()
         {
             var model = TypeModel.Create();
-            Assert.IsTrue(model.CanSerialize(typeof(List<int>)), "int Any");
-            Assert.IsTrue(model.CanSerializeBasicType(typeof(List<int>)), "int BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(List<int>)), "int ContractType");
+            Assert.True(model.CanSerialize(typeof(List<int>)), "int Any");
+            Assert.True(model.CanSerializeBasicType(typeof(List<int>)), "int BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(List<int>)), "int ContractType");
 
-            Assert.IsTrue(model.CanSerialize(typeof(List<ContractClass>)), "ContractClass Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(List<ContractClass>)), "ContractClass BasicType");
-            Assert.IsTrue(model.CanSerializeContractType(typeof(List<ContractClass>)), "ContractClass ContractType");
+            Assert.True(model.CanSerialize(typeof(List<ContractClass>)), "ContractClass Any");
+            Assert.False(model.CanSerializeBasicType(typeof(List<ContractClass>)), "ContractClass BasicType");
+            Assert.True(model.CanSerializeContractType(typeof(List<ContractClass>)), "ContractClass ContractType");
 
-            Assert.IsFalse(model.CanSerialize(typeof(List<NonContractClass>)), "NonContractClass Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(List<NonContractClass>)), "NonContractClass BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(List<NonContractClass>)), "NonContractClass ContractType");
+            Assert.False(model.CanSerialize(typeof(List<NonContractClass>)), "NonContractClass Any");
+            Assert.False(model.CanSerializeBasicType(typeof(List<NonContractClass>)), "NonContractClass BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(List<NonContractClass>)), "NonContractClass ContractType");
 
-            Assert.IsTrue(model.CanSerialize(typeof(List<ContractStruct>)), "ContractStruct Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(List<ContractStruct>)), "ContractStruct BasicType");
-            Assert.IsTrue(model.CanSerializeContractType(typeof(List<ContractStruct>)), "ContractStruct ContractType");
+            Assert.True(model.CanSerialize(typeof(List<ContractStruct>)), "ContractStruct Any");
+            Assert.False(model.CanSerializeBasicType(typeof(List<ContractStruct>)), "ContractStruct BasicType");
+            Assert.True(model.CanSerializeContractType(typeof(List<ContractStruct>)), "ContractStruct ContractType");
 
-            Assert.IsTrue(model.CanSerialize(typeof(List<ContractStruct?>)), "ContractStruct? Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(List<ContractStruct?>)), "ContractStruct? BasicType");
-            Assert.IsTrue(model.CanSerializeContractType(typeof(List<ContractStruct?>)), "ContractStruct? ContractType");
+            Assert.True(model.CanSerialize(typeof(List<ContractStruct?>)), "ContractStruct? Any");
+            Assert.False(model.CanSerializeBasicType(typeof(List<ContractStruct?>)), "ContractStruct? BasicType");
+            Assert.True(model.CanSerializeContractType(typeof(List<ContractStruct?>)), "ContractStruct? ContractType");
 
-            Assert.IsFalse(model.CanSerialize(typeof(List<NonContractStruct>)), "NonContractStruct Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(List<NonContractStruct>)), "NonContractStruct BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(List<NonContractStruct>)), "NonContractStruct ContractType");
+            Assert.False(model.CanSerialize(typeof(List<NonContractStruct>)), "NonContractStruct Any");
+            Assert.False(model.CanSerializeBasicType(typeof(List<NonContractStruct>)), "NonContractStruct BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(List<NonContractStruct>)), "NonContractStruct ContractType");
 
-            Assert.IsFalse(model.CanSerialize(typeof(List<NonContractStruct?>)), "NonContractStruct? Any");
-            Assert.IsFalse(model.CanSerializeBasicType(typeof(List<NonContractStruct?>)), "NonContractStruct? BasicType");
-            Assert.IsFalse(model.CanSerializeContractType(typeof(List<NonContractStruct?>)), "NonContractStruct? ContractType");
+            Assert.False(model.CanSerialize(typeof(List<NonContractStruct?>)), "NonContractStruct? Any");
+            Assert.False(model.CanSerializeBasicType(typeof(List<NonContractStruct?>)), "NonContractStruct? BasicType");
+            Assert.False(model.CanSerializeContractType(typeof(List<NonContractStruct?>)), "NonContractStruct? ContractType");
         }
-        [Test]
+        [Fact]
         public void TestPrimitiveCanSerialize()
         {
             var model = TypeModel.Create();
-            Assert.IsTrue(model.CanSerialize(typeof(int)));
-            Assert.IsTrue(model.CanSerialize(typeof(int?)));
-            Assert.IsTrue(model.CanSerialize(typeof(short)));
-            Assert.IsTrue(model.CanSerialize(typeof(short?)));
-            Assert.IsTrue(model.CanSerialize(typeof(byte[])));
-            Assert.IsTrue(model.CanSerialize(typeof(string)));
-            Assert.IsTrue(model.CanSerialize(typeof(DateTime)));
-            Assert.IsTrue(model.CanSerialize(typeof(DateTime?)));
+            Assert.True(model.CanSerialize(typeof(int)));
+            Assert.True(model.CanSerialize(typeof(int?)));
+            Assert.True(model.CanSerialize(typeof(short)));
+            Assert.True(model.CanSerialize(typeof(short?)));
+            Assert.True(model.CanSerialize(typeof(byte[])));
+            Assert.True(model.CanSerialize(typeof(string)));
+            Assert.True(model.CanSerialize(typeof(DateTime)));
+            Assert.True(model.CanSerialize(typeof(DateTime?)));
 #if !COREFX
-            Assert.IsFalse(model.CanSerialize(typeof(System.Windows.Media.Color)));
+            Assert.False(model.CanSerialize(typeof(System.Windows.Media.Color)));
 #endif
-            Assert.IsFalse(model.CanSerialize(typeof(DateTimeOffset)));
-            Assert.IsFalse(model.CanSerialize(typeof(Action)));
+            Assert.False(model.CanSerialize(typeof(DateTimeOffset)));
+            Assert.False(model.CanSerialize(typeof(Action)));
         }
 
-        [Test]
+        [Fact]
         public void TestPrimitiveArraysCanSerialize()
         {
             var model = TypeModel.Create();
-            Assert.IsTrue(model.CanSerialize(typeof(int[])), "int");
-            Assert.IsTrue(model.CanSerialize(typeof(int?[])), "int?");
-            Assert.IsTrue(model.CanSerialize(typeof(short[])), "short");
-            Assert.IsTrue(model.CanSerialize(typeof(short?[])), "short?");
-            Assert.IsTrue(model.CanSerialize(typeof(byte[][])), "byte[]");
-            Assert.IsTrue(model.CanSerialize(typeof(string[])), "string");
-            Assert.IsTrue(model.CanSerialize(typeof(DateTime[])), "DateTime");
-            Assert.IsTrue(model.CanSerialize(typeof(DateTime?[])), "DateTime?");
+            Assert.True(model.CanSerialize(typeof(int[])), "int");
+            Assert.True(model.CanSerialize(typeof(int?[])), "int?");
+            Assert.True(model.CanSerialize(typeof(short[])), "short");
+            Assert.True(model.CanSerialize(typeof(short?[])), "short?");
+            Assert.True(model.CanSerialize(typeof(byte[][])), "byte[]");
+            Assert.True(model.CanSerialize(typeof(string[])), "string");
+            Assert.True(model.CanSerialize(typeof(DateTime[])), "DateTime");
+            Assert.True(model.CanSerialize(typeof(DateTime?[])), "DateTime?");
 #if !COREFX
-            Assert.IsFalse(model.CanSerialize(typeof(System.Windows.Media.Color[])), "Color");
+            Assert.False(model.CanSerialize(typeof(System.Windows.Media.Color[])), "Color");
 #endif
-            Assert.IsFalse(model.CanSerialize(typeof(DateTimeOffset[])), "DateTimeOffset");
-            Assert.IsFalse(model.CanSerialize(typeof(Action[])), "Action");
+            Assert.False(model.CanSerialize(typeof(DateTimeOffset[])), "DateTimeOffset");
+            Assert.False(model.CanSerialize(typeof(Action[])), "Action");
         }
-        [Test]
+        [Fact]
         public void TestPrimitiveNestedArraysCannotSerialize()
         {
             var model = TypeModel.Create();
-            Assert.IsFalse(model.CanSerialize(typeof(int[][])));
-            Assert.IsFalse(model.CanSerialize(typeof(int?[][])));
-            Assert.IsFalse(model.CanSerialize(typeof(short[][])));
-            Assert.IsFalse(model.CanSerialize(typeof(short?[][])));
-            Assert.IsFalse(model.CanSerialize(typeof(byte[][][])));
-            Assert.IsFalse(model.CanSerialize(typeof(string[][])));
-            Assert.IsFalse(model.CanSerialize(typeof(DateTime[][])));
-            Assert.IsFalse(model.CanSerialize(typeof(DateTime?[][])));
+            Assert.False(model.CanSerialize(typeof(int[][])));
+            Assert.False(model.CanSerialize(typeof(int?[][])));
+            Assert.False(model.CanSerialize(typeof(short[][])));
+            Assert.False(model.CanSerialize(typeof(short?[][])));
+            Assert.False(model.CanSerialize(typeof(byte[][][])));
+            Assert.False(model.CanSerialize(typeof(string[][])));
+            Assert.False(model.CanSerialize(typeof(DateTime[][])));
+            Assert.False(model.CanSerialize(typeof(DateTime?[][])));
 #if !COREFX
-            Assert.IsFalse(model.CanSerialize(typeof(System.Windows.Media.Color[][])));
+            Assert.False(model.CanSerialize(typeof(System.Windows.Media.Color[][])));
 #endif
-            Assert.IsFalse(model.CanSerialize(typeof(DateTimeOffset[][])));
-            Assert.IsFalse(model.CanSerialize(typeof(Action[][])));
+            Assert.False(model.CanSerialize(typeof(DateTimeOffset[][])));
+            Assert.False(model.CanSerialize(typeof(Action[][])));
         }
-        [Test]
+        [Fact]
         public void TestPrimitiveMultidimArraysCannotSerialize()
         {
             var model = TypeModel.Create();
-            Assert.IsFalse(model.CanSerialize(typeof(int[,])));
-            Assert.IsFalse(model.CanSerialize(typeof(int?[,])));
-            Assert.IsFalse(model.CanSerialize(typeof(short[,])));
-            Assert.IsFalse(model.CanSerialize(typeof(short?[,])));
-            Assert.IsFalse(model.CanSerialize(typeof(byte[,])));
-            Assert.IsFalse(model.CanSerialize(typeof(string[,])));
-            Assert.IsFalse(model.CanSerialize(typeof(DateTime[,])));
-            Assert.IsFalse(model.CanSerialize(typeof(DateTime?[,])));
+            Assert.False(model.CanSerialize(typeof(int[,])));
+            Assert.False(model.CanSerialize(typeof(int?[,])));
+            Assert.False(model.CanSerialize(typeof(short[,])));
+            Assert.False(model.CanSerialize(typeof(short?[,])));
+            Assert.False(model.CanSerialize(typeof(byte[,])));
+            Assert.False(model.CanSerialize(typeof(string[,])));
+            Assert.False(model.CanSerialize(typeof(DateTime[,])));
+            Assert.False(model.CanSerialize(typeof(DateTime?[,])));
 #if !COREFX
-            Assert.IsFalse(model.CanSerialize(typeof(System.Windows.Media.Color[,])));
+            Assert.False(model.CanSerialize(typeof(System.Windows.Media.Color[,])));
 #endif
-            Assert.IsFalse(model.CanSerialize(typeof(DateTimeOffset[,])));
-            Assert.IsFalse(model.CanSerialize(typeof(Action[,])));
+            Assert.False(model.CanSerialize(typeof(DateTimeOffset[,])));
+            Assert.False(model.CanSerialize(typeof(Action[,])));
         }
 
 

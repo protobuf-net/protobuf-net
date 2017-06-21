@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -9,10 +9,10 @@ using System.Text;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO13783894
     {
-        [Test]
+        [Fact]
         public void ConfigureBasicEnum()
         {
             var model = TypeModel.Create();
@@ -30,11 +30,11 @@ namespace Examples.Issues
                 ms.Position = 0;
                 var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
 
-                Assert.AreEqual(2, clone1.Value);
-                Assert.AreEqual(3, clone2.Value);
+                Assert.Equal(2, clone1.Value);
+                Assert.Equal(3, clone2.Value);
             }
         }
-        [Test]
+        [Fact]
         public void ConfigureExplicitEnumValuesAtRuntime()
         {
             var model = TypeModel.Create();
@@ -52,8 +52,8 @@ namespace Examples.Issues
                 ms.Position = 0;
                 var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
 
-                Assert.AreEqual(1, clone1.Value);
-                Assert.AreEqual(10, clone2.Value);
+                Assert.Equal(1, clone1.Value);
+                Assert.Equal(10, clone2.Value);
             }
         }
         //[ProtoContract]

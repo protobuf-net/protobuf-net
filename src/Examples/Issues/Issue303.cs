@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue303
     {
         static TypeModel GetModel()
@@ -17,12 +17,13 @@ namespace Examples.Issues
             return model;
         }
 
-        [Test]
+        [Fact]
         public void TestEntireModel()
         {
             var model = GetModel();
-            Assert.AreEqual(
-                @"package Examples.Issues;
+            Assert.Equal(
+                @"syntax = ""proto2"";
+package Examples.Issues;
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
@@ -41,13 +42,14 @@ message vegetable {
 
 );
         }
-        [Test]
+        [Fact]
         public void TestEntireModelWithMultipleNamespaces()
         {
             var model = (RuntimeTypeModel)GetModel();
             model.Add(typeof (Examples.Issues.CompletelyUnrelated.Mineral), true);
-            Assert.AreEqual(
-                @"
+            Assert.Equal(
+                @"syntax = ""proto2"";
+
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
    // the following represent sub-types; at most 1 should have a value
@@ -67,12 +69,13 @@ message vegetable {
 
 );
         }
-        [Test]
+        [Fact]
         public void TestInheritanceStartingWithBaseType()
         {
             var model = GetModel();
-            Assert.AreEqual(
-                @"package Examples.Issues;
+            Assert.Equal(
+                @"syntax = ""proto2"";
+package Examples.Issues;
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
@@ -88,12 +91,13 @@ message cat {
 
                 );
         }
-        [Test]
+        [Fact]
         public void TestInheritanceStartingWithDerivedType()
         {
             var model = GetModel();
-            Assert.AreEqual(
-                @"package Examples.Issues;
+            Assert.Equal(
+                @"syntax = ""proto2"";
+package Examples.Issues;
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];

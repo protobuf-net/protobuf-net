@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.Serialization;
 using DAL;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -32,10 +32,10 @@ namespace Examples.Remoting
 
     }
 
-    [TestFixture]
+    
     public class DbRemoting
     {
-        [Test]
+        [Fact]
         public void LargePayload()
         {
             DAL.Database db = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>(RuntimeTypeModel.Default);
@@ -69,8 +69,8 @@ namespace Examples.Remoting
                 factor = 1.2M; // be realistic in debug...
 #endif
                 long target = (long) (dbTimer.ElapsedTicks * factor);
-                Assert.LessOrEqual(3, 5, "args wrong way around!");
-                Assert.LessOrEqual(remTimer.ElapsedTicks, target);
+                Assert.True(3 <= 5); //, "args wrong way around!");
+                Assert.True(remTimer.ElapsedTicks <= target);
             }
             finally
             {
@@ -125,10 +125,10 @@ namespace Examples.Remoting
         }
     }
 
-    [TestFixture]
+    
     public class RemotingDemo
     {
-        [Test]
+        [Fact]
         [Ignore("small messages known to be slower")]
         public void SmallPayload()
         {
@@ -150,14 +150,14 @@ namespace Examples.Remoting
                 ProtoFragment localFrag2 = local.SomeMethod2(frag2),
                     remoteFrag2 = remote.SomeMethod2(frag2);
 
-                Assert.AreNotSame(localFrag1, remoteFrag1);
-                Assert.AreNotSame(localFrag2, remoteFrag2);
-                Assert.AreEqual(localFrag1.Foo, remoteFrag1.Foo);
-                Assert.AreEqual(localFrag1.Bar, remoteFrag1.Bar);
-                Assert.AreEqual(localFrag2.Foo, remoteFrag2.Foo);
-                Assert.AreEqual(localFrag2.Bar, remoteFrag2.Bar);
-                Assert.AreEqual(localFrag1.Foo, localFrag2.Foo);
-                Assert.AreEqual(localFrag1.Bar, localFrag2.Bar);
+                Assert.NotSame(localFrag1, remoteFrag1);
+                Assert.NotSame(localFrag2, remoteFrag2);
+                Assert.Equal(localFrag1.Foo, remoteFrag1.Foo);
+                Assert.Equal(localFrag1.Bar, remoteFrag1.Bar);
+                Assert.Equal(localFrag2.Foo, remoteFrag2.Foo);
+                Assert.Equal(localFrag2.Bar, remoteFrag2.Bar);
+                Assert.Equal(localFrag1.Foo, localFrag2.Foo);
+                Assert.Equal(localFrag1.Bar, localFrag2.Bar);
 
                 const int LOOP = 5000;
 
@@ -174,16 +174,16 @@ namespace Examples.Remoting
                 }
                 protoWatch.Stop();
 
-                Assert.LessOrEqual(3, 5, "just checking...");
+                Assert.True(3 <= 5); //, "just checking...");
 
-                Assert.LessOrEqual(protoWatch.ElapsedMilliseconds, regWatch.ElapsedMilliseconds);
+                Assert.True(protoWatch.ElapsedMilliseconds <= regWatch.ElapsedMilliseconds);
             }
             finally
             {                
                 AppDomain.Unload(app);
             }
         }
-        [Test]
+        [Fact]
         public void TestRawSerializerPerformance()
         {
             RegularFragment frag1 = new RegularFragment { Foo = 27, Bar = 123.45F };

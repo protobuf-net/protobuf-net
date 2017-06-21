@@ -151,7 +151,7 @@ namespace ProtoBuf.Serializers
             object builderInstance = builderFactory.Invoke(null, null);
             int field = source.FieldNumber;
             object[] args = new object[1];
-            if (AppendToCollection && value != null && ((IList)value).Count != 0)
+            if (AppendToCollection && value != null && ((ICollection)value).Count != 0)
             {   
                 if(addRange !=null)
                 {
@@ -160,7 +160,7 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
-                    foreach(object item in (IList)value)
+                    foreach(object item in (ICollection)value)
                     {
                         args[0] = item;
                         add.Invoke(builderInstance, args);

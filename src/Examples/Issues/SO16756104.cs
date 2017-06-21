@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
@@ -8,10 +8,10 @@ using System.Threading.Tasks;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO16756104
     {
-        [Test]
+        [Fact]
         public void TestNullableDoubleList()
         {
             Program.ExpectFailure<NullReferenceException>(() =>
@@ -21,7 +21,7 @@ namespace Examples.Issues
             });
         }
 
-        [Test]
+        [Fact]
         public void TestNullableInt32List()
         {
             Program.ExpectFailure<NullReferenceException>(() =>
@@ -31,7 +31,7 @@ namespace Examples.Issues
             });
         }
 
-        [Test]
+        [Fact]
         public void TestNullableStringList()
         {
             Program.ExpectFailure<NullReferenceException>(() =>

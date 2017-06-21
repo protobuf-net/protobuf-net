@@ -19,35 +19,55 @@ namespace ProtoBuf.Serializers
 #else
         static readonly Type expectedType = typeof(TimeSpan);
 #endif
-        public TimeSpanSerializer(ProtoBuf.Meta.TypeModel model)
+        private readonly bool wellKnown;
+        public TimeSpanSerializer(DataFormat dataFormat, ProtoBuf.Meta.TypeModel model)
         {
 #if FEAT_IKVM
             expectedType = model.MapType(typeof(TimeSpan));
 #endif
+            wellKnown = dataFormat == DataFormat.WellKnown;
         }
-        public Type ExpectedType { get { return expectedType; } }
+        public Type ExpectedType => expectedType;
 
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        bool IProtoSerializer.RequiresOldValue => false;
+        bool IProtoSerializer.ReturnsValue => true;
 #if !FEAT_IKVM
         public object Read(object value, ProtoReader source)
         {
-            Helpers.DebugAssert(value == null); // since replaces
-            return BclHelpers.ReadTimeSpan(source);
+            if (wellKnown)
+            {
+                return BclHelpers.ReadDuration(source);
+            }
+            else
+            {
+                Helpers.DebugAssert(value == null); // since replaces
+                return BclHelpers.ReadTimeSpan(source);
+            }
         }
         public void Write(object value, ProtoWriter dest)
         {
-            BclHelpers.WriteTimeSpan((TimeSpan)value, dest);
+            if (wellKnown)
+            {
+                BclHelpers.WriteDuration((TimeSpan)value, dest);
+            }
+            else
+            {
+                BclHelpers.WriteTimeSpan((TimeSpan)value, dest);
+            }
         }
 #endif
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)), "WriteTimeSpan", valueFrom);
+            ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)),
+                wellKnown ? nameof(BclHelpers.WriteDuration) : nameof(BclHelpers.WriteTimeSpan), valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)), "ReadTimeSpan", ExpectedType);
+            if (wellKnown) ctx.LoadValue(valueFrom);
+            ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)),
+                wellKnown ? nameof(BclHelpers.ReadDuration) : nameof(BclHelpers.ReadTimeSpan),
+                ExpectedType);
         }
 #endif
 

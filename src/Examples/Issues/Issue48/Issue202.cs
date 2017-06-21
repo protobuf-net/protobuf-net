@@ -1,15 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues.Issue48
 {
-    [TestFixture]
+    
     public class Issue202
     {
-        [Test]
+        [Fact]
         public void TestListsAsFields()
         { 
             var model = RuntimeTypeModel.Create();
@@ -25,10 +25,10 @@ namespace Examples.Issues.Issue48
         {
             A a = new A { flags = new List<string> { "abc", "def" } }, c;
 
-            Assert.IsNotNull(a.flags.Count, test);
-            Assert.AreEqual(2, a.flags.Count, test);
-            Assert.AreEqual("abc", a.flags[0], test);
-            Assert.AreEqual("def", a.flags[1], test);
+            Assert.NotNull(a.flags.Count); //, test);
+            Assert.Equal(2, a.flags.Count); //, test);
+            Assert.Equal("abc", a.flags[0]); //, test);
+            Assert.Equal("def", a.flags[1]); //, test);
 
             B b;
             using (var ms = new MemoryStream())
@@ -37,10 +37,10 @@ namespace Examples.Issues.Issue48
                 ms.Position = 0;
                 b = (B)model.Deserialize(ms, null, typeof(B));
             }
-            Assert.IsNotNull(b.flags.Count, test);
-            Assert.AreEqual(2, b.flags.Count, test);
-            Assert.AreEqual("abc", b.flags[0], test);
-            Assert.AreEqual("def", b.flags[1], test);
+            Assert.NotNull(b.flags.Count); //, test);
+            Assert.Equal(2, b.flags.Count); //, test);
+            Assert.Equal("abc", b.flags[0]); //, test);
+            Assert.Equal("def", b.flags[1]); //, test);
 
             using (var ms = new MemoryStream())
             {
@@ -48,10 +48,10 @@ namespace Examples.Issues.Issue48
                 ms.Position = 0;
                 c = (A)model.Deserialize(ms, null, typeof(A));
             }
-            Assert.IsNotNull(c.flags.Count, test);
-            Assert.AreEqual(2, c.flags.Count, test);
-            Assert.AreEqual("abc", c.flags[0], test);
-            Assert.AreEqual("def", c.flags[1], test);
+            Assert.NotNull(c.flags.Count); //, test);
+            Assert.Equal(2, c.flags.Count); //, test);
+            Assert.Equal("abc", c.flags[0]); //, test);
+            Assert.Equal("def", c.flags[1]); //, test);
         }
 
         [ProtoContract]

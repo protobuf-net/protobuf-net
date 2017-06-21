@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.IO;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO6651451
     {
         public class SerializeClass
@@ -58,10 +58,9 @@ namespace Examples.Issues
                 return surrogate;
             }
         }
-        [Test]
+        [Fact]
         public void RunTest()
         {
-            Program.ExpectFailure<InvalidOperationException>(() => { 
             //Serialization Logic:
             RuntimeTypeModel.Default[typeof(SerializeClass)].SetSurrogate(typeof(SerializeClassSurrogate));
 
@@ -76,8 +75,8 @@ namespace Examples.Issues
             m.MyList.Add(myDictionaryItem);
             m.MyList.Add(myDictionaryItem);
 
-            Assert.AreSame(m.MyDictionary["def"], m.MyDictionary["abc"]);
-            Assert.AreSame(m.MyList[0], m.MyList[1]);
+            Assert.Same(m.MyDictionary["def"], m.MyDictionary["abc"]);
+            Assert.Same(m.MyList[0], m.MyList[1]);
 
             byte[] buffer;
             using (var writer = new MemoryStream())
@@ -89,10 +88,9 @@ namespace Examples.Issues
             using (var reader = new MemoryStream(buffer))
             {
                 var deserialized = Serializer.Deserialize<SerializeClass>(reader);
-                Assert.AreSame(deserialized.MyDictionary["def"], deserialized.MyDictionary["abc"]);
-                Assert.AreSame(deserialized.MyList[0], deserialized.MyList[1]);
+                Assert.Same(deserialized.MyDictionary["def"], deserialized.MyDictionary["abc"]);
+                Assert.Same(deserialized.MyList[0], deserialized.MyList[1]);
             }
-            }, "AsReference cannot be used with value-types; please see http://stackoverflow.com/q/14436606/");
         }
 
     }

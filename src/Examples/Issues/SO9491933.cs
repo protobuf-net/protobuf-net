@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO9491933
     {
         [ProtoContract]
@@ -65,7 +65,7 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public void TestProtoBuf2()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -87,11 +87,11 @@ namespace Examples.Issues
                     list2 = Serializer.Deserialize<IList<A>>(file);
                 }
 
-                Assert.AreEqual(list.Count, list2.Count);
+                Assert.Equal(list.Count, list2.Count);
 
                 for (int i = 0; i < list.Count; i++)
                 {
-                    Assert.AreEqual(list[i], list2[i]);
+                    Assert.Equal(list[i], list2[i]);
                 }
             }, "Dynamic type is not a contract-type: DateTime");
         }

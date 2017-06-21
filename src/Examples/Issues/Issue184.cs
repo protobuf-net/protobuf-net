@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -7,17 +7,17 @@ using System.Linq;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue184
     {
-        [Test]
+        [Fact]
         public void CanCreateUsableEnumerableMetaType()
         {
             var model = TypeModel.Create();
             model.Add(typeof(IEnumerable<int>), false);
             model.CompileInPlace();
         }
-        [Test]
+        [Fact]
         public void CantCreateMetaTypeForInbuilt()
         {
             Program.ExpectFailure<ArgumentException>(() =>
@@ -27,7 +27,7 @@ namespace Examples.Issues
                 model.CompileInPlace();
             }, "Data of this type has inbuilt behaviour, and cannot be added to a model in this way: System.Decimal");
         }
-        [Test]
+        [Fact]
         public void CantSubclassLists()
         {
             Program.ExpectFailure<ArgumentException>(() =>
@@ -38,7 +38,7 @@ namespace Examples.Issues
                 model.CompileInPlace();
             }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be subclassed");
         }
-        [Test]
+        [Fact]
         public void ListAsSubclass()
         {
             Program.ExpectFailure<ArgumentException>(() =>
@@ -48,7 +48,7 @@ namespace Examples.Issues
                 m.CompileInPlace();
             }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
         }
-        [Test]
+        [Fact]
         public void CantSurrogateLists()
         {
             Program.ExpectFailure<ArgumentException>(() =>
@@ -58,7 +58,7 @@ namespace Examples.Issues
                 model.CompileInPlace();
             }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
         }
-        [Test]
+        [Fact]
         public void ListAsSurrogate()
         {
             Program.ExpectFailure<ArgumentException>(() =>

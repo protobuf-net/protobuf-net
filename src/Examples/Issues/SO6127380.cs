@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO6127380
     {
         [ProtoContract]
@@ -31,7 +31,7 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             Node n = new Node { Data = 0 }, root = n;
@@ -43,7 +43,7 @@ namespace Examples.Issues
             }
             Node clone = Serializer.DeepClone(root);
         }
-        [Test]
+        [Fact]
         public void ExecuteRecursive()
         {
             Node n = new Node { Data = 0 }, root = n;
@@ -56,17 +56,17 @@ namespace Examples.Issues
             n.AddChild(root);
             Node clone = Serializer.DeepClone(root);
         }
-        [Test]
+        [Fact]
         public void TestSelfRecursive()
         {
             Node orig = new Node();
             orig.AddChild(orig);
-            Assert.AreEqual(1, orig.Children.Count);
-            Assert.AreSame(orig, orig.Children[0]);
+            Assert.Equal(1, orig.Children.Count);
+            Assert.Same(orig, orig.Children[0]);
 
             var clone = Serializer.DeepClone(orig);
-            Assert.AreEqual(1, clone.Children.Count);
-            Assert.AreSame(clone, clone.Children[0]);
+            Assert.Equal(1, clone.Children.Count);
+            Assert.Same(clone, clone.Children[0]);
         }
     }
 }

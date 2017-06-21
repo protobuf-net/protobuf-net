@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Linq;
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue243
     {
         [ProtoContract]
@@ -24,7 +24,7 @@ namespace Examples.Issues
             [ProtoMember(4)]
             public string[] StringArray { get; set; }
         }
-        [Test]
+        [Fact]
         public  void ExecuteNonNullTests()
         {
             var model = GetModel();
@@ -40,7 +40,7 @@ namespace Examples.Issues
             model.Add(typeof(NullableSequences), true);
             return model;
         }
-        [Test]
+        [Fact]
         public void ExecuteWithNullRuntime()
         {
             Program.ExpectFailure<NullReferenceException>(() =>
@@ -49,7 +49,7 @@ namespace Examples.Issues
                 RunTestNull(model, "Runtime");
             });
         }
-        [Test]
+        [Fact]
         public void ExecuteWithNullCompileInPlace()
         {
             Program.ExpectFailure<NullReferenceException>(() =>
@@ -59,7 +59,7 @@ namespace Examples.Issues
                 RunTestNull(model, "CompileInPlace");
             });
         }
-        [Test]
+        [Fact]
         public void ExecuteWithNullCompile()
         {
             Program.ExpectFailure<NullReferenceException>(() =>
@@ -68,7 +68,7 @@ namespace Examples.Issues
                 RunTestNull(model.Compile(), "Compile");
             });
         }
-        [Test]
+        [Fact]
         public void CompilesCleanly()
         {
             var model = GetModel();
@@ -84,10 +84,10 @@ namespace Examples.Issues
             l.Int32Array = new int?[] {4, 5};
             l.StringArray = new string[] { "c", "", "d" };
             NullableSequences clone = (NullableSequences) model.DeepClone(l);
-            Assert.AreEqual("2,3", string.Join(",", clone.Int32List), caption);
-            Assert.IsTrue(clone.StringList.SequenceEqual(new[] { "a", "b", "" }));
-            Assert.AreEqual("4,5", string.Join(",", clone.Int32Array), caption);
-            Assert.IsTrue(clone.StringArray.SequenceEqual(new[] { "c", "", "d" }));
+            Assert.Equal("2,3", string.Join(",", clone.Int32List)); //, caption);
+            Assert.True(clone.StringList.SequenceEqual(new[] { "a", "b", "" }));
+            Assert.Equal("4,5", string.Join(",", clone.Int32Array)); //, caption);
+            Assert.True(clone.StringArray.SequenceEqual(new[] { "c", "", "d" }));
         }
 
         private void RunTestNull(TypeModel model, string caption)
@@ -98,10 +98,10 @@ namespace Examples.Issues
             l.Int32Array = new int?[] { 4, null, 5, null };
             l.StringArray = new string[] { "c", null, "", "d", null };
             NullableSequences clone = (NullableSequences)model.DeepClone(l);
-            Assert.AreEqual("2,,3", string.Join(",", clone.Int32List), caption);
-            Assert.IsTrue(clone.StringList.SequenceEqual(new[] { "a", null, "b", "" }));
-            Assert.AreEqual("4,,5,", string.Join(",", clone.Int32Array), caption);
-            Assert.IsTrue(clone.StringArray.SequenceEqual(new[] { "c", null, "", "d", null }));
+            Assert.Equal("2,,3", string.Join(",", clone.Int32List)); //, caption);
+            Assert.True(clone.StringList.SequenceEqual(new[] { "a", null, "b", "" }));
+            Assert.Equal("4,,5,", string.Join(",", clone.Int32Array)); //, caption);
+            Assert.True(clone.StringArray.SequenceEqual(new[] { "c", null, "", "d", null }));
         }
 
 
@@ -117,14 +117,14 @@ namespace Examples.Issues
             metaType[4].SupportNull = true;
             return model;
         }
-        [Test]
+        [Fact]
         public void TestWithSupportForNullsCompilesCleanly()
         {
             var model = GetModelWithSupportForNulls();
             model.Compile("Issue243_b", "Issue243_b.dll");
             PEVerify.AssertValid("Issue243_b.dll");
         }
-        [Test]
+        [Fact]
         public void TestWithSupportForNulls()
         {
             var model = GetModelWithSupportForNulls();

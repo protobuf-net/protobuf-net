@@ -37,6 +37,13 @@ namespace ProtoBuf
         /// When applied to a sub-message, indicates that the value should be treated
         /// as group-delimited.
         /// </summary>
-        Group
+        Group,
+
+        /// <summary>
+        /// When applied to members of types such as DateTime or TimeSpan, specifies
+        /// that the "well known" standardized representation should be use; DateTime uses Timestamp,
+        /// 
+        /// </summary>
+        WellKnown
     }
 }

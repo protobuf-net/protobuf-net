@@ -64,29 +64,46 @@ namespace ProtoBuf.Serializers
                 // value is either now on the stack or not needed
                 ctx.ReadNullCheckedTail(field.FieldType, Tail, null);
 
-                if (Tail.ReturnsValue)
+                // the field could be a backing field that needs to be raised back to
+                // the property if we're doing a full compile
+                MemberInfo member = field;
+                ctx.CheckAccessibility(ref member);
+                bool writeValue = member is FieldInfo;
+
+                if (writeValue)
                 {
-                    using (Compiler.Local newVal = new Compiler.Local(ctx, field.FieldType))
+                    if (Tail.ReturnsValue)
                     {
-                        ctx.StoreValue(newVal);
-                        if (Helpers.IsValueType(field.FieldType))
+                        using (Compiler.Local newVal = new Compiler.Local(ctx, field.FieldType))
                         {
-                            ctx.LoadAddress(loc, ExpectedType);
-                            ctx.LoadValue(newVal);
-                            ctx.StoreValue(field);
-                        }
-                        else
-                        {
-                            Compiler.CodeLabel allDone = ctx.DefineLabel();
-                            ctx.LoadValue(newVal);
-                            ctx.BranchIfFalse(allDone, true); // interpret null as "don't assign"
+                            ctx.StoreValue(newVal);
+                            if (Helpers.IsValueType(field.FieldType))
+                            {
+                                ctx.LoadAddress(loc, ExpectedType);
+                                ctx.LoadValue(newVal);
+                                ctx.StoreValue(field);
+                            }
+                            else
+                            {
+                                Compiler.CodeLabel allDone = ctx.DefineLabel();
+                                ctx.LoadValue(newVal);
+                                ctx.BranchIfFalse(allDone, true); // interpret null as "don't assign"
 
-                            ctx.LoadAddress(loc, ExpectedType);
-                            ctx.LoadValue(newVal);
-                            ctx.StoreValue(field);
+                                ctx.LoadAddress(loc, ExpectedType);
+                                ctx.LoadValue(newVal);
+                                ctx.StoreValue(field);
 
-                            ctx.MarkLabel(allDone);
+                                ctx.MarkLabel(allDone);
+                            }
                         }
+                    }
+                }
+                else
+                {
+                    // can't use result
+                    if (Tail.ReturnsValue)
+                    {
+                        ctx.DiscardValue();
                     }
                 }
             }

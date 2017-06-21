@@ -2,17 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
-using NUnit.Framework.SyntaxHelpers;
 using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue174cs
     {
-        [Test]
+        [Fact]
         public void TestDynamic()
         {
             Program.ExpectFailure<Exception>(() =>
@@ -24,7 +23,7 @@ namespace Examples.Issues
                     Serializer.Serialize(ms, myVal);
                     serialized = ms.ToArray();
                 }
-                Assert.IsNotNull(serialized);
+                Assert.NotNull(serialized);
             }, "Dynamic type is not a contract-type: Boolean");
         }
 

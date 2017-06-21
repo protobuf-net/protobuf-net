@@ -1,14 +1,14 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO6407130
     {
         public class A
@@ -72,7 +72,7 @@ namespace Examples.Issues
             [ProtoMember(1)]
             public A A { get; set; }
         }
-        [Test]
+        [Fact]
         public void Execute()
         {
             var m = TypeModel.Create();
@@ -97,13 +97,13 @@ namespace Examples.Issues
             using (var ms = new MemoryStream())
             {
                 model.Serialize(ms, b);
-                Assert.AreEqual(12, ASurrogate.HackyFlags, caption);
+                Assert.Equal(12, ASurrogate.HackyFlags); //, caption);
 
                 ms.Position = 0;
                 ASurrogate.HackyFlags = 0;
                 var b2 = (B)model.Deserialize(ms, null, typeof(B));
-                Assert.AreEqual(3, ASurrogate.HackyFlags, caption);
-                Assert.AreEqual(117, b2.A.X, caption);
+                Assert.Equal(3, ASurrogate.HackyFlags); //, caption);
+                Assert.Equal(117, b2.A.X); //, caption);
             }
         }
     }

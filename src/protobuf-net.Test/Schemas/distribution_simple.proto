@@ -1,0 +1,21 @@
+﻿syntax = "proto3";
+
+message Distribution {
+  repeated double test1_d = 1 [packed=true];
+  repeated int32 test1_i32 = 2  [packed=false];
+
+
+  message BucketOptions {
+    repeated double test2_d = 1;
+	repeated int32 test2_i32 = 2;
+
+    message Explicit {
+      repeated double bounds_d = 1;
+	  repeated int32 bounds_i32 = 2;
+    }
+	oneof options {
+     Explicit explicit_buckets = 3;
+    }
+  }
+  BucketOptions bucket_options = 6;
+}

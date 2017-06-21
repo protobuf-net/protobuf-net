@@ -1,0 +1,8 @@
+﻿syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message HazWellKnownTypes {
+    google.protobuf.Timestamp x = 1;
+    google.protobuf.Duration y = 2;
+}

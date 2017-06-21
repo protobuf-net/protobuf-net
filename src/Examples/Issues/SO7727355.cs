@@ -2,13 +2,13 @@
 using System.Data;
 using System.IO;
 using System.Threading;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO7727355 // see http://stackoverflow.com/questions/7727355/no-parameterless-constructor-found
     {                      // and http://www.filejumbo.com/Download/899EB797CE084C7F
         [ProtoContract]
@@ -36,7 +36,7 @@ namespace Examples.Issues
         private Exception firstException;
         private ManualResetEvent gate = new ManualResetEvent(false);
         private int waitingThreads;
-        [Test]
+        [Fact]
         public void Execute()
         {
             for(int test = 0 ; test < 1000 ; test++)
@@ -57,7 +57,7 @@ namespace Examples.Issues
                 for (int i = 0; i < threads.Length; i++)
                     if (!threads[i].Join(5000)) throw new TimeoutException();
 
-                Assert.AreEqual(20, Interlocked.CompareExchange(ref success, 0, 0));
+                Assert.Equal(20, Interlocked.CompareExchange(ref success, 0, 0));
                 var exVal = Interlocked.CompareExchange(ref firstException, null, null);
                 if (exVal != null) throw firstException;
             }

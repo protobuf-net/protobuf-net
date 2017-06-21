@@ -1,19 +1,19 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
 
-    [TestFixture]
+    
     public class SO7218127
     {
-        [Test]
+        [Fact]
         public void Test()
         {
             var orig = new SomeWrapper {Value = new SubType { Foo = 123, Bar = "abc"}};
             var clone = Serializer.DeepClone(orig);
-            Assert.AreEqual(123, orig.Value.Foo);
-            Assert.AreEqual("abc", ((SubType) clone.Value).Bar);
+            Assert.Equal(123, orig.Value.Foo);
+            Assert.Equal("abc", ((SubType) clone.Value).Bar);
         }
         [ProtoContract]
         public class SomeWrapper

@@ -1,14 +1,14 @@
 ﻿#if !NO_CODEGEN
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using Examples.ProtoGen;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue32
     {
-        [Test]
+        [Fact]
         public void TestGpsProtoGen()
         {
             string xml = Generator.GetCode(@"-i:ProtoGen\gps.proto", "-t:xml");

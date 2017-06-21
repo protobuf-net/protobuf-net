@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -8,15 +8,15 @@ using System.Reflection;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class StupidlyComplexModel
     {
-        [Test]
+        [Fact]
         public void TimeStupidlyComplexModel()
         {
             TimeModel<StupidlyComplexModel>(5, Test);
         }
-        [Test]
+        [Fact]
         public void TimeSimpleModel()
         {
             TimeModel<SimpleModel>(100);
@@ -68,7 +68,7 @@ namespace Examples
         }
 
 
-        [Test]
+        [Fact]
         public void TestStupidlyComplexModel()
         {
             var model = RuntimeTypeModel.Create();
@@ -91,7 +91,7 @@ namespace Examples
                 Value501 = new Inner501 { Value = 456 }
             };
             var clone = (Outer)model.DeepClone(orig);
-            Assert.AreNotSame(orig, clone, test);
+            Assert.NotSame(orig, clone); //, test);
             
             var props = typeof(Outer).GetProperties();
             foreach (var prop in props)
@@ -100,27 +100,27 @@ namespace Examples
                 {
                     case "Value500":
                     case "Value501":
-                        Assert.IsNotNull(prop.GetValue(orig), test + ":orig:" + prop.Name);
-                        Assert.IsNotNull(prop.GetValue(clone), test + ":clone:" + prop.Name);
+                        Assert.NotNull(prop.GetValue(orig)); //, test + ":orig:" + prop.Name);
+                        Assert.NotNull(prop.GetValue(clone)); //, test + ":clone:" + prop.Name);
                         break;
                     default:
-                        Assert.IsNull(prop.GetValue(orig), test + ":orig:" + prop.Name);
-                        Assert.IsNull(prop.GetValue(clone), test + ":clone:" + prop.Name);
-                    break;
+                        Assert.Null(prop.GetValue(orig)); //, test + ":orig:" + prop.Name);
+                        Assert.Null(prop.GetValue(clone)); //, test + ":clone:" + prop.Name);
+                        break;
                 }
             }
 
-            Assert.AreEqual(123, orig.Value500.Value, test + ":orig:Value500.Value");
-            Assert.AreEqual(123, clone.Value500.Value, test + ":clone:Value500.Value");
-            Assert.AreEqual(456, orig.Value501.Value, test + ":orig:Value501.Value");
-            Assert.AreEqual(456, clone.Value501.Value, test + ":clone:Value501.Value");
-          
+            Assert.Equal(123, orig.Value500.Value); //, test + ":orig:Value500.Value");
+            Assert.Equal(123, clone.Value500.Value); //, test + ":clone:Value500.Value");
+            Assert.Equal(456, orig.Value501.Value); //, test + ":orig:Value501.Value");
+            Assert.Equal(456, clone.Value501.Value); //, test + ":clone:Value501.Value");
+
             var clone500 = (Inner500)model.DeepClone(orig.Value500);
             var clone501 = (Inner501)model.DeepClone(orig.Value501);
 
-            Assert.AreEqual(123, clone500.Value, test + ":clone500.Value");
-            Assert.AreEqual(456, clone501.Value, test + ":clone501.Value");
-          
+            Assert.Equal(123, clone500.Value); //, test + ":clone500.Value");
+            Assert.Equal(456, clone501.Value); //, test + ":clone501.Value");
+
         }
         [ProtoContract]
         public class Outer

@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO7219959
     {
-        [Test]
+        [Fact]
         public void Test()
         {
             Family family = new Family();
@@ -45,7 +45,7 @@ namespace Examples.Issues
         {
             [ProtoMember(1, AsReference = true)] internal Parent Parent;
 
-            private Child()
+            public Child()
             {
             }
 
@@ -63,7 +63,7 @@ namespace Examples.Issues
             /// <summary>
             /// ProtoBuf deserialization constructor (fails here)
             /// </summary>
-            private Parent()
+            public Parent()
             {
                 Initialize();
             }

@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics;
 using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO7078615
     {
         [ProtoContract] // treat the interface as a contract
@@ -34,7 +34,7 @@ namespace Examples.Issues
             public IMessage Message { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void RoundTripAnUnknownMessage()
         {
             IMessage msg = new DogBarkedEvent
@@ -54,16 +54,16 @@ namespace Examples.Issues
                 copy = wrapper.Message;
              }
             // check the data is all there
-            Assert.IsInstanceOfType(typeof(DogBarkedEvent), copy);
+            Assert.IsType(typeof(DogBarkedEvent), copy);
             var typed = (DogBarkedEvent)copy;
             var orig = (DogBarkedEvent)msg;
-            Assert.AreEqual(orig.Times, typed.Times);
-            Assert.AreEqual(orig.NameOfDog, typed.NameOfDog);
+            Assert.Equal(orig.Times, typed.Times);
+            Assert.Equal(orig.NameOfDog, typed.NameOfDog);
         }
     }
 
 
-    [TestFixture]
+    
     public class SO7078615_NoAttribs
     {
         public interface IMessage { }
@@ -78,7 +78,7 @@ namespace Examples.Issues
             public IMessage Message { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void RoundTripAnUnknownMessage()
         {
             IMessage msg = new DogBarkedEvent
@@ -103,14 +103,14 @@ namespace Examples.Issues
                 copy = wrapper.Message;
             }
             // check the data is all there
-            Assert.IsInstanceOfType(typeof(DogBarkedEvent), copy);
+            Assert.IsType(typeof(DogBarkedEvent), copy);
             var typed = (DogBarkedEvent)copy;
             var orig = (DogBarkedEvent)msg;
-            Assert.AreEqual(orig.Times, typed.Times);
-            Assert.AreEqual(orig.NameOfDog, typed.NameOfDog);
+            Assert.Equal(orig.Times, typed.Times);
+            Assert.Equal(orig.NameOfDog, typed.NameOfDog);
         }
 
-        [IgnoreTest("Long running")]
+        [Fact(Skip = "Long running")]
         public void TestPerf()
         {
             int[] values = new int[100000000];
@@ -131,8 +131,8 @@ namespace Examples.Issues
             watch.Stop();
             var direct = watch.ElapsedMilliseconds;
             Console.WriteLine(direct);
-            Assert.Less(2,3);
-            Assert.Less(hoisted, direct);
+            Assert.True(2 < 3);
+            Assert.True(hoisted < direct);
         }
 
         

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class MissingBaseTypes
     {
         [ProtoContract]
@@ -57,7 +57,7 @@ namespace Examples.Issues
 
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
 
@@ -70,11 +70,11 @@ namespace Examples.Issues
 
             string s = model.GetSchema(null);
 
-            Assert.IsNull(model[typeof(A)].BaseType, "A");
-            Assert.AreSame(model[typeof(A)], model[typeof(B)].BaseType, "B");
-            Assert.AreSame(model[typeof(A)], model[typeof(C)].BaseType, "C");
-            Assert.AreSame(model[typeof(A)], model[typeof(D)].BaseType, "D");
-            Assert.IsNull(model[typeof(TestCase)].BaseType, "TestCase");
+            Assert.Null(model[typeof(A)].BaseType); //, "A");
+            Assert.Same(model[typeof(A)], model[typeof(B)].BaseType); //, "B");
+            Assert.Same(model[typeof(A)], model[typeof(C)].BaseType); //, "C");
+            Assert.Same(model[typeof(A)], model[typeof(D)].BaseType); //, "D");
+            Assert.Null(model[typeof(TestCase)].BaseType); //, "TestCase");
         }
     }
 }

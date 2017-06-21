@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,7 +6,7 @@ using ProtoBuf;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue62
     {
         [ProtoContract]
@@ -40,7 +40,7 @@ namespace Examples.Issues
             [ProtoMember(2)]
             public float Value { get; set; }
         }
-        [Test]
+        [Fact]
         public void RunTest()
         {
             // invent CacheItemValue records
@@ -81,7 +81,7 @@ namespace Examples.Issues
             int expected = GetChecksum(htCacheItems);
             var clone = Serializer.DeepClone(htCacheItems);
             int actual = GetChecksum(clone);
-            Assert.AreEqual(expected, actual);
+            Assert.Equal(expected, actual);
         }
         static int GetChecksum(Dictionary<string, CacheItem> data)
         {

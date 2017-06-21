@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class ListsWithInheritance
     {
-        [Test]
+        [Fact]
         public void TestBasicRoundtripViaDataClass()
         {
             Data data = new Data();
@@ -16,13 +16,13 @@ namespace Examples
             data.Parties.Add(new Creditor());
             var clone = Serializer.DeepClone(data);
 
-            Assert.AreEqual(3, clone.Parties.Count);
-            Assert.AreEqual(typeof(Debtor), clone.Parties[0].GetType());
-            Assert.AreEqual(typeof(Party), clone.Parties[1].GetType());
-            Assert.AreEqual(typeof(Creditor), clone.Parties[2].GetType());
+            Assert.Equal(3, clone.Parties.Count);
+            Assert.Equal(typeof(Debtor), clone.Parties[0].GetType());
+            Assert.Equal(typeof(Party), clone.Parties[1].GetType());
+            Assert.Equal(typeof(Creditor), clone.Parties[2].GetType());
         }
 
-        [Test]
+        [Fact]
         public void TestBasicRoundtripOfNakedList()
         {
             var list = new List<Party>();
@@ -31,10 +31,10 @@ namespace Examples
             list.Add(new Creditor());
             var clone = Serializer.DeepClone(list);
 
-            Assert.AreEqual(3, clone.Count);
-            Assert.AreEqual(typeof(Debtor), clone[0].GetType());
-            Assert.AreEqual(typeof(Party), clone[1].GetType());
-            Assert.AreEqual(typeof(Creditor), clone[2].GetType());
+            Assert.Equal(3, clone.Count);
+            Assert.Equal(typeof(Debtor), clone[0].GetType());
+            Assert.Equal(typeof(Party), clone[1].GetType());
+            Assert.Equal(typeof(Creditor), clone[2].GetType());
         }
 
         [ProtoContract]

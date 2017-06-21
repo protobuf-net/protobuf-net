@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO13802844
     {
         enum AnimationCode {
@@ -17,12 +17,13 @@ namespace Examples.Issues
             Idle = 1
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             string s = Serializer.GetProto<AnimationCode>();
 
-            Assert.AreEqual(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
 
 enum AnimationCode {
    AnimationCode_None = 0;

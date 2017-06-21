@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Examples.Issues;
-using NUnit.Framework;
+using Xunit;
 using Proto;
 using ProtoBuf.Meta;
 using Types;
@@ -13,10 +13,10 @@ using Types;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO9151111_b
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             var p = new SeniorDeveloper<bool> { Id = 1, Name = "x", Boaring = true, VeryBoaring = true };
@@ -107,7 +107,7 @@ namespace Proto
                         if (this._modal.IsDefined(parent))
                         {
                             var metaType = _modal[parent];
-                            Assert.IsNotNull(metaType, "meta");
+                            Assert.NotNull(metaType); //, "meta");
 
                             int i = 500;
 

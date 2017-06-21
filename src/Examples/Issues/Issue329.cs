@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using System;
 using System.Collections.Generic;
@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue329
     {
         [Flags]
@@ -33,11 +33,12 @@ namespace Examples.Issues
             [ProtoMember(1), DefaultValue(ETheoFlags.TF_P)]
             public ETheoFlags Flags { get; set; }
         }
-        [Test]
+        [Fact]
         public void FlagsEnumGeneration()
         {
             string proto = Serializer.GetProto<Foo>();
-            Assert.AreEqual(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
 
 enum ETheoFlags {
    // this is a composite/flags enumeration

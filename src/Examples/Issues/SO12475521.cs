@@ -1,22 +1,22 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using System;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO12475521
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             var obj = new HazType { X = 1, Type = typeof(string), AnotherType = typeof(ProtoReader) };
 
             var clone = Serializer.DeepClone(obj);
 
-            Assert.AreEqual(1, clone.X);
-            Assert.AreEqual(typeof(string), clone.Type);
-            Assert.AreEqual(typeof(ProtoReader), clone.AnotherType);
+            Assert.Equal(1, clone.X);
+            Assert.Equal(typeof(string), clone.Type);
+            Assert.Equal(typeof(ProtoReader), clone.AnotherType);
         }
 
         [ProtoContract]

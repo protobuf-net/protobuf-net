@@ -1,22 +1,22 @@
 ﻿using System.IO;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO11896228
     {
-        [Test]
+        [Fact]
         public void AnonymousTypesCanRoundTrip()
         {
             var obj = new {X = 123, Y = "abc"};
-            Assert.IsTrue(Program.CheckBytes(obj, new byte[] { 0x08, 0x7B, 0x12, 0x03, 0x61, 0x62, 0x63 }));
+            Assert.True(Program.CheckBytes(obj, new byte[] { 0x08, 0x7B, 0x12, 0x03, 0x61, 0x62, 0x63 }));
             var clone = Serializer.DeepClone(obj);
-            Assert.AreNotSame(clone, obj);
-            Assert.AreEqual(123, clone.X);
-            Assert.AreEqual("abc", clone.Y);
+            Assert.NotSame(clone, obj);
+            Assert.Equal(123, clone.X);
+            Assert.Equal("abc", clone.Y);
         }
 
         static AnonEquiv ChangeToEquiv<T>(T value)
@@ -24,18 +24,18 @@ namespace Examples.Issues
             return Serializer.ChangeType<T, AnonEquiv>(value);
         }
 
-        [Test]
+        [Fact]
         public void AnonymousTypesAreEquivalent_Auto()
         {
             var obj = new { X = 123, Y = "abc" };
-            Assert.IsTrue(Program.CheckBytes(obj, new byte[] { 0x08, 0x7B, 0x12, 0x03, 0x61, 0x62, 0x63 }));
+            Assert.True(Program.CheckBytes(obj, new byte[] { 0x08, 0x7B, 0x12, 0x03, 0x61, 0x62, 0x63 }));
             var clone = ChangeToEquiv(obj);
-            Assert.AreNotSame(clone, obj);
-            Assert.AreEqual(123, clone.X);
-            Assert.AreEqual("abc", clone.Y);
+            Assert.NotSame(clone, obj);
+            Assert.Equal(123, clone.X);
+            Assert.Equal("abc", clone.Y);
         }
 
-        [Test]
+        [Fact]
         public void AnonymousTypesAreEquivalent_Manual()
         {
             var obj = new { X = 123, Y = "abc" };
@@ -50,18 +50,18 @@ namespace Examples.Issues
         {
             AnonEquiv clone;
             byte[] expected = new byte[] {0x08, 0x7B, 0x12, 0x03, 0x61, 0x62, 0x63};
-            Assert.IsTrue(Program.CheckBytes(obj, model, expected), caption);
+            Assert.True(Program.CheckBytes(obj, model, expected)); //, caption);
             using (var ms = new MemoryStream())
             {
                 model.Serialize(ms, obj);
-                Assert.AreEqual(expected.Length, ms.Length);
-                Assert.AreEqual(Program.GetByteString(expected), Program.GetByteString(ms.ToArray()), caption);
+                Assert.Equal(expected.Length, ms.Length);
+                Assert.Equal(Program.GetByteString(expected), Program.GetByteString(ms.ToArray())); //, caption);
                 ms.Position = 0;
                 clone = (AnonEquiv) model.Deserialize(ms, null, typeof (AnonEquiv));
             }
-            Assert.AreNotSame(clone, obj, caption);
-            Assert.AreEqual(123, clone.X, caption);
-            Assert.AreEqual("abc", clone.Y, caption);
+            Assert.NotSame(clone, obj); //, caption);
+            Assert.Equal(123, clone.X); //, caption);
+            Assert.Equal("abc", clone.Y); //, caption);
         }
 
         [ProtoContract]

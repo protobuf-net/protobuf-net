@@ -1,19 +1,19 @@
 ﻿using System.Runtime.Serialization;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class DataMemberOffset
     {
-        [Test]
+        [Fact]
         public void TestOffset()
         { 
             DMO_First first = new DMO_First {Foo = 12};
             DMO_Second second = Serializer.ChangeType<DMO_First, DMO_Second>(first);
 
-            Assert.AreEqual(first.Foo, second.Bar);
+            Assert.Equal(first.Foo, second.Bar);
         }
 
     }
@@ -48,24 +48,24 @@ namespace Examples
         [DataMember(Order = 2)]
         public int Bar { get; set; }
     }
-    [TestFixture]
+    
     public class TestWeCanTurnOffNonProtoMarkers
     {
-        [Test]
+        [Fact]
         public void TypeWithProtosAndDataContract_UseAny_ShouldSerializeBoth()
         {
             var orig = new TypeWithProtosAndDataContract_UseAny { Foo = 123, Bar = 456 };
             var clone = Serializer.DeepClone(orig);
-            Assert.AreEqual(123, clone.Foo);
-            Assert.AreEqual(456, clone.Bar);
+            Assert.Equal(123, clone.Foo);
+            Assert.Equal(456, clone.Bar);
         }
-        [Test]
+        [Fact]
         public void TypeWithProtosAndDataContract_UseProtoOnly_ShouldSerializeFooOnly()
         {
             var orig = new TypeWithProtosAndDataContract_UseProtoOnly { Foo = 123, Bar = 456 };
             var clone = Serializer.DeepClone(orig);
-            Assert.AreEqual(123, clone.Foo);
-            Assert.AreEqual(0, clone.Bar);
+            Assert.Equal(123, clone.Foo);
+            Assert.Equal(0, clone.Bar);
         }
     }
 }

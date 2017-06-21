@@ -1,7 +1,6 @@
 ﻿using System.IO;
-using NUnit.Framework.SyntaxHelpers;
 using System;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using Examples;
@@ -37,33 +36,33 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
         public string DerivedClassText { get; set; }
     }
 
-    [TestFixture]
+    
     public class ArrayOfBaseClassTests
     {
-        [Test] // needs dynamic handling of list itself
+        [Fact] // needs dynamic handling of list itself
         public void TestObjectArrayContainerClass()
         {
             var model = CreateModel();
             var container = new ObjectArrayContainerClass();
             container.ObjectArray = this.CreateArray();
             var cloned = (ObjectArrayContainerClass)model.DeepClone(container);
-            Assert.IsNotNull(cloned.ObjectArray);
+            Assert.NotNull(cloned.ObjectArray);
 
             foreach (var obj in cloned.ObjectArray)
             {
-                Assert.IsNotNull(obj as Base);
+                Assert.NotNull(obj as Base);
             }
 
-            Assert.IsNotNull(cloned.ObjectArray[1] as Derived);
+            Assert.NotNull(cloned.ObjectArray[1] as Derived);
             
             // this would be nice...
             //Expect(cloned.ObjectArray.GetType(), Is.EqualTo(typeof(Base[])));
 
             // but this is what we currently **expect**
-            Assert.AreEqual(typeof(object[]), cloned.ObjectArray.GetType());
+            Assert.Equal(typeof(object[]), cloned.ObjectArray.GetType());
         }
 
-        [Test]
+        [Fact]
         public void WrittenDataShouldBeConstant()
         {
             var container = new ObjectArrayContainerClass();
@@ -75,7 +74,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
 
             string s = Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length);
             // written with r480
-            Assert.AreEqual("ChkgAUIEQmFzZVIPCg1CYXNlQ2xhc3NUZXh0CjEgAkIHRGVyaXZlZFIkogYSChBEZXJpdmVkQ2xhc3NUZXh0Cg1CYXNlQ2xhc3NUZXh0", s);
+            Assert.Equal("ChkgAUIEQmFzZVIPCg1CYXNlQ2xhc3NUZXh0CjEgAkIHRGVyaXZlZFIkogYSChBEZXJpdmVkQ2xhc3NUZXh0Cg1CYXNlQ2xhc3NUZXh0", s);
         }
         void model_DynamicTypeFormatting(object sender, TypeFormatEventArgs args)
         {
@@ -97,7 +96,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
             }
         }
 
-        [Test]// needs dynamic handling of list itself
+        [Fact]// needs dynamic handling of list itself
         public void TestBaseClassArrayContainerClass()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -107,16 +106,16 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
                 var container = new BaseClassArrayContainerClass();
                 container.BaseArray = this.CreateArray();
                 var cloned = (BaseClassArrayContainerClass)model.DeepClone(container);
-                Assert.IsNotNull(cloned.BaseArray);
+                Assert.NotNull(cloned.BaseArray);
 
                 foreach (var obj in cloned.BaseArray)
                 {
-                    Assert.IsNotNull(obj as Base);
+                    Assert.NotNull(obj as Base);
                 }
-                Assert.IsNotNull(cloned.BaseArray[1] as Derived);
+                Assert.NotNull(cloned.BaseArray[1] as Derived);
 
                 // this would be nice...
-                Assert.AreEqual(typeof(Base[]), cloned.BaseArray.GetType(), "array type");
+                Assert.Equal(typeof(Base[]), cloned.BaseArray.GetType()); //, "array type");
             }, "Conflicting item/add type");
         }
 

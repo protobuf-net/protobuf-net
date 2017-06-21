@@ -1,11 +1,11 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.IO;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO16797650
     {
         [ProtoContract]
@@ -34,7 +34,7 @@ namespace Examples.Issues
         public class Foo : MessageBase { public override int Type { get { return 42; } } }
         [ProtoContract]
         public class Bar : MessageBase { public override int Type { get { return 43; } } }
-        [Test]
+        [Fact]
         public void AddSubtypeAtRuntime()
         {
             var messageBase = RuntimeTypeModel.Default[typeof(MessageBase)];
@@ -53,9 +53,9 @@ namespace Examples.Issues
                 ms.Position = 0;
                 echo1 = (MessageBase)Serializer.NonGeneric.Deserialize(typeof(MessageBase), ms);
             }
-            Assert.AreSame(echo.GetType(), echo1.GetType());
-            Assert.AreEqual(echo.ErrorMessage, echo1.ErrorMessage);
-            Assert.AreEqual(echo.Message, ((Echo)echo1).Message);
+            Assert.Same(echo.GetType(), echo1.GetType());
+            Assert.Equal(echo.ErrorMessage, echo1.ErrorMessage);
+            Assert.Equal(echo.Message, ((Echo)echo1).Message);
         }
     }
 }

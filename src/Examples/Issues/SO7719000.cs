@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO7719000
     {
         public abstract class Message
@@ -45,7 +45,7 @@ namespace Examples.Issues
             public int SomeField;
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             var model = TypeModel.Create();
@@ -92,7 +92,7 @@ namespace Examples.Issues
                 // fails here
                 var message = (SomeMessage)typeModel.DeserializeWithLengthPrefix(ms, null, typeof(Message), prefixStyle, 0);
 
-                Assert.AreEqual(testValue, ((SomeEvent)message.Desc.EventData).SomeField, caption);
+                Assert.Equal(testValue, ((SomeEvent)message.Desc.EventData).SomeField); //, caption);
             }
         }
     }

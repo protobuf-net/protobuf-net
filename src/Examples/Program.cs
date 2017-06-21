@@ -7,7 +7,7 @@ using Examples.SimpleStream;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Reflection;
-using NUnit.Framework;
+using Xunit;
 
 namespace Examples
 {
@@ -25,13 +25,13 @@ namespace Examples
         }
 #endif
 
-        static void Main() {
-#if !COREFX
-            Console.WriteLine("CLR: " + Environment.Version);
+//        static void Main() {
+//#if !COREFX
+//            Console.WriteLine("CLR: " + Environment.Version);
 
-            new NWindTests().PerfTestDb();
-#endif
-        }
+//            new NWindTests().PerfTestDb();
+//#endif
+//        }
 
         //static void Main2() {
         //    SimpleStreamDemo demo = new SimpleStreamDemo();
@@ -124,14 +124,11 @@ namespace Examples
             try
             {
                 action();
-                Assert.Fail("expected " + typeof(TException).Name);
-            } catch(Exception ex)
+                Assert.Equal("throw", "ok");
+            }
+            catch (TException ex)
             {
-                if (!(ex is TException))
-                {
-                    Assert.IsInstanceOfType(typeof(TException), ex);
-                }
-                if (message != null) Assert.AreEqual(message, ex.Message);
+                if (message != null) Assert.Equal(message, ex.Message);
             }
         }
         public static void ExpectFailure<TException>(Action action, Func<TException, bool> check)
@@ -140,16 +137,12 @@ namespace Examples
             try
             {
                 action();
-                Assert.Fail();
+                Assert.Equal("throw", "ok");
             }
-            catch (Exception ex)
+            catch(TException ex)
             {
-                if (!(ex is TException))
-                {
-                    Assert.IsInstanceOfType(typeof(TException), ex);
-                }                
-                Assert.IsTrue(check((TException)ex));
-            }
+                if (check != null) Assert.True(check(ex));
+            }            
         }
     }
 }

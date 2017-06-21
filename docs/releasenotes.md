@@ -19,19 +19,35 @@ If you feel like supporting my efforts, I won't stop you:
 
 If you can't, that's fine too.
 
-## v3.* (future plans)
+## v3.* (not yet started)
 
-see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
+- see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
+- gRPC?
 
-## v2.3 (work in progress)
+## v2.4.0 (not yet started)
 
-- proto2/proto3 DSL processing tools to make a resurgance
+- build-time tooling
+- `dynamic` API over types known only via descriptors loaded at runtime
+- `Any` support
 
-preview: [https://protogen.marcgravell.com/](https://protogen.marcgravell.com/)
+## v2.3.1 (not yet started)
+
+- preserve comments from .proto in schema emit (#263)
+
+## v2.3.0 (work in progress)
+
+- proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
+- proto3 schema generation
+- full support for `map<,>`, `Timestamp`, `Duration`
+- dictionaries are now "maps" by default - duplicated keys *replace* values rather than causing exceptions
+- support for one-of
+- enums are now "pass thru" whenever possible - unknown values will not normally cause exceptions
 
 ## v2.2.2 (not yet released)
 
 - fix: `Type` members should work with `GetProto<T>` (as `string`)
+- fix: issues with `Uri` handling (#162 via #261, thanks)
+- add build support for .NET 3.5 (#262)
 
 ## v2.2.1
 

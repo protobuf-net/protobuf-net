@@ -3,70 +3,71 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples
 {
-    [TestFixture]
+    
     public class Pipeline
     {
-        [Test]
+        [Fact]
         public void TestEnumerable()
         {
             EnumWrapper obj = new EnumWrapper();
             EnumWrapper clone = Serializer.DeepClone(obj);
 
             // the source object should have been read once, but not had any data added
-            Assert.AreEqual(1, obj.SubData.IteratorCount, "obj IteratorCount");
-            Assert.AreEqual(0, obj.SubData.Count, "obj Count");
-            Assert.AreEqual(0, obj.SubData.Sum, "obj Sum");
+            Assert.Equal(1, obj.SubData.IteratorCount); //, "obj IteratorCount");
+            Assert.Equal(0, obj.SubData.Count); //, "obj Count");
+            Assert.Equal(0, obj.SubData.Sum); //, "obj Sum");
 
             // the destination object should never have been read, but should have
             // had 5 values added
-            Assert.AreEqual(0, clone.SubData.IteratorCount, "clone IteratorCount");
-            Assert.AreEqual(5, clone.SubData.Count, "clone Count");
-            Assert.AreEqual(1 + 2 + 3 + 4 + 5, clone.SubData.Sum, "clone Sum");
+            Assert.Equal(0, clone.SubData.IteratorCount); //, "clone IteratorCount");
+            Assert.Equal(5, clone.SubData.Count); //, "clone Count");
+            Assert.Equal(1 + 2 + 3 + 4 + 5, clone.SubData.Sum); //, "clone Sum");
         }
 
-        [Test]
+        [Fact]
         public void TestEnumerableProto()
         {
 
             string proto = Serializer.GetProto<EnumWrapper>();
 
-            string expected = @"package Examples;
+            string expected = @"syntax = ""proto2"";
+package Examples;
 
 message EnumWrapper {
    repeated int32 SubData = 1;
 }
 ";
-            Assert.AreEqual(expected, proto);
+            Assert.Equal(expected, proto);
         }
-        [Test]
+        [Fact]
         public void TestEnumerableGroup()
         {
             EnumParentGroupWrapper obj = new EnumParentGroupWrapper();
             EnumParentGroupWrapper clone = Serializer.DeepClone(obj);
 
             // the source object should have been read once, but not had any data added
-            Assert.AreEqual(1, obj.Wrapper.SubData.IteratorCount, "obj IteratorCount");
-            Assert.AreEqual(0, obj.Wrapper.SubData.Count, "obj Count");
-            Assert.AreEqual(0, obj.Wrapper.SubData.Sum, "obj Sum");
+            Assert.Equal(1, obj.Wrapper.SubData.IteratorCount); //, "obj IteratorCount");
+            Assert.Equal(0, obj.Wrapper.SubData.Count); //, "obj Count");
+            Assert.Equal(0, obj.Wrapper.SubData.Sum); //, "obj Sum");
 
             // the destination object should never have been read, but should have
             // had 5 values added
-            Assert.AreEqual(0, clone.Wrapper.SubData.IteratorCount, "clone IteratorCount");
-            Assert.AreEqual(5, clone.Wrapper.SubData.Count, "clone Count");
-            Assert.AreEqual(1 + 2 + 3 + 4 + 5, clone.Wrapper.SubData.Sum, "clone Sum");
+            Assert.Equal(0, clone.Wrapper.SubData.IteratorCount); //, "clone IteratorCount");
+            Assert.Equal(5, clone.Wrapper.SubData.Count); //, "clone Count");
+            Assert.Equal(1 + 2 + 3 + 4 + 5, clone.Wrapper.SubData.Sum); //, "clone Sum");
         }
 
-        [Test]
+        [Fact]
         public void TestEnumerableBinary()
         {
             EnumParentStandardWrapper obj = new EnumParentStandardWrapper();
-            Assert.IsTrue(Program.CheckBytes(obj,
+            Assert.True(Program.CheckBytes(obj,
                 0x0A, 0x0A,  // field 1: obj, 10 bytes
                 0x08, 0x01,  // field 1: variant, 1
                 0x08, 0x02,  // field 1: variant, 2
@@ -74,7 +75,7 @@ message EnumWrapper {
                 0x08, 0x04,  // field 1: variant, 4
                 0x08, 0x05)); // field 1: variant, 5
         }
-        [Test]
+        [Fact]
         public void TestEnumerableStandard()
         {
             EnumParentStandardWrapper obj = new EnumParentStandardWrapper();
@@ -83,24 +84,25 @@ message EnumWrapper {
             // old: the source object should have been read twice
             // old: once to get the length-prefix, and once for the data
             // update: once only with buffering
-            Assert.AreEqual(1, obj.Wrapper.SubData.IteratorCount, "obj IteratorCount");
-            Assert.AreEqual(0, obj.Wrapper.SubData.Count, "obj Count");
-            Assert.AreEqual(0, obj.Wrapper.SubData.Sum, "obj Sum");
+            Assert.Equal(1, obj.Wrapper.SubData.IteratorCount); //, "obj IteratorCount");
+            Assert.Equal(0, obj.Wrapper.SubData.Count); //, "obj Count");
+            Assert.Equal(0, obj.Wrapper.SubData.Sum); //, "obj Sum");
 
             // the destination object should never have been read, but should have
             // had 5 values added
-            Assert.AreEqual(0, clone.Wrapper.SubData.IteratorCount, "clone IteratorCount");
-            Assert.AreEqual(5, clone.Wrapper.SubData.Count, "clone Count");
-            Assert.AreEqual(1 + 2 + 3 + 4 + 5, clone.Wrapper.SubData.Sum, "clone Sum");
+            Assert.Equal(0, clone.Wrapper.SubData.IteratorCount); //, "clone IteratorCount");
+            Assert.Equal(5, clone.Wrapper.SubData.Count); //, "clone Count");
+            Assert.Equal(1 + 2 + 3 + 4 + 5, clone.Wrapper.SubData.Sum); //, "clone Sum");
         }
 
-        [Test]
+        [Fact]
         public void TestEnumerableGroupProto()
         {
 
             string proto = Serializer.GetProto<EnumParentGroupWrapper>();
 
-            string expected = @"package Examples;
+            string expected = @"syntax = ""proto2"";
+package Examples;
 
 message EnumParentWrapper {
    optional group EnumWrapper Wrapper = 1;
@@ -109,10 +111,10 @@ message EnumWrapper {
    repeated int32 SubData = 1;
 }
 ";
-            Assert.AreEqual(expected, proto);
+            Assert.Equal(expected, proto);
         }
 
-        [Test]
+        [Fact]
         public void NWindPipeline()
         {
             DAL.Database masterDb = DAL.NWindTests.LoadDatabaseFromFile<DAL.Database>(RuntimeTypeModel.Default);
@@ -123,19 +125,19 @@ message EnumWrapper {
             decimal freight = masterDb.Orders.Sum(order => order.Freight).GetValueOrDefault(),
                 value = masterDb.Orders.SelectMany(o => o.Lines).Sum(l => l.Quantity * l.UnitPrice);
 
-            Assert.AreEqual(830, orderCount);
-            Assert.AreEqual(2155, lineCount);
-            Assert.AreEqual(51317, unitCount);
-            Assert.AreEqual(1354458.59M, value);
+            Assert.Equal(830, orderCount);
+            Assert.Equal(2155, lineCount);
+            Assert.Equal(51317, unitCount);
+            Assert.Equal(1354458.59M, value);
 
             DatabaseReader db = DAL.NWindTests.LoadDatabaseFromFile<DatabaseReader>(RuntimeTypeModel.Default);
 
 
-            Assert.AreEqual(orderCount, db.OrderReader.OrderCount);
-            Assert.AreEqual(lineCount, db.OrderReader.LineCount);
-            Assert.AreEqual(unitCount, db.OrderReader.UnitCount);
-            Assert.AreEqual(freight, db.OrderReader.FreightTotal);
-            Assert.AreEqual(value, db.OrderReader.ValueTotal);
+            Assert.Equal(orderCount, db.OrderReader.OrderCount);
+            Assert.Equal(lineCount, db.OrderReader.LineCount);
+            Assert.Equal(unitCount, db.OrderReader.UnitCount);
+            Assert.Equal(freight, db.OrderReader.FreightTotal);
+            Assert.Equal(value, db.OrderReader.ValueTotal);
         }
 
         [ProtoContract]
@@ -173,13 +175,14 @@ message EnumWrapper {
             }
         }
 
-        [Test]
+        [Fact]
         public void TestEnumerableStandardProto()
         {
 
             string proto = Serializer.GetProto<EnumParentStandardWrapper>();
 
-            string expected = @"package Examples;
+            string expected = @"syntax = ""proto2"";
+package Examples;
 
 message EnumParentWrapper {
    optional EnumWrapper Wrapper = 1;
@@ -188,7 +191,7 @@ message EnumWrapper {
    repeated int32 SubData = 1;
 }
 ";
-            Assert.AreEqual(expected, proto);
+            Assert.Equal(expected, proto);
         }
     }
 

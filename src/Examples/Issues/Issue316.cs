@@ -1,5 +1,5 @@
 ﻿#if !COREFX
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -11,10 +11,10 @@ using System.Text;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue316
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             var runtimeTypeModel = TypeModel.Create();
@@ -24,7 +24,8 @@ namespace Examples.Issues
 
             string proto = runtimeTypeModel.GetSchema(null);
 
-            Assert.AreEqual(@"package Examples.Issues;
+            Assert.Equal(@"syntax = ""proto2"";
+package Examples.Issues;
 
 message BinarySerializationSurrogate_MyException {
    optional bytes objectData = 1;

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using ProtoBuf;
 using System.Runtime.Serialization;
-using NUnit.Framework;
+using Xunit;
 
 namespace Examples
 {
@@ -58,10 +58,10 @@ namespace Examples
         public int Charlie { get; set; }
     }
 
-    [TestFixture]
+    
     public class TagInference
     {
-        [Test]
+        [Fact]
         public void TestTagWithoutInference()
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
@@ -71,7 +71,7 @@ namespace Examples
             });
         }
 
-        [Test]
+        [Fact]
         public void TestTagWithInferenceRoundtrip()
         {
             TagData data = new TagData
@@ -82,13 +82,13 @@ namespace Examples
                 Zulu = 9
             };
             TagData clone = Serializer.DeepClone(data);
-            Assert.AreEqual(data.Bravo, clone.Bravo, "Bravo");
-            Assert.AreEqual(data.Charlie, clone.Charlie, "Charlie");
-            Assert.AreEqual(data.Delta, clone.Delta, "Delta");
-            Assert.AreEqual(data.Zulu, clone.Zulu, "Zulu");
+            Assert.Equal(data.Bravo, clone.Bravo); //, "Bravo");
+            Assert.Equal(data.Charlie, clone.Charlie); //, "Charlie");
+            Assert.Equal(data.Delta, clone.Delta); //, "Delta");
+            Assert.Equal(data.Zulu, clone.Zulu); //, "Zulu");
         }
 
-        [Test]
+        [Fact]
         public void TestTagWithInferenceBinary()
         {
             TagData data = new TagData
@@ -99,19 +99,19 @@ namespace Examples
                 Zulu = 9
             };
             TagDataExpected clone = Serializer.ChangeType<TagData, TagDataExpected>(data);
-            Assert.AreEqual(data.Bravo, clone.Bravo, "Bravo");
-            Assert.AreEqual(data.Charlie, clone.Charlie, "Charlie");
-            Assert.AreEqual(data.Delta, clone.Delta, "Delta");
-            Assert.AreEqual(data.Zulu, clone.Zulu, "Zulu");
+            Assert.Equal(data.Bravo, clone.Bravo); //, "Bravo");
+            Assert.Equal(data.Charlie, clone.Charlie); //, "Charlie");
+            Assert.Equal(data.Delta, clone.Delta); //, "Delta");
+            Assert.Equal(data.Zulu, clone.Zulu); //, "Zulu");
         }
 
-        [Test]
+        [Fact]
         public void RoundTripWithImplicitFields()
         {
             var obj = new WithImplicitFields {X = 123, Y = "abc"};
             var clone = Serializer.DeepClone(obj);
-            Assert.AreEqual(123, clone.X);
-            Assert.AreEqual("abc", clone.Y);
+            Assert.Equal(123, clone.X);
+            Assert.Equal("abc", clone.Y);
         }
 
         [ProtoContract(ImplicitFields = ImplicitFields.AllPublic)]

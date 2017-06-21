@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
@@ -8,7 +8,7 @@ using System.Text;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue312
     {
         [ProtoContract]
@@ -44,7 +44,7 @@ namespace Examples.Issues
             }
         }
 
-        [Test]
+        [Fact]
         public void Execute()
         {
             var rt = TypeModel.Create();
@@ -54,7 +54,7 @@ namespace Examples.Issues
             var c1 = new IEnumerableClass() { Prop1 = 1, Prop2 = "a" };
             var i1 = new RootClass() { Prop1 = 1, Prop2 = "blabla", Prop3 = c1 };
             var cloned = rt.DeepClone(i1) as RootClass;
-            Assert.AreEqual(1, cloned.Prop3.Prop1);
+            Assert.Equal(1, cloned.Prop3.Prop1);
         }
     }
 }

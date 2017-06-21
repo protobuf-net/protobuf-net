@@ -1,0 +1,9 @@
+﻿syntax = "proto3";
+import "protobuf-net/protogen.proto";
+
+message Foo {
+  option (.protobuf_net.msgopt).name = "Bar";
+
+  int32 id = 1 [(.protobuf_net.fieldopt).access = INTERNAL];  
+  map<sint32,Foo> item = 2 [(.protobuf_net.fieldopt).asRef = true];
+}

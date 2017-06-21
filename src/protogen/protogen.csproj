@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <VersionPrefix>$(ProtoGenVersion)</VersionPrefix>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net40;netcoreapp1.1</TargetFrameworks>
+    <Configurations>Debug;Release;VS</Configurations>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
+  </ItemGroup>
+
+</Project>

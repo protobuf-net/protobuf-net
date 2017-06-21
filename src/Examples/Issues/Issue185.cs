@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using ProtoBuf;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf.Meta;
 using System.IO;
 
@@ -44,10 +44,10 @@ namespace Examples.Issues
         [ProtoMember(1)]
         public I Unknown { get; set; }
     }
-    [TestFixture]
+    
     public class Issue185
     {
-        [Test]
+        [Fact]
         public void ExecuteWithConstructType()
         {
             Program.ExpectFailure<ArgumentException>(() =>
@@ -70,18 +70,18 @@ Parameter name: constructType");
         }
         static void Test(TypeModel model, C c, string caption)
         {
-            Assert.AreEqual(43, c.Unknown.N, "braindead");
+            Assert.Equal(43, c.Unknown.N); //, "braindead");
             using (var ms = new MemoryStream())
             {
                 model.Serialize(ms, c);
-                Assert.Greater(1, 0, "args fail");
-                Assert.Greater(ms.Length, 0, "Nothing written");
+                Assert.True(1 > 0);
+                Assert.True(ms.Length > 0); //, "Nothing written");
                 ms.Position = 0;
                 var c2 = (C)model.Deserialize(ms, null, typeof(C));
-                Assert.AreEqual(c.Unknown.N, c2.Unknown.N, caption);
+                Assert.Equal(c.Unknown.N, c2.Unknown.N); //, caption);
             }
         }
-        [Test]
+        [Fact]
         public void ExecuteWithSubType()
         {
             var m = RuntimeTypeModel.Create();

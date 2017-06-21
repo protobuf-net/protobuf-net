@@ -1,14 +1,14 @@
 ﻿using System;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class SO11641262
     {
-        [Test]
+        [Fact]
         public void Execute()
         {
             var model = TypeModel.Create();
@@ -19,8 +19,8 @@ namespace Examples.Issues
 
             var val = FooData.Create("abc");
             var clone = (FooData)model.DeepClone(val);
-            Assert.AreEqual("abc", clone.ValueUntyped);
-            Assert.AreEqual(typeof(string), clone.ItemType);
+            Assert.Equal("abc", clone.ValueUntyped);
+            Assert.Equal(typeof(string), clone.ItemType);
 
         }
 

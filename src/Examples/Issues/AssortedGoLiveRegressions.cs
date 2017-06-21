@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using System.IO;
 using ProtoBuf;
 using System.Runtime.Serialization;
@@ -10,45 +10,45 @@ using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class AssortedGoLiveRegressions
     {
-        [Test]
+        [Fact]
         public void TestStringFromEmpty()
         {
             using (var ms = new MemoryStream())
             {
-                Assert.IsNotNull(Serializer.Deserialize<Foo>(ms), "Foo");
-                Assert.IsNull(Serializer.Deserialize<string>(ms), "string");
-                Assert.IsNotNull(Serializer.Deserialize<DateTime>(ms), "DateTime");
-                Assert.IsNull(Serializer.Deserialize<DateTime?>(ms), "DateTime?");
-                Assert.IsNotNull(Serializer.Deserialize<int>(ms), "int");
-                Assert.IsNull(Serializer.Deserialize<int?>(ms), "int?");
+                Assert.NotNull(Serializer.Deserialize<Foo>(ms)); //, "Foo");
+                Assert.Null(Serializer.Deserialize<string>(ms)); //, "string");
+                Assert.NotNull(Serializer.Deserialize<DateTime>(ms)); //, "DateTime");
+                Assert.Null(Serializer.Deserialize<DateTime?>(ms)); //, "DateTime?");
+                Assert.NotNull(Serializer.Deserialize<int>(ms)); //, "int");
+                Assert.Null(Serializer.Deserialize<int?>(ms)); //, "int?");
             }
         }
 
-        [Test]
+        [Fact]
         public void TestStringArray()
         {
             var orig = new[] { "abc", "def" };
-            Assert.IsTrue(Serializer.DeepClone(orig).SequenceEqual(orig));
+            Assert.True(Serializer.DeepClone(orig).SequenceEqual(orig));
         }
 
-        [Test]
+        [Fact]
         public void TestInt32Array()
         {
             var orig = new[] { 1, 2 };
-            Assert.IsTrue(Serializer.DeepClone(orig).SequenceEqual(orig));
+            Assert.True(Serializer.DeepClone(orig).SequenceEqual(orig));
         }
 
-        [Test]
+        [Fact]
         public void TestByteArray()
         {
             // byte[] is a special case that compares most closely to 1:data
             // (rather than 1:item0 1:item1 1:item2 etc)
             var orig = new byte[] { 0, 1, 2, 4, 5 };
             var clone = Serializer.ChangeType<byte[], HasBytes>(orig).Blob;
-            Assert.IsTrue(orig.SequenceEqual(clone));
+            Assert.True(orig.SequenceEqual(clone));
         }
 
         [ProtoContract]
@@ -58,37 +58,37 @@ namespace Examples.Issues
             public byte[] Blob { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void TestStringDictionary()
         {
             var orig = new Dictionary<string,string> { {"abc","def" }};
             var clone = Serializer.DeepClone(orig).Single();
             MetaType[] types = RuntimeTypeModel.Default.GetTypes().Cast<MetaType>().ToArray();
-            Assert.AreEqual(orig.Single().Key, clone.Key);
-            Assert.AreEqual(orig.Single().Value, clone.Value);
+            Assert.Equal(orig.Single().Key, clone.Key);
+            Assert.Equal(orig.Single().Value, clone.Value);
         }
 
-        [Test]
+        [Fact]
         public void TestFooList()
         {
             var orig = new List<Foo> { new Foo() { Count = 12, Name = "abc" } };
 
             var clone = Serializer.DeepClone(orig).Single();
-            Assert.AreEqual(orig.Single().Count, clone.Count);
-            Assert.AreEqual(orig.Single().Name, clone.Name);
+            Assert.Equal(orig.Single().Count, clone.Count);
+            Assert.Equal(orig.Single().Name, clone.Name);
         }
 
 
 
-        [Test]
+        [Fact]
         public void TestEmptyStringDictionary()
         {
             var orig = new Dictionary<string, string> { };
-            Assert.AreEqual(0, orig.Count);
+            Assert.Equal(0, orig.Count);
 
             var clone = Serializer.DeepClone(orig);
-            Assert.IsNotNull(clone);
-            Assert.AreEqual(0, clone.Count);
+            Assert.NotNull(clone);
+            Assert.Equal(0, clone.Count);
         }
 
         [ProtoContract]

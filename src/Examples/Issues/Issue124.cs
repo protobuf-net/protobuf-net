@@ -3,14 +3,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using System.Windows.Media;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue124
     {
         // note this is a simplified example that 
@@ -36,7 +36,7 @@ namespace Examples.Issues
             public Color Color { get; set; }
         }
 
-        [Test]
+        [Fact]
         public void TestMediaColorDirect()
         {
             var model = TypeModel.Create();
@@ -45,7 +45,7 @@ namespace Examples.Issues
             RoundtripTypeWithColor(model);
         }
 
-        [Test]
+        [Fact]
         public void TestMediaColorSurrogate()
         {
             var model = TypeModel.Create();
@@ -61,10 +61,10 @@ namespace Examples.Issues
                 Color = new Color { A = 1, R = 2, G = 3, B = 4 }
             };
             var clone = (TypeWithColor)model.DeepClone(orig);
-            Assert.AreEqual(1, clone.Color.A);
-            Assert.AreEqual(2, clone.Color.R);
-            Assert.AreEqual(3, clone.Color.G);
-            Assert.AreEqual(4, clone.Color.B);
+            Assert.Equal(1, clone.Color.A);
+            Assert.Equal(2, clone.Color.R);
+            Assert.Equal(3, clone.Color.G);
+            Assert.Equal(4, clone.Color.B);
         }
     }
 }

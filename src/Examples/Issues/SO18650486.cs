@@ -3,20 +3,24 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
-using NUnit.Framework;
+using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
 namespace Examples.Issues
 {
 
-    [TestFixture]
+    
     public class SO18650486
     {
-        [Test]
+        [Fact] //(Skip = "breaking test harness; investigate"), Trait("kind", "test harness fail")]
         public void Execute()
         {
+#if DEBUG
+            const int OuterLoop = 5;
+#else
             const int OuterLoop = 500;
+#endif
             var model = TypeModel.Create();
             model.AutoCompile = false;
             // Execute(OuterLoop, model, "RT");

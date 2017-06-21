@@ -1,5 +1,0 @@
-﻿Create an IHttpHandler (ex. Silverlight) for hosting proto-rpc in ASP.NET
-
-Create a ProtoHost (ex. Silverlight) for hosting proto-rpc standalone;
-	* HttpListenere for http?
-	* And what for Tcp?

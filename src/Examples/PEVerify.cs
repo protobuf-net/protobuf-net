@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using NUnit.Framework;
+using Xunit;
 using System.IO;
 
 namespace Examples
@@ -37,7 +37,7 @@ namespace Examples
             {
                 if (proc.WaitForExit(10000))
                 {
-                    Assert.AreEqual(0, proc.ExitCode, path);
+                    Assert.Equal(0, proc.ExitCode); //, path);
                     return proc.ExitCode == 0;
                 }
                 else

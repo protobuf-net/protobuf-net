@@ -1,20 +1,20 @@
-﻿using NUnit.Framework;
+﻿using Xunit;
 using ProtoBuf;
 using System.Linq;
 using System;
 namespace Examples.Issues
 {
-    [TestFixture]
+    
     public class Issue170
     {
 
-        [Test]
+        [Fact]
         public void ArrayWithoutNullContentShouldClone()
         {
             var arr = new[] { "aaa","bbb" };
-            Assert.IsTrue(Serializer.DeepClone(arr).SequenceEqual(arr));
+            Assert.True(Serializer.DeepClone(arr).SequenceEqual(arr));
         }
-        [Test]
+        [Fact]
         public void ArrayWithNullContentShouldThrow()
         {
             Program.ExpectFailure<NullReferenceException>(() =>
