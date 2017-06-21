@@ -32,22 +32,24 @@ If you can't, that's fine too.
 
 ## v2.3.1 (not yet started)
 
-- preserve comments from .proto in schema emit (#263)
+- candidate issues: https://github.com/mgravell/protobuf-net/milestone/2
 
-## v2.3.0 (work in progress)
+## v2.3.0-alpha
 
 - proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
 - proto3 schema generation
 - full support for `map<,>`, `Timestamp`, `Duration`
 - dictionaries are now "maps" by default - duplicated keys *replace* values rather than causing exceptions
 - support for one-of
-- enums are now "pass thru" whenever possible - unknown values will not normally cause exceptions
-
-## v2.2.2 (not yet released)
-
-- fix: `Type` members should work with `GetProto<T>` (as `string`)
-- fix: issues with `Uri` handling (#162 via #261, thanks)
-- add build support for .NET 3.5 (#262)
+- enums are now "pass thru" whenever possible - unknown values will not normally cause exceptions (this indirectly fixes #260, but proto3 semantics was the motivation)
+- various bug-fixes
+ - fix bug in schema output forn enums withut a zero value (#224)
+ - fix bug in runtime handling of immutable collections (#264)
+ - fix issue with serialization context being list (#268)
+ - fix issue with type error message when type is generic (#267)
+ - net20 / net35 targets reinstated for NuGet build (#262)
+ - fix for `Uri` handling (#162 / #261)
+ - fix: `Type` members should work with `GetProto<T>` (as `string`)
 
 ## v2.2.1
 
