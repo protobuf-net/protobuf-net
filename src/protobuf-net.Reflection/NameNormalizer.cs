@@ -34,13 +34,22 @@ namespace ProtoBuf.Reflection
         private class NullNormalizer : NameNormalizer
         {
             protected override string GetName(string identifier) => identifier;
+            /// <summary>
+            /// Suggest a name with idiomatic pluralization
+            /// </summary>
             public override string Pluralize(string identifier) => identifier;
         }
         private class DefaultNormalizer : NameNormalizer
         {
             protected override string GetName(string identifier) => AutoCapitalize(identifier);
+            /// <summary>
+            /// Suggest a name with idiomatic pluralization
+            /// </summary>
             public override string Pluralize(string identifier) => AutoPluralize(identifier);
         }
+        /// <summary>
+        /// Suggest a name with idiomatic name capitalization
+        /// </summary>
         protected static string AutoCapitalize(string identifier)
         {
             if (string.IsNullOrEmpty(identifier)) return identifier;
@@ -59,6 +68,9 @@ namespace ProtoBuf.Reflection
             // just remove underscores - leave their chosen casing alone
             return identifier.Replace("_", "");
         }
+        /// <summary>
+        /// Suggest a name with idiomatic pluralization
+        /// </summary>
         protected static string AutoPluralize(string identifier)
         {
             // horribly Anglo-centric and only covers common cases; but: is swappable
@@ -86,11 +98,26 @@ namespace ProtoBuf.Reflection
             }
             return identifier + "s";
         }
+        /// <summary>
+        /// Name normalizer with default protobuf-net behaviour, using .NET idioms
+        /// </summary>
         public static NameNormalizer Default { get; } = new DefaultNormalizer();
+        /// <summary>
+        /// Name normalizer that passes through all identifiers without any changes
+        /// </summary>
         public static NameNormalizer Null { get; } = new NullNormalizer();
+        /// <summary>
+        /// Suggest a normalized identifier
+        /// </summary>
         protected abstract string GetName(string identifier);
+        /// <summary>
+        /// Suggest a name with idiomatic pluralization
+        /// </summary>
         public abstract string Pluralize(string identifier);
 
+        /// <summary>
+        /// Suggest a normalized identifier
+        /// </summary>
         public virtual string GetName(FileDescriptorProto definition)
         {
             var ns = definition?.Options?.GetOptions()?.Namespace;
@@ -100,25 +127,36 @@ namespace ProtoBuf.Reflection
 
             return string.IsNullOrWhiteSpace(ns) ? null : ns;
         }
-
+        /// <summary>
+        /// Suggest a normalized identifier
+        /// </summary>
         public virtual string GetName(DescriptorProto definition)
         {
             var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
             return GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         }
+        /// <summary>
+        /// Suggest a normalized identifier
+        /// </summary>
         public virtual string GetName(EnumDescriptorProto definition)
         {
             var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
             return GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         }
+        /// <summary>
+        /// Suggest a normalized identifier
+        /// </summary>
         public virtual string GetName(EnumValueDescriptorProto definition)
         {
             var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
             return AutoCapitalize(definition.Name);
         }
+        /// <summary>
+        /// Suggest a normalized identifier
+        /// </summary>
         public virtual string GetName(FieldDescriptorProto definition)
         {
             var name = definition?.Options?.GetOptions()?.Name;
@@ -130,7 +168,9 @@ namespace ProtoBuf.Reflection
             }
             return GetName(definition.Parent as DescriptorProto, preferred, definition.Name, true);
         }
-
+        /// <summary>
+        /// Obtain a set of all names defined for a message
+        /// </summary>
         protected HashSet<string> BuildConflicts(DescriptorProto parent, bool includeDescendents)
         {
             var conflicts = new HashSet<string>();
