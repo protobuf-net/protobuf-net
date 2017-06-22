@@ -36,6 +36,7 @@ If you can't, that's fine too.
 
 ## v2.3.0-alpha
 
+- [further reading](http://blog.marcgravell.com/2017/06/protobuf-net-gets-proto3-support.html)
 - proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
 - proto3 schema generation
 - full support for `map<,>`, `Timestamp`, `Duration`
