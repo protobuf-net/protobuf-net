@@ -56,7 +56,7 @@ namespace Google.Protobuf.Reflection
                 };
                 Files.Add(descriptor);
 
-                descriptor.Parse(reader, Errors, name);
+                descriptor.Parse(reader, Errors, name, includeInOutput);
                 return true;
             }
         }
@@ -668,10 +668,11 @@ namespace Google.Protobuf.Reflection
             } // else EOF
         }
 
-        public void Parse(TextReader schema, List<Error> errors, string file)
+        public void Parse(TextReader schema, List<Error> errors, string file, bool trackComments)
         {
             Syntax = "";
-            using (var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace()), errors))
+            var comments = trackComments ? new List<Span>() : null;
+            using (var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace(comments)), errors))
             {
                 var tokens = ctx.Tokens;
                 tokens.Peek(out Token startOfFile); // want this for "stuff you didn't do" warnings

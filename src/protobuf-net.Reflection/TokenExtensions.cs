@@ -479,38 +479,86 @@ namespace ProtoBuf.Reflection
             return TokenType.Symbol;
         }
 
-        public static IEnumerable<Token> RemoveCommentsAndWhitespace(this IEnumerable<Token> tokens)
+        public static IEnumerable<Token> RemoveCommentsAndWhitespace(this IEnumerable<Token> tokens, List<Span> comments = null)
         {
             int commentLineNumber = -1;
             bool isBlockComment = false;
+            Span commentToken = default(Span);
+            StringBuilder comment = comments == null ? null : new StringBuilder();
             foreach (var token in tokens)
             {
                 if (isBlockComment)
                 {
                     // swallow everything until the end of the block comment
                     if (token.Is(TokenType.Symbol, "*/"))
+                    {
                         isBlockComment = false;
+                        if (commentToken.HasValue)
+                        {
+                            comments?.Add(commentToken.WithValue(comment?.ToString() ?? ""));
+                        }
+                        comment?.Clear();
+                        commentToken = default(Span);
+                    }
+                    else
+                    {
+                        commentToken += token;
+                        comment?.Append(token.Value);
+                    }
                 }
                 else if (commentLineNumber == token.LineNumber)
                 {
                     // swallow everything else on that line
-                }
-                else if (token.Is(TokenType.Whitespace))
-                {
-                    continue;
-                }
-                else if (token.Is(TokenType.Symbol, "//"))
-                {
-                    commentLineNumber = token.LineNumber;
-                }
-                else if (token.Is(TokenType.Symbol, "/*"))
-                {
-                    isBlockComment = true;
+                    commentToken += token;
+                    comment?.Append(token.Value);
                 }
                 else
                 {
-                    yield return token;
+                    // we may have buffered line-comment data from the previous line
+                    if (commentLineNumber >= 0)
+                    {
+                        commentLineNumber = -1;
+                        if (commentToken.HasValue)
+                        {
+                            comments?.Add(commentToken.WithValue(comment?.ToString() ?? ""));
+                        }
+                        comment?.Clear();
+                        commentToken = default(Span);
+                    }
+
+                    // non-comment data
+                    if (token.Is(TokenType.Whitespace))
+                    {
+                        continue;
+                    }
+                    else if (token.Is(TokenType.Symbol, "//"))
+                    {
+                        commentLineNumber = token.LineNumber;
+                        commentToken = Span.After(token);
+
+                    }
+                    else if (token.Is(TokenType.Symbol, "/*"))
+                    {
+                        isBlockComment = true;
+                        commentToken = Span.After(token);
+                    }
+                    else
+                    {
+                        yield return token;
+                    }
                 }
+            }
+
+            // we may have buffered line-comment data from the final line
+            if (commentLineNumber >= 0)
+            {
+                commentLineNumber = -1;
+                if (commentToken.HasValue)
+                {
+                    comments?.Add(commentToken.WithValue(comment?.ToString() ?? ""));
+                }
+                comment?.Clear();
+                commentToken = default(Span);
             }
         }
 
