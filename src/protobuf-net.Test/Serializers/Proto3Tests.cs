@@ -253,6 +253,44 @@ message HazAliasedEnum {
             Assert.Equal(DataFormat.Default, RuntimeTypeModel.Default[typeof(HazMap)][3].MapValueFormat);
         }
 
+        [ProtoContract]
+        class HasEvilDictionary_Array
+        {
+            [ProtoMember(1)]
+            public Dictionary<int, int[]> SourceOfProblem { get; set; }
+        }
+
+        [ProtoContract]
+        class HasEvilDictionary_List
+        {
+            [ProtoMember(1)]
+            public Dictionary<int, List<int>> SourceOfProblem { get; set; }
+        }
+
+        [Fact]
+        public void ComplexMapShouldNotBreak_Array()
+        {
+            var obj = new HasEvilDictionary_Array();
+            var model = RuntimeTypeModel.Create();
+            model.DeepClone(obj);
+
+            var arr = new int[] { 1, 2, 3 };
+            var arr2 = (int[])model.DeepClone(arr);
+            Assert.Equal("1,2,3", string.Join(",", arr2));
+        }
+
+        [Fact]
+        public void ComplexMapShouldNotBreak_List()
+        {
+            var obj = new HasEvilDictionary_List();
+            var model = RuntimeTypeModel.Create();
+            model.DeepClone(obj);
+
+            var list = new List<int> { 1, 2, 3 };
+            var list2 = (List<int>) model.DeepClone(list);
+            Assert.Equal("1,2,3", string.Join(",", list2));
+        }
+
         [Fact]
         public void GetMapSchema()
         {

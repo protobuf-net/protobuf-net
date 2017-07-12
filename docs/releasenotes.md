@@ -34,6 +34,10 @@ If you can't, that's fine too.
 
 - candidate issues: https://github.com/mgravell/protobuf-net/milestone/2
 
+## v2.3.0-gamma
+
+- fix issue with "map" detection of complex dictionaries-of-arrays incorrectly trying to configure a `MetaType` for the array type
+
 ## v2.3.0-beta
 
 - fix issue with unwanted static constructors being detected (#276)

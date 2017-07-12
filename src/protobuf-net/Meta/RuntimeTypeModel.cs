@@ -1900,7 +1900,6 @@ namespace ProtoBuf.Meta
         {
             if (type == null) return;
             if(Helpers.GetTypeCode(type) != ProtoTypeCode.Unknown) return; // don't try this[type] for inbuilts
-            if(this[type].IgnoreListHandling) return;
 
             // handle arrays
             if (type.IsArray)
@@ -1919,7 +1918,13 @@ namespace ProtoBuf.Meta
                     defaultType = type;
                 }
             }
-            // handle lists
+            else
+            {
+                // if not an array, first check it isn't explicitly opted out
+                if (this[type].IgnoreListHandling) return;
+            }
+
+            // handle lists 
             if (itemType == null) { itemType = TypeModel.GetListItemType(this, type); }
 
             // check for nested data (not allowed)
