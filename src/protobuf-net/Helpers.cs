@@ -2,7 +2,9 @@
 using System;
 using System.Collections;
 using System.IO;
+#if COREFX
 using System.Linq;
+#endif
 #if FEAT_IKVM
 using Type = IKVM.Reflection.Type;
 using IKVM.Reflection;

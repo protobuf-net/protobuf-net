@@ -34,6 +34,11 @@ If you can't, that's fine too.
 
 - candidate issues: https://github.com/mgravell/protobuf-net/milestone/2
 
+## v2.3.0-beta
+
+- fix issue with unwanted static constructors being detected (#276)
+- explicitly prevent `MetaType` instances for arrays
+
 ## v2.3.0-alpha
 
 - [further reading](http://blog.marcgravell.com/2017/06/protobuf-net-gets-proto3-support.html)

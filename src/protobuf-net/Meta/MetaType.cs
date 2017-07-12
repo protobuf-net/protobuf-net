@@ -331,7 +331,8 @@ namespace ProtoBuf.Meta
             this.factory = factory;
             if (model == null) throw new ArgumentNullException("model");
             if (type == null) throw new ArgumentNullException("type");
-            
+
+            if (type.IsArray) throw InbuiltType(type);
             IProtoSerializer coreSerializer = model.TryGetBasicTypeSerializer(type);
             if (coreSerializer != null)
             {
