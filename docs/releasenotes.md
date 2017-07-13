@@ -30,9 +30,10 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
-## v2.3.1 (not yet started)
+## v2.3.1 (work in progress)
 
 - candidate issues: https://github.com/mgravell/protobuf-net/milestone/2
+- fix bug with `optional` being emitted for sub-types in proto3 schemas (#280)
 
 ## v2.3.0
 
