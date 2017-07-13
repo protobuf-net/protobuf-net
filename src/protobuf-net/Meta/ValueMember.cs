@@ -776,6 +776,7 @@ namespace ProtoBuf.Meta
         public string Name
         {
             get { return Helpers.IsNullOrEmpty(name) ? originalMember.Name : name; }
+            set { SetName(value); }
         }
 
         private const byte

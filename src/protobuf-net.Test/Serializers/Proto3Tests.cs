@@ -418,6 +418,26 @@ enum SomeEnum {
         }
 
         [Fact]
+        public void TestEnumProto_Proto2_RuntimeRenamed()
+        {
+            var model = TypeModel.Create();
+            model[typeof(HazEnum.SomeEnum)][1].Name = "zzz";
+            var schema = model.GetSchema(typeof(HazEnum), ProtoSyntax.Proto2);
+            Assert.Equal(@"syntax = ""proto2"";
+package ProtoBuf.Serializers;
+
+message HazEnum {
+   optional SomeEnum X = 1 [default = B];
+}
+enum SomeEnum {
+   B = 0;
+   zzz = 1;
+   C = 2;
+}
+", schema);
+        }
+
+        [Fact]
         public void TestEnumProto_Proto3()
         {
             var schema = Serializer.GetProto<HazEnum>(ProtoSyntax.Proto3);
