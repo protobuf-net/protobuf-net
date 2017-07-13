@@ -1996,7 +1996,7 @@ namespace ProtoBuf.Meta
                     foreach (SubType subType in subTypeArr)
                     {
                         string subTypeName = subType.DerivedType.GetSchemaTypeName();
-                        NewLine(builder, indent + 1).Append("optional ").Append(subTypeName)
+                        NewLine(builder, indent + 1).Append((syntax == ProtoSyntax.Proto2 ? "optional " : "")).Append(subTypeName)
                             .Append(" ").Append(subTypeName).Append(" = ").Append(subType.FieldNumber).Append(';');
                     }
                 }

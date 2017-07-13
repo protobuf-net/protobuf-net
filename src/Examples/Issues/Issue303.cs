@@ -18,7 +18,7 @@ namespace Examples.Issues
         }
 
         [Fact]
-        public void TestEntireModel()
+        public void TestEntireModel_Proto2()
         {
             var model = GetModel();
             Assert.Equal(
@@ -39,6 +39,31 @@ message vegetable {
 ",
 
  model.GetSchema(null)
+
+);
+        }
+        [Fact]
+        public void TestEntireModel_Proto3()
+        {
+            var model = GetModel();
+            Assert.Equal(
+                @"syntax = ""proto3"";
+package Examples.Issues;
+
+message animal {
+   int32 numberOfLegs = 1; // default value could not be applied: 4
+   // the following represent sub-types; at most 1 should have a value
+   cat cat = 4;
+}
+message cat {
+   repeated animal animalsHunted = 1;
+}
+message vegetable {
+   int32 size = 1;
+}
+",
+
+ model.GetSchema(null, ProtoSyntax.Proto3)
 
 );
         }
