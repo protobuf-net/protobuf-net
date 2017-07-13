@@ -34,6 +34,10 @@ If you can't, that's fine too.
 
 - candidate issues: https://github.com/mgravell/protobuf-net/milestone/2
 
+## v2.3.0
+
+- include better information when rejecting jagged arrays / nested lists ([SO 45062514](https://stackoverflow.com/q/45062514/23354))
+
 ## v2.3.0-gamma
 
 - fix issue with "map" detection of complex dictionaries-of-arrays incorrectly trying to configure a `MetaType` for the array type

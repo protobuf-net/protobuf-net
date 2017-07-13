@@ -45,7 +45,7 @@ namespace ProtoBuf
             {
                 writer.model.Serialize(key, value, writer);
             }
-            else if (writer.model != null && writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value, false))
+            else if (writer.model != null && writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value, false, null))
             {
                 // all ok
             }
@@ -104,7 +104,7 @@ namespace ProtoBuf
             SubItemToken token = StartSubItem(value, writer, true);
             if (key < 0)
             {
-                if (!writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value, false))
+                if (!writer.model.TrySerializeAuxiliaryType(writer, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value, false, null))
                 {
                     TypeModel.ThrowUnexpectedType(value.GetType());
                 }

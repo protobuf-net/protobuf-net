@@ -27,7 +27,7 @@ namespace Examples.Issues
             {
                 var list = new List<SomeType>[] { new List<SomeType> { new SomeType() }, new List<SomeType> { new SomeType() } };
                 Serializer.Serialize(Stream.Null, list);
-            }, "Nested or jagged lists and arrays are not supported");
+            }, "Nested or jagged lists and arrays are not supported: System.Collections.Generic.List`1[[Examples.Issues.Issue192+SomeType, Examples, Version=2.3.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67]][]");
         }
         [Fact]
         public void DeserializeDeepList()
@@ -35,7 +35,7 @@ namespace Examples.Issues
             Program.ExpectFailure<NotSupportedException>(() =>
             {
                 Serializer.Deserialize<List<SomeType>[]>(Stream.Null);
-            }, "Nested or jagged lists and arrays are not supported");
+            }, "Nested or jagged lists and arrays are not supported: System.Collections.Generic.List`1[[Examples.Issues.Issue192+SomeType, Examples, Version=2.3.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67]][]");
         }
         [Fact]
         public void SerializeWrappedDeepList()
@@ -44,7 +44,7 @@ namespace Examples.Issues
             {
                 var wrapped = new Wrapper();
                 var clone = Serializer.DeepClone(wrapped);
-            }, "Nested or jagged lists and arrays are not supported");
+            }, "Nested or jagged lists and arrays are not supported: System.Collections.Generic.List`1[[Examples.Issues.Issue192+SomeType, Examples, Version=2.3.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67]][]");
         }
 
     }

@@ -1516,7 +1516,7 @@ namespace ProtoBuf.Meta
                 ResolveListTypes(model, itemType, ref nestedItemType, ref nestedDefaultType);
                 if (nestedItemType != null)
                 {
-                    throw TypeModel.CreateNestedListsNotSupported();
+                    throw TypeModel.CreateNestedListsNotSupported(type);
                 }
             }
 
