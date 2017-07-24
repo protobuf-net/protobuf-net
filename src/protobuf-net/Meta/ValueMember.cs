@@ -441,7 +441,7 @@ namespace ProtoBuf.Meta
 
         static bool IsValidMapKeyType(Type type)
         {
-            if (type == null) return false;
+            if (type == null || Helpers.IsEnum(type)) return false;
             switch(Helpers.GetTypeCode(type))
             {
                 case ProtoTypeCode.Boolean:
