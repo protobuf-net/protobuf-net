@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Globalization;
 using System.Collections.Generic;
+using System.Linq;
 #endif
 #endif
 
@@ -1629,6 +1630,21 @@ namespace ProtoBuf.Meta
             return arr;
         }
 
+        public IEnumerable<Type> GetAllGenericArguments()
+        {
+            return GetAllGenericArguments(type);
+        }
+
+        private static IEnumerable<Type> GetAllGenericArguments(Type type)
+        {
+#if NO_GENERICS
+            return Type.EmptyTypes;
+#else
+            var genericArguments = type.GetGenericArguments();
+            return genericArguments.Concat(genericArguments.SelectMany(t => GetAllGenericArguments(t)));
+#endif
+        }
+
 #if FEAT_COMPILER && !FX11
 
         /// <summary>
@@ -1756,11 +1772,11 @@ namespace ProtoBuf.Meta
 
         internal bool IsPrepared()
         {
-            #if FEAT_COMPILER && !FEAT_IKVM && !FX11
+#if FEAT_COMPILER && !FEAT_IKVM && !FX11
             return serializer is CompiledSerializer;
-            #else
+#else
             return false;
-            #endif
+#endif
         }
 
         internal System.Collections.IEnumerable Fields { get { return this.fields; } }

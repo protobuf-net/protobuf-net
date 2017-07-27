@@ -290,21 +290,7 @@ namespace ProtoBuf.Meta
             if (metaType.IsList)
             {
                 Type itemType = TypeModel.GetListItemType(this, metaType.Type);
-                WireType defaultWireType;
-                IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, itemType, out defaultWireType, false, false, false, false);
-                if (coreSerializer == null)
-                {
-                    int index = FindOrAddAuto(itemType, false, false, false);
-                    if (index >= 0)
-                    {
-                        tmp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
-                        if (!list.Contains(tmp))
-                        { // could perhaps also implement as a queue, but this should work OK for sane models
-                            list.Add(tmp);
-                            CascadeDependents(list, tmp);
-                        }
-                    }
-                }
+                TryGetCoreSerializer(list, itemType);
             }
             else
             {
@@ -318,22 +304,7 @@ namespace ProtoBuf.Meta
                             Type type = null;
                             if (mapping[i] is PropertyInfo) type = ((PropertyInfo)mapping[i]).PropertyType;
                             else if (mapping[i] is FieldInfo) type = ((FieldInfo)mapping[i]).FieldType;
-
-                            WireType defaultWireType;
-                            IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false);
-                            if (coreSerializer == null)
-                            {
-                                int index = FindOrAddAuto(type, false, false, false);
-                                if (index >= 0)
-                                {
-                                    tmp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
-                                    if (!list.Contains(tmp))
-                                    { // could perhaps also implement as a queue, but this should work OK for sane models
-                                        list.Add(tmp);
-                                        CascadeDependents(list, tmp);
-                                    }
-                                }
-                            }
+                            TryGetCoreSerializer(list, type);
                         }
                     }
                 }
@@ -346,26 +317,15 @@ namespace ProtoBuf.Meta
                         {
                             member.ResolveMapTypes(out _, out _, out type); // don't need key-type
                         }
-                        if (type == null) type = member.MemberType;
-                        WireType defaultWireType;
-                        IProtoSerializer coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false);
-                        if (coreSerializer == null)
-                        {
-                            // is an interesting type
-                            int index = FindOrAddAuto(type, false, false, false);
-                            if (index >= 0)
-                            {
-                                tmp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
-                                if (!list.Contains(tmp))
-                                { // could perhaps also implement as a queue, but this should work OK for sane models
-                                    list.Add(tmp);
-                                    CascadeDependents(list, tmp);
-                                }
-                            }
-                        }
+                        if(type == null) type = member.MemberType;
+                        TryGetCoreSerializer(list, type);
                     }
                 }
-                if (metaType.HasSubtypes)
+                foreach(var genericArgument in metaType.GetAllGenericArguments())
+                {
+                    TryGetCoreSerializer(list, genericArgument);
+                }
+                if(metaType.HasSubtypes)
                 {
                     foreach (SubType subType in metaType.GetSubtypes())
                     {
@@ -387,6 +347,27 @@ namespace ProtoBuf.Meta
             }
         }
 
+        private void TryGetCoreSerializer(BasicList list, Type itemType)
+        {
+            var coreSerializer = ValueMember.TryGetCoreSerializer(this, DataFormat.Default, itemType, out _, false, false, false, false);
+            if(coreSerializer != null)
+            {
+                return;
+            }
+            int index = FindOrAddAuto(itemType, false, false, false);
+            if(index < 0)
+            {
+                return;
+            }
+            var temp = ((MetaType)types[index]).GetSurrogateOrBaseOrSelf(false);
+            if(list.Contains(temp))
+            {
+                return;
+            }
+            // could perhaps also implement as a queue, but this should work OK for sane models
+            list.Add(temp);
+            CascadeDependents(list, temp);
+        }
 
         internal RuntimeTypeModel(bool isDefault)
         {
