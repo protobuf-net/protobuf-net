@@ -30,9 +30,8 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
-## v2.3.1 (work in progress)
+## v2.3.1
 
-- candidate issues: https://github.com/mgravell/protobuf-net/milestone/2
 - fix bug with `optional` being emitted for sub-types in proto3 schemas (#280)
 - add setter to `ValueMember.Name` - in particular allows runtime enum name configuration (#281)
 - fix bug with implicit map when `TKey` is an enum type (#289)
