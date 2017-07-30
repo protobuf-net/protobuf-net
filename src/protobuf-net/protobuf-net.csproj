@@ -4,7 +4,6 @@
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
     <TargetFrameworks>net40;netstandard1.3</TargetFrameworks>
-    <!--net20;net35;-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
     <!-- new build tools spit these out -->
@@ -19,7 +18,7 @@
     <Configurations>Debug;Release;VS</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'VS'">
-    <TargetFrameworks>net40;netstandard1.3;net20;net35</TargetFrameworks>
+    <TargetFrameworks>$(TargetFrameworks);net20;net35</TargetFrameworks>
   </PropertyGroup>
   <!-- define configuration per-platform -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20'">

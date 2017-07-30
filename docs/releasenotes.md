@@ -36,6 +36,7 @@ If you can't, that's fine too.
 - fix bug with `optional` being emitted for sub-types in proto3 schemas (#280)
 - add setter to `ValueMember.Name` - in particular allows runtime enum name configuration (#281)
 - fix bug with implicit map when `TKey` is an enum type (#289)
+- fix build config (optimized build)
 
 ## v2.3.0
 
