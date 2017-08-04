@@ -30,6 +30,10 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## v2.3.3 (not yet released)
+
+- fix protogen bug with `[DefaultValue]` for enums not including the fully qualified name when required
+
 ## v2.3.2
 
 - fix bug with `IgnoreListHandling` not being respected for custom dictionary-like types (with "map" taking precedence)
