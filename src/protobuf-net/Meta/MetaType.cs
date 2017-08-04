@@ -1129,11 +1129,12 @@ namespace ProtoBuf.Meta
 
             // check for list types
             ResolveListTypes(model, effectiveType, ref itemType, ref defaultType);
+            bool ignoreListHandling = false;
             // but take it back if it is explicitly excluded
             if(itemType != null)
             { // looks like a list, but double check for IgnoreListHandling
                 int idx = model.FindOrAddAuto(effectiveType, false, true, false);
-                if(idx >= 0 && model[effectiveType].IgnoreListHandling)
+                if(idx >= 0 && (ignoreListHandling = model[effectiveType].IgnoreListHandling))
                 {
                     itemType = null;
                     defaultType = null;
@@ -1205,7 +1206,7 @@ namespace ProtoBuf.Meta
                 }
                 vm.DynamicType = normalizedAttribute.DynamicType;
 
-                vm.IsMap = vm.ResolveMapTypes(out var _, out var _, out var _);
+                vm.IsMap = ignoreListHandling ? false : vm.ResolveMapTypes(out var _, out var _, out var _);
                 if (vm.IsMap) // is it even *allowed* to be a map?
                 {
                     if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoMapAttribute")) != null)

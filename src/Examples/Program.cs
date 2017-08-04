@@ -8,6 +8,7 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using System.Reflection;
 using Xunit;
+using System.Text.RegularExpressions;
 
 namespace Examples
 {
@@ -128,9 +129,10 @@ namespace Examples
             }
             catch (TException ex)
             {
-                if (message != null) Assert.Equal(message, ex.Message);
+                if (message != null) Assert.Equal(DeVersion(message), DeVersion(ex.Message));
             }
         }
+        static string DeVersion(string input) => Regex.Replace(input, "Version=([0-9.]+)", "Version=*");
         public static void ExpectFailure<TException>(Action action, Func<TException, bool> check)
             where TException : Exception
         {

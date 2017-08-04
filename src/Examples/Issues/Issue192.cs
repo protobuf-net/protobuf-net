@@ -29,6 +29,8 @@ namespace Examples.Issues
                 Serializer.Serialize(Stream.Null, list);
             }, "Nested or jagged lists and arrays are not supported: System.Collections.Generic.List`1[[Examples.Issues.Issue192+SomeType, Examples, Version=2.3.0.0, Culture=neutral, PublicKeyToken=257b51d87d2e4d67]][]");
         }
+        
+
         [Fact]
         public void DeserializeDeepList()
         {
