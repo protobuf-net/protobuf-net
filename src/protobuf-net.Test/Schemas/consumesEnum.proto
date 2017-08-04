@@ -1,0 +1,7 @@
+﻿package Jam.Toast.Foo;
+
+import "definesEnum.proto";
+
+message Bar {
+  optional Jam.Scones.Foo.someEnum val = 42;
+}

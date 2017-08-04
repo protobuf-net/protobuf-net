@@ -280,6 +280,8 @@ namespace ProtoBuf.Reflection
 
             string defaultValue = null;
             bool suppressDefaultAttribute = !isOptional;
+            var typeName = GetTypeName(ctx, obj, out var dataFormat, out var isMap);
+
             if (isOptional || obj.type == FieldDescriptorProto.Type.TypeEnum)
             {
                 defaultValue = obj.DefaultValue;
@@ -334,12 +336,12 @@ namespace ProtoBuf.Reflection
                         }
                         if (!string.IsNullOrWhiteSpace(defaultValue))
                         {
-                            defaultValue = ctx.NameNormalizer.GetName(enumType) + "." + defaultValue;
+                            defaultValue = typeName + "." + defaultValue;
                         }
                     }
                 }
             }
-            var typeName = GetTypeName(ctx, obj, out var dataFormat, out var isMap);
+            
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
                 tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
