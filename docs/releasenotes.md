@@ -30,6 +30,10 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## v2.3.2
+
+- fix bug with `IgnoreListHandling` not being respected for custom dictionary-like types (with "map" taking precedence)
+
 ## v2.3.1
 
 - fix bug with `optional` being emitted for sub-types in proto3 schemas (#280)
