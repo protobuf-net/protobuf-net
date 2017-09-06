@@ -22,7 +22,6 @@ namespace ProtoBuf
                     Pool[i] = null;
             }
         }
-  
         internal static byte[] GetBuffer()
         {
             return GetBuffer(BufferPoolConfiguration.InitialBufferSize);
@@ -127,6 +126,20 @@ namespace ProtoBuf
             }
 
             buffer = null;
+        }
+
+        public static int GetBufferPoolOccupancy()
+        {
+            lock (Pool)
+            {
+                var numberOfNulls = 0;
+                for (var i = 0; i < Pool.Length; i++)
+                {
+                    if (Pool[i] == null)
+                        numberOfNulls++;
+                }
+                return numberOfNulls;
+            }
         }
 
         private class CachedBuffer
