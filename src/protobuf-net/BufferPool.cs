@@ -1,19 +1,9 @@
-﻿using System;
+using System;
 
 namespace ProtoBuf
 {
-    public static class BufferPoolConfiguration
-    {
-        public static int PoolSize = 20;
-        public static int InitialBufferSize = 1024;
-    }
-
     internal sealed class BufferPool
     {
-        private BufferPool() { }
-
-        private static readonly CachedBuffer[] Pool = new CachedBuffer[BufferPoolConfiguration.PoolSize];
-
         internal static void Flush()
         {
             lock (Pool)
@@ -23,9 +13,14 @@ namespace ProtoBuf
             }
         }
 
+        private BufferPool() { }
+        private const int POOL_SIZE = 20;
+        internal const int BUFFER_LENGTH = 1024;
+        private static readonly CachedBuffer[] Pool = new CachedBuffer[POOL_SIZE];
+
         internal static byte[] GetBuffer()
         {
-            return GetBuffer(BufferPoolConfiguration.InitialBufferSize);
+            return GetBuffer(BUFFER_LENGTH);
         }
 
         internal static byte[] GetBuffer(int minSize)
@@ -101,8 +96,7 @@ namespace ProtoBuf
 
         internal static void ReleaseBufferToPool(ref byte[] buffer)
         {
-            if (buffer == null)
-                return;
+            if (buffer == null) return;
 
             lock (Pool)
             {
@@ -127,19 +121,6 @@ namespace ProtoBuf
             }
 
             buffer = null;
-        }
-
-        public static int[] GetBufferPoolSizes()
-        {
-            var bufferSizes = new int[BufferPoolConfiguration.PoolSize];
-            lock(Pool)
-            {
-                for (var i = 0; i < Pool.Length; i++)
-                {
-                    bufferSizes[i] = Pool[i] == null ? -1 : Pool[i].Size;
-                }
-            }
-            return bufferSizes;
         }
 
         private class CachedBuffer
