@@ -19,3 +19,4 @@ Tests.Dnx/protoTest.txt
 Tests.Dnx/TraceCompile.txt
 *.NoCommit.*
 del.me
+_ReSharper.Caches/
