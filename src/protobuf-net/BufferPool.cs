@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Threading;
 namespace ProtoBuf
 {
@@ -46,6 +47,12 @@ namespace ProtoBuf
 #endif
             return new byte[BufferLength];
         }
+
+        /// <remarks>
+        /// https://docs.microsoft.com/en-us/dotnet/framework/configure-apps/file-schema/runtime/gcallowverylargeobjects-element
+        /// </remarks>
+        private const int MaxByteArraySize = int.MaxValue - 56;
+
         internal static void ResizeAndFlushLeft(ref byte[] buffer, int toFitAtLeastBytes, int copyFromIndex, int copyBytes)
         {
             Helpers.DebugAssert(buffer != null);
@@ -55,6 +62,11 @@ namespace ProtoBuf
 
             // try doubling, else match
             int newLength = buffer.Length * 2;
+            if (newLength < 0)
+            {
+                newLength = MaxByteArraySize;
+            }
+
             if (newLength < toFitAtLeastBytes) newLength = toFitAtLeastBytes;
 
             byte[] newBuffer = new byte[newLength];
