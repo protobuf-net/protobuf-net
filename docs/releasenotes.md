@@ -30,9 +30,10 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
-## v2.3.3 (not yet released)
+## v2.3.3
 
 - fix protogen bug with `[DefaultValue]` for enums not including the fully qualified name when required
+- fix pathological memory usage bug with large buffers (int-overflow); many thanks to [Mikhail Brinchuk](https://github.com/Thecentury)
 
 ## v2.3.2
 
