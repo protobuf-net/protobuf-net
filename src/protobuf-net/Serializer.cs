@@ -245,16 +245,23 @@ namespace ProtoBuf
         }
 #endif
 
+        /// <summary>
+        /// Precompiles the serializer for a given type.
+        /// </summary>
+        public static void PrepareSerializer(Type t) {
+#if FEAT_COMPILER
+            RuntimeTypeModel model = RuntimeTypeModel.Default;
+            model[model.MapType(t)].CompileInPlace();
+#endif
+        }
+
 #if !NO_GENERICS
         /// <summary>
         /// Precompiles the serializer for a given type.
         /// </summary>
         public static void PrepareSerializer<T>()
-        { 
-#if FEAT_COMPILER
-            RuntimeTypeModel model = RuntimeTypeModel.Default;
-            model[model.MapType(typeof(T))].CompileInPlace();
-#endif
+        {
+            PrepareSerializer(typeof(T));
         }
 
 #if PLAT_BINARYFORMATTER && !(WINRT || PHONE8 || COREFX)
