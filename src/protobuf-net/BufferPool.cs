@@ -68,6 +68,11 @@ namespace ProtoBuf
             }
         }
 
+        /// <remarks>
+        /// https://docs.microsoft.com/en-us/dotnet/framework/configure-apps/file-schema/runtime/gcallowverylargeobjects-element
+        /// </remarks>
+        private const int MaxByteArraySize = int.MaxValue - 56;
+
         internal static void ResizeAndFlushLeft(ref byte[] buffer, int toFitAtLeastBytes, int copyFromIndex, int copyBytes)
         {
             Helpers.DebugAssert(buffer != null);
@@ -75,7 +80,12 @@ namespace ProtoBuf
             Helpers.DebugAssert(copyFromIndex >= 0);
             Helpers.DebugAssert(copyBytes >= 0);
 
-            var newLength = buffer.Length * 2;
+            int newLength = buffer.Length * 2;
+            if (newLength < 0)
+            {
+                newLength = MaxByteArraySize;
+            }
+
             if (newLength < toFitAtLeastBytes) newLength = toFitAtLeastBytes;
 
             if (copyBytes == 0)
