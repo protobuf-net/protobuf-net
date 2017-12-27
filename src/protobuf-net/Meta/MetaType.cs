@@ -1487,9 +1487,12 @@ namespace ProtoBuf.Meta
             return newField;
         }
 
-        internal static void ResolveListTypes(TypeModel model, Type type, ref Type itemType, ref Type defaultType)
+        internal static void ResolveListTypes(RuntimeTypeModel model, Type type, ref Type itemType, ref Type defaultType)
         {
-            if (type == null) return;
+            // If the type is equal to Null or the type has a surrogate defined to handle this list it shouldn't be handled here.
+            if (type == null || (model.IsDefined(type) && model[type].IgnoreListHandling && model[type].surrogate != null))
+                return;
+
             // handle arrays
             if (type.IsArray)
             {
