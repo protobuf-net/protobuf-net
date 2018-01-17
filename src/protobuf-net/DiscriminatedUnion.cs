@@ -128,7 +128,7 @@ namespace ProtoBuf
         [FieldOffset(8)] public readonly TimeSpan TimeSpan;
         /// <summary>The value typed as Guid</summary>
         [FieldOffset(8)] public readonly Guid Guid;
-        /// <summary>The value typed as Double</summary>
+        /// <summary>The value typed as Object</summary>
         [FieldOffset(24)] public readonly object Object;
 
         private DiscriminatedUnion128Object(int discriminator) : this()
@@ -270,7 +270,7 @@ namespace ProtoBuf
         [FieldOffset(8)] public readonly DateTime DateTime;
         /// <summary>The value typed as TimeSpan</summary>
         [FieldOffset(8)] public readonly TimeSpan TimeSpan;
-        /// <summary>The value typed as Double</summary>
+        /// <summary>The value typed as Object</summary>
         [FieldOffset(16)] public readonly object Object;
 
         private DiscriminatedUnion64Object(int discriminator) : this()
@@ -364,7 +364,7 @@ namespace ProtoBuf
         [FieldOffset(4)] public readonly bool Boolean;
         /// <summary>The value typed as Single</summary>
         [FieldOffset(4)] public readonly float Single;
-        /// <summary>The value typed as Double</summary>
+        /// <summary>The value typed as Object</summary>
         [FieldOffset(8)] public readonly object Object;
 
         private DiscriminatedUnion32Object(int discriminator) : this()
