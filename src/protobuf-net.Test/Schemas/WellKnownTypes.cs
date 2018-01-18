@@ -62,7 +62,7 @@ namespace ProtoBuf.Schemas
         [InlineData("2017-01-15T01:30:15.01Z")]
         [InlineData("1970-01-15T00:00:00Z")]
         [InlineData("1930-01-15T00:00:00.00001Z")]
-        public void DateTime_WellKnownEquiv(string s)
+        public void DateTime_WellKnownEquiv_String(string s)
         {
             // parse
             var when = DateTime.Parse(s, CultureInfo.InvariantCulture);
@@ -127,7 +127,7 @@ namespace ProtoBuf.Schemas
         [InlineData("00:00:00.00032")]
         [InlineData("-00:00:00.00032")]
         [InlineData("00:00:00")]
-        public void TimeSpan_WellKnownEquiv(string s)
+        public void TimeSpan_WellKnownEquiv_String(string s)
         {
             // parse
             var time = TimeSpan.Parse(s, CultureInfo.InvariantCulture);

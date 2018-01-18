@@ -20,3 +20,5 @@ Tests.Dnx/TraceCompile.txt
 *.NoCommit.*
 del.me
 _ReSharper.Caches/
+BenchmarkDotNet.Artifacts/
+filedata.bin
