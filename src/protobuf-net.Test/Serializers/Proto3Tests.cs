@@ -707,7 +707,7 @@ message KeyValuePair_Double_String {
             var ex = Assert.Throws<ArgumentException>(() =>
                 Serializer.Deserialize<DisabledMap>(ms)
             );
-            Assert.True(ex.Message.StartsWith("An item with the same key has already been added."));
+            Assert.StartsWith("An item with the same key has already been added.", ex.Message);
         }
 
         [ProtoContract]

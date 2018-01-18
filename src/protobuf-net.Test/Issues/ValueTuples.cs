@@ -15,7 +15,7 @@ namespace ProtoBuf.Issues
             var bar = Serializer.DeepClone(foo);
             Assert.Equal(123, bar.a);
             Assert.Equal("def", bar.b);
-            Assert.Equal(true, bar.c.d);
+            Assert.True(bar.c.d);
             Assert.Equal("abc,def", string.Join(",", bar.c.e));
 
         }

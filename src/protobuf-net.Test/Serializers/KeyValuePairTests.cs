@@ -98,7 +98,7 @@ namespace ProtoBuf.unittest.Serializers
             var orig = new TypeWithDictionary { Data = new Dictionary<string, decimal> { { "abc", 123.45M } } };
             var model = TypeModel.Create();
             var clone = (TypeWithDictionary)model.DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]); //, "Runtime");
 
             model.Compile("TypeWithDictionaryTest", "TypeWithDictionaryTest.dll");
@@ -106,11 +106,11 @@ namespace ProtoBuf.unittest.Serializers
 
             model.CompileInPlace();
             clone = (TypeWithDictionary)model.DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]); //, "Runtime");
 
             clone = (TypeWithDictionary)model.Compile().DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]); //, "Runtime");
         }
 
@@ -122,7 +122,7 @@ namespace ProtoBuf.unittest.Serializers
             model.AutoAddMissingTypes = false;
             model.Add(typeof (TypeWithDictionary), true);
             var clone = (TypeWithDictionary) model.DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]);
         }
 
@@ -135,7 +135,7 @@ namespace ProtoBuf.unittest.Serializers
             model.Add(typeof(TypeWithDictionary), true);
             model.Add(typeof(KeyValuePair<string,decimal>), true);
             var clone = (TypeWithDictionary)model.DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]);
         }
         [Fact]
@@ -147,7 +147,7 @@ namespace ProtoBuf.unittest.Serializers
             model.Add(typeof (TypeWithDictionary), true);
             model.CompileInPlace();
             var clone = (TypeWithDictionary) model.DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]);
         }
         [Fact]
@@ -158,7 +158,7 @@ namespace ProtoBuf.unittest.Serializers
             model.AutoAddMissingTypes = false;
             model.Add(typeof(TypeWithDictionary), true);
             var clone = (TypeWithDictionary)model.Compile().DeepClone(orig);
-            Assert.Equal(1, clone.Data.Count);
+            Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]);
         }
 

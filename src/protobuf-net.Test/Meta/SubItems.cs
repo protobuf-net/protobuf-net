@@ -43,23 +43,23 @@ namespace ProtoBuf.unittest.Meta
         public void TestCanDeserialierAllFromEmptyStream()
         {
             var model = CreateModel();
-            Assert.IsType(typeof(OuterRef), model.Deserialize(Stream.Null, null, typeof(OuterRef)));
-            Assert.IsType(typeof(OuterVal), model.Deserialize(Stream.Null, null, typeof(OuterVal)));
-            Assert.IsType(typeof(InnerRef), model.Deserialize(Stream.Null, null, typeof(InnerRef)));
-            Assert.IsType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
+            Assert.IsType<OuterRef>(model.Deserialize(Stream.Null, null, typeof(OuterRef)));
+            Assert.IsType<OuterVal>(model.Deserialize(Stream.Null, null, typeof(OuterVal)));
+            Assert.IsType<InnerRef>(model.Deserialize(Stream.Null, null, typeof(InnerRef)));
+            Assert.IsType<InnerVal>(model.Deserialize(Stream.Null, null, typeof(InnerVal)));
 
             model.CompileInPlace();
-            Assert.IsType(typeof(OuterRef), model.Deserialize(Stream.Null, null, typeof(OuterRef)));
-            Assert.IsType(typeof(OuterVal), model.Deserialize(Stream.Null, null, typeof(OuterVal)));
-            Assert.IsType(typeof(InnerRef), model.Deserialize(Stream.Null, null, typeof(InnerRef)));
-            Assert.IsType(typeof(InnerVal), model.Deserialize(Stream.Null, null, typeof(InnerVal)));
+            Assert.IsType<OuterRef>(model.Deserialize(Stream.Null, null, typeof(OuterRef)));
+            Assert.IsType<OuterVal>(model.Deserialize(Stream.Null, null, typeof(OuterVal)));
+            Assert.IsType<InnerRef>(model.Deserialize(Stream.Null, null, typeof(InnerRef)));
+            Assert.IsType<InnerVal>(model.Deserialize(Stream.Null, null, typeof(InnerVal)));
 
             var compiled = model.Compile("SubItems","SubItems.dll");
             PEVerify.Verify("SubItems.dll");
-            Assert.IsType(typeof(OuterRef), compiled.Deserialize(Stream.Null, null, typeof(OuterRef)));
-            Assert.IsType(typeof(OuterVal), compiled.Deserialize(Stream.Null, null, typeof(OuterVal)));
-            Assert.IsType(typeof(InnerRef), compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
-            Assert.IsType(typeof(InnerVal), compiled.Deserialize(Stream.Null, null, typeof(InnerVal)));
+            Assert.IsType<OuterRef>(compiled.Deserialize(Stream.Null, null, typeof(OuterRef)));
+            Assert.IsType<OuterVal>(compiled.Deserialize(Stream.Null, null, typeof(OuterVal)));
+            Assert.IsType<InnerRef>(compiled.Deserialize(Stream.Null, null, typeof(InnerRef)));
+            Assert.IsType<InnerVal>(compiled.Deserialize(Stream.Null, null, typeof(InnerVal)));
         }
 
 
@@ -108,7 +108,6 @@ namespace ProtoBuf.unittest.Meta
 
             var model = CreateModel();
             clone = (OuterVal)model.DeepClone(outer);
-            Assert.NotSame(outer, clone);
             Assert.Equal(123, clone.InnerRef.Int32);
             Assert.Equal("abc", clone.InnerRef.String);
             Assert.Equal(456, clone.InnerVal.Int32);
@@ -117,14 +116,12 @@ namespace ProtoBuf.unittest.Meta
             model.CompileInPlace();
             clone = (OuterVal)model.DeepClone(outer);
             
-            Assert.NotSame(outer, clone);
             Assert.Equal(123, clone.InnerRef.Int32);
             Assert.Equal("abc", clone.InnerRef.String);
             Assert.Equal(456, clone.InnerVal.Int32);
             Assert.Equal("def", clone.InnerVal.String);
             
             clone = (OuterVal)model.Compile().DeepClone(outer);
-            Assert.NotSame(outer, clone);
             Assert.Equal(123, clone.InnerRef.Int32);
             Assert.Equal("abc", clone.InnerRef.String);
             Assert.Equal(456, clone.InnerVal.Int32);

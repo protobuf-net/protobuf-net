@@ -20,7 +20,7 @@ namespace ProtoBuf.Issues
         {
             var arr = Convert.FromBase64String("Cg4KDAjH8sZ3EgVUYWxlcw==");
             var item = Serializer.Deserialize<Item>(new MemoryStream(arr));
-            Assert.Equal(1, item.Map.Count);
+            Assert.Single(item.Map);
             Assert.Equal("Tales", item.Map[250722631]);
         }
 
