@@ -385,40 +385,20 @@ namespace ProtoBuf.Meta
         internal bool ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
         {
             dictionaryType = keyType = valueType = null;
-
+            try
+            {
 #if WINRT || COREFX
-            var info = memberType.GetTypeInfo();
+                var info = memberType.GetTypeInfo();
 #else
-            var info = memberType;
+                var info = memberType;
 #endif
-            if(ImmutableCollectionDecorator.IdentifyImmutable(model, MemberType, out _, out _, out _, out _))
-            {
-                return false;
-            }
-            if (info.IsInterface && info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-            {
-                var typeArgs = memberType.GetGenericArguments();
-
-                if (IsValidMapKeyType(typeArgs[0]))
+                if (ImmutableCollectionDecorator.IdentifyImmutable(model, MemberType, out _, out _, out _, out _))
                 {
-                    keyType = typeArgs[0];
-                    valueType = typeArgs[1];
-                    dictionaryType = memberType;
+                    return false;
                 }
-                return false;
-            }
-
-            foreach (var iType in memberType.GetInterfaces())
-            {
-#if WINRT || COREFX
-                info = iType.GetTypeInfo();
-#else
-                info = iType;
-#endif
-                if (info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                if (info.IsInterface && info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                 {
-                    if (dictionaryType != null) throw new InvalidOperationException("Multiple dictionary interfaces implemented by type: " + memberType.FullName);
-                    var typeArgs = iType.GetGenericArguments();
+                    var typeArgs = memberType.GetGenericArguments();
 
                     if (IsValidMapKeyType(typeArgs[0]))
                     {
@@ -426,17 +406,44 @@ namespace ProtoBuf.Meta
                         valueType = typeArgs[1];
                         dictionaryType = memberType;
                     }
+                    return false;
                 }
+
+                foreach (var iType in memberType.GetInterfaces())
+                {
+#if WINRT || COREFX
+                info = iType.GetTypeInfo();
+#else
+                    info = iType;
+#endif
+                    if (info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
+                    {
+                        if (dictionaryType != null) throw new InvalidOperationException("Multiple dictionary interfaces implemented by type: " + memberType.FullName);
+                        var typeArgs = iType.GetGenericArguments();
+
+                        if (IsValidMapKeyType(typeArgs[0]))
+                        {
+                            keyType = typeArgs[0];
+                            valueType = typeArgs[1];
+                            dictionaryType = memberType;
+                        }
+                    }
+                }
+                if (dictionaryType == null) return false;
+
+                // (note we checked the key type already)
+                // not a map if value is repeated
+                Type itemType = null, defaultType = null;
+                model.ResolveListTypes(valueType, ref itemType, ref defaultType);
+                if (itemType != null) return false;
+
+                return dictionaryType != null;
             }
-            if (dictionaryType == null) return false;
-
-            // (note we checked the key type already)
-            // not a map if value is repeated
-            Type itemType = null, defaultType = null;
-            model.ResolveListTypes(valueType, ref itemType, ref defaultType);
-            if (itemType != null) return false;
-
-            return dictionaryType != null;
+            catch
+            {
+                // if it isn't a good fit; don't use "map"
+                return false;
+            }
         }
 
         static bool IsValidMapKeyType(Type type)
