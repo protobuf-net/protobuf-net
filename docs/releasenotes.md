@@ -30,6 +30,10 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## v2.3.4
+
+- fix [#341](https://github.com/mgravell/protobuf-net/issues/341) - dictionaries with nullable types
+
 ## v2.3.3
 
 - fix protogen bug with `[DefaultValue]` for enums not including the fully qualified name when required
