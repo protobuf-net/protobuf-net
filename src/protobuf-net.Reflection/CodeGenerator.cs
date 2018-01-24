@@ -1,6 +1,7 @@
 ﻿using Google.Protobuf.Reflection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace ProtoBuf.Reflection
@@ -78,7 +79,24 @@ namespace ProtoBuf.Reflection
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
         protected Access GetAccess(FileDescriptorProto obj)
-            => obj?.Options?.GetOptions()?.Access ?? Access.Public;
+            => NullIfInherit(obj?.Options?.GetOptions()?.Access) ?? Access.Public;
+
+        /// <summary>
+        /// Obtain the language-version of a file
+        /// </summary>
+        protected Version GetLanguageVersion(FileDescriptorProto obj)
+        {
+            var s = obj?.Options?.GetOptions()?.LanguageVersion?.Trim();
+            if (string.IsNullOrEmpty(s)) return null;
+
+            if (Version.TryParse(s, out Version v)) return v;
+
+            if (int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out int i))
+                return new Version(i, 0);
+
+            return null;
+        }
+            
 
         static Access? NullIfInherit(Access? access)
             => access == Access.Inherit ? null : access;
@@ -87,19 +105,19 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected Access GetAccess(DescriptorProto obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access)
-            ?? GetAccess(obj?.Parent) ?? Access.Public;
+            ?? NullIfInherit(GetAccess(obj?.Parent)) ?? Access.Public;
         /// <summary>
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
         protected Access GetAccess(FieldDescriptorProto obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access)
-            ?? GetAccess(obj?.Parent as IType) ?? Access.Public;
+            ?? NullIfInherit(GetAccess(obj?.Parent as IType)) ?? Access.Public;
         /// <summary>
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
         protected Access GetAccess(EnumDescriptorProto obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access)
-                ?? GetAccess(obj?.Parent) ?? Access.Public;
+                ?? NullIfInherit(GetAccess(obj?.Parent)) ?? Access.Public;
         /// <summary>
         /// Get the textual name of a given access level
         /// </summary>
@@ -134,7 +152,7 @@ namespace ProtoBuf.Reflection
                 string generated;
                 using (var buffer = new StringWriter())
                 {
-                    var ctx = new GeneratorContext(file, normalizer ?? NameNormalizer.Default, buffer, Indent);
+                    var ctx = new GeneratorContext(this, file, normalizer ?? NameNormalizer.Default, buffer, Indent);
 
                     ctx.BuildTypeIndex(); // populates for TryFind<T>
                     WriteFile(ctx, file);
@@ -240,6 +258,16 @@ namespace ProtoBuf.Reflection
 
             WriteMessageHeader(ctx, obj, ref state);
             var oneOfs = OneOfStub.Build(ctx, obj);
+
+
+            if(WriteContructorHeader(ctx, obj, ref state))
+            {
+                foreach(var inner in obj.Fields)
+                {
+                    WriteInitField(ctx, inner, ref state, oneOfs);
+                }
+                WriteConstructorFooter(ctx, obj, ref state);
+            }
             foreach (var inner in obj.Fields)
             {
                 WriteField(ctx, inner, ref state, oneOfs);
@@ -264,6 +292,24 @@ namespace ProtoBuf.Reflection
             }
             WriteMessageFooter(ctx, obj, ref state);
         }
+
+        /// <summary>
+        /// Emit code terminating a constructor, if one is required
+        /// </summary>
+        protected virtual void WriteConstructorFooter(GeneratorContext ctx, DescriptorProto obj, ref object state) { }
+
+        /// <summary>
+        /// Emit code initializing field values inside a constructor, if one is required
+        /// </summary>
+        protected virtual void WriteInitField(GeneratorContext ctx, FieldDescriptorProto inner, ref object state, OneOfStub[] oneOfs) { }
+
+        /// <summary>
+        /// Emit code beginning a constructor, if one is required
+        /// </summary>
+        /// <returns>true if a constructor is required</returns>
+        protected virtual bool WriteContructorHeader(GeneratorContext ctx, DescriptorProto obj, ref object state) => false;
+
+
         /// <summary>
         /// Emit code representing a message field
         /// </summary>
@@ -343,13 +389,33 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// Create a new GeneratorContext instance
             /// </summary>
-            internal GeneratorContext(FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken)
+            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken)
             {
                 File = file;
                 NameNormalizer = nameNormalizer;
                 Output = output;
                 IndentToken = indentToken;
+                LanguageVersion = generator?.GetLanguageVersion(file);
+                EmitRequiredDefaults = file.Options.GetOptions()?.EmitRequiredDefaults ?? false;
             }
+
+            /// <summary>
+            /// Should default value initializers be emitted even for required values?
+            /// </summary>
+            internal bool EmitRequiredDefaults { get; set; }
+
+            internal bool Supports(Version version)
+            {
+                if (version == null) return true;
+                var langver = LanguageVersion;
+                if (langver == null) return true; // default is highest
+                return langver >= version;
+            }
+
+            /// <summary>
+            /// The specified language version (null if not specified)
+            /// </summary>
+            public Version LanguageVersion { get; }
 
             /// <summary>
             /// Ends the current line

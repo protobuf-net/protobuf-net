@@ -30,6 +30,8 @@ message ProtogenFileOptions {
   string namespace = 1;
   Access access = 2;
   string extensions = 3 [(.protobuf_net.fieldopt).name	= "ExtensionTypeName"];
+  string langver = 4 [(.protobuf_net.fieldopt).name	= "LanguageVersion"]; // language specific version specifier, for example "3.0" for C# 3
+  bool requiredDefaults = 5 [(.protobuf_net.fieldopt).name	= "EmitRequiredDefaults"]; // intialize required values with their default values
 }
 message ProtogenMessageOptions {
   string name = 1;

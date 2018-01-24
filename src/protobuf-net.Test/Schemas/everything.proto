@@ -3,6 +3,9 @@
 import "protobuf-net/protogen.proto";
 import "protobuf-net/bcl.proto";
 
+option (.protobuf_net.fileopt).langver = "3";
+option (.protobuf_net.fileopt).requiredDefaults = true;
+
 // file comment
 
 package AllTheThings;
@@ -26,6 +29,8 @@ message MagicValues {
 	optional float f = 6 [default=0.0];
 
 	optional bool g = 7 [default=true];
+
+	required int32 requiredWithDefault = 8 [default=12];
 }
 
 message SampleMessage {
