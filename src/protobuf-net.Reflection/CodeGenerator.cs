@@ -1,7 +1,6 @@
 ﻿using Google.Protobuf.Reflection;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 
 namespace ProtoBuf.Reflection
@@ -82,20 +81,9 @@ namespace ProtoBuf.Reflection
             => NullIfInherit(obj?.Options?.GetOptions()?.Access) ?? Access.Public;
 
         /// <summary>
-        /// Obtain the language-version of a file
+        /// Get the language version for this language
         /// </summary>
-        protected Version GetLanguageVersion(FileDescriptorProto obj)
-        {
-            var s = obj?.Options?.GetOptions()?.LanguageVersion?.Trim();
-            if (string.IsNullOrEmpty(s)) return null;
-
-            if (Version.TryParse(s, out Version v)) return v;
-
-            if (int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out int i))
-                return new Version(i, 0);
-
-            return null;
-        }
+        protected virtual Version GetLanguageVersion(FileDescriptorProto obj) => null;
             
 
         static Access? NullIfInherit(Access? access)

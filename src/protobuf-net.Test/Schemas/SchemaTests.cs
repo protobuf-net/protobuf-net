@@ -123,7 +123,7 @@ namespace ProtoBuf.Schemas
             set.AddImportPath(schemaPath);
             set.Add(path, includeInOutput: true);
             set.Process();
-            var langver = set.Files[0].Options.GetOptions()?.LanguageVersion;
+            var langver = set.Files[0].Options.GetOptions()?.CSharpLanguageVersion;
             Assert.Equal("3", langver);
 
 

@@ -3,8 +3,7 @@
 import "protobuf-net/protogen.proto";
 import "protobuf-net/bcl.proto";
 
-option (.protobuf_net.fileopt).langver = "3";
-option (.protobuf_net.fileopt).requiredDefaults = true;
+option (.protobuf_net.fileopt).csharp_langver = "3";
 
 // file comment
 
