@@ -141,12 +141,12 @@ namespace ProtoBuf.Meta
         {
             if (baseType == null) throw new ArgumentNullException("baseType");
             if (this.baseType == baseType) return;
-            if (this.baseType != null) throw new InvalidOperationException("A type can only participate in one inheritance hierarchy");
+            if (this.baseType != null) throw new InvalidOperationException($"Type '{this.baseType.Type.FullName}' can only participate in one inheritance hierarchy");
 
             MetaType type = baseType;
             while (type != null)
             {
-                if (ReferenceEquals(type, this)) throw new InvalidOperationException("Cyclic inheritance is not allowed");
+                if (ReferenceEquals(type, this)) throw new InvalidOperationException($"Cyclic inheritance of '{this.baseType.Type.FullName}' is not allowed");
                 type = type.baseType;
             }
             this.baseType = baseType;
