@@ -22,6 +22,8 @@ namespace protogen
                 var inputFiles = new List<string>(); // {PROTO_FILES} (everything not `-`)
                 bool exec = false;
                 CodeGenerator codegen = null;
+
+                Dictionary<string, string> options = null;
                 foreach (string arg in args)
                 {
                     string lhs = arg, rhs = "";
@@ -40,6 +42,14 @@ namespace protogen
                     {
                         lhs = "--proto_path";
                         rhs = arg.Substring(2);
+                    }
+
+
+                    if(lhs.StartsWith("+"))
+                    {
+                        if(options == null) options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                        options[lhs.Substring(1)] = rhs;
+                        continue;
                     }
 
                     switch (lhs)
@@ -152,9 +162,14 @@ namespace protogen
                             Serializer.Serialize(fds, set);
                         }
                     }
+                    else if(!Directory.Exists(outPath))
+                    {
+                        Console.Error.WriteLine($"Output directory does not exist: {outPath}");
+                        exitCode = 1;
+                    }
                     else
                     {
-                        var files = codegen.Generate(set);
+                        var files = codegen.Generate(set, options: options);
                         foreach (var file in files)
                         {
                             var path = Path.Combine(outPath, file.Name);
@@ -196,7 +211,13 @@ Parse PROTO_FILES and generate output based on the options given:
   -oFILE,                     Writes a FileDescriptorSet (a protocol buffer,
     --descriptor_set_out=FILE defined in descriptor.proto) containing all of
                               the input files to FILE.
-  --csharp_out=OUT_DIR        Generate C# source file.");
+  --csharp_out=OUT_DIR        Generate C# source file.
+  +langver=VERSION            Request a specific language version from the
+                              selected code generator
+  +names={auto|original}      Specify naming convention rules
+  +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
+                              selected code generator");
+
         }
     }
 }

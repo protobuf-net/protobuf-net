@@ -29,6 +29,7 @@
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net452'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
+    <PackageReference Include="Iesi.Collections" Version="4.0.3" />
   </ItemGroup>
   <ItemGroup Condition="'$(LibImport)' == 'net'">
     <Reference Include="Microsoft.CSharp" />

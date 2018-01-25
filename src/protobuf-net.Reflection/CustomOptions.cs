@@ -21,6 +21,13 @@ namespace ProtoBuf.Reflection
         [global::System.ComponentModel.DefaultValue("")]
         public string ExtensionTypeName { get; set; } = "";
 
+        [global::ProtoBuf.ProtoMember(4, Name = @"csharp_langver")]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string CSharpLanguageVersion { get; set; } = "";
+
+        [global::ProtoBuf.ProtoMember(5, Name = @"requiredDefaults")]
+        [global::System.ComponentModel.DefaultValue(false)]
+        public bool EmitRequiredDefaults { get; set; }
     }
 
     [global::ProtoBuf.ProtoContract()]
