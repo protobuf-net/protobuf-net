@@ -115,10 +115,11 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Global switch that determines whether a single instance of the same string should be used during deserialization.
         /// </summary>
-        public bool DoNotInternStrings
+        /// <remarks>Note this does not use the global .NET string interner</remarks>
+        public bool InternStrings
         {
-            get { return GetOption(OPTIONS_DoNotInternStrings); }
-            set { SetOption(OPTIONS_DoNotInternStrings, value); }
+            get { return !GetOption(OPTIONS_DoNotInternStrings); }
+            set { SetOption(OPTIONS_DoNotInternStrings, !value); }
         }
         /// <summary>
         /// Should the <c>Kind</c> be included on date/time values?

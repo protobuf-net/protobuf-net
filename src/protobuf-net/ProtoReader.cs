@@ -110,7 +110,7 @@ namespace ProtoBuf
             reader.position64 = 0;
             reader.available = reader.depth = reader.fieldNumber = reader.ioIndex = 0;
             reader.blockEnd64 = long.MaxValue;
-            reader.internStrings = !RuntimeTypeModel.Default.DoNotInternStrings;
+            reader.internStrings = RuntimeTypeModel.Default.InternStrings;
             reader.wireType = WireType.None;
             reader.trapCount = 1;
             if(reader.netCache == null) reader.netCache = new NetObjectCache();            
