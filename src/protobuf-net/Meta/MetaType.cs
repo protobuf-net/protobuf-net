@@ -3,23 +3,8 @@ using System;
 using System.Collections;
 using System.Text;
 using ProtoBuf.Serializers;
-
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#if FEAT_COMPILER
-using IKVM.Reflection.Emit;
-#endif
-#else
 using System.Reflection;
-#if FEAT_COMPILER
-using System.Reflection.Emit;
-using System.Globalization;
 using System.Collections.Generic;
-#endif
-#endif
-
 
 namespace ProtoBuf.Meta
 {
@@ -1630,6 +1615,28 @@ namespace ProtoBuf.Meta
             return arr;
         }
 
+        internal IEnumerable<Type> GetAllGenericArguments()
+        {
+            return GetAllGenericArguments(type);
+        }
+
+        private static IEnumerable<Type> GetAllGenericArguments(Type type)
+        {
+#if NO_GENERICS
+            return Type.EmptyTypes;
+#else
+            var genericArguments = type.GetGenericArguments();
+            foreach(var arg in genericArguments)
+            {
+                yield return arg;
+                foreach(var inner in GetAllGenericArguments(arg))
+                {
+                    yield return inner;
+                }
+            }
+#endif
+        }
+
 #if FEAT_COMPILER && !FX11
 
         /// <summary>
@@ -1757,11 +1764,11 @@ namespace ProtoBuf.Meta
 
         internal bool IsPrepared()
         {
-            #if FEAT_COMPILER && !FEAT_IKVM && !FX11
+#if FEAT_COMPILER && !FEAT_IKVM && !FX11
             return serializer is CompiledSerializer;
-            #else
+#else
             return false;
-            #endif
+#endif
         }
 
         internal System.Collections.IEnumerable Fields { get { return this.fields; } }
