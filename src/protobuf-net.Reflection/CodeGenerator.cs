@@ -1,6 +1,7 @@
 ﻿using Google.Protobuf.Reflection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace ProtoBuf.Reflection
@@ -19,10 +20,17 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public override string ToString() => Name;
 
+
+
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null);
+        public IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer) => Generate(set, normalizer, null);
+
+        /// <summary>
+        /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
+        /// </summary>
+        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string,string> options = null);
 
         /// <summary>
         /// Eexecute this code generator against a code file
@@ -78,7 +86,13 @@ namespace ProtoBuf.Reflection
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
         protected Access GetAccess(FileDescriptorProto obj)
-            => obj?.Options?.GetOptions()?.Access ?? Access.Public;
+            => NullIfInherit(obj?.Options?.GetOptions()?.Access) ?? Access.Public;
+
+        /// <summary>
+        /// Get the language version for this language from a schema
+        /// </summary>
+        protected virtual string GetLanguageVersion(FileDescriptorProto obj) => null;
+            
 
         static Access? NullIfInherit(Access? access)
             => access == Access.Inherit ? null : access;
@@ -87,19 +101,19 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected Access GetAccess(DescriptorProto obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access)
-            ?? GetAccess(obj?.Parent) ?? Access.Public;
+            ?? NullIfInherit(GetAccess(obj?.Parent)) ?? Access.Public;
         /// <summary>
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
         protected Access GetAccess(FieldDescriptorProto obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access)
-            ?? GetAccess(obj?.Parent as IType) ?? Access.Public;
+            ?? NullIfInherit(GetAccess(obj?.Parent as IType)) ?? Access.Public;
         /// <summary>
         /// Obtain the access of an item, accounting for the model's hierarchy
         /// </summary>
         protected Access GetAccess(EnumDescriptorProto obj)
             => NullIfInherit(obj?.Options?.GetOptions()?.Access)
-                ?? GetAccess(obj?.Parent) ?? Access.Public;
+                ?? NullIfInherit(GetAccess(obj?.Parent)) ?? Access.Public;
         /// <summary>
         /// Get the textual name of a given access level
         /// </summary>
@@ -123,7 +137,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null)
+        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string,string> options = null)
         {
             foreach (var file in set.Files)
             {
@@ -134,7 +148,7 @@ namespace ProtoBuf.Reflection
                 string generated;
                 using (var buffer = new StringWriter())
                 {
-                    var ctx = new GeneratorContext(file, normalizer ?? NameNormalizer.Default, buffer, Indent);
+                    var ctx = new GeneratorContext(this, file, normalizer, buffer, Indent, options);
 
                     ctx.BuildTypeIndex(); // populates for TryFind<T>
                     WriteFile(ctx, file);
@@ -240,6 +254,16 @@ namespace ProtoBuf.Reflection
 
             WriteMessageHeader(ctx, obj, ref state);
             var oneOfs = OneOfStub.Build(ctx, obj);
+
+
+            if(WriteContructorHeader(ctx, obj, ref state))
+            {
+                foreach(var inner in obj.Fields)
+                {
+                    WriteInitField(ctx, inner, ref state, oneOfs);
+                }
+                WriteConstructorFooter(ctx, obj, ref state);
+            }
             foreach (var inner in obj.Fields)
             {
                 WriteField(ctx, inner, ref state, oneOfs);
@@ -264,6 +288,24 @@ namespace ProtoBuf.Reflection
             }
             WriteMessageFooter(ctx, obj, ref state);
         }
+
+        /// <summary>
+        /// Emit code terminating a constructor, if one is required
+        /// </summary>
+        protected virtual void WriteConstructorFooter(GeneratorContext ctx, DescriptorProto obj, ref object state) { }
+
+        /// <summary>
+        /// Emit code initializing field values inside a constructor, if one is required
+        /// </summary>
+        protected virtual void WriteInitField(GeneratorContext ctx, FieldDescriptorProto inner, ref object state, OneOfStub[] oneOfs) { }
+
+        /// <summary>
+        /// Emit code beginning a constructor, if one is required
+        /// </summary>
+        /// <returns>true if a constructor is required</returns>
+        protected virtual bool WriteContructorHeader(GeneratorContext ctx, DescriptorProto obj, ref object state) => false;
+
+
         /// <summary>
         /// Emit code representing a message field
         /// </summary>
@@ -343,13 +385,75 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// Create a new GeneratorContext instance
             /// </summary>
-            internal GeneratorContext(FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken)
+            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken, Dictionary<string,string> options)
             {
+                if(nameNormalizer == null)
+                {
+                    string nn = null;
+                    if (options != null) options.TryGetValue("names", out nn);
+                    // todo: support getting from a .proto extension?
+
+                    if (nn != null) nn = nn.Trim();
+                    if (string.Equals(nn, "auto", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Default;
+                    else if (string.Equals(nn, "original", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Null;
+                }
+
+                string langver = null;
+                if (options != null) options.TryGetValue("langver", out langver); // explicit option first
+                if (string.IsNullOrWhiteSpace(langver)) langver = generator?.GetLanguageVersion(file); // then from file
+
+
                 File = file;
-                NameNormalizer = nameNormalizer;
+                NameNormalizer = nameNormalizer ?? NameNormalizer.Default;
                 Output = output;
                 IndentToken = indentToken;
+
+                LanguageVersion = ParseVersion(langver);
+                EmitRequiredDefaults = file.Options.GetOptions()?.EmitRequiredDefaults ?? false;
+                _options = options;
             }
+
+            private Dictionary<string, string> _options;
+            /// <summary>
+            /// Gets the value of an OPTION/VALUE pair provided to the system
+            /// </summary>
+            public string GetCustomOption(string key)
+            {
+                string value = null;
+                _options?.TryGetValue(key, out value);
+                return value;
+            }
+
+            static Version ParseVersion(string version)
+            {
+                if (string.IsNullOrWhiteSpace(version)) return null;
+                version = version.Trim();
+
+                if (Version.TryParse(version, out Version v)) return v;
+
+                if (int.TryParse(version, NumberStyles.Integer, CultureInfo.InvariantCulture, out int i))
+                    return new Version(i, 0);
+
+                return null;
+            }
+
+            /// <summary>
+            /// Should default value initializers be emitted even for required values?
+            /// </summary>
+            internal bool EmitRequiredDefaults { get; set; }
+
+            internal bool Supports(Version version)
+            {
+                if (version == null) return true;
+                var langver = LanguageVersion;
+                if (langver == null) return true; // default is highest
+                return langver >= version;
+            }
+
+            /// <summary>
+            /// The specified language version (null if not specified)
+            /// </summary>
+            public Version LanguageVersion { get; }
 
             /// <summary>
             /// Ends the current line

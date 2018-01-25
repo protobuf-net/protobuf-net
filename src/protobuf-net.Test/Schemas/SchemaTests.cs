@@ -1,7 +1,9 @@
 ﻿using Google.Protobuf.Reflection;
+using Microsoft.CSharp;
 using Newtonsoft.Json;
 using ProtoBuf.Reflection;
 using System;
+using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -111,6 +113,41 @@ namespace ProtoBuf.Schemas
 
         static JsonSerializerSettings jsonSettings = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
 
+        [Fact]
+        public void EverythingProtoLangver3()
+        {
+            var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
+            var path = "everything.proto";
+            
+            var set = new FileDescriptorSet();
+            set.AddImportPath(schemaPath);
+            set.Add(path, includeInOutput: true);
+            set.Process();
+            var langver = set.Files[0].Options.GetOptions()?.CSharpLanguageVersion;
+            Assert.Equal("3", langver);
+
+
+            var sourceFiles = CSharpCodeGenerator.Default.Generate(set).Select(x => x.Text).ToArray();
+            Assert.Single(sourceFiles);
+            _output.WriteLine(sourceFiles[0]);
+            var csharp = new CSharpCodeProvider(new Dictionary<string, string>
+            {
+                { "CompilerVersion", "v3.5"}
+            });
+
+            var p = new CompilerParameters
+            {
+                GenerateInMemory = true
+            };
+            p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
+            p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
+            p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
+            var results = csharp.CompileAssemblyFromSource(p, sourceFiles);
+            Assert.Empty(results.Errors);
+            
+
+
+        }
 
         [Theory]
         [MemberData(nameof(GetSchemas))]

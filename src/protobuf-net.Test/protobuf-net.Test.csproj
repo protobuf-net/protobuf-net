@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks>
-    <!--<TargetFrameworks>net452</TargetFrameworks>-->
+    <!--<TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks>-->
+    <TargetFrameworks>net452</TargetFrameworks>
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
   </PropertyGroup>
@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net452'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
+    <PackageReference Include="Iesi.Collections" Version="4.0.3" />
   </ItemGroup>
   <ItemGroup Condition="'$(LibImport)' == 'net'">
     <Reference Include="System" />
