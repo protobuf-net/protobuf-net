@@ -1,6 +1,7 @@
 ﻿using Google.Protobuf.Reflection;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace ProtoBuf.Reflection
@@ -19,10 +20,17 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public override string ToString() => Name;
 
+
+
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null);
+        public IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer) => Generate(set, normalizer, null);
+
+        /// <summary>
+        /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
+        /// </summary>
+        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string,string> options = null);
 
         /// <summary>
         /// Eexecute this code generator against a code file
@@ -81,9 +89,9 @@ namespace ProtoBuf.Reflection
             => NullIfInherit(obj?.Options?.GetOptions()?.Access) ?? Access.Public;
 
         /// <summary>
-        /// Get the language version for this language
+        /// Get the language version for this language from a schema
         /// </summary>
-        protected virtual Version GetLanguageVersion(FileDescriptorProto obj) => null;
+        protected virtual string GetLanguageVersion(FileDescriptorProto obj) => null;
             
 
         static Access? NullIfInherit(Access? access)
@@ -129,7 +137,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null)
+        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string,string> options = null)
         {
             foreach (var file in set.Files)
             {
@@ -140,7 +148,7 @@ namespace ProtoBuf.Reflection
                 string generated;
                 using (var buffer = new StringWriter())
                 {
-                    var ctx = new GeneratorContext(this, file, normalizer ?? NameNormalizer.Default, buffer, Indent);
+                    var ctx = new GeneratorContext(this, file, normalizer, buffer, Indent, options);
 
                     ctx.BuildTypeIndex(); // populates for TryFind<T>
                     WriteFile(ctx, file);
@@ -377,14 +385,56 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// Create a new GeneratorContext instance
             /// </summary>
-            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken)
+            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken, Dictionary<string,string> options)
             {
+                if(nameNormalizer == null)
+                {
+                    string nn = null;
+                    if (options != null) options.TryGetValue("names", out nn);
+                    // todo: support getting from a .proto extension?
+
+                    if (nn != null) nn = nn.Trim();
+                    if (string.Equals(nn, "auto", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Default;
+                    else if (string.Equals(nn, "original", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Null;
+                }
+
+                string langver = null;
+                if (options != null) options.TryGetValue("langver", out langver); // explicit option first
+                if (string.IsNullOrWhiteSpace(langver)) langver = generator?.GetLanguageVersion(file); // then from file
+
+
                 File = file;
-                NameNormalizer = nameNormalizer;
+                NameNormalizer = nameNormalizer ?? NameNormalizer.Default;
                 Output = output;
                 IndentToken = indentToken;
-                LanguageVersion = generator?.GetLanguageVersion(file);
+
+                LanguageVersion = ParseVersion(langver);
                 EmitRequiredDefaults = file.Options.GetOptions()?.EmitRequiredDefaults ?? false;
+                _options = options;
+            }
+
+            private Dictionary<string, string> _options;
+            /// <summary>
+            /// Gets the value of an OPTION/VALUE pair provided to the system
+            /// </summary>
+            public string GetCustomOption(string key)
+            {
+                string value = null;
+                _options?.TryGetValue(key, out value);
+                return value;
+            }
+
+            static Version ParseVersion(string version)
+            {
+                if (string.IsNullOrWhiteSpace(version)) return null;
+                version = version.Trim();
+
+                if (Version.TryParse(version, out Version v)) return v;
+
+                if (int.TryParse(version, NumberStyles.Integer, CultureInfo.InvariantCulture, out int i))
+                    return new Version(i, 0);
+
+                return null;
             }
 
             /// <summary>

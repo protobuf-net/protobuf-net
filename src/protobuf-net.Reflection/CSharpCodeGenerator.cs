@@ -1,7 +1,6 @@
 ﻿using Google.Protobuf.Reflection;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -120,20 +119,10 @@ namespace ProtoBuf.Reflection
         }
 
         /// <summary>
-        /// Get the language version for this language
+        /// Get the language version for this language from a schema
         /// </summary>
-        protected override Version GetLanguageVersion(FileDescriptorProto obj)
-        {
-            var s = obj?.Options?.GetOptions()?.CSharpLanguageVersion?.Trim();
-            if (string.IsNullOrEmpty(s)) return null;
-
-            if (Version.TryParse(s, out Version v)) return v;
-
-            if (int.TryParse(s, NumberStyles.Integer, CultureInfo.InvariantCulture, out int i))
-                return new Version(i, 0);
-
-            return null;
-        }
+        protected override string GetLanguageVersion(FileDescriptorProto obj)
+            => obj?.Options?.GetOptions()?.CSharpLanguageVersion;
 
         /// <summary>
         /// Start a file
