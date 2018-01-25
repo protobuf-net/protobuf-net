@@ -30,6 +30,13 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## v2.3.5
+
+- add codegen support for C# 3.0; C# 6.0 is still the default, but can be overridden via CLI or .proto options; see [#343](https://github.com/mgravell/protobuf-net/issues/343)
+- updated Google "protoc" tooling on the web-site
+- better exception messages when inheritance problems are detected; [#186](https://github.com/mgravell/protobuf-net/pull/186) via TrexinanF14
+- add switch to allow the string cache code to be disabled; [#333](https://github.com/mgravell/protobuf-net/pull/333) via solyutor
+
 ## v2.3.4
 
 - fix [#341](https://github.com/mgravell/protobuf-net/issues/341) - dictionaries with nullable types
