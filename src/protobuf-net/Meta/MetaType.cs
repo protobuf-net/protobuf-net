@@ -622,6 +622,11 @@ namespace ProtoBuf.Meta
                         if (item.TryGet(nameof(ProtoContractAttribute.AsReferenceDefault), out tmp)) AsReferenceDefault = (bool) tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.ImplicitFirstTag), out tmp) && (int) tmp > 0) implicitFirstTag = (int) tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.IsGroup), out tmp)) IsGroup = (bool)tmp;
+
+                        if (item.TryGet(nameof(ProtoContractAttribute.Surrogate), out tmp))
+                        {
+                            SetSurrogate((Type)tmp);
+                        }
                     }
                 }
 

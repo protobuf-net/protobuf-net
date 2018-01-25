@@ -168,6 +168,11 @@ namespace ProtoBuf
         }
 
         /// <summary>
+        /// Allows to define a surrogate type used for serialization/deserialization purpose.
+        /// </summary>
+        public Type Surrogate { get; set; }
+
+        /// <summary>
         /// Has a EnumPassthru value been explicitly set?
         /// </summary>
         internal bool EnumPassthruHasValue
