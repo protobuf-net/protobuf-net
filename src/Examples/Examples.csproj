@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>net452;netcoreapp1.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks>
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
