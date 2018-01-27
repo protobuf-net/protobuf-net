@@ -19,6 +19,7 @@
     <DefineConstants>FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.5.0" />
