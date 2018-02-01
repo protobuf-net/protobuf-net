@@ -30,6 +30,10 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## v2.3.6
+
+- add .NET Standard 2.0 build target 
+
 ## v2.3.5
 
 - add codegen support for C# 3.0; C# 6.0 is still the default, but can be overridden via CLI or .proto options; see [#343](https://github.com/mgravell/protobuf-net/issues/343)
