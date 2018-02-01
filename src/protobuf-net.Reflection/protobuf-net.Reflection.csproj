@@ -4,7 +4,7 @@
     <AssemblyName>protobuf-net.Reflection</AssemblyName>
     <Title>protobuf-net.Reflection</Title>
     <Description>ProtoBuf DSL (proto2 / proto3) and descriptor tools for protobuf-net</Description>
-    <TargetFrameworks>net40;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>net40;netstandard1.3;netstandard2.0</TargetFrameworks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Configurations>Debug;Release;VS</Configurations>
