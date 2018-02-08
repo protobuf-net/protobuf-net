@@ -3,7 +3,7 @@
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net20;net35;net40;netstandard1.3;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net20;net35;net40;netstandard1.3;netstandard2.0;.NETPortable,Version=v4.0,Profile=Profile5</TargetFrameworks>
     <!--  -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
@@ -18,6 +18,18 @@
     <PlatformBinaryFormatter>true</PlatformBinaryFormatter>
     <Configurations>Debug;Release;VS</Configurations>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == '.NETPortable,Version=v4.0,Profile=Profile5'">
+    <TargetFrameworkIdentifier>.NETPortable</TargetFrameworkIdentifier>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkProfile>Profile5</TargetFrameworkProfile>
+    <DefineConstants>$(DefineConstants);PORTABLE</DefineConstants>
+    <PlatformXmlSerializer>false</PlatformXmlSerializer>
+    <FeatureCompiler>false</FeatureCompiler>
+    <FeatureServiceModel>false</FeatureServiceModel>
+    <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
+  </PropertyGroup>
+  
   <PropertyGroup Condition="'$(Configuration)' == 'VS'">
     <TargetFrameworks>$(TargetFrameworks);net20;net35</TargetFrameworks>
   </PropertyGroup>
