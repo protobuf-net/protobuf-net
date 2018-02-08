@@ -113,6 +113,7 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
+#endif
 
         private bool CanUsePackedPrefix() => CanUsePackedPrefix(packedWireType, itemType);
         internal static bool CanUsePackedPrefix(WireType packedWireType,  Type itemType)
@@ -130,6 +131,7 @@ namespace ProtoBuf.Serializers
             return Helpers.GetUnderlyingType(itemType) == null;
         }
 
+#if FEAT_COMPILER
         private void EmitWriteArrayLoop(Compiler.CompilerContext ctx, Compiler.Local i, Compiler.Local arr)
         {
             // i = 0
