@@ -1,6 +1,8 @@
 ﻿using ProtoBuf.Meta;
 using System;
+#if FEAT_COMPILER
 using ProtoBuf.Compiler;
+#endif
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -107,6 +109,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
+#if FEAT_COMPILER
         protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
             Type itemType = typeof(KeyValuePair<TKey, TValue>);
@@ -280,5 +283,6 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
+#endif
     }
 }
