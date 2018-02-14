@@ -32,7 +32,7 @@ If you can't, that's fine too.
 
 ## v2.3.7
 
-- add "profile 259" support - contributed by Lorick Russow
+- add .NET Standard 1.0 "profile 259" support - contributed by Lorick Russow
 
 ## v2.3.6
 
