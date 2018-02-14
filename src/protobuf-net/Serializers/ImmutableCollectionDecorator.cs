@@ -19,8 +19,8 @@ namespace ProtoBuf.Serializers
 
         static Type ResolveIReadOnlyCollection(Type declaredType, Type t)
         {
-#if WINRT || COREFX
-            foreach (Type intImplBasic in declaredType.GetTypeInfo().ImplementedInterfaces)
+#if WINRT || COREFX || PROFILE259
+			foreach (Type intImplBasic in declaredType.GetTypeInfo().ImplementedInterfaces)
             {
                 TypeInfo intImpl = intImplBasic.GetTypeInfo();
                 if (intImpl.IsGenericType && intImpl.Name.StartsWith("IReadOnlyCollection`"))
@@ -53,8 +53,8 @@ namespace ProtoBuf.Serializers
         {
             builderFactory = add = addRange = finish = null;
             if (model == null || declaredType == null) return false;
-#if WINRT || COREFX
-            TypeInfo declaredTypeInfo = declaredType.GetTypeInfo();
+#if WINRT || COREFX || PROFILE259
+			TypeInfo declaredTypeInfo = declaredType.GetTypeInfo();
 #else
             Type declaredTypeInfo = declaredType;
 #endif
@@ -62,8 +62,8 @@ namespace ProtoBuf.Serializers
             // try to detect immutable collections; firstly, they are all generic, and all implement IReadOnlyCollection<T> for some T
             if(!declaredTypeInfo.IsGenericType) return false;
 
-#if WINRT || COREFX
-            Type[] typeArgs = declaredTypeInfo.GenericTypeArguments, effectiveType;
+#if WINRT || COREFX || PROFILE259
+			Type[] typeArgs = declaredTypeInfo.GenericTypeArguments, effectiveType;
 #else
             Type[] typeArgs = declaredTypeInfo.GetGenericArguments(), effectiveType;
 #endif
@@ -98,8 +98,8 @@ namespace ProtoBuf.Serializers
             }
             if (outerType == null) return false;
 
-#if WINRT
-            foreach (MethodInfo method in outerType.GetTypeInfo().DeclaredMethods)
+#if WINRT || PROFILE259
+			foreach (MethodInfo method in outerType.GetTypeInfo().DeclaredMethods)
 #else
             foreach (MethodInfo method in outerType.GetMethods())
 #endif

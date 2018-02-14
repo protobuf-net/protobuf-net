@@ -51,13 +51,13 @@ namespace ProtoBuf.Serializers
 #if WINRT || COREFX
             MethodInfo method = Helpers.GetInstanceMethod(property.DeclaringType.GetTypeInfo(), "Set" + property.Name, new Type[] { property.PropertyType });
 #else
-            
-#if FEAT_IKVM
+
+#if FEAT_IKVM || PROFILE259
             Type reflectedType = property.DeclaringType;
 #else
-            Type reflectedType = property.ReflectedType;
+			Type reflectedType = property.ReflectedType;
 #endif
-            MethodInfo method = Helpers.GetInstanceMethod(reflectedType, "Set" + property.Name, new Type[] { property.PropertyType });
+			MethodInfo method = Helpers.GetInstanceMethod(reflectedType, "Set" + property.Name, new Type[] { property.PropertyType });
 #endif
             if (method == null || !method.IsPublic || method.ReturnType != model.MapType(typeof(void))) return null;
             return method;

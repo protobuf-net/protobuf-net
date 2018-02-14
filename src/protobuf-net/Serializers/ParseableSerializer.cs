@@ -17,11 +17,11 @@ namespace ProtoBuf.Serializers
         public static ParseableSerializer TryCreate(Type type, TypeModel model)
         {
             if (type == null) throw new ArgumentNullException("type");
-#if WINRT || PORTABLE || COREFX
-            MethodInfo method = null;
-            
-#if WINRT || COREFX
-            foreach (MethodInfo tmp in type.GetTypeInfo().GetDeclaredMethods("Parse"))
+#if WINRT || PORTABLE || COREFX || PROFILE259
+			MethodInfo method = null;
+
+#if WINRT || COREFX || PROFILE259
+			foreach (MethodInfo tmp in type.GetTypeInfo().GetDeclaredMethods("Parse"))
 #else
             foreach (MethodInfo tmp in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
 #endif
@@ -57,8 +57,8 @@ namespace ProtoBuf.Serializers
                 if (method.IsPublic && !method.IsStatic && method.GetParameters().Length == 0) return method;
             }
             return null;
-#elif PORTABLE || COREFX
-            MethodInfo method = Helpers.GetInstanceMethod(type, "ToString", Helpers.EmptyTypes);
+#elif PORTABLE || COREFX || PROFILE259
+			MethodInfo method = Helpers.GetInstanceMethod(type, "ToString", Helpers.EmptyTypes);
             if (method == null || !method.IsPublic || method.IsStatic || method.DeclaringType != type) return null;
             return method;
 #else

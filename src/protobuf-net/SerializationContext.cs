@@ -32,7 +32,7 @@ namespace ProtoBuf
         internal static SerializationContext Default { get {return @default;}}
 #if PLAT_BINARYFORMATTER || (SILVERLIGHT && NET_4_0)
 
-#if !(WINRT || PHONE7 || PHONE8 || COREFX)
+#if !(WINRT || PHONE7 || PHONE8 || COREFX || PROFILE259)
         private System.Runtime.Serialization.StreamingContextStates state = System.Runtime.Serialization.StreamingContextStates.Persistence;
         /// <summary>
         /// Gets or sets the source or destination of the transmitted data.
@@ -43,13 +43,13 @@ namespace ProtoBuf
             set { if (state != value) { ThrowIfFrozen(); state = value; } }
         }
 #endif
-        /// <summary>
-        /// Convert a SerializationContext to a StreamingContext
-        /// </summary>
-        public static implicit operator System.Runtime.Serialization.StreamingContext(SerializationContext ctx)
+		/// <summary>
+		/// Convert a SerializationContext to a StreamingContext
+		/// </summary>
+		public static implicit operator System.Runtime.Serialization.StreamingContext(SerializationContext ctx)
         {
 #if WINRT || PHONE7 || PHONE8 || COREFX
-            return new System.Runtime.Serialization.StreamingContext();
+			return new System.Runtime.Serialization.StreamingContext();
 #else
             if (ctx == null) return new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.Persistence);
             return new System.Runtime.Serialization.StreamingContext(ctx.state, ctx.context);
@@ -62,12 +62,12 @@ namespace ProtoBuf
         {
             SerializationContext result = new SerializationContext();
 
-#if !(WINRT || PHONE7 || PHONE8 || COREFX)
+#if !(WINRT || PHONE7 || PHONE8 || COREFX || PROFILE259)
             result.Context = ctx.Context;
             result.State = ctx.State;
 #endif
 
-            return result;
+			return result;
         }
 #endif
     }

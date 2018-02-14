@@ -35,8 +35,8 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT || COREFX
-            Attribute[] all = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OfType<Attribute>(type.GetTypeInfo().GetCustomAttributes(inherit)));
+#if WINRT || COREFX || PROFILE259
+			Attribute[] all = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OfType<Attribute>(type.GetTypeInfo().GetCustomAttributes(inherit)));
 #else
             object[] all = type.GetCustomAttributes(inherit);
 #endif
@@ -61,8 +61,8 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT || COREFX
-            Attribute[] all = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OfType<Attribute>(member.GetCustomAttributes(inherit)));
+#if WINRT || COREFX || PROFILE259
+			Attribute[] all = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OfType<Attribute>(member.GetCustomAttributes(inherit)));
 #else
             object[] all = member.GetCustomAttributes(inherit);
 #endif
@@ -88,8 +88,8 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT || COREFX
-            Attribute[] all = System.Linq.Enumerable.ToArray(assembly.GetCustomAttributes());
+#if WINRT || COREFX || PROFILE259
+			Attribute[] all = System.Linq.Enumerable.ToArray(assembly.GetCustomAttributes());
 #else
             const bool inherit = false;
             object[] all = assembly.GetCustomAttributes(inherit);
