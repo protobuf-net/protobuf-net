@@ -30,6 +30,10 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## v2.3.7
+
+- add "profile 259" support - contributed by Lorick Russow
+
 ## v2.3.6
 
 - add .NET Standard 2.0 build target 

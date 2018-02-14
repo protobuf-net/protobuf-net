@@ -1,6 +1,5 @@
 ﻿#if !NO_RUNTIME
 using System;
-using System.Linq;
 using ProtoBuf.Meta;
 #if FEAT_COMPILER
 
@@ -313,8 +312,8 @@ namespace ProtoBuf.Serializers
             {
                 if (!hasConstructor) TypeModel.ThrowCannotCreateInstance(constructType);
 #if PROFILE259
-	            ConstructorInfo constructorInfo = constructType.GetTypeInfo().DeclaredConstructors
-		            .First(c => c.GetParameters().Length == 0);
+	            ConstructorInfo constructorInfo = System.Linq.Enumerable.First(
+                    constructType.GetTypeInfo().DeclaredConstructors, c => c.GetParameters().Length == 0);
 	            obj = constructorInfo.Invoke(new object[] {});
 
 #else
