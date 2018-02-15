@@ -25,8 +25,8 @@ namespace ProtoBuf.Serializers
             return false;
         }
         private readonly Type forType, constructType;
-#if WINRT || COREFX
-        private readonly TypeInfo typeInfo;
+#if WINRT || COREFX || PROFILE259
+		private readonly TypeInfo typeInfo;
 #endif
         public Type ExpectedType { get { return forType; } }
         private readonly IProtoSerializer[] serializers;
@@ -55,8 +55,8 @@ namespace ProtoBuf.Serializers
             }
             this.forType = forType;
             this.factory = factory;
-#if WINRT || COREFX
-            this.typeInfo = forType.GetTypeInfo();
+#if WINRT || COREFX || PROFILE259
+			this.typeInfo = forType.GetTypeInfo();
 #endif
             if (constructType == null)
             {
@@ -64,8 +64,8 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-#if WINRT || COREFX
-                if (!typeInfo.IsAssignableFrom(constructType.GetTypeInfo()))
+#if WINRT || COREFX || PROFILE259
+				if (!typeInfo.IsAssignableFrom(constructType.GetTypeInfo()))
 #else
                 if (!forType.IsAssignableFrom(constructType))
 #endif
@@ -89,8 +89,8 @@ namespace ProtoBuf.Serializers
             }
 #endif
 
-#if WINRT || COREFX
-            if (iextensible.IsAssignableFrom(typeInfo))
+#if WINRT || COREFX || PROFILE259
+			if (iextensible.IsAssignableFrom(typeInfo))
             {
                 if (typeInfo.IsValueType || !isRootType || hasSubTypes)
 #else
@@ -103,8 +103,8 @@ namespace ProtoBuf.Serializers
                 }
                 isExtensible = true;
             }
-#if WINRT || COREFX
-            TypeInfo constructTypeInfo = constructType.GetTypeInfo();
+#if WINRT || COREFX || PROFILE259
+			TypeInfo constructTypeInfo = constructType.GetTypeInfo();
             hasConstructor = !constructTypeInfo.IsAbstract && Helpers.GetConstructor(constructTypeInfo, Helpers.EmptyTypes, true) != null;
 #else
             hasConstructor = !constructType.IsAbstract && Helpers.GetConstructor(constructType, Helpers.EmptyTypes, true) != null;
@@ -114,8 +114,8 @@ namespace ProtoBuf.Serializers
                 throw new ArgumentException("The supplied default implementation cannot be created: " + constructType.FullName, "constructType");
             }
         }
-#if WINRT || COREFX
-        private static readonly TypeInfo iextensible = typeof(IExtensible).GetTypeInfo();
+#if WINRT || COREFX || PROFILE259
+		private static readonly TypeInfo iextensible = typeof(IExtensible).GetTypeInfo();
 #else
         private static readonly System.Type iextensible = typeof(IExtensible);
 #endif
@@ -123,8 +123,8 @@ namespace ProtoBuf.Serializers
         private bool CanHaveInheritance
         {
             get {
-#if WINRT || COREFX
-                return (typeInfo.IsClass || typeInfo.IsInterface) && !typeInfo.IsSealed;
+#if WINRT || COREFX || PROFILE259
+				return (typeInfo.IsClass || typeInfo.IsInterface) && !typeInfo.IsSealed;
 #else
                 return (forType.IsClass || forType.IsInterface) && !forType.IsSealed;
 #endif
@@ -212,8 +212,8 @@ namespace ProtoBuf.Serializers
                         {
                             if (serType != forType && ((IProtoTypeSerializer)ser).CanCreateInstance()
                                 && serType
-#if WINRT || COREFX
-                                .GetTypeInfo()
+#if WINRT || COREFX || PROFILE259
+								.GetTypeInfo()
 #endif
                                 .IsSubclassOf(value.GetType()))
                             {
@@ -311,11 +311,18 @@ namespace ProtoBuf.Serializers
             else if (useConstructor)
             {
                 if (!hasConstructor) TypeModel.ThrowCannotCreateInstance(constructType);
-                obj = Activator.CreateInstance(constructType
-#if !(CF || SILVERLIGHT || WINRT || PORTABLE || NETSTANDARD1_3 || NETSTANDARD1_4)
+#if PROFILE259
+	            ConstructorInfo constructorInfo = System.Linq.Enumerable.First(
+                    constructType.GetTypeInfo().DeclaredConstructors, c => c.GetParameters().Length == 0);
+	            obj = constructorInfo.Invoke(new object[] {});
+
+#else
+				obj = Activator.CreateInstance(constructType
+#if !(CF || SILVERLIGHT || WINRT || PORTABLE  || NETSTANDARD1_3 || NETSTANDARD1_4)
                     , nonPublic: true
 #endif
                     );
+#endif
             }
             else
             {

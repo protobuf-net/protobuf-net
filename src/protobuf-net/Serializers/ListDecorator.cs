@@ -341,9 +341,13 @@ namespace ProtoBuf.Serializers
                 moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext", null);
                 PropertyInfo prop = Helpers.GetProperty(iteratorType, "Current", false);
                 current = prop == null ? null : Helpers.GetGetMethod(prop, false, false);
-                if (moveNext == null && (model.MapType(ienumeratorType).IsAssignableFrom(iteratorType)))
-                {
-                    moveNext = Helpers.GetInstanceMethod(model.MapType(ienumeratorType), "MoveNext", null);
+#if PROFILE259
+				if (moveNext == null && (model.MapType(ienumeratorType).GetTypeInfo().IsAssignableFrom(iteratorType.GetTypeInfo())))
+#else
+				if (moveNext == null && (model.MapType(ienumeratorType).IsAssignableFrom(iteratorType)))
+#endif
+				{
+					moveNext = Helpers.GetInstanceMethod(model.MapType(ienumeratorType), "MoveNext", null);
                 }
                 // fully typed
                 if (moveNext != null && moveNext.ReturnType == model.MapType(typeof(bool))
@@ -369,11 +373,15 @@ namespace ProtoBuf.Serializers
 #endif
             }
 ;
-            if (enumeratorType != null && enumeratorType.IsAssignableFrom(expectedType
-#if WINRT || COREFX
+#if PROFILE259
+			if (enumeratorType != null && enumeratorType.GetTypeInfo().IsAssignableFrom(expectedType
+#else
+			if (enumeratorType != null && enumeratorType.IsAssignableFrom(expectedType
+#endif
+#if WINRT || COREFX || PROFILE259
                 .GetTypeInfo()
 #endif
-                ))
+				))
             {
                 getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
                 getReturnType = getEnumerator.ReturnType;
@@ -389,8 +397,8 @@ namespace ProtoBuf.Serializers
                 return getEnumerator;
             }
 #endif
-            // give up and fall-back to non-generic IEnumerable
-            enumeratorType = model.MapType(ienumerableType);
+			// give up and fall-back to non-generic IEnumerable
+			enumeratorType = model.MapType(ienumerableType);
             getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
             getReturnType = getEnumerator.ReturnType;
             iteratorType = getReturnType

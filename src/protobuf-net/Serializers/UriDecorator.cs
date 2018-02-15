@@ -1,7 +1,9 @@
 ﻿#if !NO_RUNTIME
 using System;
 
+#if FEAT_COMPILER
 using ProtoBuf.Compiler;
+#endif
 #if FEAT_IKVM
 using Type = IKVM.Reflection.Type;
 using IKVM.Reflection;
@@ -65,7 +67,7 @@ namespace ProtoBuf.Serializers
             ctx.EmitCtor(ctx.MapType(typeof(Uri)), ctx.MapType(typeof(string)), ctx.MapType(typeof(UriKind)));
             ctx.MarkLabel(@end);
         }
-#endif 
+#endif
     }
 }
 #endif

@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 #if COREFX
 using System.Linq;
@@ -8,6 +9,9 @@ using System.Linq;
 #if FEAT_IKVM
 using Type = IKVM.Reflection.Type;
 using IKVM.Reflection;
+#elif PROFILE259
+using System.Reflection;
+using System.Linq;
 #else
 using System.Reflection;
 #endif
@@ -73,8 +77,8 @@ namespace ProtoBuf
 #if TRACE
 #if MF
             Microsoft.SPOT.Trace.Print(message);
-#elif SILVERLIGHT || MONODROID || CF2 || WINRT || IOS || PORTABLE || COREFX
-            System.Diagnostics.Debug.WriteLine(message);
+#elif SILVERLIGHT || MONODROID || CF2 || WINRT || IOS || PORTABLE || COREFX || PROFILE259
+			System.Diagnostics.Debug.WriteLine(message);
 #else
             System.Diagnostics.Trace.WriteLine(message);
 #endif
@@ -156,7 +160,7 @@ namespace ProtoBuf
 #endif
         }
 #if WINRT || COREFX
-        internal static MemberInfo GetInstanceMember(TypeInfo declaringType, string name)
+		internal static MemberInfo GetInstanceMember(TypeInfo declaringType, string name)
         {
             var members = declaringType.AsType().GetMember(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             switch(members.Length)
@@ -211,8 +215,90 @@ namespace ProtoBuf
         {
             return GetInstanceMethod(declaringType.AsType(), name, types);
         }
-#else
+#elif PROFILE259
+		internal static MemberInfo GetInstanceMember(TypeInfo declaringType, string name)
+		{
+			IEnumerable<MemberInfo> members = declaringType.DeclaredMembers;
+			IList<MemberInfo> found = new List<MemberInfo>();
+			foreach (MemberInfo member in members)
+			{
+				if (member.Name.Equals(name))
+				{
+					found.Add(member);
+				}
+			}
+			switch(found.Count)
+			{ 
+				case 0: return null;
+				case 1: return found.First();
+				default: throw new AmbiguousMatchException(name);
+			}
+		}
         internal static MethodInfo GetInstanceMethod(Type declaringType, string name)
+        {
+	        var methods = declaringType.GetRuntimeMethods();
+			foreach (MethodInfo method in methods)
+            {
+	            if (method.Name == name)
+	            {
+		            return method;
+	            }
+            }
+            return null;
+        }
+        internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name)
+        {
+            return GetInstanceMethod(declaringType.AsType(), name); ;
+        }
+        internal static MethodInfo GetStaticMethod(Type declaringType, string name)
+        {
+	        var methods = declaringType.GetRuntimeMethods();
+			foreach (MethodInfo method in methods)
+            {
+	            if (method.Name == name)
+	            {
+		            return method;
+	            }
+            }
+            return null;
+        }
+
+        internal static MethodInfo GetStaticMethod(TypeInfo declaringType, string name)
+        {
+            return GetStaticMethod(declaringType.AsType(), name);
+        }
+        internal static MethodInfo GetStaticMethod(Type declaringType, string name, Type[] parameterTypes)
+        {
+			var methods = declaringType.GetRuntimeMethods();
+            foreach (MethodInfo method in methods)
+            {
+	            if (method.Name == name &&
+	                IsMatch(method.GetParameters(), parameterTypes))
+	            {
+		            return method;
+	            }
+            }
+            return null;
+        }
+        internal static MethodInfo GetInstanceMethod(Type declaringType, string name, Type[] parameterTypes)
+        {
+	        var methods = declaringType.GetRuntimeMethods();
+			foreach (MethodInfo method in methods)
+            {
+	            if (method.Name == name &&
+	                IsMatch(method.GetParameters(), parameterTypes))
+	            {
+		            return method;
+	            }
+            }
+            return null;
+        }
+        internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name, Type[] types)
+        {
+            return GetInstanceMethod(declaringType.AsType(), name, types);
+        }
+#else
+		internal static MethodInfo GetInstanceMethod(Type declaringType, string name)
         {
             return declaringType.GetMethod(name, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         }
@@ -248,8 +334,8 @@ namespace ProtoBuf
 
             internal static bool IsSubclassOf(Type type, Type baseClass)
         {
-#if WINRT || COREFX
-            return type.GetTypeInfo().IsSubclassOf(baseClass);
+#if WINRT || COREFX || PROFILE259
+			return type.GetTypeInfo().IsSubclassOf(baseClass);
 #else
             return type.IsSubclassOf(baseClass);
 #endif
@@ -265,14 +351,14 @@ namespace ProtoBuf
 #endif
         }
         public readonly static Type[] EmptyTypes =
-#if PORTABLE || WINRT || CF2 || CF35
+#if PORTABLE || WINRT || CF2 || CF35 || PROFILE259
             new Type[0];
 #else
             Type.EmptyTypes;
 #endif
 
-#if WINRT || COREFX
-        private static readonly Type[] knownTypes = new Type[] {
+#if WINRT || COREFX || PROFILE259
+		private static readonly Type[] knownTypes = new Type[] {
                 typeof(bool), typeof(char), typeof(sbyte), typeof(byte),
                 typeof(short), typeof(ushort), typeof(int), typeof(uint),
                 typeof(long), typeof(ulong), typeof(float), typeof(double),
@@ -328,8 +414,8 @@ namespace ProtoBuf
 
         public static ProtoTypeCode GetTypeCode(System.Type type)
         {
-#if WINRT || COREFX
-            if(IsEnum(type))
+#if WINRT || COREFX || PROFILE259
+			if (IsEnum(type))
             {
                 type = Enum.GetUnderlyingType(type);
             }
@@ -395,24 +481,24 @@ namespace ProtoBuf
 
         internal static bool IsValueType(Type type)
         {
-#if WINRT || COREFX
-            return type.GetTypeInfo().IsValueType;
+#if WINRT || COREFX || PROFILE259
+			return type.GetTypeInfo().IsValueType;
 #else
             return type.IsValueType;
 #endif
         }
         internal static bool IsSealed(Type type)
         {
-#if WINRT || COREFX
-            return type.GetTypeInfo().IsSealed;
+#if WINRT || COREFX || PROFILE259
+			return type.GetTypeInfo().IsSealed;
 #else
             return type.IsSealed;
 #endif
         }
         internal static bool IsClass(Type type)
         {
-#if WINRT || COREFX
-            return type.GetTypeInfo().IsClass;
+#if WINRT || COREFX || PROFILE259
+			return type.GetTypeInfo().IsClass;
 #else
             return type.IsClass;
 #endif
@@ -420,8 +506,8 @@ namespace ProtoBuf
 
         internal static bool IsEnum(Type type)
         {
-#if WINRT || COREFX
-            return type.GetTypeInfo().IsEnum;
+#if WINRT || COREFX || PROFILE259
+			return type.GetTypeInfo().IsEnum;
 #else
             return type.IsEnum;
 #endif
@@ -430,8 +516,8 @@ namespace ProtoBuf
         internal static MethodInfo GetGetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
         {
             if (property == null) return null;
-#if WINRT || COREFX
-            MethodInfo method = property.GetMethod;
+#if WINRT || COREFX || PROFILE259
+			MethodInfo method = property.GetMethod;
             if (!nonPublic && method != null && !method.IsPublic) method = null;
             return method;
 #else
@@ -450,8 +536,8 @@ namespace ProtoBuf
         internal static MethodInfo GetSetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
         {
             if (property == null) return null;
-#if WINRT || COREFX
-            MethodInfo method = property.SetMethod;
+#if WINRT || COREFX || PROFILE259
+			MethodInfo method = property.SetMethod;
             if (!nonPublic && method != null && !method.IsPublic) method = null;
             return method;
 #else
@@ -480,8 +566,8 @@ namespace ProtoBuf
             return true;
         }
 #endif
-#if WINRT || COREFX || PORTABLE
-        private static bool IsMatch(ParameterInfo[] parameters, Type[] parameterTypes)
+#if WINRT || COREFX || PORTABLE || PROFILE259
+		private static bool IsMatch(ParameterInfo[] parameters, Type[] parameterTypes)
         {
             if (parameterTypes == null) parameterTypes = EmptyTypes;
             if (parameters.Length != parameterTypes.Length) return false;
@@ -492,8 +578,8 @@ namespace ProtoBuf
             return true;
         }
 #endif
-#if WINRT || COREFX
-        internal static ConstructorInfo GetConstructor(Type type, Type[] parameterTypes, bool nonPublic)
+#if WINRT || COREFX || PROFILE259
+		internal static ConstructorInfo GetConstructor(Type type, Type[] parameterTypes, bool nonPublic)
         {
             return GetConstructor(type.GetTypeInfo(), parameterTypes, nonPublic);
         }
@@ -503,7 +589,7 @@ namespace ProtoBuf
         }
         internal static ConstructorInfo[] GetConstructors(TypeInfo typeInfo, bool nonPublic)
         {
-            return typeInfo.DeclaredConstructors.Where(c => !c.IsStatic && (nonPublic || c.IsPublic)).ToArray();
+            return typeInfo.DeclaredConstructors.Where(c => !c.IsStatic && ((!nonPublic && c.IsPublic) || nonPublic)).ToArray();
         }
         internal static PropertyInfo GetProperty(Type type, string name, bool nonPublic)
         {
@@ -561,8 +647,8 @@ namespace ProtoBuf
 
         internal static MemberInfo[] GetInstanceFieldsAndProperties(Type type, bool publicOnly)
         {
-#if WINRT
-            System.Collections.Generic.List<MemberInfo> members = new System.Collections.Generic.List<MemberInfo>();
+#if WINRT || PROFILE259
+			System.Collections.Generic.List<MemberInfo> members = new System.Collections.Generic.List<MemberInfo>();
             foreach(FieldInfo field in type.GetRuntimeFields())
             {
                 if(field.IsStatic) continue;
@@ -588,8 +674,8 @@ namespace ProtoBuf
 
         internal static Type GetMemberType(MemberInfo member)
         {
-#if WINRT || PORTABLE || COREFX
-            PropertyInfo prop = member as PropertyInfo;
+#if WINRT || PORTABLE || COREFX || PROFILE259
+			PropertyInfo prop = member as PropertyInfo;
             if (prop != null) return prop.PropertyType;
             FieldInfo fld = member as FieldInfo;
             return fld == null ? null : fld.FieldType;
@@ -605,16 +691,16 @@ namespace ProtoBuf
 
         internal static bool IsAssignableFrom(Type target, Type type)
         {
-#if WINRT
-            return target.GetTypeInfo().IsAssignableFrom(type.GetTypeInfo());
+#if WINRT || PROFILE259
+			return target.GetTypeInfo().IsAssignableFrom(type.GetTypeInfo());
 #else
             return target.IsAssignableFrom(type);
 #endif
         }
         internal static Assembly GetAssembly(Type type)
         {
-#if COREFX
-            return type.GetTypeInfo().Assembly;
+#if COREFX || PROFILE259
+			return type.GetTypeInfo().Assembly;
 #else
             return type.Assembly;
 #endif
@@ -633,8 +719,8 @@ namespace ProtoBuf
             {
                 return segment.Array;
             }
-#elif PORTABLE
-            return ms.ToArray();
+#elif PORTABLE || PROFILE259
+			return ms.ToArray();
 #else
             return ms.GetBuffer();
 #endif

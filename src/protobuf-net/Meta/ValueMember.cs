@@ -4,10 +4,13 @@ using System;
 using ProtoBuf.Serializers;
 using System.Globalization;
 using System.Collections.Generic;
-
 #if FEAT_IKVM
 using Type = IKVM.Reflection.Type;
 using IKVM.Reflection;
+using System.Linq;
+#elif PROFILE259
+using System.Reflection;
+using System.Linq;
 #else
 using System.Reflection;
 #endif
@@ -133,8 +136,8 @@ namespace ProtoBuf.Meta
         }
         internal object GetRawEnumValue()
         {
-#if WINRT || PORTABLE || CF || FX11 || COREFX
-            object value = ((FieldInfo)originalMember).GetValue(null);
+#if WINRT || PORTABLE || CF || FX11 || COREFX || PROFILE259
+			object value = ((FieldInfo)originalMember).GetValue(null);
             switch(Helpers.GetTypeCode(Enum.GetUnderlyingType(((FieldInfo)originalMember).FieldType)))
             {
                 case ProtoTypeCode.SByte: return (sbyte)value;
@@ -387,8 +390,8 @@ namespace ProtoBuf.Meta
             dictionaryType = keyType = valueType = null;
             try
             {
-#if WINRT || COREFX
-                var info = memberType.GetTypeInfo();
+#if WINRT || COREFX || PROFILE259
+				var info = memberType.GetTypeInfo();
 #else
                 var info = memberType;
 #endif
@@ -398,9 +401,12 @@ namespace ProtoBuf.Meta
                 }
                 if (info.IsInterface && info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                 {
-                    var typeArgs = memberType.GetGenericArguments();
-
-                    if (IsValidMapKeyType(typeArgs[0]))
+#if PROFILE259
+					var typeArgs = memberType.GetGenericTypeDefinition().GenericTypeArguments;
+#else
+					var typeArgs = memberType.GetGenericArguments();
+#endif
+					if (IsValidMapKeyType(typeArgs[0]))
                     {
                         keyType = typeArgs[0];
                         valueType = typeArgs[1];
@@ -408,20 +414,26 @@ namespace ProtoBuf.Meta
                     }
                     return false;
                 }
-
-                foreach (var iType in memberType.GetInterfaces())
-                {
-#if WINRT || COREFX
-                info = iType.GetTypeInfo();
+#if PROFILE259
+				foreach (var iType in memberType.GetTypeInfo().ImplementedInterfaces)
+#else
+				foreach (var iType in memberType.GetInterfaces())
+#endif
+				{
+#if WINRT || COREFX || PROFILE259
+					info = iType.GetTypeInfo();
 #else
                     info = iType;
 #endif
                     if (info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                     {
                         if (dictionaryType != null) throw new InvalidOperationException("Multiple dictionary interfaces implemented by type: " + memberType.FullName);
-                        var typeArgs = iType.GetGenericArguments();
-
-                        if (IsValidMapKeyType(typeArgs[0]))
+#if PROFILE259
+						var typeArgs = iType.GetGenericTypeDefinition().GenericTypeArguments;
+#else
+						var typeArgs = iType.GetGenericArguments();
+#endif
+						if (IsValidMapKeyType(typeArgs[0]))
                         {
                             keyType = typeArgs[0];
                             valueType = typeArgs[1];
@@ -494,12 +506,21 @@ namespace ProtoBuf.Meta
                         AsReference = MetaType.GetAsReferenceDefault(model, valueType);
                     }
                     var valueSer = TryGetCoreSerializer(model, MapValueFormat, valueType, out var valueWireType, AsReference, DynamicType, false, true);
-
-                    var ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetConstructors(
+#if PROFILE259
+					IEnumerable<ConstructorInfo> ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetTypeInfo().DeclaredConstructors;
+	                if (ctors.Count() != 1)
+	                {
+		                throw new InvalidOperationException("Unable to resolve MapDecorator constructor");
+	                }
+	                ser = (IProtoSerializer)ctors.First().Invoke(new object[] {model, concreteType, keySer, valueSer, fieldNumber,
+		                DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String, keyWireType, valueWireType, OverwriteList });
+#else
+					var ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetConstructors(
                         BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-                    if (ctors.Length != 1) throw new InvalidOperationException("Unable to resolve MapDecorator constructor");
+				if (ctors.Length != 1) throw new InvalidOperationException("Unable to resolve MapDecorator constructor");
                     ser = (IProtoSerializer)ctors[0].Invoke(new object[] {model, concreteType, keySer, valueSer, fieldNumber,
                         DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String, keyWireType, valueWireType, OverwriteList });
+#endif
                 }
                 else
                 {

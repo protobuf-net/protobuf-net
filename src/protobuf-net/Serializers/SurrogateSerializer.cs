@@ -47,8 +47,8 @@ namespace ProtoBuf.Serializers
         }
         private static bool HasCast(TypeModel model, Type type, Type from, Type to, out MethodInfo op)
         {
-#if WINRT
-            System.Collections.Generic.List<MethodInfo> list = new System.Collections.Generic.List<MethodInfo>();
+#if WINRT || PROFILE259
+			System.Collections.Generic.List<MethodInfo> list = new System.Collections.Generic.List<MethodInfo>();
             foreach (var item in type.GetRuntimeMethods())
             {
                 if (item.IsStatic) list.Add(item);
