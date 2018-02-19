@@ -233,7 +233,7 @@ namespace Examples.Issues
                 var model = TypeModel.Create();
                 model.AutoCompile = false;
                 ExecuteAllModes(model);
-            }, "AsReference cannot be used with value-types; please see http://stackoverflow.com/q/14436606/");
+            }, "AsReference cannot be used with value-types; please see https://stackoverflow.com/q/14436606/23354");
         }
 
         static B CreateB()

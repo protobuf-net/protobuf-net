@@ -1451,7 +1451,7 @@ namespace ProtoBuf.Meta
                     .IsGenericType && baseType.GetGenericTypeDefinition().Name == "GeneratedMessage`2")
                 {
                     throw new InvalidOperationException(
-                        "Are you mixing protobuf-net and protobuf-csharp-port? See http://stackoverflow.com/q/11564914; type: " + fullName);
+                        "Are you mixing protobuf-net and protobuf-csharp-port? See https://stackoverflow.com/q/11564914/23354; type: " + fullName);
                 }
             }
 #endif

@@ -551,7 +551,7 @@ namespace ProtoBuf
         }
         private Exception CreateWireTypeException()
         {
-            return CreateException("Invalid wire-type; this usually means you have over-written a file without truncating or setting the length; see http://stackoverflow.com/q/2152978/23354");
+            return CreateException("Invalid wire-type; this usually means you have over-written a file without truncating or setting the length; see https://stackoverflow.com/q/2152978/23354");
         }
         private Exception CreateException(string message)
         {
