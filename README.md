@@ -15,7 +15,7 @@ If you can't, that's fine too.
 
 ---
 
-Supported Runtimes :
+## Supported Runtimes
 - .NET Framework 4.0+
 - .NET Standard 1.3+
 
@@ -26,9 +26,11 @@ Legacy Runtimes (up to v2.1.0)
 - Silverlight, Windows Phone 7&8
 - Windows 8 apps
 
-## install
+## Runtime Installation
 
-Nuget : `Install-Package protobuf-net`
+Packages are available on NuGet: [`protobuf-net`](https://www.nuget.org/packages/protobuf-net). You can use the following command in the Package Manager Console:
+`Install-Package protobuf-net`
+
 
 ## Basic usage
 
@@ -122,9 +124,7 @@ There is no special significance in the 7 above; it is an integer key, just like
 
 ### .proto file
 
-As an alternative to writing your classes and decorating them, You can generate your types and serializer from a .proto schema. 
-
-This done using the precompiler. [Additional guidance can be found here](http://blog.marcgravell.com/2012/07/introducing-protobuf-net-precompiler.html).
+As an alternative to writing your classes and decorating them, You can generate your types from a .proto schema using [`ProtoGen`](https://protogen.marcgravell.com/). You can also generate serializer assembly using the [`precompiler`](http://blog.marcgravell.com/2012/07/introducing-protobuf-net-precompiler.html).
 
 ### Alternative to attributes
 
