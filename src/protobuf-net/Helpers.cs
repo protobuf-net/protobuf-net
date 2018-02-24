@@ -363,15 +363,15 @@ namespace ProtoBuf
                 typeof(short), typeof(ushort), typeof(int), typeof(uint),
                 typeof(long), typeof(ulong), typeof(float), typeof(double),
                 typeof(decimal), typeof(string),
-                typeof(DateTime), typeof(TimeSpan), typeof(Guid), typeof(Uri),
-                typeof(byte[]), typeof(System.Type)};
+                typeof(DateTime), typeof(DateTimeOffset), typeof(TimeSpan), 
+                typeof(Guid), typeof(Uri), typeof(byte[]), typeof(System.Type)};
         private static readonly ProtoTypeCode[] knownCodes = new ProtoTypeCode[] {
             ProtoTypeCode.Boolean, ProtoTypeCode.Char, ProtoTypeCode.SByte, ProtoTypeCode.Byte,
             ProtoTypeCode.Int16, ProtoTypeCode.UInt16, ProtoTypeCode.Int32, ProtoTypeCode.UInt32,
             ProtoTypeCode.Int64, ProtoTypeCode.UInt64, ProtoTypeCode.Single, ProtoTypeCode.Double,
             ProtoTypeCode.Decimal, ProtoTypeCode.String,
-            ProtoTypeCode.DateTime, ProtoTypeCode.TimeSpan, ProtoTypeCode.Guid, ProtoTypeCode.Uri,
-            ProtoTypeCode.ByteArray, ProtoTypeCode.Type
+            ProtoTypeCode.DateTime, ProtoTypeCode.DateTimeOffset, ProtoTypeCode.TimeSpan, ProtoTypeCode.Guid, 
+            ProtoTypeCode.Uri, ProtoTypeCode.ByteArray, ProtoTypeCode.Type
         };
 
 #endif
@@ -407,6 +407,7 @@ namespace ProtoBuf
                 case "System.Uri": return ProtoTypeCode.Uri;
                 case "System.Byte[]": return ProtoTypeCode.ByteArray;
                 case "System.Type": return ProtoTypeCode.Type;
+                case "System.DateTimeOffset" return ProtoTypeCode.DateTimeOffset;
             }
             return ProtoTypeCode.Unknown;
         }
@@ -447,6 +448,7 @@ namespace ProtoBuf
             if (type == typeof(TimeSpan)) return ProtoTypeCode.TimeSpan;
             if (type == typeof(Guid)) return ProtoTypeCode.Guid;
             if (type == typeof(Uri)) return ProtoTypeCode.Uri;
+            if (type == typeof(DateTimeOffset)) return ProtoTypeCode.DateTimeOffset;
 #if PORTABLE
             // In PCLs, the Uri type may not match (WinRT uses Internal/Uri, .Net uses System/Uri), so match on the full name instead
             if (type.FullName == typeof(Uri).FullName) return ProtoTypeCode.Uri;
@@ -756,6 +758,7 @@ namespace ProtoBuf
         ByteArray = 101,
         Guid = 102,
         Uri = 103,
-        Type = 104
+        Type = 104,
+        DateTimeOffset = 105,
     }
 }

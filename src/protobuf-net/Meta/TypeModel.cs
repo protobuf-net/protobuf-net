@@ -153,6 +153,7 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.Char: ProtoWriter.WriteUInt16((ushort)(char)value, writer); return true;
                 case ProtoTypeCode.Double: ProtoWriter.WriteDouble((double)value, writer); return true;
                 case ProtoTypeCode.Single: ProtoWriter.WriteSingle((float)value, writer); return true;
+                case ProtoTypeCode.DateTimeOffset: BclHelpers.WriteDateTimeOffset((DateTimeOffset)value, writer); return true;
                 case ProtoTypeCode.DateTime:
                     if (SerializeDateTimeKind())
                         BclHelpers.WriteDateTimeWithKind((DateTime)value, writer);
@@ -1191,6 +1192,7 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Double: value = reader.ReadDouble(); continue;
                     case ProtoTypeCode.Single: value = reader.ReadSingle(); continue;
                     case ProtoTypeCode.DateTime: value = BclHelpers.ReadDateTime(reader); continue;
+                    case ProtoTypeCode.DateTimeOffset: value = BclHelpers.ReadDateTimeOffset(reader); continue;
                     case ProtoTypeCode.Decimal: value = BclHelpers.ReadDecimal(reader); continue;
                     case ProtoTypeCode.String: value = reader.ReadString(); continue;
                     case ProtoTypeCode.ByteArray: value = ProtoReader.AppendBytes((byte[])value, reader); continue;

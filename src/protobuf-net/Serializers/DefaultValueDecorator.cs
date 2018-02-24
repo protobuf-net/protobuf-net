@@ -257,6 +257,13 @@ namespace ProtoBuf.Serializers
                         EmitBeq(ctx, label, expected);
                         break;
                     }
+                case ProtoTypeCode.DateTimeOffset:
+                    {
+                        ctx.LoadValue(((DateTimeOffset)defaultValue).ToFileTime());
+                        ctx.EmitCall(ctx.MapType(typeof(DateTimeOffset)).GetMethod("FromFileTime"));
+                        EmitBeq(ctx, label, expected);
+                        break;
+                    }
                 default:
                     throw new NotSupportedException("Type cannot be represented as a default value: " + expected.FullName);
             }

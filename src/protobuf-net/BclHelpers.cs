@@ -169,8 +169,7 @@ namespace ProtoBuf
         /// </summary>        
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
-            DateTimeKind kind;
-            long ticks = ReadTimeSpanTicks(source, out kind);
+            long ticks = ReadTimeSpanTicks(source, out _);
             if (ticks == long.MinValue) return TimeSpan.MinValue;
             if (ticks == long.MaxValue) return TimeSpan.MaxValue;
             return TimeSpan.FromTicks(ticks);
@@ -275,8 +274,7 @@ namespace ProtoBuf
         /// </summary>
         public static DateTime ReadDateTime(ProtoReader source)
         {
-            DateTimeKind kind;
-            long ticks = ReadTimeSpanTicks(source, out kind);
+            long ticks = ReadTimeSpanTicks(source, out var kind);
             if (ticks == long.MinValue) return DateTime.MinValue;
             if (ticks == long.MaxValue) return DateTime.MaxValue;
             return EpochOrigin[(int)kind].AddTicks(ticks);
@@ -289,6 +287,67 @@ namespace ProtoBuf
         {
             WriteDateTimeImpl(value, dest, false);
         }
+
+        /// <summary>
+        /// Parses a DateTime from a protobuf stream
+        /// </summary>
+        public static DateTimeOffset ReadDateTimeOffset(ProtoReader source)
+        {
+            var token = ProtoReader.StartSubItem(source);
+            try
+            {
+                long ticks = ReadTimeSpanTicks(source, out var _);
+                if (ticks == long.MinValue) return DateTimeOffset.MinValue;
+                if (ticks == long.MaxValue) return DateTimeOffset.MaxValue;
+                return new DateTimeOffset(EpochOrigin[0].AddTicks(ticks), ReadTimeSpan(source));
+            }
+            finally
+            {
+                ProtoReader.EndSubItem(token, source);
+            }
+        }
+
+        /// <summary>
+        /// Writes a DateTime to a protobuf stream, excluding the <c>Kind</c>
+        /// </summary>
+        public static void WriteDateTimeOffset(DateTimeOffset value, ProtoWriter dest)
+        {
+            if (dest == null) throw new ArgumentNullException(nameof(dest));
+            TimeSpan delta;
+            switch (dest.WireType)
+            {
+                case WireType.StartGroup:
+                case WireType.String:
+                    if (value == DateTimeOffset.MaxValue)
+                    {
+                        delta = TimeSpan.MaxValue;
+                    }
+                    else if (value == DateTimeOffset.MinValue)
+                    {
+                        delta = TimeSpan.MinValue;
+                    }
+                    else
+                    {
+                        delta = value - EpochOrigin[0];
+                    }
+                    break;
+                default:
+                    delta = value - EpochOrigin[0];
+                    break;
+            }
+
+            var token = ProtoWriter.StartSubItem(null, dest);
+            try
+            {
+                WriteTimeSpanImpl(delta, dest, DateTimeKind.Unspecified);
+                WriteTimeSpanImpl(value.Offset, dest, DateTimeKind.Unspecified);
+            }
+            finally
+            {
+                ProtoWriter.EndSubItem(token, dest);
+            }
+        }
+
         /// <summary>
         /// Writes a DateTime to a protobuf stream, including the <c>Kind</c>
         /// </summary>
@@ -299,7 +358,7 @@ namespace ProtoBuf
 
         private static void WriteDateTimeImpl(DateTime value, ProtoWriter dest, bool includeKind)
         {
-            if (dest == null) throw new ArgumentNullException("dest");
+            if (dest == null) throw new ArgumentNullException(nameof(dest));
             TimeSpan delta;
             switch (dest.WireType)
             {

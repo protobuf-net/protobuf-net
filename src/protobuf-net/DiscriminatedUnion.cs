@@ -105,6 +105,7 @@ namespace ProtoBuf
 		unsafe static DiscriminatedUnion128Object()
         {
             if (sizeof(DateTime) > 16) throw new InvalidOperationException(nameof(DateTime) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128Object));
+            if (sizeof(DateTimeOffset) > 16) throw new InvalidOperationException(nameof(DateTimeOffset) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128Object));
             if (sizeof(TimeSpan) > 16) throw new InvalidOperationException(nameof(TimeSpan) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128Object));
             if (sizeof(Guid) > 16) throw new InvalidOperationException(nameof(Guid) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128Object));
         }
@@ -128,6 +129,8 @@ namespace ProtoBuf
         [FieldOffset(8)] public readonly double Double;
         /// <summary>The value typed as DateTime</summary>
         [FieldOffset(8)] public readonly DateTime DateTime;
+        /// <summary>The value typed as DateTimeOffset</summary>
+        [FieldOffset(8)] public readonly DateTimeOffset DateTimeOffset;
         /// <summary>The value typed as TimeSpan</summary>
         [FieldOffset(8)] public readonly TimeSpan TimeSpan;
         /// <summary>The value typed as Guid</summary>
@@ -162,6 +165,8 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128Object(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: ~0) { DateTime = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
+        public DiscriminatedUnion128Object(int discriminator, DateTimeOffset? value) : this(value.HasValue ? discriminator : ~0) { DateTimeOffset = value.GetValueOrDefault(); }
+        /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128Object(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : ~0) { TimeSpan = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128Object(int discriminator, Guid? value) : this(value.HasValue ? discriminator : ~0) { Guid = value.GetValueOrDefault(); }
@@ -182,6 +187,7 @@ namespace ProtoBuf
         unsafe static DiscriminatedUnion128()
         {
             if (sizeof(DateTime) > 16) throw new InvalidOperationException(nameof(DateTime) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128));
+            if (sizeof(DateTimeOffset) > 16) throw new InvalidOperationException(nameof(DateTimeOffset) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128));
             if (sizeof(TimeSpan) > 16) throw new InvalidOperationException(nameof(TimeSpan) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128));
             if (sizeof(Guid) > 16) throw new InvalidOperationException(nameof(Guid) + " was unexpectedly too big for " + nameof(DiscriminatedUnion128));
         }
@@ -204,6 +210,8 @@ namespace ProtoBuf
         [FieldOffset(8)] public readonly double Double;
         /// <summary>The value typed as DateTime</summary>
         [FieldOffset(8)] public readonly DateTime DateTime;
+        /// <summary>The value typed as DateTimeOffset</summary>
+        [FieldOffset(8)] public readonly DateTimeOffset DateTimeOffset;
         /// <summary>The value typed as TimeSpan</summary>
         [FieldOffset(8)] public readonly TimeSpan TimeSpan;
         /// <summary>The value typed as Guid</summary>
@@ -233,6 +241,8 @@ namespace ProtoBuf
         public DiscriminatedUnion128(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: ~0) { DateTime = value.GetValueOrDefault(); }
+        /// <summary>Create a new discriminated union value</summary>
+        public DiscriminatedUnion128(int discriminator, DateTimeOffset? value) : this(value.HasValue ? discriminator : ~0) { DateTimeOffset = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : ~0) { TimeSpan = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>

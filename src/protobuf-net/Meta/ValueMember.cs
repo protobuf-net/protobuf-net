@@ -174,6 +174,7 @@ namespace ProtoBuf.Meta
                         if (s.Length == 1) return s[0];
                         throw new FormatException("Single character expected: \"" + s + "\"");
                     case ProtoTypeCode.DateTime: return DateTime.Parse(s, CultureInfo.InvariantCulture);
+                    case ProtoTypeCode.DateTimeOffset: return DateTimeOffset.Parse(s, CultureInfo.InvariantCulture);
                     case ProtoTypeCode.Decimal: return decimal.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case ProtoTypeCode.Double: return double.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
                     case ProtoTypeCode.Int16: return short.Parse(s, NumberStyles.Any, CultureInfo.InvariantCulture);
@@ -696,6 +697,9 @@ namespace ProtoBuf.Meta
                 case ProtoTypeCode.DateTime:
                     defaultWireType = GetDateTimeWireType(dataFormat);
                     return new DateTimeSerializer(dataFormat, model);
+                case ProtoTypeCode.DateTimeOffset:
+                    defaultWireType = GetDateTimeWireType(dataFormat);
+                    return new DateTimeOffsetSerializer(dataFormat, model);
                 case ProtoTypeCode.Decimal:
                     defaultWireType = WireType.String;
                     return new DecimalSerializer(model);
