@@ -214,26 +214,24 @@ namespace ProtoBuf.Reflection
             tw.WriteLine(")]");
             WriteOptions(ctx, obj.Options);
             tw = ctx.Write($"{GetAccess(GetAccess(obj))} partial class {Escape(name)}");
-            if (obj.ExtensionRanges.Count != 0) tw.Write(" : global::ProtoBuf.IExtensible");
+            tw.Write(" : global::ProtoBuf.IExtensible");
             tw.WriteLine();
             ctx.WriteLine("{").Indent();
             if (obj.Options?.MessageSetWireFormat == true)
             {
                 ctx.WriteLine("#error message_set_wire_format is not currently implemented").WriteLine();
             }
-            if (obj.ExtensionRanges.Count != 0)
-            {
-                ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
-                    .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
+            
+            ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
+                .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
 
-                if (ctx.Supports(CSharp6))
-                {
-                    ctx.Indent().WriteLine($"=> global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine();
-                }
-                else
-                {
-                    ctx.WriteLine("{").Indent().WriteLine($"return global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine("}");
-                }
+            if (ctx.Supports(CSharp6))
+            {
+                ctx.Indent().WriteLine($"=> global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine();
+            }
+            else
+            {
+                ctx.WriteLine("{").Indent().WriteLine($"return global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine("}");
             }
         }
 
