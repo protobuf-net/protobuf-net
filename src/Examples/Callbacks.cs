@@ -184,7 +184,7 @@ namespace Examples
     
     public class Callbacks
     {
-        public static void Test<T, TCreate>(bool compile = false, params Type[] extraTypes)
+        private static void Test<T, TCreate>(bool compile = false, params Type[] extraTypes)
             where TCreate : T, new()
             where T : ICallbackTest
         {
@@ -212,6 +212,7 @@ namespace Examples
                 Test<T, TCreate>(model.Compile(), "Compile"); // <===== lots of private members etc
             }
         }
+#pragma warning disable xUnit2002, xUnit2005 // it is convinced that TCreate is a value-type
         static void Test<T, TCreate>(TypeModel model, string mode)
             where TCreate : T, new()
             where T : ICallbackTest
@@ -249,6 +250,7 @@ namespace Examples
             Assert.Equal("abc", clone2.Bar); //, "clone2 after" + mode);
             
         }
+#pragma warning restore xUnit2002, xUnit2005
 
         [ProtoContract]
         class DuplicateCallbacks
@@ -456,7 +458,7 @@ namespace Examples
             public string Bar { get; set; }
         }
 
-        public void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ProtoWriter writer)
+        private void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ProtoWriter writer)
         {
             obj.OnSerializing();
             string bar = obj.Bar;

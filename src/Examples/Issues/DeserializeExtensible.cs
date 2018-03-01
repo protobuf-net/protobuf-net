@@ -17,12 +17,12 @@ namespace Examples.Issues
         {
             var model = TypeModel.Create();
             model.AutoCompile = false;
-            Execute(model, "Runtime");
+            ExecuteImpl(model, "Runtime");
             model.CompileInPlace();
-            Execute(model, "CompileInPlace");
-            Execute(model.Compile(), "Compile");
+            ExecuteImpl(model, "CompileInPlace");
+            ExecuteImpl(model.Compile(), "Compile");
         }
-        private void Execute(TypeModel model, string caption)
+        private void ExecuteImpl(TypeModel model, string caption)
         {
             var large = new LargeType { Foo = 1, Bar = "abc" };
             SmallType small;

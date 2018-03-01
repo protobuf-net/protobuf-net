@@ -17,16 +17,16 @@ namespace Examples.Issues
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
-            Execute(model, "Runtime");
+            ExecuteImpl(model, "Runtime");
             model.CompileInPlace();
-            Execute(model, "CompileInPlace");
+            ExecuteImpl(model, "CompileInPlace");
             //Execute(model.Compile(), "Compile");
 
             model.Compile("SO14020284", "SO14020284.dll");
             PEVerify.AssertValid("SO14020284.dll");
 
         }
-        public void Execute(TypeModel model, string caption)
+        private void ExecuteImpl(TypeModel model, string caption)
         {
             var ms = new MemoryStream();
             model.Serialize(ms, new EncapsulatedOuter { X = 123, Inner = new EncapsulatedInner { Y = 456 } });

@@ -32,7 +32,7 @@ namespace Examples.Issues
                 ms.Position = 0;
                 clone = Serializer.Deserialize<Node<int>>(ms);
             }
-            Assert.IsType(typeof(Node<int>.RootNode), clone);
+            Assert.IsType<Node<int>.RootNode>(clone);
             Assert.Equal("abc", clone.Key);
             Assert.Equal(1, clone.Value);
             children = clone.GetChildren();
@@ -71,7 +71,7 @@ namespace Examples.Issues
                 ms.Position = 0;
                 clone = Serializer.Deserialize<Node<MyDto>>(ms);
             }
-            Assert.IsType(typeof(Node<MyDto>.RootNode), clone);
+            Assert.IsType<Node<MyDto>.RootNode>(clone);
             Assert.Equal("abc", clone.Key);
             Assert.Equal(1, clone.Value.Value);
             children = clone.GetChildren();

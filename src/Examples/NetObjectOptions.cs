@@ -179,26 +179,26 @@ namespace Examples
             model.Add(typeof(BasicDynamicTestInner), true); // assume we can at least know candidates at runtime, for now
 
             Assert.NotNull(outer.Foo); //, "not null before");
-            Assert.IsType(typeof(BasicDynamicTestInner), outer.Foo); //, "typed before");
+            Assert.IsType<BasicDynamicTestInner>(outer.Foo); //, "typed before");
 
             var clone = (BasicDynamicTestOuter)model.DeepClone(outer);
             Assert.NotNull(clone); //, "clone exists (runtime)");
             Assert.NotSame(outer, clone); //, "clone is different (runtime)");
             Assert.NotNull(clone.Foo); //, "not null after (runtime)");
-            Assert.IsType(typeof(BasicDynamicTestInner), outer.Foo); //, "typed after (runtime)");
+            Assert.IsType<BasicDynamicTestInner>(outer.Foo); //, "typed after (runtime)");
 
             model.CompileInPlace();
             clone = (BasicDynamicTestOuter)model.DeepClone(outer);
             Assert.NotNull(clone); //, "clone exists (compile in place)");
             Assert.NotSame(outer, clone); //, "clone is different (compile in place)");
             Assert.NotNull(clone.Foo); //, "not null after (compile in place)");
-            Assert.IsType(typeof(BasicDynamicTestInner), outer.Foo); //, "typed after (compile in place)");
+            Assert.IsType<BasicDynamicTestInner>(outer.Foo); //, "typed after (compile in place)");
 
             clone = (BasicDynamicTestOuter)model.Compile().DeepClone(outer);
             Assert.NotNull(clone); //, "clone exists (full compile)");
             Assert.NotSame(outer, clone); //, "clone is different (full compile)");
             Assert.NotNull(clone.Foo); //, "not null after (full compile)");
-            Assert.IsType(typeof(BasicDynamicTestInner), outer.Foo); //, "typed after (full compile)");
+            Assert.IsType<BasicDynamicTestInner>(outer.Foo); //, "typed after (full compile)");
         }
 
 
@@ -228,7 +228,7 @@ namespace Examples
             var obj = new Wrapper { Value = new Derived { Bar = 123, Foo = "abc" } };
 
             var clone = Serializer.DeepClone(obj);
-            Assert.IsType(typeof(Derived), clone.Value);
+            Assert.IsType<Derived>(clone.Value);
             Derived d = (Derived)clone.Value;
             Assert.Equal(123, d.Bar);
             Assert.Equal("abc", d.Foo);

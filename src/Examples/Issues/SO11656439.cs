@@ -17,7 +17,7 @@ namespace Examples.Issues
         {
             var list = new List<string> {"abc"};
             var clone = Serializer.DeepClone(list);
-            Assert.Equal(1, clone.Count);
+            Assert.Single(clone);
             Assert.Equal("abc", clone[0]);
         }
 
@@ -28,7 +28,7 @@ namespace Examples.Issues
         {
             var list = new MyList { "abc" };
             var clone = Serializer.DeepClone(list);
-            Assert.Equal(1, clone.Count);
+            Assert.Single(clone);
             Assert.Equal("abc", clone[0]);
         }
 
@@ -60,7 +60,7 @@ namespace Examples.Issues
                 Assert.True(ms.Length >  0); //, "data should be written:" + caption);
                 ms.Position = 0;
                 var clone = (MyContractList) model.Deserialize(ms,null, typeof(MyContractList));
-                Assert.Equal(1, clone.Count); //, "count:" + caption);
+                Assert.Single(clone); //, "count:" + caption);
                 Assert.Equal("abc", clone[0]); //, "payload:" + caption);
             }
         }
@@ -83,7 +83,7 @@ namespace Examples.Issues
             var clone = Serializer.DeepClone(obj);
             Assert.Null(clone.MyList);
             Assert.Null(clone.MyContractList);
-            Assert.Equal(1, clone.BasicList.Count);
+            Assert.Single(clone.BasicList);
             Assert.Equal("abc", clone.BasicList[0]);
         }
 
@@ -94,7 +94,7 @@ namespace Examples.Issues
             var clone = Serializer.DeepClone(obj);
             Assert.Null(clone.BasicList);
             Assert.Null(clone.MyContractList);
-            Assert.Equal(1, clone.MyList.Count);
+            Assert.Single(clone.MyList);
             Assert.Equal("abc", clone.MyList[0]);
         }
 
@@ -105,7 +105,7 @@ namespace Examples.Issues
             var clone = Serializer.DeepClone(obj);
             Assert.Null(clone.BasicList);
             Assert.Null(clone.MyList);
-            Assert.Equal(1, clone.MyContractList.Count);
+            Assert.Single(clone.MyContractList);
             Assert.Equal("abc", clone.MyContractList[0]);
         }
 

@@ -63,7 +63,7 @@ namespace Examples.Issues
             }
         }
 
-        public void PistonThread(object state)
+        private void PistonThread(object state)
         {
             try
             {

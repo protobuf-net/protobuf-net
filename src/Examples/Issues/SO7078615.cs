@@ -54,7 +54,7 @@ namespace Examples.Issues
                 copy = wrapper.Message;
              }
             // check the data is all there
-            Assert.IsType(typeof(DogBarkedEvent), copy);
+            Assert.IsType<DogBarkedEvent>(copy);
             var typed = (DogBarkedEvent)copy;
             var orig = (DogBarkedEvent)msg;
             Assert.Equal(orig.Times, typed.Times);
@@ -103,7 +103,7 @@ namespace Examples.Issues
                 copy = wrapper.Message;
             }
             // check the data is all there
-            Assert.IsType(typeof(DogBarkedEvent), copy);
+            Assert.IsType<DogBarkedEvent>(copy);
             var typed = (DogBarkedEvent)copy;
             var orig = (DogBarkedEvent)msg;
             Assert.Equal(orig.Times, typed.Times);

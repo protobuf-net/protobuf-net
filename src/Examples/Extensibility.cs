@@ -102,12 +102,12 @@ namespace Examples
             model.Add(typeof(Naked), true);
             model.Add(typeof(CanHazData), true)[3].IsStrict = true;
 
-            MakeFromScratch(model, "Runtime");
+            MakeFromScratchImpl(model, "Runtime");
             model.CompileInPlace();
-            MakeFromScratch(model, "CompileInPlace");
-            MakeFromScratch(model.Compile(), "Compile");
+            MakeFromScratchImpl(model, "CompileInPlace");
+            MakeFromScratchImpl(model.Compile(), "Compile");
         }
-        static void MakeFromScratch(TypeModel model, string caption)
+        static void MakeFromScratchImpl(TypeModel model, string caption)
         {
             var obj = new Naked();
             try

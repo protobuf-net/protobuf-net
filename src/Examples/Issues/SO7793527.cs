@@ -53,7 +53,7 @@ namespace Examples.Issues
 
             var clone = Serializer.DeepClone(obj);
             Assert.Equal(2, clone.Bars.Count);
-            Assert.IsType(typeof(List<Bar>), clone.Bars);
+            Assert.IsType<List<Bar>>(clone.Bars);
         }
 
         [Fact]
@@ -66,7 +66,7 @@ namespace Examples.Issues
                 ms.Position = 0;
                 var clone = (FooEnumerable)ser.ReadObject(ms);
                 Assert.NotNull(clone.Bars);
-                Assert.Equal(1, clone.Bars.Count());
+                Assert.Single(clone.Bars);
             }
         }
         [Fact]
@@ -81,7 +81,7 @@ namespace Examples.Issues
                     ms.Position = 0;
                     var clone = (FooEnumerable)ser.Deserialize(ms);
                     Assert.NotNull(clone.Bars);
-                    Assert.Equal(1, clone.Bars.Count());
+                    Assert.Single(clone.Bars);
                 }
             });
         }
@@ -96,7 +96,7 @@ namespace Examples.Issues
                 ms.Position = 0;
                 var clone = (FooEnumerable)ser.Deserialize(s, typeof(FooEnumerable));
                 Assert.NotNull(clone.Bars);
-                Assert.Equal(1, clone.Bars.Count());
+                Assert.Single(clone.Bars);
             }
         }
 #endif
@@ -111,7 +111,7 @@ namespace Examples.Issues
                 ms.Position = 0;
                 var clone = (FooEnumerable)ser.Deserialize(ms, null, typeof(FooEnumerable));
                 Assert.NotNull(clone.Bars);
-                Assert.Equal(1, clone.Bars.Count());
+                Assert.Single(clone.Bars);
             }
         }
 
@@ -191,7 +191,7 @@ namespace Examples.Issues
             var clone = (GoalPlanningModel1)model.DeepClone(obj);
             Assert.Null(clone.PublishedGoals); //, caption + ":published");
             Assert.NotNull(clone.ProposedGoals); //, caption + ":proposed");
-            Assert.Equal(1, clone.ProposedGoals.Count()); //, caption + ":count");
+            Assert.Single(clone.ProposedGoals); //, caption + ":count");
             Assert.Equal(23, clone.ProposedGoals.Single().X); //, caption + ":X");
         }
     }

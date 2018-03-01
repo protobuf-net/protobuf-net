@@ -158,7 +158,7 @@ namespace Examples.Issues
 
         }
 
-        public static void Deserialize(byte[] b, TextWriter dest)
+        private static void Deserialize(byte[] b, TextWriter dest)
         {
             MemoryStream mspp = new MemoryStream(b);
             MemoryStream mspf = new MemoryStream(b);

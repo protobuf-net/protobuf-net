@@ -47,7 +47,7 @@ namespace Examples
             Foo foo = new Bar { Value = 1 };
             Foo clone = Serializer.DeepClone(foo);
             Assert.Equal(foo.Value, clone.Value);
-            Assert.IsType(typeof(Bar), clone);
+            Assert.IsType<Bar>(clone);
         }
     }
     

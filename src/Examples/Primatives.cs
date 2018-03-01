@@ -459,7 +459,7 @@ namespace Examples
         [Fact]
         public void TestEmptyUri()
         {
-            Assert.Equal(null, TestUri(null)); //, "null");
+            Assert.Null(TestUri(null)); //, "null");
 
         }
         [Fact]
@@ -532,11 +532,11 @@ namespace Examples
         [Fact]
         public void TestByteTwos()
         {
-            Assert.Equal(0, TestByteTwos(0));
+            Assert.Equal(0, TestByteTwosImpl(0));
             byte value = 1;
             for (int i = 0; i < 8; i++)
             {
-                Assert.Equal(value, TestByteTwos(value));
+                Assert.Equal(value, TestByteTwosImpl(value));
                 value <<= 1;
             }
         }
@@ -544,47 +544,47 @@ namespace Examples
         [Fact]
         public void TestSByteTwos()
         {
-            Assert.Equal(0, TestSByteTwos(0));
+            Assert.Equal(0, TestSByteTwoImpls(0));
             sbyte value = 1;
             for (int i = 0; i < 7; i++)
             {
-                Assert.Equal(value, TestSByteTwos(value));
+                Assert.Equal(value, TestSByteTwoImpls(value));
                 value <<= 1;
             }
             value = -1;
             for (int i = 0; i < 7; i++)
             {
-                Assert.Equal(value, TestSByteTwos(value));
+                Assert.Equal(value, TestSByteTwoImpls(value));
                 value <<= 1;
             }
         }
         [Fact]
         public void TestSByteZigZag()
         {
-            Assert.Equal(0, TestSByteZigZag(0));
+            Assert.Equal(0, TestSByteZigZagImpl(0));
             sbyte value = 1;
             for (int i = 0; i < 7; i++)
             {
-                Assert.Equal(value, TestSByteZigZag(value));
+                Assert.Equal(value, TestSByteZigZagImpl(value));
                 value <<= 1;
             }
             value = -1;
             for (int i = 0; i < 7; i++)
             {
-                Assert.Equal(value, TestSByteZigZag(value));
+                Assert.Equal(value, TestSByteZigZagImpl(value));
                 value <<= 1;
             }
         }
 
-        static byte TestByteTwos(byte value)
+        static byte TestByteTwosImpl(byte value)
         {
             return Serializer.DeepClone(new BytePrimatives { ByteTwos = value }).ByteTwos;
         }
-        static sbyte TestSByteTwos(sbyte value)
+        static sbyte TestSByteTwoImpls(sbyte value)
         {
             return Serializer.DeepClone(new BytePrimatives { SByteTwos = value }).SByteTwos;
         }
-        static sbyte TestSByteZigZag(sbyte value)
+        static sbyte TestSByteZigZagImpl(sbyte value)
         {
             return Serializer.DeepClone(new BytePrimatives { SByteZigZag = value }).SByteZigZag;
         }

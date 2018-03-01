@@ -20,9 +20,7 @@ namespace Examples.Issues
             {
                 Assert.NotNull(Serializer.Deserialize<Foo>(ms)); //, "Foo");
                 Assert.Null(Serializer.Deserialize<string>(ms)); //, "string");
-                Assert.NotNull(Serializer.Deserialize<DateTime>(ms)); //, "DateTime");
                 Assert.Null(Serializer.Deserialize<DateTime?>(ms)); //, "DateTime?");
-                Assert.NotNull(Serializer.Deserialize<int>(ms)); //, "int");
                 Assert.Null(Serializer.Deserialize<int?>(ms)); //, "int?");
             }
         }
@@ -84,11 +82,11 @@ namespace Examples.Issues
         public void TestEmptyStringDictionary()
         {
             var orig = new Dictionary<string, string> { };
-            Assert.Equal(0, orig.Count);
+            Assert.Empty(orig);
 
             var clone = Serializer.DeepClone(orig);
             Assert.NotNull(clone);
-            Assert.Equal(0, clone.Count);
+            Assert.Empty(clone);
         }
 
         [ProtoContract]

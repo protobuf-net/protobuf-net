@@ -100,17 +100,17 @@ namespace Examples.Issues
         private void CheckObject(BaseResponse obj)
         {
             Assert.NotNull(obj);
-            Assert.IsType(typeof(SourceTableResponse), obj);
+            Assert.IsType<SourceTableResponse>(obj);
             Assert.True(obj.Success);
             Assert.Equal("ok", obj.Error);
             SourceTableResponse typed = (SourceTableResponse)obj;
             Assert.NotNull(typed.FieldValuesByTableName);
-            Assert.Equal(1, typed.FieldValuesByTableName.Count);
+            Assert.Single(typed.FieldValuesByTableName);
             var pair = typed.FieldValuesByTableName.Single();
             Assert.Equal("abc", pair.Key);
             var dict = pair.Value;
             Assert.NotNull(dict);
-            Assert.Equal(1, dict.Count);
+            Assert.Single(dict);
             var innerPair = dict.Single();
             Assert.Equal("def", innerPair.Key);
             Assert.Equal("ghi", innerPair.Value);
@@ -118,17 +118,17 @@ namespace Examples.Issues
         private void CheckObject(CustomBaseResponse obj)
         {
             Assert.NotNull(obj);
-            Assert.IsType(typeof(CustomSourceTableResponse), obj);
+            Assert.IsType<CustomSourceTableResponse>(obj);
             Assert.True(obj.Success);
             Assert.Equal("ok", obj.Error);
             CustomSourceTableResponse typed = (CustomSourceTableResponse)obj;
             Assert.NotNull(typed.FieldValuesByTableName);
-            Assert.Equal(1, typed.FieldValuesByTableName.Count);
+            Assert.Single(typed.FieldValuesByTableName);
             var pair = typed.FieldValuesByTableName.Single();
             Assert.Equal("abc", pair.TableName);
             var dict = pair.FieldValues;
             Assert.NotNull(dict);
-            Assert.Equal(1, dict.Count);
+            Assert.Single(dict);
             var innerPair = dict.Single();
             Assert.Equal("def", innerPair.Name);
             Assert.Equal("ghi", innerPair.Value);

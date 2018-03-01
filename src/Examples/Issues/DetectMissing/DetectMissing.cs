@@ -23,14 +23,14 @@ namespace Examples.Issues.DetectMissing
             var model = TypeModel.Create();
             model.AutoCompile = false;
 
-            Execute(obj, model, "Runtime");
+            ExecuteImpl(obj, model, "Runtime");
             model.CompileInPlace();
-            Execute(obj, model, "CompileInPlace");
+            ExecuteImpl(obj, model, "CompileInPlace");
 
             // note: full Compile() won't work with that due to private member
         }
 
-        private static void Execute(TestUser obj, TypeModel model, string caption)
+        private static void ExecuteImpl(TestUser obj, TypeModel model, string caption)
         {
             var ms = new MemoryStream();
             model.Serialize(ms, obj);

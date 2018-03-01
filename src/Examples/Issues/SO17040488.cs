@@ -53,8 +53,8 @@ namespace Examples.Issues
             Assert.Equal(2, clone.Length); //, caption + ":length");
             Assert.Equal(1, clone[0].Order); //, caption + ":order");
             Assert.Equal(2, clone[1].Order); //, caption + ":order");
-            Assert.IsType(typeof(Foo), clone[0].Value); //, caption + ":type");
-            Assert.IsType(typeof(Bar), clone[1].Value); //, caption + ":type");
+            Assert.IsType<Foo>(clone[0].Value); //, caption + ":type");
+            Assert.IsType<Bar>(clone[1].Value); //, caption + ":type");
             Assert.Equal(123, ((Foo)clone[0].Value).A); //, caption + ":value");
             Assert.Equal("abc", ((Bar)clone[1].Value).B); //, caption + ":value");
         }

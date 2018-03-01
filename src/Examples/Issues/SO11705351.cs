@@ -92,14 +92,14 @@ namespace Examples.Issues
         public void Execute()
         {
             var model = GetModel();
-            Execute(model, "Runtime");
+            ExecuteImpl(model, "Runtime");
             model.CompileInPlace();
-            Execute(model, "CompileInPlace");
-            Execute(model.Compile(), "Compile");
+            ExecuteImpl(model, "CompileInPlace");
+            ExecuteImpl(model.Compile(), "Compile");
             model.Compile("SO11705351", "SO11705351.dll");
             PEVerify.AssertValid("SO11705351.dll");
         }
-        private static void Execute(TypeModel model, string caption)
+        private static void ExecuteImpl(TypeModel model, string caption)
         {
             
             using (var stream = new MemoryStream())

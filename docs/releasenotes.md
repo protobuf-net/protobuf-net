@@ -30,7 +30,11 @@ If you can't, that's fine too.
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
-## v2.3.7
+## protogen v1.0.1
+
+- unknown fields (`IExtensible`) now preserved by default, in line with Google's v3.5.0 release
+
+## protobuf-net v2.3.7
 
 - add .NET Standard 1.0 "profile 259" support - contributed by Lorick Russow
 

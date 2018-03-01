@@ -228,7 +228,7 @@ namespace Examples
             item.ItemsNoDefault.Add(123);
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.ItemsNoDefault);
-            Assert.Equal(1, clone.ItemsNoDefault.Count);
+            Assert.Single(clone.ItemsNoDefault);
             Assert.Equal(123, clone.ItemsNoDefault[0]);
         }
 
@@ -243,12 +243,12 @@ namespace Examples
             item.ListNoDefault = new List<int>();
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.ListNoDefault);
-            Assert.Equal(0, clone.ListNoDefault.Count);
+            Assert.Empty(clone.ListNoDefault);
            
             item.ListNoDefault.Add(123);
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.ListNoDefault);
-            Assert.Equal(1, clone.ListNoDefault.Count);
+            Assert.Single(clone.ListNoDefault);
             Assert.Equal(123, clone.ListNoDefault[0]);
         }
 
@@ -267,7 +267,7 @@ namespace Examples
             item.ItemArray = new int[1] { 123 };
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.ItemArray);
-            Assert.Equal(1, clone.ItemArray.Length);
+            Assert.Single(clone.ItemArray);
             Assert.Equal(123, clone.ItemArray[0]);
 
             
@@ -285,12 +285,12 @@ namespace Examples
             item.ItemArray = new int[0];
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.ItemArray);
-            Assert.Equal(0, clone.ItemArray.Length);
+            Assert.Empty(clone.ItemArray);
 
             item.ItemArray = new int[1] { 123 };
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.ItemArray);
-            Assert.Equal(1, clone.ItemArray.Length);
+            Assert.Single(clone.ItemArray);
             Assert.Equal(123, clone.ItemArray[0]);
         }
 
@@ -323,7 +323,7 @@ namespace Examples
             item.Custom = new CustomEnumerable();
             clone = Serializer.DeepClone(item);
             Assert.NotNull(clone.Custom);
-            Assert.Equal(0, clone.Custom.Count());
+            Assert.Empty(clone.Custom);
 
             item.Custom.Add(123);
             clone = Serializer.DeepClone(item);

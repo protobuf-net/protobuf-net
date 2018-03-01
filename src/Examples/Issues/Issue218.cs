@@ -30,18 +30,18 @@ namespace Examples.Issues
 
             var clone = (Test)typeModel.DeepClone(obj);
             Assert.NotNull(clone.BackgroundImageToUpload); //, "Runtime");
-            Assert.Equal(0, clone.BackgroundImageToUpload.Length); //, "Runtime");
+            Assert.Empty(clone.BackgroundImageToUpload); //, "Runtime");
             Assert.Equal("MyTitle", clone.Title); //, "Runtime");
 
             typeModel.CompileInPlace();
             clone = (Test)typeModel.DeepClone(obj);
             Assert.NotNull(clone.BackgroundImageToUpload); //, "CompileInPlace");
-            Assert.Equal(0, clone.BackgroundImageToUpload.Length); //, "CompileInPlace");
+            Assert.Empty(clone.BackgroundImageToUpload); //, "CompileInPlace");
             Assert.Equal("MyTitle", clone.Title); //, "CompileInPlace");
 
             clone = (Test)typeModel.Compile().DeepClone(obj);
             Assert.NotNull(clone.BackgroundImageToUpload); //, "Compile");
-            Assert.Equal(0, clone.BackgroundImageToUpload.Length); //, "Compile");
+            Assert.Empty(clone.BackgroundImageToUpload); //, "Compile");
             Assert.Equal("MyTitle", clone.Title); //, "Compile");
 
         }

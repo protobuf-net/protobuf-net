@@ -22,7 +22,7 @@ namespace Examples.Issues
                 var resp = (Response)model.Deserialize(ms, null, typeof(Response), len);
 
                 Assert.Equal(5, resp.Type);
-                Assert.Equal(1, resp.v3dDelta.Count);
+                Assert.Single(resp.v3dDelta);
                 Assert.Equal(12654, resp.v3dDelta[0].ask);
                 Assert.Equal(1, resp.v3dDelta[0].askSize);
             }

@@ -15,7 +15,7 @@ namespace Examples.Issues
          
             var original = new Custom<string> { "C#" };
             var clone = (Custom<string>)model.DeepClone(original);
-            Assert.Equal(1, clone.Count);
+            Assert.Single(clone);
             Assert.Equal("C#", clone.Single());
         }
         public class Custom<T> : List<T> { }

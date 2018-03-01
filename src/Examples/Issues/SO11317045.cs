@@ -69,8 +69,8 @@ namespace Examples.Issues
         {
             int sum = original.B.Data.Sum(x => x.Sum(b => (int)b));
             var clone = (A)model.DeepClone(original);
-            Assert.IsType(typeof(A), clone);
-            Assert.IsType(typeof(B), clone.B);
+            Assert.IsType<A>(clone);
+            Assert.IsType<B>(clone.B);
             Assert.Equal(sum, clone.B.Data.Sum(x => x.Sum(b => (int)b)));
         }
 
@@ -81,7 +81,7 @@ namespace Examples.Issues
             NamedProtoInclude.Foo foo = new NamedProtoInclude.Bar();
             var clone = Serializer.DeepClone(foo);
 
-            Assert.IsType(typeof(NamedProtoInclude.Bar), foo);
+            Assert.IsType<NamedProtoInclude.Bar>(foo);
         }
 
     }

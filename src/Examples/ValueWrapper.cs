@@ -116,7 +116,7 @@ namespace Examples
         public void TestRaw()
         {
             Assert.True(Program.CheckBytes(new FieldData()), "Empty");
-            Assert.Equal(null, Serializer.DeepClone(new FieldData()).Value);
+            Assert.Null(Serializer.DeepClone(new FieldData()).Value);
 
         }
         [Fact]
@@ -158,7 +158,7 @@ namespace Examples
         public void TestRaw()
         {
             Assert.True(Program.CheckBytes(new FieldDataViaNullable()), "Empty");
-            Assert.Equal(null, Serializer.DeepClone(new FieldDataViaNullable()).Value);
+            Assert.Null(Serializer.DeepClone(new FieldDataViaNullable()).Value);
 
         }
 

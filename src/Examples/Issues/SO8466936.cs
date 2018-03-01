@@ -29,7 +29,7 @@ namespace Examples.Issues
         {
             var foo = new Bar<int> {BaseValue = 123, Value = 456};
             var clone = (Bar<int>) model.DeepClone(foo);
-            Assert.IsType(typeof(Bar<int>), clone); //, caption);
+            Assert.IsType<Bar<int>>(clone); //, caption);
             Assert.Equal(123, clone.BaseValue); //, caption);
             Assert.Equal(456, clone.Value); //, caption);
         }

@@ -261,16 +261,16 @@ enum blah {
         [Fact]
         public void TestNegEnum()
         {
-            TestNegEnum(NegEnum.A);
-            TestNegEnum(NegEnum.B);
-            TestNegEnum(NegEnum.C);
+            TestNegEnumImpl(NegEnum.A);
+            TestNegEnumImpl(NegEnum.B);
+            TestNegEnumImpl(NegEnum.C);
         }
         [Fact]
         public void TestNegEnumnotDefinedNeg()
         {
             Program.ExpectFailure<ProtoException>(() =>
             {
-                TestNegEnum((NegEnum)(-2));
+                TestNegEnumImpl((NegEnum)(-2));
             });
         }
         [Fact]
@@ -278,7 +278,7 @@ enum blah {
         {
             Program.ExpectFailure<ProtoException>(() =>
             {
-                TestNegEnum((NegEnum)2);
+                TestNegEnumImpl((NegEnum)2);
             });
         }
         [Fact]
@@ -302,7 +302,7 @@ enum blah {
             B = 1
         }
 
-        private static void TestNegEnum(NegEnum value)
+        private static void TestNegEnumImpl(NegEnum value)
         {
             NegEnumType obj = new NegEnumType { Value = value },
                 clone = Serializer.DeepClone(obj);

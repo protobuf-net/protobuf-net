@@ -25,13 +25,13 @@ namespace Examples.Issues
             model.AutoCompile = false;
             // Execute(OuterLoop, model, "RT");
             model.CompileInPlace();
-            Execute(OuterLoop, model, "CIP");
-            Execute(OuterLoop, model.Compile(), "C");
+            ExecuteImpl(OuterLoop, model, "CIP");
+            ExecuteImpl(OuterLoop, model.Compile(), "C");
             var ext = model.Compile("SO18650486", "SO18650486.dll");
             PEVerify.AssertValid("SO18650486.dll");
-            Execute(OuterLoop, ext, "EXT");
+            ExecuteImpl(OuterLoop, ext, "EXT");
         }
-        private static void Execute(int count, TypeModel model, string caption)
+        private static void ExecuteImpl(int count, TypeModel model, string caption)
         {
             const int InnerLoop = 1000;
             object lockObj = new object();

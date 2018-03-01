@@ -30,8 +30,8 @@ namespace Examples
         internal static void CheckChild(IMLChild original, IMLChild clone)
         {
             Assert.NotSame(original, clone);
-            Assert.IsType(typeof(IMLChild), original); //, "Original type");
-            Assert.IsType(typeof(IMLChild), clone); //, "Clone type");
+            Assert.IsType<IMLChild>(original); //, "Original type");
+            Assert.IsType<IMLChild>(clone); //, "Clone type");
             Assert.Equal(0, clone.RootProperty); //, "RootProperty"); // not serialized
             Assert.Equal(original.ParentProperty, clone.ParentProperty); //, "ParentProperty");
             Assert.Equal(original.ChildProperty, clone.ChildProperty); //, "ChildProperty");
@@ -79,8 +79,8 @@ namespace Examples
             IMLTest test = new IMLTest() {Parents = {CreateChild()}},
                     clone = Serializer.DeepClone(test);
 
-            Assert.Equal(1, test.Parents.Count);
-            Assert.Equal(1, clone.Parents.Count);
+            Assert.Single(test.Parents);
+            Assert.Single(clone.Parents);
             CheckParent(test.Parents[0], clone.Parents[0]);
         }
 
@@ -90,8 +90,8 @@ namespace Examples
             IMLTest test = new IMLTest() { Children = { CreateChild() } },
                     clone = Serializer.DeepClone(test);
 
-            Assert.Equal(1, test.Children.Count);
-            Assert.Equal(1, clone.Children.Count);
+            Assert.Single(test.Children);
+            Assert.Single(clone.Children);
             CheckChild(test.Children[0], clone.Children[0]);
         }
 
@@ -115,15 +115,15 @@ namespace Examples
         {
             var children = new List<IMLChild> { CreateChild()};
             var clone = Serializer.DeepClone(children);
-            Assert.Equal(1, children.Count);
-            Assert.Equal(1, clone.Count);
+            Assert.Single(children);
+            Assert.Single(clone);
             CheckChild(children[0], clone[0]);
         }
         [Fact]
         public void TestCloneAsParentList()
         {
             var parents = new List<IMLParent> { CreateChild() };
-            Assert.Equal(1, parents.Count); //, "Original list (before)");
+            Assert.Single(parents); //, "Original list (before)");
             using (var ms = new MemoryStream())
             {
                 Serializer.Serialize(ms, parents);
@@ -146,8 +146,8 @@ namespace Examples
                 */
             }
             var clone = Serializer.DeepClone(parents);
-            Assert.Equal(1, parents.Count); //, "Original list (after)");
-            Assert.Equal(1, clone.Count); //, "Cloned list");
+            Assert.Single(parents); //, "Original list (after)");
+            Assert.Single(clone); //, "Cloned list");
             CheckParent(parents[0], clone[0]);
         }
         [Fact]
@@ -155,8 +155,8 @@ namespace Examples
         {
             IMLChild[] children = { CreateChild() };
             var clone = Serializer.DeepClone(children);
-            Assert.Equal(1, children.Length);
-            Assert.Equal(1, clone.Length);
+            Assert.Single(children);
+            Assert.Single(clone);
             CheckChild(children[0], clone[0]);
         }
 
@@ -165,8 +165,8 @@ namespace Examples
         {
             IMLParent[] parents = { CreateChild() };
             var clone = Serializer.DeepClone(parents);
-            Assert.Equal(1, parents.Length);
-            Assert.Equal(1, clone.Length);
+            Assert.Single(parents);
+            Assert.Single(clone);
             CheckParent(parents[0], clone[0]);
         }
         [Fact]

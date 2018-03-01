@@ -161,7 +161,7 @@ namespace TestMediaBrowser
         public void TestInheritedClone()
         {
             Thing original = new Animal();
-            Assert.IsType(typeof(Animal), Serializer.DeepClone(original));
+            Assert.IsType<Animal>(Serializer.DeepClone(original));
         }
         /*
         [Fact]
@@ -206,7 +206,7 @@ namespace TestMediaBrowser
 
             var copy = Serializer.DeepClone(l);
             Assert.Equal(2, copy.animals.Count());
-            Assert.Equal(copy.animals[0].GetType(), typeof(Dog));
+            Assert.Equal(typeof(Dog), copy.animals[0].GetType());
         }
 
         [Fact]

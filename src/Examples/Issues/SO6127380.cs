@@ -61,11 +61,11 @@ namespace Examples.Issues
         {
             Node orig = new Node();
             orig.AddChild(orig);
-            Assert.Equal(1, orig.Children.Count);
+            Assert.Single(orig.Children);
             Assert.Same(orig, orig.Children[0]);
 
             var clone = Serializer.DeepClone(orig);
-            Assert.Equal(1, clone.Children.Count);
+            Assert.Single(clone.Children);
             Assert.Same(clone, clone.Children[0]);
         }
     }

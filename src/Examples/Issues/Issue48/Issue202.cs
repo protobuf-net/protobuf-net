@@ -24,8 +24,6 @@ namespace Examples.Issues.Issue48
         void ExecuteTest(TypeModel model, string test)
         {
             A a = new A { flags = new List<string> { "abc", "def" } }, c;
-
-            Assert.NotNull(a.flags.Count); //, test);
             Assert.Equal(2, a.flags.Count); //, test);
             Assert.Equal("abc", a.flags[0]); //, test);
             Assert.Equal("def", a.flags[1]); //, test);
@@ -37,7 +35,7 @@ namespace Examples.Issues.Issue48
                 ms.Position = 0;
                 b = (B)model.Deserialize(ms, null, typeof(B));
             }
-            Assert.NotNull(b.flags.Count); //, test);
+
             Assert.Equal(2, b.flags.Count); //, test);
             Assert.Equal("abc", b.flags[0]); //, test);
             Assert.Equal("def", b.flags[1]); //, test);
@@ -48,7 +46,7 @@ namespace Examples.Issues.Issue48
                 ms.Position = 0;
                 c = (A)model.Deserialize(ms, null, typeof(A));
             }
-            Assert.NotNull(c.flags.Count); //, test);
+
             Assert.Equal(2, c.flags.Count); //, test);
             Assert.Equal("abc", c.flags[0]); //, test);
             Assert.Equal("def", c.flags[1]); //, test);

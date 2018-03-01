@@ -86,7 +86,7 @@ namespace Examples.Issues
             // model === RuntimeTypeModel.Default
             var clone = (Param) model.DeepClone(param);
             Assert.NotSame(clone, param); //, "Different instance");
-            Assert.IsType(typeof(FloatData), clone.Item); //, "Data type");
+            Assert.IsType<FloatData>(clone.Item); //, "Data type");
             var data = (FloatData) clone.Item;
             Assert.Equal(123.45F, data.AdjustValue);
             Assert.Equal(2, data.Ranges.Length);

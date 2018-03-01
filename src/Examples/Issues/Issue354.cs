@@ -106,8 +106,8 @@ namespace Examples.Issues
             //Assert.False(data.Queue.TryDequeue(out val), caption + ":Queue - try 3");
 
             Assert.Equal(2, data.Bag.Count); //, caption + ":Bag.Count");
-            Assert.True(data.Bag.Contains("abc")); //, caption + ":Bag - try 1");
-            Assert.True(data.Bag.Contains("def")); //, caption + ":Bag - try 2");
+            Assert.Contains("abc", data.Bag); //, caption + ":Bag - try 1");
+            Assert.Contains("def", data.Bag); //, caption + ":Bag - try 2");
 
             Assert.Equal(2, data.Dictionary.Count); //, caption + ":Dictionary.Count");
             string s;

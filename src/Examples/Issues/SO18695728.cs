@@ -23,8 +23,8 @@ namespace Examples.Issues
              var clone = Serializer.DeepClone(list);
 
              Assert.Equal(2, clone.Count);
-             Assert.IsType(typeof(GPSReading), clone[0]);
-             Assert.IsType(typeof(TemperatureReading), clone[1]);
+             Assert.IsType<GPSReading>(clone[0]);
+             Assert.IsType<TemperatureReading>(clone[1]);
         }
         [ProtoContract]
         public abstract class WebSyncedObject

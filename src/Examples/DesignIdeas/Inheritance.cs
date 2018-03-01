@@ -58,7 +58,7 @@ namespace Examples.DesignIdeas
         {
             SomeBase sb = new SomeBase {Test = 12345};
             SomeBase clone = Serializer.DeepClone<SomeBase>(sb);
-            Assert.IsType(typeof(SomeBase), clone); //, "Type");
+            Assert.IsType<SomeBase>(clone); //, "Type");
             Assert.Equal(sb.Test, clone.Test); //, "Value");
         }
         [Fact]
@@ -66,7 +66,7 @@ namespace Examples.DesignIdeas
         {
             SomeBase sb = new Sub1 { Test = 12345, Foo = "abc" };
             SomeBase clone = Serializer.DeepClone<SomeBase>(sb);
-            Assert.IsType(typeof(Sub1), clone); //, "Type");
+            Assert.IsType<Sub1>(clone); //, "Type");
             Assert.Equal(sb.Test, clone.Test); //, "Value");
             Assert.Equal(((Sub1)sb).Foo, ((Sub1)clone).Foo); //, "Foo");
         }
@@ -75,7 +75,7 @@ namespace Examples.DesignIdeas
         {
             SomeBase sb = new Sub2 { Test = 12345, Bar = 123.45F};
             SomeBase clone = Serializer.DeepClone<SomeBase>(sb);
-            Assert.IsType(typeof(Sub2), clone); //, "Type");
+            Assert.IsType<Sub2>(clone); //, "Type");
             Assert.Equal(sb.Test, clone.Test); //, "Value");
             Assert.Equal(((Sub2)sb).Bar, ((Sub2)clone).Bar); //, "Foo");
         }
@@ -98,7 +98,7 @@ namespace Examples.DesignIdeas
 
             Assert.True(Program.CheckBytes(sb, raw), "raw bytes");
             SomeBase clone = Program.Build<SomeBase>(raw);
-            Assert.IsType(typeof(Sub1), clone);
+            Assert.IsType<Sub1>(clone);
             Assert.Equal(sb.Test, clone.Test);
             Assert.Equal(((Sub1)sb).Foo, ((Sub1)clone).Foo);
         }
@@ -111,7 +111,7 @@ namespace Examples.DesignIdeas
             // note sure this is a realistic concern
             byte[] raw = { 0x50, 0xB9, 0x60, 0x12, 0x05, 0x5A, 0x03, 0x61, 0x62, 0x63};
             SomeBase clone = Program.Build<SomeBase>(raw);
-            Assert.IsType(typeof(Sub1), clone);
+            Assert.IsType<Sub1>(clone);
             Assert.Equal(12345, clone.Test);
             Assert.Equal("abc", ((Sub1)clone).Foo);
         }

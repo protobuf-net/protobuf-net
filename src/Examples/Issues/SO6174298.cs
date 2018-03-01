@@ -40,16 +40,16 @@ namespace Examples.Issues
         public void Execute()
         {
             var model = TypeModel.Create();
-            Execute(model, "runtime");
+            ExecuteImpl(model, "runtime");
 
             model.CompileInPlace();
-            Execute(model, "CompileInPlace");
+            ExecuteImpl(model, "CompileInPlace");
 
             var pregen = model.Compile();
-            Execute(pregen, "Compile");
+            ExecuteImpl(pregen, "Compile");
         }
 
-        public void Execute(TypeModel model, string caption)
+        private void ExecuteImpl(TypeModel model, string caption)
         {
             BinaryNode head = new BinaryNode();
             BinaryNode node = head;

@@ -18,7 +18,7 @@ namespace Examples.Issues
         {
             var model = TypeModel.Create();
             model.AutoCompile = false;
-            Assert.Equal(false, model.IncludeDateTimeKind);
+            Assert.False(model.IncludeDateTimeKind);
         }
 
         [Fact]

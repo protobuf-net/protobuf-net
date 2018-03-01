@@ -353,9 +353,9 @@ namespace Examples
                     throw new ProtoException(caption + ":deserialize", ex);
                 }
                 Assert.Equal(3, clone.HashSet.Count); //, caption);
-                Assert.True(clone.HashSet.Contains(1)); //, caption);
-                Assert.True(clone.HashSet.Contains(2)); //, caption);
-                Assert.True(clone.HashSet.Contains(3)); //, caption);
+                Assert.Contains(1, clone.HashSet); //, caption);
+                Assert.Contains(2, clone.HashSet); //, caption);
+                Assert.Contains(3, clone.HashSet); //, caption);
             }
         }
         private static void TestSortedSetImpl<T>([CallerMemberName] string name = null)

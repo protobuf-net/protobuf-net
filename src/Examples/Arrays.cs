@@ -84,7 +84,7 @@ namespace Examples
             var arr = new Foo[0];
             var model = TypeModel.Create();
             Foo[] foo = (Foo[])model.DeepClone(arr);
-            Assert.Equal(0, foo.Length);
+            Assert.Empty(foo);
         }
         [Fact]
         public void DeserializeBusyArray()
@@ -205,7 +205,7 @@ namespace Examples
             VerifyNodeTree(node);
         }
 
-        // [Fact] known variation...
+        [Fact(Skip = "known variation")]
         public void TestEmptyArray()
         {
             Node node = new Node

@@ -53,7 +53,7 @@ namespace Examples
             Assert.Equal(14, clone.Item2[1].Item6);
             Assert.Equal(15, clone.Item2[1].Item7);
             Assert.Equal(Tuple.Create(3F, 4F), clone.Item2[1].Rest.Item1.Single());
-            Assert.Equal(true, clone.Item3);
+            Assert.True(clone.Item3);
         }
 
 

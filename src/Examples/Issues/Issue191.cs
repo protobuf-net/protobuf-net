@@ -40,19 +40,19 @@ namespace Examples.Issues
 
             RoundtripEmptyDictionaryShouldNotNullThem(model.Compile(), "Compile");
         }
-        public void RoundtripEmptyDictionaryShouldNotNullThem(TypeModel model, string scenario)
+        private void RoundtripEmptyDictionaryShouldNotNullThem(TypeModel model, string scenario)
         {
             var orig = new Test();
             Assert.NotNull(orig.dict); //, scenario);
-            Assert.Equal(0, orig.dict.Count); //, scenario);
+            Assert.Empty(orig.dict); //, scenario);
             Assert.NotNull(orig.dict2); //, scenario);
-            Assert.Equal(0, orig.dict2.Count); //, scenario);
+            Assert.Empty(orig.dict2); //, scenario);
 
             var clone = (Test)model.DeepClone(orig);
             Assert.NotNull(clone.dict); //, scenario);
-            Assert.Equal(0, clone.dict.Count); //, scenario);
+            Assert.Empty(clone.dict); //, scenario);
             Assert.NotNull(clone.dict2); //, scenario);
-            Assert.Equal(0, clone.dict2.Count); //, scenario);
+            Assert.Empty(clone.dict2); //, scenario);
 
         }
     }
