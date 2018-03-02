@@ -13,12 +13,6 @@ If you prefer to build from source:
 
 Alternatively, use Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) to build `src\protobuf-net.sln`
 
-If you feel like supporting my efforts, I won't stop you:
-
-<a href='https://pledgie.com/campaigns/33946'><img alt='Click here to lend your support to: protobuf-net; fast binary serialization for .NET and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/33946.png?skin_name=chrome' border='0' ></a>
-
-If you can't, that's fine too.
-
 ## v3.* (not yet started)
 
 - see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)

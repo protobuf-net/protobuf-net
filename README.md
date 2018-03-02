@@ -5,14 +5,6 @@ protobuf-net is a contract based serializer for .NET code, that happens to write
 
 [Change history and pending changes are here](http://mgravell.github.io/protobuf-net/releasenotes)
 
-## Donate
-
-If you feel like supporting my efforts, I won't stop you:
-
-<a href='https://pledgie.com/campaigns/33946'><img alt='Click here to lend your support to: protobuf-net; fast binary serialization for .NET and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/33946.png?skin_name=chrome' border='0' ></a>
-
-If you can't, that's fine too.
-
 ---
 
 ## Supported Runtimes
