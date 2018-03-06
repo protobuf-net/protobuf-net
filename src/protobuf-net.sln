@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 	ProjectSection(SolutionItems) = preProject
 		Tools\bcl.proto = Tools\bcl.proto
 		Directory.build.props = Directory.build.props
+		global.json = global.json
 		Tools\protogen.proto = Tools\protogen.proto
 		..\README.md = ..\README.md
 		..\docs\releasenotes.md = ..\docs\releasenotes.md
