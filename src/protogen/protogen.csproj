@@ -3,8 +3,11 @@
   <PropertyGroup>
     <VersionPrefix>$(ProtoGenVersion)</VersionPrefix>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net40;netcoreapp1.1</TargetFrameworks>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <!--<TargetFrameworks>net462;netcoreapp1.1</TargetFrameworks>-->
     <Configurations>Debug;Release;VS</Configurations>
+    <PackAsTool>true</PackAsTool>
+    <!--<GeneratePackageOnBuild>True</GeneratePackageOnBuild>-->
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
