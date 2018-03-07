@@ -24,6 +24,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protogen v1.0.2
+
+- packaging updates (no code changes)
+
 ## protogen v1.0.1
 
 - unknown fields (`IExtensible`) now preserved by default, in line with Google's v3.5.0 release
