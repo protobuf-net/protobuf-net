@@ -7,7 +7,9 @@
     <Configurations>Debug;Release;VS</Configurations>
     <PackAsTool>true</PackAsTool>
     <AssemblyName>protogen</AssemblyName>
+    <ToolCommandName>protogen</ToolCommandName>
     <PackageId>protobuf-net.Protogen</PackageId>
+    <Title>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Title>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
