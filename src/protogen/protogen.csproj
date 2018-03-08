@@ -2,7 +2,9 @@
 
   <PropertyGroup>
     <VersionPrefix>$(ProtoGenVersion)</VersionPrefix>
+    <VersionSuffix>alpha1</VersionSuffix>
     <OutputType>Exe</OutputType>
+    <!--<TargetFramework>netcoreapp2.0</TargetFramework>-->
     <TargetFrameworks>net462;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
     <PackAsTool>true</PackAsTool>
@@ -12,8 +14,8 @@
     <Title>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Title>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
-    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
+    <PackageReference Include="protobuf-net" Version="2.3.7" />
+    <PackageReference Include="protobuf-net.Reflection" Version="1.0.2" />
   </ItemGroup>
 
 </Project>
