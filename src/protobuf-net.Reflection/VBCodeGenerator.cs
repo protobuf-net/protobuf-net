@@ -1,29 +1,34 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace ProtoBuf.Reflection
+namespace ProtoBuf
 {
     /// <summary>
-    /// A code generator that writes C#
+    /// A code generator that writes VB
     /// </summary>
-    public class CSharpCodeGenerator : CommonCodeGenerator
+    [Obsolete("Experimental; this is not stable", false)]
+    public class VBCodeGenerator : CommonCodeGenerator
     {
         /// <summary>
         /// Reusable code-generator instance
         /// </summary>
-        public static CSharpCodeGenerator Default { get; } = new CSharpCodeGenerator();
+        public static VBCodeGenerator Default { get; } = new VBCodeGenerator();
+
         /// <summary>
-        /// Create a new CSharpCodeGenerator instance
+        /// Create a new VBCodeGenerator instance
         /// </summary>
-        protected CSharpCodeGenerator() { }
+        protected VBCodeGenerator() { }
+
         /// <summary>
         /// Returns the language name
         /// </summary>
-        public override string Name => "C#";
+        public override string Name => "VB";
+
         /// <summary>
         /// Returns the default file extension
         /// </summary>
@@ -191,7 +196,7 @@ namespace ProtoBuf.Reflection
                 tw.Write($@"Name = @""{obj.Name}""");
                 tw.WriteLine(")]");
             }
-            
+
             WriteOptions(ctx, obj.Options);
             ctx.WriteLine($"{Escape(name)} = {obj.Number},");
         }
@@ -221,7 +226,7 @@ namespace ProtoBuf.Reflection
             {
                 ctx.WriteLine("#error message_set_wire_format is not currently implemented").WriteLine();
             }
-            
+
             ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
                 .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
 
@@ -322,7 +327,7 @@ namespace ProtoBuf.Reflection
             }
             else if (oneOf != null)
             { } // nothing to do
-            else if(explicitValues)
+            else if (explicitValues)
             { } // nothing to do
             else
             {
@@ -331,7 +336,7 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine($"{Escape(name)} = {defaultValue};");
                 }
             }
-            
+
         }
 
         private string GetDefaultValue(GeneratorContext ctx, FieldDescriptorProto obj, string typeName)
@@ -433,7 +438,7 @@ namespace ProtoBuf.Reflection
             bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
                 && obj.type != FieldDescriptorProto.Type.TypeMessage
                 && obj.type != FieldDescriptorProto.Type.TypeGroup;
-            
+
             bool suppressDefaultAttribute = !isOptional;
             var typeName = GetTypeName(ctx, obj, out var dataFormat, out var isMap);
             string defaultValue = GetDefaultValue(ctx, obj, typeName);
@@ -493,7 +498,7 @@ namespace ProtoBuf.Reflection
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
-                else if(ctx.Supports(CSharp6))
+                else if (ctx.Supports(CSharp6))
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
@@ -670,13 +675,13 @@ namespace ProtoBuf.Reflection
                     tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
                 }
                 tw.WriteLine(");");
-                if(ctx.Supports(CSharp6))
+                if (ctx.Supports(CSharp6))
                 {
                     ctx.Outdent().WriteLine();
                 }
                 else
                 {
-                    ctx.Outdent().WriteLine("}").WriteLine();   
+                    ctx.Outdent().WriteLine("}").WriteLine();
                 }
 
                 //  GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
