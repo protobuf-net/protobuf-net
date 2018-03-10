@@ -128,6 +128,12 @@ namespace ProtoBuf.Reflection
         /// The file extension of the files generatred by this generator
         /// </summary>
         protected abstract string DefaultFileExtension { get; }
+
+        /// <summary>
+        /// Should case-sensitivity be used when computing conflicts?
+        /// </summary>
+        protected internal virtual bool IsCaseSensitive => false;
+
         /// <summary>
         /// Handle keyword escaping in the language of this code generator
         /// </summary>
@@ -397,14 +403,19 @@ namespace ProtoBuf.Reflection
                     if (string.Equals(nn, "auto", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Default;
                     else if (string.Equals(nn, "original", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Null;
                 }
-
+                
                 string langver = null;
                 if (options != null) options.TryGetValue("langver", out langver); // explicit option first
                 if (string.IsNullOrWhiteSpace(langver)) langver = generator?.GetLanguageVersion(file); // then from file
 
+                if(nameNormalizer == null)
+                {
+                    nameNormalizer = NameNormalizer.Default;
+                }
+                nameNormalizer.IsCaseSensitive = generator.IsCaseSensitive;
 
                 File = file;
-                NameNormalizer = nameNormalizer ?? NameNormalizer.Default;
+                NameNormalizer = nameNormalizer;
                 Output = output;
                 IndentToken = indentToken;
 
