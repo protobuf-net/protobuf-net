@@ -193,7 +193,21 @@ namespace protogen.site.Controllers
                         {
                             result.ParserExceptions = errors;
                         }
-                        result.Files = CSharpCodeGenerator.Default.Generate(set).ToArray();
+                        CodeGenerator codegen;
+                        switch(tooling)
+                        {
+                            case "protogen:VB":
+#pragma warning disable 0618
+                                codegen = VBCodeGenerator.Default;
+#pragma warning restore 0618
+                                break;
+                            case "protogen:C#":
+                            default:
+                                codegen = CSharpCodeGenerator.Default;
+                                break;
+                                 
+                        }
+                        result.Files = codegen.Generate(set).ToArray();
                     }
                     else
                     {
