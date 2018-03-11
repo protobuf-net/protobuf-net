@@ -15,7 +15,8 @@
         <button id="generatecsharp">Generate</button>
         <select id="tooling">
             <optgroup label="protobuf-net">
-                <option value="" selected="selected">(protogen) C#</option>
+                <option value="protogen:C#" selected="selected">(protogen) C#</option>
+                <option value="protogen:VB" selected="selected">(protogen) VB</option>
             </optgroup>
             @if (Model.CanUseProtoc)
             {

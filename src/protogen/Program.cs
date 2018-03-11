@@ -68,6 +68,13 @@ namespace protogen
                             codegen = CSharpCodeGenerator.Default;
                             exec = true;
                             break;
+                        case "--vb_out":
+                            outPath = rhs;
+#pragma warning disable CS0618
+                            codegen = VBCodeGenerator.Default;
+#pragma warning restore CS0618
+                            exec = true;
+                            break;
                         case "--descriptor_set_out":
                             outPath = rhs;
                             codegen = null;
