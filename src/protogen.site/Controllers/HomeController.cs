@@ -27,9 +27,11 @@ namespace protogen.site.Controllers
         }
         public IActionResult Index()
         {
-            var model = new IndexModel();
-            model.ProtocVersion = GetProtocVersion(_host, out var canUse);
-            model.CanUseProtoc = canUse;
+            var model = new IndexModel
+            {
+                ProtocVersion = GetProtocVersion(_host, out var canUse),
+                CanUseProtoc = canUse
+            };
             return View("Index", model);
         }
 

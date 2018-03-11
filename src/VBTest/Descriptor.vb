@@ -2,30 +2,30 @@
 ' Consider using 'partial classes' to extend these types
 ' Input: descriptor.proto
 
-#Disable Warning BC40008
+#Disable Warning BC40008, IDE1006
 
 Namespace Google.Protobuf.Reflection
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class FileDescriptorSet
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="file")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="file")> _
         Public ReadOnly Property Files As New Global.System.Collections.Generic.List(Of FileDescriptorProto)
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class FileDescriptorProto
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Name As String
             Get
                 Return If(__pbn__Name, "")
@@ -42,8 +42,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Name As String
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="package")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="package")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Package As String
             Get
                 Return If(__pbn__Package, "")
@@ -60,35 +60,35 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Package As String
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="dependency")>
+        <Global.ProtoBuf.ProtoMember(3, Name:="dependency")> _
         Public ReadOnly Property Dependencies As New Global.System.Collections.Generic.List(Of String)
 
-        <Global.ProtoBuf.ProtoMember(10, Name:="public_dependency")>
+        <Global.ProtoBuf.ProtoMember(10, Name:="public_dependency")> _
         Public Property PublicDependencies As Integer()
 
-        <Global.ProtoBuf.ProtoMember(11, Name:="weak_dependency")>
+        <Global.ProtoBuf.ProtoMember(11, Name:="weak_dependency")> _
         Public Property WeakDependencies As Integer()
 
-        <Global.ProtoBuf.ProtoMember(4, Name:="message_type")>
+        <Global.ProtoBuf.ProtoMember(4, Name:="message_type")> _
         Public ReadOnly Property MessageTypes As New Global.System.Collections.Generic.List(Of DescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(5, Name:="enum_type")>
+        <Global.ProtoBuf.ProtoMember(5, Name:="enum_type")> _
         Public ReadOnly Property EnumTypes As New Global.System.Collections.Generic.List(Of EnumDescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(6, Name:="service")>
+        <Global.ProtoBuf.ProtoMember(6, Name:="service")> _
         Public ReadOnly Property Services As New Global.System.Collections.Generic.List(Of ServiceDescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(7, Name:="extension")>
+        <Global.ProtoBuf.ProtoMember(7, Name:="extension")> _
         Public ReadOnly Property Extensions As New Global.System.Collections.Generic.List(Of FieldDescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(8, Name:="options")>
+        <Global.ProtoBuf.ProtoMember(8, Name:="options")> _
         Public Property Options As FileOptions
 
-        <Global.ProtoBuf.ProtoMember(9, Name:="source_code_info")>
+        <Global.ProtoBuf.ProtoMember(9, Name:="source_code_info")> _
         Public Property SourceCodeInfo As SourceCodeInfo
 
-        <Global.ProtoBuf.ProtoMember(12, Name:="syntax")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(12, Name:="syntax")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Syntax As String
             Get
                 Return If(__pbn__Syntax, "")
@@ -107,15 +107,15 @@ Namespace Google.Protobuf.Reflection
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class DescriptorProto
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Name As String
             Get
                 Return If(__pbn__Name, "")
@@ -132,41 +132,41 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Name As String
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="field")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="field")> _
         Public ReadOnly Property Fields As New Global.System.Collections.Generic.List(Of FieldDescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(6, Name:="extension")>
+        <Global.ProtoBuf.ProtoMember(6, Name:="extension")> _
         Public ReadOnly Property Extensions As New Global.System.Collections.Generic.List(Of FieldDescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="nested_type")>
+        <Global.ProtoBuf.ProtoMember(3, Name:="nested_type")> _
         Public ReadOnly Property NestedTypes As New Global.System.Collections.Generic.List(Of DescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(4, Name:="enum_type")>
+        <Global.ProtoBuf.ProtoMember(4, Name:="enum_type")> _
         Public ReadOnly Property EnumTypes As New Global.System.Collections.Generic.List(Of EnumDescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(5, Name:="extension_range")>
+        <Global.ProtoBuf.ProtoMember(5, Name:="extension_range")> _
         Public ReadOnly Property ExtensionRanges As New Global.System.Collections.Generic.List(Of ExtensionRange)
 
-        <Global.ProtoBuf.ProtoMember(8, Name:="oneof_decl")>
+        <Global.ProtoBuf.ProtoMember(8, Name:="oneof_decl")> _
         Public ReadOnly Property OneofDecls As New Global.System.Collections.Generic.List(Of OneofDescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(7, Name:="options")>
+        <Global.ProtoBuf.ProtoMember(7, Name:="options")> _
         Public Property Options As MessageOptions
 
-        <Global.ProtoBuf.ProtoMember(9, Name:="reserved_range")>
+        <Global.ProtoBuf.ProtoMember(9, Name:="reserved_range")> _
         Public ReadOnly Property ReservedRanges As New Global.System.Collections.Generic.List(Of ReservedRange)
 
-        <Global.ProtoBuf.ProtoMember(10, Name:="reserved_name")>
+        <Global.ProtoBuf.ProtoMember(10, Name:="reserved_name")> _
         Public ReadOnly Property ReservedNames As New Global.System.Collections.Generic.List(Of String)
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Partial Public Class ExtensionRange
             Implements Global.ProtoBuf.IExtensible
             Private __pbn__extensionData As Global.ProtoBuf.IExtension
             Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
                 Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
             End Function
-            <Global.ProtoBuf.ProtoMember(1, Name:="start")>
+            <Global.ProtoBuf.ProtoMember(1, Name:="start")> _
             Public Property Start As Integer
                 Get
                     Return __pbn__Start.GetValueOrDefault()
@@ -183,7 +183,7 @@ Namespace Google.Protobuf.Reflection
             End Sub
             Private __pbn__Start As Integer?
 
-            <Global.ProtoBuf.ProtoMember(2, Name:="end")>
+            <Global.ProtoBuf.ProtoMember(2, Name:="end")> _
             Public Property [End] As Integer
                 Get
                     Return __pbn__End.GetValueOrDefault()
@@ -202,14 +202,14 @@ Namespace Google.Protobuf.Reflection
 
         End Class
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Partial Public Class ReservedRange
             Implements Global.ProtoBuf.IExtensible
             Private __pbn__extensionData As Global.ProtoBuf.IExtension
             Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
                 Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
             End Function
-            <Global.ProtoBuf.ProtoMember(1, Name:="start")>
+            <Global.ProtoBuf.ProtoMember(1, Name:="start")> _
             Public Property Start As Integer
                 Get
                     Return __pbn__Start.GetValueOrDefault()
@@ -226,7 +226,7 @@ Namespace Google.Protobuf.Reflection
             End Sub
             Private __pbn__Start As Integer?
 
-            <Global.ProtoBuf.ProtoMember(2, Name:="end")>
+            <Global.ProtoBuf.ProtoMember(2, Name:="end")> _
             Public Property [End] As Integer
                 Get
                     Return __pbn__End.GetValueOrDefault()
@@ -247,15 +247,15 @@ Namespace Google.Protobuf.Reflection
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class FieldDescriptorProto
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Name As String
             Get
                 Return If(__pbn__Name, "")
@@ -272,7 +272,7 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Name As String
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="number")>
+        <Global.ProtoBuf.ProtoMember(3, Name:="number")> _
         Public Property Number As Integer
             Get
                 Return __pbn__Number.GetValueOrDefault()
@@ -289,8 +289,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Number As Integer?
 
-        <Global.ProtoBuf.ProtoMember(4, Name:="label")>
-        <Global.System.ComponentModel.DefaultValue(Label.LabelOptional)>
+        <Global.ProtoBuf.ProtoMember(4, Name:="label")> _
+        <Global.System.ComponentModel.DefaultValue(Label.LabelOptional)> _
         Public Property LabelValue As Label
             Get
                 Return If(__pbn__LabelValue, Label.LabelOptional)
@@ -307,8 +307,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__LabelValue As Label?
 
-        <Global.ProtoBuf.ProtoMember(5, Name:="type")>
-        <Global.System.ComponentModel.DefaultValue(Type.TypeDouble)>
+        <Global.ProtoBuf.ProtoMember(5, Name:="type")> _
+        <Global.System.ComponentModel.DefaultValue(Type.TypeDouble)> _
         Public Property TypeValue As Type
             Get
                 Return If(__pbn__TypeValue, Type.TypeDouble)
@@ -325,8 +325,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__TypeValue As Type?
 
-        <Global.ProtoBuf.ProtoMember(6, Name:="type_name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(6, Name:="type_name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property TypeName As String
             Get
                 Return If(__pbn__TypeName, "")
@@ -343,8 +343,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__TypeName As String
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="extendee")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="extendee")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Extendee As String
             Get
                 Return If(__pbn__Extendee, "")
@@ -361,8 +361,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Extendee As String
 
-        <Global.ProtoBuf.ProtoMember(7, Name:="default_value")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(7, Name:="default_value")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property DefaultValue As String
             Get
                 Return If(__pbn__DefaultValue, "")
@@ -379,7 +379,7 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__DefaultValue As String
 
-        <Global.ProtoBuf.ProtoMember(9, Name:="oneof_index")>
+        <Global.ProtoBuf.ProtoMember(9, Name:="oneof_index")> _
         Public Property OneofIndex As Integer
             Get
                 Return __pbn__OneofIndex.GetValueOrDefault()
@@ -396,8 +396,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__OneofIndex As Integer?
 
-        <Global.ProtoBuf.ProtoMember(10, Name:="json_name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(10, Name:="json_name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property JsonName As String
             Get
                 Return If(__pbn__JsonName, "")
@@ -414,70 +414,70 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__JsonName As String
 
-        <Global.ProtoBuf.ProtoMember(8, Name:="options")>
+        <Global.ProtoBuf.ProtoMember(8, Name:="options")> _
         Public Property Options As FieldOptions
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Public Enum Type
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_DOUBLE")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_DOUBLE")> _
             TypeDouble = 1
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_FLOAT")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_FLOAT")> _
             TypeFloat = 2
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_INT64")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_INT64")> _
             TypeInt64 = 3
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_UINT64")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_UINT64")> _
             TypeUint64 = 4
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_INT32")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_INT32")> _
             TypeInt32 = 5
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_FIXED64")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_FIXED64")> _
             TypeFixed64 = 6
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_FIXED32")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_FIXED32")> _
             TypeFixed32 = 7
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_BOOL")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_BOOL")> _
             TypeBool = 8
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_STRING")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_STRING")> _
             TypeString = 9
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_GROUP")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_GROUP")> _
             TypeGroup = 10
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_MESSAGE")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_MESSAGE")> _
             TypeMessage = 11
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_BYTES")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_BYTES")> _
             TypeBytes = 12
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_UINT32")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_UINT32")> _
             TypeUint32 = 13
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_ENUM")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_ENUM")> _
             TypeEnum = 14
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_SFIXED32")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_SFIXED32")> _
             TypeSfixed32 = 15
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_SFIXED64")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_SFIXED64")> _
             TypeSfixed64 = 16
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_SINT32")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_SINT32")> _
             TypeSint32 = 17
-            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_SINT64")>
+            <Global.ProtoBuf.ProtoEnum(Name:="TYPE_SINT64")> _
             TypeSint64 = 18
         End Enum
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Public Enum Label
-            <Global.ProtoBuf.ProtoEnum(Name:="LABEL_OPTIONAL")>
+            <Global.ProtoBuf.ProtoEnum(Name:="LABEL_OPTIONAL")> _
             LabelOptional = 1
-            <Global.ProtoBuf.ProtoEnum(Name:="LABEL_REQUIRED")>
+            <Global.ProtoBuf.ProtoEnum(Name:="LABEL_REQUIRED")> _
             LabelRequired = 2
-            <Global.ProtoBuf.ProtoEnum(Name:="LABEL_REPEATED")>
+            <Global.ProtoBuf.ProtoEnum(Name:="LABEL_REPEATED")> _
             LabelRepeated = 3
         End Enum
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class OneofDescriptorProto
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Name As String
             Get
                 Return If(__pbn__Name, "")
@@ -494,20 +494,20 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Name As String
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="options")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="options")> _
         Public Property Options As OneofOptions
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class EnumDescriptorProto
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Name As String
             Get
                 Return If(__pbn__Name, "")
@@ -524,23 +524,23 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Name As String
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="value")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="value")> _
         Public ReadOnly Property Values As New Global.System.Collections.Generic.List(Of EnumValueDescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="options")>
+        <Global.ProtoBuf.ProtoMember(3, Name:="options")> _
         Public Property Options As EnumOptions
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class EnumValueDescriptorProto
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Name As String
             Get
                 Return If(__pbn__Name, "")
@@ -557,7 +557,7 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Name As String
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="number")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="number")> _
         Public Property Number As Integer
             Get
                 Return __pbn__Number.GetValueOrDefault()
@@ -574,20 +574,20 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Number As Integer?
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="options")>
+        <Global.ProtoBuf.ProtoMember(3, Name:="options")> _
         Public Property Options As EnumValueOptions
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class ServiceDescriptorProto
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Name As String
             Get
                 Return If(__pbn__Name, "")
@@ -604,23 +604,23 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Name As String
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="method")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="method")> _
         Public ReadOnly Property Methods As New Global.System.Collections.Generic.List(Of MethodDescriptorProto)
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="options")>
+        <Global.ProtoBuf.ProtoMember(3, Name:="options")> _
         Public Property Options As ServiceOptions
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class MethodDescriptorProto
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="name")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="name")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property Name As String
             Get
                 Return If(__pbn__Name, "")
@@ -637,8 +637,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Name As String
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="input_type")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="input_type")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property InputType As String
             Get
                 Return If(__pbn__InputType, "")
@@ -655,8 +655,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__InputType As String
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="output_type")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(3, Name:="output_type")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property OutputType As String
             Get
                 Return If(__pbn__OutputType, "")
@@ -673,11 +673,11 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__OutputType As String
 
-        <Global.ProtoBuf.ProtoMember(4, Name:="options")>
+        <Global.ProtoBuf.ProtoMember(4, Name:="options")> _
         Public Property Options As MethodOptions
 
-        <Global.ProtoBuf.ProtoMember(5, Name:="client_streaming")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(5, Name:="client_streaming")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property ClientStreaming As Boolean
             Get
                 Return If(__pbn__ClientStreaming, False)
@@ -694,8 +694,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__ClientStreaming As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(6, Name:="server_streaming")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(6, Name:="server_streaming")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property ServerStreaming As Boolean
             Get
                 Return If(__pbn__ServerStreaming, False)
@@ -714,15 +714,15 @@ Namespace Google.Protobuf.Reflection
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class FileOptions
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="java_package")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="java_package")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property JavaPackage As String
             Get
                 Return If(__pbn__JavaPackage, "")
@@ -739,8 +739,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__JavaPackage As String
 
-        <Global.ProtoBuf.ProtoMember(8, Name:="java_outer_classname")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(8, Name:="java_outer_classname")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property JavaOuterClassname As String
             Get
                 Return If(__pbn__JavaOuterClassname, "")
@@ -757,8 +757,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__JavaOuterClassname As String
 
-        <Global.ProtoBuf.ProtoMember(10, Name:="java_multiple_files")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(10, Name:="java_multiple_files")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property JavaMultipleFiles As Boolean
             Get
                 Return If(__pbn__JavaMultipleFiles, False)
@@ -775,8 +775,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__JavaMultipleFiles As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(20, Name:="java_generate_equals_and_hash")>
-        <Global.System.Obsolete>
+        <Global.ProtoBuf.ProtoMember(20, Name:="java_generate_equals_and_hash")> _
+        <Global.System.Obsolete> _
         Public Property JavaGenerateEqualsAndHash As Boolean
             Get
                 Return __pbn__JavaGenerateEqualsAndHash.GetValueOrDefault()
@@ -793,8 +793,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__JavaGenerateEqualsAndHash As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(27, Name:="java_string_check_utf8")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(27, Name:="java_string_check_utf8")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property JavaStringCheckUtf8 As Boolean
             Get
                 Return If(__pbn__JavaStringCheckUtf8, False)
@@ -811,8 +811,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__JavaStringCheckUtf8 As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(9, Name:="optimize_for")>
-        <Global.System.ComponentModel.DefaultValue(OptimizeMode.Speed)>
+        <Global.ProtoBuf.ProtoMember(9, Name:="optimize_for")> _
+        <Global.System.ComponentModel.DefaultValue(OptimizeMode.Speed)> _
         Public Property OptimizeFor As OptimizeMode
             Get
                 Return If(__pbn__OptimizeFor, OptimizeMode.Speed)
@@ -829,8 +829,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__OptimizeFor As OptimizeMode?
 
-        <Global.ProtoBuf.ProtoMember(11, Name:="go_package")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(11, Name:="go_package")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property GoPackage As String
             Get
                 Return If(__pbn__GoPackage, "")
@@ -847,8 +847,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__GoPackage As String
 
-        <Global.ProtoBuf.ProtoMember(16, Name:="cc_generic_services")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(16, Name:="cc_generic_services")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property CcGenericServices As Boolean
             Get
                 Return If(__pbn__CcGenericServices, False)
@@ -865,8 +865,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__CcGenericServices As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(17, Name:="java_generic_services")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(17, Name:="java_generic_services")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property JavaGenericServices As Boolean
             Get
                 Return If(__pbn__JavaGenericServices, False)
@@ -883,8 +883,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__JavaGenericServices As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(18, Name:="py_generic_services")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(18, Name:="py_generic_services")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property PyGenericServices As Boolean
             Get
                 Return If(__pbn__PyGenericServices, False)
@@ -901,8 +901,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__PyGenericServices As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(23, Name:="deprecated")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(23, Name:="deprecated")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property Deprecated As Boolean
             Get
                 Return If(__pbn__Deprecated, False)
@@ -919,8 +919,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Deprecated As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(31, Name:="cc_enable_arenas")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(31, Name:="cc_enable_arenas")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property CcEnableArenas As Boolean
             Get
                 Return If(__pbn__CcEnableArenas, False)
@@ -937,8 +937,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__CcEnableArenas As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(36, Name:="objc_class_prefix")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(36, Name:="objc_class_prefix")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property ObjcClassPrefix As String
             Get
                 Return If(__pbn__ObjcClassPrefix, "")
@@ -955,8 +955,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__ObjcClassPrefix As String
 
-        <Global.ProtoBuf.ProtoMember(37, Name:="csharp_namespace")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(37, Name:="csharp_namespace")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property CsharpNamespace As String
             Get
                 Return If(__pbn__CsharpNamespace, "")
@@ -973,8 +973,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__CsharpNamespace As String
 
-        <Global.ProtoBuf.ProtoMember(39, Name:="swift_prefix")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(39, Name:="swift_prefix")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property SwiftPrefix As String
             Get
                 Return If(__pbn__SwiftPrefix, "")
@@ -991,8 +991,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__SwiftPrefix As String
 
-        <Global.ProtoBuf.ProtoMember(40, Name:="php_class_prefix")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(40, Name:="php_class_prefix")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property PhpClassPrefix As String
             Get
                 Return If(__pbn__PhpClassPrefix, "")
@@ -1009,30 +1009,30 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__PhpClassPrefix As String
 
-        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")>
+        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")> _
         Public ReadOnly Property UninterpretedOptions As New Global.System.Collections.Generic.List(Of UninterpretedOption)
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Public Enum OptimizeMode
-            <Global.ProtoBuf.ProtoEnum(Name:="SPEED")>
+            <Global.ProtoBuf.ProtoEnum(Name:="SPEED")> _
             Speed = 1
-            <Global.ProtoBuf.ProtoEnum(Name:="CODE_SIZE")>
+            <Global.ProtoBuf.ProtoEnum(Name:="CODE_SIZE")> _
             CodeSize = 2
-            <Global.ProtoBuf.ProtoEnum(Name:="LITE_RUNTIME")>
+            <Global.ProtoBuf.ProtoEnum(Name:="LITE_RUNTIME")> _
             LiteRuntime = 3
         End Enum
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class MessageOptions
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="message_set_wire_format")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(1, Name:="message_set_wire_format")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property MessageSetWireFormat As Boolean
             Get
                 Return If(__pbn__MessageSetWireFormat, False)
@@ -1049,8 +1049,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__MessageSetWireFormat As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="no_standard_descriptor_accessor")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(2, Name:="no_standard_descriptor_accessor")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property NoStandardDescriptorAccessor As Boolean
             Get
                 Return If(__pbn__NoStandardDescriptorAccessor, False)
@@ -1067,8 +1067,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__NoStandardDescriptorAccessor As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="deprecated")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(3, Name:="deprecated")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property Deprecated As Boolean
             Get
                 Return If(__pbn__Deprecated, False)
@@ -1085,7 +1085,7 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Deprecated As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(7, Name:="map_entry")>
+        <Global.ProtoBuf.ProtoMember(7, Name:="map_entry")> _
         Public Property MapEntry As Boolean
             Get
                 Return __pbn__MapEntry.GetValueOrDefault()
@@ -1102,20 +1102,20 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__MapEntry As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")>
+        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")> _
         Public ReadOnly Property UninterpretedOptions As New Global.System.Collections.Generic.List(Of UninterpretedOption)
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class FieldOptions
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="ctype")>
-        <Global.System.ComponentModel.DefaultValue([CType].String)>
+        <Global.ProtoBuf.ProtoMember(1, Name:="ctype")> _
+        <Global.System.ComponentModel.DefaultValue([CType].String)> _
         Public Property CtypeValue As [CType]
             Get
                 Return If(__pbn__CtypeValue, [CType].String)
@@ -1132,7 +1132,7 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__CtypeValue As [CType]?
 
-        <Global.ProtoBuf.ProtoMember(2, Name:="packed")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="packed")> _
         Public Property Packed As Boolean
             Get
                 Return __pbn__Packed.GetValueOrDefault()
@@ -1149,8 +1149,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Packed As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(6, Name:="jstype")>
-        <Global.System.ComponentModel.DefaultValue(JSType.JsNormal)>
+        <Global.ProtoBuf.ProtoMember(6, Name:="jstype")> _
+        <Global.System.ComponentModel.DefaultValue(JSType.JsNormal)> _
         Public Property JstypeValue As JSType
             Get
                 Return If(__pbn__JstypeValue, JSType.JsNormal)
@@ -1167,8 +1167,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__JstypeValue As JSType?
 
-        <Global.ProtoBuf.ProtoMember(5, Name:="lazy")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(5, Name:="lazy")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property Lazy As Boolean
             Get
                 Return If(__pbn__Lazy, False)
@@ -1185,8 +1185,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Lazy As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="deprecated")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(3, Name:="deprecated")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property Deprecated As Boolean
             Get
                 Return If(__pbn__Deprecated, False)
@@ -1203,8 +1203,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Deprecated As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(10, Name:="weak")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(10, Name:="weak")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property Weak As Boolean
             Get
                 Return If(__pbn__Weak, False)
@@ -1221,51 +1221,51 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Weak As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")>
+        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")> _
         Public ReadOnly Property UninterpretedOptions As New Global.System.Collections.Generic.List(Of UninterpretedOption)
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Public Enum [CType]
-            <Global.ProtoBuf.ProtoEnum(Name:="STRING")>
+            <Global.ProtoBuf.ProtoEnum(Name:="STRING")> _
             [String] = 0
-            <Global.ProtoBuf.ProtoEnum(Name:="CORD")>
+            <Global.ProtoBuf.ProtoEnum(Name:="CORD")> _
             Cord = 1
-            <Global.ProtoBuf.ProtoEnum(Name:="STRING_PIECE")>
+            <Global.ProtoBuf.ProtoEnum(Name:="STRING_PIECE")> _
             StringPiece = 2
         End Enum
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Public Enum JSType
-            <Global.ProtoBuf.ProtoEnum(Name:="JS_NORMAL")>
+            <Global.ProtoBuf.ProtoEnum(Name:="JS_NORMAL")> _
             JsNormal = 0
-            <Global.ProtoBuf.ProtoEnum(Name:="JS_STRING")>
+            <Global.ProtoBuf.ProtoEnum(Name:="JS_STRING")> _
             JsString = 1
-            <Global.ProtoBuf.ProtoEnum(Name:="JS_NUMBER")>
+            <Global.ProtoBuf.ProtoEnum(Name:="JS_NUMBER")> _
             JsNumber = 2
         End Enum
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class OneofOptions
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")>
+        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")> _
         Public ReadOnly Property UninterpretedOptions As New Global.System.Collections.Generic.List(Of UninterpretedOption)
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class EnumOptions
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(2, Name:="allow_alias")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="allow_alias")> _
         Public Property AllowAlias As Boolean
             Get
                 Return __pbn__AllowAlias.GetValueOrDefault()
@@ -1282,8 +1282,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__AllowAlias As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="deprecated")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(3, Name:="deprecated")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property Deprecated As Boolean
             Get
                 Return If(__pbn__Deprecated, False)
@@ -1300,20 +1300,20 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Deprecated As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")>
+        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")> _
         Public ReadOnly Property UninterpretedOptions As New Global.System.Collections.Generic.List(Of UninterpretedOption)
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class EnumValueOptions
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="deprecated")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(1, Name:="deprecated")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property Deprecated As Boolean
             Get
                 Return If(__pbn__Deprecated, False)
@@ -1330,20 +1330,20 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Deprecated As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")>
+        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")> _
         Public ReadOnly Property UninterpretedOptions As New Global.System.Collections.Generic.List(Of UninterpretedOption)
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class ServiceOptions
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(33, Name:="deprecated")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(33, Name:="deprecated")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property Deprecated As Boolean
             Get
                 Return If(__pbn__Deprecated, False)
@@ -1360,20 +1360,20 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Deprecated As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")>
+        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")> _
         Public ReadOnly Property UninterpretedOptions As New Global.System.Collections.Generic.List(Of UninterpretedOption)
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class MethodOptions
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(33, Name:="deprecated")>
-        <Global.System.ComponentModel.DefaultValue(False)>
+        <Global.ProtoBuf.ProtoMember(33, Name:="deprecated")> _
+        <Global.System.ComponentModel.DefaultValue(False)> _
         Public Property Deprecated As Boolean
             Get
                 Return If(__pbn__Deprecated, False)
@@ -1390,8 +1390,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__Deprecated As Boolean?
 
-        <Global.ProtoBuf.ProtoMember(34)>
-        <Global.System.ComponentModel.DefaultValue(IdempotencyLevel.IdempotencyUnknown)>
+        <Global.ProtoBuf.ProtoMember(34)> _
+        <Global.System.ComponentModel.DefaultValue(IdempotencyLevel.IdempotencyUnknown)> _
         Public Property idempotency_level As IdempotencyLevel
             Get
                 Return If(__pbn__idempotency_level, IdempotencyLevel.IdempotencyUnknown)
@@ -1408,33 +1408,33 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__idempotency_level As IdempotencyLevel?
 
-        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")>
+        <Global.ProtoBuf.ProtoMember(999, Name:="uninterpreted_option")> _
         Public ReadOnly Property UninterpretedOptions As New Global.System.Collections.Generic.List(Of UninterpretedOption)
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Public Enum IdempotencyLevel
-            <Global.ProtoBuf.ProtoEnum(Name:="IDEMPOTENCY_UNKNOWN")>
+            <Global.ProtoBuf.ProtoEnum(Name:="IDEMPOTENCY_UNKNOWN")> _
             IdempotencyUnknown = 0
-            <Global.ProtoBuf.ProtoEnum(Name:="NO_SIDE_EFFECTS")>
+            <Global.ProtoBuf.ProtoEnum(Name:="NO_SIDE_EFFECTS")> _
             NoSideEffects = 1
-            <Global.ProtoBuf.ProtoEnum(Name:="IDEMPOTENT")>
+            <Global.ProtoBuf.ProtoEnum(Name:="IDEMPOTENT")> _
             Idempotent = 2
         End Enum
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class UninterpretedOption
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(2, Name:="name")>
+        <Global.ProtoBuf.ProtoMember(2, Name:="name")> _
         Public ReadOnly Property Names As New Global.System.Collections.Generic.List(Of NamePart)
 
-        <Global.ProtoBuf.ProtoMember(3, Name:="identifier_value")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(3, Name:="identifier_value")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property IdentifierValue As String
             Get
                 Return If(__pbn__IdentifierValue, "")
@@ -1451,7 +1451,7 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__IdentifierValue As String
 
-        <Global.ProtoBuf.ProtoMember(4, Name:="positive_int_value")>
+        <Global.ProtoBuf.ProtoMember(4, Name:="positive_int_value")> _
         Public Property PositiveIntValue As ULong
             Get
                 Return __pbn__PositiveIntValue.GetValueOrDefault()
@@ -1468,7 +1468,7 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__PositiveIntValue As ULong?
 
-        <Global.ProtoBuf.ProtoMember(5, Name:="negative_int_value")>
+        <Global.ProtoBuf.ProtoMember(5, Name:="negative_int_value")> _
         Public Property NegativeIntValue As Long
             Get
                 Return __pbn__NegativeIntValue.GetValueOrDefault()
@@ -1485,7 +1485,7 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__NegativeIntValue As Long?
 
-        <Global.ProtoBuf.ProtoMember(6, Name:="double_value")>
+        <Global.ProtoBuf.ProtoMember(6, Name:="double_value")> _
         Public Property DoubleValue As Double
             Get
                 Return __pbn__DoubleValue.GetValueOrDefault()
@@ -1502,7 +1502,7 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__DoubleValue As Double?
 
-        <Global.ProtoBuf.ProtoMember(7, Name:="string_value")>
+        <Global.ProtoBuf.ProtoMember(7, Name:="string_value")> _
         Public Property StringValue As Byte()
             Get
                 Return __pbn__StringValue
@@ -1519,8 +1519,8 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__StringValue As Byte()
 
-        <Global.ProtoBuf.ProtoMember(8, Name:="aggregate_value")>
-        <Global.System.ComponentModel.DefaultValue("")>
+        <Global.ProtoBuf.ProtoMember(8, Name:="aggregate_value")> _
+        <Global.System.ComponentModel.DefaultValue("")> _
         Public Property AggregateValue As String
             Get
                 Return If(__pbn__AggregateValue, "")
@@ -1537,48 +1537,48 @@ Namespace Google.Protobuf.Reflection
         End Sub
         Private __pbn__AggregateValue As String
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Partial Public Class NamePart
             Implements Global.ProtoBuf.IExtensible
             Private __pbn__extensionData As Global.ProtoBuf.IExtension
             Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
                 Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
             End Function
-            <Global.ProtoBuf.ProtoMember(1, IsRequired:=True)>
+            <Global.ProtoBuf.ProtoMember(1, IsRequired:=True)> _
             Public Property name_part As String
 
-            <Global.ProtoBuf.ProtoMember(2, Name:="is_extension", IsRequired:=True)>
+            <Global.ProtoBuf.ProtoMember(2, Name:="is_extension", IsRequired:=True)> _
             Public Property IsExtension As Boolean
 
         End Class
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class SourceCodeInfo
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="location")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="location")> _
         Public ReadOnly Property Locations As New Global.System.Collections.Generic.List(Of Location)
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Partial Public Class Location
             Implements Global.ProtoBuf.IExtensible
             Private __pbn__extensionData As Global.ProtoBuf.IExtension
             Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
                 Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
             End Function
-            <Global.ProtoBuf.ProtoMember(1, Name:="path", IsPacked:=True)>
+            <Global.ProtoBuf.ProtoMember(1, Name:="path", IsPacked:=True)> _
             Public Property Paths As Integer()
 
-            <Global.ProtoBuf.ProtoMember(2, Name:="span", IsPacked:=True)>
+            <Global.ProtoBuf.ProtoMember(2, Name:="span", IsPacked:=True)> _
             Public Property Spans As Integer()
 
-            <Global.ProtoBuf.ProtoMember(3, Name:="leading_comments")>
-            <Global.System.ComponentModel.DefaultValue("")>
+            <Global.ProtoBuf.ProtoMember(3, Name:="leading_comments")> _
+            <Global.System.ComponentModel.DefaultValue("")> _
             Public Property LeadingComments As String
                 Get
                     Return If(__pbn__LeadingComments, "")
@@ -1595,8 +1595,8 @@ Namespace Google.Protobuf.Reflection
             End Sub
             Private __pbn__LeadingComments As String
 
-            <Global.ProtoBuf.ProtoMember(4, Name:="trailing_comments")>
-            <Global.System.ComponentModel.DefaultValue("")>
+            <Global.ProtoBuf.ProtoMember(4, Name:="trailing_comments")> _
+            <Global.System.ComponentModel.DefaultValue("")> _
             Public Property TrailingComments As String
                 Get
                     Return If(__pbn__TrailingComments, "")
@@ -1613,35 +1613,35 @@ Namespace Google.Protobuf.Reflection
             End Sub
             Private __pbn__TrailingComments As String
 
-            <Global.ProtoBuf.ProtoMember(6, Name:="leading_detached_comments")>
+            <Global.ProtoBuf.ProtoMember(6, Name:="leading_detached_comments")> _
             Public ReadOnly Property LeadingDetachedComments As New Global.System.Collections.Generic.List(Of String)
 
         End Class
 
     End Class
 
-    <Global.ProtoBuf.ProtoContract()>
+    <Global.ProtoBuf.ProtoContract()> _
     Partial Public Class GeneratedCodeInfo
         Implements Global.ProtoBuf.IExtensible
         Private __pbn__extensionData As Global.ProtoBuf.IExtension
         Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
             Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
         End Function
-        <Global.ProtoBuf.ProtoMember(1, Name:="annotation")>
+        <Global.ProtoBuf.ProtoMember(1, Name:="annotation")> _
         Public ReadOnly Property Annotations As New Global.System.Collections.Generic.List(Of Annotation)
 
-        <Global.ProtoBuf.ProtoContract()>
+        <Global.ProtoBuf.ProtoContract()> _
         Partial Public Class Annotation
             Implements Global.ProtoBuf.IExtensible
             Private __pbn__extensionData As Global.ProtoBuf.IExtension
             Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject
                 Return Extensible.GetExtensionObject(__pbn__extensionData, createIfMissing)
             End Function
-            <Global.ProtoBuf.ProtoMember(1, Name:="path", IsPacked:=True)>
+            <Global.ProtoBuf.ProtoMember(1, Name:="path", IsPacked:=True)> _
             Public Property Paths As Integer()
 
-            <Global.ProtoBuf.ProtoMember(2, Name:="source_file")>
-            <Global.System.ComponentModel.DefaultValue("")>
+            <Global.ProtoBuf.ProtoMember(2, Name:="source_file")> _
+            <Global.System.ComponentModel.DefaultValue("")> _
             Public Property SourceFile As String
                 Get
                     Return If(__pbn__SourceFile, "")
@@ -1658,7 +1658,7 @@ Namespace Google.Protobuf.Reflection
             End Sub
             Private __pbn__SourceFile As String
 
-            <Global.ProtoBuf.ProtoMember(3, Name:="begin")>
+            <Global.ProtoBuf.ProtoMember(3, Name:="begin")> _
             Public Property Begin As Integer
                 Get
                     Return __pbn__Begin.GetValueOrDefault()
@@ -1675,7 +1675,7 @@ Namespace Google.Protobuf.Reflection
             End Sub
             Private __pbn__Begin As Integer?
 
-            <Global.ProtoBuf.ProtoMember(4, Name:="end")>
+            <Global.ProtoBuf.ProtoMember(4, Name:="end")> _
             Public Property [End] As Integer
                 Get
                     Return __pbn__End.GetValueOrDefault()
@@ -1698,5 +1698,5 @@ Namespace Google.Protobuf.Reflection
 
 End Namespace
 
-#Enable Warning BC40008
+#Enable Warning BC40008, IDE1006
 

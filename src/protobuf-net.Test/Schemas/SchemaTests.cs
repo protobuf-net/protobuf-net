@@ -162,9 +162,9 @@ namespace ProtoBuf.Schemas
 #pragma warning restore CS0618
             Assert.Single(sourceFiles);
             _output.WriteLine(sourceFiles[0]);
-            var csharp = new VBCodeProvider(new Dictionary<string, string>
+            var vb = new VBCodeProvider(new Dictionary<string, string>
             {
-                // { "CompilerVersion", "v3.5"}
+                { "CompilerVersion", "v3.5"}
             });
 
             var p = new CompilerParameters
@@ -174,7 +174,7 @@ namespace ProtoBuf.Schemas
             p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
             p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
             p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
-            var results = csharp.CompileAssemblyFromSource(p, sourceFiles);
+            var results = vb.CompileAssemblyFromSource(p, sourceFiles);
             Assert.Empty(results.Errors);
         }
 

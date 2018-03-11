@@ -2,7 +2,15 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>14</LangVersion>
   </PropertyGroup>
+  <!--
+  9: ===3.5
+  10: auto-props, implicit _ line-continuations, inline subs
+  11: 
+  14: ?. , warning pragmas, readonly auto-props
+  15:
+  -->
 
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
