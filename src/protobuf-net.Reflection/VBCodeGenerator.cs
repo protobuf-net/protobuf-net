@@ -593,14 +593,15 @@ namespace ProtoBuf
         {
             var name = obj?.Options?.GetOptions()?.ExtensionTypeName;
             if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
-            // ctx.WriteLine($"{GetAccess(GetAccess(obj))} Module {Escape(name)}").Indent();
+            ctx.WriteLine("<Global.System.Runtime.CompilerServices.Extension> _")
+               .WriteLine($"{GetAccess(GetAccess(obj))} Module {Escape(name)}").Indent();
         }
         /// <summary>
         /// Ends an extgensions block
         /// </summary>
         protected override void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto obj, ref object state)
         {
-            // ctx.Outdent().WriteLine("End Module");
+            ctx.Outdent().WriteLine("End Module");
         }
         /// <summary>
         /// Starts an extensions block
@@ -635,35 +636,28 @@ namespace ProtoBuf
             }
             else
             {
-                ctx.WriteLine("REM #error extensions not yet implemented");
-                //var msg = ctx.TryFind<DescriptorProto>(field.Extendee);
-                //var extendee = MakeRelativeName(field, msg, ctx.NameNormalizer);
+                var msg = ctx.TryFind<DescriptorProto>(field.Extendee);
+                var extendee = MakeRelativeName(field, msg, ctx.NameNormalizer);
 
-                //var @this = field.Parent is FileDescriptorProto ? "this " : "";
-                //string name = ctx.NameNormalizer.GetName(field);
-                //ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj)");
+                string name = ctx.NameNormalizer.GetName(field);
+                string shared = "";
+                if (field.Parent is FileDescriptorProto)
+                {
+                    ctx.WriteLine("<Global.System.Runtime.CompilerServices.Extension> _");
+                }
+                else
+                {
+                    shared = "Shared ";
+                }
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} {shared}Function Get{name}(ByVal obj As {extendee}) As {type}");
 
-                //TextWriter tw;
-
-                //    ctx.WriteLine("{").Indent();
-                //    tw = ctx.Write("return ");
-
-                //tw.Write($"obj == null ? default({type}) : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
-                //if (!string.IsNullOrEmpty(dataFormat))
-                //{
-                //    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
-                //}
-                //tw.WriteLine(");");
-                //if (ctx.Supports(CSharp6))
-                //{
-                //    ctx.Outdent().WriteLine();
-                //}
-                //else
-                //{
-                //    ctx.Outdent().WriteLine("}").WriteLine();
-                //}
-
-                //  GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
+                var tw = ctx.Indent().Write($"Return If(obj Is Nothing, CType(Nothing, {type}), Global.ProtoBuf.Extensible.GetValue(Of {type})(obj, {field.Number}");
+                if (!string.IsNullOrEmpty(dataFormat))
+                {
+                    tw.Write($", Global.ProtoBuf.DataFormat.{dataFormat}");
+                }
+                tw.WriteLine("))");
+                ctx.Outdent().WriteLine("End Function");
             }
         }
 
