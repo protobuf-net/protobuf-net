@@ -42,7 +42,11 @@
     <ImportLibs>core</ImportLibs>
     <FeatureServiceModel>false</FeatureServiceModel>
   </PropertyGroup>
-
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
+    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
+    <ImportLibs>core</ImportLibs>
+    <FeatureServiceModel>false</FeatureServiceModel>
+  </PropertyGroup>
   <!-- apply the configuration options (typical via defines that switch code flows) -->
   <PropertyGroup Condition="'$(FeatureCompiler)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER</DefineConstants>
