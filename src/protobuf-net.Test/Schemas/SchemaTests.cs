@@ -1,5 +1,6 @@
 ﻿using Google.Protobuf.Reflection;
 using Microsoft.CSharp;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using ProtoBuf.Reflection;
 using System;
@@ -144,9 +145,37 @@ namespace ProtoBuf.Schemas
             p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
             var results = csharp.CompileAssemblyFromSource(p, sourceFiles);
             Assert.Empty(results.Errors);
-            
+        }
 
+        [Fact]
+        public void DescriptorProtoVB()
+        {
+            var schemaPath = Path.Combine(Directory.GetCurrentDirectory(), SchemaPath);
+            var path = "descriptor.proto";
 
+            var set = new FileDescriptorSet();
+            set.AddImportPath(schemaPath);
+            set.Add(path, includeInOutput: true);
+            set.Process();
+#pragma warning disable CS0618
+            var sourceFiles = VBCodeGenerator.Default.Generate(set).Select(x => x.Text).ToArray();
+#pragma warning restore CS0618
+            Assert.Single(sourceFiles);
+            _output.WriteLine(sourceFiles[0]);
+            var vb = new VBCodeProvider(new Dictionary<string, string>
+            {
+                { "CompilerVersion", "v3.5"}
+            });
+
+            var p = new CompilerParameters
+            {
+                GenerateInMemory = true
+            };
+            p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
+            p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
+            p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
+            var results = vb.CompileAssemblyFromSource(p, sourceFiles);
+            Assert.Empty(results.Errors);
         }
 
         [Theory]

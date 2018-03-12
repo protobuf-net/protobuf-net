@@ -1,33 +1,43 @@
 ﻿using Google.Protobuf.Reflection;
+using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace ProtoBuf.Reflection
+namespace ProtoBuf
 {
     /// <summary>
-    /// A code generator that writes C#
+    /// A code generator that writes VB
     /// </summary>
-    public class CSharpCodeGenerator : CommonCodeGenerator
+    [Obsolete("Experimental; this is not stable", false)]
+    public class VBCodeGenerator : CommonCodeGenerator
     {
         /// <summary>
         /// Reusable code-generator instance
         /// </summary>
-        public static CSharpCodeGenerator Default { get; } = new CSharpCodeGenerator();
+        public static VBCodeGenerator Default { get; } = new VBCodeGenerator();
+
         /// <summary>
-        /// Create a new CSharpCodeGenerator instance
+        /// Should case-sensitivity be used when computing conflicts?
         /// </summary>
-        protected CSharpCodeGenerator() { }
+        protected internal override bool IsCaseSensitive => true;
+
+        /// <summary>
+        /// Create a new VBCodeGenerator instance
+        /// </summary>
+        protected VBCodeGenerator() { }
+
         /// <summary>
         /// Returns the language name
         /// </summary>
-        public override string Name => "C#";
+        public override string Name => "VB.NET";
+
         /// <summary>
         /// Returns the default file extension
         /// </summary>
-        protected override string DefaultFileExtension => "cs";
+        protected override string DefaultFileExtension => "vb";
         /// <summary>
         /// Escapes language keywords
         /// </summary>
@@ -35,110 +45,176 @@ namespace ProtoBuf.Reflection
         {
             switch (identifier)
             {
-                case "abstract":
-                case "event":
-                case "new":
-                case "struct":
-                case "as":
-                case "explicit":
-                case "null":
-                case "switch":
-                case "base":
-                case "extern":
-                case "object":
-                case "this":
-                case "bool":
-                case "false":
-                case "operator":
-                case "throw":
-                case "break":
-                case "finally":
-                case "out":
-                case "true":
-                case "byte":
-                case "fixed":
-                case "override":
-                case "try":
-                case "case":
-                case "float":
-                case "params":
-                case "typeof":
-                case "catch":
-                case "for":
-                case "private":
-                case "uint":
-                case "char":
-                case "foreach":
-                case "protected":
-                case "ulong":
-                case "checked":
-                case "goto":
-                case "public":
-                case "unchecked":
-                case "class":
-                case "if":
-                case "readonly":
-                case "unsafe":
-                case "const":
-                case "implicit":
-                case "ref":
-                case "ushort":
-                case "continue":
-                case "in":
-                case "return":
-                case "using":
-                case "decimal":
-                case "int":
-                case "sbyte":
-                case "virtual":
-                case "default":
-                case "interface":
-                case "sealed":
-                case "volatile":
-                case "delegate":
-                case "internal":
-                case "short":
-                case "void":
-                case "do":
-                case "is":
-                case "sizeof":
-                case "while":
-                case "double":
-                case "lock":
-                case "stackalloc":
-                case "else":
-                case "long":
-                case "static":
-                case "enum":
-                case "namespace":
-                case "string":
-                    return "@" + identifier;
+                case "AddHandler":
+                case "AddressOf":
+                case "Alias":
+                case "And":
+                case "AndAlso":
+                case "As":
+                case "Boolean":
+                case "ByRef":
+                case "Byte":
+                case "ByVal":
+                case "Call":
+                case "Case":
+                case "Catch":
+                case "CBool":
+                case "CByte":
+                case "CChar":
+                case "CDate":
+                case "CDbl":
+                case "CDec":
+                case "Char":
+                case "CInt":
+                case "Class":
+                case "Constraint":
+                case "CLng":
+                case "CObj":
+                case "Const":
+                case "Continue":
+                case "CSByte":
+                case "CShort":
+                case "CSng":
+                case "CStr":
+                case "CType":
+                case "CUInt":
+                case "CULng":
+                case "CUShort":
+                case "Date":
+                case "Decimal":
+                case "Declare":
+                case "Default":
+                case "Delegate":
+                case "Dim":
+                case "DirectCast":
+                case "Do":
+                case "Double":
+                case "Each":
+                case "Else":
+                case "ElseIf":
+                case "End":
+                case "EndIf":
+                case "Enum":
+                case "Erase":
+                case "Error":
+                case "Event":
+                case "Exit":
+                case "False":
+                case "Finally":
+                case "For":
+                case "Friend":
+                case "Function":
+                case "Get":
+                case "GetType":
+                case "GetXMLNamespace":
+                case "Global":
+                case "GoSub":
+                case "GoTo":
+                case "Handles":
+                case "If":
+                case "Implements":
+                case "Imports":
+                case "In":
+                case "Inherits":
+                case "Integer":
+                case "Interface":
+                case "Is":
+                case "IsNot":
+                case "Let":
+                case "Lib":
+                case "Like":
+                case "Long":
+                case "Loop":
+                case "Me":
+                case "Mod":
+                case "Module":
+                case "MustInherit":
+                case "MustOverride":
+                case "MyBase":
+                case "MyClass":
+                case "Namespace":
+                case "Narrowing":
+                case "New":
+                case "Next":
+                case "Not":
+                case "Nothing":
+                case "NotInheritable":
+                case "NotOverridable":
+                case "Object":
+                case "Of":
+                case "On":
+                case "Operator":
+                case "Option":
+                case "Optional":
+                case "Or":
+                case "OrElse":
+                case "Out":
+                case "Overloads":
+                case "Overridable":
+                case "Overrides":
+                case "ParamArray":
+                case "Partial":
+                case "Private":
+                case "Property":
+                case "Protected":
+                case "Public":
+                case "RaiseEvent":
+                case "ReadOnly":
+                case "ReDim":
+                case "REM":
+                case "RemoveHandler":
+                case "Resume":
+                case "Return":
+                case "SByte":
+                case "Select":
+                case "Set":
+                case "Shadows":
+                case "Shared":
+                case "Short":
+                case "Single":
+                case "Static":
+                case "Step":
+                case "Stop":
+                case "String":
+                case "Structure":
+                case "Sub":
+                case "SyncLock":
+                case "Then":
+                case "Throw":
+                case "To":
+                case "True":
+                case "Try":
+                case "TryCast":
+                case "TypeOf":
+                case "UInteger":
+                case "ULong":
+                case "UShort":
+                case "Using":
+                case "Variant":
+                case "Wend":
+                case "When":
+                case "While":
+                case "Widening":
+                case "With":
+                case "WithEvents":
+                case "WriteOnly":
+                case "Xor":
+                    return "[" + identifier + "]";
                 default:
                     return identifier;
             }
         }
 
         /// <summary>
-        /// Get the language version for this language from a schema
-        /// </summary>
-        protected override string GetLanguageVersion(FileDescriptorProto obj)
-            => obj?.Options?.GetOptions()?.CSharpLanguageVersion;
-
-        /// <summary>
         /// Start a file
         /// </summary>
         protected override void WriteFileHeader(GeneratorContext ctx, FileDescriptorProto file, ref object state)
         {
-            var prefix = ctx.Supports(CSharp6) ? "CS" : "";
-            var tw = ctx.WriteLine("// This file was generated by a tool; you should avoid making direct changes.")
-               .WriteLine("// Consider using 'partial classes' to extend these types")
-               .WriteLine($"// Input: {Path.GetFileName(ctx.File.Name)}").WriteLine()
-               .Write($"#pragma warning disable {prefix}1591, {prefix}0612, {prefix}3021");
-            if(ctx.Supports(CSharp6))
-            {
-                tw.Write(", IDE1006");
-            }
-            tw.WriteLine();
+            //var prefix = ctx.Supports(CSharp6) ? "CS" : "";
+            ctx.WriteLine("' This file was generated by a tool; you should avoid making direct changes.")
+               .WriteLine("' Consider using 'partial classes' to extend these types")
+               .WriteLine($"' Input: {Path.GetFileName(ctx.File.Name)}").WriteLine()
+               .WriteLine($"#Disable Warning BC40008, IDE1006").WriteLine();
 
 
             var @namespace = ctx.NameNormalizer.GetName(file);
@@ -146,8 +222,7 @@ namespace ProtoBuf.Reflection
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
                 state = @namespace;
-                ctx.WriteLine($"namespace {@namespace}");
-                ctx.WriteLine("{").Indent().WriteLine();
+                ctx.WriteLine($"Namespace {@namespace}").Indent();
             }
 
         }
@@ -157,17 +232,11 @@ namespace ProtoBuf.Reflection
         protected override void WriteFileFooter(GeneratorContext ctx, FileDescriptorProto file, ref object state)
         {
             var @namespace = (string)state;
-            var prefix = ctx.Supports(CSharp6) ? "CS" : "";
             if (!string.IsNullOrWhiteSpace(@namespace))
             {
-                ctx.Outdent().WriteLine("}").WriteLine();
+                ctx.Outdent().WriteLine("End Namespace").WriteLine();
             }
-            var tw = ctx.Write($"#pragma warning restore {prefix}1591, {prefix}0612, {prefix}3021");
-            if(ctx.Supports(CSharp6))
-            {
-                tw.Write(", IDE1006");
-            }
-            tw.WriteLine();
+            ctx.WriteLine($"#Enable Warning BC40008, IDE1006").WriteLine();
         }
         /// <summary>
         /// Start an enum
@@ -175,11 +244,11 @@ namespace ProtoBuf.Reflection
         protected override void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto obj, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            var tw = ctx.Write($@"[global::ProtoBuf.ProtoContract(");
-            if (name != obj.Name) tw.Write($@"Name = @""{obj.Name}""");
-            tw.WriteLine(")]");
+            var tw = ctx.Write($@"<Global.ProtoBuf.ProtoContract(");
+            if (name != obj.Name) tw.Write($@"Name := ""{obj.Name}""");
+            tw.WriteLine(")> _");
             WriteOptions(ctx, obj.Options);
-            ctx.WriteLine($"{GetAccess(GetAccess(obj))} enum {Escape(name)}").WriteLine("{").Indent();
+            ctx.WriteLine($"{GetAccess(GetAccess(obj))} Enum {Escape(name)}").Indent();
         }
         /// <summary>
         /// End an enum
@@ -187,7 +256,7 @@ namespace ProtoBuf.Reflection
 
         protected override void WriteEnumFooter(GeneratorContext ctx, EnumDescriptorProto obj, ref object state)
         {
-            ctx.Outdent().WriteLine("}").WriteLine();
+            ctx.Outdent().WriteLine("End Enum").WriteLine();
         }
         /// <summary>
         /// Write an enum value
@@ -197,13 +266,13 @@ namespace ProtoBuf.Reflection
             var name = ctx.NameNormalizer.GetName(obj);
             if (name != obj.Name)
             {
-                var tw = ctx.Write($@"[global::ProtoBuf.ProtoEnum(");
-                tw.Write($@"Name = @""{obj.Name}""");
-                tw.WriteLine(")]");
+                var tw = ctx.Write($@"<Global.ProtoBuf.ProtoEnum(");
+                tw.Write($@"Name := ""{obj.Name}""");
+                tw.WriteLine(")> _");
             }
-            
+
             WriteOptions(ctx, obj.Options);
-            ctx.WriteLine($"{Escape(name)} = {obj.Number},");
+            ctx.WriteLine($"{Escape(name)} = {obj.Number}");
         }
 
         /// <summary>
@@ -211,7 +280,7 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteMessageFooter(GeneratorContext ctx, DescriptorProto obj, ref object state)
         {
-            ctx.Outdent().WriteLine("}").WriteLine();
+            ctx.Outdent().WriteLine("End Class").WriteLine();
         }
         /// <summary>
         /// Start a message
@@ -219,30 +288,23 @@ namespace ProtoBuf.Reflection
         protected override void WriteMessageHeader(GeneratorContext ctx, DescriptorProto obj, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            var tw = ctx.Write($@"[global::ProtoBuf.ProtoContract(");
-            if (name != obj.Name) tw.Write($@"Name = @""{obj.Name}""");
-            tw.WriteLine(")]");
+            var tw = ctx.Write($@"<Global.ProtoBuf.ProtoContract(");
+            if (name != obj.Name) tw.Write($@"Name := ""{obj.Name}""");
+            tw.WriteLine(")> _");
             WriteOptions(ctx, obj.Options);
-            tw = ctx.Write($"{GetAccess(GetAccess(obj))} partial class {Escape(name)}");
-            tw.Write(" : global::ProtoBuf.IExtensible");
-            tw.WriteLine();
-            ctx.WriteLine("{").Indent();
+            ctx.WriteLine($"Partial {GetAccess(GetAccess(obj))} Class {Escape(name)}");
+            ctx.Indent().WriteLine("Implements Global.ProtoBuf.IExtensible").Outdent();
+
+            ctx.Indent();
             if (obj.Options?.MessageSetWireFormat == true)
             {
-                ctx.WriteLine("#error message_set_wire_format is not currently implemented").WriteLine();
+                ctx.WriteLine("REM #error message_set_wire_format is not currently implemented").WriteLine();
             }
-            
-            ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
-                .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
 
-            if (ctx.Supports(CSharp6))
-            {
-                ctx.Indent().WriteLine($"=> global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine();
-            }
-            else
-            {
-                ctx.WriteLine("{").Indent().WriteLine($"return global::ProtoBuf.Extensible.GetExtensionObject(ref {FieldPrefix}extensionData, createIfMissing);").Outdent().WriteLine("}");
-            }
+            ctx.WriteLine($"Private {FieldPrefix}extensionData As Global.ProtoBuf.IExtension")
+                .WriteLine($"Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject")
+                .Indent().WriteLine($"Return Extensible.GetExtensionObject({FieldPrefix}extensionData, createIfMissing)")
+                .Outdent().WriteLine("End Function");
         }
 
         private static void WriteOptions<T>(GeneratorContext ctx, T obj) where T : class, ISchemaOptions
@@ -250,7 +312,7 @@ namespace ProtoBuf.Reflection
             if (obj == null) return;
             if (obj.Deprecated)
             {
-                ctx.WriteLine($"[global::System.Obsolete]");
+                ctx.WriteLine($"<Global.System.Obsolete> _");
             }
         }
 
@@ -263,85 +325,11 @@ namespace ProtoBuf.Reflection
         {
             switch (access)
             {
-                case Access.Internal: return "internal";
-                case Access.Public: return "public";
-                case Access.Private: return "private";
+                case Access.Internal: return "Friend";
+                case Access.Public: return "Public";
+                case Access.Private: return "Private";
                 default: return base.GetAccess(access);
             }
-        }
-
-
-        /// <summary>
-        /// Emit code beginning a constructor, if one is required
-        /// </summary>
-        /// <returns>true if a constructor is required</returns>
-        protected override bool WriteContructorHeader(GeneratorContext ctx, DescriptorProto obj, ref object state)
-        {
-            if (ctx.Supports(CSharp6)) return false;
-
-            var name = ctx.NameNormalizer.GetName(obj);
-            ctx.WriteLine($"public {Escape(name)}()") // note: the .ctor is still public even if the type is internal; it is protected by the scope
-                .WriteLine("{").Indent();
-            return true;
-        }
-
-        /// <summary>
-        /// Emit code terminating a constructor, if one is required
-        /// </summary>
-        protected override void WriteConstructorFooter(GeneratorContext ctx, DescriptorProto obj, ref object state)
-        {
-            ctx.WriteLine("OnConstructor();")
-                .Outdent().WriteLine("}").WriteLine()
-                .WriteLine("partial void OnConstructor();")
-                .WriteLine();
-        }
-
-        /// <summary>
-        /// Emit code initializing field values inside a constructor, if one is required
-        /// </summary>
-        protected override void WriteInitField(GeneratorContext ctx, FieldDescriptorProto obj, ref object state, OneOfStub[] oneOfs)
-        {
-            var name = ctx.NameNormalizer.GetName(obj);
-            bool isOptional = obj.label == FieldDescriptorProto.Label.LabelOptional;
-            bool isRepeated = obj.label == FieldDescriptorProto.Label.LabelRepeated;
-            var typeName = GetTypeName(ctx, obj, out var dataFormat, out var isMap);
-            OneOfStub oneOf = obj.ShouldSerializeOneofIndex() ? oneOfs?[obj.OneofIndex] : null;
-            bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
-                    && obj.type != FieldDescriptorProto.Type.TypeMessage
-                    && obj.type != FieldDescriptorProto.Type.TypeGroup;
-
-            string defaultValue = GetDefaultValue(ctx, obj, typeName);
-
-            if (isRepeated)
-            {
-                var mapMsgType = isMap ? ctx.TryFind<DescriptorProto>(obj.TypeName) : null;
-                if (mapMsgType != null)
-                {
-                    var keyTypeName = GetTypeName(ctx, mapMsgType.Fields.Single(x => x.Number == 1),
-                        out var keyDataFormat, out var _);
-                    var valueTypeName = GetTypeName(ctx, mapMsgType.Fields.Single(x => x.Number == 2),
-                        out var valueDataFormat, out var _);
-                    ctx.WriteLine($"{Escape(name)} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
-                }
-                else if (UseArray(obj))
-                { } // nothing needed
-                else
-                {
-                    ctx.WriteLine($"{Escape(name)} = new global::System.Collections.Generic.List<{typeName}>();");
-                }
-            }
-            else if (oneOf != null)
-            { } // nothing to do
-            else if(explicitValues)
-            { } // nothing to do
-            else
-            {
-                if (!string.IsNullOrWhiteSpace(defaultValue))
-                {
-                    ctx.WriteLine($"{Escape(name)} = {defaultValue};");
-                }
-            }
-            
         }
 
         private string GetDefaultValue(GeneratorContext ctx, FieldDescriptorProto obj, string typeName)
@@ -356,24 +344,24 @@ namespace ProtoBuf.Reflection
                 if (obj.type == FieldDescriptorProto.Type.TypeString)
                 {
                     defaultValue = string.IsNullOrEmpty(defaultValue) ? "\"\""
-                        : ("@\"" + (defaultValue ?? "").Replace("\"", "\"\"") + "\"");
+                        : ("\"" + (defaultValue ?? "").Replace("\"", "\"\"") + "\"");
                 }
                 else if (obj.type == FieldDescriptorProto.Type.TypeDouble)
                 {
                     switch (defaultValue)
                     {
-                        case "inf": defaultValue = "double.PositiveInfinity"; break;
-                        case "-inf": defaultValue = "double.NegativeInfinity"; break;
-                        case "nan": defaultValue = "double.NaN"; break;
+                        case "inf": defaultValue = "Double.PositiveInfinity"; break;
+                        case "-inf": defaultValue = "Double.NegativeInfinity"; break;
+                        case "nan": defaultValue = "Double.NaN"; break;
                     }
                 }
                 else if (obj.type == FieldDescriptorProto.Type.TypeFloat)
                 {
                     switch (defaultValue)
                     {
-                        case "inf": defaultValue = "float.PositiveInfinity"; break;
-                        case "-inf": defaultValue = "float.NegativeInfinity"; break;
-                        case "nan": defaultValue = "float.NaN"; break;
+                        case "inf": defaultValue = "Single.PositiveInfinity"; break;
+                        case "-inf": defaultValue = "Single.NegativeInfinity"; break;
+                        case "nan": defaultValue = "Single.NaN"; break;
                     }
                 }
                 else if (obj.type == FieldDescriptorProto.Type.TypeEnum)
@@ -417,19 +405,20 @@ namespace ProtoBuf.Reflection
         protected override void WriteField(GeneratorContext ctx, FieldDescriptorProto obj, ref object state, OneOfStub[] oneOfs)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            var tw = ctx.Write($@"[global::ProtoBuf.ProtoMember({obj.Number}");
+            if (name == "StringValue") System.Diagnostics.Debugger.Break();
+            var tw = ctx.Write($@"<Global.ProtoBuf.ProtoMember({obj.Number}");
             if (name != obj.Name)
             {
-                tw.Write($@", Name = @""{obj.Name}""");
+                tw.Write($@", Name := ""{obj.Name}""");
             }
             var options = obj.Options?.GetOptions();
             if (options?.AsReference == true)
             {
-                tw.Write($@", AsReference = true");
+                tw.Write($@", AsReference := True");
             }
             if (options?.DynamicType == true)
             {
-                tw.Write($@", DynamicType = true");
+                tw.Write($@", DynamicType := True");
             }
 
             bool isOptional = obj.label == FieldDescriptorProto.Label.LabelOptional;
@@ -443,7 +432,7 @@ namespace ProtoBuf.Reflection
             bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
                 && obj.type != FieldDescriptorProto.Type.TypeMessage
                 && obj.type != FieldDescriptorProto.Type.TypeGroup;
-            
+
             bool suppressDefaultAttribute = !isOptional;
             var typeName = GetTypeName(ctx, obj, out var dataFormat, out var isMap);
             string defaultValue = GetDefaultValue(ctx, obj, typeName);
@@ -451,20 +440,20 @@ namespace ProtoBuf.Reflection
 
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
-                tw.Write($", DataFormat = global::ProtoBuf.DataFormat.{dataFormat}");
+                tw.Write($", DataFormat := Global.ProtoBuf.DataFormat.{dataFormat}");
             }
             if (obj.IsPacked(ctx.Syntax))
             {
-                tw.Write($", IsPacked = true");
+                tw.Write($", IsPacked := True");
             }
             if (obj.label == FieldDescriptorProto.Label.LabelRequired)
             {
-                tw.Write($", IsRequired = true");
+                tw.Write($", IsRequired := True");
             }
-            tw.WriteLine(")]");
+            tw.WriteLine(")> _");
             if (!isRepeated && !string.IsNullOrWhiteSpace(defaultValue) && !suppressDefaultAttribute)
             {
-                ctx.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue})]");
+                ctx.WriteLine($"<Global.System.ComponentModel.DefaultValue({defaultValue})> _");
             }
             WriteOptions(ctx, obj.Options);
             if (isRepeated)
@@ -478,47 +467,38 @@ namespace ProtoBuf.Reflection
                         out var valueDataFormat, out var _);
 
                     bool first = true;
-                    tw = ctx.Write($"[global::ProtoBuf.ProtoMap");
+                    tw = ctx.Write($"<Global.ProtoBuf.ProtoMap");
                     if (!string.IsNullOrWhiteSpace(keyDataFormat))
                     {
-                        tw.Write($"{(first ? "(" : ", ")}KeyFormat = global::ProtoBuf.DataFormat.{keyDataFormat}");
+                        tw.Write($"{(first ? "(" : ", ")}KeyFormat := Global.ProtoBuf.DataFormat.{keyDataFormat}");
                         first = false;
                     }
                     if (!string.IsNullOrWhiteSpace(valueDataFormat))
                     {
-                        tw.Write($"{(first ? "(" : ", ")}ValueFormat = global::ProtoBuf.DataFormat.{valueDataFormat}");
+                        tw.Write($"{(first ? "(" : ", ")}ValueFormat := Global.ProtoBuf.DataFormat.{valueDataFormat}");
                         first = false;
                     }
-                    tw.WriteLine(first ? "]" : ")]");
-                    if (ctx.Supports(CSharp6))
-                    {
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
-                    }
-                    else
-                    {
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; private set; }}");
-                    }
+                    tw.WriteLine(first ? "> _" : ")> _");
+
+                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} Readonly Property {Escape(name)} As New Global.System.Collections.Generic.Dictionary(Of {keyTypeName}, {valueTypeName})");
                 }
                 else if (UseArray(obj))
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName}[] {Escape(name)} {{ get; set; }}");
-                }
-                else if(ctx.Supports(CSharp6))
-                {
-                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
+                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}()");
                 }
                 else
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; private set; }}");
+                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} Readonly Property {Escape(name)} As New Global.System.Collections.Generic.List(Of {typeName})");
                 }
             }
             else if (oneOf != null)
             {
-                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"default({typeName})" : defaultValue;
+                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"CType(Nothing, {typeName})" : defaultValue;
                 var fieldName = FieldPrefix + oneOf.OneOf.Name;
                 var storage = oneOf.GetStorage(obj.type, obj.TypeName);
-                ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)}").WriteLine("{").Indent();
+                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}").WriteLine().Indent();
 
+                ctx.WriteLine("Get").Indent();
                 switch (obj.type)
                 {
                     case FieldDescriptorProto.Type.TypeMessage:
@@ -526,32 +506,31 @@ namespace ProtoBuf.Reflection
                     case FieldDescriptorProto.Type.TypeEnum:
                     case FieldDescriptorProto.Type.TypeBytes:
                     case FieldDescriptorProto.Type.TypeString:
-                        ctx.WriteLine($"get {{ return {fieldName}.Is({obj.Number}) ? (({typeName}){fieldName}.{storage}) : {defValue}; }}");
+                        ctx.WriteLine($"Return If({fieldName}.Is({obj.Number}), CType({fieldName}.{storage}, {typeName}), {defValue})");
                         break;
                     default:
-                        ctx.WriteLine($"get {{ return {fieldName}.Is({obj.Number}) ? {fieldName}.{storage} : {defValue}; }}");
+                        ctx.WriteLine($"Return If({fieldName}.Is({obj.Number}), {fieldName}.{storage}, {defValue})");
                         break;
                 }
-                var unionType = oneOf.GetUnionType();
-                ctx.WriteLine($"set {{ {fieldName} = new global::ProtoBuf.{unionType}({obj.Number}, value); }}")
-                    .Outdent().WriteLine("}");
+                ctx.Outdent().WriteLine("End Get");
 
-                if (ctx.Supports(CSharp6))
-                {
-                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} bool ShouldSerialize{name}() => {fieldName}.Is({obj.Number});")
-                    .WriteLine($"{GetAccess(GetAccess(obj))} void Reset{name}() => global::ProtoBuf.{unionType}.Reset(ref {fieldName}, {obj.Number});");
-                }
-                else
-                {
-                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} bool ShouldSerialize{name}()").WriteLine("{").Indent()
-                        .WriteLine($"return {fieldName}.Is({obj.Number});").Outdent().WriteLine("}")
-                        .WriteLine($"{GetAccess(GetAccess(obj))} void Reset{name}()").WriteLine("{").Indent()
-                        .WriteLine($"global::ProtoBuf.{unionType}.Reset(ref {fieldName}, {obj.Number});").Outdent().WriteLine("}");
-                }
+                var unionType = oneOf.GetUnionType();
+
+                ctx.WriteLine($"Set(ByVal value As {typeName})").Indent()
+                    .WriteLine($"{fieldName} = New Global.ProtoBuf.{unionType}({obj.Number}, value)").Outdent().WriteLine("End Set");
+
+                ctx.Outdent().WriteLine("End Property");
+
+                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Function ShouldSerialize{name}() As Boolean").Indent()
+                    .WriteLine($"Return {fieldName}.Is({obj.Number})").Outdent()
+                    .WriteLine("End Function")
+                    .WriteLine($"{GetAccess(GetAccess(obj))} Sub Reset{name}()").Indent()
+                    .WriteLine($"Global.ProtoBuf.{unionType}.Reset({fieldName}, {obj.Number})")
+                    .Outdent().WriteLine("End Sub");
 
                 if (oneOf.IsFirst())
                 {
-                    ctx.WriteLine().WriteLine($"private global::ProtoBuf.{unionType} {fieldName};");
+                    ctx.WriteLine().WriteLine($"Private {fieldName} As Global.ProtoBuf.{unionType}");
                 }
             }
             else if (explicitValues)
@@ -569,44 +548,43 @@ namespace ProtoBuf.Reflection
                         fieldType = typeName + "?";
                         break;
                 }
-                ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)}").WriteLine("{").Indent();
-                tw = ctx.Write($"get {{ return {fieldName}");
+
+                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}").Indent()
+                    .WriteLine("Get").Indent();
+
                 if (!string.IsNullOrWhiteSpace(defaultValue))
                 {
-                    tw.Write(" ?? ");
-                    tw.Write(defaultValue);
+                    ctx.WriteLine($"Return If({fieldName}, {defaultValue})");
                 }
                 else if (!isRef)
                 {
-                    tw.Write(".GetValueOrDefault()");
-                }
-                tw.WriteLine("; }");
-                ctx.WriteLine($"set {{ {fieldName} = value; }}")
-                    .Outdent().WriteLine("}");
-                if (ctx.Supports(CSharp6))
-                {
-                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} bool ShouldSerialize{name}() => {fieldName} != null;")
-                    .WriteLine($"{GetAccess(GetAccess(obj))} void Reset{name}() => {fieldName} = null;");
+                    ctx.WriteLine($"Return {fieldName}.GetValueOrDefault()");
                 }
                 else
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} bool ShouldSerialize{name}()").WriteLine("{").Indent()
-                        .WriteLine($"return {fieldName} != null;").Outdent().WriteLine("}")
-                        .WriteLine($"{GetAccess(GetAccess(obj))} void Reset{name}()").WriteLine("{").Indent()
-                        .WriteLine($"{fieldName} = null;").Outdent().WriteLine("}");
+                    ctx.WriteLine($"Return {fieldName}");
                 }
-                ctx.WriteLine($"private {fieldType} {fieldName};");
+
+                ctx.Outdent().WriteLine("End Get").WriteLine($"Set(ByVal value As {typeName})").Indent()
+                    .WriteLine($"{fieldName} = value").Outdent().WriteLine("End Set").
+                    Outdent().WriteLine("End Property");
+
+                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Function ShouldSerialize{name}() As Boolean").Indent()
+                    .WriteLine($"Return Not ({fieldName} Is Nothing)").Outdent()
+                    .WriteLine("End Function")
+                    .WriteLine($"{GetAccess(GetAccess(obj))} Sub Reset{name}()").Indent()
+                    .WriteLine($"{fieldName} = Nothing").Outdent().WriteLine("End Sub");
+
+                ctx.WriteLine($"Private {fieldName} As {fieldType}");
             }
             else
             {
-                tw = ctx.Write($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)} {{ get; set; }}");
-                if (!string.IsNullOrWhiteSpace(defaultValue) && ctx.Supports(CSharp6)) tw.Write($" = {defaultValue};");
+                tw = ctx.Write($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}");
+                if (!string.IsNullOrWhiteSpace(defaultValue)) tw.Write($" = {defaultValue}");
                 tw.WriteLine();
             }
             ctx.WriteLine();
         }
-
-        static readonly Version CSharp6 = new Version(6, 0);
 
         /// <summary>
         /// Starts an extgensions block
@@ -615,14 +593,14 @@ namespace ProtoBuf.Reflection
         {
             var name = obj?.Options?.GetOptions()?.ExtensionTypeName;
             if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
-            ctx.WriteLine($"{GetAccess(GetAccess(obj))} static class {Escape(name)}").WriteLine("{").Indent();
+            // ctx.WriteLine($"{GetAccess(GetAccess(obj))} Module {Escape(name)}").Indent();
         }
         /// <summary>
         /// Ends an extgensions block
         /// </summary>
         protected override void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto obj, ref object state)
         {
-            ctx.Outdent().WriteLine("}");
+            // ctx.Outdent().WriteLine("End Module");
         }
         /// <summary>
         /// Starts an extensions block
@@ -631,14 +609,14 @@ namespace ProtoBuf.Reflection
         {
             var name = obj?.Options?.GetOptions()?.ExtensionTypeName;
             if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
-            ctx.WriteLine($"{GetAccess(GetAccess(obj))} static class {Escape(name)}").WriteLine("{").Indent();
+            //ctx.WriteLine($"{GetAccess(GetAccess(obj))} Module {Escape(name)}").Indent();
         }
         /// <summary>
         /// Ends an extensions block
         /// </summary>
         protected override void WriteExtensionsFooter(GeneratorContext ctx, DescriptorProto obj, ref object state)
         {
-            ctx.Outdent().WriteLine("}");
+            // ctx.Outdent().WriteLine("End Module");
         }
         /// <summary>
         /// Write an extension
@@ -649,45 +627,41 @@ namespace ProtoBuf.Reflection
 
             if (isMap)
             {
-                ctx.WriteLine("#error map extensions not yet implemented");
+                ctx.WriteLine("REM #error map extensions not yet implemented");
             }
             else if (field.label == FieldDescriptorProto.Label.LabelRepeated)
             {
-                ctx.WriteLine("#error repeated extensions not yet implemented");
+                ctx.WriteLine("REM #error repeated extensions not yet implemented");
             }
             else
             {
-                var msg = ctx.TryFind<DescriptorProto>(field.Extendee);
-                var extendee = MakeRelativeName(field, msg, ctx.NameNormalizer);
+                ctx.WriteLine("REM #error extensions not yet implemented");
+                //var msg = ctx.TryFind<DescriptorProto>(field.Extendee);
+                //var extendee = MakeRelativeName(field, msg, ctx.NameNormalizer);
 
-                var @this = field.Parent is FileDescriptorProto ? "this " : "";
-                string name = ctx.NameNormalizer.GetName(field);
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj)");
+                //var @this = field.Parent is FileDescriptorProto ? "this " : "";
+                //string name = ctx.NameNormalizer.GetName(field);
+                //ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj)");
 
-                TextWriter tw;
-                if (ctx.Supports(CSharp6))
-                {
-                    tw = ctx.Indent().Write($"=> ");
-                }
-                else
-                {
-                    ctx.WriteLine("{").Indent();
-                    tw = ctx.Write("return ");
-                }
-                tw.Write($"obj == null ? default({type}) : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
-                if (!string.IsNullOrEmpty(dataFormat))
-                {
-                    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
-                }
-                tw.WriteLine(");");
-                if(ctx.Supports(CSharp6))
-                {
-                    ctx.Outdent().WriteLine();
-                }
-                else
-                {
-                    ctx.Outdent().WriteLine("}").WriteLine();   
-                }
+                //TextWriter tw;
+
+                //    ctx.WriteLine("{").Indent();
+                //    tw = ctx.Write("return ");
+
+                //tw.Write($"obj == null ? default({type}) : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
+                //if (!string.IsNullOrEmpty(dataFormat))
+                //{
+                //    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
+                //}
+                //tw.WriteLine(");");
+                //if (ctx.Supports(CSharp6))
+                //{
+                //    ctx.Outdent().WriteLine();
+                //}
+                //else
+                //{
+                //    ctx.Outdent().WriteLine("}").WriteLine();
+                //}
 
                 //  GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
             }
@@ -723,46 +697,46 @@ namespace ProtoBuf.Reflection
             switch (field.type)
             {
                 case FieldDescriptorProto.Type.TypeDouble:
-                    return "double";
+                    return "Double";
                 case FieldDescriptorProto.Type.TypeFloat:
-                    return "float";
+                    return "Single";
                 case FieldDescriptorProto.Type.TypeBool:
-                    return "bool";
+                    return "Boolean";
                 case FieldDescriptorProto.Type.TypeString:
-                    return "string";
+                    return "String";
                 case FieldDescriptorProto.Type.TypeSint32:
                     dataFormat = nameof(DataFormat.ZigZag);
-                    return "int";
+                    return "Integer";
                 case FieldDescriptorProto.Type.TypeInt32:
-                    return "int";
+                    return "Integer";
                 case FieldDescriptorProto.Type.TypeSfixed32:
                     dataFormat = nameof(DataFormat.FixedSize);
-                    return "int";
+                    return "Integer";
                 case FieldDescriptorProto.Type.TypeSint64:
                     dataFormat = nameof(DataFormat.ZigZag);
-                    return "long";
+                    return "Long";
                 case FieldDescriptorProto.Type.TypeInt64:
-                    return "long";
+                    return "Long";
                 case FieldDescriptorProto.Type.TypeSfixed64:
                     dataFormat = nameof(DataFormat.FixedSize);
-                    return "long";
+                    return "Long";
                 case FieldDescriptorProto.Type.TypeFixed32:
                     dataFormat = nameof(DataFormat.FixedSize);
-                    return "uint";
+                    return "UInteger";
                 case FieldDescriptorProto.Type.TypeUint32:
-                    return "uint";
+                    return "UInteger";
                 case FieldDescriptorProto.Type.TypeFixed64:
                     dataFormat = nameof(DataFormat.FixedSize);
-                    return "ulong";
+                    return "ULong";
                 case FieldDescriptorProto.Type.TypeUint64:
-                    return "ulong";
+                    return "ULong";
                 case FieldDescriptorProto.Type.TypeBytes:
-                    return "byte[]";
+                    return "Byte()";
                 case FieldDescriptorProto.Type.TypeEnum:
                     switch (field.TypeName)
                     {
                         case ".bcl.DateTime.DateTimeKind":
-                            return "global::System.DateTimeKind";
+                            return "Global.System.DateTimeKind";
                     }
                     var enumType = ctx.TryFind<EnumDescriptorProto>(field.TypeName);
                     return MakeRelativeName(field, enumType, ctx.NameNormalizer);
@@ -772,20 +746,20 @@ namespace ProtoBuf.Reflection
                     {
                         case WellKnownTypeTimestamp:
                             dataFormat = "WellKnown";
-                            return "global::System.DateTime?";
+                            return "Date?";
                         case WellKnownTypeDuration:
                             dataFormat = "WellKnown";
-                            return "global::System.TimeSpan?";
+                            return "Global.System.TimeSpan?";
                         case ".bcl.NetObjectProxy":
-                            return "object";
+                            return "Object";
                         case ".bcl.DateTime":
-                            return "global::System.DateTime?";
+                            return "Date?";
                         case ".bcl.TimeSpan":
-                            return "global::System.TimeSpan?";
+                            return "Global.System.TimeSpan?";
                         case ".bcl.Decimal":
-                            return "decimal?";
+                            return "Decimal?";
                         case ".bcl.Guid":
-                            return "global::System.Guid?";
+                            return "Global.System.Guid?";
                     }
                     var msgType = ctx.TryFind<DescriptorProto>(field.TypeName);
                     if (field.type == FieldDescriptorProto.Type.TypeGroup)
@@ -897,7 +871,7 @@ namespace ProtoBuf.Reflection
 
                 if (!string.IsNullOrWhiteSpace(nextName))
                 {
-                    if (sb.Length == 0 && target is FileDescriptorProto) sb.Append("global::");
+                    if (sb.Length == 0 && target is FileDescriptorProto) sb.Append("Global.");
                     else if (sb.Length != 0) sb.Append('.');
                     sb.Append(Escape(nextName));
                 }

@@ -27,9 +27,11 @@ namespace protogen.site.Controllers
         }
         public IActionResult Index()
         {
-            var model = new IndexModel();
-            model.ProtocVersion = GetProtocVersion(_host, out var canUse);
-            model.CanUseProtoc = canUse;
+            var model = new IndexModel
+            {
+                ProtocVersion = GetProtocVersion(_host, out var canUse),
+                CanUseProtoc = canUse
+            };
             return View("Index", model);
         }
 
@@ -193,7 +195,21 @@ namespace protogen.site.Controllers
                         {
                             result.ParserExceptions = errors;
                         }
-                        result.Files = CSharpCodeGenerator.Default.Generate(set).ToArray();
+                        CodeGenerator codegen;
+                        switch(tooling)
+                        {
+                            case "protogen:VB":
+#pragma warning disable 0618
+                                codegen = VBCodeGenerator.Default;
+#pragma warning restore 0618
+                                break;
+                            case "protogen:C#":
+                            default:
+                                codegen = CSharpCodeGenerator.Default;
+                                break;
+                                 
+                        }
+                        result.Files = codegen.Generate(set).ToArray();
                     }
                     else
                     {

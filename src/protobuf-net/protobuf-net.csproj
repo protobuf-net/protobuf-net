@@ -60,9 +60,6 @@
   <PropertyGroup Condition="'$(PlatformBinaryFormatter)' == 'true'">
     <DefineConstants>$(DefineConstants);PLAT_BINARYFORMATTER</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(ImportLibs)' == 'net'">
-    <Reference Include="System" />
-  </ItemGroup>
   <ItemGroup Condition="'$(ImportLibs)|$(FeatureServiceModel)' == 'net|true'">
     <Reference Include="System.ServiceModel" />
     <Reference Include="System.Configuration" />

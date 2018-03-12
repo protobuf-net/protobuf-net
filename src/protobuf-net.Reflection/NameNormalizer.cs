@@ -101,11 +101,11 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Name normalizer with default protobuf-net behaviour, using .NET idioms
         /// </summary>
-        public static NameNormalizer Default { get; } = new DefaultNormalizer();
+        public static NameNormalizer Default => new DefaultNormalizer(); // intentionally not reused
         /// <summary>
         /// Name normalizer that passes through all identifiers without any changes
         /// </summary>
-        public static NameNormalizer Null { get; } = new NullNormalizer();
+        public static NameNormalizer Null => new NullNormalizer(); // intentionally not reused
         /// <summary>
         /// Suggest a normalized identifier
         /// </summary>
@@ -168,12 +168,16 @@ namespace ProtoBuf.Reflection
             }
             return GetName(definition.Parent as DescriptorProto, preferred, definition.Name, true);
         }
+
+        internal bool IsCaseSensitive { get; set; }
+
         /// <summary>
         /// Obtain a set of all names defined for a message
         /// </summary>
         protected HashSet<string> BuildConflicts(DescriptorProto parent, bool includeDescendents)
         {
-            var conflicts = new HashSet<string>();
+            var conflicts = new HashSet<string>(
+                IsCaseSensitive ? StringComparer.OrdinalIgnoreCase : StringComparer.Ordinal);
             if (parent != null)
             {
                 conflicts.Add(GetName(parent));
