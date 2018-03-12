@@ -218,12 +218,13 @@ Parse PROTO_FILES and generate output based on the options given:
   -oFILE,                     Writes a FileDescriptorSet (a protocol buffer,
     --descriptor_set_out=FILE defined in descriptor.proto) containing all of
                               the input files to FILE.
-  --csharp_out=OUT_DIR        Generate C# source file.
+  --csharp_out=OUT_DIR        Generate C# source file(s).
+  --vb_out=OUT_DIR            Generate VB source file(s).
   +langver=VERSION            Request a specific language version from the
-                              selected code generator
-  +names={auto|original}      Specify naming convention rules
+                              selected code generator.
+  +names={auto|original}      Specify naming convention rules.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
-                              selected code generator");
+                              selected code generator.s");
 
         }
     }
