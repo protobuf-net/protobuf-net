@@ -24,9 +24,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
-## protogen v1.0.2
+## protogen v1.0.3
 
-- packaging updates (no code changes)
+- VB.NET code-gen support added (from: alpha2)
+- packaging updates for "global tools" (from: alpha1)
 
 ## protogen v1.0.1
 

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <VersionPrefix>$(ProtoGenVersion)</VersionPrefix>
-    <VersionSuffix>alpha1</VersionSuffix>
+    <VersionSuffix>alpha2</VersionSuffix>
     <OutputType>Exe</OutputType>
     <!--<TargetFramework>netcoreapp2.0</TargetFramework>-->
     <TargetFrameworks>net462;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
