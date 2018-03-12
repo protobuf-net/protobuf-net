@@ -395,6 +395,14 @@ namespace ProtoBuf
                         }
                     }
                 }
+                else if (!string.IsNullOrWhiteSpace(defaultValue))
+                {
+                    switch (typeName)
+                    {
+                        case "UInteger": defaultValue = defaultValue + "UI"; break;
+                        case "ULong": defaultValue = defaultValue + "UL"; break;
+                    }
+                }
             }
 
             return defaultValue;
