@@ -574,7 +574,7 @@ namespace ProtoBuf.Reflection
                             {
                                 if (processedFiles.Add(import.Path))
                                 {
-                                    var importFile = file.Parent.GetFile(import.Path);
+                                    var importFile = file.Parent.GetFile(file, import.Path);
                                     if (importFile != null) pendingFiles.Enqueue(importFile);
                                 }
                             }

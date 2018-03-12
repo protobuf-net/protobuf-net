@@ -143,6 +143,31 @@ namespace protogen
                         }
                     }
                     
+                    if(inputFiles.Count == 1 && importPaths.Count == 1)
+                    {
+                        SearchOption? searchOption = null;
+                        if (inputFiles[0] == "**/*.proto"
+                            || inputFiles[0] == "**\\*.proto")
+                        {
+                            searchOption = SearchOption.AllDirectories;
+                            set.AllowNameOnlyImport = true;
+                        }
+                        else if (inputFiles[0] == "*.proto")
+                        {
+                            searchOption = SearchOption.TopDirectoryOnly;
+                        }
+
+                        if(searchOption != null)
+                        {
+                            inputFiles.Clear();
+                            var searchRoot = importPaths[0];
+                            foreach (var path in Directory.EnumerateFiles(importPaths[0], "*.proto", searchOption.Value))
+                            {
+                                inputFiles.Add(MakeRelativePath(searchRoot, path));
+                            }
+                        }
+                    }
+                    
                     foreach (var input in inputFiles)
                     {
                         if (!set.Add(input, true))
@@ -151,8 +176,8 @@ namespace protogen
                             exitCode = 1;
                         }
                     }
+                    
                     if(exitCode != 0) return exitCode;
-
                     set.Process();
                     var errors = set.GetErrors();
                     foreach(var err in errors)
@@ -169,21 +194,24 @@ namespace protogen
                             Serializer.Serialize(fds, set);
                         }
                     }
-                    else if(!Directory.Exists(outPath))
+                    
+                    
+                    var files = codegen.Generate(set, options: options);
+                    foreach (var file in files)
                     {
-                        Console.Error.WriteLine($"Output directory does not exist: {outPath}");
-                        exitCode = 1;
-                    }
-                    else
-                    {
-                        var files = codegen.Generate(set, options: options);
-                        foreach (var file in files)
+                        var path = Path.Combine(outPath, file.Name);
+
+                        var dir = Path.GetDirectoryName(path);
+                        if(!Directory.Exists(dir))
                         {
-                            var path = Path.Combine(outPath, file.Name);
-                            File.WriteAllText(path, file.Text);
-                            Console.WriteLine($"generated: {path}");
+                            Console.Error.WriteLine($"Output directory does not exist, creating... {dir}");
+                            Directory.CreateDirectory(dir);
                         }
+
+                        File.WriteAllText(path, file.Text);
+                        Console.WriteLine($"generated: {path}");
                     }
+
                     return 0;
                 }
             }
@@ -194,6 +222,33 @@ namespace protogen
                 return -1;
             }
         }
+
+        // with thanks to "Dave": https://stackoverflow.com/a/340454/23354
+        public static String MakeRelativePath(String fromPath, String toPath)
+        {
+#if NETCOREAPP2_0
+            return Path.GetRelativePath(fromPath, toPath);
+#else
+            if (String.IsNullOrEmpty(fromPath)) throw new ArgumentNullException("fromPath");
+            if (String.IsNullOrEmpty(toPath)) throw new ArgumentNullException("toPath");
+
+            Uri fromUri = new Uri(fromPath);
+            Uri toUri = new Uri(toPath);
+
+            if (fromUri.Scheme != toUri.Scheme) { return toPath; } // path can't be made relative.
+
+            Uri relativeUri = fromUri.MakeRelativeUri(toUri);
+            String relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+            if (toUri.Scheme.Equals("file", StringComparison.OrdinalIgnoreCase))
+            {
+                relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            }
+
+            return relativePath;
+#endif
+        }
+
         static string GetVersion<T>()
         {
 #if NETCOREAPP1_1
@@ -224,7 +279,11 @@ Parse PROTO_FILES and generate output based on the options given:
                               selected code generator.
   +names={auto|original}      Specify naming convention rules.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
-                              selected code generator.s");
+                              selected code generator.s
+
+Note that PROTO_FILES can be *.proto or **/*.proto (recursive) when a single
+import location is used, to process all schema files found. In recursive mode,
+imports from the current directory can also be specified by name-only.");
 
         }
     }
