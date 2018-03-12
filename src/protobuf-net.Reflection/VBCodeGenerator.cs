@@ -405,7 +405,7 @@ namespace ProtoBuf
         protected override void WriteField(GeneratorContext ctx, FieldDescriptorProto obj, ref object state, OneOfStub[] oneOfs)
         {
             var name = ctx.NameNormalizer.GetName(obj);
-            if (name == "StringValue") System.Diagnostics.Debugger.Break();
+
             var tw = ctx.Write($@"<Global.ProtoBuf.ProtoMember({obj.Number}");
             if (name != obj.Name)
             {
