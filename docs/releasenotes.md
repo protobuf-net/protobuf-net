@@ -24,6 +24,12 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protogen v1.0.4
+
+- fixes for VB.NET code-gen (especially: overflow in default values)
+- add wildcard+recursive generation modes for all languages
+- fix resolution of rooted types in imports without a package
+
 ## protogen v1.0.3
 
 - VB.NET code-gen support added (from: alpha2)
