@@ -8,21 +8,16 @@ protobuf-net is a contract based serializer for .NET code, that happens to write
 ---
 
 ## Supported Runtimes
-- .NET Framework 4.0+
-- .NET Standard 1.3+
+- .NET Framework 2.0+
+- .NET Standard 1.0+ (note that 1.0 is very restricted, and suits iOS etc; use the highest .NET Standard that works for your platform)
 
-Legacy Runtimes (up to v2.1.0)
-- .NET Framework 2.0/3.0/3.5
-- Compact Framework 2.0/3.5
-- Mono 2.x
-- Silverlight, Windows Phone 7&8
-- Windows 8 apps
+It is possible to build for more specific TFMs, but *right now* I've simplified the build to those. If you need help
+with a custom build: let me know.
 
 ## Runtime Installation
 
 Packages are available on NuGet: [`protobuf-net`](https://www.nuget.org/packages/protobuf-net). You can use the following command in the Package Manager Console:
 `Install-Package protobuf-net`
-
 
 ## Basic usage
 
@@ -116,9 +111,12 @@ There is no special significance in the 7 above; it is an integer key, just like
 
 ### .proto file
 
-As an alternative to writing your classes and decorating them, You can generate your types from a .proto schema using [`ProtoGen`](https://protogen.marcgravell.com/). You can also generate serializer assembly using the [`precompiler`](http://blog.marcgravell.com/2012/07/introducing-protobuf-net-precompiler.html).
+As an alternative to writing your classes and decorating them, You can generate your types from a .proto schema using [`protogen`](https://protogen.marcgravell.com/).
 
 ### Alternative to attributes
 
-In v2, everything that can be done with attributes can also be configured at runtime via RuntimeTypeModel. The Serializer.* methods are basically just shortcuts to RuntimeTypeModel.Default.*, so to manipulate the behaviour of Serializer.*, you must configure RuntimeTypeModel.Default. 
+In v2, everything that can be done with attributes can also be configured at runtime via `RuntimeTypeModel`. The Serializer.* methods are basically just shortcuts to RuntimeTypeModel.Default.*, so to manipulate the behaviour of Serializer.*, you must configure RuntimeTypeModel.Default. 
 
+## Support
+
+I try to be responsive to [Stack Overflow questions in the `protobuf-net` tag](https://stackoverflow.com/questions/tagged/protobuf-net), [issues logged on github](https://github.com/mgravell/protobuf-net), [email](mailto:marc.gravell@gmail.com), etc. I don't currently offer a paid support channel. If I've helped you, feel free to [buy me a coffee](https://buymeacoff.ee/marcgravell).
