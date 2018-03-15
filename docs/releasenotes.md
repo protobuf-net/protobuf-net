@@ -24,6 +24,11 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protogen v1.0.5
+
+- allow default package name using #FILE# and #DIR# tokens
+- more fixes for VB.NET idioms
+
 ## protogen v1.0.4
 
 - fixes for VB.NET code-gen (especially: overflow in default values)

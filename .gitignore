@@ -24,3 +24,4 @@ _ReSharper.Caches/
 BenchmarkDotNet.Artifacts/
 filedata.bin
 *.binlog
+src/VBTest/*

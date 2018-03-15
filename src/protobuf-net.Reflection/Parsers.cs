@@ -52,15 +52,16 @@ namespace Google.Protobuf.Reflection
                 if (includeInOutput) descriptor.IncludeInOutput = true;
                 return true; // already exists, that counts as success
             }
-
-            using (var reader = source ?? Open(name))
+            string path = null;
+            using (var reader = source ?? Open(name, out path))
             {
                 if (reader == null) return false; // not found
 
                 descriptor = new FileDescriptorProto
                 {
                     Name = name,
-                    IncludeInOutput = includeInOutput
+                    IncludeInOutput = includeInOutput,
+                    DefaultPackage = GetDefaultPackageName(path),
                 };
                 Files.Add(descriptor);
 
@@ -68,10 +69,25 @@ namespace Google.Protobuf.Reflection
                 return true;
             }
         }
-
-        private TextReader Open(string name)
+        /// <summary>
+        /// Default package to use when none is specified; can use #FILE# and #DIR# tokens
+        /// </summary>
+        public string DefaultPackage { get; set; }
+        string GetDefaultPackageName(string path)
         {
-            var found = FindFile(name);
+            if (string.IsNullOrWhiteSpace(DefaultPackage)) return null;
+
+            if (DefaultPackage.IndexOf('#') < 0) return DefaultPackage;
+
+            var file = Path.GetFileNameWithoutExtension(path)?.Replace(' ', '_');
+            var dir = Path.GetFileName(Path.GetDirectoryName(path))?.Replace(' ', '_');
+
+            return DefaultPackage.Replace("#FILE#", file).Replace("#DIR#", dir);
+        }
+
+        private TextReader Open(string name, out string found)
+        {
+            found = FindFile(name);
             if (found == null) return null;
             return File.OpenText(found);
         }
@@ -584,7 +600,7 @@ namespace Google.Protobuf.Reflection
         internal FileDescriptorSet Parent { get; private set; }
 
         internal bool IncludeInOutput { get; set; }
-
+        internal string DefaultPackage { get; set; }
         public bool HasImports() => _imports.Count != 0;
         internal IEnumerable<Import> GetImports(bool resetPendingFlag = false)
         {

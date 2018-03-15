@@ -21,6 +21,7 @@ namespace protogen
                 var importPaths = new List<string>(); // -I{PATH}, --proto_path={PATH}
                 var inputFiles = new List<string>(); // {PROTO_FILES} (everything not `-`)
                 bool exec = false;
+                string package = null; // --package=foo
                 CodeGenerator codegen = null;
 
                 Dictionary<string, string> options = null;
@@ -58,6 +59,9 @@ namespace protogen
                             break;
                         case "--version":
                             version = true;
+                            break;
+                        case "--package":
+                            package = rhs;
                             break;
                         case "-h":
                         case "--help":
@@ -122,7 +126,10 @@ namespace protogen
                 else
                 {
                     int exitCode = 0;
-                    var set = new FileDescriptorSet();
+                    var set = new FileDescriptorSet
+                    {
+                        DefaultPackage = package
+                    };
                     if (importPaths.Count == 0)
                     {
                         set.AddImportPath(Directory.GetCurrentDirectory());
@@ -279,7 +286,9 @@ Parse PROTO_FILES and generate output based on the options given:
                               selected code generator.
   +names={auto|original}      Specify naming convention rules.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
-                              selected code generator.s
+                              selected code generator.
+  --package=PACKAGE           Add a default package (when no package is
+                              specified); can use #FILE# and #DIR# tokens.
 
 Note that PROTO_FILES can be *.proto or **/*.proto (recursive) when a single
 import location is used, to process all schema files found. In recursive mode,

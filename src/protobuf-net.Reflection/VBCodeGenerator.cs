@@ -38,171 +38,172 @@ namespace ProtoBuf
         /// Returns the default file extension
         /// </summary>
         protected override string DefaultFileExtension => "vb";
+
+        static HashSet<string> keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "AddHandler",
+            "AddressOf",
+            "Alias",
+            "And",
+            "AndAlso",
+            "As",
+            "Boolean",
+            "ByRef",
+            "Byte",
+            "ByVal",
+            "Call",
+            "Case",
+            "Catch",
+            "CBool",
+            "CByte",
+            "CChar",
+            "CDate",
+            "CDbl",
+            "CDec",
+            "Char",
+            "CInt",
+            "Class",
+            "Constraint",
+            "CLng",
+            "CObj",
+            "Const",
+            "Continue",
+            "CSByte",
+            "CShort",
+            "CSng",
+            "CStr",
+            "CType",
+            "CUInt",
+            "CULng",
+            "CUShort",
+            "Date",
+            "Decimal",
+            "Declare",
+            "Default",
+            "Delegate",
+            "Dim",
+            "DirectCast",
+            "Do",
+            "Double",
+            "Each",
+            "Else",
+            "ElseIf",
+            "End",
+            "EndIf",
+            "Enum",
+            "Erase",
+            "Error",
+            "Event",
+            "Exit",
+            "False",
+            "Finally",
+            "For",
+            "Friend",
+            "Function",
+            "Get",
+            "GetType",
+            "GetXMLNamespace",
+            "Global",
+            "GoSub",
+            "GoTo",
+            "Handles",
+            "If",
+            "Implements",
+            "Imports",
+            "In",
+            "Inherits",
+            "Integer",
+            "Interface",
+            "Is",
+            "IsNot",
+            "Let",
+            "Lib",
+            "Like",
+            "Long",
+            "Loop",
+            "Me",
+            "Mod",
+            "Module",
+            "MustInherit",
+            "MustOverride",
+            "MyBase",
+            "MyClass",
+            "Namespace",
+            "Narrowing",
+            "New",
+            "Next",
+            "Not",
+            "Nothing",
+            "NotInheritable",
+            "NotOverridable",
+            "Object",
+            "Of",
+            "On",
+            "Operator",
+            "Option",
+            "Optional",
+            "Or",
+            "OrElse",
+            "Out",
+            "Overloads",
+            "Overridable",
+            "Overrides",
+            "ParamArray",
+            "Partial",
+            "Private",
+            "Property",
+            "Protected",
+            "Public",
+            "RaiseEvent",
+            "ReadOnly",
+            "ReDim",
+            "REM",
+            "RemoveHandler",
+            "Resume",
+            "Return",
+            "SByte",
+            "Select",
+            "Set",
+            "Shadows",
+            "Shared",
+            "Short",
+            "Single",
+            "Static",
+            "Step",
+            "Stop",
+            "String",
+            "Structure",
+            "Sub",
+            "SyncLock",
+            "Then",
+            "Throw",
+            "To",
+            "True",
+            "Try",
+            "TryCast",
+            "TypeOf",
+            "UInteger",
+            "ULong",
+            "UShort",
+            "Using",
+            "Variant",
+            "Wend",
+            "When",
+            "While",
+            "Widening",
+            "With",
+            "WithEvents",
+            "WriteOnly",
+            "Xor",
+        };
         /// <summary>
         /// Escapes language keywords
         /// </summary>
         protected override string Escape(string identifier)
         {
-            switch (identifier)
-            {
-                case "AddHandler":
-                case "AddressOf":
-                case "Alias":
-                case "And":
-                case "AndAlso":
-                case "As":
-                case "Boolean":
-                case "ByRef":
-                case "Byte":
-                case "ByVal":
-                case "Call":
-                case "Case":
-                case "Catch":
-                case "CBool":
-                case "CByte":
-                case "CChar":
-                case "CDate":
-                case "CDbl":
-                case "CDec":
-                case "Char":
-                case "CInt":
-                case "Class":
-                case "Constraint":
-                case "CLng":
-                case "CObj":
-                case "Const":
-                case "Continue":
-                case "CSByte":
-                case "CShort":
-                case "CSng":
-                case "CStr":
-                case "CType":
-                case "CUInt":
-                case "CULng":
-                case "CUShort":
-                case "Date":
-                case "Decimal":
-                case "Declare":
-                case "Default":
-                case "Delegate":
-                case "Dim":
-                case "DirectCast":
-                case "Do":
-                case "Double":
-                case "Each":
-                case "Else":
-                case "ElseIf":
-                case "End":
-                case "EndIf":
-                case "Enum":
-                case "Erase":
-                case "Error":
-                case "Event":
-                case "Exit":
-                case "False":
-                case "Finally":
-                case "For":
-                case "Friend":
-                case "Function":
-                case "Get":
-                case "GetType":
-                case "GetXMLNamespace":
-                case "Global":
-                case "GoSub":
-                case "GoTo":
-                case "Handles":
-                case "If":
-                case "Implements":
-                case "Imports":
-                case "In":
-                case "Inherits":
-                case "Integer":
-                case "Interface":
-                case "Is":
-                case "IsNot":
-                case "Let":
-                case "Lib":
-                case "Like":
-                case "Long":
-                case "Loop":
-                case "Me":
-                case "Mod":
-                case "Module":
-                case "MustInherit":
-                case "MustOverride":
-                case "MyBase":
-                case "MyClass":
-                case "Namespace":
-                case "Narrowing":
-                case "New":
-                case "Next":
-                case "Not":
-                case "Nothing":
-                case "NotInheritable":
-                case "NotOverridable":
-                case "Object":
-                case "Of":
-                case "On":
-                case "Operator":
-                case "Option":
-                case "Optional":
-                case "Or":
-                case "OrElse":
-                case "Out":
-                case "Overloads":
-                case "Overridable":
-                case "Overrides":
-                case "ParamArray":
-                case "Partial":
-                case "Private":
-                case "Property":
-                case "Protected":
-                case "Public":
-                case "RaiseEvent":
-                case "ReadOnly":
-                case "ReDim":
-                case "REM":
-                case "RemoveHandler":
-                case "Resume":
-                case "Return":
-                case "SByte":
-                case "Select":
-                case "Set":
-                case "Shadows":
-                case "Shared":
-                case "Short":
-                case "Single":
-                case "Static":
-                case "Step":
-                case "Stop":
-                case "String":
-                case "Structure":
-                case "Sub":
-                case "SyncLock":
-                case "Then":
-                case "Throw":
-                case "To":
-                case "True":
-                case "Try":
-                case "TryCast":
-                case "TypeOf":
-                case "UInteger":
-                case "ULong":
-                case "UShort":
-                case "Using":
-                case "Variant":
-                case "Wend":
-                case "When":
-                case "While":
-                case "Widening":
-                case "With":
-                case "WithEvents":
-                case "WriteOnly":
-                case "Xor":
-                    return "[" + identifier + "]";
-                default:
-                    return identifier;
-            }
+            if (keywords.Contains(identifier))
+                return "[" + identifier + "]";
+            return identifier;
         }
 
         /// <summary>
@@ -214,7 +215,7 @@ namespace ProtoBuf
             ctx.WriteLine("' This file was generated by a tool; you should avoid making direct changes.")
                .WriteLine("' Consider using 'partial classes' to extend these types")
                .WriteLine($"' Input: {Path.GetFileName(ctx.File.Name)}").WriteLine()
-               .WriteLine($"#Disable Warning BC40008, IDE1006").WriteLine();
+               .WriteLine($"#Disable Warning BC40008, BC40055, IDE1006").WriteLine();
 
 
             var @namespace = ctx.NameNormalizer.GetName(file);
@@ -236,7 +237,7 @@ namespace ProtoBuf
             {
                 ctx.Outdent().WriteLine("End Namespace").WriteLine();
             }
-            ctx.WriteLine($"#Enable Warning BC40008, IDE1006").WriteLine();
+            ctx.WriteLine($"#Enable Warning BC40008, BC40055, IDE1006").WriteLine();
         }
         /// <summary>
         /// Start an enum
@@ -302,8 +303,8 @@ namespace ProtoBuf
             }
 
             ctx.WriteLine($"Private {FieldPrefix}extensionData As Global.ProtoBuf.IExtension")
-                .WriteLine($"Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As IExtension Implements IExtensible.GetExtensionObject")
-                .Indent().WriteLine($"Return Extensible.GetExtensionObject({FieldPrefix}extensionData, createIfMissing)")
+                .WriteLine($"Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As Global.ProtoBuf.IExtension Implements Global.ProtoBuf.IExtensible.GetExtensionObject")
+                .Indent().WriteLine($"Return Global.ProtoBuf.Extensible.GetExtensionObject({FieldPrefix}extensionData, createIfMissing)")
                 .Outdent().WriteLine("End Function");
         }
 
@@ -443,8 +444,8 @@ namespace ProtoBuf
 
             bool suppressDefaultAttribute = !isOptional;
             var typeName = GetTypeName(ctx, obj, out var dataFormat, out var isMap);
-            string defaultValue = GetDefaultValue(ctx, obj, typeName);
 
+            string defaultValue = GetDefaultValue(ctx, obj, typeName);
 
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
