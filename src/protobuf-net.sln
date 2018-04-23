@@ -15,9 +15,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 	ProjectSection(SolutionItems) = preProject
 		Tools\bcl.proto = Tools\bcl.proto
 		Directory.build.props = Directory.build.props
+		..\docs\index.md = ..\docs\index.md
 		Tools\protogen.proto = Tools\protogen.proto
 		..\README.md = ..\README.md
 		..\docs\releasenotes.md = ..\docs\releasenotes.md
+		..\docs\version.md = ..\docs\version.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Reflection", "protobuf-net.Reflection\protobuf-net.Reflection.csproj", "{EDA3DD64-F60F-40C3-AEA2-8AFDA67AD32D}"
@@ -28,7 +30,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Examples", "Examples\Exampl
 EndProject
 Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "VBTest", "VBTest\VBTest.vbproj", "{B48366B6-99FB-47D6-B517-CA702811244C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpTest", "CSharpTest\CSharpTest.csproj", "{3C7D830B-7A76-43FD-8FFB-95E9E4231653}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTest", "CSharpTest\CSharpTest.csproj", "{3C7D830B-7A76-43FD-8FFB-95E9E4231653}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

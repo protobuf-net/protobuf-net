@@ -3,7 +3,9 @@ protobuf-net is a contract based serializer for .NET code, that happens to write
 
 ## Release Notes
 
-[Change history and pending changes are here](http://mgravell.github.io/protobuf-net/releasenotes)
+[Change history and pending changes are here](https://mgravell.github.io/protobuf-net/releasenotes).
+
+To understand how protobuf-net relates to protobuf [see here](https://mgravell.github.io/protobuf-net/version).
 
 ---
 

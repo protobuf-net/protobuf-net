@@ -15,7 +15,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 
 ## v3.* (not yet started)
 
-- see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
+- see: [protobuf-net: large data, and the future](https://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
 - gRPC?
 
 ## v2.4.0 (not yet started)
@@ -94,7 +94,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 
 ## v2.3.0-alpha
 
-- [further reading](http://blog.marcgravell.com/2017/06/protobuf-net-gets-proto3-support.html)
+- [further reading](https://blog.marcgravell.com/2017/06/protobuf-net-gets-proto3-support.html)
 - proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
 - proto3 schema generation
 - full support for `map<,>`, `Timestamp`, `Duration`
@@ -127,7 +127,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - fix bug with cyclic types resolving as lists (#167)
 - optimized encoding of packed fixed-length primitives (in particular, arrays)
 
-(see also: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html))
+(see also: [protobuf-net: large data, and the future](https://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html))
 
 ## v2.1.0
 
