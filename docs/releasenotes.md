@@ -24,6 +24,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protobuf-net v2.3.8-alpha1
+
+- Speculative fix for iOS issues (#381)
+
 ## protogen v1.0.5
 
 - allow default package name using #FILE# and #DIR# tokens

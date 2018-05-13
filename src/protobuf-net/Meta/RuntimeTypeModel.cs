@@ -17,7 +17,8 @@ using System.Reflection.Emit;
 using ProtoBuf.Serializers;
 using System.Threading;
 using System.IO;
-
+using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Meta
 {
@@ -388,9 +389,32 @@ namespace ProtoBuf.Meta
             UseImplicitZeroDefaults = true;
             SetOption(OPTIONS_IsDefaultModel, isDefault);
 #if FEAT_COMPILER && !FX11 && !DEBUG
-            AutoCompile = true;
+            AutoCompile = EnableAutoCompile();
 #endif
         }
+
+#if FEAT_COMPILER
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static bool EnableAutoCompile()
+        {
+            try
+            {
+                var dm = new DynamicMethod("CheckCompilerAvailable", typeof(bool), new Type[] { typeof(int) });
+                var il = dm.GetILGenerator();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldc_I4, 42);
+                il.Emit(OpCodes.Ceq);
+                il.Emit(OpCodes.Ret);
+                var func = (Predicate<int>)dm.CreateDelegate(typeof(Predicate<int>));
+                return func(42);
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine(ex);
+                return false;
+            }
+        }
+#endif
 
 #if FEAT_IKVM
         readonly IKVM.Reflection.Universe universe;
