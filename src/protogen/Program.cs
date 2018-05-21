@@ -239,8 +239,16 @@ namespace protogen
             if (String.IsNullOrEmpty(fromPath)) throw new ArgumentNullException("fromPath");
             if (String.IsNullOrEmpty(toPath)) throw new ArgumentNullException("toPath");
 
-            Uri fromUri = new Uri(fromPath);
-            Uri toUri = new Uri(toPath);
+            Uri fromUri = new Uri(fromPath, UriKind.RelativeOrAbsolute);
+            if (!fromUri.IsAbsoluteUri)
+            {
+                fromUri = new Uri(Path.Combine(Directory.GetCurrentDirectory(), fromPath));
+            }
+            Uri toUri = new Uri(toPath, UriKind.RelativeOrAbsolute);
+            if (!toUri.IsAbsoluteUri)
+            {
+                toUri = new Uri(Path.Combine(Directory.GetCurrentDirectory(), toPath));
+            }
 
             if (fromUri.Scheme != toUri.Scheme) { return toPath; } // path can't be made relative.
 
