@@ -25,12 +25,13 @@ namespace protogen.site.Controllers
         {
             _host = host;
         }
-        public IActionResult Index()
+        public IActionResult Index(string oneof = null)
         {
             var model = new IndexModel
             {
                 ProtocVersion = GetProtocVersion(_host, out var canUse),
-                CanUseProtoc = canUse
+                CanUseProtoc = canUse,
+                OneOfEnum = string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase),
             };
             return View("Index", model);
         }
@@ -66,6 +67,7 @@ namespace protogen.site.Controllers
         {
             public string ProtocVersion { get; set; }
             public bool CanUseProtoc { get; set; }
+            public bool OneOfEnum { get; set; }
         }
         public const int MaxFileLength = 1024 * 1024;
         [Route("/decode")]
@@ -74,7 +76,7 @@ namespace protogen.site.Controllers
             byte[] data = null;
             try
             {
-                
+
                 if (hex != null) hex = hex.Trim();
                 if (base64 != null) base64 = base64.Trim();
 
@@ -85,7 +87,7 @@ namespace protogen.site.Controllers
                     {
                         stream.CopyTo(ms);
                         data = ms.ToArray();
-                    }                        
+                    }
                 }
                 else if (!string.IsNullOrWhiteSpace(hex))
                 {
@@ -122,7 +124,7 @@ namespace protogen.site.Controllers
                 Deep = deep;
                 SkipField = skipField;
             }
-            public DecodeModel(byte[] data, bool deep) : this(data, deep, 0, data?.Length??0) { }
+            public DecodeModel(byte[] data, bool deep) : this(data, deep, 0, data?.Length ?? 0) { }
 
             public string AsHex() => ContainsValue ? BitConverter.ToString(data.Array, data.Offset, data.Count) : null;
 
@@ -174,6 +176,25 @@ namespace protogen.site.Controllers
             {
                 return null;
             }
+
+            Dictionary<string, string> options = null;
+            foreach(var field in Request.Form)
+            {
+                switch(field.Key)
+                {
+                    case nameof(schema):
+                    case nameof(tooling):
+                        break; // handled separately
+                    default:
+                        string s = field.Value;
+                        if (!string.IsNullOrWhiteSpace(s))
+                        {
+                            if (options == null) options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+                            options[field.Key] = s;
+                        }
+                        break;
+                }
+            }
             var result = new GenerateResult();
             try
             {
@@ -196,7 +217,7 @@ namespace protogen.site.Controllers
                             result.ParserExceptions = errors;
                         }
                         CodeGenerator codegen;
-                        switch(tooling)
+                        switch (tooling)
                         {
                             case "protogen:VB":
 #pragma warning disable 0618
@@ -207,9 +228,9 @@ namespace protogen.site.Controllers
                             default:
                                 codegen = CSharpCodeGenerator.Default;
                                 break;
-                                 
+
                         }
-                        result.Files = codegen.Generate(set).ToArray();
+                        result.Files = codegen.Generate(set, options: options).ToArray();
                     }
                     else
                     {

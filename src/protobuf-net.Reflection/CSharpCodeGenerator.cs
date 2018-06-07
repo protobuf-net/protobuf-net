@@ -134,7 +134,7 @@ namespace ProtoBuf.Reflection
                .WriteLine("// Consider using 'partial classes' to extend these types")
                .WriteLine($"// Input: {Path.GetFileName(ctx.File.Name)}").WriteLine()
                .Write($"#pragma warning disable {prefix}1591, {prefix}0612, {prefix}3021");
-            if(ctx.Supports(CSharp6))
+            if (ctx.Supports(CSharp6))
             {
                 tw.Write(", IDE1006");
             }
@@ -163,7 +163,7 @@ namespace ProtoBuf.Reflection
                 ctx.Outdent().WriteLine("}").WriteLine();
             }
             var tw = ctx.Write($"#pragma warning restore {prefix}1591, {prefix}0612, {prefix}3021");
-            if(ctx.Supports(CSharp6))
+            if (ctx.Supports(CSharp6))
             {
                 tw.Write(", IDE1006");
             }
@@ -201,7 +201,7 @@ namespace ProtoBuf.Reflection
                 tw.Write($@"Name = @""{obj.Name}""");
                 tw.WriteLine(")]");
             }
-            
+
             WriteOptions(ctx, obj.Options);
             ctx.WriteLine($"{Escape(name)} = {obj.Number},");
         }
@@ -231,7 +231,7 @@ namespace ProtoBuf.Reflection
             {
                 ctx.WriteLine("#error message_set_wire_format is not currently implemented").WriteLine();
             }
-            
+
             ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
                 .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
 
@@ -332,7 +332,7 @@ namespace ProtoBuf.Reflection
             }
             else if (oneOf != null)
             { } // nothing to do
-            else if(explicitValues)
+            else if (explicitValues)
             { } // nothing to do
             else
             {
@@ -341,7 +341,7 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine($"{Escape(name)} = {defaultValue};");
                 }
             }
-            
+
         }
 
         private string GetDefaultValue(GeneratorContext ctx, FieldDescriptorProto obj, string typeName)
@@ -443,7 +443,7 @@ namespace ProtoBuf.Reflection
             bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
                 && obj.type != FieldDescriptorProto.Type.TypeMessage
                 && obj.type != FieldDescriptorProto.Type.TypeGroup;
-            
+
             bool suppressDefaultAttribute = !isOptional;
             var typeName = GetTypeName(ctx, obj, out var dataFormat, out var isMap);
             string defaultValue = GetDefaultValue(ctx, obj, typeName);
@@ -503,7 +503,7 @@ namespace ProtoBuf.Reflection
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
-                else if(ctx.Supports(CSharp6))
+                else if (ctx.Supports(CSharp6))
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
@@ -552,6 +552,31 @@ namespace ProtoBuf.Reflection
                 if (oneOf.IsFirst())
                 {
                     ctx.WriteLine().WriteLine($"private global::ProtoBuf.{unionType} {fieldName};");
+
+                    if (ctx.OneOfEnums)
+                    {
+                        ctx.WriteLine().WriteLine($"public enum {name}OneofCase").WriteLine("{").Indent().WriteLine("None = 0,");
+                        var index = obj.OneofIndex;
+                        foreach(var field in obj.Parent.Fields)
+                        {
+                            if(field.ShouldSerializeOneofIndex() && field.OneofIndex == index)
+                            {
+                                ctx.WriteLine($"{ctx.NameNormalizer.GetName(field)} = {field.Number},");
+                            }
+                        }
+                        ctx.Outdent().WriteLine("}").WriteLine();
+
+                        if (ctx.Supports(CSharp6))
+                        {
+                            ctx.WriteLine($"public {name}OneofCase {name}Case => ({name}OneofCase){fieldName}.Discriminator;");
+                        }
+                        else
+                        {
+                            ctx.WriteLine($"public {name}OneofCase {name}Case").WriteLine("{").Indent()
+                                .WriteLine($"return ({name}OneofCase){fieldName}.Discriminator;")
+                                .Outdent().WriteLine("}");
+                        }
+                    }
                 }
             }
             else if (explicitValues)
@@ -680,13 +705,13 @@ namespace ProtoBuf.Reflection
                     tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
                 }
                 tw.WriteLine(");");
-                if(ctx.Supports(CSharp6))
+                if (ctx.Supports(CSharp6))
                 {
                     ctx.Outdent().WriteLine();
                 }
                 else
                 {
-                    ctx.Outdent().WriteLine("}").WriteLine();   
+                    ctx.Outdent().WriteLine("}").WriteLine();
                 }
 
                 //  GetValue<TValue>(IExtensible instance, int tag, DataFormat format)

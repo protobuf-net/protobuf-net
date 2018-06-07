@@ -30,7 +30,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string,string> options = null);
+        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null);
 
         /// <summary>
         /// Eexecute this code generator against a code file
@@ -92,7 +92,7 @@ namespace ProtoBuf.Reflection
         /// Get the language version for this language from a schema
         /// </summary>
         protected virtual string GetLanguageVersion(FileDescriptorProto obj) => null;
-            
+
 
         static Access? NullIfInherit(Access? access)
             => access == Access.Inherit ? null : access;
@@ -119,7 +119,7 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public virtual string GetAccess(Access access)
             => access.ToString();
-        
+
         /// <summary>
         /// The indentation used by this code generator
         /// </summary>
@@ -143,7 +143,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string,string> options = null)
+        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null)
         {
             foreach (var file in set.Files)
             {
@@ -186,11 +186,11 @@ namespace ProtoBuf.Reflection
             {
                 WriteService(ctx, inner);
             }
-            if(file.Extensions.Count != 0)
+            if (file.Extensions.Count != 0)
             {
                 object extState = null;
                 WriteExtensionsHeader(ctx, file, ref extState);
-                foreach(var ext in file.Extensions)
+                foreach (var ext in file.Extensions)
                 {
                     WriteExtension(ctx, ext);
                 }
@@ -262,9 +262,9 @@ namespace ProtoBuf.Reflection
             var oneOfs = OneOfStub.Build(ctx, obj);
 
 
-            if(WriteContructorHeader(ctx, obj, ref state))
+            if (WriteContructorHeader(ctx, obj, ref state))
             {
-                foreach(var inner in obj.Fields)
+                foreach (var inner in obj.Fields)
                 {
                     WriteInitField(ctx, inner, ref state, oneOfs);
                 }
@@ -388,12 +388,16 @@ namespace ProtoBuf.Reflection
             /// The effective syntax of this code-generation cycle, defaulting to "proto2" if not explicity specified
             /// </summary>
             public string Syntax => string.IsNullOrWhiteSpace(File.Syntax) ? FileDescriptorProto.SyntaxProto2 : File.Syntax;
+
+            internal bool OneOfEnums => _options != null && _options.TryGetValue("oneof", out var oneof)
+                && string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase);
+
             /// <summary>
             /// Create a new GeneratorContext instance
             /// </summary>
-            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken, Dictionary<string,string> options)
+            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken, Dictionary<string, string> options)
             {
-                if(nameNormalizer == null)
+                if (nameNormalizer == null)
                 {
                     string nn = null;
                     if (options != null) options.TryGetValue("names", out nn);
@@ -403,12 +407,12 @@ namespace ProtoBuf.Reflection
                     if (string.Equals(nn, "auto", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Default;
                     else if (string.Equals(nn, "original", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Null;
                 }
-                
+
                 string langver = null;
                 if (options != null) options.TryGetValue("langver", out langver); // explicit option first
                 if (string.IsNullOrWhiteSpace(langver)) langver = generator?.GetLanguageVersion(file); // then from file
 
-                if(nameNormalizer == null)
+                if (nameNormalizer == null)
                 {
                     nameNormalizer = NameNormalizer.Default;
                 }

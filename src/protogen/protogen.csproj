@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <VersionPrefix>$(ProtoGenVersion)</VersionPrefix>
-    <!--<VersionSuffix>alpha2</VersionSuffix>-->
+    <VersionSuffix></VersionSuffix>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>net462;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
