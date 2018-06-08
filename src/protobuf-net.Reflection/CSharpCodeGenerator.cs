@@ -721,9 +721,10 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Emit a field-based entry for a 'oneof' groups's enum
         /// </summary>
-        protected override void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto field, ref object state)
+        protected override void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto obj, ref object state)
         {
-            ctx.WriteLine($"{ctx.NameNormalizer.GetName(field)} = {field.Number},");
+            var name = ctx.NameNormalizer.GetName(obj);
+            ctx.WriteLine($"{Escape(name)} = {obj.Number},");
         }
         /// <summary>
         /// Emit  the discriminator accessor for 'oneof' groups
@@ -734,12 +735,12 @@ namespace ProtoBuf.Reflection
             var fieldName = GetOneOfFieldName(obj);
             if (ctx.Supports(CSharp6))
             {
-                ctx.WriteLine($"public {name}OneofCase {name}Case => ({name}OneofCase){fieldName}.Discriminator;");
+                ctx.WriteLine($"public {name}{OneOfEnumSuffixEnum} {name}{OneOfEnumSuffixDiscriminator} => ({name}{OneOfEnumSuffixEnum}){fieldName}.Discriminator;");
             }
             else
             {
-                ctx.WriteLine($"public {name}OneofCase {name}Case").WriteLine("{").Indent()
-                    .WriteLine($"get {{ return ({name}OneofCase){fieldName}.Discriminator; }}")
+                ctx.WriteLine($"public {name}{OneOfEnumSuffixEnum} {name}{OneOfEnumSuffixDiscriminator}").WriteLine("{").Indent()
+                    .WriteLine($"get {{ return ({name}{OneOfEnumSuffixEnum}){fieldName}.Discriminator; }}")
                     .Outdent().WriteLine("}");
             }
         }

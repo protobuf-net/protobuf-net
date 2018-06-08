@@ -275,6 +275,42 @@ namespace ProtoBuf
             WriteOptions(ctx, obj.Options);
             ctx.WriteLine($"{Escape(name)} = {obj.Number}");
         }
+        private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
+
+        /// <summary>
+        /// Emit  the discriminator accessor for 'oneof' groups
+        /// </summary>
+        protected override void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        {
+            var name = ctx.NameNormalizer.GetName(obj);
+            var fieldName = GetOneOfFieldName(obj);
+            ctx.WriteLine($"Public ReadOnly Property {name}{OneOfEnumSuffixDiscriminator} As {name}{OneOfEnumSuffixEnum}").Indent().WriteLine("Get").Indent()
+                .WriteLine($"Return {fieldName}.Discriminator")
+                .Outdent().WriteLine("End Get").Outdent().WriteLine("End Property").WriteLine();
+        }
+        /// <summary>
+        /// Emit the end of an enum declaration for 'oneof' groups
+        /// </summary>
+        protected override void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        {
+            ctx.Outdent().WriteLine("End Enum").WriteLine();
+        }
+        /// <summary>
+        /// Emit the start of an enum declaration for 'oneof' groups, including the 0/None element
+        /// </summary>
+        protected override void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        {
+            ctx.WriteLine($"Public Enum {Escape(ctx.NameNormalizer.GetName(obj))}{OneOfEnumSuffixEnum}").Indent().WriteLine("None = 0");
+        }
+
+        /// <summary>
+        /// Emit a field-based entry for a 'oneof' groups's enum
+        /// </summary>
+        protected override void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto obj, ref object state)
+        {
+            var name = ctx.NameNormalizer.GetName(obj);
+            ctx.WriteLine($"{Escape(name)} = {obj.Number}");
+        }
 
         /// <summary>
         /// End a message
@@ -503,11 +539,9 @@ namespace ProtoBuf
             else if (oneOf != null)
             {
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"CType(Nothing, {typeName})" : defaultValue;
-                var fieldName = FieldPrefix + oneOf.OneOf.Name;
+                var fieldName = GetOneOfFieldName(oneOf.OneOf);
                 var storage = oneOf.GetStorage(obj.type, obj.TypeName);
-                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}").WriteLine().Indent();
-
-                ctx.WriteLine("Get").Indent();
+                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}").Indent().WriteLine("Get").Indent();
                 switch (obj.type)
                 {
                     case FieldDescriptorProto.Type.TypeMessage:
@@ -528,11 +562,11 @@ namespace ProtoBuf
                 ctx.WriteLine($"Set(ByVal value As {typeName})").Indent()
                     .WriteLine($"{fieldName} = New Global.ProtoBuf.{unionType}({obj.Number}, value)").Outdent().WriteLine("End Set");
 
-                ctx.Outdent().WriteLine("End Property");
+                ctx.Outdent().WriteLine("End Property").WriteLine();
 
                 ctx.WriteLine($"{GetAccess(GetAccess(obj))} Function ShouldSerialize{name}() As Boolean").Indent()
                     .WriteLine($"Return {fieldName}.Is({obj.Number})").Outdent()
-                    .WriteLine("End Function")
+                    .WriteLine("End Function").WriteLine()
                     .WriteLine($"{GetAccess(GetAccess(obj))} Sub Reset{name}()").Indent()
                     .WriteLine($"Global.ProtoBuf.{unionType}.Reset({fieldName}, {obj.Number})")
                     .Outdent().WriteLine("End Sub");

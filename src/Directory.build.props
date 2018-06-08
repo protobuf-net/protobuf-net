@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <VersionPrefix>2.3.8</VersionPrefix>
-    <VersionSuffix>alpha2</VersionSuffix>
+    <VersionSuffix></VersionSuffix>
     <ProtoGenVersion>1.0.6</ProtoGenVersion>
     <RootNamespace>ProtoBuf</RootNamespace>
     <Authors>Marc Gravell</Authors>

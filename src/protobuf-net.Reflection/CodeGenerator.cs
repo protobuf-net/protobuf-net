@@ -422,7 +422,7 @@ namespace ProtoBuf.Reflection
         /// Convention-based suffix for 'oneof' discriminators
         /// </summary>
 
-        protected const string OneOfEnumSuffixDiscriminatior = "Case";
+        protected const string OneOfEnumSuffixDiscriminator = "Case";
 
         /// <summary>
         /// Represents the state of a code-generation invocation
