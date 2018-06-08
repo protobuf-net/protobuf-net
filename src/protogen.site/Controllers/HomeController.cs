@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ProtoBuf;
+using ProtoBuf.Meta;
 using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace protogen.site.Controllers
@@ -70,6 +72,18 @@ namespace protogen.site.Controllers
             public bool CanUseProtoc { get; set; }
             public bool OneOfEnum { get; set; }
             public string LangVer { get; set; }
+
+            public string LibVersion => _libVersion;
+
+            static readonly string _libVersion =
+                GetVersion(typeof(TypeModel)) + "/" + GetVersion(typeof(CodeGenerator));
+            static string GetVersion(Type type)
+            {
+                var assembly = type.GetTypeInfo().Assembly;
+                return assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                    ?? assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
+                    ?? assembly.GetName().Version.ToString();
+            }
         }
         public const int MaxFileLength = 1024 * 1024;
         [Route("/decode")]
