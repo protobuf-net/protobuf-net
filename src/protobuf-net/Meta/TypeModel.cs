@@ -1279,6 +1279,20 @@ namespace ProtoBuf.Meta
         {
             return GetKey(ref type) >= 0;
         }
+
+        readonly Dictionary<Type, KnownTypeKey> knownKeys = new Dictionary<Type, KnownTypeKey>();
+
+        // essentially just a ValueTuple<int,Type> - I just don't want the extra dependency
+        private readonly struct KnownTypeKey
+        {
+            public int Key { get; }
+            public Type Type { get; }
+            public KnownTypeKey(Type type, int key)
+            {
+                Type = type;
+                Key = key;
+            }
+        }
         /// <summary>
         /// Provides the key that represents a given type in the current model.
         /// The type is also normalized for proxies at the same time.
@@ -1286,14 +1300,30 @@ namespace ProtoBuf.Meta
         protected internal int GetKey(ref Type type)
         {
             if (type == null) return -1;
-            int key = GetKeyImpl(type);
+            int key;
+            lock (knownKeys)
+            {
+                if (knownKeys.TryGetValue(type, out var tuple))
+                {
+                    // the type can be changed via ResolveProxies etc
+                    type = tuple.Type;
+                    return tuple.Key;
+                }
+            }
+            key = GetKeyImpl(type);
+            Type originalType = type;
             if (key < 0)
             {
                 Type normalized = ResolveProxies(type);
-                if (normalized != null) {
+                if (normalized != null && normalized != type)
+                {
                     type = normalized; // hence ref
                     key = GetKeyImpl(type);
                 }
+            }
+            lock (knownKeys)
+            {
+                knownKeys[originalType] = new KnownTypeKey(type, key);
             }
             return key;
         }
