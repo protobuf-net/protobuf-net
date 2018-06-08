@@ -16,15 +16,15 @@
         <button id="generatecsharp">Generate</button>
         <select id="tooling">
             <optgroup label="protobuf-net @Model.LibVersion">
-                <option value="protogen:C#" selected="selected">(protogen) C#</option>
-                <option value="protogen:VB">(protogen) VB</option>
+                <option value="protogen:C#" selected="@(Model.LangVer.StartsWith("cs"))">(protogen) C#</option>
+                <option value="protogen:VB" selected="@(Model.LangVer.StartsWith("vb"))">(protogen) VB</option>
             </optgroup>
             @if (Model.CanUseProtoc)
             {
                 <optgroup label="@Model.ProtocVersion">
                     @foreach (var option in protogen.site.Controllers.HomeController.ProtocTooling.Options)
                     {
-                        <option value="@option.Tooling">(protoc) @option.Caption</option>
+                        <option value="@option.Tooling" selected="@(Model.LangVer == option.Tooling)">(protoc) @option.Caption</option>
                     }
                 </optgroup>
             }
@@ -46,15 +46,15 @@
         <label for="opt_langver">Language Version</label>&nbsp;<select id="opt_langver">
             <option value="" selected="@(Model.LangVer == "")">(latest/default)</option>
             <optgroup label="C#">
-                <option value="7.1" selected="@(Model.LangVer == "7.1")">C# 7.1 - default literals</option>
-                <option value="6" selected="@(Model.LangVer == "6")">C# 6 - expresson-based (&DoubleRightArrow;) members</option>
-                <option value="3" selected="@(Model.LangVer == "3")">C# 3 - partial methods</option>
-                <option value="2" selected="@(Model.LangVer == "2")">C# 2 - downlevel</option>
+                <option value="7.1" selected="@(Model.LangVer == "cs7.1")">C# 7.1 - default literals</option>
+                <option value="6" selected="@(Model.LangVer == "cs6")">C# 6 - expresson-based (&DoubleRightArrow;) members</option>
+                <option value="3" selected="@(Model.LangVer == "cs3")">C# 3 - partial methods</option>
+                <option value="2" selected="@(Model.LangVer == "cs2")">C# 2 - downlevel</option>
             </optgroup>
             <optgroup label="VB">
-                <option value="14" selected="@(Model.LangVer == "14")">VB 14 - readonly automatic properties</option>
-                <option value="11" selected="@(Model.LangVer == "11")">VB 11 - auto-implemented properties</option>
-                <option value="9" selected="@(Model.LangVer == "9")">VB 9 - downlevel</option>
+                <option value="14" selected="@(Model.LangVer == "vb14")">VB 14 - readonly automatic properties</option>
+                <option value="11" selected="@(Model.LangVer == "vb11")">VB 11 - auto-implemented properties</option>
+                <option value="9" selected="@(Model.LangVer == "vb9")">VB 9 - downlevel</option>
             </optgroup>
         </select>
         <a target="_blank" href="#gc545f903467fd7fa441ad80c5433d331">or specify in the .proto</a>
