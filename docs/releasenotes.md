@@ -39,6 +39,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - fix #313 immutable arrays (#346 from BryantL)
 - improve LOH behaviour (#307 from mintsoft)
 - allow model precompilation for unknown types (#326 from daef)
+- improve type-key lookup performance (#310 from alex-sherman)
 
 ## protogen v1.0.5
 
