@@ -36,6 +36,8 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - add discriminator accessor to discriminated union types, for protogen v1.0.6
 - improve performance of ProtoWriter.DemandSpace (#378 from szehetner)
 - protogen - better support for wildcard paths (#390 from RansomVO)
+- fix #313 immutable arrays (#346 from BryantL)
+- improve LOH behaviour (#307 from mintsoft)
 
 ## protogen v1.0.5
 
