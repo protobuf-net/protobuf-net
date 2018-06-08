@@ -24,9 +24,18 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
-## protobuf-net v2.3.8-alpha1
+## protogen v1.0.6
 
-- Speculative fix for iOS issues (#381)
+- optional ability to emit enums for `oneof` [similar to Google's C# generator](https://developers.google.com/protocol-buffers/docs/reference/csharp-generated#oneof)
+- extend C# support down to 2.0 and up to 7.1, and VB support down to VB 9
+- add website support for additional options (as above)
+
+## protobuf-net v2.3.8
+
+- speculative fix for iOS issues (#381)
+- add discriminator accessor to discriminated union types, for protogen v1.0.6
+- improve performance of ProtoWriter.DemandSpace (#378 from szehetner)
+- protogen - better support for wildcard paths (#390 from RansomVO)
 
 ## protogen v1.0.5
 

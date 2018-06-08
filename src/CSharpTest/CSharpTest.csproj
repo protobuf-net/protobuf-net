@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>7.1</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../protobuf-net/protobuf-net.csproj"/>
+    <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
   </ItemGroup>
 
 </Project>

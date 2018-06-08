@@ -157,8 +157,14 @@ namespace ProtoBuf.Schemas
             set.AddImportPath(schemaPath);
             set.Add(path, includeInOutput: true);
             set.Process();
+
+            var options = new Dictionary<string, string>
+            {
+                ["langver"] = "9",
+            };
+
 #pragma warning disable CS0618
-            var sourceFiles = VBCodeGenerator.Default.Generate(set).Select(x => x.Text).ToArray();
+            var sourceFiles = VBCodeGenerator.Default.Generate(set, options: options).Select(x => x.Text).ToArray();
 #pragma warning restore CS0618
             Assert.Single(sourceFiles);
             _output.WriteLine(sourceFiles[0]);

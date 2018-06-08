@@ -293,6 +293,7 @@ Parse PROTO_FILES and generate output based on the options given:
   +langver=VERSION            Request a specific language version from the
                               selected code generator.
   +names={auto|original}      Specify naming convention rules.
+  +oneof={default|enum}       Specify whether 'oneof' should generate enums.
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
                               selected code generator.
   --package=PACKAGE           Add a default package (when no package is

@@ -15,18 +15,17 @@
     <div>
         <button id="generatecsharp">Generate</button>
         <select id="tooling">
-            <optgroup label="protobuf-net">
-                <option value="protogen:C#" selected="selected">(protogen) C#</option>
-                <option value="protogen:VB">(protogen) VB</option>
+            <optgroup label="protobuf-net @Model.LibVersion">
+                <option value="protogen:C#" selected="@(Model.LangVer.StartsWith("cs"))">(protogen) C#</option>
+                <option value="protogen:VB" selected="@(Model.LangVer.StartsWith("vb"))">(protogen) VB</option>
             </optgroup>
             @if (Model.CanUseProtoc)
             {
                 <optgroup label="@Model.ProtocVersion">
                     @foreach (var option in protogen.site.Controllers.HomeController.ProtocTooling.Options)
                     {
-                        <option value="@option.Tooling">(protoc) @option.Caption</option>
+                        <option value="@option.Tooling" selected="@(Model.LangVer == option.Tooling)">(protoc) @option.Caption</option>
                     }
-                    
                 </optgroup>
             }
         </select>
@@ -39,13 +38,33 @@
             <span>(sorry, protoc is not available: @Model.ProtocVersion)</span>
         }
     </div>
+    <div title="with the command line tools: +oneof=...">
+        <label for="opt_oneof"><code>oneof</code> should use enum</label>&nbsp;<input type="checkbox" id="opt_oneof" value="enum" checked="@Model.OneOfEnum"/>
+        <a target="_blank" href="#gc545f903467fd7fa441ad80c5433d331">or specify in the .proto</a>
+    </div>
+    <div title="with the command line tools: +langver=...">
+        <label for="opt_langver">Language Version</label>&nbsp;<select id="opt_langver">
+            <option value="" selected="@(Model.LangVer == "")">(latest/default)</option>
+            <optgroup label="C#">
+                <option value="7.1" selected="@(Model.LangVer == "cs7.1")">C# 7.1 - default literals</option>
+                <option value="6" selected="@(Model.LangVer == "cs6")">C# 6 - expresson-based (&DoubleRightArrow;) members</option>
+                <option value="3" selected="@(Model.LangVer == "cs3")">C# 3 - partial methods</option>
+                <option value="2" selected="@(Model.LangVer == "cs2")">C# 2 - downlevel</option>
+            </optgroup>
+            <optgroup label="VB">
+                <option value="14" selected="@(Model.LangVer == "vb14")">VB 14 - readonly automatic properties</option>
+                <option value="11" selected="@(Model.LangVer == "vb11")">VB 11 - auto-implemented properties</option>
+                <option value="9" selected="@(Model.LangVer == "vb9")">VB 9 - downlevel</option>
+            </optgroup>
+        </select>
+        <a target="_blank" href="#gc545f903467fd7fa441ad80c5433d331">or specify in the .proto</a>
+    </div>
     <div id="protocontainer" style="width:100%; max-width:unset;height:600px;border:1px solid grey"></div>
     <script>
 
     </script>
     <p>Not sure what to use? How about <a href="https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto">descriptor.proto</a>?</p>
-    <p>download <code>protogen</code> <a href="/protogen/protogen 1.0.5.zip">1.0.5 (windows)</a> to use this tool at the command-line</p>
-    <p>tip: if needed, you can <a href="https://github.com/mgravell/protobuf-net/issues/343#issuecomment-360127902">generate C# 3.0 instead of C# 6.0</a></p>
+    <p>download <code>protogen</code> <a href="/protogen/protogen 1.0.6.zip">1.0.6 (windows)</a> to use this tool at the command-line</p>
 </section>
 <section id="coderesult" style="display: none;">
     <h3>Generated Code</h3>
