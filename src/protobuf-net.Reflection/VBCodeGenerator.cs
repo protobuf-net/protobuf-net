@@ -330,18 +330,17 @@ namespace ProtoBuf
             tw.WriteLine(")> _");
             WriteOptions(ctx, obj.Options);
             ctx.WriteLine($"Partial {GetAccess(GetAccess(obj))} Class {Escape(name)}");
-            ctx.Indent().WriteLine("Implements Global.ProtoBuf.IExtensible").Outdent();
+            ctx.Indent().WriteLine("Implements Global.ProtoBuf.IExtensible").WriteLine();
 
-            ctx.Indent();
             if (obj.Options?.MessageSetWireFormat == true)
             {
                 ctx.WriteLine("REM #error message_set_wire_format is not currently implemented").WriteLine();
             }
 
-            ctx.WriteLine($"Private {FieldPrefix}extensionData As Global.ProtoBuf.IExtension")
+            ctx.WriteLine($"Private {FieldPrefix}extensionData As Global.ProtoBuf.IExtension").WriteLine()
                 .WriteLine($"Private Function GetExtensionObject(ByVal createIfMissing As Boolean) As Global.ProtoBuf.IExtension Implements Global.ProtoBuf.IExtensible.GetExtensionObject")
                 .Indent().WriteLine($"Return Global.ProtoBuf.Extensible.GetExtensionObject({FieldPrefix}extensionData, createIfMissing)")
-                .Outdent().WriteLine("End Function");
+                .Outdent().WriteLine("End Function").WriteLine();
         }
 
         private static void WriteOptions<T>(GeneratorContext ctx, T obj) where T : class, ISchemaOptions
