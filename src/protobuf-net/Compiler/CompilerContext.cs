@@ -14,7 +14,6 @@ using System.Reflection;
 using System.Reflection.Emit;
 #endif
 
-
 namespace ProtoBuf.Compiler
 {
     internal readonly struct CodeLabel
@@ -86,7 +85,7 @@ namespace ProtoBuf.Compiler
             catch (Exception ex)
             {
                 string name = type.FullName;
-                if(string.IsNullOrEmpty(name)) name = type.Name;
+                if (string.IsNullOrEmpty(name)) name = type.Name;
                 throw new InvalidOperationException("It was not possible to prepare a serializer for: " + name, ex);
             }
         }
@@ -124,7 +123,7 @@ namespace ProtoBuf.Compiler
         {
             Type type = head.ExpectedType;
             CompilerContext ctx = new CompilerContext(type, false, true, model, typeof(object));
-            
+
             using (Local typedVal = new Local(ctx, type))
             {
                 if (!Helpers.IsValueType(type))
@@ -134,7 +133,7 @@ namespace ProtoBuf.Compiler
                     ctx.StoreValue(typedVal);
                 }
                 else
-                {   
+                {
                     ctx.LoadValue(ctx.InputValue);
                     CodeLabel notNull = ctx.DefineLabel(), endNull = ctx.DefineLabel();
                     ctx.BranchIfTrue(notNull, true);
@@ -152,7 +151,8 @@ namespace ProtoBuf.Compiler
                 }
                 head.EmitRead(ctx, typedVal);
 
-                if (head.ReturnsValue) {
+                if (head.ReturnsValue)
+                {
                     ctx.StoreValue(typedVal);
                 }
 
@@ -179,7 +179,7 @@ namespace ProtoBuf.Compiler
         }
         internal void CastToObject(Type type)
         {
-            if(IsObject(type))
+            if (IsObject(type))
             { }
             else if (Helpers.IsValueType(type))
             {
@@ -208,6 +208,7 @@ namespace ProtoBuf.Compiler
                         TraceCompile(OpCodes.Ldobj + ": " + type);
                         break;
                     default:
+
                         il.Emit(OpCodes.Unbox_Any, type);
                         TraceCompile(OpCodes.Unbox_Any + ": " + type);
                         break;
@@ -226,7 +227,7 @@ namespace ProtoBuf.Compiler
         {
             if (methodPairs == null) return null;
             // but if we *do* have pairs, we demand that we find a match...
-            for (int i = 0; i < methodPairs.Length; i++ )
+            for (int i = 0; i < methodPairs.Length; i++)
             {
                 if (methodPairs[i].MetaKey == metaKey) { return read ? methodPairs[i].Deserialize : methodPairs[i].Serialize; }
             }
@@ -243,6 +244,7 @@ namespace ProtoBuf.Compiler
             }
             throw new ArgumentException("Key could not be mapped: " + metaKey.ToString(), "metaKey");
         }
+
 
         private readonly bool isWriter;
 #if FEAT_IKVM
@@ -281,7 +283,6 @@ namespace ProtoBuf.Compiler
             if (model == null) throw new ArgumentNullException("model");
 
             metadataVersion = ILVersion.Net2;
-
             this.isStatic = isStatic;
             this.isWriter = isWriter;
             this.model = model;
@@ -418,12 +419,13 @@ namespace ProtoBuf.Compiler
         {
             if (local == this.InputValue)
             {
-                byte b = isStatic ? (byte) 0 : (byte)1;
+                byte b = isStatic ? (byte)0 : (byte)1;
                 il.Emit(OpCodes.Starg_S, b);
                 TraceCompile(OpCodes.Starg_S + ": $" + b);
             }
             else
             {
+
                 switch (local.Value.LocalIndex)
                 {
                     case 0: Emit(OpCodes.Stloc_0); break;
@@ -457,9 +459,11 @@ namespace ProtoBuf.Compiler
                     case 2: Emit(OpCodes.Ldloc_2); break;
                     case 3: Emit(OpCodes.Ldloc_3); break;
                     default:
-                        OpCode code = UseShortForm(local) ? OpCodes.Ldloc_S :  OpCodes.Ldloc;
+            
+                        OpCode code = UseShortForm(local) ? OpCodes.Ldloc_S : OpCodes.Ldloc;
                         il.Emit(code, local.Value);
                         TraceCompile(code + ": $" + local.Value);
+
                         break;
                 }
             }
@@ -488,7 +492,7 @@ namespace ProtoBuf.Compiler
             if (method == null || method.ReturnType != expectedType
                 || method.GetParameters().Length != 0) throw new ArgumentException("methodName");
             LoadReaderWriter();
-            EmitCall(method);            
+            EmitCall(method);
         }
         internal void EmitBasicRead(Type helperType, string methodName, Type expectedType)
         {
@@ -512,7 +516,7 @@ namespace ProtoBuf.Compiler
             MethodInfo[] methods = writerType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             foreach (MethodInfo method in methods)
             {
-                if(method.Name != methodName) continue;
+                if (method.Name != methodName) continue;
                 ParameterInfo[] pis = method.GetParameters();
                 if (pis.Length == 2 && pis[1].ParameterType == writerType) return method;
             }
@@ -537,7 +541,7 @@ namespace ProtoBuf.Compiler
             OpCode opcode;
             if (method.IsStatic || Helpers.IsValueType(method.DeclaringType))
             {
-                opcode = OpCodes.Call; 
+                opcode = OpCodes.Call;
             }
             else
             {
@@ -566,8 +570,8 @@ namespace ProtoBuf.Compiler
         {
             if (Helpers.IsValueType(type))
             {
-                Type underlyingType = null;
-                underlyingType = Helpers.GetUnderlyingType(type);
+                Type underlyingType = Helpers.GetUnderlyingType(type);
+
                 if (underlyingType == null)
                 { // not a nullable T; can invoke directly
                     tail.EmitWrite(this, valueFrom);
@@ -605,10 +609,10 @@ namespace ProtoBuf.Compiler
         {
 
             Type underlyingType;
-            
+
             if (Helpers.IsValueType(type) && (underlyingType = Helpers.GetUnderlyingType(type)) != null)
             {
-                if(tail.RequiresOldValue)
+                if (tail.RequiresOldValue)
                 {
                     // we expect the input value to be in valueFrom; need to unpack it from T?
                     using (Local loc = GetLocalWithValue(type, valueFrom))
@@ -667,7 +671,7 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                ConstructorInfo ctor =  Helpers.GetConstructor(type
+                ConstructorInfo ctor = Helpers.GetConstructor(type
 #if COREFX
                 .GetTypeInfo()
 #endif
@@ -698,7 +702,7 @@ namespace ProtoBuf.Compiler
             }
             bool isTrusted = false;
             Type attributeType = MapType(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute));
-            if(attributeType == null) return false;
+            if (attributeType == null) return false;
 #if FEAT_IKVM
             foreach (CustomAttributeData attrib in assembly.__GetCustomAttributes(attributeType, false))
             {
@@ -738,7 +742,6 @@ namespace ProtoBuf.Compiler
                 knownUntrustedAssemblies.Add(assembly);
             }
             return isTrusted;
-#endif
         }
         internal void CheckAccessibility(ref MemberInfo member)
         {
@@ -751,7 +754,7 @@ namespace ProtoBuf.Compiler
 #endif
             if (!NonPublic)
             {
-                if(member is FieldInfo && member.Name.StartsWith("<") & member.Name.EndsWith(">k__BackingField"))
+                if (member is FieldInfo && member.Name.StartsWith("<") & member.Name.EndsWith(">k__BackingField"))
                 {
                     var propName = member.Name.Substring(1, member.Name.Length - 17);
                     var prop = member.DeclaringType.GetProperty(propName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
@@ -828,9 +831,9 @@ namespace ProtoBuf.Compiler
                         if (!isPublic)
                         {
                             // allow calls to TypeModel protected methods, and methods we are in the process of creating
-                            if(
+                            if (
                                 member is MethodBuilder ||
-                                member.DeclaringType == MapType(typeof(TypeModel))) isPublic = true; 
+                                member.DeclaringType == MapType(typeof(TypeModel))) isPublic = true;
                         }
                         break;
                     case MemberTypes.Property:
@@ -919,7 +922,7 @@ namespace ProtoBuf.Compiler
                 TraceCompile(code + ": " + field + " on " + field.DeclaringType);
             }
         }
-        
+
         public void LoadValue(PropertyInfo property)
         {
             MemberInfo member = property;
@@ -961,6 +964,7 @@ namespace ProtoBuf.Compiler
         {
             return local.Value.LocalIndex < 256;
         }
+
 #if FEAT_IKVM
         internal void LoadAddress(Local local, System.Type type)
         {
@@ -1002,7 +1006,7 @@ namespace ProtoBuf.Compiler
         }
         internal void BranchIfFalse(CodeLabel label, bool @short)
         {
-            OpCode code = @short ? OpCodes.Brfalse_S :  OpCodes.Brfalse;
+            OpCode code = @short ? OpCodes.Brfalse_S : OpCodes.Brfalse;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
@@ -1055,8 +1059,6 @@ namespace ProtoBuf.Compiler
             Emit(OpCodes.Sub);
         }
 
-
-
         public void Switch(CodeLabel[] jumpTable)
         {
             const int MAX_JUMPS = 128;
@@ -1087,7 +1089,7 @@ namespace ProtoBuf.Compiler
                         blockLabels[i] = il.DefineLabel();
                     }
                     CodeLabel endOfSwitch = DefineLabel();
-                    
+
                     LoadValue(val);
                     LoadValue(MAX_JUMPS);
                     Emit(OpCodes.Div);
@@ -1171,11 +1173,14 @@ namespace ProtoBuf.Compiler
             il.Emit(OpCodes.Castclass, type);
             TraceCompile(OpCodes.Castclass + ": " + type);
         }
+
         public IDisposable Using(Local local)
         {
             return new UsingBlock(this, local);
         }
-        private sealed class UsingBlock : IDisposable{
+
+        private sealed class UsingBlock : IDisposable
+        {
             private Local local;
             CompilerContext ctx;
             CodeLabel label;
@@ -1206,7 +1211,7 @@ namespace ProtoBuf.Compiler
                 this.local = local;
                 this.ctx = ctx;
                 label = ctx.BeginTry();
-                
+
             }
             public void Dispose()
             {
@@ -1214,7 +1219,7 @@ namespace ProtoBuf.Compiler
 
                 ctx.EndTry(label, false);
                 ctx.BeginFinally();
-                Type disposableType = ctx.MapType(typeof (IDisposable));
+                Type disposableType = ctx.MapType(typeof(IDisposable));
                 MethodInfo dispose = disposableType.GetMethod("Dispose");
                 Type type = local.Type;
                 // remember that we've already (in the .ctor) excluded the case
@@ -1232,7 +1237,7 @@ namespace ProtoBuf.Compiler
                             ctx.Constrain(type);
                             break;
                     }
-                    ctx.EmitCall(dispose);                    
+                    ctx.EmitCall(dispose);
                 }
                 else
                 {
@@ -1311,7 +1316,8 @@ namespace ProtoBuf.Compiler
             Helpers.DebugAssert(type != null, "Not an array: " + arr.Type.FullName);
             LoadValue(arr);
             LoadValue(i);
-            switch(Helpers.GetTypeCode(type)) {
+            switch (Helpers.GetTypeCode(type))
+            {
                 case ProtoTypeCode.SByte: Emit(OpCodes.Ldelem_I1); break;
                 case ProtoTypeCode.Int16: Emit(OpCodes.Ldelem_I2); break;
                 case ProtoTypeCode.Int32: Emit(OpCodes.Ldelem_I4); break;
@@ -1336,13 +1342,10 @@ namespace ProtoBuf.Compiler
                     {
                         Emit(OpCodes.Ldelem_Ref);
                     }
-             
+
                     break;
             }
-            
         }
-
-
 
         internal void LoadValue(Type type)
         {
@@ -1449,7 +1452,7 @@ namespace ProtoBuf.Compiler
 
         private readonly TypeModel model;
 
-        internal Type MapType(System.Type type)
+        internal Type MapType(Type type)
         {
             return model.MapType(type);
         }
