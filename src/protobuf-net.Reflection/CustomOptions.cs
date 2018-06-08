@@ -34,6 +34,10 @@ namespace ProtoBuf.Reflection
         [global::ProtoBuf.ProtoMember(6, Name = @"oneofEnum")]
         public bool EmitOneOfEnum { get; set; }
 
+        [global::ProtoBuf.ProtoMember(7, Name = @"vb_langver")]
+        [global::System.ComponentModel.DefaultValue("")]
+        public string VisualBasicLanguageVersion { get; set; } = "";
+
     }
 
     [global::ProtoBuf.ProtoContract()]

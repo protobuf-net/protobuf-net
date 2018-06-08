@@ -37,6 +37,12 @@ namespace ProtoBuf
         public override string Name => "VB.NET";
 
         /// <summary>
+        /// Get the language version for this language from a schema
+        /// </summary>
+        protected override string GetLanguageVersion(FileDescriptorProto obj)
+            => obj?.Options?.GetOptions()?.VisualBasicLanguageVersion;
+
+        /// <summary>
         /// Returns the default file extension
         /// </summary>
         protected override string DefaultFileExtension => "vb";
