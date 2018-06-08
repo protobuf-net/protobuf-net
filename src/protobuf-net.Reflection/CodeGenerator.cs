@@ -454,8 +454,10 @@ namespace ProtoBuf.Reflection
             /// </summary>
             public string Syntax => string.IsNullOrWhiteSpace(File.Syntax) ? FileDescriptorProto.SyntaxProto2 : File.Syntax;
 
-            internal bool OneOfEnums => _options != null && _options.TryGetValue("oneof", out var oneof)
-                && string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase);
+            /// <summary>
+            /// Whether to emit enums and discriminators for oneof groups
+            /// </summary>
+            internal bool OneOfEnums { get; }
 
             /// <summary>
             /// Create a new GeneratorContext instance
@@ -491,6 +493,8 @@ namespace ProtoBuf.Reflection
                 LanguageVersion = ParseVersion(langver);
                 EmitRequiredDefaults = file.Options.GetOptions()?.EmitRequiredDefaults ?? false;
                 _options = options;
+
+                OneOfEnums = (File.Options?.GetOptions()?.EmitOneOfEnum ?? false) || (_options != null && _options.TryGetValue("oneof", out var oneof) && string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase));
             }
 
             private Dictionary<string, string> _options;

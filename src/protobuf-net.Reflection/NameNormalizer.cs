@@ -137,7 +137,6 @@ namespace ProtoBuf.Reflection
         {
             var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
-            if (!string.IsNullOrWhiteSpace(name)) return name;
             return GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
         }
 
