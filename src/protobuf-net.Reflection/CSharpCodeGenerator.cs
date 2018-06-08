@@ -703,19 +703,31 @@ namespace ProtoBuf.Reflection
             }
         }
 
+        /// <summary>
+        /// Emit the start of an enum declaration for 'oneof' groups, including the 0/None element
+        /// </summary>
         protected override void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
         {
             ctx.WriteLine().WriteLine($"public enum {ctx.NameNormalizer.GetName(obj)}{OneOfEnumSuffixEnum}").WriteLine("{").Indent().WriteLine("None = 0,");
         }
+        /// <summary>
+        /// Emit the end of an enum declaration for 'oneof' groups
+        /// </summary>
         protected override void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
         {
             ctx.Outdent().WriteLine("}").WriteLine();
         }
 
+        /// <summary>
+        /// Emit a field-based entry for a 'oneof' groups's enum
+        /// </summary>
         protected override void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto field, ref object state)
         {
             ctx.WriteLine($"{ctx.NameNormalizer.GetName(field)} = {field.Number},");
         }
+        /// <summary>
+        /// Emit  the discriminator accessor for 'oneof' groups
+        /// </summary>
         protected override void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(obj);
