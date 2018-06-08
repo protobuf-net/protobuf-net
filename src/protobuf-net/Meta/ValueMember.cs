@@ -395,7 +395,7 @@ namespace ProtoBuf.Meta
 #else
                 var info = memberType;
 #endif
-                if (ImmutableCollectionDecorator.IdentifyImmutable(model, MemberType, out _, out _, out _, out _))
+                if (ImmutableCollectionDecorator.IdentifyImmutable(model, MemberType, out _, out _, out _, out _, out _, out _))
                 {
                     return false;
                 }

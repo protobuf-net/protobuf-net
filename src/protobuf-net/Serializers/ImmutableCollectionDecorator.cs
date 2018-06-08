@@ -49,9 +49,11 @@ namespace ProtoBuf.Serializers
 #endif
             return null;
         }
-        internal static bool IdentifyImmutable(TypeModel model, Type declaredType, out MethodInfo builderFactory, out MethodInfo add, out MethodInfo addRange, out MethodInfo finish)
+
+        internal static bool IdentifyImmutable(TypeModel model, Type declaredType, out MethodInfo builderFactory, out PropertyInfo isEmpty, out PropertyInfo length, out MethodInfo add, out MethodInfo addRange, out MethodInfo finish)
         {
             builderFactory = add = addRange = finish = null;
+            isEmpty = length = null;
             if (model == null || declaredType == null) return false;
 #if WINRT || COREFX || PROFILE259
 			TypeInfo declaredTypeInfo = declaredType.GetTypeInfo();
@@ -113,6 +115,23 @@ namespace ProtoBuf.Serializers
             Type voidType = model.MapType(typeof(void));
             if (builderFactory == null || builderFactory.ReturnType == null || builderFactory.ReturnType == voidType) return false;
 
+#if COREFX
+            TypeInfo typeInfo = declaredType.GetTypeInfo();
+#else
+            Type typeInfo = declaredType;
+#endif
+            isEmpty = Helpers.GetProperty(typeInfo, "IsDefaultOrEmpty", false); //struct based immutabletypes can have both a "default" and "empty" state
+            if (isEmpty == null) isEmpty = Helpers.GetProperty(typeInfo, "IsEmpty", false);
+            if (isEmpty == null)
+            {
+                //Fallback to checking length if a "IsEmpty" property is not found
+                length = Helpers.GetProperty(typeInfo, "Length", false);
+                if (length == null) length = Helpers.GetProperty(typeInfo, "Count", false);
+#if !NO_GENERICS
+                if (length == null) length = Helpers.GetProperty(ResolveIReadOnlyCollection(declaredType, effectiveType[0]), "Count", false);
+#endif
+                if (length == null) return false;
+            }
 
             add = Helpers.GetInstanceMethod(builderFactory.ReturnType, "Add", effectiveType);
             if (add == null) return false;
@@ -136,11 +155,14 @@ namespace ProtoBuf.Serializers
         }
 #endif
         private readonly MethodInfo builderFactory, add, addRange, finish;
+        private readonly PropertyInfo isEmpty, length;
         internal ImmutableCollectionDecorator(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull,
-            MethodInfo builderFactory, MethodInfo add, MethodInfo addRange, MethodInfo finish)
+            MethodInfo builderFactory, PropertyInfo isEmpty, PropertyInfo length, MethodInfo add, MethodInfo addRange, MethodInfo finish)
             : base(model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull)
         {
             this.builderFactory = builderFactory;
+            this.isEmpty = isEmpty;
+            this.length = length;
             this.add = add;
             this.addRange = addRange;
             this.finish = finish;
@@ -151,7 +173,7 @@ namespace ProtoBuf.Serializers
             object builderInstance = builderFactory.Invoke(null, null);
             int field = source.FieldNumber;
             object[] args = new object[1];
-            if (AppendToCollection && value != null && ((ICollection)value).Count != 0)
+            if (AppendToCollection && value != null && (isEmpty != null ? !(bool)isEmpty.GetValue(value, null) : (int)length.GetValue(value, null) != 0))
             {   
                 if(addRange !=null)
                 {
@@ -208,19 +230,18 @@ namespace ProtoBuf.Serializers
                         ctx.LoadValue(oldList);
                         ctx.BranchIfFalse(done, false); // old value null; nothing to add
                     }
-#if COREFX
-                    TypeInfo typeInfo = ExpectedType.GetTypeInfo();
-#else
-                    Type typeInfo = ExpectedType;
-#endif
-                    PropertyInfo prop = Helpers.GetProperty(typeInfo, "Length", false);
-                    if(prop == null) prop = Helpers.GetProperty(typeInfo, "Count", false);
-#if !NO_GENERICS
-                    if (prop == null) prop = Helpers.GetProperty(ResolveIReadOnlyCollection(ExpectedType, Tail.ExpectedType), "Count", false);
-#endif
+
                     ctx.LoadAddress(oldList, oldList.Type);
-                    ctx.EmitCall(Helpers.GetGetMethod(prop, false, false));
-                    ctx.BranchIfFalse(done, false); // old list is empty; nothing to add
+                    if (isEmpty != null)
+                    {
+                        ctx.EmitCall(Helpers.GetGetMethod(isEmpty, false, false));
+                        ctx.BranchIfTrue(done, false); // old list is empty; nothing to add
+                    }
+                    else
+                    {
+                        ctx.EmitCall(Helpers.GetGetMethod(length, false, false));
+                        ctx.BranchIfFalse(done, false); // old list is empty; nothing to add
+                    }
 
                     Type voidType = ctx.MapType(typeof(void));
                     if(addRange != null)

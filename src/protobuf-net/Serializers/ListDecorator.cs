@@ -54,11 +54,12 @@ namespace ProtoBuf.Serializers
         {
 #if !NO_GENERICS
             MethodInfo builderFactory, add, addRange, finish;
-            if (returnList && ImmutableCollectionDecorator.IdentifyImmutable(model, declaredType, out builderFactory, out add, out addRange, out finish))
+            PropertyInfo isEmpty, length;
+            if (returnList && ImmutableCollectionDecorator.IdentifyImmutable(model, declaredType, out builderFactory, out isEmpty, out length, out add, out addRange, out finish))
             {
                 return new ImmutableCollectionDecorator(
                     model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull,
-                    builderFactory, add, addRange, finish);
+                    builderFactory, isEmpty, length, add, addRange, finish);
             }
 
 #endif
