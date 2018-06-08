@@ -17,7 +17,7 @@ namespace ProtoBuf.Meta
     /// </summary>
     public abstract class TypeModel
     {
-#if WINRT || COREFX
+#if COREFX
         internal TypeInfo MapType(TypeInfo type)
         {
             return type;
@@ -405,7 +405,7 @@ namespace ProtoBuf.Meta
         /// <param name="resolver">On a field-by-field basis, the type of object to deserialize (can be null if "type" is specified). </param>
         /// <param name="type">The type of object to deserialize (can be null if "resolver" is specified).</param>
         /// <returns>The sequence of deserialized objects.</returns>
-        public System.Collections.IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
+        public IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
         {
             return DeserializeItems(source, type, style, expectedField, resolver, null);
         }
@@ -426,12 +426,11 @@ namespace ProtoBuf.Meta
         /// <param name="type">The type of object to deserialize (can be null if "resolver" is specified).</param>
         /// <returns>The sequence of deserialized objects.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public System.Collections.IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, SerializationContext context)
+        public IEnumerable DeserializeItems(System.IO.Stream source, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, SerializationContext context)
         {
             return new DeserializeItemsIterator(this, source, type, style, expectedField, resolver, context);
         }
 
-#if !NO_GENERICS
         /// <summary>
         /// Reads a sequence of consecutive length-prefixed items from a stream, using
         /// either base-128 or fixed-length prefixes. Base-128 prefixes with a tag
@@ -447,7 +446,7 @@ namespace ProtoBuf.Meta
         /// <param name="expectedField">The tag of records to return (if non-positive, then no tag is
         /// expected and all records are returned).</param>
         /// <returns>The sequence of deserialized objects.</returns>
-        public System.Collections.Generic.IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField)
+        public IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField)
         {
             return DeserializeItems<T>(source, style, expectedField, null);
         }
@@ -467,22 +466,22 @@ namespace ProtoBuf.Meta
         /// expected and all records are returned).</param>
         /// <returns>The sequence of deserialized objects.</returns>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public System.Collections.Generic.IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField, SerializationContext context)
+        public IEnumerable<T> DeserializeItems<T>(Stream source, PrefixStyle style, int expectedField, SerializationContext context)
         {
             return new DeserializeItemsIterator<T>(this, source, style, expectedField, context);
         }
 
         private sealed class DeserializeItemsIterator<T> : DeserializeItemsIterator,
-            System.Collections.Generic.IEnumerator<T>,
-            System.Collections.Generic.IEnumerable<T>
+            IEnumerator<T>,
+            IEnumerable<T>
         {
-            System.Collections.Generic.IEnumerator<T> System.Collections.Generic.IEnumerable<T>.GetEnumerator() { return this; }
+            IEnumerator<T> IEnumerable<T>.GetEnumerator() { return this; }
             public new T Current { get { return (T)base.Current; } }
             void IDisposable.Dispose() { }
             public DeserializeItemsIterator(TypeModel model, Stream source, PrefixStyle style, int expectedField, SerializationContext context)
                 : base(model, source, model.MapType(typeof(T)), style, expectedField, null, context) { }
         }
-#endif
+
         private class DeserializeItemsIterator : IEnumerator, IEnumerable
         {
             IEnumerator IEnumerable.GetEnumerator() { return this; }
@@ -630,14 +629,12 @@ namespace ProtoBuf.Meta
                 }
             }
             bool autoCreate = true;
-#if !NO_GENERICS
             Type underlyingType = Helpers.GetUnderlyingType(type);
             if (underlyingType != null)
             {
                 type = underlyingType;
                 autoCreate = false;
             }
-#endif
             return autoCreate;
         }
 
@@ -749,14 +746,14 @@ namespace ProtoBuf.Meta
             return value;
         }
 #endif
-#if WINRT || COREFX
+#if COREFX
         private static readonly System.Reflection.TypeInfo ilist = typeof(IList).GetTypeInfo();
 #else
         private static readonly System.Type ilist = typeof(IList);
 #endif
         internal static MethodInfo ResolveListAdd(TypeModel model, Type listType, Type itemType, out bool isList)
         {
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			TypeInfo listTypeInfo = listType.GetTypeInfo();
 #else
             Type listTypeInfo = listType;
@@ -775,12 +772,12 @@ namespace ProtoBuf.Meta
 
                 bool forceList = listTypeInfo.IsInterface &&
                     listTypeInfo == model.MapType(typeof(System.Collections.Generic.IEnumerable<>)).MakeGenericType(types)
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 					.GetTypeInfo()
 #endif
                     ;
 
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 				TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
 #else
                 Type constuctedListType = model.MapType(typeof(System.Collections.Generic.ICollection<>)).MakeGenericType(types);
@@ -794,13 +791,13 @@ namespace ProtoBuf.Meta
             if (add == null)
             {
 
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 				foreach (Type tmpType in listTypeInfo.ImplementedInterfaces)
 #else
                 foreach (Type interfaceType in listTypeInfo.GetInterfaces())
 #endif
                 {
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 					TypeInfo interfaceType = tmpType.GetTypeInfo();
 #endif
                     if (interfaceType.Name == "IProducerConsumerCollection`1" && interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
@@ -827,7 +824,7 @@ namespace ProtoBuf.Meta
         {
             Helpers.DebugAssert(listType != null);
 
-#if WINRT || PROFILE259
+#if PROFILE259
 			TypeInfo listTypeInfo = listType.GetTypeInfo();
             if (listType == typeof(string) || listType.IsArray
                 || !typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(listTypeInfo)) return null;
@@ -837,7 +834,7 @@ namespace ProtoBuf.Meta
 #endif
             
             BasicList candidates = new BasicList();
-#if WINRT || PROFILE259
+#if PROFILE259
 			foreach (MethodInfo method in listType.GetRuntimeMethods())
 #else
             foreach (MethodInfo method in listType.GetMethods())
@@ -854,11 +851,11 @@ namespace ProtoBuf.Meta
 
             string name = listType.Name;
             bool isQueueStack = name != null && (name.IndexOf("Queue") >= 0 || name.IndexOf("Stack") >= 0);
-#if !NO_GENERICS
+
             if(!isQueueStack)
             {
                 TestEnumerableListPatterns(model, candidates, listType);
-#if WINRT || PROFILE259
+#if PROFILE259
 				foreach (Type iType in listTypeInfo.ImplementedInterfaces)
                 {
                     TestEnumerableListPatterns(model, candidates, iType);
@@ -870,9 +867,8 @@ namespace ProtoBuf.Meta
                 }
 #endif
             }
-#endif
 
-#if WINRT || PROFILE259
+#if PROFILE259
 			// more convenient GetProperty overload not supported on all platforms
 			foreach (PropertyInfo indexer in listType.GetRuntimeProperties())
             {
@@ -913,7 +909,7 @@ namespace ProtoBuf.Meta
         private static void TestEnumerableListPatterns(TypeModel model, BasicList candidates, Type iType)
         {
 
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			TypeInfo iTypeInfo = iType.GetTypeInfo();
             if (iTypeInfo.IsGenericType)
             {
@@ -931,7 +927,7 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-#elif !NO_GENERICS
+#else
             if (iType.IsGenericType)
             {
                 Type typeDef = iType.GetGenericTypeDefinition();
@@ -951,10 +947,7 @@ namespace ProtoBuf.Meta
 
         private static bool CheckDictionaryAccessors(TypeModel model, Type pair, Type value)
         {
-
-#if NO_GENERICS
-            return false;
-#elif WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			TypeInfo finalType = pair.GetTypeInfo();
             return finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
                 && finalType.GenericTypeArguments[1] == value;
@@ -1034,7 +1027,7 @@ namespace ProtoBuf.Meta
                 return Array.CreateInstance(itemType, 0);
             }
 
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			TypeInfo listTypeInfo = listType.GetTypeInfo();
             if (!listTypeInfo.IsClass || listTypeInfo.IsAbstract ||
                 Helpers.GetConstructor(listTypeInfo, Helpers.EmptyTypes, true) == null)
@@ -1045,15 +1038,14 @@ namespace ProtoBuf.Meta
             {
                 string fullName;
                 bool handled = false;
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 				if (listTypeInfo.IsInterface &&
 #else
                 if (listType.IsInterface &&
 #endif
                     (fullName = listType.FullName) != null && fullName.IndexOf("Dictionary") >= 0) // have to try to be frugal here...
                 {
-#if !NO_GENERICS
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 					TypeInfo finalType = listType.GetTypeInfo();
                     if (finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
                     {
@@ -1069,8 +1061,8 @@ namespace ProtoBuf.Meta
                         handled = true;
                     }
 #endif
-#endif
-#if !SILVERLIGHT && !WINRT && !PORTABLE && !COREFX && !PROFILE259
+
+#if !PORTABLE && !COREFX && !PROFILE259
                     if (!handled && listType == typeof(IDictionary))
                     {
                         concreteListType = typeof(Hashtable);
@@ -1078,15 +1070,14 @@ namespace ProtoBuf.Meta
                     }
 #endif
                 }
-#if !NO_GENERICS
+
                 if (!handled)
                 {
                     concreteListType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
                     handled = true;
                 }
-#endif
 
-#if !SILVERLIGHT && !WINRT && !PORTABLE && !COREFX && !PROFILE259
+#if !PORTABLE && !COREFX && !PROFILE259
                 if (!handled)
                 {
                     concreteListType = typeof(ArrayList);
@@ -1237,7 +1228,7 @@ namespace ProtoBuf.Meta
             if (tmp != null) return tmp;
 #endif
 
-#if !(WINRT || CF)
+#if !CF
             // EF POCO
             string fullName = type.FullName;
             if (fullName != null && fullName.StartsWith("System.Data.Entity.DynamicProxies."))
@@ -1466,7 +1457,7 @@ namespace ProtoBuf.Meta
         protected internal static void ThrowUnexpectedType(Type type)
         {
             string fullName = type == null ? "(unknown)" : type.FullName;
-#if !NO_GENERICS && !WINRT
+
             if (type != null)
             {
                 Type baseType = type
@@ -1484,7 +1475,7 @@ namespace ProtoBuf.Meta
                         "Are you mixing protobuf-net and protobuf-csharp-port? See https://stackoverflow.com/q/11564914/23354; type: " + fullName);
                 }
             }
-#endif
+
             throw new InvalidOperationException("Type is not expected, and no contract can be inferred: " + fullName);
         }
         internal static Exception CreateNestedListsNotSupported(Type type)
@@ -1621,7 +1612,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public event TypeFormatEventHandler DynamicTypeFormatting;
 
-#if PLAT_BINARYFORMATTER && !(WINRT || PHONE8 || COREFX || PROFILE259)
+#if PLAT_BINARYFORMATTER && !(PHONE8 || COREFX || PROFILE259)
 		/// <summary>
 		/// Creates a new IFormatter that uses protocol-buffer [de]serialization.
 		/// </summary>
@@ -1702,7 +1693,7 @@ namespace ProtoBuf.Meta
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         internal static Type ResolveKnownType(string name, TypeModel model, Assembly assembly)
         {
-            if (Helpers.IsNullOrEmpty(name)) return null;
+            if (string.IsNullOrEmpty(name)) return null;
             try
             {
 #if FEAT_IKVM
@@ -1718,7 +1709,7 @@ namespace ProtoBuf.Meta
             {
                 int i = name.IndexOf(',');
                 string fullName = (i > 0 ? name.Substring(0, i) : name).Trim();
-#if !(WINRT || FEAT_IKVM || COREFX || PROFILE259)
+#if !(FEAT_IKVM || COREFX || PROFILE259)
                 if (assembly == null) assembly = Assembly.GetCallingAssembly();
 #endif
 				Type type = assembly?.GetType(fullName);

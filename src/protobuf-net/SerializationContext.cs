@@ -30,9 +30,9 @@ namespace ProtoBuf
         /// A default SerializationContext, with minimal information.
         /// </summary>
         internal static SerializationContext Default { get {return @default;}}
-#if PLAT_BINARYFORMATTER || (SILVERLIGHT && NET_4_0)
+#if PLAT_BINARYFORMATTER
 
-#if !(WINRT || PHONE7 || PHONE8 || COREFX || PROFILE259)
+#if !(PHONE8 || COREFX || PROFILE259)
         private System.Runtime.Serialization.StreamingContextStates state = System.Runtime.Serialization.StreamingContextStates.Persistence;
         /// <summary>
         /// Gets or sets the source or destination of the transmitted data.
@@ -48,7 +48,7 @@ namespace ProtoBuf
 		/// </summary>
 		public static implicit operator System.Runtime.Serialization.StreamingContext(SerializationContext ctx)
         {
-#if WINRT || PHONE7 || PHONE8 || COREFX
+#if PHONE8 || COREFX
 			return new System.Runtime.Serialization.StreamingContext();
 #else
             if (ctx == null) return new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.Persistence);
@@ -62,7 +62,7 @@ namespace ProtoBuf
         {
             SerializationContext result = new SerializationContext();
 
-#if !(WINRT || PHONE7 || PHONE8 || COREFX || PROFILE259)
+#if !(PHONE8 || COREFX || PROFILE259)
             result.Context = ctx.Context;
             result.State = ctx.State;
 #endif

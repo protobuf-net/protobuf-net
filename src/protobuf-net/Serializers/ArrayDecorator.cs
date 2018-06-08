@@ -28,11 +28,7 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(arrayType != null, "arrayType should be non-null");
             Helpers.DebugAssert(arrayType.IsArray && arrayType.GetArrayRank() == 1, "should be single-dimension array; " + arrayType.FullName);
             this.itemType = arrayType.GetElementType();
-#if NO_GENERICS
-            Type underlyingItemType = itemType;
-#else
             Type underlyingItemType = supportNull ? itemType : (Helpers.GetUnderlyingType(itemType) ?? itemType);
-#endif
 
             Helpers.DebugAssert(underlyingItemType == Tail.ExpectedType
                 || (Tail.ExpectedType == model.MapType(typeof(object)) && !Helpers.IsValueType(underlyingItemType)), "invalid tail");
@@ -251,11 +247,7 @@ namespace ProtoBuf.Serializers
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             Type listType;
-#if NO_GENERICS
-            listType = typeof(BasicList);
-#else
             listType = ctx.MapType(typeof(System.Collections.Generic.List<>)).MakeGenericType(itemType);
-#endif
             Type expected = ExpectedType;
             using (Compiler.Local oldArr = AppendToCollection ? ctx.GetLocalWithValue(expected, valueFrom) : null)
             using (Compiler.Local newArr = new Compiler.Local(ctx, expected))

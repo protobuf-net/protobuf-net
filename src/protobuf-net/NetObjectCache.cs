@@ -87,35 +87,7 @@ namespace ProtoBuf
             BasicList list = List;
             int index;
 
-#if NO_GENERICS
-            
-            if(s == null)
-            {
-                if (objectKeys == null)
-                {
-                    objectKeys = new ReferenceHashtable();
-                    index = -1;
-                }
-                else
-                {
-                    object tmp = objectKeys[value];
-                    index = tmp == null ? -1 : (int) tmp;
-                }
-            }
-            else
-            {
-                if (stringKeys == null)
-                {
-                    stringKeys = new Hashtable();
-                    index = -1;
-                }
-                else
-                {
-                    object tmp = stringKeys[s];
-                    index = tmp == null ? -1 : (int) tmp;
-                }
-            }
-#else
+
 
             if(s == null)
             {
@@ -145,7 +117,6 @@ namespace ProtoBuf
                     if (!stringKeys.TryGetValue(s, out index)) index = -1;
                 }
             }
-#endif
 
             if (!(existing = index >= 0))
             {
@@ -193,21 +164,6 @@ namespace ProtoBuf
                 }
             }
         }
-#if NO_GENERICS
-        private ReferenceHashtable objectKeys;
-        private System.Collections.Hashtable stringKeys;
-        private class ReferenceHashtable : System.Collections.Hashtable
-        {
-            protected override int GetHash(object key)
-            {
-                return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(key);
-            }
-            protected override bool KeyEquals(object item, object key)
-            {
-                return item == key;
-            }
-        }   
-#else
 
         private System.Collections.Generic.Dictionary<string, int> stringKeys;
 
@@ -228,8 +184,6 @@ namespace ProtoBuf
                 return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
             }
         }
-#endif
-
 #endif
 
         internal void Clear()

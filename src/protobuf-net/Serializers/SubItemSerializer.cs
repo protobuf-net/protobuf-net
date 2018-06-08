@@ -85,9 +85,6 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         bool EmitDedicatedMethod(Compiler.CompilerContext ctx, Compiler.Local valueFrom, bool read)
         {
-#if SILVERLIGHT
-            return false;
-#else
             MethodBuilder method = ctx.GetDedicatedMethod(key, read);
             if (method == null) return false;
 
@@ -116,7 +113,6 @@ namespace ProtoBuf.Serializers
                 ctx.EmitCall(Helpers.GetStaticMethod(rwType, "EndSubItem", new Type[] { ctx.MapType(typeof(SubItemToken)), rwType }));
             }            
             return true;
-#endif
         }
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

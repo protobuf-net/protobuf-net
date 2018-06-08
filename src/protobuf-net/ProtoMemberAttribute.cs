@@ -19,9 +19,7 @@ namespace ProtoBuf
         AllowMultiple = false, Inherited = true)]
     public class ProtoMemberAttribute : Attribute
         , IComparable
-#if !NO_GENERICS
         , IComparable<ProtoMemberAttribute>
-#endif
 
     {
         /// <summary>
@@ -220,7 +218,7 @@ namespace ProtoBuf
             : base(tag)
         {
 #if !NO_RUNTIME
-            if (Helpers.IsNullOrEmpty(memberName)) throw new ArgumentNullException("memberName");
+            if (string.IsNullOrEmpty(memberName)) throw new ArgumentNullException("memberName");
 #endif
             this.memberName = memberName;
         }

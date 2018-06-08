@@ -136,7 +136,7 @@ namespace ProtoBuf.Meta
         }
         internal object GetRawEnumValue()
         {
-#if WINRT || PORTABLE || CF || FX11 || COREFX || PROFILE259
+#if PORTABLE || CF || COREFX || PROFILE259
 			object value = ((FieldInfo)originalMember).GetValue(null);
             switch(Helpers.GetTypeCode(Enum.GetUnderlyingType(((FieldInfo)originalMember).FieldType)))
             {
@@ -390,7 +390,7 @@ namespace ProtoBuf.Meta
             dictionaryType = keyType = valueType = null;
             try
             {
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 				var info = memberType.GetTypeInfo();
 #else
                 var info = memberType;
@@ -420,7 +420,7 @@ namespace ProtoBuf.Meta
 				foreach (var iType in memberType.GetInterfaces())
 #endif
 				{
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 					info = iType.GetTypeInfo();
 #else
                     info = iType;
@@ -550,11 +550,8 @@ namespace ProtoBuf.Meta
                     // apply lists if appropriate
                     if (itemType != null)
                     {
-#if NO_GENERICS
-                    Type underlyingItemType = itemType;
-#else
                         Type underlyingItemType = SupportNull ? itemType : Helpers.GetUnderlyingType(itemType) ?? itemType;
-#endif
+
                         Helpers.DebugAssert(underlyingItemType == ser.ExpectedType
                             || (ser.ExpectedType == model.MapType(typeof(object)) && !Helpers.IsValueType(underlyingItemType))
                             , "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
@@ -642,12 +639,10 @@ namespace ProtoBuf.Meta
         internal static IProtoSerializer TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType,
             bool asReference, bool dynamicType, bool overwriteList, bool allowComplexTypes)
         {
-#if !NO_GENERICS
             {
                 Type tmp = Helpers.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
             }
-#endif
             if (Helpers.IsEnum(type))
             {
                 if (allowComplexTypes && model != null)
@@ -848,10 +843,7 @@ namespace ProtoBuf.Meta
         }
 
         
-        internal sealed class Comparer : System.Collections.IComparer
-#if !NO_GENERICS
-, System.Collections.Generic.IComparer<ValueMember>
-#endif
+        internal sealed class Comparer : System.Collections.IComparer, IComparer<ValueMember>
         {
             public static readonly Comparer Default = new Comparer();
             public int Compare(object x, object y)

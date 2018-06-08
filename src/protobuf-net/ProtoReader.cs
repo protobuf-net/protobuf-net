@@ -1,6 +1,6 @@
 ﻿
 using System;
-
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
@@ -460,29 +460,8 @@ namespace ProtoBuf
             throw EoF(this);
         }
 
-#if NO_GENERICS
-        private System.Collections.Hashtable stringInterner;
-        private string Intern(string value)
-        {
-            if (value == null) return null;
-            if (value.Length == 0) return "";
-            if (stringInterner == null)
-            {
-                stringInterner = new System.Collections.Hashtable();
-                stringInterner.Add(value, value);      
-            }
-            else if (stringInterner.ContainsKey(value))
-            {
-                value = (string)stringInterner[value];
-            }
-            else
-            {
-                stringInterner.Add(value, value);
-            }
-            return value;
-        }
-#else
-        private System.Collections.Generic.Dictionary<string,string> stringInterner;
+
+        private Dictionary<string,string> stringInterner;
         private string Intern(string value)
         {
             if (value == null) return null;
@@ -503,7 +482,6 @@ namespace ProtoBuf
             }
             return value;
         }
-#endif
 
 #if COREFX
         static readonly Encoding encoding = Encoding.UTF8;
@@ -1216,7 +1194,7 @@ namespace ProtoBuf
         }
         internal static Exception AddErrorData(Exception exception, ProtoReader source)
         {
-#if !CF && !FX11 && !PORTABLE
+#if !CF && !PORTABLE
             if (exception != null && source != null && !exception.Data.Contains("protoSource"))
             {
                 exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",

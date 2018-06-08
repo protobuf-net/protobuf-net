@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections;
-#if !NO_GENERICS
 using System.Collections.Generic;
-#endif
 using System.IO;
 using ProtoBuf.Meta;
 
@@ -12,21 +10,12 @@ namespace ProtoBuf
     /// This class acts as an internal wrapper allowing us to do a dynamic
     /// methodinfo invoke; an't put into Serializer as don't want on public
     /// API; can't put into Serializer&lt;T&gt; since we need to invoke
-    /// accross classes, which isn't allowed in Silverlight)
+    /// across classes
     /// </summary>
-    internal
-#if FX11
-    sealed
-#else
-    static
-#endif
-        class ExtensibleUtil
+    internal static class ExtensibleUtil
     {
-#if FX11
-        private ExtensibleUtil() { } // not a static class for C# 1.2 reasons
-#endif
 
-#if !NO_RUNTIME && !NO_GENERICS
+#if !NO_RUNTIME
         /// <summary>
         /// All this does is call GetExtendedValuesTyped with the correct type for "instance";
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
@@ -57,16 +46,9 @@ namespace ProtoBuf
 
             if (extn == null)
             {
-#if FX11
-                return new object[0];
-#else
                 yield break;
-#endif
             }
 
-#if FX11
-            BasicList result = new BasicList();
-#endif
             Stream stream = extn.BeginQuery();
             object value = null;
             ProtoReader reader = null;
@@ -77,27 +59,15 @@ namespace ProtoBuf
                 {
                     if (!singleton)
                     {
-#if FX11
-                        result.Add(value);
-#else
                         yield return value;
-#endif
+
                         value = null; // fresh item each time
                     }
                 }
                 if (singleton && value != null)
                 {
-#if FX11
-                    result.Add(value);
-#else
                     yield return value;
-#endif
                 }
-#if FX11
-                object[] resultArr = new object[result.Count];
-                result.CopyTo(resultArr, 0);
-                return resultArr;
-#endif
             } finally {
                 ProtoReader.Recycle(reader);
                 extn.EndQuery(stream);
@@ -133,7 +103,7 @@ namespace ProtoBuf
             }
 #endif
         }
-//#if !NO_GENERICS
+
 //        /// <summary>
 //        /// Stores the given value into the instance's stream; the serializer
 //        /// is inferred from TValue and format.
@@ -145,7 +115,7 @@ namespace ProtoBuf
 //        {
 //            AppendExtendValue(model, instance, tag, format, value);
 //        }
-//#endif
+
     }
 
 }

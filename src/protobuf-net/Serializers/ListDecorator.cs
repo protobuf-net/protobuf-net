@@ -52,7 +52,6 @@ namespace ProtoBuf.Serializers
 
         internal static ListDecorator Create(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
         {
-#if !NO_GENERICS
             MethodInfo builderFactory, add, addRange, finish;
             PropertyInfo isEmpty, length;
             if (returnList && ImmutableCollectionDecorator.IdentifyImmutable(model, declaredType, out builderFactory, out isEmpty, out length, out add, out addRange, out finish))
@@ -62,7 +61,6 @@ namespace ProtoBuf.Serializers
                     builderFactory, isEmpty, length, add, addRange, finish);
             }
 
-#endif
             return new ListDecorator(model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull);
         }
 
@@ -291,13 +289,11 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.CastToObject(itemType);
                 }
-#if !NO_GENERICS
                 else if(Helpers.GetUnderlyingType(addParamType) == itemType)
                 { // list is nullable
                     ConstructorInfo ctor = Helpers.GetConstructor(addParamType, new Type[] {itemType}, false);
                     ctx.EmitCtor(ctor); // the itemType on the stack is now a Nullable<ItemType>
                 }
-#endif
                 else
                 {
                     throw new InvalidOperationException("Conflicting item/add type");
@@ -311,7 +307,7 @@ namespace ProtoBuf.Serializers
         }
 #endif
 
-#if WINRT || COREFX
+#if COREFX
         private static readonly TypeInfo ienumeratorType = typeof(IEnumerator).GetTypeInfo(), ienumerableType = typeof (IEnumerable).GetTypeInfo();
 #else
         private static readonly System.Type ienumeratorType = typeof (IEnumerator), ienumerableType = typeof (IEnumerable);
@@ -321,7 +317,7 @@ namespace ProtoBuf.Serializers
         internal static MethodInfo GetEnumeratorInfo(TypeModel model, Type expectedType, Type itemType, out MethodInfo moveNext, out MethodInfo current)
         {
 
-#if WINRT || COREFX
+#if COREFX
             TypeInfo enumeratorType = null, iteratorType;
 #else
             Type enumeratorType = null, iteratorType;
@@ -335,7 +331,7 @@ namespace ProtoBuf.Serializers
             {
                 getReturnType = getEnumerator.ReturnType;
                 iteratorType = getReturnType
-#if WINRT || COREFX || COREFX
+#if COREFX || COREFX
                     .GetTypeInfo()
 #endif
                     ;
@@ -359,7 +355,6 @@ namespace ProtoBuf.Serializers
                 moveNext = current = getEnumerator = null;
             }
             
-#if !NO_GENERICS
             // try IEnumerable<T>
             Type tmp = model.MapType(typeof(System.Collections.Generic.IEnumerable<>), false);
             
@@ -367,7 +362,7 @@ namespace ProtoBuf.Serializers
             {
                 tmp = tmp.MakeGenericType(itemType);
 
-#if WINRT || COREFX
+#if COREFX
                 enumeratorType = tmp.GetTypeInfo();
 #else
                 enumeratorType = tmp;
@@ -379,7 +374,7 @@ namespace ProtoBuf.Serializers
 #else
 			if (enumeratorType != null && enumeratorType.IsAssignableFrom(expectedType
 #endif
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
                 .GetTypeInfo()
 #endif
 				))
@@ -387,7 +382,7 @@ namespace ProtoBuf.Serializers
                 getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
                 getReturnType = getEnumerator.ReturnType;
 
-#if WINRT || COREFX
+#if COREFX
                 iteratorType = getReturnType.GetTypeInfo();
 #else
                 iteratorType = getReturnType;
@@ -397,13 +392,12 @@ namespace ProtoBuf.Serializers
                 current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current", false), false, false);
                 return getEnumerator;
             }
-#endif
 			// give up and fall-back to non-generic IEnumerable
 			enumeratorType = model.MapType(ienumerableType);
             getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
             getReturnType = getEnumerator.ReturnType;
             iteratorType = getReturnType
-#if WINRT || COREFX
+#if COREFX
                 .GetTypeInfo()
 #endif
                 ;

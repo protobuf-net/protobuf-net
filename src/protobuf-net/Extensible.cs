@@ -1,6 +1,4 @@
-﻿#if !NO_GENERICS
-using System.Collections.Generic;
-#endif
+﻿using System.Collections.Generic;
 using ProtoBuf.Meta;
 using System.Collections;
 
@@ -64,7 +62,7 @@ namespace ProtoBuf
             return extensionObject;
         }
 
-#if !NO_RUNTIME && !NO_GENERICS
+#if !NO_RUNTIME
         /// <summary>
         /// Appends the value as an additional (unexpected) data-field for the instance.
         /// Note that for non-repeated sub-objects, this equates to a merge operation;

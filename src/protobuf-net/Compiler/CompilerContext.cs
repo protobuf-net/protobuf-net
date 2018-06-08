@@ -31,7 +31,7 @@ namespace ProtoBuf.Compiler
     {
         public TypeModel Model { get { return model; } }
 
-#if !(FX11 || FEAT_IKVM)
+#if !FEAT_IKVM
         readonly DynamicMethod method;
         static int next;
 #endif
@@ -69,7 +69,7 @@ namespace ProtoBuf.Compiler
             TraceCompile("#: " + label.Index);
         }
 
-#if !(FX11 || FEAT_IKVM)
+#if !FEAT_IKVM
         public static ProtoSerializer BuildSerializer(IProtoSerializer head, TypeModel model)
         {
             Type type = head.ExpectedType;
@@ -208,13 +208,9 @@ namespace ProtoBuf.Compiler
                         TraceCompile(OpCodes.Ldobj + ": " + type);
                         break;
                     default:
-#if FX11
-                        throw new NotSupportedException();
-#else
                         il.Emit(OpCodes.Unbox_Any, type);
                         TraceCompile(OpCodes.Unbox_Any + ": " + type);
                         break;
-#endif
                 }
             }
             else
@@ -224,7 +220,6 @@ namespace ProtoBuf.Compiler
             }
         }
         private readonly bool isStatic;
-#if !SILVERLIGHT
         private readonly RuntimeTypeModel.SerializerPair[] methodPairs;
 
         internal MethodBuilder GetDedicatedMethod(int metaKey, bool read)
@@ -248,15 +243,9 @@ namespace ProtoBuf.Compiler
             }
             throw new ArgumentException("Key could not be mapped: " + metaKey.ToString(), "metaKey");
         }
-#else
-        internal int MapMetaKeyToCompiledKey(int metaKey)
-        {
-            return metaKey;
-        }
-#endif
 
         private readonly bool isWriter;
-#if FX11 || FEAT_IKVM
+#if FEAT_IKVM
         internal bool NonPublic { get { return false; } }
 #else
         private readonly bool nonPublic;
@@ -266,14 +255,14 @@ namespace ProtoBuf.Compiler
 
         private readonly Local inputValue;
         public Local InputValue { get { return inputValue; } }
-#if !(SILVERLIGHT || PHONE8)
+#if !PHONE8
         private readonly string assemblyName;
         internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType, string traceName)
         {
             if (il == null) throw new ArgumentNullException("il");
             if (methodPairs == null) throw new ArgumentNullException("methodPairs");
             if (model == null) throw new ArgumentNullException("model");
-            if (Helpers.IsNullOrEmpty(assemblyName)) throw new ArgumentNullException("assemblyName");
+            if (string.IsNullOrEmpty(assemblyName)) throw new ArgumentNullException("assemblyName");
             this.assemblyName = assemblyName;
             this.isStatic = isStatic;
             this.methodPairs = methodPairs;
@@ -286,15 +275,13 @@ namespace ProtoBuf.Compiler
             TraceCompile(">> " + traceName);
         }
 #endif
-#if !(FX11 || FEAT_IKVM)
+#if !FEAT_IKVM
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
         {
             if (model == null) throw new ArgumentNullException("model");
-#if FX11
-            metadataVersion = ILVersion.Net1;
-#else
+
             metadataVersion = ILVersion.Net2;
-#endif
+
             this.isStatic = isStatic;
             this.isWriter = isWriter;
             this.model = model;
@@ -437,7 +424,6 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-#if !FX11
                 switch (local.Value.LocalIndex)
                 {
                     case 0: Emit(OpCodes.Stloc_0); break;
@@ -445,14 +431,13 @@ namespace ProtoBuf.Compiler
                     case 2: Emit(OpCodes.Stloc_2); break;
                     case 3: Emit(OpCodes.Stloc_3); break;
                     default:
-#endif
+
                         OpCode code = UseShortForm(local) ? OpCodes.Stloc_S : OpCodes.Stloc;
                         il.Emit(code, local.Value);
                         TraceCompile(code + ": $" + local.Value);
-#if !FX11
+
                         break;
                 }
-#endif
             }
         }
         public void LoadValue(Local local)
@@ -464,7 +449,7 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-#if !FX11
+
                 switch (local.Value.LocalIndex)
                 {
                     case 0: Emit(OpCodes.Ldloc_0); break;
@@ -472,14 +457,11 @@ namespace ProtoBuf.Compiler
                     case 2: Emit(OpCodes.Ldloc_2); break;
                     case 3: Emit(OpCodes.Ldloc_3); break;
                     default:
-#endif             
                         OpCode code = UseShortForm(local) ? OpCodes.Ldloc_S :  OpCodes.Ldloc;
                         il.Emit(code, local.Value);
                         TraceCompile(code + ": $" + local.Value);
-#if !FX11
                         break;
                 }
-#endif
             }
         }
         public Local GetLocalWithValue(Type type, Compiler.Local fromValue)
@@ -519,7 +501,7 @@ namespace ProtoBuf.Compiler
         }
         internal void EmitBasicWrite(string methodName, Compiler.Local fromValue)
         {
-            if (Helpers.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
+            if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
             LoadValue(fromValue);
             LoadReaderWriter();
             EmitCall(GetWriterMethod(methodName));
@@ -538,7 +520,7 @@ namespace ProtoBuf.Compiler
         }
         internal void EmitWrite(Type helperType, string methodName, Compiler.Local valueFrom)
         {
-            if (Helpers.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
+            if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
             MethodInfo method = helperType.GetMethod(
                 methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (method == null || method.ReturnType != MapType(typeof(void))) throw new ArgumentException("methodName");
@@ -585,9 +567,7 @@ namespace ProtoBuf.Compiler
             if (Helpers.IsValueType(type))
             {
                 Type underlyingType = null;
-#if !FX11
                 underlyingType = Helpers.GetUnderlyingType(type);
-#endif
                 if (underlyingType == null)
                 { // not a nullable T; can invoke directly
                     tail.EmitWrite(this, valueFrom);
@@ -623,7 +603,7 @@ namespace ProtoBuf.Compiler
 
         internal void ReadNullCheckedTail(Type type, IProtoSerializer tail, Compiler.Local valueFrom)
         {
-#if !FX11
+
             Type underlyingType;
             
             if (Helpers.IsValueType(type) && (underlyingType = Helpers.GetUnderlyingType(type)) != null)
@@ -649,7 +629,7 @@ namespace ProtoBuf.Compiler
                 }
                 return;
             }
-#endif
+
             // either a ref-type of a non-nullable struct; treat "as is", even if null
             // (the type-serializer will handle the null case; it needs to allow null
             // inputs to perform the correct type of subclass creation)
@@ -696,15 +676,15 @@ namespace ProtoBuf.Compiler
                 EmitCtor(ctor);
             }
         }
-#if !(PHONE8 || SILVERLIGHT || FX11)
+#if !PHONE8
         BasicList knownTrustedAssemblies, knownUntrustedAssemblies;
 #endif
         bool InternalsVisible(Assembly assembly)
         {
-#if PHONE8 || SILVERLIGHT || FX11
+#if PHONE8
             return false;
 #else
-            if (Helpers.IsNullOrEmpty(assemblyName)) return false;
+            if (string.IsNullOrEmpty(assemblyName)) return false;
             if (knownTrustedAssemblies != null)
             {
                 if (knownTrustedAssemblies.IndexOfReference(assembly) >= 0)
@@ -769,7 +749,7 @@ namespace ProtoBuf.Compiler
             {
                 throw new ArgumentNullException("member");
             }
-#if ! COREFX
+#if !COREFX
             Type type;
 #endif
             if (!NonPublic)
@@ -852,9 +832,7 @@ namespace ProtoBuf.Compiler
                         {
                             // allow calls to TypeModel protected methods, and methods we are in the process of creating
                             if(
-#if !SILVERLIGHT
                                 member is MethodBuilder ||
-#endif
                                 member.DeclaringType == MapType(typeof(TypeModel))) isPublic = true; 
                         }
                         break;
@@ -984,11 +962,7 @@ namespace ProtoBuf.Compiler
 
         private bool UseShortForm(Local local)
         {
-#if FX11
-            return locals.Count < 256;
-#else
             return local.Value.LocalIndex < 256;
-#endif
         }
 #if FEAT_IKVM
         internal void LoadAddress(Local local, System.Type type)
@@ -1185,14 +1159,9 @@ namespace ProtoBuf.Compiler
 
         internal void Constrain(Type type)
         {
-#if FX11
-            throw new NotSupportedException("This operation requires a constrained call, which is not available on this platform");
-#else
             il.Emit(OpCodes.Constrained, type);
             TraceCompile(OpCodes.Constrained + ": " + type);
-#endif
         }
-
 
         internal void TryCast(Type type)
         {
@@ -1263,12 +1232,8 @@ namespace ProtoBuf.Compiler
                             ctx.CastToObject(type);
                             break;
                         default:
-#if FX11
-                            throw new NotSupportedException();
-#else
                             ctx.Constrain(type);
                             break;
-#endif
                     }
                     ctx.EmitCall(dispose);                    
                 }

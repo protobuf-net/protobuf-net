@@ -35,7 +35,7 @@ namespace ProtoBuf
         public ProtoIncludeAttribute(int tag, string knownTypeName)
         {
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag", "Tags must be positive integers");
-            if (Helpers.IsNullOrEmpty(knownTypeName)) throw new ArgumentNullException("knownTypeName", "Known type cannot be blank");
+            if (string.IsNullOrEmpty(knownTypeName)) throw new ArgumentNullException("knownTypeName", "Known type cannot be blank");
             this.tag = tag;
             this.knownTypeName = knownTypeName;
         }

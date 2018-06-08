@@ -2,9 +2,7 @@
 using ProtoBuf.Meta;
 using System;
 using System.IO;
-#if !NO_GENERICS
 using System.Collections.Generic;
-#endif
 
 #if FEAT_IKVM
 using Type = IKVM.Reflection.Type;
@@ -25,18 +23,10 @@ namespace ProtoBuf
     /// extensible, allowing a type to be deserialized / merged even if some data is
     /// not recognised.
     /// </remarks>
-    public 
-#if FX11
-    sealed
-#else
-    static
-#endif
-        class Serializer
+    public static class Serializer
     {
-#if FX11
-        private Serializer() { } // not a static class for C# 1.2 reasons
-#endif
-#if !NO_RUNTIME && !NO_GENERICS
+
+#if !NO_RUNTIME
         /// <summary>
         /// Suggest a .proto definition for the given type
         /// </summary>
@@ -124,7 +114,7 @@ namespace ProtoBuf
                 return Deserialize<TTo>(ms);
             }
         }
-#if PLAT_BINARYFORMATTER && !(WINRT || PHONE8 || COREFX || PROFILE259)
+#if PLAT_BINARYFORMATTER && !(PHONE8 || COREFX || PROFILE259)
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.
         /// </summary>
@@ -208,7 +198,7 @@ namespace ProtoBuf
 #endif
 
         private const string ProtoBinaryField = "proto";
-#if PLAT_BINARYFORMATTER && !NO_GENERICS && !(WINRT || PHONE8 || COREFX || PROFILE259)
+#if PLAT_BINARYFORMATTER && !(PHONE8 || COREFX || PROFILE259)
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
         /// </summary>
@@ -245,7 +235,6 @@ namespace ProtoBuf
         }
 #endif
 
-#if !NO_GENERICS
         /// <summary>
         /// Precompiles the serializer for a given type.
         /// </summary>
@@ -254,7 +243,7 @@ namespace ProtoBuf
             NonGeneric.PrepareSerializer(typeof(T));
         }
 
-#if PLAT_BINARYFORMATTER && !(WINRT || PHONE8 || COREFX || PROFILE259)
+#if PLAT_BINARYFORMATTER && !(PHONE8 || COREFX || PROFILE259)
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
         /// </summary>
@@ -365,7 +354,7 @@ namespace ProtoBuf
             RuntimeTypeModel model = RuntimeTypeModel.Default;
             model.SerializeWithLengthPrefix(destination, instance, model.MapType(typeof(T)), style, fieldNumber);
         }
-#endif
+
         /// <summary>Indicates the number of bytes expected for the next message.</summary>
         /// <param name="source">The stream containing the data to investigate for a length.</param>
         /// <param name="style">The algorithm used to encode the length.</param>
@@ -405,17 +394,8 @@ namespace ProtoBuf
         /// <summary>
         /// Provides non-generic access to the default serializer.
         /// </summary>
-        public
-#if FX11
-    sealed
-#else
-    static
-#endif
-            class NonGeneric
+        public static class NonGeneric
         {
-#if FX11
-            private NonGeneric() { } // not a static class for C# 1.2 reasons
-#endif
             /// <summary>
             /// Create a deep clone of the supplied instance; any sub-items are also cloned.
             /// </summary>
@@ -512,17 +492,8 @@ namespace ProtoBuf
         /// <summary>
         /// Global switches that change the behavior of protobuf-net
         /// </summary>
-        public
-#if FX11
-    sealed
-#else
-    static
-#endif
-            class GlobalOptions
+        public static class GlobalOptions
         {
-#if FX11
-            private GlobalOptions() { } // not a static class for C# 1.2 reasons
-#endif
             /// <summary>
             /// <see cref="RuntimeTypeModel.InferTagFromNameDefault"/>
             /// </summary>

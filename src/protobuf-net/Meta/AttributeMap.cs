@@ -35,7 +35,7 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			Attribute[] all = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OfType<Attribute>(type.GetTypeInfo().GetCustomAttributes(inherit)));
 #else
             object[] all = type.GetCustomAttributes(inherit);
@@ -61,7 +61,7 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			Attribute[] all = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OfType<Attribute>(member.GetCustomAttributes(inherit)));
 #else
             object[] all = member.GetCustomAttributes(inherit);
@@ -88,7 +88,7 @@ namespace ProtoBuf.Meta
             }
             return result;
 #else
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			Attribute[] all = System.Linq.Enumerable.ToArray(assembly.GetCustomAttributes());
 #else
             const bool inherit = false;
@@ -157,11 +157,7 @@ namespace ProtoBuf.Meta
                 MemberInfo[] members = Helpers.GetInstanceFieldsAndProperties(attribute.GetType(), publicOnly);
                 foreach (MemberInfo member in members)
                 {
-#if FX11
-                    if (member.Name.ToUpper() == key.ToUpper())
-#else
                     if (string.Equals(member.Name, key, StringComparison.OrdinalIgnoreCase))
-#endif
                     {
                         PropertyInfo prop = member as PropertyInfo;
                         if (prop != null) {

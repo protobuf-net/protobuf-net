@@ -246,13 +246,8 @@ namespace ProtoBuf.Serializers
                     }
                 case ProtoTypeCode.DateTime:
                     {
-#if FX11
-                        ctx.LoadValue(((DateTime)defaultValue).ToFileTime());
-                        ctx.EmitCall(typeof(DateTime).GetMethod("FromFileTime"));                      
-#else
                         ctx.LoadValue(((DateTime)defaultValue).ToBinary());
                         ctx.EmitCall(ctx.MapType(typeof(DateTime)).GetMethod("FromBinary"));
-#endif
 
                         EmitBeq(ctx, label, expected);
                         break;

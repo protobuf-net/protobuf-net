@@ -15,11 +15,10 @@ namespace ProtoBuf.Serializers
     sealed class ImmutableCollectionDecorator : ListDecorator
     {
         protected override bool RequireAdd { get { return false; } }
-#if !NO_GENERICS
 
         static Type ResolveIReadOnlyCollection(Type declaredType, Type t)
         {
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			foreach (Type intImplBasic in declaredType.GetTypeInfo().ImplementedInterfaces)
             {
                 TypeInfo intImpl = intImplBasic.GetTypeInfo();
@@ -55,7 +54,7 @@ namespace ProtoBuf.Serializers
             builderFactory = add = addRange = finish = null;
             isEmpty = length = null;
             if (model == null || declaredType == null) return false;
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			TypeInfo declaredTypeInfo = declaredType.GetTypeInfo();
 #else
             Type declaredTypeInfo = declaredType;
@@ -64,7 +63,7 @@ namespace ProtoBuf.Serializers
             // try to detect immutable collections; firstly, they are all generic, and all implement IReadOnlyCollection<T> for some T
             if(!declaredTypeInfo.IsGenericType) return false;
 
-#if WINRT || COREFX || PROFILE259
+#if COREFX || PROFILE259
 			Type[] typeArgs = declaredTypeInfo.GenericTypeArguments, effectiveType;
 #else
             Type[] typeArgs = declaredTypeInfo.GetGenericArguments(), effectiveType;
@@ -100,7 +99,7 @@ namespace ProtoBuf.Serializers
             }
             if (outerType == null) return false;
 
-#if WINRT || PROFILE259
+#if PROFILE259
 			foreach (MethodInfo method in outerType.GetTypeInfo().DeclaredMethods)
 #else
             foreach (MethodInfo method in outerType.GetMethods())
@@ -127,9 +126,9 @@ namespace ProtoBuf.Serializers
                 //Fallback to checking length if a "IsEmpty" property is not found
                 length = Helpers.GetProperty(typeInfo, "Length", false);
                 if (length == null) length = Helpers.GetProperty(typeInfo, "Count", false);
-#if !NO_GENERICS
+
                 if (length == null) length = Helpers.GetProperty(ResolveIReadOnlyCollection(declaredType, effectiveType[0]), "Count", false);
-#endif
+
                 if (length == null) return false;
             }
 
@@ -153,7 +152,7 @@ namespace ProtoBuf.Serializers
 
             return true;
         }
-#endif
+
         private readonly MethodInfo builderFactory, add, addRange, finish;
         private readonly PropertyInfo isEmpty, length;
         internal ImmutableCollectionDecorator(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull,
