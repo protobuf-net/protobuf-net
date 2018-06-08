@@ -255,7 +255,7 @@ namespace ProtoBuf.Compiler
 
         private readonly Local inputValue;
         public Local InputValue { get { return inputValue; } }
-#if !PHONE8
+
         private readonly string assemblyName;
         internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType, string traceName)
         {
@@ -274,7 +274,7 @@ namespace ProtoBuf.Compiler
             if (inputType != null) this.inputValue = new Local(null, inputType);
             TraceCompile(">> " + traceName);
         }
-#endif
+
 #if !FEAT_IKVM
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
         {
@@ -676,14 +676,11 @@ namespace ProtoBuf.Compiler
                 EmitCtor(ctor);
             }
         }
-#if !PHONE8
+
         BasicList knownTrustedAssemblies, knownUntrustedAssemblies;
-#endif
+
         bool InternalsVisible(Assembly assembly)
         {
-#if PHONE8
-            return false;
-#else
             if (string.IsNullOrEmpty(assemblyName)) return false;
             if (knownTrustedAssemblies != null)
             {

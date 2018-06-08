@@ -1612,7 +1612,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public event TypeFormatEventHandler DynamicTypeFormatting;
 
-#if PLAT_BINARYFORMATTER && !(PHONE8 || COREFX || PROFILE259)
+#if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
 		/// <summary>
 		/// Creates a new IFormatter that uses protocol-buffer [de]serialization.
 		/// </summary>
