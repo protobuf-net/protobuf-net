@@ -1159,8 +1159,9 @@ namespace ProtoBuf
                 if (b < 0) throw EoF(null);
                 value |= ((ulong)b & 0x7F) << shift;
                 shift += 7;
+                bytesRead++;
 
-                if ((b & 0x80) == 0) return ++bytesRead;
+                if ((b & 0x80) == 0) return bytesRead;
             }
             b = source.ReadByte();
             if (b < 0) throw EoF(null);

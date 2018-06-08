@@ -134,7 +134,7 @@ namespace ProtoBuf.Reflection
                .WriteLine("// Consider using 'partial classes' to extend these types")
                .WriteLine($"// Input: {Path.GetFileName(ctx.File.Name)}").WriteLine()
                .Write($"#pragma warning disable {prefix}1591, {prefix}0612, {prefix}3021");
-            if(ctx.Supports(CSharp6))
+            if (ctx.Supports(CSharp6))
             {
                 tw.Write(", IDE1006");
             }
@@ -163,7 +163,7 @@ namespace ProtoBuf.Reflection
                 ctx.Outdent().WriteLine("}").WriteLine();
             }
             var tw = ctx.Write($"#pragma warning restore {prefix}1591, {prefix}0612, {prefix}3021");
-            if(ctx.Supports(CSharp6))
+            if (ctx.Supports(CSharp6))
             {
                 tw.Write(", IDE1006");
             }
@@ -201,7 +201,7 @@ namespace ProtoBuf.Reflection
                 tw.Write($@"Name = @""{obj.Name}""");
                 tw.WriteLine(")]");
             }
-            
+
             WriteOptions(ctx, obj.Options);
             ctx.WriteLine($"{Escape(name)} = {obj.Number},");
         }
@@ -231,7 +231,7 @@ namespace ProtoBuf.Reflection
             {
                 ctx.WriteLine("#error message_set_wire_format is not currently implemented").WriteLine();
             }
-            
+
             ctx.WriteLine($"private global::ProtoBuf.IExtension {FieldPrefix}extensionData;")
                 .WriteLine($"global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)");
 
@@ -290,10 +290,17 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteConstructorFooter(GeneratorContext ctx, DescriptorProto obj, ref object state)
         {
-            ctx.WriteLine("OnConstructor();")
-                .Outdent().WriteLine("}").WriteLine()
-                .WriteLine("partial void OnConstructor();")
+            if (ctx.Supports(CSharp3))
+            {
+                ctx.WriteLine("OnConstructor();");
+            }
+            ctx.Outdent().WriteLine("}").WriteLine();
+
+            if (ctx.Supports(CSharp3))
+            {
+                ctx.WriteLine("partial void OnConstructor();")
                 .WriteLine();
+            }
         }
 
         /// <summary>
@@ -332,7 +339,7 @@ namespace ProtoBuf.Reflection
             }
             else if (oneOf != null)
             { } // nothing to do
-            else if(explicitValues)
+            else if (explicitValues)
             { } // nothing to do
             else
             {
@@ -341,7 +348,7 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine($"{Escape(name)} = {defaultValue};");
                 }
             }
-            
+
         }
 
         private string GetDefaultValue(GeneratorContext ctx, FieldDescriptorProto obj, string typeName)
@@ -436,14 +443,14 @@ namespace ProtoBuf.Reflection
             bool isRepeated = obj.label == FieldDescriptorProto.Label.LabelRepeated;
 
             OneOfStub oneOf = obj.ShouldSerializeOneofIndex() ? oneOfs?[obj.OneofIndex] : null;
-            if (oneOf != null && oneOf.CountTotal == 1)
+            if (oneOf != null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
             }
             bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
                 && obj.type != FieldDescriptorProto.Type.TypeMessage
                 && obj.type != FieldDescriptorProto.Type.TypeGroup;
-            
+
             bool suppressDefaultAttribute = !isOptional;
             var typeName = GetTypeName(ctx, obj, out var dataFormat, out var isMap);
             string defaultValue = GetDefaultValue(ctx, obj, typeName);
@@ -503,7 +510,7 @@ namespace ProtoBuf.Reflection
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName}[] {Escape(name)} {{ get; set; }}");
                 }
-                else if(ctx.Supports(CSharp6))
+                else if (ctx.Supports(CSharp6))
                 {
                     ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
@@ -514,8 +521,8 @@ namespace ProtoBuf.Reflection
             }
             else if (oneOf != null)
             {
-                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"default({typeName})" : defaultValue;
-                var fieldName = FieldPrefix + oneOf.OneOf.Name;
+                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? (ctx.Supports(CSharp7_1) ? "default" : $"default({typeName})") : defaultValue;
+                var fieldName = GetOneOfFieldName(oneOf.OneOf);
                 var storage = oneOf.GetStorage(obj.type, obj.TypeName);
                 ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)}").WriteLine("{").Indent();
 
@@ -606,7 +613,9 @@ namespace ProtoBuf.Reflection
             ctx.WriteLine();
         }
 
-        static readonly Version CSharp6 = new Version(6, 0);
+        private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
+
+        static readonly Version CSharp6 = new Version(6, 0), CSharp3 = new Version(3, 0), CSharp7_1 = new Version(7, 1);
 
         /// <summary>
         /// Starts an extgensions block
@@ -674,22 +683,65 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine("{").Indent();
                     tw = ctx.Write("return ");
                 }
-                tw.Write($"obj == null ? default({type}) : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
+                var defaultValue = ctx.Supports(CSharp7_1) ? "default" : $"default({type})";
+                tw.Write($"obj == null ? {defaultValue} : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
                 if (!string.IsNullOrEmpty(dataFormat))
                 {
                     tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
                 }
                 tw.WriteLine(");");
-                if(ctx.Supports(CSharp6))
+                if (ctx.Supports(CSharp6))
                 {
                     ctx.Outdent().WriteLine();
                 }
                 else
                 {
-                    ctx.Outdent().WriteLine("}").WriteLine();   
+                    ctx.Outdent().WriteLine("}").WriteLine();
                 }
 
                 //  GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
+            }
+        }
+
+        /// <summary>
+        /// Emit the start of an enum declaration for 'oneof' groups, including the 0/None element
+        /// </summary>
+        protected override void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        {
+            ctx.WriteLine().WriteLine($"public enum {ctx.NameNormalizer.GetName(obj)}{OneOfEnumSuffixEnum}").WriteLine("{").Indent().WriteLine("None = 0,");
+        }
+        /// <summary>
+        /// Emit the end of an enum declaration for 'oneof' groups
+        /// </summary>
+        protected override void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        {
+            ctx.Outdent().WriteLine("}").WriteLine();
+        }
+
+        /// <summary>
+        /// Emit a field-based entry for a 'oneof' groups's enum
+        /// </summary>
+        protected override void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto obj, ref object state)
+        {
+            var name = ctx.NameNormalizer.GetName(obj);
+            ctx.WriteLine($"{Escape(name)} = {obj.Number},");
+        }
+        /// <summary>
+        /// Emit  the discriminator accessor for 'oneof' groups
+        /// </summary>
+        protected override void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        {
+            var name = ctx.NameNormalizer.GetName(obj);
+            var fieldName = GetOneOfFieldName(obj);
+            if (ctx.Supports(CSharp6))
+            {
+                ctx.WriteLine($"public {name}{OneOfEnumSuffixEnum} {name}{OneOfEnumSuffixDiscriminator} => ({name}{OneOfEnumSuffixEnum}){fieldName}.Discriminator;");
+            }
+            else
+            {
+                ctx.WriteLine($"public {name}{OneOfEnumSuffixEnum} {name}{OneOfEnumSuffixDiscriminator}").WriteLine("{").Indent()
+                    .WriteLine($"get {{ return ({name}{OneOfEnumSuffixEnum}){fieldName}.Discriminator; }}")
+                    .Outdent().WriteLine("}");
             }
         }
 

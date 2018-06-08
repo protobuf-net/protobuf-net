@@ -17,7 +17,7 @@ using System.Reflection.Emit;
 
 namespace ProtoBuf.Compiler
 {
-    internal struct CodeLabel
+    internal readonly struct CodeLabel
     {
         public readonly Label Value;
         public readonly int Index;

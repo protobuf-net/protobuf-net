@@ -14,9 +14,15 @@ namespace ProtoBuf.Reflection
             /// </summary>
             public OneofDescriptorProto OneOf { get; }
 
-            internal OneOfStub(OneofDescriptorProto decl)
+            /// <summary>
+            /// The effective index of this stub
+            /// </summary>
+            public int Index { get; }
+
+            internal OneOfStub(OneofDescriptorProto decl, int index)
             {
                 OneOf = decl;
+                Index = index;
             }
             internal int Count32 { get; private set; }
             internal int Count64 { get; private set; }
@@ -115,7 +121,8 @@ namespace ProtoBuf.Reflection
                 int index = 0;
                 foreach (var decl in message.OneofDecls)
                 {
-                    stubs[index++] = new OneOfStub(decl);
+                    stubs[index] = new OneOfStub(decl, index);
+                    index++;
                 }
                 foreach (var field in message.Fields)
                 {

@@ -15,6 +15,7 @@ extend .google.protobuf.EnumOptions      { ProtogenEnumOptions		enumopt		= 1037 
 extend .google.protobuf.EnumValueOptions { ProtogenEnumValueOptions	enumvalopt	= 1037 [(.protobuf_net.fieldopt).name	= "Options"]; }
 extend .google.protobuf.ServiceOptions   { ProtogenServiceOptions	serviceopt	= 1037 [(.protobuf_net.fieldopt).name	= "Options"]; }
 extend .google.protobuf.MethodOptions    { ProtogenMethodOptions	methodopt	= 1037 [(.protobuf_net.fieldopt).name	= "Options"]; }
+extend .google.protobuf.OneofOptions	 { ProtogenOneofOptions		oneofopt	= 1037 [(.protobuf_net.fieldopt).name	= "Options"]; }
 
 enum Access {
   option (.protobuf_net.enumopt) = {
@@ -30,8 +31,10 @@ message ProtogenFileOptions {
   string namespace = 1;
   Access access = 2;
   string extensions = 3 [(.protobuf_net.fieldopt).name	= "ExtensionTypeName"];
-  string csharp_langver = 4 [(.protobuf_net.fieldopt).name	= "CSharpLanguageVersion"]; // language specific version specifier, for example "3.0" for C# 3
+  string csharp_langver = 4 [(.protobuf_net.fieldopt).name	= "CSharpLanguageVersion"]; // language specific version specifier, for example "3.0" or "3" for C# 3
   bool requiredDefaults = 5 [(.protobuf_net.fieldopt).name	= "EmitRequiredDefaults"]; // intialize required values with their default values
+  bool oneofEnum = 6 [(.protobuf_net.fieldopt).name	= "EmitOneOfEnum"]; // emit enums for oneof elements
+  string vb_langver = 7 [(.protobuf_net.fieldopt).name	= "VisualBasicLanguageVersion"]; // language specific version specifier, for example "11" for VB 11
 }
 message ProtogenMessageOptions {
   string name = 1;
@@ -56,6 +59,9 @@ message ProtogenServiceOptions {
   Access access = 2;
 }
 message ProtogenMethodOptions {
+  string name = 1;
+}
+message ProtogenOneofOptions {
   string name = 1;
 }
 

@@ -15,7 +15,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 
 ## v3.* (not yet started)
 
-- see: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
+- see: [protobuf-net: large data, and the future](https://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
 - gRPC?
 
 ## v2.4.0 (not yet started)
@@ -23,6 +23,43 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - build-time tooling
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
+
+## protobuf-net v2.3.9
+
+- fix behaviour of `DiscriminatedUnion*` for `None` enum case
+
+## protogen v1.0.6
+
+- optional ability to emit enums for `oneof` [similar to Google's C# generator](https://developers.google.com/protocol-buffers/docs/reference/csharp-generated#oneof)
+- extend C# support down to 2.0 and up to 7.1, and VB support down to VB 9
+- add website support for additional options (as above)
+
+## protobuf-net v2.3.8
+
+- speculative fix for iOS issues (#381)
+- add discriminator accessor to discriminated union types, for protogen v1.0.6
+- improve performance of ProtoWriter.DemandSpace (#378 from szehetner)
+- protogen - better support for wildcard paths (#390 from RansomVO)
+- fix #313 immutable arrays (#346 from BryantL)
+- improve LOH behaviour (#307 from mintsoft)
+- allow model precompilation for unknown types (#326 from daef)
+- improve type-key lookup performance (#310 from alex-sherman)
+
+## protogen v1.0.5
+
+- allow default package name using #FILE# and #DIR# tokens
+- more fixes for VB.NET idioms
+
+## protogen v1.0.4
+
+- fixes for VB.NET code-gen (especially: overflow in default values)
+- add wildcard+recursive generation modes for all languages
+- fix resolution of rooted types in imports without a package
+
+## protogen v1.0.3
+
+- VB.NET code-gen support added (from: alpha2)
+- packaging updates for "global tools" (from: alpha1)
 
 ## protogen v1.0.2
 
@@ -82,7 +119,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 
 ## v2.3.0-alpha
 
-- [further reading](http://blog.marcgravell.com/2017/06/protobuf-net-gets-proto3-support.html)
+- [further reading](https://blog.marcgravell.com/2017/06/protobuf-net-gets-proto3-support.html)
 - proto2/proto3 DSL processing tools to make a resurgance; [preview is available here](https://protogen.marcgravell.com/)
 - proto3 schema generation
 - full support for `map<,>`, `Timestamp`, `Duration`
@@ -115,7 +152,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - fix bug with cyclic types resolving as lists (#167)
 - optimized encoding of packed fixed-length primitives (in particular, arrays)
 
-(see also: [protobuf-net: large data, and the future](http://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html))
+(see also: [protobuf-net: large data, and the future](https://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html))
 
 ## v2.1.0
 

@@ -33,26 +33,35 @@ namespace Google.Protobuf.Reflection
         public Error[] GetErrors() => Error.GetArray(Errors);
         internal List<Error> Errors { get; } = new List<Error>();
 
+        /// <summary>
+        /// When processing Foo/Bar/Some.proto, should Foo/Bar be treated as an implicit import location?
+        /// </summary>
+        public bool AllowNameOnlyImport { get; set; }
+
         public bool Add(string name, bool includeInOutput, TextReader source = null)
+            => Add(name, includeInOutput, source, null);
+        internal bool Add(string name, bool includeInOutput, TextReader source, FileDescriptorProto fromFile)
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentNullException(nameof(name));
             if (Path.IsPathRooted(name) || name.Contains(".."))
                 throw new ArgumentException("Paths should be relative to the import paths, not rooted", nameof(name));
-            if (TryResolve(name, out var descriptor))
+
+            if (TryResolve(name, fromFile, out var descriptor))
             {
                 if (includeInOutput) descriptor.IncludeInOutput = true;
                 return true; // already exists, that counts as success
             }
-
-            using (var reader = source ?? Open(name))
+            string path = null;
+            using (var reader = source ?? Open(name, out path))
             {
                 if (reader == null) return false; // not found
 
                 descriptor = new FileDescriptorProto
                 {
                     Name = name,
-                    IncludeInOutput = includeInOutput
+                    IncludeInOutput = includeInOutput,
+                    DefaultPackage = GetDefaultPackageName(path),
                 };
                 Files.Add(descriptor);
 
@@ -60,10 +69,25 @@ namespace Google.Protobuf.Reflection
                 return true;
             }
         }
-
-        private TextReader Open(string name)
+        /// <summary>
+        /// Default package to use when none is specified; can use #FILE# and #DIR# tokens
+        /// </summary>
+        public string DefaultPackage { get; set; }
+        string GetDefaultPackageName(string path)
         {
-            var found = FindFile(name);
+            if (string.IsNullOrWhiteSpace(DefaultPackage)) return null;
+
+            if (DefaultPackage.IndexOf('#') < 0) return DefaultPackage;
+
+            var file = Path.GetFileNameWithoutExtension(path)?.Replace(' ', '_');
+            var dir = Path.GetFileName(Path.GetDirectoryName(path))?.Replace(' ', '_');
+
+            return DefaultPackage.Replace("#FILE#", file).Replace("#DIR#", dir);
+        }
+
+        private TextReader Open(string name, out string found)
+        {
+            found = FindFile(name);
             if (found == null) return null;
             return File.OpenText(found);
         }
@@ -77,9 +101,19 @@ namespace Google.Protobuf.Reflection
             return null;
         }
 
-        bool TryResolve(string name, out FileDescriptorProto descriptor)
+        bool TryResolve(string name, FileDescriptorProto from, out FileDescriptorProto descriptor)
         {
             descriptor = Files.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+
+            if (descriptor == null && from != null && AllowNameOnlyImport && Path.GetFileName(name) == name) // only if no folder specified
+            {
+                try
+                {
+                    var inSameFolder = Path.Combine(Path.GetDirectoryName(from.Name), name);
+                    descriptor = Files.FirstOrDefault(x => string.Equals(x.Name, inSameFolder, StringComparison.OrdinalIgnoreCase));
+                }
+                catch { } // ignore
+            }
             return descriptor != null;
         }
 
@@ -99,7 +133,7 @@ namespace Google.Protobuf.Reflection
                         {
                             Errors.Error(import.Token, $"import of {import.Path} is disallowed");
                         }
-                        else if (Add(import.Path, false))
+                        else if (Add(import.Path, false, null, file))
                         {
                             didSomething = true;
                         }
@@ -161,9 +195,8 @@ namespace Google.Protobuf.Reflection
             Serialize((s,o) => { Serializer.Serialize((Stream)o, s); return true; }, includeImports, destination);
         }
 
-        internal FileDescriptorProto GetFile(string path)
-            // try full match first, then name-only match
-            => Files.FirstOrDefault(x => string.Equals(x.Name, path, StringComparison.OrdinalIgnoreCase));
+        internal FileDescriptorProto GetFile(FileDescriptorProto from, string path)
+            => TryResolve(path, from, out var descriptor) ? descriptor : null;
     }
     partial class DescriptorProto : ISchemaObject, IType, IMessage
     {
@@ -567,7 +600,7 @@ namespace Google.Protobuf.Reflection
         internal FileDescriptorSet Parent { get; private set; }
 
         internal bool IncludeInOutput { get; set; }
-
+        internal string DefaultPackage { get; set; }
         public bool HasImports() => _imports.Count != 0;
         internal IEnumerable<Import> GetImports(bool resetPendingFlag = false)
         {
@@ -786,7 +819,7 @@ namespace Google.Protobuf.Reflection
             {
                 foreach (var import in _imports)
                 {
-                    var file = Parent?.GetFile(import.Path);
+                    var file = Parent?.GetFile(this, import.Path);
                     if (file != null)
                     {
                         if (TryResolveFromFile(file, extendee, extension, out field, true, import.IsPublic))
@@ -798,7 +831,7 @@ namespace Google.Protobuf.Reflection
                 }
                 foreach (var import in _imports)
                 {
-                    var file = Parent?.GetFile(import.Path);
+                    var file = Parent?.GetFile(this, import.Path);
                     if (file != null)
                     {
                         if (TryResolveFromFile(file, extendee, extension, out field, false, import.IsPublic))
@@ -822,11 +855,17 @@ namespace Google.Protobuf.Reflection
                 if (withPackageName)
                 {
                     var pkg = file.Package;
-                    if (string.IsNullOrWhiteSpace(pkg)) return false; // we're only looking *with* packages right now
 
-                    if (!tn.StartsWith(pkg + ".")) return false; // wrong file
+                    if(string.IsNullOrWhiteSpace(pkg))
+                    {
+                        // no package; anything could be fine
+                    }
+                    else
+                    {
+                        if (!tn.StartsWith(pkg + ".")) return false; // wrong file
 
-                    tn = tn.Substring(pkg.Length + 1); // and fully qualified (non-qualified is a second pass)
+                        tn = tn.Substring(pkg.Length + 1); // and fully qualified (non-qualified is a second pass)
+                    }
                 }
 
                 return file.TryResolveType(tn, file, out tp, ai, false, treatAllAsPublic);
@@ -871,7 +910,7 @@ namespace Google.Protobuf.Reflection
             {
                 if (allowImports || import.IsPublic || treatAllAsPublic)
                 {
-                    var file = Parent?.GetFile(import.Path);
+                    var file = Parent?.GetFile(this, import.Path);
                     if (TryResolveFromFile(file, typeName, false, out type, true, treatAllAsPublic))
                     {
                         import.Used = true;
@@ -885,7 +924,7 @@ namespace Google.Protobuf.Reflection
             {
                 if (allowImports || import.IsPublic || treatAllAsPublic)
                 {
-                    var file = Parent?.GetFile(import.Path);
+                    var file = Parent?.GetFile(this, import.Path);
                     if (TryResolveFromFile(file, typeName, false, out type, false, treatAllAsPublic))
                     {
                         import.Used = true;

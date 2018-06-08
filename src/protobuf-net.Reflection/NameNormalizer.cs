@@ -125,8 +125,21 @@ namespace ProtoBuf.Reflection
             ns = definition.Options?.CsharpNamespace;
             if (string.IsNullOrWhiteSpace(ns)) ns = GetName(definition.Package);
 
+            if (string.IsNullOrEmpty(ns)) ns = definition?.DefaultPackage;
+
             return string.IsNullOrWhiteSpace(ns) ? null : ns;
         }
+
+        /// <summary>
+        /// Suggest a normalized identifier
+        /// </summary>
+        public virtual string GetName(OneofDescriptorProto definition)
+        {
+            var name = definition?.Options?.GetOptions()?.Name;
+            if (!string.IsNullOrWhiteSpace(name)) return name;
+            return GetName(definition.Parent as DescriptorProto, GetName(definition.Name), definition.Name, false);
+        }
+
         /// <summary>
         /// Suggest a normalized identifier
         /// </summary>
