@@ -1500,7 +1500,7 @@ namespace ProtoBuf.Meta
                 {
                     TypeFormatEventArgs args = new TypeFormatEventArgs(type);
                     handler(model, args);
-                    if (!Helpers.IsNullOrEmpty(args.FormattedName)) return args.FormattedName;
+                    if (!string.IsNullOrEmpty(args.FormattedName)) return args.FormattedName;
                 }
             }
             return type.AssemblyQualifiedName;

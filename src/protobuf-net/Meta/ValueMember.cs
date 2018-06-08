@@ -798,7 +798,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public string Name
         {
-            get { return Helpers.IsNullOrEmpty(name) ? originalMember.Name : name; }
+            get { return string.IsNullOrEmpty(name) ? originalMember.Name : name; }
             set { SetName(value); }
         }
 
