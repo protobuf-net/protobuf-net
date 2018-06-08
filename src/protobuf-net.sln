@@ -33,6 +33,8 @@ Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "VBTest", "VBTest\VBTest.vbp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTest", "CSharpTest\CSharpTest.csproj", "{3C7D830B-7A76-43FD-8FFB-95E9E4231653}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.Protogen", "protobuf-net.Protogen\protobuf-net.Protogen.csproj", "{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		CoreOnly|Any CPU = CoreOnly|Any CPU
@@ -208,6 +210,24 @@ Global
 		{3C7D830B-7A76-43FD-8FFB-95E9E4231653}.Unity|Any CPU.Build.0 = Debug|Any CPU
 		{3C7D830B-7A76-43FD-8FFB-95E9E4231653}.VS|Any CPU.ActiveCfg = Debug|Any CPU
 		{3C7D830B-7A76-43FD-8FFB-95E9E4231653}.VS|Any CPU.Build.0 = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.CoreOnly|Any CPU.ActiveCfg = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.CoreOnly|Any CPU.Build.0 = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.iOS|Any CPU.ActiveCfg = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.iOS|Any CPU.Build.0 = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Net20|Any CPU.ActiveCfg = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Net20|Any CPU.Build.0 = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Profile|Any CPU.ActiveCfg = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Profile|Any CPU.Build.0 = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Silverlight2|Any CPU.ActiveCfg = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Silverlight2|Any CPU.Build.0 = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Unity|Any CPU.ActiveCfg = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.Unity|Any CPU.Build.0 = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.VS|Any CPU.ActiveCfg = Debug|Any CPU
+		{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}.VS|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
