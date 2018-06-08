@@ -493,15 +493,22 @@ namespace ProtoBuf
             // check for enough space
             if ((writer.ioBuffer.Length - writer.ioIndex) < required)
             {
-                if (writer.flushLock == 0)
-                {
-                    Flush(writer); // try emptying the buffer
-                    if ((writer.ioBuffer.Length - writer.ioIndex) >= required) return;
-                }
-                // either can't empty the buffer, or that didn't help; need more space
-                BufferPool.ResizeAndFlushLeft(ref writer.ioBuffer, required + writer.ioIndex, 0, writer.ioIndex);
+                TryFlushOrResize(required, writer);
             }
         }
+
+        private static void TryFlushOrResize(int required, ProtoWriter writer)
+        {
+            if (writer.flushLock == 0)
+            {
+                Flush(writer); // try emptying the buffer
+                if ((writer.ioBuffer.Length - writer.ioIndex) >= required) return;
+            }
+
+            // either can't empty the buffer, or that didn't help; need more space
+            BufferPool.ResizeAndFlushLeft(ref writer.ioBuffer, required + writer.ioIndex, 0, writer.ioIndex);
+        }
+
         /// <summary>
         /// Flushes data to the underlying stream, and releases any resources. The underlying stream is *not* disposed
         /// by this operation.
