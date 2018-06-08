@@ -21,15 +21,6 @@ public partial class Packet : global::ProtoBuf.IExtensible
 
     private global::ProtoBuf.DiscriminatedUnionObject __pbn__Content;
 
-    public enum OneOneofCase
-    {
-        None = 0,
-        One = 1,
-        Two = 42,
-    }
-
-    public OneOneofCase OneCase => (OneOneofCase)__pbn__Content.Discriminator;
-
     [global::ProtoBuf.ProtoMember(42)]
     public TypeTwo Two
     {
@@ -50,16 +41,6 @@ public partial class Packet : global::ProtoBuf.IExtensible
 
     private global::ProtoBuf.DiscriminatedUnionObject __pbn__ContentTwo;
 
-    public enum AnotherOneOneofCase
-    {
-        None = 0,
-        AnotherOne = 5,
-        AnotherTwo = 7,
-        Three = 6,
-    }
-
-    public AnotherOneOneofCase AnotherOneCase => (AnotherOneOneofCase)__pbn__ContentTwo.Discriminator;
-
     [global::ProtoBuf.ProtoMember(7)]
     public TypeTwo AnotherTwo
     {
@@ -77,6 +58,25 @@ public partial class Packet : global::ProtoBuf.IExtensible
     }
     public bool ShouldSerializeThree() => __pbn__ContentTwo.Is(6);
     public void ResetThree() => global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__ContentTwo, 6);
+
+    public ContentOneofCase ContentCase => (ContentOneofCase)__pbn__Content.Discriminator;
+
+    public enum ContentOneofCase
+    {
+        None = 0,
+        One = 1,
+        Two = 42,
+    }
+
+    public ContentTwoOneofCase ContentTwoCase => (ContentTwoOneofCase)__pbn__ContentTwo.Discriminator;
+
+    public enum ContentTwoOneofCase
+    {
+        None = 0,
+        AnotherOne = 5,
+        AnotherTwo = 7,
+        Three = 6,
+    }
 
 }
 

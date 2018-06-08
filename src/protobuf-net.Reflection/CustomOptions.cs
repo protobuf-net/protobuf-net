@@ -142,6 +142,9 @@ namespace ProtoBuf.Reflection
         public static ProtogenMethodOptions GetOptions(this global::Google.Protobuf.Reflection.MethodOptions obj)
         => obj == null ? default(ProtogenMethodOptions) : global::ProtoBuf.Extensible.GetValue<ProtogenMethodOptions>(obj, 1037);
 
+        public static ProtogenMessageOptions GetOptions(this global::Google.Protobuf.Reflection.OneofOptions obj)
+        => obj == null ? default(ProtogenMessageOptions) : global::ProtoBuf.Extensible.GetValue<ProtogenMessageOptions>(obj, 1037);
+
     }
 }
 

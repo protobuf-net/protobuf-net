@@ -436,7 +436,7 @@ namespace ProtoBuf.Reflection
             bool isRepeated = obj.label == FieldDescriptorProto.Label.LabelRepeated;
 
             OneOfStub oneOf = obj.ShouldSerializeOneofIndex() ? oneOfs?[obj.OneofIndex] : null;
-            if (oneOf != null && oneOf.CountTotal == 1)
+            if (oneOf != null && ctx.OneOfEnums && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
             }
@@ -515,7 +515,7 @@ namespace ProtoBuf.Reflection
             else if (oneOf != null)
             {
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"default({typeName})" : defaultValue;
-                var fieldName = FieldPrefix + oneOf.OneOf.Name;
+                var fieldName = GetOneOfFieldName(oneOf.OneOf);
                 var storage = oneOf.GetStorage(obj.type, obj.TypeName);
                 ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)}").WriteLine("{").Indent();
 
@@ -552,31 +552,6 @@ namespace ProtoBuf.Reflection
                 if (oneOf.IsFirst())
                 {
                     ctx.WriteLine().WriteLine($"private global::ProtoBuf.{unionType} {fieldName};");
-
-                    if (ctx.OneOfEnums)
-                    {
-                        ctx.WriteLine().WriteLine($"public enum {name}OneofCase").WriteLine("{").Indent().WriteLine("None = 0,");
-                        var index = obj.OneofIndex;
-                        foreach(var field in obj.Parent.Fields)
-                        {
-                            if(field.ShouldSerializeOneofIndex() && field.OneofIndex == index)
-                            {
-                                ctx.WriteLine($"{ctx.NameNormalizer.GetName(field)} = {field.Number},");
-                            }
-                        }
-                        ctx.Outdent().WriteLine("}").WriteLine();
-
-                        if (ctx.Supports(CSharp6))
-                        {
-                            ctx.WriteLine($"public {name}OneofCase {name}Case => ({name}OneofCase){fieldName}.Discriminator;");
-                        }
-                        else
-                        {
-                            ctx.WriteLine($"public {name}OneofCase {name}Case").WriteLine("{").Indent()
-                                .WriteLine($"return ({name}OneofCase){fieldName}.Discriminator;")
-                                .Outdent().WriteLine("}");
-                        }
-                    }
                 }
             }
             else if (explicitValues)
@@ -630,6 +605,8 @@ namespace ProtoBuf.Reflection
             }
             ctx.WriteLine();
         }
+
+        private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
 
         static readonly Version CSharp6 = new Version(6, 0);
 
@@ -715,6 +692,35 @@ namespace ProtoBuf.Reflection
                 }
 
                 //  GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
+            }
+        }
+
+        protected override void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        {
+            ctx.WriteLine().WriteLine($"public enum {ctx.NameNormalizer.GetName(obj)}{OneOfEnumSuffixEnum}").WriteLine("{").Indent().WriteLine("None = 0,");
+        }
+        protected override void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        {
+            ctx.Outdent().WriteLine("}").WriteLine();
+        }
+
+        protected override void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto field, ref object state)
+        {
+            ctx.WriteLine($"{ctx.NameNormalizer.GetName(field)} = {field.Number},");
+        }
+        protected override void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        {
+            var name = ctx.NameNormalizer.GetName(obj);
+            var fieldName = GetOneOfFieldName(obj);
+            if (ctx.Supports(CSharp6))
+            {
+                ctx.WriteLine($"public {name}OneofCase {name}Case => ({name}OneofCase){fieldName}.Discriminator;");
+            }
+            else
+            {
+                ctx.WriteLine($"public {name}OneofCase {name}Case").WriteLine("{").Indent()
+                    .WriteLine($"return ({name}OneofCase){fieldName}.Discriminator;")
+                    .Outdent().WriteLine("}");
             }
         }
 

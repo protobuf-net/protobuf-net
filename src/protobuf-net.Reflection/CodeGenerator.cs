@@ -274,6 +274,16 @@ namespace ProtoBuf.Reflection
             {
                 WriteField(ctx, inner, ref state, oneOfs);
             }
+
+            if (oneOfs != null)
+            {
+                foreach (var stub in oneOfs)
+                {
+                    WriteOneOf(ctx, stub);
+                }
+            }
+
+
             foreach (var inner in obj.NestedTypes)
             {
                 WriteMessage(ctx, inner);
@@ -339,6 +349,30 @@ namespace ProtoBuf.Reflection
         }
 
         /// <summary>
+        /// Emit code representing 'oneof' elements as an enum discriminator
+        /// </summary>
+        protected virtual void WriteOneOf(GeneratorContext ctx, OneOfStub stub)
+        {
+            if (ctx.OneOfEnums)
+            {
+                int index = stub.Index;
+                var obj = stub.OneOf;
+                object state = null;
+                WriteOneOfDiscriminator(ctx, obj, ref state);
+
+                WriteOneOfEnumHeader(ctx, obj, ref state);
+                foreach (var field in obj.Parent.Fields)
+                {
+                    if (field.ShouldSerializeOneofIndex() && field.OneofIndex == index)
+                    {
+                        WriteOneOfEnumValue(ctx, field, ref state);
+                    }
+                }
+                WriteOneOfEnumFooter(ctx, obj, ref state);
+            }
+        }
+
+        /// <summary>
         /// Emit code preceeding a set of enum values
         /// </summary>
         protected abstract void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto obj, ref object state);
@@ -358,6 +392,16 @@ namespace ProtoBuf.Reflection
         /// Emit code at the end of a file
         /// </summary>
         protected virtual void WriteFileFooter(GeneratorContext ctx, FileDescriptorProto obj, ref object state) { }
+
+
+        protected virtual void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto obj, ref object state) { }
+
+        protected virtual void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto obj, ref object state) { }
+        protected virtual void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto obj, ref object state) { }
+
+        protected virtual void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto obj, ref object state) { }
+
+        protected const string OneOfEnumSuffixEnum = "OneofCase", OneOfEnumSuffixDiscriminatior = "Case";
 
         /// <summary>
         /// Represents the state of a code-generation invocation
