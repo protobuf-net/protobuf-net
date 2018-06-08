@@ -34,6 +34,8 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 
 - speculative fix for iOS issues (#381)
 - add discriminator accessor to discriminated union types, for protogen v1.0.6
+- improve performance of ProtoWriter.DemandSpace (#378 from szehetner)
+- protogen - better support for wildcard paths (#390 from RansomVO)
 
 ## protogen v1.0.5
 
