@@ -1279,6 +1279,8 @@ namespace ProtoBuf.Meta
         {
             return GetKey(ref type) >= 0;
         }
+
+        Dictionary<Type, int> last = new Dictionary<Type, int>();
         /// <summary>
         /// Provides the key that represents a given type in the current model.
         /// The type is also normalized for proxies at the same time.
@@ -1286,7 +1288,12 @@ namespace ProtoBuf.Meta
         protected internal int GetKey(ref Type type)
         {
             if (type == null) return -1;
-            int key = GetKeyImpl(type);
+            int key;
+            lock(last)
+            {
+                if (!last.TryGetValue(type, out key))
+                    key = last[type] = GetKeyImpl(type);
+            }
             if (key < 0)
             {
                 Type normalized = ResolveProxies(type);
