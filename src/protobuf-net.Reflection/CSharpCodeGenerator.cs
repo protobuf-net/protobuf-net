@@ -521,7 +521,7 @@ namespace ProtoBuf.Reflection
             }
             else if (oneOf != null)
             {
-                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"default({typeName})" : defaultValue;
+                var defValue = string.IsNullOrWhiteSpace(defaultValue) ? (ctx.Supports(CSharp7_1) ? "default" : $"default({typeName})") : defaultValue;
                 var fieldName = GetOneOfFieldName(oneOf.OneOf);
                 var storage = oneOf.GetStorage(obj.type, obj.TypeName);
                 ctx.WriteLine($"{GetAccess(GetAccess(obj))} {typeName} {Escape(name)}").WriteLine("{").Indent();
@@ -615,7 +615,7 @@ namespace ProtoBuf.Reflection
 
         private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
 
-        static readonly Version CSharp6 = new Version(6, 0), CSharp3 = new Version(3, 0);
+        static readonly Version CSharp6 = new Version(6, 0), CSharp3 = new Version(3, 0), CSharp7_1 = new Version(7, 1);
 
         /// <summary>
         /// Starts an extgensions block
@@ -683,7 +683,8 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine("{").Indent();
                     tw = ctx.Write("return ");
                 }
-                tw.Write($"obj == null ? default({type}) : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
+                var defaultValue = ctx.Supports(CSharp7_1) ? "default" : $"default({type})";
+                tw.Write($"obj == null ? {defaultValue} : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
                 if (!string.IsNullOrEmpty(dataFormat))
                 {
                     tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");

@@ -46,6 +46,7 @@
         <select id="opt_langver">
             <option value="" selected="@(Model.LangVer == "")">(latest/default)</option>
             <optgroup label="C#">
+                <option value="7.1" selected="@(Model.LangVer == "7.1")">C# 7.1 - default literals</option>
                 <option value="6" selected="@(Model.LangVer == "6")">C# 6 - lambda-based properties</option>
                 <option value="3" selected="@(Model.LangVer == "3")">C# 3 - partial methods</option>
                 <option value="2" selected="@(Model.LangVer == "2")">C# 2 - downlevel</option>

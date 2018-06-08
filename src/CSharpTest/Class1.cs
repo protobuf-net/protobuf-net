@@ -2,97 +2,62 @@
 // Consider using 'partial classes' to extend these types
 // Input: my.proto
 
-#pragma warning disable 1591, 0612, 3021
+#pragma warning disable CS1591, CS0612, CS3021, IDE1006
 [global::ProtoBuf.ProtoContract()]
 public partial class Packet : global::ProtoBuf.IExtensible
 {
     private global::ProtoBuf.IExtension __pbn__extensionData;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-    {
-        return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-    }
-    public Packet()
-    {
-    }
+        => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
     [global::ProtoBuf.ProtoMember(1)]
     public TypeOne One
     {
-        get { return __pbn__Content.Is(1) ? ((TypeOne)__pbn__Content.Object) : default(TypeOne); }
+        get { return __pbn__Content.Is(1) ? ((TypeOne)__pbn__Content.Object) : default; }
         set { __pbn__Content = new global::ProtoBuf.DiscriminatedUnionObject(1, value); }
     }
-    public bool ShouldSerializeOne()
-    {
-        return __pbn__Content.Is(1);
-    }
-    public void ResetOne()
-    {
-        global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__Content, 1);
-    }
+    public bool ShouldSerializeOne() => __pbn__Content.Is(1);
+    public void ResetOne() => global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__Content, 1);
 
     private global::ProtoBuf.DiscriminatedUnionObject __pbn__Content;
 
     [global::ProtoBuf.ProtoMember(42)]
     public TypeTwo Two
     {
-        get { return __pbn__Content.Is(42) ? ((TypeTwo)__pbn__Content.Object) : default(TypeTwo); }
+        get { return __pbn__Content.Is(42) ? ((TypeTwo)__pbn__Content.Object) : default; }
         set { __pbn__Content = new global::ProtoBuf.DiscriminatedUnionObject(42, value); }
     }
-    public bool ShouldSerializeTwo()
-    {
-        return __pbn__Content.Is(42);
-    }
-    public void ResetTwo()
-    {
-        global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__Content, 42);
-    }
+    public bool ShouldSerializeTwo() => __pbn__Content.Is(42);
+    public void ResetTwo() => global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__Content, 42);
 
     [global::ProtoBuf.ProtoMember(5)]
     public TypeOne AnotherOne
     {
-        get { return __pbn__ContentTwo.Is(5) ? ((TypeOne)__pbn__ContentTwo.Object) : default(TypeOne); }
+        get { return __pbn__ContentTwo.Is(5) ? ((TypeOne)__pbn__ContentTwo.Object) : default; }
         set { __pbn__ContentTwo = new global::ProtoBuf.DiscriminatedUnionObject(5, value); }
     }
-    public bool ShouldSerializeAnotherOne()
-    {
-        return __pbn__ContentTwo.Is(5);
-    }
-    public void ResetAnotherOne()
-    {
-        global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__ContentTwo, 5);
-    }
+    public bool ShouldSerializeAnotherOne() => __pbn__ContentTwo.Is(5);
+    public void ResetAnotherOne() => global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__ContentTwo, 5);
 
     private global::ProtoBuf.DiscriminatedUnionObject __pbn__ContentTwo;
 
     [global::ProtoBuf.ProtoMember(7)]
     public TypeTwo AnotherTwo
     {
-        get { return __pbn__ContentTwo.Is(7) ? ((TypeTwo)__pbn__ContentTwo.Object) : default(TypeTwo); }
+        get { return __pbn__ContentTwo.Is(7) ? ((TypeTwo)__pbn__ContentTwo.Object) : default; }
         set { __pbn__ContentTwo = new global::ProtoBuf.DiscriminatedUnionObject(7, value); }
     }
-    public bool ShouldSerializeAnotherTwo()
-    {
-        return __pbn__ContentTwo.Is(7);
-    }
-    public void ResetAnotherTwo()
-    {
-        global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__ContentTwo, 7);
-    }
+    public bool ShouldSerializeAnotherTwo() => __pbn__ContentTwo.Is(7);
+    public void ResetAnotherTwo() => global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__ContentTwo, 7);
 
     [global::ProtoBuf.ProtoMember(6)]
     public TypeTwo Three
     {
-        get { return __pbn__ContentTwo.Is(6) ? ((TypeTwo)__pbn__ContentTwo.Object) : default(TypeTwo); }
+        get { return __pbn__ContentTwo.Is(6) ? ((TypeTwo)__pbn__ContentTwo.Object) : default; }
         set { __pbn__ContentTwo = new global::ProtoBuf.DiscriminatedUnionObject(6, value); }
     }
-    public bool ShouldSerializeThree()
-    {
-        return __pbn__ContentTwo.Is(6);
-    }
-    public void ResetThree()
-    {
-        global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__ContentTwo, 6);
-    }
+    public bool ShouldSerializeThree() => __pbn__ContentTwo.Is(6);
+    public void ResetThree() => global::ProtoBuf.DiscriminatedUnionObject.Reset(ref __pbn__ContentTwo, 6);
 
 }
 
@@ -101,12 +66,7 @@ public partial class TypeOne : global::ProtoBuf.IExtensible
 {
     private global::ProtoBuf.IExtension __pbn__extensionData;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-    {
-        return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-    }
-    public TypeOne()
-    {
-    }
+        => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
 }
 
@@ -115,13 +75,8 @@ public partial class TypeTwo : global::ProtoBuf.IExtensible
 {
     private global::ProtoBuf.IExtension __pbn__extensionData;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
-    {
-        return global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
-    }
-    public TypeTwo()
-    {
-    }
+        => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
 }
 
-#pragma warning restore 1591, 0612, 3021
+#pragma warning restore CS1591, CS0612, CS3021, IDE1006
