@@ -394,14 +394,35 @@ namespace ProtoBuf.Reflection
         protected virtual void WriteFileFooter(GeneratorContext ctx, FileDescriptorProto obj, ref object state) { }
 
 
+        /// <summary>
+        /// Emit the start of an enum declaration for 'oneof' groups, including the 0/None element
+        /// </summary>
         protected virtual void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto obj, ref object state) { }
 
+        /// <summary>
+        /// Emit a field-based entry for a 'oneof' groups's enum
+        /// </summary>
         protected virtual void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto obj, ref object state) { }
+        /// <summary>
+        /// Emit the end of an enum declaration for 'oneof' groups
+        /// </summary>
         protected virtual void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto obj, ref object state) { }
 
+        /// <summary>
+        /// Emit  the discriminator accessor for 'oneof' groups
+        /// </summary>
         protected virtual void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto obj, ref object state) { }
 
-        protected const string OneOfEnumSuffixEnum = "OneofCase", OneOfEnumSuffixDiscriminatior = "Case";
+        /// <summary>
+        /// Convention-based suffix for 'oneof' enums
+        /// </summary>
+        protected const string OneOfEnumSuffixEnum = "OneofCase";
+
+        /// <summary>
+        /// Convention-based suffix for 'oneof' discriminators
+        /// </summary>
+
+        protected const string OneOfEnumSuffixDiscriminatior = "Case";
 
         /// <summary>
         /// Represents the state of a code-generation invocation

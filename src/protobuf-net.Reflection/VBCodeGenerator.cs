@@ -434,7 +434,7 @@ namespace ProtoBuf
             bool isRepeated = obj.label == FieldDescriptorProto.Label.LabelRepeated;
 
             OneOfStub oneOf = obj.ShouldSerializeOneofIndex() ? oneOfs?[obj.OneofIndex] : null;
-            if (oneOf != null && oneOf.CountTotal == 1)
+            if (oneOf != null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
             }

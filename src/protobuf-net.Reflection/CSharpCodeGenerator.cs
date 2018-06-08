@@ -290,10 +290,17 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteConstructorFooter(GeneratorContext ctx, DescriptorProto obj, ref object state)
         {
-            ctx.WriteLine("OnConstructor();")
-                .Outdent().WriteLine("}").WriteLine()
-                .WriteLine("partial void OnConstructor();")
+            if (ctx.Supports(CSharp3))
+            {
+                ctx.WriteLine("OnConstructor();");
+            }
+            ctx.Outdent().WriteLine("}").WriteLine();
+
+            if (ctx.Supports(CSharp3))
+            {
+                ctx.WriteLine("partial void OnConstructor();")
                 .WriteLine();
+            }
         }
 
         /// <summary>
@@ -436,7 +443,7 @@ namespace ProtoBuf.Reflection
             bool isRepeated = obj.label == FieldDescriptorProto.Label.LabelRepeated;
 
             OneOfStub oneOf = obj.ShouldSerializeOneofIndex() ? oneOfs?[obj.OneofIndex] : null;
-            if (oneOf != null && ctx.OneOfEnums && oneOf.CountTotal == 1)
+            if (oneOf != null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
             }
@@ -608,7 +615,7 @@ namespace ProtoBuf.Reflection
 
         private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
 
-        static readonly Version CSharp6 = new Version(6, 0);
+        static readonly Version CSharp6 = new Version(6, 0), CSharp3 = new Version(3, 0);
 
         /// <summary>
         /// Starts an extgensions block
@@ -719,7 +726,7 @@ namespace ProtoBuf.Reflection
             else
             {
                 ctx.WriteLine($"public {name}OneofCase {name}Case").WriteLine("{").Indent()
-                    .WriteLine($"return ({name}OneofCase){fieldName}.Discriminator;")
+                    .WriteLine($"get {{ return ({name}OneofCase){fieldName}.Discriminator; }}")
                     .Outdent().WriteLine("}");
             }
         }

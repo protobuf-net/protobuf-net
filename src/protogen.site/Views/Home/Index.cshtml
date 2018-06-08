@@ -26,7 +26,6 @@
                     {
                         <option value="@option.Tooling">(protoc) @option.Caption</option>
                     }
-
                 </optgroup>
             }
         </select>
@@ -39,8 +38,20 @@
             <span>(sorry, protoc is not available: @Model.ProtocVersion)</span>
         }
     </div>
-    <div>
-        <input type="checkbox" id="opt_oneof" value="enum" checked="@Model.OneOfEnum"/><label for="opt_oneof"><code>oneof</code> should use enum</label>
+    <div title="with the command line tools: +oneof=...">
+        <label for="opt_oneof"><code>oneof</code> should use enum</label><input type="checkbox" id="opt_oneof" value="enum" checked="@Model.OneOfEnum"/>
+    </div>
+    <div title="with the command line tools: +langver=...">
+        <label for="opt_langver">Language Version</label>
+        <select id="opt_langver">
+            <option value="" selected="@(Model.LangVer == "")">(latest/default)</option>
+            <optgroup label="C#">
+                <option value="6" selected="@(Model.LangVer == "6")">C# 6 - lambda-based properties</option>
+                <option value="3" selected="@(Model.LangVer == "3")">C# 3 - partial methods</option>
+                <option value="2" selected="@(Model.LangVer == "2")">C# 2 - downlevel</option>
+            </optgroup>
+        </select>
+        <a href="https://github.com/mgravell/protobuf-net/issues/343#issuecomment-360127902">or specify in the .proto</a>
     </div>
     <div id="protocontainer" style="width:100%; max-width:unset;height:600px;border:1px solid grey"></div>
     <script>
@@ -48,7 +59,6 @@
     </script>
     <p>Not sure what to use? How about <a href="https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto">descriptor.proto</a>?</p>
     <p>download <code>protogen</code> <a href="/protogen/protogen 1.0.6.zip">1.0.6 (windows)</a> to use this tool at the command-line</p>
-    <p>tip: if needed, you can <a href="https://github.com/mgravell/protobuf-net/issues/343#issuecomment-360127902">generate C# 3.0 instead of C# 6.0</a></p>
 </section>
 <section id="coderesult" style="display: none;">
     <h3>Generated Code</h3>

@@ -25,13 +25,14 @@ namespace protogen.site.Controllers
         {
             _host = host;
         }
-        public IActionResult Index(string oneof = null)
+        public IActionResult Index(string oneof = null, string langver = null)
         {
             var model = new IndexModel
             {
                 ProtocVersion = GetProtocVersion(_host, out var canUse),
                 CanUseProtoc = canUse,
                 OneOfEnum = string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase),
+                LangVer = langver ?? "",
             };
             return View("Index", model);
         }
@@ -68,6 +69,7 @@ namespace protogen.site.Controllers
             public string ProtocVersion { get; set; }
             public bool CanUseProtoc { get; set; }
             public bool OneOfEnum { get; set; }
+            public string LangVer { get; set; }
         }
         public const int MaxFileLength = 1024 * 1024;
         [Route("/decode")]
