@@ -1372,7 +1372,7 @@ namespace ProtoBuf.Meta
             if (type == typeof(byte[]))
             {
                 byte[] orig = (byte[])value, clone = new byte[orig.Length];
-                Helpers.BlockCopy(orig, 0, clone, 0, orig.Length);
+                Buffer.BlockCopy(orig, 0, clone, 0, orig.Length);
                 return clone;
             }
             else if (GetWireType(Helpers.GetTypeCode(type), DataFormat.Default, ref type, out int modelKey) != WireType.None && modelKey < 0)

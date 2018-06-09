@@ -97,7 +97,7 @@ namespace ProtoBuf
 
             if (copyBytes > 0)
             {
-                Helpers.BlockCopy(buffer, copyFromIndex, newBuffer, 0, copyBytes);
+                Buffer.BlockCopy(buffer, copyFromIndex, newBuffer, 0, copyBytes);
                 ReleaseBufferToPool(ref buffer);
             }
 
