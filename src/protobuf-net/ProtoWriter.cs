@@ -631,6 +631,12 @@ namespace ProtoBuf
                     DemandSpace(8, writer);
                     buffer = writer.ioBuffer;
                     index = writer.ioIndex;
+
+#if NETCOREAPP2_1
+                    System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(buffer.AsSpan(index, 8), value);
+
+                    index += 8;
+#else
                     buffer[index] = (byte)value;
                     buffer[index + 1] = (byte)(value >> 8);
                     buffer[index + 2] = (byte)(value >> 16);
@@ -639,6 +645,7 @@ namespace ProtoBuf
                     buffer[index + 5] = (byte)(value >> 40);
                     buffer[index + 6] = (byte)(value >> 48);
                     buffer[index + 7] = (byte)(value >> 56);
+#endif
                     IncrementedAndReset(8, writer);
                     return;
                 case WireType.SignedVariant:

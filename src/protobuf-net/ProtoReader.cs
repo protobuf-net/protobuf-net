@@ -359,6 +359,13 @@ namespace ProtoBuf
                     position64 += 8;
                     available -= 8;
 
+#if NETCOREAPP2_1
+                    var result = System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(ioBuffer.AsSpan(ioIndex, 8));
+
+                    ioIndex+= 8;
+
+                    return result;
+#else
                     return ((long)ioBuffer[ioIndex++])
                         | (((long)ioBuffer[ioIndex++]) << 8)
                         | (((long)ioBuffer[ioIndex++]) << 16)
@@ -367,7 +374,7 @@ namespace ProtoBuf
                         | (((long)ioBuffer[ioIndex++]) << 40)
                         | (((long)ioBuffer[ioIndex++]) << 48)
                         | (((long)ioBuffer[ioIndex++]) << 56);
-
+#endif
                 case WireType.SignedVariant:
                     return Zag(ReadUInt64Variant());
                 default:
