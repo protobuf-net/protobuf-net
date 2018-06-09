@@ -87,6 +87,13 @@ namespace protogen
                         case "--proto_path":
                             importPaths.Add(rhs);
                             break;
+                        case "--pwd":
+                            Console.WriteLine($"Current Directory: {Directory.GetCurrentDirectory()}");
+#if NETCOREAPP2_1 || NETSTANDARD2_0
+                            Console.WriteLine($"Program: {typeof(Program).Assembly.Location}");
+                            Console.WriteLine($"CodeGenerator: {typeof(CodeGenerator).Assembly.Location}");
+#endif
+                            break;
                         default:
                             if (lhs.StartsWith("-") || !string.IsNullOrWhiteSpace(rhs))
                             {
