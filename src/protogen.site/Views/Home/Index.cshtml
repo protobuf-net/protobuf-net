@@ -39,7 +39,7 @@
         }
     </div>
     <div title="with the command line tools: +oneof=...">
-        <label for="opt_oneof"><code>oneof</code> should use enum</label>&nbsp;<input type="checkbox" id="opt_oneof" value="enum" checked="@Model.OneOfEnum"/>
+        <label for="opt_oneof"><code>oneof</code> should use enum</label>&nbsp;<input type="checkbox" id="opt_oneof" value="enum" checked="@Model.OneOfEnum" />
         <a target="_blank" href="#gc545f903467fd7fa441ad80c5433d331">or specify in the .proto</a>
     </div>
     <div title="with the command line tools: +langver=...">
@@ -59,12 +59,18 @@
         </select>
         <a target="_blank" href="#gc545f903467fd7fa441ad80c5433d331">or specify in the .proto</a>
     </div>
+    <div title="with the command line tools: +names=...">
+        <label for="opt_names">Naming Conventions</label>&nbsp;<select id="opt_names">
+            <option value="auto" selected="@(Model.Names=="auto")">auto - use .NET conventions</option>
+            <option value="original" selected="@(Model.Names=="original")">original - use names from schema</option>
+        </select>
+    </div>
     <div id="protocontainer" style="width:100%; max-width:unset;height:600px;border:1px solid grey"></div>
     <script>
 
     </script>
     <p>Not sure what to use? How about <a href="https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto">descriptor.proto</a>?</p>
-    <p>download <code>protogen</code> <a href="/protogen/protogen 1.0.6.zip">1.0.6 (windows)</a> to use this tool at the command-line</p>
+    <p>download <code>protogen</code> <a href="/protogen/protogen 1.0.6.zip">1.0.6 (windows)</a> to use this tool at the command-line, or <a href="https://www.nuget.org/packages/protobuf-net.Protogen">install as a <code>dotnet</code> global tool</a></p>
 </section>
 <section id="coderesult" style="display: none;">
     <h3>Generated Code</h3>
