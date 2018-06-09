@@ -1,13 +1,7 @@
 ﻿#if !NO_RUNTIME
 using System;
 using ProtoBuf.Meta;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
 
 namespace ProtoBuf.Serializers
 {
@@ -16,17 +10,13 @@ namespace ProtoBuf.Serializers
         public readonly struct EnumPair
         {
             public readonly object RawValue; // note that this is boxing, but I'll live with it
-#if !FEAT_IKVM
             public readonly Enum TypedValue; // note that this is boxing, but I'll live with it
-#endif
             public readonly int WireValue;
             public EnumPair(int wireValue, object raw, Type type)
             {
                 WireValue = wireValue;
                 RawValue = raw;
-#if !FEAT_IKVM
                 TypedValue = (Enum)Enum.ToObject(type, raw);
-#endif
             }
         } 
         private readonly Type enumType; 
@@ -65,7 +55,6 @@ namespace ProtoBuf.Serializers
         bool IProtoSerializer.RequiresOldValue { get { return false; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
 
-#if !FEAT_IKVM
         private int EnumToWire(object value)
         {
             unchecked
@@ -137,7 +126,7 @@ namespace ProtoBuf.Serializers
                 ProtoWriter.ThrowEnumException(dest, value);
             }
         }
-#endif
+
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

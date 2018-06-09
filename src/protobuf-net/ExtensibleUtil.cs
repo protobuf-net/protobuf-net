@@ -36,10 +36,6 @@ namespace ProtoBuf
         /// </summary>
         internal static IEnumerable GetExtendedValues(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
-
             if (instance == null) throw new ArgumentNullException("instance");
             if (tag <= 0) throw new ArgumentOutOfRangeException("tag");
             IExtension extn = instance.GetExtensionObject(false);
@@ -72,14 +68,10 @@ namespace ProtoBuf
                 ProtoReader.Recycle(reader);
                 extn.EndQuery(stream);
             }
-#endif       
         }
 
         internal static void AppendExtendValue(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             if(instance == null) throw new ArgumentNullException("instance");
             if(value == null) throw new ArgumentNullException("value");
 
@@ -101,7 +93,6 @@ namespace ProtoBuf
             finally {
                 extn.EndAppend(stream, commit);
             }
-#endif
         }
 
 //        /// <summary>

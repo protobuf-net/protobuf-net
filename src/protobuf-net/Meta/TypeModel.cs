@@ -3,12 +3,7 @@ using System.IO;
 
 using System.Collections;
 using System.Collections.Generic;
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
 
 namespace ProtoBuf.Meta
 {
@@ -41,12 +36,9 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal virtual Type MapType(System.Type type, bool demand)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException(); // this should come from RuntimeTypeModel!
-#else
             return type;
-#endif
         }
+
         private WireType GetWireType(ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
         {
             modelKey = -1;
@@ -90,7 +82,7 @@ namespace ProtoBuf.Meta
             return WireType.None;
         }
 
-#if !FEAT_IKVM
+
         /// <summary>
         /// This is the more "complete" version of Serialize, which handles single instances of mapped types.
         /// The value is written as a complete field, including field-header and (for sub-objects) a
@@ -201,7 +193,7 @@ namespace ProtoBuf.Meta
                 ThrowUnexpectedType(type);
             }
         }
-#endif
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
         /// </summary>
@@ -219,17 +211,14 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             using (ProtoWriter writer = new ProtoWriter(dest, this, context))
             {
                 writer.SetRootObject(value);
                 SerializeCore(writer, value);
                 writer.Close();
             }
-#endif
         }
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied writer.
         /// </summary>
@@ -237,16 +226,12 @@ namespace ProtoBuf.Meta
         /// <param name="dest">The destination writer to write to.</param>
         public void Serialize(ProtoWriter dest, object value)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             if (dest == null) throw new ArgumentNullException("dest");
             dest.CheckDepthFlushlock();
             dest.SetRootObject(value);
             SerializeCore(dest, value);
             dest.CheckDepthFlushlock();
             ProtoWriter.Flush(dest);
-#endif
         }
 
         /// <summary>
@@ -320,9 +305,6 @@ namespace ProtoBuf.Meta
 
         private object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out long bytesRead, out bool haveObject, SerializationContext context)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             haveObject = false;
             bool skip;
             long len;
@@ -387,8 +369,8 @@ namespace ProtoBuf.Meta
             {
                 ProtoReader.Recycle(reader);
             }
-#endif
         }
+
         /// <summary>
         /// Reads a sequence of consecutive length-prefixed items from a stream, using
         /// either base-128 or fixed-length prefixes. Base-128 prefixes with a tag
@@ -595,9 +577,6 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public object Deserialize(Stream source, object value, System.Type type, SerializationContext context)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             bool autoCreate = PrepareDeserialize(value, ref type);
             ProtoReader reader = null;
             try
@@ -612,7 +591,6 @@ namespace ProtoBuf.Meta
             {
                 ProtoReader.Recycle(reader);
             }
-#endif
         }
 
         private bool PrepareDeserialize(object value, ref Type type)
@@ -691,9 +669,6 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             bool autoCreate = PrepareDeserialize(value, ref type);
             ProtoReader reader = null;
             try
@@ -708,8 +683,8 @@ namespace ProtoBuf.Meta
             {
                 ProtoReader.Recycle(reader);
             }
-#endif
         }
+
         /// <summary>
         /// Applies a protocol-buffer reader to an existing instance (which may be null).
         /// </summary>
@@ -721,19 +696,14 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public object Deserialize(ProtoReader source, object value, System.Type type)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             if (source == null) throw new ArgumentNullException("source");
             bool autoCreate = PrepareDeserialize(value, ref type);
             if (value != null) source.SetRootObject(value);
             object obj = DeserializeCore(source, type, value, autoCreate);
             source.CheckFullyConsumed();
             return obj;
-#endif
         }
 
-#if !FEAT_IKVM
         private object DeserializeCore(ProtoReader reader, Type type, object value, bool noAutoCreate)
         {
             int key = GetKey(ref type);
@@ -745,7 +715,7 @@ namespace ProtoBuf.Meta
             TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, noAutoCreate, false, null);
             return value;
         }
-#endif
+
 #if COREFX
         private static readonly System.Reflection.TypeInfo ilist = typeof(IList).GetTypeInfo();
 #else
@@ -957,7 +927,6 @@ namespace ProtoBuf.Meta
 #endif
         }
 
-#if !FEAT_IKVM
         private bool TryDeserializeList(TypeModel model, ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
         {
             MethodInfo addMethod = TypeModel.ResolveListAdd(model, listType, itemType, out bool isList);
@@ -1200,7 +1169,6 @@ namespace ProtoBuf.Meta
             }
             return found;
         }
-#endif
 
 #if !NO_RUNTIME
         /// <summary>
@@ -1374,9 +1342,6 @@ namespace ProtoBuf.Meta
         /// </summary>
         public object DeepClone(object value)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             if (value == null) return null;
             Type type = value.GetType();
             int key = GetKey(ref type);
@@ -1435,8 +1400,6 @@ namespace ProtoBuf.Meta
                     ProtoReader.Recycle(reader);
                 }
             }
-#endif
-
         }
 
         /// <summary>
@@ -1648,11 +1611,7 @@ namespace ProtoBuf.Meta
 
             public object Deserialize(Stream source)
             {
-#if FEAT_IKVM
-                throw new NotSupportedException();
-#else
                 return model.Deserialize(source, null, type, (long)-1, Context);
-#endif
             }
 
             public void Serialize(Stream destination, object graph)
@@ -1683,11 +1642,7 @@ namespace ProtoBuf.Meta
 
         internal virtual Type GetType(string fullName, Assembly context)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             return ResolveKnownType(fullName, this, context);
-#endif
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
@@ -1696,12 +1651,8 @@ namespace ProtoBuf.Meta
             if (string.IsNullOrEmpty(name)) return null;
             try
             {
-#if FEAT_IKVM
-                // looks like a NullReferenceException, but this should call into RuntimeTypeModel's version
-                Type type = model == null ? null : model.GetType(name, assembly);
-#else
                 Type type = Type.GetType(name);
-#endif
+
                 if (type != null) return type;
             }
             catch { }
@@ -1709,7 +1660,7 @@ namespace ProtoBuf.Meta
             {
                 int i = name.IndexOf(',');
                 string fullName = (i > 0 ? name.Substring(0, i) : name).Trim();
-#if !(FEAT_IKVM || COREFX || PROFILE259)
+#if !(COREFX || PROFILE259)
                 if (assembly == null) assembly = Assembly.GetCallingAssembly();
 #endif
 				Type type = assembly?.GetType(fullName);

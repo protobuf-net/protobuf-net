@@ -7,10 +7,6 @@ using ProtoBuf.Meta;
 using OverflowException = System.ApplicationException;
 #endif
 
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-#endif
-
 namespace ProtoBuf
 {
     /// <summary>
@@ -31,9 +27,6 @@ namespace ProtoBuf
         /// <param name="writer">The destination.</param>
         public static void WriteObject(object value, int key, ProtoWriter writer)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             if (writer == null) throw new ArgumentNullException("writer");
             if (writer.model == null)
             {
@@ -53,8 +46,8 @@ namespace ProtoBuf
             {
                 TypeModel.ThrowUnexpectedType(value.GetType());
             }
+
             EndSubItem(token, writer);
-#endif 
         }
         /// <summary>
         /// Write an encapsulated sub-object, using the supplied unique key (reprasenting a type) - but the
@@ -77,9 +70,6 @@ namespace ProtoBuf
         }
         internal static void WriteObject(object value, int key, ProtoWriter writer, PrefixStyle style, int fieldNumber)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             if (writer.model == null)
             {
                 throw new InvalidOperationException("Cannot serialize sub-objects unless a model is provided");
@@ -113,8 +103,7 @@ namespace ProtoBuf
             {
                 writer.model.Serialize(key, value, writer);
             }
-            EndSubItem(token, writer, style);
-#endif       
+            EndSubItem(token, writer, style);    
         }
 
         internal int GetTypeKey(ref Type type)

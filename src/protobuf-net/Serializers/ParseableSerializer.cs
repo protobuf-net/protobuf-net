@@ -2,12 +2,7 @@
 using System;
 using System.Net;
 using ProtoBuf.Meta;
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
 
 namespace ProtoBuf.Serializers
 {
@@ -61,26 +56,27 @@ namespace ProtoBuf.Serializers
                         null, Helpers.EmptyTypes, null);
 #endif
         }
+
         private ParseableSerializer(MethodInfo parse)
         {
             this.parse = parse;
         }
-        public Type ExpectedType { get { return parse.DeclaringType; } }
+
+        public Type ExpectedType => parse.DeclaringType;
 
         bool IProtoSerializer.RequiresOldValue { get { return false; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
 
-#if !FEAT_IKVM
         public object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return parse.Invoke(null, new object[] { source.ReadString() });
         }
+
         public void Write(object value, ProtoWriter dest)
         {
             ProtoWriter.WriteString(value.ToString(), dest);
         }
-#endif
 
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

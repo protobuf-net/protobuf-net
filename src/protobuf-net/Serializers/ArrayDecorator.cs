@@ -1,20 +1,13 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Collections;
-using ProtoBuf.Meta;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
+using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
     sealed class ArrayDecorator : ProtoDecoratorBase
     {
-
         private readonly int fieldNumber;
         private const byte
                    OPTIONS_WritePacked = 1,
@@ -168,7 +161,6 @@ namespace ProtoBuf.Serializers
         }
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
 
-#if !FEAT_IKVM
         public override void Write(object value, ProtoWriter dest)
         {
             IList arr = (IList)value;
@@ -241,7 +233,6 @@ namespace ProtoBuf.Serializers
             list.CopyTo(result, oldLen);
             return result;
         }
-#endif
 
 #if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)

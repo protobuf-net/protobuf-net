@@ -582,11 +582,7 @@ namespace ProtoBuf.Meta
                     if (item.TryGet(nameof(ProtoContractAttribute.Name), out tmp)) name = (string) tmp;
                     if (Helpers.IsEnum(type)) // note this is subtly different to isEnum; want to do this even if [Flags]
                     {
-
-#if !FEAT_IKVM
-                        // IKVM can't access EnumPassthruHasValue, but conveniently, EnumPassthru will only be returned if set via ctor or property
                         if (item.TryGet(nameof(ProtoContractAttribute.EnumPassthruHasValue), false, out tmp) && (bool)tmp)
-#endif
                         {
                             if (item.TryGet(nameof(ProtoContractAttribute.EnumPassthru), out tmp))
                             {
@@ -600,10 +596,7 @@ namespace ProtoBuf.Meta
                     {
                         if (item.TryGet(nameof(ProtoContractAttribute.DataMemberOffset), out tmp)) dataMemberOffset = (int) tmp;
 
-#if !FEAT_IKVM
-                        // IKVM can't access InferTagFromNameHasValue, but conveniently, InferTagFromName will only be returned if set via ctor or property
                         if (item.TryGet(nameof(ProtoContractAttribute.InferTagFromNameHasValue), false, out tmp) && (bool) tmp)
-#endif
                         {
                             if (item.TryGet(nameof(ProtoContractAttribute.InferTagFromName), out tmp)) inferTagByName = (bool) tmp;
                         }
@@ -645,13 +638,13 @@ namespace ProtoBuf.Meta
             BasicList members = new BasicList();
 
 #if PROFILE259
-			System.Collections.Generic.IEnumerable<MemberInfo> foundList;
+			IEnumerable<MemberInfo> foundList;
             if(isEnum) {
                 foundList = type.GetRuntimeFields();
             }
             else
             {
-                System.Collections.Generic.List<MemberInfo> list = new System.Collections.Generic.List<MemberInfo>();
+                List<MemberInfo> list = new List<MemberInfo>();
                 foreach(PropertyInfo prop in type.GetRuntimeProperties()) {
                     MethodInfo getter = Helpers.GetGetMethod(prop, false, false);
                     if(getter != null && !getter.IsStatic) list.Add(prop);
@@ -934,7 +927,7 @@ namespace ProtoBuf.Meta
                     if (callbacks == null) { callbacks = new MethodInfo[8]; }
                     else if (callbacks[index] != null)
                     {
-#if FEAT_IKVM || COREFX || PROFILE259
+#if COREFX || PROFILE259
 						Type reflected = method.DeclaringType;
 #else
                         Type reflected = method.ReflectedType;
@@ -979,13 +972,12 @@ namespace ProtoBuf.Meta
                     if (attrib != null)
                     {
                         GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
-#if !FEAT_IKVM // IKVM can't access HasValue, but conveniently, Value will only be returned if set via ctor or property
+
                         if ((bool)Helpers.GetInstanceMethod(attrib.AttributeType
 #if COREFX || PROFILE259
 							 .GetTypeInfo()
 #endif
                             , nameof(ProtoEnumAttribute.HasValue)).Invoke(attrib.Target, null))
-#endif
                         {
                             if (attrib.TryGet(nameof(ProtoEnumAttribute.Value), out object tmp))
                             {
@@ -1015,12 +1007,9 @@ namespace ProtoBuf.Meta
                     GetFieldBoolean(ref isPacked, attrib, "IsPacked");
                     GetFieldBoolean(ref overwriteList, attrib, "OverwriteList");
                     GetDataFormat(ref dataFormat, attrib, "DataFormat");
-
-#if !FEAT_IKVM
-                    // IKVM can't access AsReferenceHasValue, but conveniently, AsReference will only be returned if set via ctor or property
                     GetFieldBoolean(ref asReferenceHasValue, attrib, "AsReferenceHasValue", false);
+
                     if(asReferenceHasValue)
-#endif
                     {
                         asReferenceHasValue = GetFieldBoolean(ref asReference, attrib, "AsReference", true);
                     }
@@ -1040,12 +1029,9 @@ namespace ProtoBuf.Meta
                             GetFieldBoolean(ref isPacked, ppma, "IsPacked");
                             GetFieldBoolean(ref overwriteList, attrib, "OverwriteList");
                             GetDataFormat(ref dataFormat, ppma, "DataFormat");
-
-#if !FEAT_IKVM
-                            // IKVM can't access AsReferenceHasValue, but conveniently, AsReference will only be returned if set via ctor or property
                             GetFieldBoolean(ref asReferenceHasValue, attrib, "AsReferenceHasValue", false);
+
                             if (asReferenceHasValue)
-#endif
                             {
                                 asReferenceHasValue = GetFieldBoolean(ref asReference, ppma, "AsReference", true);
                             }
@@ -1655,7 +1641,6 @@ namespace ProtoBuf.Meta
         }
 
 #if FEAT_COMPILER
-
         /// <summary>
         /// Compiles the serializer for this type; this is *not* a full
         /// standalone compile, but can significantly boost performance
@@ -1664,11 +1649,7 @@ namespace ProtoBuf.Meta
         /// <remarks>An in-place compile can access non-public types / members</remarks>
         public void CompileInPlace()
         {
-#if FEAT_IKVM
-            // just no nothing, quietely; don't want to break the API
-#else
             serializer = CompiledSerializer.Wrap(Serializer, model);
-#endif
         }
 #endif
 
@@ -1781,7 +1762,7 @@ namespace ProtoBuf.Meta
 
         internal bool IsPrepared()
         {
-#if FEAT_COMPILER && !FEAT_IKVM
+#if FEAT_COMPILER
             return serializer is CompiledSerializer;
 #else
             return false;

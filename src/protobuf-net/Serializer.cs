@@ -3,13 +3,7 @@ using ProtoBuf.Meta;
 using System;
 using System.IO;
 using System.Collections.Generic;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
 
 namespace ProtoBuf
 {
@@ -251,11 +245,7 @@ namespace ProtoBuf
         /// <returns>A new IFormatter to be used during [de]serialization.</returns>
         public static System.Runtime.Serialization.IFormatter CreateFormatter<T>()
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             return RuntimeTypeModel.Default.CreateFormatter(typeof(T));
-#endif
         }
 #endif
         /// <summary>

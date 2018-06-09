@@ -1,15 +1,6 @@
 ﻿#if !NO_RUNTIME
 using System;
-using ProtoBuf.Meta;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
-
-
 
 namespace ProtoBuf.Serializers
 {
@@ -27,7 +18,7 @@ namespace ProtoBuf.Serializers
             this.getSpecified = getSpecified;
             this.setSpecified = setSpecified;
         }
-#if !FEAT_IKVM
+
         public override void Write(object value, ProtoWriter dest)
         {
             if(getSpecified == null || (bool)getSpecified.Invoke(value, null))
@@ -35,13 +26,13 @@ namespace ProtoBuf.Serializers
                 Tail.Write(value, dest);
             }
         }
+
         public override object Read(object value, ProtoReader source)
         {
             object result = Tail.Read(value, source);
             if (setSpecified != null) setSpecified.Invoke(value, new object[] { true });
             return result;
         }
-#endif
 
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

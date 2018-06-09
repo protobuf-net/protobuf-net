@@ -1,13 +1,7 @@
 ﻿#if !NO_RUNTIME
 using System;
-using ProtoBuf.Meta;
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
-
+using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
@@ -22,17 +16,13 @@ namespace ProtoBuf.Serializers
         {
             if (defaultValue == null) throw new ArgumentNullException("defaultValue");
             Type type = model.MapType(defaultValue.GetType());
-            if (type != tail.ExpectedType
-#if FEAT_IKVM // in IKVM, we'll have the default value as an underlying type
-                && !(tail.ExpectedType.IsEnum && type == tail.ExpectedType.GetEnumUnderlyingType())
-#endif
-                )
+            if (type != tail.ExpectedType)
             {
                 throw new ArgumentException("Default value is of incorrect type", "defaultValue");
             }
             this.defaultValue = defaultValue;
         }
-#if !FEAT_IKVM
+
         public override void Write(object value, ProtoWriter dest)
         {
             if (!object.Equals(value, defaultValue))
@@ -40,11 +30,11 @@ namespace ProtoBuf.Serializers
                 Tail.Write(value, dest);
             }
         }
+
         public override object Read(object value, ProtoReader source)
         {
             return Tail.Read(value, source);
         }
-#endif
 
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

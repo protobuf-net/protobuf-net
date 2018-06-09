@@ -1,29 +1,14 @@
 ﻿#if !NO_RUNTIME
 using System;
 
-using ProtoBuf.Meta;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
-using System.Reflection;
-#endif
-
 namespace ProtoBuf.Serializers
 {
     sealed class StringSerializer : IProtoSerializer
     {
-#if FEAT_IKVM
-        readonly Type expectedType;
-#else
         static readonly Type expectedType = typeof(string);
-#endif
+
         public StringSerializer(ProtoBuf.Meta.TypeModel model)
         {
-#if FEAT_IKVM
-            expectedType = model.MapType(typeof(string));
-#endif
         }
         public Type ExpectedType { get { return expectedType; } }
         public void Write(object value, ProtoWriter dest)

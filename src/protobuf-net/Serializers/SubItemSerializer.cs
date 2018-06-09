@@ -3,12 +3,7 @@ using System;
 using ProtoBuf.Meta;
 
 #if FEAT_COMPILER
-#if FEAT_IKVM
-using IKVM.Reflection.Emit;
-using Type = IKVM.Reflection.Type;
-#else
 using System.Reflection.Emit;
-#endif
 #endif
 
 namespace ProtoBuf.Serializers
@@ -33,7 +28,7 @@ namespace ProtoBuf.Serializers
             ((IProtoTypeSerializer)proxy.Serializer).EmitCreateInstance(ctx);
         }
 #endif
-#if !FEAT_IKVM
+
         void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
             ((IProtoTypeSerializer)proxy.Serializer).Callback(value, callbackType, context);
@@ -42,7 +37,6 @@ namespace ProtoBuf.Serializers
         {
             return ((IProtoTypeSerializer)proxy.Serializer).CreateInstance(source);
         }
-#endif
 
         private readonly int key;
         private readonly Type type;
@@ -64,7 +58,6 @@ namespace ProtoBuf.Serializers
         bool IProtoSerializer.RequiresOldValue { get { return true; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
 
-#if !FEAT_IKVM
         void IProtoSerializer.Write(object value, ProtoWriter dest)
         {
             if (recursionCheck)
@@ -76,11 +69,11 @@ namespace ProtoBuf.Serializers
                 ProtoWriter.WriteRecursionSafeObject(value, key, dest);
             }
         }
+
         object IProtoSerializer.Read(object value, ProtoReader source)
         {
             return ProtoReader.ReadObject(value, key, source);
         }
-#endif
 
 #if FEAT_COMPILER
         bool EmitDedicatedMethod(Compiler.CompilerContext ctx, Compiler.Local valueFrom, bool read)

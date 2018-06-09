@@ -1,13 +1,7 @@
 ﻿#if !NO_RUNTIME
 using System;
-using ProtoBuf.Meta;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
+using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
@@ -74,14 +68,8 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, Meta.TypeModel.CallbackType callbackType) { }
 #endif
-        public Type ExpectedType
-        {
-            get { return ctor.DeclaringType; }
-        }
+        public Type ExpectedType => ctor.DeclaringType;
 
-
-
-#if !FEAT_IKVM
         void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
         object IProtoTypeSerializer.CreateInstance(ProtoReader source) { throw new NotSupportedException(); }
         private object GetValue(object obj, int index)
@@ -140,16 +128,11 @@ namespace ProtoBuf.Serializers
                 if (val != null) tails[i].Write(val, dest);
             }
         }
-#endif
-        public bool RequiresOldValue
-        {
-            get { return true; }
-        }
 
-        public bool ReturnsValue
-        {
-            get { return false; }
-        }
+        public bool RequiresOldValue => true;
+
+        public bool ReturnsValue => false;
+
         Type GetMemberType(int index)
         {
             Type result = Helpers.GetMemberType(members[index]);

@@ -1,16 +1,8 @@
 ﻿#if !NO_RUNTIME
 using System;
+using System.Reflection;
 
 using ProtoBuf.Meta;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
-using System.Reflection;
-#endif
-
-
 
 namespace ProtoBuf.Serializers
 {
@@ -52,7 +44,7 @@ namespace ProtoBuf.Serializers
             MethodInfo method = Helpers.GetInstanceMethod(property.DeclaringType.GetTypeInfo(), "Set" + property.Name, new Type[] { property.PropertyType });
 #else
 
-#if FEAT_IKVM || PROFILE259
+#if PROFILE259
             Type reflectedType = property.DeclaringType;
 #else
 			Type reflectedType = property.ReflectedType;
@@ -62,7 +54,7 @@ namespace ProtoBuf.Serializers
             if (method == null || !method.IsPublic || method.ReturnType != model.MapType(typeof(void))) return null;
             return method;
         }
-#if !FEAT_IKVM
+
         public override void Write(object value, ProtoWriter dest)
         {
             Helpers.DebugAssert(value != null);
@@ -88,7 +80,6 @@ namespace ProtoBuf.Serializers
             }
             return null;
         }
-#endif
 
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

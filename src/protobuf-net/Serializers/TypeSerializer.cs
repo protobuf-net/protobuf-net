@@ -5,12 +5,7 @@ using ProtoBuf.Meta;
 
 #endif
 
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
 
 namespace ProtoBuf.Serializers
 {
@@ -129,8 +124,9 @@ namespace ProtoBuf.Serializers
 #endif
             }
         }
+
         bool IProtoTypeSerializer.CanCreateInstance() { return true; }
-#if !FEAT_IKVM
+
         object IProtoTypeSerializer.CreateInstance(ProtoReader source)
         {
             return CreateInstance(source, false);
@@ -336,7 +332,7 @@ namespace ProtoBuf.Serializers
             if (includeLocalCallback && callbacks != null) InvokeCallback(callbacks.BeforeDeserialize, obj, source.Context);
             return obj;
         }
-#endif
+
         bool IProtoSerializer.RequiresOldValue { get { return true; } }
         bool IProtoSerializer.ReturnsValue { get { return false; } } // updates field directly
 #if FEAT_COMPILER

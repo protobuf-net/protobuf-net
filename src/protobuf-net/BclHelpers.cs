@@ -537,9 +537,6 @@ namespace ProtoBuf
         /// </summary>
         public static object ReadNetObject(object value, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             SubItemToken token = ProtoReader.StartSubItem(source);
             int fieldNumber;
             int newObjectKey = -1, newTypeKey = -1, tmp;
@@ -641,16 +638,13 @@ namespace ProtoBuf
             ProtoReader.EndSubItem(token, source);
 
             return value;
-#endif
         }
+
         /// <summary>
         /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
         public static void WriteNetObject(object value, ProtoWriter dest, int key, NetObjectOptions options)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             if (dest == null) throw new ArgumentNullException("dest");
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
                  asReference = (options & NetObjectOptions.AsReference) != 0;
@@ -701,7 +695,6 @@ namespace ProtoBuf
                 }
             }
             ProtoWriter.EndSubItem(token, dest);
-#endif
         }
     }
 }

@@ -4,11 +4,8 @@ using System;
 using ProtoBuf.Serializers;
 using System.Globalization;
 using System.Collections.Generic;
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-using System.Linq;
-#elif PROFILE259
+
+#if PROFILE259
 using System.Reflection;
 using System.Linq;
 #else
@@ -190,29 +187,10 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Guid: return new Guid(s);
                 }
             }
-#if FEAT_IKVM
-            if (Helpers.IsEnum(type)) return value; // return the underlying type instead
-            System.Type convertType = null;
-            switch(Helpers.GetTypeCode(type))
-            {
-                case ProtoTypeCode.SByte: convertType = typeof(sbyte); break;
-                case ProtoTypeCode.Int16: convertType = typeof(short); break;
-                case ProtoTypeCode.Int32: convertType = typeof(int); break;
-                case ProtoTypeCode.Int64: convertType = typeof(long); break;
-                case ProtoTypeCode.Byte: convertType = typeof(byte); break;
-                case ProtoTypeCode.UInt16: convertType = typeof(ushort); break;
-                case ProtoTypeCode.UInt32: convertType = typeof(uint); break;
-                case ProtoTypeCode.UInt64: convertType = typeof(ulong); break;
-                case ProtoTypeCode.Single: convertType = typeof(float); break;
-                case ProtoTypeCode.Double: convertType = typeof(double); break;
-                case ProtoTypeCode.Decimal: convertType = typeof(decimal); break;
-            }
-            if(convertType != null) return Convert.ChangeType(value, convertType, CultureInfo.InvariantCulture);
-            throw new ArgumentException("Unable to process default value: " + value + ", " + type.FullName);
-#else
+
             if (Helpers.IsEnum(type)) return Enum.ToObject(type, value);
             return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
-#endif
+
         }
 
         private IProtoSerializer serializer;

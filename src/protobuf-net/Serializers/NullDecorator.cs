@@ -1,14 +1,8 @@
 ﻿#if !NO_RUNTIME
 using System;
+using System.Reflection;
 
 using ProtoBuf.Meta;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
-using System.Reflection;
-#endif
 
 namespace ProtoBuf.Serializers
 {
@@ -30,21 +24,14 @@ namespace ProtoBuf.Serializers
             {
                 expectedType = tailType;
             }
-
         }
 
-        public override Type ExpectedType
-        {
-            get { return expectedType; }
-        }
-        public override bool ReturnsValue
-        {
-            get { return true; }
-        }
-        public override bool RequiresOldValue
-        {
-            get { return true; }
-        }
+        public override Type ExpectedType => expectedType;
+
+        public override bool ReturnsValue => true;
+
+        public override bool RequiresOldValue => true;
+
 #if FEAT_COMPILER
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
@@ -147,7 +134,6 @@ namespace ProtoBuf.Serializers
         }
 #endif
 
-#if !FEAT_IKVM
         public override object Read(object value, ProtoReader source)
         {
             SubItemToken tok = ProtoReader.StartSubItem(source);
@@ -163,6 +149,7 @@ namespace ProtoBuf.Serializers
             ProtoReader.EndSubItem(tok, source);
             return value;
         }
+
         public override void Write(object value, ProtoWriter dest)
         {
             SubItemToken token = ProtoWriter.StartSubItem(null, dest);
@@ -172,7 +159,6 @@ namespace ProtoBuf.Serializers
             }
             ProtoWriter.EndSubItem(token, dest);
         }
-#endif
     }
 }
 #endif

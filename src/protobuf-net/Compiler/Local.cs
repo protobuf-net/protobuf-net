@@ -1,11 +1,6 @@
 ﻿#if FEAT_COMPILER
 using System;
-#if FEAT_IKVM
-using IKVM.Reflection.Emit;
-using Type  = IKVM.Reflection.Type;
-#else
 using System.Reflection.Emit;
-#endif
 
 namespace ProtoBuf.Compiler
 {

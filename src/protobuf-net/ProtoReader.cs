@@ -5,10 +5,6 @@ using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
 
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-#endif
-
 #if MF
 using EndOfStreamException = System.ApplicationException;
 using OverflowException = System.ApplicationException;
@@ -566,13 +562,9 @@ namespace ProtoBuf
         /// </summary>
         public static object ReadObject(object value, int key, ProtoReader reader)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             return ReadTypedObject(value, key, reader, null);
-#endif
         }
-#if !FEAT_IKVM
+
         internal static object ReadTypedObject(object value, int key, ProtoReader reader, Type type)
         {
             if (reader.model == null)
@@ -595,7 +587,6 @@ namespace ProtoBuf
             ProtoReader.EndSubItem(token, reader);
             return value;
         }
-#endif
 
         /// <summary>
         /// Makes the end of consuming a nested message in the stream; the stream must be either at the correct EndGroup

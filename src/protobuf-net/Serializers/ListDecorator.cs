@@ -2,13 +2,7 @@
 using System;
 using System.Collections;
 using ProtoBuf.Meta;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
 
 namespace ProtoBuf.Serializers
 {
@@ -472,7 +466,6 @@ namespace ProtoBuf.Serializers
         }
 #endif
 
-#if !FEAT_IKVM
         public override void Write(object value, ProtoWriter dest)
         {
             SubItemToken token;
@@ -575,7 +568,6 @@ namespace ProtoBuf.Serializers
                 throw;
             }
         }
-#endif
 
     }
 }

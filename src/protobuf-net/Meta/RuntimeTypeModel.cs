@@ -2,16 +2,9 @@
 using System;
 using System.Collections;
 using System.Text;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-using IKVM.Reflection.Emit;
-#else
 using System.Reflection;
 #if FEAT_COMPILER
 using System.Reflection.Emit;
-#endif
 #endif
 
 using ProtoBuf.Serializers;
@@ -381,10 +374,6 @@ namespace ProtoBuf.Meta
 
         internal RuntimeTypeModel(bool isDefault)
         {
-#if FEAT_IKVM
-            universe = new IKVM.Reflection.Universe();
-            universe.EnableMissingMemberResolution(); // needed to avoid TypedReference issue on WinRT
-#endif
             AutoAddMissingTypes = true;
             UseImplicitZeroDefaults = true;
             SetOption(OPTIONS_IsDefaultModel, isDefault);
@@ -414,49 +403,6 @@ namespace ProtoBuf.Meta
                 return false;
             }
         }
-#endif
-
-#if FEAT_IKVM
-        readonly IKVM.Reflection.Universe universe;
-        /// <summary>
-        /// Load an assembly into the model's universe
-        /// </summary>
-        public Assembly Load(string path)
-        {
-            return universe.LoadFile(path);
-        }
-        /// <summary>
-        /// Gets the IKVM Universe that relates to this model
-        /// </summary>
-        public Universe Universe { get { return universe; } }
-
-        /// <summary>
-        /// Adds support for an additional type in this model, optionally
-        /// applying inbuilt patterns. If the type is already known to the
-        /// model, the existing type is returned **without** applying
-        /// any additional behaviour.
-        /// </summary>
-        public MetaType Add(string assemblyQualifiedTypeName, bool applyDefaults)
-        {
-            Type type = universe.GetType(assemblyQualifiedTypeName, true);
-            return Add(type, applyDefaults);
-        }
-        /// <summary>
-        /// Adds support for an additional type in this model, optionally
-        /// applying inbuilt patterns. If the type is already known to the
-        /// model, the existing type is returned **without** applying
-        /// any additional behaviour.
-        /// </summary>
-        public MetaType Add(System.Type type, bool applyDefaultBehaviour)
-        {
-            return Add(MapType(type), applyDefaultBehaviour);
-        }
-        /// <summary>
-        /// Obtains the MetaType associated with a given Type for the current model,
-        /// allowing additional configuration.
-        /// </summary>
-        public MetaType this[System.Type type] { get { return this[MapType(type)]; } }
-        
 #endif
 
         /// <summary>
@@ -814,12 +760,8 @@ namespace ProtoBuf.Meta
         /// <param name="dest">The destination stream to write to.</param>
         protected internal override void Serialize(int key, object value, ProtoWriter dest)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             //Helpers.DebugWriteLine("Serialize", value);
             ((MetaType)types[key]).Serializer.Write(value, dest);
-#endif
         }
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
@@ -832,9 +774,6 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         protected internal override object Deserialize(int key, object value, ProtoReader source)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             //Helpers.DebugWriteLine("Deserialize", value);
             IProtoSerializer ser = ((MetaType)types[key]).Serializer;
             if (value == null && Helpers.IsValueType(ser.ExpectedType)) {
@@ -843,22 +782,17 @@ namespace ProtoBuf.Meta
             } else {
                 return ser.Read(value, source);
             }
-#endif
         }
 
 #if FEAT_COMPILER
         // this is used by some unit-tests; do not remove
         internal Compiler.ProtoSerializer GetSerializer(IProtoSerializer serializer, bool compiled)
         {
-#if FEAT_IKVM
-            throw new NotSupportedException();
-#else
             if (serializer == null) throw new ArgumentNullException("serializer");
 #if FEAT_COMPILER
             if (compiled) return Compiler.CompilerContext.BuildSerializer(serializer, this);
 #endif
             return new Compiler.ProtoSerializer(serializer.Write);
-#endif
         }
 
         /// <summary>
@@ -979,47 +913,7 @@ namespace ProtoBuf.Meta
             type.DefineMethodOverride(newMethod, baseMethod);
             return il;
         }
-
-#if FEAT_IKVM
-        /// <summary>
-        /// Inspect the model, and resolve all related types
-        /// </summary>
-        public void Cascade()
-        {
-            BuildAllSerializers();
-        }
-        /// <summary>
-        /// Translate a System.Type into the universe's type representation
-        /// </summary>
-        protected internal override Type MapType(System.Type type, bool demand)
-        {
-            if (type == null) return null;
-#if DEBUG
-            if (type.Assembly == typeof(IKVM.Reflection.Type).Assembly)
-            {
-                throw new InvalidOperationException(string.Format(
-                    "Somebody is passing me IKVM types! {0} should be fully-qualified at the call-site",
-                    type.Name));
-            }
-#endif
-            Type result = universe.GetType(type.AssemblyQualifiedName);
-            
-            if(result == null)
-            {
-                // things also tend to move around... *a lot* - especially in WinRT; search all as a fallback strategy
-                foreach (Assembly a in universe.GetAssemblies())
-                {
-                    result = a.GetType(type.FullName);
-                    if (result != null) break;
-                }
-                if (result == null && demand)
-                {
-                    throw new InvalidOperationException("Unable to map type: " + type.AssemblyQualifiedName);
-                }
-            }
-            return result;
-        }
-#endif
+        
         /// <summary>
         /// Represents configuration options for compiling a model to 
         /// a standalone assembly.
@@ -1086,23 +980,8 @@ namespace ProtoBuf.Meta
             /// The acecssibility of the generated serializer
             /// </summary>
             public Accessibility Accessibility { get { return accessibility; } set { accessibility = value; } }
-
-#if FEAT_IKVM
-            /// <summary>
-            /// The name of the container that holds the key pair.
-            /// </summary>
-            public string KeyContainer { get; set; }
-            /// <summary>
-            /// The path to a file that hold the key pair.
-            /// </summary>
-            public string KeyFile { get; set; }
-
-            /// <summary>
-            /// The public  key to sign the file with.
-            /// </summary>
-            public string PublicKey { get; set; }
-#endif
         }
+
         /// <summary>
         /// Type accessibility
         /// </summary>
@@ -1169,29 +1048,8 @@ namespace ProtoBuf.Meta
                 assemblyName = new System.IO.FileInfo(System.IO.Path.GetFileNameWithoutExtension(path)).Name;
                 moduleName = assemblyName + System.IO.Path.GetExtension(path);
             }
-
-#if FEAT_IKVM
-            IKVM.Reflection.AssemblyName an = new IKVM.Reflection.AssemblyName();
-            an.Name = assemblyName;
-            AssemblyBuilder asm = universe.DefineDynamicAssembly(an, AssemblyBuilderAccess.Save);
-            if (!string.IsNullOrEmpty(options.KeyFile))
-            {
-                asm.__SetAssemblyKeyPair(new StrongNameKeyPair(File.OpenRead(options.KeyFile)));
-            }
-            else if (!string.IsNullOrEmpty(options.KeyContainer))
-            {
-                asm.__SetAssemblyKeyPair(new StrongNameKeyPair(options.KeyContainer));
-            }
-            else if (!string.IsNullOrEmpty(options.PublicKey))
-            {
-                asm.__SetAssemblyPublicKey(FromHex(options.PublicKey));
-            }
-            if(!string.IsNullOrEmpty(options.ImageRuntimeVersion) && options.MetaDataVersion != 0)
-            {
-                asm.__SetImageRuntimeVersion(options.ImageRuntimeVersion, options.MetaDataVersion);
-            }
-            ModuleBuilder module = asm.DefineDynamicModule(moduleName, path);
-#elif COREFX
+            
+#if COREFX
             AssemblyName an = new AssemblyName();
             an.Name = assemblyName;
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
@@ -1255,25 +1113,9 @@ namespace ProtoBuf.Meta
                 Helpers.DebugWriteLine("Wrote dll:" + path);
 #endif
             }
-#if FEAT_IKVM
-            return null;
-#else
             return (TypeModel)Activator.CreateInstance(finalType);
-#endif
         }
-#if FEAT_IKVM
-        private byte[] FromHex(string value)
-        {
-            if (string.IsNullOrEmpty(value)) throw new ArgumentNullException("value");
-            int len = value.Length / 2;
-            byte[] result = new byte[len];
-            for(int i = 0 ; i < len ; i++)
-            {
-                result[i] = Convert.ToByte(value.Substring(i * 2, 2), 16);
-            }
-            return result;
-        }
-#endif
+
         private void WriteConstructors(TypeBuilder type, ref int index, SerializerPair[] methodPairs, ref ILGenerator il, int knownTypesCategory, FieldBuilder knownTypes, Type knownTypesLookupType, Compiler.CompilerContext ctx)
         {
             type.DefineDefaultConstructor(MethodAttributes.Public);
@@ -1977,19 +1819,6 @@ namespace ProtoBuf.Meta
                 if (defaultType != null && !Helpers.IsAssignableFrom(type, defaultType)) { defaultType = null; }
             }
         }
-
-      
-#if FEAT_IKVM
-        internal override Type GetType(string fullName, Assembly context)
-        {
-            if (context != null)
-            {
-                Type found = universe.GetType(context, fullName, false);
-                if (found != null) return found;
-            }
-            return universe.GetType(fullName, false);
-        }
-#endif
 
         internal string GetSchemaTypeName(Type effectiveType, DataFormat dataFormat, bool asReference, bool dynamicType, ref CommonImports imports)
         {

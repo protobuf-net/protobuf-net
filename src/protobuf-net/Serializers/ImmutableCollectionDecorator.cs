@@ -1,14 +1,8 @@
 ﻿#if !NO_RUNTIME
 using System;
 using System.Collections;
-using ProtoBuf.Meta;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-#else
 using System.Reflection;
-#endif
+using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
@@ -166,7 +160,7 @@ namespace ProtoBuf.Serializers
             this.addRange = addRange;
             this.finish = finish;
         }
-#if !FEAT_IKVM
+
         public override object Read(object value, ProtoReader source)
         {
             object builderInstance = builderFactory.Invoke(null, null);
@@ -210,7 +204,6 @@ namespace ProtoBuf.Serializers
 
             return finish.Invoke(builderInstance, null);
         }
-#endif
 
 #if FEAT_COMPILER
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

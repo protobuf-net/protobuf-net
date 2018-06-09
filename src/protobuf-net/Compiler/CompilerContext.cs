@@ -4,15 +4,8 @@ using System;
 using System.Threading;
 using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
-
-#if FEAT_IKVM
-using Type = IKVM.Reflection.Type;
-using IKVM.Reflection;
-using IKVM.Reflection.Emit;
-#else
 using System.Reflection;
 using System.Reflection.Emit;
-#endif
 
 namespace ProtoBuf.Compiler
 {
@@ -30,10 +23,8 @@ namespace ProtoBuf.Compiler
     {
         public TypeModel Model { get { return model; } }
 
-#if !FEAT_IKVM
         readonly DynamicMethod method;
         static int next;
-#endif
 
         internal CodeLabel DefineLabel()
         {
@@ -68,7 +59,6 @@ namespace ProtoBuf.Compiler
             TraceCompile("#: " + label.Index);
         }
 
-#if !FEAT_IKVM
         public static ProtoSerializer BuildSerializer(IProtoSerializer head, TypeModel model)
         {
             Type type = head.ExpectedType;
@@ -163,7 +153,7 @@ namespace ProtoBuf.Compiler
             return (ProtoDeserializer)ctx.method.CreateDelegate(
                 typeof(ProtoDeserializer));
         }
-#endif
+
         internal void Return()
         {
             Emit(OpCodes.Ret);
@@ -171,12 +161,9 @@ namespace ProtoBuf.Compiler
 
         static bool IsObject(Type type)
         {
-#if FEAT_IKVM
-            return type.FullName == "System.Object";
-#else
             return type == typeof(object);
-#endif
         }
+
         internal void CastToObject(Type type)
         {
             if (IsObject(type))
@@ -247,13 +234,9 @@ namespace ProtoBuf.Compiler
 
 
         private readonly bool isWriter;
-#if FEAT_IKVM
-        internal bool NonPublic { get { return false; } }
-#else
+
         private readonly bool nonPublic;
         internal bool NonPublic { get { return nonPublic; } }
-#endif
-
 
         private readonly Local inputValue;
         public Local InputValue { get { return inputValue; } }
@@ -277,7 +260,6 @@ namespace ProtoBuf.Compiler
             TraceCompile(">> " + traceName);
         }
 
-#if !FEAT_IKVM
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
         {
             if (model == null) throw new ArgumentNullException("model");
@@ -315,7 +297,6 @@ namespace ProtoBuf.Compiler
             TraceCompile(">> " + method.Name);
         }
 
-#endif
         private readonly ILGenerator il;
 
         private void Emit(OpCode opcode)
@@ -703,20 +684,6 @@ namespace ProtoBuf.Compiler
             bool isTrusted = false;
             Type attributeType = MapType(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute));
             if (attributeType == null) return false;
-#if FEAT_IKVM
-            foreach (CustomAttributeData attrib in assembly.__GetCustomAttributes(attributeType, false))
-            {
-                if (attrib.ConstructorArguments.Count == 1)
-                {
-                    string privelegedAssembly = attrib.ConstructorArguments[0].Value as string;
-                    if (privelegedAssembly == assemblyName || privelegedAssembly.StartsWith(assemblyName + ","))
-                    {
-                        isTrusted = true;
-                        break;
-                    }
-                }
-            }
-#else
 
 #if COREFX
             foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType))
@@ -730,7 +697,7 @@ namespace ProtoBuf.Compiler
                     break;
                 }
             }
-#endif
+
             if (isTrusted)
             {
                 if (knownTrustedAssemblies == null) knownTrustedAssemblies = new BasicList();
@@ -889,24 +856,7 @@ namespace ProtoBuf.Compiler
                 TraceCompile(code + ": " + field + " on " + field.DeclaringType);
             }
         }
-#if FEAT_IKVM
-        public void StoreValue(System.Reflection.FieldInfo field)
-        {
-            StoreValue(MapType(field.DeclaringType).GetField(field.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance));
-        }
-        public void StoreValue(System.Reflection.PropertyInfo property)
-        {
-            StoreValue(MapType(property.DeclaringType).GetProperty(property.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance));
-        }
-        public void LoadValue(System.Reflection.FieldInfo field)
-        {
-            LoadValue(MapType(field.DeclaringType).GetField(field.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance));
-        }
-        public void LoadValue(System.Reflection.PropertyInfo property)
-        {
-            LoadValue(MapType(property.DeclaringType).GetProperty(property.Name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance));
-        }
-#endif
+
         public void StoreValue(FieldInfo field)
         {
             MemberInfo member = field;
@@ -965,12 +915,6 @@ namespace ProtoBuf.Compiler
             return local.Value.LocalIndex < 256;
         }
 
-#if FEAT_IKVM
-        internal void LoadAddress(Local local, System.Type type)
-        {
-            LoadAddress(local, MapType(type));
-        }
-#endif
         internal void LoadAddress(Local local, Type type, bool evenIfClass = false)
         {
             if (evenIfClass || Helpers.IsValueType(type))

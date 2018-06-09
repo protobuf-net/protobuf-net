@@ -1,4 +1,4 @@
-﻿#if FEAT_COMPILER && !FEAT_IKVM
+﻿#if FEAT_COMPILER
 using System;
 using ProtoBuf.Meta;
 
