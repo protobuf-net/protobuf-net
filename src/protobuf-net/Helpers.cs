@@ -64,7 +64,7 @@ namespace ProtoBuf
 #if TRACE
 #if MF
             Microsoft.SPOT.Trace.Print(message);
-#elif MONODROID || CF2 || IOS || PORTABLE || COREFX || PROFILE259
+#elif CF2 || PORTABLE || COREFX || PROFILE259
 			System.Diagnostics.Debug.WriteLine(message);
 #else
             System.Diagnostics.Trace.WriteLine(message);
@@ -562,7 +562,7 @@ namespace ProtoBuf
         internal static MemberInfo[] GetInstanceFieldsAndProperties(Type type, bool publicOnly)
         {
 #if PROFILE259
-			System.Collections.Generic.List<MemberInfo> members = new System.Collections.Generic.List<MemberInfo>();
+			var members = new List<MemberInfo>();
             foreach(FieldInfo field in type.GetRuntimeFields())
             {
                 if(field.IsStatic) continue;
