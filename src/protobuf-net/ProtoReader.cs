@@ -5,11 +5,6 @@ using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
 
-#if MF
-using EndOfStreamException = System.ApplicationException;
-using OverflowException = System.ApplicationException;
-#endif
-
 namespace ProtoBuf
 {
     /// <summary>
@@ -254,7 +249,7 @@ namespace ProtoBuf
             else if (ioIndex + count >= ioBuffer.Length)
             {
                 // need to shift the buffer data to the left to make space
-                Helpers.BlockCopy(ioBuffer, ioIndex, ioBuffer, 0, available);
+                Buffer.BlockCopy(ioBuffer, ioIndex, ioBuffer, 0, available);
                 ioIndex = 0;
             }
             count -= available;
@@ -494,19 +489,9 @@ namespace ProtoBuf
                 int bytes = (int)ReadUInt32Variant(false);
                 if (bytes == 0) return "";
                 if (available < bytes) Ensure(bytes, true);
-#if MF
-                byte[] tmp;
-                if(ioIndex == 0 && bytes == ioBuffer.Length) {
-                    // unlikely, but...
-                    tmp = ioBuffer;
-                } else {
-                    tmp = new byte[bytes];
-                    Helpers.BlockCopy(ioBuffer, ioIndex, tmp, 0, bytes);
-                }
-                string s = new string(encoding.GetChars(tmp));
-#else
+
                 string s = encoding.GetString(ioBuffer, ioIndex, bytes);
-#endif
+
                 if (internStrings) { s = Intern(s); }
                 available -= bytes;
                 position64 += bytes;
@@ -848,8 +833,7 @@ namespace ProtoBuf
                     {
                         double value = ReadDouble();
                         float f = (float)value;
-                        if (Helpers.IsInfinity(f)
-                            && !Helpers.IsInfinity(value))
+                        if (float.IsInfinity(f) && !double.IsInfinity(value))
                         {
                             throw AddErrorData(new OverflowException(), this);
                         }
@@ -897,7 +881,7 @@ namespace ProtoBuf
                     {
                         offset = value.Length;
                         byte[] tmp = new byte[value.Length + len];
-                        Helpers.BlockCopy(value, 0, tmp, 0, value.Length);
+                        Buffer.BlockCopy(value, 0, tmp, 0, value.Length);
                         value = tmp;
                     }
                     // value is now sized with the final length, and (if necessary)
@@ -908,7 +892,7 @@ namespace ProtoBuf
                         if (reader.available > 0)
                         {
                             // copy what we *do* have
-                            Helpers.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, reader.available);
+                            Buffer.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, reader.available);
                             len -= reader.available;
                             offset += reader.available;
                             reader.ioIndex = reader.available = 0; // we've drained the buffer
@@ -920,7 +904,7 @@ namespace ProtoBuf
                     // at this point, we know that len <= available
                     if (len > 0)
                     {   // still need data, but we have enough buffered
-                        Helpers.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, len);
+                        Buffer.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, len);
                         reader.ioIndex += len;
                         reader.available -= len;
                     }

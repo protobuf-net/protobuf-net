@@ -51,20 +51,14 @@ namespace ProtoBuf
         public static void DebugWriteLine(string message)
         {
 #if DEBUG
-#if MF      
-            Microsoft.SPOT.Debug.Print(message);
-#else
             System.Diagnostics.Debug.WriteLine(message);
-#endif
 #endif
         }
         [System.Diagnostics.Conditional("TRACE")]
         public static void TraceWriteLine(string message)
         {
 #if TRACE
-#if MF
-            Microsoft.SPOT.Trace.Print(message);
-#elif CF2 || PORTABLE || COREFX || PROFILE259
+#if CF2 || PORTABLE || COREFX || PROFILE259
 			System.Diagnostics.Debug.WriteLine(message);
 #else
             System.Diagnostics.Trace.WriteLine(message);
@@ -78,12 +72,8 @@ namespace ProtoBuf
 #if DEBUG
             if (!condition)
             {
-#if MF
-                Microsoft.SPOT.Debug.Assert(false, message);
-#else
                 System.Diagnostics.Debug.Assert(false, message);
             }
-#endif
 #endif
         }
         [System.Diagnostics.Conditional("DEBUG")]
@@ -97,12 +87,8 @@ namespace ProtoBuf
         public static void DebugAssert(bool condition)
         {
 #if DEBUG   
-#if MF
-            Microsoft.SPOT.Debug.Assert(condition);
-#else
             if(!condition && System.Diagnostics.Debugger.IsAttached) System.Diagnostics.Debugger.Break();
             System.Diagnostics.Debug.Assert(condition);
-#endif
 #endif
         }
 #if !NO_RUNTIME
@@ -129,23 +115,7 @@ namespace ProtoBuf
             } while (swapped);
         }
 #endif
-        public static void BlockCopy(byte[] from, int fromIndex, byte[] to, int toIndex, int count)
-        {
-#if MF
-            Array.Copy(from, fromIndex, to, toIndex, count);
-#else
-            Buffer.BlockCopy(from, fromIndex, to, toIndex, count);
-#endif
-        }
-        public static bool IsInfinity(float value)
-        {
-#if MF
-            const float inf = (float)1.0 / (float)0.0, minf = (float)-1.0F / (float)0.0;
-            return value == inf || value == minf;
-#else
-            return float.IsInfinity(value);
-#endif
-        }
+     
 #if COREFX
 		internal static MemberInfo GetInstanceMember(TypeInfo declaringType, string name)
         {
@@ -327,16 +297,7 @@ namespace ProtoBuf
             return type.IsSubclassOf(baseClass);
 #endif
         }
-
-        public static bool IsInfinity(double value)
-        {
-#if MF
-            const double inf = (double)1.0 / (double)0.0, minf = (double)-1.0F / (double)0.0;
-            return value == inf || value == minf;
-#else
-            return double.IsInfinity(value);
-#endif
-        }
+        
         public readonly static Type[] EmptyTypes =
 #if PORTABLE || CF2 || CF35 || PROFILE259
             new Type[0];

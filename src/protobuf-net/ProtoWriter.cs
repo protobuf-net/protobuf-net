@@ -3,9 +3,7 @@
 using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
-#if MF
-using OverflowException = System.ApplicationException;
-#endif
+
 
 namespace ProtoBuf
 {
@@ -219,7 +217,7 @@ namespace ProtoBuf
             throw CreateException(writer);
         CopyFixedLength: // no point duplicating this lots of times, and don't really want another stackframe
             DemandSpace(length, writer);
-            Helpers.BlockCopy(data, offset, writer.ioBuffer, writer.ioIndex, length);
+            Buffer.BlockCopy(data, offset, writer.ioBuffer, writer.ioIndex, length);
             IncrementedAndReset(length, writer);
         }
         private static void CopyRawFromStream(Stream source, ProtoWriter writer)
@@ -407,7 +405,7 @@ namespace ProtoBuf
                     {
                         DemandSpace(offset, writer);
                         byte[] blob = writer.ioBuffer;
-                        Helpers.BlockCopy(blob, value + 1, blob, value + 1 + offset, len);
+                        Buffer.BlockCopy(blob, value + 1, blob, value + 1 + offset, len);
                         tmp = (uint)len;
                         do
                         {
@@ -589,19 +587,11 @@ namespace ProtoBuf
                 writer.wireType = WireType.None;
                 return; // just a header
             }
-#if MF
-            byte[] bytes = encoding.GetBytes(value);
-            int actual = bytes.Length;
-            writer.WriteUInt32Variant((uint)actual);
-            writer.Ensure(actual);
-            Helpers.BlockCopy(bytes, 0, writer.ioBuffer, writer.ioIndex, actual);
-#else
             int predicted = encoding.GetByteCount(value);
             WriteUInt32Variant((uint)predicted, writer);
             DemandSpace(predicted, writer);
             int actual = encoding.GetBytes(value, 0, value.Length, writer.ioBuffer, writer.ioIndex);
             Helpers.DebugAssert(predicted == actual);
-#endif
             IncrementedAndReset(actual, writer);
         }
         /// <summary>
@@ -820,8 +810,7 @@ namespace ProtoBuf
             {
                 case WireType.Fixed32:
                     float f = (float)value;
-                    if (Helpers.IsInfinity(f)
-                        && !Helpers.IsInfinity(value))
+                    if (float.IsInfinity(f) && !double.IsInfinity(value))
                     {
                         throw new OverflowException();
                     }
