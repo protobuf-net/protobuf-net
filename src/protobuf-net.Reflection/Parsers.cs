@@ -93,13 +93,32 @@ namespace Google.Protobuf.Reflection
         }
         string FindFile(string file)
         {
+            string rel;
             foreach (var path in importPaths)
             {
-                var rel = Path.Combine(path, file);
+                rel = Path.Combine(path, file);
                 if (File.Exists(rel)) return rel;
             }
+#if NETSTANDARD2_0 || NETCOREAPP2_1
+            if (AssemblyPath != null)
+            {
+                try {
+                    rel = Path.Combine(AssemblyPath, file);
+                    if (File.Exists(rel)) return rel;
+                } catch {}
+            }
+#endif
             return null;
         }
+#if NETSTANDARD2_0 || NETCOREAPP2_1
+        static readonly string AssemblyPath;
+        static FileDescriptorSet()
+        {
+            try {
+                AssemblyPath = typeof(CodeGenerator).Assembly.Location;
+            } catch {}
+        }
+#endif
 
         bool TryResolve(string name, FileDescriptorProto from, out FileDescriptorProto descriptor)
         {
