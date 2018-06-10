@@ -389,7 +389,11 @@ namespace ProtoBuf.Meta
             UseImplicitZeroDefaults = true;
             SetOption(OPTIONS_IsDefaultModel, isDefault);
 #if FEAT_COMPILER && !FX11 && !DEBUG
-            AutoCompile = EnableAutoCompile();
+            try
+            {
+                AutoCompile = EnableAutoCompile();
+            }
+            catch { } // this is all kinds of brittle on things like UWP
 #endif
         }
 
