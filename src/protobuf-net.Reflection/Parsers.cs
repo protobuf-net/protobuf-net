@@ -93,14 +93,14 @@ namespace Google.Protobuf.Reflection
         }
         string FindFile(string file)
         {
+            string rel;
             foreach (var path in importPaths)
             {
-                var rel = Path.Combine(path, file);
+                rel = Path.Combine(path, file);
                 if (File.Exists(rel)) return rel;
             }
             return null;
         }
-
         bool TryResolve(string name, FileDescriptorProto from, out FileDescriptorProto descriptor)
         {
             descriptor = Files.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));

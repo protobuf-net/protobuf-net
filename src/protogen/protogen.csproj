@@ -1,22 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <VersionPrefix>$(ProtoGenVersion)</VersionPrefix>
     <!--<VersionSuffix></VersionSuffix>-->
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net462;netcoreapp1.1;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net462;netcoreapp2.0</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
-    <PackAsTool>true</PackAsTool>
     <AssemblyName>protogen</AssemblyName>
-    <ToolCommandName>protogen</ToolCommandName>
-    <PackageId>protobuf-net.Protogen</PackageId>
     <Title>protobuf-net command-line "global tool" for .NET code-generation from .proto schema files</Title>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
     <ProjectReference Include="../protobuf-net.Reflection/protobuf-net.Reflection.csproj" />
-    <!--<PackageReference Include="protobuf-net" Version="2.3.7" />
-    <PackageReference Include="protobuf-net.Reflection" Version="1.0.2" />-->
   </ItemGroup>
-
 </Project>

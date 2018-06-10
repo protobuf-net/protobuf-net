@@ -24,6 +24,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protogen v1.0.7
+
+- ship default google and protobuf-net imports with the "global tool" install
+
 ## protobuf-net v2.3.9
 
 - fix behaviour of `DiscriminatedUnion*` for `None` enum case
@@ -60,6 +64,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 
 - VB.NET code-gen support added (from: alpha2)
 - packaging updates for "global tools" (from: alpha1)
+
+## protogen v1.0.2
+
+- packaging updates (no code changes)
 
 ## protogen v1.0.1
 
