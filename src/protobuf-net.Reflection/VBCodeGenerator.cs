@@ -11,7 +11,6 @@ namespace ProtoBuf
     /// <summary>
     /// A code generator that writes VB
     /// </summary>
-    [Obsolete("Experimental; this is not stable", false)]
     public class VBCodeGenerator : CommonCodeGenerator
     {
         private static Version VB14 = new Version(14, 0), VB11 = new Version(11, 0);

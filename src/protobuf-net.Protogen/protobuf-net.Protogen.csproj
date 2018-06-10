@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <VersionPrefix>$(ProtoGenVersion)</VersionPrefix>
-    <VersionSuffix>alpha3</VersionSuffix>
+    <VersionSuffix>alpha4</VersionSuffix>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
     <Configurations>Debug;Release;VS</Configurations>
@@ -18,8 +18,6 @@
   <ItemGroup>
     <None Remove="google\**\*.proto" />
     <None Remove="protobuf-net\**\*.proto" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="google\**\*.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

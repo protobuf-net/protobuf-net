@@ -156,6 +156,9 @@ namespace protogen
                             }
                         }
                     }
+
+                    // add the library area for auto-imports (library inbuilts)
+                    set.AddImportPath(Path.GetDirectoryName(typeof(Program).Assembly.Location));
                     
                     if(inputFiles.Count == 1 && importPaths.Count == 1)
                     {
