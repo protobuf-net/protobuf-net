@@ -68,7 +68,6 @@
   <ItemGroup Condition="'$(ImportLibs)' == 'core'">
     <!-- could make this more granular to respect the options, but no need yet -->
     <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
-    <PackageReference Include="System.Reflection.Emit.ILGeneration" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
