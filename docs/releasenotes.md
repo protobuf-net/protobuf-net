@@ -24,6 +24,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protobuf-net v2.3.10
+
+- fix #388 - stability when `DynamicMethod` is not available (UWP, iOS, etc)
+
 ## protogen v1.0.8
 
 - move default .proto imports (from v1.0.7) to embedded resources that work for all consumers
