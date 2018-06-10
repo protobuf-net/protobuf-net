@@ -16,16 +16,6 @@
     <Compile Include="..\protogen\**\*.cs" Exclude="..\protogen\obj\**\*" />
   </ItemGroup>
   <ItemGroup>
-    <None Remove="google\**\*.proto" />
-    <None Remove="protobuf-net\**\*.proto" />
-    <Content Include="google\**\*.proto">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="protobuf-net\**\*.proto">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="../protobuf-net/protobuf-net.csproj" />
     <ProjectReference Include="../protobuf-net.Reflection/protobuf-net.Reflection.csproj" />
   </ItemGroup>
