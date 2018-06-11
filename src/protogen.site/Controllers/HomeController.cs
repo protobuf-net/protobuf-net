@@ -27,7 +27,7 @@ namespace protogen.site.Controllers
         {
             _host = host;
         }
-        public IActionResult Index(string oneof = null, string langver = null)
+        public IActionResult Index(string oneof = null, string langver = null, string names = null)
         {
             var model = new IndexModel
             {
@@ -35,6 +35,7 @@ namespace protogen.site.Controllers
                 CanUseProtoc = canUse,
                 OneOfEnum = string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase),
                 LangVer = langver ?? "",
+                Names = names ?? "",
             };
             return View("Index", model);
         }
@@ -72,6 +73,7 @@ namespace protogen.site.Controllers
             public bool CanUseProtoc { get; set; }
             public bool OneOfEnum { get; set; }
             public string LangVer { get; set; }
+            public string Names { get; set; }
 
             public string LibVersion => _libVersion;
 
@@ -186,7 +188,7 @@ namespace protogen.site.Controllers
 
         [Route("/generate")]
         [HttpPost]
-        public GenerateResult Generate(string schema = null, string tooling = null)
+        public GenerateResult Generate(string schema = null, string tooling = null, string names = null)
         {
             if (string.IsNullOrWhiteSpace(schema))
             {
@@ -200,6 +202,7 @@ namespace protogen.site.Controllers
                 {
                     case nameof(schema):
                     case nameof(tooling):
+                    case nameof(names):
                         break; // handled separately
                     default:
                         string s = field.Value;
@@ -210,6 +213,17 @@ namespace protogen.site.Controllers
                         }
                         break;
                 }
+            }
+
+            NameNormalizer nameNormalizer = null;
+            switch (names)
+            {
+                case "auto":
+                    nameNormalizer = NameNormalizer.Default;
+                    break;
+                case "original":
+                    nameNormalizer = NameNormalizer.Null;
+                    break;
             }
             var result = new GenerateResult();
             try
@@ -246,7 +260,7 @@ namespace protogen.site.Controllers
                                 break;
 
                         }
-                        result.Files = codegen.Generate(set, options: options).ToArray();
+                        result.Files = codegen.Generate(set, nameNormalizer, options).ToArray();
                     }
                     else
                     {

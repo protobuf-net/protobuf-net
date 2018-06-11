@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Reflection;
 
 namespace Google.Protobuf.Reflection
 {
@@ -88,19 +89,45 @@ namespace Google.Protobuf.Reflection
         private TextReader Open(string name, out string found)
         {
             found = FindFile(name);
-            if (found == null) return null;
+            if (found == null)
+            {
+                var embedded = TryGetEmbedded(name);
+                if (embedded != null)
+                    return new StreamReader(embedded);
+                return null;
+            }
             return File.OpenText(found);
+        }
+        static Stream TryGetEmbedded(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)
+                || !name.EndsWith(".proto")) return null;
+
+            if (name.StartsWith("google/")
+                || name.StartsWith("protobuf-net/"))
+            {
+                var resourceName = "ProtoBuf." + name.Replace('/', '.').Replace('-', '_');
+                try
+                {
+                    return typeof(FileDescriptorSet)
+#if NETSTANDARD1_3
+                    .GetTypeInfo()
+#endif
+                    .Assembly.GetManifestResourceStream(resourceName);
+                } catch { }
+            }
+            return null;
         }
         string FindFile(string file)
         {
+            string rel;
             foreach (var path in importPaths)
             {
-                var rel = Path.Combine(path, file);
+                rel = Path.Combine(path, file);
                 if (File.Exists(rel)) return rel;
             }
             return null;
         }
-
         bool TryResolve(string name, FileDescriptorProto from, out FileDescriptorProto descriptor)
         {
             descriptor = Files.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));

@@ -24,6 +24,22 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protobuf-net v2.3.10
+
+- fix #388 - stability when `DynamicMethod` is not available (UWP, iOS, etc)
+
+## protogen v1.0.8
+
+- move default .proto imports (from v1.0.7) to embedded resources that work for all consumers
+
+## protogen v1.0.7
+
+- ship default google and protobuf-net imports with the "global tool" install
+
+## protobuf-net v2.3.9
+
+- fix behaviour of `DiscriminatedUnion*` for `None` enum case
+
 ## protogen v1.0.6
 
 - optional ability to emit enums for `oneof` [similar to Google's C# generator](https://developers.google.com/protocol-buffers/docs/reference/csharp-generated#oneof)
@@ -56,6 +72,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 
 - VB.NET code-gen support added (from: alpha2)
 - packaging updates for "global tools" (from: alpha1)
+
+## protogen v1.0.2
+
+- packaging updates (no code changes)
 
 ## protogen v1.0.1
 

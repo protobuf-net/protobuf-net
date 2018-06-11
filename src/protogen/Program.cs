@@ -87,6 +87,13 @@ namespace protogen
                         case "--proto_path":
                             importPaths.Add(rhs);
                             break;
+                        case "--pwd":
+                            Console.WriteLine($"Current Directory: {Directory.GetCurrentDirectory()}");
+#if NETCOREAPP2_1 || NETSTANDARD2_0
+                            Console.WriteLine($"Program: {typeof(Program).Assembly.Location}");
+                            Console.WriteLine($"CodeGenerator: {typeof(CodeGenerator).Assembly.Location}");
+#endif
+                            break;
                         default:
                             if (lhs.StartsWith("-") || !string.IsNullOrWhiteSpace(rhs))
                             {
@@ -149,6 +156,9 @@ namespace protogen
                             }
                         }
                     }
+
+                    // add the library area for auto-imports (library inbuilts)
+                    set.AddImportPath(Path.GetDirectoryName(typeof(Program).Assembly.Location));
                     
                     if(inputFiles.Count == 1 && importPaths.Count == 1)
                     {
