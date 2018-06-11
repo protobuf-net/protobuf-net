@@ -13,23 +13,23 @@ namespace ProtoBuf
         public readonly object Object;
 
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
-        public bool Is(int discriminator) => _discriminator == ~discriminator;
+        public bool Is(int discriminator) => _discriminator == discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnionObject(int discriminator, object value)
         {
-            _discriminator = ~discriminator; // avoids issues with default value / 0
+            _discriminator = discriminator;
             Object = value;
         }
 
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnionObject value, int discriminator)
         {
-            if (value.Is(discriminator)) value = default(DiscriminatedUnionObject);
+            if (value.Discriminator == discriminator) value = default;
         }
 
         /// <summary>The discriminator value</summary>
-        public int Discriminator => ~_discriminator;
+        public int Discriminator => _discriminator;
     }
 
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
@@ -67,11 +67,11 @@ namespace ProtoBuf
 
         private DiscriminatedUnion64(int discriminator) : this()
         {
-            _discriminator = ~discriminator; // avoids issues with default value / 0
+            _discriminator = discriminator;
         }
 
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
-        public bool Is(int discriminator) => _discriminator == ~discriminator;
+        public bool Is(int discriminator) => _discriminator == discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion64(int discriminator, long value) : this(discriminator) { Int64 = value; }
@@ -88,17 +88,17 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion64(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion64(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: ~0) { DateTime = value.GetValueOrDefault(); }
+        public DiscriminatedUnion64(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: 0) { DateTime = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion64(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : ~0) { TimeSpan = value.GetValueOrDefault(); }
+        public DiscriminatedUnion64(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : 0) { TimeSpan = value.GetValueOrDefault(); }
 
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnion64 value, int discriminator)
         {
-            if (value.Is(discriminator)) value = default(DiscriminatedUnion64);
+            if (value.Discriminator == discriminator) value = default;
         }
         /// <summary>The discriminator value</summary>
-        public int Discriminator => ~_discriminator;
+        public int Discriminator => _discriminator;
     }
 
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
@@ -142,11 +142,11 @@ namespace ProtoBuf
 
         private DiscriminatedUnion128Object(int discriminator) : this()
         {
-            _discriminator = ~discriminator; // avoids issues with default value / 0
+            _discriminator = discriminator;
         }
 
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
-        public bool Is(int discriminator) => _discriminator == ~discriminator;
+        public bool Is(int discriminator) => _discriminator == discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128Object(int discriminator, long value) : this(discriminator) { Int64 = value; }
@@ -163,21 +163,21 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128Object(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion128Object(int discriminator, object value) : this(value != null ? discriminator : ~0) { Object = value; }
+        public DiscriminatedUnion128Object(int discriminator, object value) : this(value != null ? discriminator : 0) { Object = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion128Object(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: ~0) { DateTime = value.GetValueOrDefault(); }
+        public DiscriminatedUnion128Object(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: 0) { DateTime = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion128Object(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : ~0) { TimeSpan = value.GetValueOrDefault(); }
+        public DiscriminatedUnion128Object(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : 0) { TimeSpan = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion128Object(int discriminator, Guid? value) : this(value.HasValue ? discriminator : ~0) { Guid = value.GetValueOrDefault(); }
+        public DiscriminatedUnion128Object(int discriminator, Guid? value) : this(value.HasValue ? discriminator : 0) { Guid = value.GetValueOrDefault(); }
 
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnion128Object value, int discriminator)
         {
-            if (value.Is(discriminator)) value = default(DiscriminatedUnion128Object);
+            if (value.Discriminator == discriminator) value = default;
         }
         /// <summary>The discriminator value</summary>
-        public int Discriminator => ~_discriminator;
+        public int Discriminator => _discriminator;
     }
 
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
@@ -218,11 +218,11 @@ namespace ProtoBuf
 
         private DiscriminatedUnion128(int discriminator) : this()
         {
-            _discriminator = ~discriminator; // avoids issues with default value / 0
+            _discriminator = discriminator;
         }
 
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
-        public bool Is(int discriminator) => _discriminator == ~discriminator;
+        public bool Is(int discriminator) => _discriminator == discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128(int discriminator, long value) : this(discriminator) { Int64 = value; }
@@ -239,19 +239,19 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion128(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion128(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: ~0) { DateTime = value.GetValueOrDefault(); }
+        public DiscriminatedUnion128(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: 0) { DateTime = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion128(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : ~0) { TimeSpan = value.GetValueOrDefault(); }
+        public DiscriminatedUnion128(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : 0) { TimeSpan = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion128(int discriminator, Guid? value) : this(value.HasValue ? discriminator : ~0) { Guid = value.GetValueOrDefault(); }
+        public DiscriminatedUnion128(int discriminator, Guid? value) : this(value.HasValue ? discriminator : 0) { Guid = value.GetValueOrDefault(); }
 
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnion128 value, int discriminator)
         {
-            if (value.Is(discriminator)) value = default(DiscriminatedUnion128);
+            if (value.Discriminator == discriminator) value = default;
         }
         /// <summary>The discriminator value</summary>
-        public int Discriminator => ~_discriminator;
+        public int Discriminator => _discriminator;
     }
 
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
@@ -291,11 +291,11 @@ namespace ProtoBuf
 
         private DiscriminatedUnion64Object(int discriminator) : this()
         {
-            _discriminator = ~discriminator; // avoids issues with default value / 0
+            _discriminator = discriminator;
         }
 
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
-        public bool Is(int discriminator) => _discriminator == ~discriminator;
+        public bool Is(int discriminator) => _discriminator == discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion64Object(int discriminator, long value) : this(discriminator) { Int64 = value; }
@@ -312,19 +312,19 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion64Object(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion64Object(int discriminator, object value) : this(value != null ? discriminator : ~0) { Object = value; }
+        public DiscriminatedUnion64Object(int discriminator, object value) : this(value != null ? discriminator : 0) { Object = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion64Object(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: ~0) { DateTime = value.GetValueOrDefault(); }
+        public DiscriminatedUnion64Object(int discriminator, DateTime? value) : this(value.HasValue ? discriminator: 0) { DateTime = value.GetValueOrDefault(); }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion64Object(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : ~0) { TimeSpan = value.GetValueOrDefault(); }
+        public DiscriminatedUnion64Object(int discriminator, TimeSpan? value) : this(value.HasValue ? discriminator : 0) { TimeSpan = value.GetValueOrDefault(); }
 
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnion64Object value, int discriminator)
         {
-            if (value.Is(discriminator)) value = default(DiscriminatedUnion64Object);
+            if (value.Discriminator == discriminator) value = default;
         }
         /// <summary>The discriminator value</summary>
-        public int Discriminator => ~_discriminator;
+        public int Discriminator => _discriminator;
     }
 
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
@@ -345,11 +345,11 @@ namespace ProtoBuf
 
         private DiscriminatedUnion32(int discriminator) : this()
         {
-            _discriminator = ~discriminator; // avoids issues with default value / 0
+            _discriminator = discriminator;
         }
 
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
-        public bool Is(int discriminator) => _discriminator == ~discriminator;
+        public bool Is(int discriminator) => _discriminator == discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion32(int discriminator, int value) : this(discriminator) { Int32 = value; }
@@ -363,10 +363,10 @@ namespace ProtoBuf
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnion32 value, int discriminator)
         {
-            if (value.Is(discriminator)) value = default(DiscriminatedUnion32);
+            if (value.Discriminator == discriminator) value = default;
         }
         /// <summary>The discriminator value</summary>
-        public int Discriminator => ~_discriminator;
+        public int Discriminator => _discriminator;
     }
 
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
@@ -389,11 +389,11 @@ namespace ProtoBuf
 
         private DiscriminatedUnion32Object(int discriminator) : this()
         {
-            _discriminator = ~discriminator; // avoids issues with default value / 0
+            _discriminator = discriminator;
         }
 
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
-        public bool Is(int discriminator) => _discriminator == ~discriminator;
+        public bool Is(int discriminator) => _discriminator == discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion32Object(int discriminator, int value) : this(discriminator) { Int32 = value; }
@@ -404,14 +404,14 @@ namespace ProtoBuf
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnion32Object(int discriminator, bool value) : this(discriminator) { Boolean = value; }
         /// <summary>Create a new discriminated union value</summary>
-        public DiscriminatedUnion32Object(int discriminator, object value) : this(value != null ? discriminator : ~0) { Object = value; }
+        public DiscriminatedUnion32Object(int discriminator, object value) : this(value != null ? discriminator : 0) { Object = value; }
 
         /// <summary>Reset a value if the specified discriminator is assigned</summary>
         public static void Reset(ref DiscriminatedUnion32Object value, int discriminator)
         {
-            if (value.Is(discriminator)) value = default(DiscriminatedUnion32Object);
+            if (value.Discriminator == discriminator) value = default;
         }
         /// <summary>The discriminator value</summary>
-        public int Discriminator => ~_discriminator;
+        public int Discriminator => _discriminator;
     }
 }

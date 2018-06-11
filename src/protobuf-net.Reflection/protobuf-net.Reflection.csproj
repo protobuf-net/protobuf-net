@@ -15,6 +15,12 @@
     -->
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="google\**\*.proto" />
+    <None Remove="protobuf-net\**\*.proto" />
+    <EmbeddedResource Include="google\**\*.proto" />
+    <EmbeddedResource Include="protobuf-net\**\*.proto" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <None Include="CodeGenerator.OneOfStub.cs" />
   </ItemGroup>
