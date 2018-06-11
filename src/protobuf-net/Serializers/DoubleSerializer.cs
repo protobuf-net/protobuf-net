@@ -20,6 +20,7 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(value == null); // since replaces
             return source.ReadDouble();
         }
+
         public void Write(object value, ProtoWriter dest)
         {
             ProtoWriter.WriteDouble((double)value, dest);
@@ -30,6 +31,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteDouble", valueFrom);
         }
+
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicRead("ReadDouble", ExpectedType);

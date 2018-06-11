@@ -12,13 +12,18 @@ namespace ProtoBuf.Serializers
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
         void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx) { throw new NotSupportedException(); }
 #endif
-        bool IProtoTypeSerializer.CanCreateInstance() { return false; }
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source) { throw new NotSupportedException(); }
+        bool IProtoTypeSerializer.CanCreateInstance() => false;
+
+        object IProtoTypeSerializer.CreateInstance(ProtoReader source) => throw new NotSupportedException();
+
         void IProtoTypeSerializer.Callback(object value, ProtoBuf.Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
 
-        public bool ReturnsValue { get { return false; } }
-        public bool RequiresOldValue { get { return true; } }
-        public Type ExpectedType { get { return forType; } }
+        public bool ReturnsValue => false;
+
+        public bool RequiresOldValue => true;
+
+        public Type ExpectedType => forType;
+
         private readonly Type forType, declaredType;
         private readonly MethodInfo toTail, fromTail;
         IProtoTypeSerializer rootTail;
@@ -57,7 +62,7 @@ namespace ProtoBuf.Serializers
                 MethodInfo m = found[i];
                 if (m.ReturnType != to) continue;
                 paramTypes = m.GetParameters();
-                if(paramTypes.Length == 1 && paramTypes[0].ParameterType == from)
+                if (paramTypes.Length == 1 && paramTypes[0].ParameterType == from)
                 {
                     if (convertAttributeType == null)
                     {
@@ -75,7 +80,7 @@ namespace ProtoBuf.Serializers
                 }
             }
 
-            for(int i = 0 ; i < found.Length ; i++)
+            for (int i = 0; i < found.Length; i++)
             {
                 MethodInfo m = found[i];
                 if ((m.Name != "op_Implicit" && m.Name != "op_Explicit") || m.ReturnType != to)
@@ -83,7 +88,7 @@ namespace ProtoBuf.Serializers
                     continue;
                 }
                 paramTypes = m.GetParameters();
-                if(paramTypes.Length == 1 && paramTypes[0].ParameterType == from)
+                if (paramTypes.Length == 1 && paramTypes[0].ParameterType == from)
                 {
                     op = m;
                     return true;
@@ -116,7 +121,7 @@ namespace ProtoBuf.Serializers
             // convert the incoming value
             object[] args = { value };
             value = toTail.Invoke(null, args);
-            
+
             // invoke the tail and convert the outgoing value
             args[0] = rootTail.Read(value, source);
             return fromTail.Invoke(null, args);

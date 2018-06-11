@@ -43,7 +43,7 @@ namespace ProtoBuf.Serializers
             ctx.CastToObject(type);
             ctx.LoadReaderWriter();
             ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
-            if (type ==  ctx.MapType(typeof(object))) ctx.LoadNullRef();
+            if (type == ctx.MapType(typeof(object))) ctx.LoadNullRef();
             else ctx.LoadValue(type);
             ctx.LoadValue((int)options);
             ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("ReadNetObject"));

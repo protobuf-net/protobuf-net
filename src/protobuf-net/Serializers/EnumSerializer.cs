@@ -18,42 +18,44 @@ namespace ProtoBuf.Serializers
                 RawValue = raw;
                 TypedValue = (Enum)Enum.ToObject(type, raw);
             }
-        } 
-        private readonly Type enumType; 
+        }
+
+        private readonly Type enumType;
         private readonly EnumPair[] map;
         public EnumSerializer(Type enumType, EnumPair[] map)
         {
-            if (enumType == null) throw new ArgumentNullException("enumType");
-            this.enumType = enumType;
+            this.enumType = enumType ?? throw new ArgumentNullException(nameof(enumType));
             this.map = map;
             if (map != null)
             {
                 for (int i = 1; i < map.Length; i++)
-                for (int j = 0 ; j < i ; j++)
-                {
-                    if (map[i].WireValue == map[j].WireValue && !Equals(map[i].RawValue, map[j].RawValue))
+                    for (int j = 0; j < i; j++)
                     {
-                        throw new ProtoException("Multiple enums with wire-value " + map[i].WireValue.ToString());
+                        if (map[i].WireValue == map[j].WireValue && !Equals(map[i].RawValue, map[j].RawValue))
+                        {
+                            throw new ProtoException("Multiple enums with wire-value " + map[i].WireValue.ToString());
+                        }
+                        if (Equals(map[i].RawValue, map[j].RawValue) && map[i].WireValue != map[j].WireValue)
+                        {
+                            throw new ProtoException("Multiple enums with deserialized-value " + map[i].RawValue);
+                        }
                     }
-                    if (Equals(map[i].RawValue, map[j].RawValue) && map[i].WireValue != map[j].WireValue)
-                    {
-                        throw new ProtoException("Multiple enums with deserialized-value " + map[i].RawValue);
-                    }
-                }
 
             }
         }
-        private ProtoTypeCode GetTypeCode() {
+
+        private ProtoTypeCode GetTypeCode()
+        {
             Type type = Helpers.GetUnderlyingType(enumType);
-            if(type == null) type = enumType;
+            if (type == null) type = enumType;
             return Helpers.GetTypeCode(type);
         }
 
-        
-        public Type ExpectedType { get { return enumType; } }
-        
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        public Type ExpectedType => enumType;
+
+        bool IProtoSerializer.RequiresOldValue => false;
+
+        bool IProtoSerializer.ReturnsValue => true;
 
         private int EnumToWire(object value)
         {
@@ -73,6 +75,7 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
+
         private object WireToEnum(int value)
         {
             unchecked
@@ -96,17 +99,21 @@ namespace ProtoBuf.Serializers
         {
             Helpers.DebugAssert(value == null); // since replaces
             int wireValue = source.ReadInt32();
-            if(map == null) {
+            if (map == null)
+            {
                 return WireToEnum(wireValue);
             }
-            for(int i = 0 ; i < map.Length ; i++) {
-                if(map[i].WireValue == wireValue) {
+            for (int i = 0; i < map.Length; i++)
+            {
+                if (map[i].WireValue == wireValue)
+                {
                     return map[i].TypedValue;
                 }
             }
             source.ThrowEnumException(ExpectedType, wireValue);
             return null; // to make compiler happy
         }
+
         public void Write(object value, ProtoWriter dest)
         {
             if (map == null)
@@ -162,8 +169,8 @@ namespace ProtoBuf.Serializers
                     ctx.MarkLabel(@continue);
                 }
             }
-            
         }
+
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ProtoTypeCode typeCode = GetTypeCode();
@@ -208,7 +215,8 @@ namespace ProtoBuf.Serializers
                             ctx.LoadValue(group.First);
                             ctx.Subtract(); // jump-tables are zero-based
                             Compiler.CodeLabel[] jmp = new Compiler.CodeLabel[groupItemCount];
-                            for (int i = 0; i < groupItemCount; i++) {
+                            for (int i = 0; i < groupItemCount; i++)
+                            {
                                 jmp[i] = ctx.DefineLabel();
                             }
                             ctx.Switch(jmp);

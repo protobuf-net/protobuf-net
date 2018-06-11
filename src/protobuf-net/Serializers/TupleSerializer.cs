@@ -12,10 +12,8 @@ namespace ProtoBuf.Serializers
         private IProtoSerializer[] tails;
         public TupleSerializer(RuntimeTypeModel model, ConstructorInfo ctor, MemberInfo[] members)
         {
-            if (ctor == null) throw new ArgumentNullException("ctor");
-            if (members == null) throw new ArgumentNullException("members");
-            this.ctor = ctor;
-            this.members = members;
+            this.ctor = ctor ?? throw new ArgumentNullException(nameof(ctor));
+            this.members = members ?? throw new ArgumentNullException(nameof(members));
             this.tails = new IProtoSerializer[members.Length];
 
             ParameterInfo[] parameters = ctor.GetParameters();
@@ -94,6 +92,7 @@ namespace ProtoBuf.Serializers
                 throw new InvalidOperationException();
             }
         }
+
         public object Read(object value, ProtoReader source)
         {
             object[] values = new object[members.Length];
@@ -120,6 +119,7 @@ namespace ProtoBuf.Serializers
             }
             return invokeCtor ? ctor.Invoke(values) : value;
         }
+
         public void Write(object value, ProtoWriter dest)
         {
             for (int i = 0; i < tails.Length; i++)
@@ -139,6 +139,7 @@ namespace ProtoBuf.Serializers
             if (result == null) throw new InvalidOperationException();
             return result;
         }
+
         bool IProtoTypeSerializer.CanCreateInstance() { return false; }
 
 #if FEAT_COMPILER

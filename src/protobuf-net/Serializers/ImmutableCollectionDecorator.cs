@@ -31,7 +31,7 @@ namespace ProtoBuf.Serializers
             {
                 if (intImpl.IsGenericType && intImpl.Name.StartsWith("IReadOnlyCollection`"))
                 {
-                    if(t != null)
+                    if (t != null)
                     {
                         Type[] typeArgs = intImpl.GetGenericArguments();
                         if (typeArgs.Length != 1 && typeArgs[0] != t) continue;
@@ -55,7 +55,7 @@ namespace ProtoBuf.Serializers
 #endif
 
             // try to detect immutable collections; firstly, they are all generic, and all implement IReadOnlyCollection<T> for some T
-            if(!declaredTypeInfo.IsGenericType) return false;
+            if (!declaredTypeInfo.IsGenericType) return false;
 
 #if COREFX || PROFILE259
 			Type[] typeArgs = declaredTypeInfo.GenericTypeArguments, effectiveType;
@@ -167,15 +167,15 @@ namespace ProtoBuf.Serializers
             int field = source.FieldNumber;
             object[] args = new object[1];
             if (AppendToCollection && value != null && (isEmpty != null ? !(bool)isEmpty.GetValue(value, null) : (int)length.GetValue(value, null) != 0))
-            {   
-                if(addRange !=null)
+            {
+                if (addRange != null)
                 {
                     args[0] = value;
                     addRange.Invoke(builderInstance, args);
                 }
                 else
                 {
-                    foreach(object item in (ICollection)value)
+                    foreach (object item in (ICollection)value)
                     {
                         args[0] = item;
                         add.Invoke(builderInstance, args);
@@ -209,15 +209,15 @@ namespace ProtoBuf.Serializers
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             using (Compiler.Local oldList = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : null)
-            using(Compiler.Local builder = new Compiler.Local(ctx, builderFactory.ReturnType))
+            using (Compiler.Local builder = new Compiler.Local(ctx, builderFactory.ReturnType))
             {
                 ctx.EmitCall(builderFactory);
                 ctx.StoreValue(builder);
 
-                if(AppendToCollection)
+                if (AppendToCollection)
                 {
                     Compiler.CodeLabel done = ctx.DefineLabel();
-                    if(!Helpers.IsValueType(ExpectedType))
+                    if (!Helpers.IsValueType(ExpectedType))
                     {
                         ctx.LoadValue(oldList);
                         ctx.BranchIfFalse(done, false); // old value null; nothing to add
@@ -236,7 +236,7 @@ namespace ProtoBuf.Serializers
                     }
 
                     Type voidType = ctx.MapType(typeof(void));
-                    if(addRange != null)
+                    if (addRange != null)
                     {
                         ctx.LoadValue(builder);
                         ctx.LoadValue(oldList);
@@ -264,7 +264,7 @@ namespace ProtoBuf.Serializers
 
                                 ctx.MarkLabel(body);
                                 ctx.LoadAddress(builder, builder.Type);
-                                ctx.LoadAddress(iter, enumeratorType);                                
+                                ctx.LoadAddress(iter, enumeratorType);
                                 ctx.EmitCall(current);
                                 ctx.EmitCall(add);
                                 if (add.ReturnType != null && add.ReturnType != voidType) ctx.DiscardValue();
@@ -285,13 +285,13 @@ namespace ProtoBuf.Serializers
 
                 ctx.LoadAddress(builder, builder.Type);
                 ctx.EmitCall(finish);
-                if(ExpectedType != finish.ReturnType)
+                if (ExpectedType != finish.ReturnType)
                 {
                     ctx.Cast(ExpectedType);
                 }
             }
         }
 #endif
-                }
+    }
 }
 #endif

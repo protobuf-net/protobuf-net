@@ -37,7 +37,7 @@ namespace ProtoBuf.Serializers
         /// value should be expected.
         /// </summary>
         bool ReturnsValue { get; }
-        
+
 #if FEAT_COMPILER
         /// <summary>Emit the IL necessary to perform the given actions
         /// to serialize this data.

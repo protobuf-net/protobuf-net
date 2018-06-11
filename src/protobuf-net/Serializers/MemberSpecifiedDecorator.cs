@@ -6,10 +6,12 @@ namespace ProtoBuf.Serializers
 {
     sealed class MemberSpecifiedDecorator : ProtoDecoratorBase
     {
+        public override Type ExpectedType => Tail.ExpectedType;
 
-        public override Type ExpectedType { get { return Tail.ExpectedType; } }
-        public override bool RequiresOldValue { get { return Tail.RequiresOldValue; } }
-        public override bool ReturnsValue { get { return Tail.ReturnsValue; } }
+        public override bool RequiresOldValue => Tail.RequiresOldValue;
+
+        public override bool ReturnsValue => Tail.ReturnsValue;
+
         private readonly MethodInfo getSpecified, setSpecified;
         public MemberSpecifiedDecorator(MethodInfo getSpecified, MethodInfo setSpecified, IProtoSerializer tail)
             : base(tail)
@@ -21,7 +23,7 @@ namespace ProtoBuf.Serializers
 
         public override void Write(object value, ProtoWriter dest)
         {
-            if(getSpecified == null || (bool)getSpecified.Invoke(value, null))
+            if (getSpecified == null || (bool)getSpecified.Invoke(value, null))
             {
                 Tail.Write(value, dest);
             }

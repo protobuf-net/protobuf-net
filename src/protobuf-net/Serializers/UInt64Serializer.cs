@@ -5,23 +5,24 @@ namespace ProtoBuf.Serializers
 {
     sealed class UInt64Serializer : IProtoSerializer
     {
-
         static readonly Type expectedType = typeof(ulong);
 
         public UInt64Serializer(ProtoBuf.Meta.TypeModel model)
         {
 
         }
-        public Type ExpectedType { get { return expectedType; } }
+        public Type ExpectedType => expectedType;
 
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        bool IProtoSerializer.RequiresOldValue => false;
+
+        bool IProtoSerializer.ReturnsValue => true;
 
         public object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return source.ReadUInt64();
         }
+
         public void Write(object value, ProtoWriter dest)
         {
             ProtoWriter.WriteUInt64((ulong)value, dest);

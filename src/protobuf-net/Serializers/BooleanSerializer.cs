@@ -7,10 +7,7 @@ namespace ProtoBuf.Serializers
     {
         static readonly Type expectedType = typeof(bool);
 
-        public BooleanSerializer(ProtoBuf.Meta.TypeModel model)
-        {
-
-        }
+        public BooleanSerializer(ProtoBuf.Meta.TypeModel model) { }
 
         public Type ExpectedType => expectedType;
 
@@ -18,13 +15,17 @@ namespace ProtoBuf.Serializers
         {
             ProtoWriter.WriteBoolean((bool)value, dest);
         }
+
         public object Read(object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return source.ReadBoolean();
         }
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+
+        bool IProtoSerializer.RequiresOldValue => false;
+
+        bool IProtoSerializer.ReturnsValue => true;
+
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

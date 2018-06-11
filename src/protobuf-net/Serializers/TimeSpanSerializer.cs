@@ -1,12 +1,10 @@
 ﻿#if !NO_RUNTIME
 using System;
 
-
 namespace ProtoBuf.Serializers
 {
     sealed class TimeSpanSerializer : IProtoSerializer
     {
-
         static readonly Type expectedType = typeof(TimeSpan);
         private readonly bool wellKnown;
         public TimeSpanSerializer(DataFormat dataFormat, ProtoBuf.Meta.TypeModel model)
@@ -17,6 +15,7 @@ namespace ProtoBuf.Serializers
         public Type ExpectedType => expectedType;
 
         bool IProtoSerializer.RequiresOldValue => false;
+
         bool IProtoSerializer.ReturnsValue => true;
 
         public object Read(object value, ProtoReader source)
@@ -31,6 +30,7 @@ namespace ProtoBuf.Serializers
                 return BclHelpers.ReadTimeSpan(source);
             }
         }
+
         public void Write(object value, ProtoWriter dest)
         {
             if (wellKnown)

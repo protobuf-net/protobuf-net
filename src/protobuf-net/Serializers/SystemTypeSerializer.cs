@@ -6,15 +6,14 @@ namespace ProtoBuf.Serializers
 {
     sealed class SystemTypeSerializer : IProtoSerializer
     {
-
-        static readonly Type expectedType = typeof(System.Type);
+        static readonly Type expectedType = typeof(Type);
 
         public SystemTypeSerializer(ProtoBuf.Meta.TypeModel model)
         {
 
         }
-        public Type ExpectedType { get { return expectedType; } }
 
+        public Type ExpectedType => expectedType;
 
         void IProtoSerializer.Write(object value, ProtoWriter dest)
         {
@@ -27,8 +26,9 @@ namespace ProtoBuf.Serializers
             return source.ReadType();
         }
 
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        bool IProtoSerializer.RequiresOldValue => false;
+
+        bool IProtoSerializer.ReturnsValue => true;
 
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

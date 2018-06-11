@@ -86,7 +86,7 @@ namespace ProtoBuf.Serializers
 
                 // outro
                 ctx.MarkLabel(end);
-               
+
                 ctx.LoadValue(token);
                 ctx.LoadReaderWriter();
                 ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem"));
@@ -95,14 +95,14 @@ namespace ProtoBuf.Serializers
         }
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            using(Compiler.Local valOrNull = ctx.GetLocalWithValue(expectedType, valueFrom))
-            using(Compiler.Local token = new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))))
+            using (Compiler.Local valOrNull = ctx.GetLocalWithValue(expectedType, valueFrom))
+            using (Compiler.Local token = new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))))
             {
                 ctx.LoadNullRef();
                 ctx.LoadReaderWriter();
                 ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("StartSubItem"));
                 ctx.StoreValue(token);
-                
+
                 if (Helpers.IsValueType(expectedType))
                 {
                     ctx.LoadAddress(valOrNull, expectedType);
@@ -138,11 +138,14 @@ namespace ProtoBuf.Serializers
         {
             SubItemToken tok = ProtoReader.StartSubItem(source);
             int field;
-            while((field = source.ReadFieldHeader()) > 0)
+            while ((field = source.ReadFieldHeader()) > 0)
             {
-                if(field == Tag) {
+                if (field == Tag)
+                {
                     value = Tail.Read(value, source);
-                } else {
+                }
+                else
+                {
                     source.SkipField();
                 }
             }
@@ -153,7 +156,7 @@ namespace ProtoBuf.Serializers
         public override void Write(object value, ProtoWriter dest)
         {
             SubItemToken token = ProtoWriter.StartSubItem(null, dest);
-            if(value != null)
+            if (value != null)
             {
                 Tail.Write(value, dest);
             }

@@ -7,14 +7,16 @@ namespace ProtoBuf.Serializers
 {
     sealed class DefaultValueDecorator : ProtoDecoratorBase
     {
+        public override Type ExpectedType => Tail.ExpectedType;
 
-        public override Type ExpectedType { get { return Tail.ExpectedType; } }
-        public override bool RequiresOldValue { get { return Tail.RequiresOldValue; } }
-        public override bool ReturnsValue { get { return Tail.ReturnsValue; } }
+        public override bool RequiresOldValue => Tail.RequiresOldValue;
+
+        public override bool ReturnsValue => Tail.ReturnsValue;
+
         private readonly object defaultValue;
         public DefaultValueDecorator(TypeModel model, object defaultValue, IProtoSerializer tail) : base(tail)
         {
-            if (defaultValue == null) throw new ArgumentNullException("defaultValue");
+            if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
             Type type = model.MapType(defaultValue.GetType());
             if (type != tail.ExpectedType)
             {
@@ -82,7 +84,7 @@ namespace ProtoBuf.Serializers
                     if (method == null || !method.IsPublic || !method.IsStatic) method = null;
 #else
                     MethodInfo method = type.GetMethod("op_Equality", BindingFlags.Public | BindingFlags.Static,
-                        null, new Type[] { type, type}, null);
+                        null, new Type[] { type, type }, null);
 #endif
                     if (method == null || method.ReturnType != ctx.MapType(typeof(bool)))
                     {
@@ -246,11 +248,12 @@ namespace ProtoBuf.Serializers
                     throw new NotSupportedException("Type cannot be represented as a default value: " + expected.FullName);
             }
         }
+
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Tail.EmitRead(ctx, valueFrom);
         }
 #endif
-            }
+    }
 }
 #endif

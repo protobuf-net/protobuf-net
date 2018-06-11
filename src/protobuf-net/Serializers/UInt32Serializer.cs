@@ -1,7 +1,6 @@
 ﻿#if !NO_RUNTIME
 using System;
 
-
 namespace ProtoBuf.Serializers
 {
     sealed class UInt32Serializer : IProtoSerializer
@@ -13,10 +12,11 @@ namespace ProtoBuf.Serializers
 
         }
 
-        public Type ExpectedType { get { return expectedType; } }
+        public Type ExpectedType => expectedType;
 
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        bool IProtoSerializer.RequiresOldValue => false;
+
+        bool IProtoSerializer.ReturnsValue => true;
 
         public object Read(object value, ProtoReader source)
         {

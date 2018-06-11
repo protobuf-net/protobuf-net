@@ -6,7 +6,6 @@ using System.Reflection;
 using ProtoBuf.Compiler;
 #endif
 
-
 namespace ProtoBuf.Serializers
 {
     sealed class UriDecorator : ProtoDecoratorBase

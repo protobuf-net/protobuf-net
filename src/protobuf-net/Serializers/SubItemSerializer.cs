@@ -14,15 +14,18 @@ namespace ProtoBuf.Serializers
         {
             return ((IProtoTypeSerializer)proxy.Serializer).HasCallbacks(callbackType);
         }
+
         bool IProtoTypeSerializer.CanCreateInstance()
         {
             return ((IProtoTypeSerializer)proxy.Serializer).CanCreateInstance();
         }
+
 #if FEAT_COMPILER
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             ((IProtoTypeSerializer)proxy.Serializer).EmitCallback(ctx, valueFrom, callbackType);
         }
+
         void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx)
         {
             ((IProtoTypeSerializer)proxy.Serializer).EmitCreateInstance(ctx);
@@ -33,6 +36,7 @@ namespace ProtoBuf.Serializers
         {
             ((IProtoTypeSerializer)proxy.Serializer).Callback(value, callbackType, context);
         }
+
         object IProtoTypeSerializer.CreateInstance(ProtoReader source)
         {
             return ((IProtoTypeSerializer)proxy.Serializer).CreateInstance(source);
@@ -44,19 +48,17 @@ namespace ProtoBuf.Serializers
         private readonly bool recursionCheck;
         public SubItemSerializer(Type type, int key, ISerializerProxy proxy, bool recursionCheck)
         {
-            if (type == null) throw new ArgumentNullException("type");
-            if (proxy == null) throw new ArgumentNullException("proxy");
-            this.type = type;
-            this.proxy= proxy;
+            this.type = type ?? throw new ArgumentNullException(nameof(type));
+            this.proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
             this.key = key;
             this.recursionCheck = recursionCheck;
         }
-        Type IProtoSerializer.ExpectedType
-        {
-            get { return type; }
-        }
-        bool IProtoSerializer.RequiresOldValue { get { return true; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+
+        Type IProtoSerializer.ExpectedType => type;
+
+        bool IProtoSerializer.RequiresOldValue => true;
+
+        bool IProtoSerializer.ReturnsValue => true;
 
         void IProtoSerializer.Write(object value, ProtoWriter dest)
         {
@@ -96,7 +98,7 @@ namespace ProtoBuf.Serializers
                 ctx.StoreValue(token);
 
                 // note: value already on the stack
-                ctx.LoadReaderWriter();                
+                ctx.LoadReaderWriter();
                 ctx.EmitCall(method);
                 // handle inheritance (we will be calling the *base* version of things,
                 // but we expect Read to return the "type" type)
@@ -104,7 +106,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(token);
                 ctx.LoadReaderWriter();
                 ctx.EmitCall(Helpers.GetStaticMethod(rwType, "EndSubItem", new Type[] { ctx.MapType(typeof(SubItemToken)), rwType }));
-            }            
+            }
             return true;
         }
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -115,7 +117,7 @@ namespace ProtoBuf.Serializers
                 if (Helpers.IsValueType(type)) ctx.CastToObject(type);
                 ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key)); // re-map for formality, but would expect identical, else dedicated method
                 ctx.LoadReaderWriter();
-                ctx.EmitCall(Helpers.GetStaticMethod(ctx.MapType(typeof(ProtoWriter)), recursionCheck ?  "WriteObject" : "WriteRecursionSafeObject", new Type[] { ctx.MapType(typeof(object)), ctx.MapType(typeof(int)), ctx.MapType(typeof(ProtoWriter)) }));
+                ctx.EmitCall(Helpers.GetStaticMethod(ctx.MapType(typeof(ProtoWriter)), recursionCheck ? "WriteObject" : "WriteRecursionSafeObject", new Type[] { ctx.MapType(typeof(object)), ctx.MapType(typeof(int)), ctx.MapType(typeof(ProtoWriter)) }));
             }
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

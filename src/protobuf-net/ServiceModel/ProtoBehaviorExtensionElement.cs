@@ -20,13 +20,7 @@ namespace ProtoBuf.ServiceModel
         /// <summary>
         /// Gets the type of behavior.
         /// </summary>     
-        public override Type BehaviorType
-        {
-            get
-            {
-                return typeof(ProtoEndpointBehavior);
-            }
-        }
+        public override Type BehaviorType => typeof(ProtoEndpointBehavior);
 
         /// <summary>
         /// Creates a behavior extension based on the current configuration settings.

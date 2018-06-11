@@ -10,10 +10,12 @@ namespace ProtoBuf.Serializers
         public UInt16Serializer(ProtoBuf.Meta.TypeModel model)
         {
         }
-        public virtual Type ExpectedType { get { return expectedType; } }
 
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        public virtual Type ExpectedType => expectedType;
+
+        bool IProtoSerializer.RequiresOldValue => false;
+
+        bool IProtoSerializer.ReturnsValue => true;
 
         public virtual object Read(object value, ProtoReader source)
         {

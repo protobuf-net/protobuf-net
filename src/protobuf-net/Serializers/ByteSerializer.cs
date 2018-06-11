@@ -37,7 +37,6 @@ namespace ProtoBuf.Serializers
             ctx.EmitBasicRead("ReadByte", ExpectedType);
         }
 #endif
-
     }
 }
 #endif

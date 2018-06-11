@@ -12,11 +12,11 @@ namespace ProtoBuf.Serializers
 
         }
 
-        public Type ExpectedType { get { return expectedType; } }
+        public Type ExpectedType => expectedType;
 
+        bool IProtoSerializer.RequiresOldValue => false;
 
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        bool IProtoSerializer.ReturnsValue => true;
 
         public object Read(object value, ProtoReader source)
         {

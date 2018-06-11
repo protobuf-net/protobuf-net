@@ -10,13 +10,16 @@ namespace ProtoBuf.Serializers
         public StringSerializer(ProtoBuf.Meta.TypeModel model)
         {
         }
-        public Type ExpectedType { get { return expectedType; } }
+
+        public Type ExpectedType => expectedType;
+
         public void Write(object value, ProtoWriter dest)
         {
             ProtoWriter.WriteString((string)value, dest);
         }
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        bool IProtoSerializer.RequiresOldValue => false;
+
+        bool IProtoSerializer.ReturnsValue => true;
 
         public object Read(object value, ProtoReader source)
         {

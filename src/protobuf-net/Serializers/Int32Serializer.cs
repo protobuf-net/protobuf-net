@@ -20,6 +20,7 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(value == null); // since replaces
             return source.ReadInt32();
         }
+
         public void Write(object value, ProtoWriter dest)
         {
             ProtoWriter.WriteInt32((int)value, dest);
