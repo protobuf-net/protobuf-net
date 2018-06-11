@@ -7,25 +7,33 @@ namespace ProtoBuf.Compiler
     internal sealed class Local : IDisposable
     {
         // public static readonly Local InputValue = new Local(null, null);
-        LocalBuilder value;
-        public Type Type { get { return type; } }
+        private LocalBuilder value;
+        private readonly Type type;
+        private CompilerContext ctx;
+
+        private Local(LocalBuilder value, Type type)
+        {
+            this.value = value;
+            this.type = type;
+        }
+
+        internal Local(CompilerContext ctx, Type type)
+        {
+            this.ctx = ctx;
+            if (ctx != null) { value = ctx.GetFromPool(type); }
+            this.type = type;
+        }
+
+        internal LocalBuilder Value => value ?? throw new ObjectDisposedException(GetType().Name);
+
+        public Type Type => type;
+
         public Local AsCopy()
         {
             if (ctx == null) return this; // can re-use if context-free
             return new Local(value, this.type);
         }
-        internal LocalBuilder Value
-        {
-            get
-            {
-                if (value == null)
-                {
-                    throw new ObjectDisposedException(GetType().Name);
-                }
-                return value;
-            }
-        }
-        CompilerContext ctx;
+        
         public void Dispose()
         {
             if (ctx != null)
@@ -36,19 +44,6 @@ namespace ProtoBuf.Compiler
                 value = null; 
                 ctx = null;
             }            
-            
-        }
-        private Local(LocalBuilder value, Type type)
-        {
-            this.value = value;
-            this.type = type;
-        }
-        private readonly Type type;
-        internal Local(Compiler.CompilerContext ctx, Type type)
-        {
-            this.ctx = ctx;
-            if (ctx != null) { value = ctx.GetFromPool(type); }
-            this.type = type;
         }
 
         internal bool IsSame(Local other)
@@ -59,7 +54,5 @@ namespace ProtoBuf.Compiler
             return other != null && ourVal == (object)(other.value); 
         }
     }
-
-
 }
 #endif

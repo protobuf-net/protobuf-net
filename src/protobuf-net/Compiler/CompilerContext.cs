@@ -21,7 +21,7 @@ namespace ProtoBuf.Compiler
     }
     internal sealed class CompilerContext
     {
-        public TypeModel Model { get { return model; } }
+        public TypeModel Model => model;
 
         readonly DynamicMethod method;
         static int next;
@@ -244,17 +244,14 @@ namespace ProtoBuf.Compiler
         private readonly string assemblyName;
         internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType, string traceName)
         {
-            if (il == null) throw new ArgumentNullException("il");
-            if (methodPairs == null) throw new ArgumentNullException("methodPairs");
-            if (model == null) throw new ArgumentNullException("model");
-            if (string.IsNullOrEmpty(assemblyName)) throw new ArgumentNullException("assemblyName");
+            if (string.IsNullOrEmpty(assemblyName)) throw new ArgumentNullException(nameof(assemblyName));
             this.assemblyName = assemblyName;
             this.isStatic = isStatic;
-            this.methodPairs = methodPairs;
-            this.il = il;
+            this.methodPairs = methodPairs ?? throw new ArgumentNullException(nameof(methodPairs));
+            this.il = il ?? throw new ArgumentNullException(nameof(il));
             // nonPublic = false; <== implicit
             this.isWriter = isWriter;
-            this.model = model;
+            this.model = model ?? throw new ArgumentNullException(nameof(model));
             this.metadataVersion = metadataVersion;
             if (inputType != null) this.inputValue = new Local(null, inputType);
             TraceCompile(">> " + traceName);
@@ -262,12 +259,10 @@ namespace ProtoBuf.Compiler
 
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
         {
-            if (model == null) throw new ArgumentNullException("model");
-
             metadataVersion = ILVersion.Net2;
             this.isStatic = isStatic;
             this.isWriter = isWriter;
-            this.model = model;
+            this.model = model ?? throw new ArgumentNullException(nameof(model));
             nonPublic = true;
             Type[] paramTypes;
             Type returnType;
@@ -304,6 +299,7 @@ namespace ProtoBuf.Compiler
             il.Emit(opcode);
             TraceCompile(opcode.ToString());
         }
+
         public void LoadValue(string value)
         {
             if (value == null)
@@ -316,21 +312,25 @@ namespace ProtoBuf.Compiler
                 TraceCompile(OpCodes.Ldstr + ": " + value);
             }
         }
+
         public void LoadValue(float value)
         {
             il.Emit(OpCodes.Ldc_R4, value);
             TraceCompile(OpCodes.Ldc_R4 + ": " + value);
         }
+
         public void LoadValue(double value)
         {
             il.Emit(OpCodes.Ldc_R8, value);
             TraceCompile(OpCodes.Ldc_R8 + ": " + value);
         }
+
         public void LoadValue(long value)
         {
             il.Emit(OpCodes.Ldc_I8, value);
             TraceCompile(OpCodes.Ldc_I8 + ": " + value);
         }
+
         public void LoadValue(int value)
         {
             switch (value)
@@ -378,6 +378,7 @@ namespace ProtoBuf.Compiler
             TraceCompile("$ " + result + ": " + type);
             return result;
         }
+
         //
         internal void ReleaseToPool(LocalBuilder value)
         {
@@ -392,10 +393,12 @@ namespace ProtoBuf.Compiler
             }
             locals.Add(value); // create a new slot
         }
+
         public void LoadReaderWriter()
         {
             Emit(isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2);
         }
+
         public void StoreValue(Local local)
         {
             if (local == this.InputValue)
@@ -423,6 +426,7 @@ namespace ProtoBuf.Compiler
                 }
             }
         }
+
         public void LoadValue(Local local)
         {
             if (local == null) { /* nothing to do; top of stack */}
@@ -440,7 +444,7 @@ namespace ProtoBuf.Compiler
                     case 2: Emit(OpCodes.Ldloc_2); break;
                     case 3: Emit(OpCodes.Ldloc_3); break;
                     default:
-            
+
                         OpCode code = UseShortForm(local) ? OpCodes.Ldloc_S : OpCodes.Ldloc;
                         il.Emit(code, local.Value);
                         TraceCompile(code + ": $" + local.Value);
@@ -449,6 +453,7 @@ namespace ProtoBuf.Compiler
                 }
             }
         }
+
         public Local GetLocalWithValue(Type type, Compiler.Local fromValue)
         {
             if (fromValue != null)
@@ -466,6 +471,7 @@ namespace ProtoBuf.Compiler
             StoreValue(result);
             return result;
         }
+
         internal void EmitBasicRead(string methodName, Type expectedType)
         {
             MethodInfo method = MapType(typeof(ProtoReader)).GetMethod(
@@ -475,6 +481,7 @@ namespace ProtoBuf.Compiler
             LoadReaderWriter();
             EmitCall(method);
         }
+
         internal void EmitBasicRead(Type helperType, string methodName, Type expectedType)
         {
             MethodInfo method = helperType.GetMethod(
@@ -484,6 +491,7 @@ namespace ProtoBuf.Compiler
             LoadReaderWriter();
             EmitCall(method);
         }
+
         internal void EmitBasicWrite(string methodName, Compiler.Local fromValue)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
@@ -491,6 +499,7 @@ namespace ProtoBuf.Compiler
             LoadReaderWriter();
             EmitCall(GetWriterMethod(methodName));
         }
+
         private MethodInfo GetWriterMethod(string methodName)
         {
             Type writerType = MapType(typeof(ProtoWriter));
@@ -503,6 +512,7 @@ namespace ProtoBuf.Compiler
             }
             throw new ArgumentException("No suitable method found for: " + methodName, "methodName");
         }
+
         internal void EmitWrite(Type helperType, string methodName, Compiler.Local valueFrom)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
@@ -513,7 +523,9 @@ namespace ProtoBuf.Compiler
             LoadReaderWriter();
             EmitCall(method);
         }
+
         public void EmitCall(MethodInfo method) { EmitCall(method, null); }
+
         public void EmitCall(MethodInfo method, Type targetType)
         {
             Helpers.DebugAssert(method != null);
@@ -535,6 +547,7 @@ namespace ProtoBuf.Compiler
             il.EmitCall(opcode, method, null);
             TraceCompile(opcode + ": " + method + " on " + method.DeclaringType + (targetType == null ? "" : (" via " + targetType)));
         }
+
         /// <summary>
         /// Pushes a null reference onto the stack. Note that this should only
         /// be used to return a null (or set a variable to null); for null-tests
@@ -641,6 +654,7 @@ namespace ProtoBuf.Compiler
             il.Emit(OpCodes.Initobj, type);
             TraceCompile(OpCodes.Initobj + ": " + type);
         }
+
         public void EmitCtor(Type type, params Type[] parameterTypes)
         {
             Helpers.DebugAssert(type != null);
@@ -710,11 +724,12 @@ namespace ProtoBuf.Compiler
             }
             return isTrusted;
         }
+
         internal void CheckAccessibility(ref MemberInfo member)
         {
             if (member == null)
             {
-                throw new ArgumentNullException("member");
+                throw new ArgumentNullException(nameof(member));
             }
 #if !COREFX
             Type type;
@@ -879,6 +894,7 @@ namespace ProtoBuf.Compiler
             CheckAccessibility(ref member);
             EmitCall(Helpers.GetGetMethod(property, true, true));
         }
+
         public void StoreValue(PropertyInfo property)
         {
             MemberInfo member = property;
@@ -942,12 +958,14 @@ namespace ProtoBuf.Compiler
                 LoadValue(local);
             }
         }
+
         internal void Branch(CodeLabel label, bool @short)
         {
             OpCode code = @short ? OpCodes.Br_S : OpCodes.Br;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
+
         internal void BranchIfFalse(CodeLabel label, bool @short)
         {
             OpCode code = @short ? OpCodes.Brfalse_S : OpCodes.Brfalse;
@@ -955,24 +973,24 @@ namespace ProtoBuf.Compiler
             TraceCompile(code + ": " + label.Index);
         }
 
-
         internal void BranchIfTrue(CodeLabel label, bool @short)
         {
             OpCode code = @short ? OpCodes.Brtrue_S : OpCodes.Brtrue;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
+
         internal void BranchIfEqual(CodeLabel label, bool @short)
         {
             OpCode code = @short ? OpCodes.Beq_S : OpCodes.Beq;
             il.Emit(code, label.Value);
             TraceCompile(code + ": " + label.Index);
         }
+
         //internal void TestEqual()
         //{
         //    Emit(OpCodes.Ceq);
         //}
-
 
         internal void CopyValue()
         {
