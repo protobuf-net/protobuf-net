@@ -8,7 +8,7 @@ namespace ProtoBuf.Meta
     {
 #if DEBUG
         [Obsolete("Please use AttributeType instead")]
-        new public Type GetType() { return AttributeType; }
+        new public Type GetType() => AttributeType;
 #endif
         public override string ToString() => AttributeType?.FullName ?? "";
         public abstract bool TryGet(string key, bool publicOnly, out object value);
@@ -66,16 +66,20 @@ namespace ProtoBuf.Meta
         }
 
         public abstract object Target { get; }
+
         private sealed class ReflectionAttributeMap : AttributeMap
         {
-            public override object Target
+            private readonly Attribute attribute;
+
+            public ReflectionAttributeMap(Attribute attribute)
             {
-                get { return attribute; }
+                this.attribute = attribute;
             }
-            public override Type AttributeType
-            {
-                get { return attribute.GetType(); }
-            }
+
+            public override object Target => attribute;
+
+            public override Type AttributeType => attribute.GetType();
+
             public override bool TryGet(string key, bool publicOnly, out object value)
             {
                 MemberInfo[] members = Helpers.GetInstanceFieldsAndProperties(attribute.GetType(), publicOnly);
@@ -83,13 +87,11 @@ namespace ProtoBuf.Meta
                 {
                     if (string.Equals(member.Name, key, StringComparison.OrdinalIgnoreCase))
                     {
-                        PropertyInfo prop = member as PropertyInfo;
-                        if (prop != null) {
+                        if (member is PropertyInfo prop) {
                             value = prop.GetValue(attribute, null);
                             return true;
                         }
-                        FieldInfo field = member as FieldInfo;
-                        if (field != null) {
+                        if (member is FieldInfo field) {
                             value = field.GetValue(attribute);
                             return true;
                         }
@@ -99,11 +101,6 @@ namespace ProtoBuf.Meta
                 }
                 value = null;
                 return false;
-            }
-            private readonly Attribute attribute;
-            public ReflectionAttributeMap(Attribute attribute)
-            {
-                this.attribute = attribute;
             }
         }
     }

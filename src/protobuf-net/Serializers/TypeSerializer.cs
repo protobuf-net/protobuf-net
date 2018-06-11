@@ -488,6 +488,7 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
+
         private void EmitCallbackIfNeeded(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             Helpers.DebugAssert(valueFrom != null);
@@ -496,6 +497,7 @@ namespace ProtoBuf.Serializers
                 ((IProtoTypeSerializer)this).EmitCallback(ctx, valueFrom, callbackType);
             }
         }
+
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             bool actuallyHasInheritance = false;
