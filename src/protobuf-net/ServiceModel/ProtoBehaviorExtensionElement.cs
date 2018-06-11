@@ -13,10 +13,7 @@ namespace ProtoBuf.ServiceModel
         /// <summary>
         /// Creates a new ProtoBehaviorExtension instance.
         /// </summary>
-        public ProtoBehaviorExtension()
-        {
-        }
-
+        public ProtoBehaviorExtension() { }
         /// <summary>
         /// Gets the type of behavior.
         /// </summary>     
@@ -26,10 +23,7 @@ namespace ProtoBuf.ServiceModel
         /// Creates a behavior extension based on the current configuration settings.
         /// </summary>
         /// <returns>The behavior extension.</returns>
-        protected override object CreateBehavior()
-        {
-            return new ProtoEndpointBehavior();
-        }
+        protected override object CreateBehavior() => new ProtoEndpointBehavior();
     }
 }
 #endif
