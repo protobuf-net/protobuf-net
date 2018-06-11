@@ -119,7 +119,7 @@ namespace ProtoBuf.Meta
 #if COREFX || PROFILE259
 		internal static readonly TypeInfo ienumerable = typeof(IEnumerable).GetTypeInfo();
 #else
-        internal static readonly System.Type ienumerable = typeof(IEnumerable);
+        internal static readonly Type ienumerable = typeof(IEnumerable);
 #endif
         private void SetBaseType(MetaType baseType)
         {

@@ -36,8 +36,8 @@ namespace ProtoBuf
         /// </summary>
         internal static IEnumerable GetExtendedValues(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
         {
-            if (instance == null) throw new ArgumentNullException("instance");
-            if (tag <= 0) throw new ArgumentOutOfRangeException("tag");
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (tag <= 0) throw new ArgumentOutOfRangeException(nameof(tag));
             IExtension extn = instance.GetExtensionObject(false);
 
             if (extn == null)
@@ -48,7 +48,8 @@ namespace ProtoBuf
             Stream stream = extn.BeginQuery();
             object value = null;
             ProtoReader reader = null;
-            try {
+            try
+            {
                 SerializationContext ctx = new SerializationContext();
                 reader = ProtoReader.Create(stream, model, ctx, ProtoReader.TO_EOF);
                 while (model.TryDeserializeAuxiliaryType(reader, format, tag, type, ref value, true, false, false, false, null) && value != null)
@@ -64,7 +65,9 @@ namespace ProtoBuf
                 {
                     yield return value;
                 }
-            } finally {
+            }
+            finally
+            {
                 ProtoReader.Recycle(reader);
                 extn.EndQuery(stream);
             }
@@ -72,8 +75,8 @@ namespace ProtoBuf
 
         internal static void AppendExtendValue(TypeModel model, IExtensible instance, int tag, DataFormat format, object value)
         {
-            if(instance == null) throw new ArgumentNullException("instance");
-            if(value == null) throw new ArgumentNullException("value");
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (value == null) throw new ArgumentNullException(nameof(value));
 
             // TODO
             //model.CheckTagNotInUse(tag);
@@ -83,29 +86,32 @@ namespace ProtoBuf
             if (extn == null) throw new InvalidOperationException("No extension object available; appended data would be lost.");
             bool commit = false;
             Stream stream = extn.BeginAppend();
-            try {
-                using(ProtoWriter writer = new ProtoWriter(stream, model, null)) {
+            try
+            {
+                using (ProtoWriter writer = new ProtoWriter(stream, model, null))
+                {
                     model.TrySerializeAuxiliaryType(writer, null, format, tag, value, false, null);
                     writer.Close();
                 }
                 commit = true;
             }
-            finally {
+            finally
+            {
                 extn.EndAppend(stream, commit);
             }
         }
 
-//        /// <summary>
-//        /// Stores the given value into the instance's stream; the serializer
-//        /// is inferred from TValue and format.
-//        /// </summary>
-//        /// <remarks>Needs to be public to be callable thru reflection in Silverlight</remarks>
-//        public static void AppendExtendValueTyped<TSource, TValue>(
-//            TypeModel model, TSource instance, int tag, DataFormat format, TValue value)
-//            where TSource : class, IExtensible
-//        {
-//            AppendExtendValue(model, instance, tag, format, value);
-//        }
+        //        /// <summary>
+        //        /// Stores the given value into the instance's stream; the serializer
+        //        /// is inferred from TValue and format.
+        //        /// </summary>
+        //        /// <remarks>Needs to be public to be callable thru reflection in Silverlight</remarks>
+        //        public static void AppendExtendValueTyped<TSource, TValue>(
+        //            TypeModel model, TSource instance, int tag, DataFormat format, TValue value)
+        //            where TSource : class, IExtensible
+        //        {
+        //            AppendExtendValue(model, instance, tag, format, value);
+        //        }
 
     }
 

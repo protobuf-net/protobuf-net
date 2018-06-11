@@ -22,12 +22,12 @@ namespace ProtoBuf
 #if !CF && !PORTABLE && !COREFX && !PROFILE259
     [ImmutableObject(true)]
 #endif
-	public sealed class ProtoBeforeDeserializationAttribute : Attribute { }
+    public sealed class ProtoBeforeDeserializationAttribute : Attribute { }
 
     /// <summary>Specifies a method on the root-contract in an hierarchy to be invoked after deserialization.</summary>
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false, Inherited = false)]
 #if !CF && !PORTABLE && !COREFX && !PROFILE259
     [ImmutableObject(true)]
 #endif
-	public sealed class ProtoAfterDeserializationAttribute : Attribute { }
+    public sealed class ProtoAfterDeserializationAttribute : Attribute { }
 }

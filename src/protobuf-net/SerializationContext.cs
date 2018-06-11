@@ -8,7 +8,7 @@ namespace ProtoBuf
     public sealed class SerializationContext
     {
         private bool frozen;
-        internal void Freeze() { frozen = true;}
+        internal void Freeze() { frozen = true; }
         private void ThrowIfFrozen() { if (frozen) throw new InvalidOperationException("The serialization-context cannot be changed once it is in use"); }
         private object context;
         /// <summary>
@@ -21,6 +21,7 @@ namespace ProtoBuf
         }
 
         private static readonly SerializationContext @default;
+
         static SerializationContext()
         {
             @default = new SerializationContext();
@@ -29,7 +30,7 @@ namespace ProtoBuf
         /// <summary>
         /// A default SerializationContext, with minimal information.
         /// </summary>
-        internal static SerializationContext Default { get {return @default;}}
+        internal static SerializationContext Default => @default;
 #if PLAT_BINARYFORMATTER
 
 #if !(COREFX || PROFILE259)

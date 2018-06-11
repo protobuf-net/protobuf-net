@@ -10,7 +10,6 @@ namespace ProtoBuf
     {
         private byte[] buffer;
 
-
         void IExtensionResettable.Reset()
         {
             buffer = null;

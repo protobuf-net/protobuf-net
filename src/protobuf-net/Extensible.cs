@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ProtoBuf.Meta;
 using System.Collections;
 
@@ -19,13 +20,13 @@ namespace ProtoBuf
         // note: not marked ProtoContract - no local state, and can't 
         // predict sub-classes
 
-
         private IExtension extensionObject;
 
         IExtension IExtensible.GetExtensionObject(bool createIfMissing)
         {
             return GetExtensionObject(createIfMissing);
         }
+
         /// <summary>
         /// Retrieves the <see cref="IExtension">extension</see> object for the current
         /// instance, optionally creating it if it does not already exist.
@@ -123,8 +124,7 @@ namespace ProtoBuf
         /// <returns>The effective value of the field, or the default value if not found.</returns>
         public static TValue GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
         {
-            TValue value;
-            TryGetValue<TValue>(instance, tag, format, out value);
+            TryGetValue<TValue>(instance, tag, format, out TValue value);
             return value;
         }
 
@@ -231,7 +231,7 @@ namespace ProtoBuf
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <param name="allowDefinedTag">Allow tags that are present as part of the definition; for example, to query unknown enum values.</param>
         /// <returns>True if data for the field was present, false otherwise.</returns>
-        public static bool TryGetValue(TypeModel model, System.Type type, IExtensible instance, int tag, DataFormat format, bool allowDefinedTag, out object value)
+        public static bool TryGetValue(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format, bool allowDefinedTag, out object value)
         {
             value = null;
             bool set = false;
@@ -245,6 +245,7 @@ namespace ProtoBuf
 
             return set;
         }
+
         /// <summary>
         /// Queries an extensible object for an additional (unexpected) data-field for the instance.
         /// Each occurrence of the field is yielded separately, making this usage suitable for "repeated"
@@ -257,7 +258,7 @@ namespace ProtoBuf
         /// <param name="tag">The field identifier; the tag should not be defined as a known data-field for the instance.</param>
         /// <param name="format">The data-format to use when decoding the value.</param>
         /// <returns>An enumerator that yields each occurrence of the field.</returns>
-        public static IEnumerable GetValues(TypeModel model, System.Type type, IExtensible instance, int tag, DataFormat format)
+        public static IEnumerable GetValues(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format)
         {
             return ExtensibleUtil.GetExtendedValues(model, type, instance, tag, format, false, false);
         }
@@ -279,6 +280,5 @@ namespace ProtoBuf
         {
             ExtensibleUtil.AppendExtendValue(model, instance, tag, format, value);
         }
-        
-    }   
+    }
 }
