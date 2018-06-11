@@ -1,9 +1,7 @@
 ﻿using System;
-
 using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
-
 
 namespace ProtoBuf
 {
@@ -634,8 +632,6 @@ namespace ProtoBuf
 
 #if NETCOREAPP2_1
                     System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(buffer.AsSpan(index, 8), value);
-
-                    index += 8;
 #else
                     buffer[index] = (byte)value;
                     buffer[index + 1] = (byte)(value >> 8);
@@ -738,10 +734,14 @@ namespace ProtoBuf
         }
         private static void WriteInt32ToBuffer(int value, byte[] buffer, int index)
         {
+#if NETCOREAPP2_1
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(buffer.AsSpan(index, 4), value);
+#else
             buffer[index] = (byte)value;
             buffer[index + 1] = (byte)(value >> 8);
             buffer[index + 2] = (byte)(value >> 16);
             buffer[index + 3] = (byte)(value >> 24);
+#endif
         }
 
         /// <summary>
