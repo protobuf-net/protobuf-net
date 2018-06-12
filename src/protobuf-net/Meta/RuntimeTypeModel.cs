@@ -727,6 +727,7 @@ namespace ProtoBuf.Meta
             finally
             {
                 ReleaseLock(opaqueToken);
+                ResetKeyCache(type);
             }
             
             return newType;

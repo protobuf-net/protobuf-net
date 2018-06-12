@@ -86,6 +86,11 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Update="Issues\Issue401.cs">
+      <SubType>Component</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
     <None Update="..\Tools\nwind.proto.bin" Link="nwind.proto.bin" />
   </ItemGroup>
 </Project>

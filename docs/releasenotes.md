@@ -24,6 +24,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protobuf-net v2.3.11
+
+- fix #401 - error introduced in the new key cache from v2.3.8
+
 ## protobuf-net v2.3.10
 
 - fix #388 - stability when `DynamicMethod` is not available (UWP, iOS, etc)
