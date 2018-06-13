@@ -24,9 +24,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
-## protobuf-net (not yet packaged)
+## protobuf-net v2.3.12
 
 - fix #402 - zero `decimal` with non-trivial sign/scale should round-trip correctly
+- fix additional scenarios for #401
 
 ## protobuf-net v2.3.11
 

@@ -577,7 +577,7 @@ namespace ProtoBuf.Meta
 
             // check for proxy types
             Type underlyingType = ResolveProxies(type);
-            if (underlyingType != null)
+            if (underlyingType != null && underlyingType != type)
             {
                 key = types.IndexOf(MetaTypeFinder, underlyingType);
                 type = underlyingType; // if new added, make it reflect the underlying type
@@ -586,6 +586,8 @@ namespace ProtoBuf.Meta
             if (key < 0)
             {
                 int opaqueToken = 0;
+                Type origType = type;
+                bool weAdded = false;
                 try
                 {
                     TakeLock(ref opaqueToken);
@@ -608,8 +610,7 @@ namespace ProtoBuf.Meta
                         metaType = Create(type);
                     }
                     metaType.Pending = true;                    
-                    bool weAdded = false;
-
+                    
                     // double-checked
                     int winner = types.IndexOf(MetaTypeFinder, type);
                     if (winner < 0)
@@ -631,6 +632,10 @@ namespace ProtoBuf.Meta
                 finally
                 {
                     ReleaseLock(opaqueToken);
+                    if (weAdded)
+                    {
+                        ResetKeyCache(origType);
+                    }
                 }
             }
             return key;
