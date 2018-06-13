@@ -423,8 +423,6 @@ namespace ProtoBuf
             }
             ProtoReader.EndSubItem(token, reader);
 
-            if (low == 0 && high == 0) return decimal.Zero;
-
             int lo = (int)(low & 0xFFFFFFFFL),
                 mid = (int)((low >> 32) & 0xFFFFFFFFL),
                 hi = (int)high;
