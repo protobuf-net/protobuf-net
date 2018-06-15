@@ -24,6 +24,15 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protobuf-net v2.3.12
+
+- fix #402 - zero `decimal` with non-trivial sign/scale should round-trip correctly
+- fix additional scenarios for #401
+
+## protobuf-net v2.3.11
+
+- fix #401 - error introduced in the new key cache from v2.3.8
+
 ## protobuf-net v2.3.10
 
 - fix #388 - stability when `DynamicMethod` is not available (UWP, iOS, etc)
@@ -42,7 +51,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 
 ## protogen v1.0.6
 
-- optional ability to emit enums for `oneof` [similar to Google's C# generator](https://developers.google.com/protocol-buffers/docs/reference/csharp-generated#oneof)
+- add #393 - optional ability to emit enums for `oneof` [similar to Google's C# generator](https://developers.google.com/protocol-buffers/docs/reference/csharp-generated#oneof)
 - extend C# support down to 2.0 and up to 7.1, and VB support down to VB 9
 - add website support for additional options (as above)
 

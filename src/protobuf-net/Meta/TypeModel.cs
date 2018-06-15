@@ -1295,6 +1295,28 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
+        /// Advertise that a type's key can have changed
+        /// </summary>
+        internal void ResetKeyCache(Type type)
+        {
+            if (type == null) return;
+            // clear
+            lock(knownKeys)
+            {
+                knownKeys.Remove(type);
+            }
+            Type normalized = ResolveProxies(type);
+            if (normalized != null && normalized != type)
+            {
+                lock (knownKeys)
+                {
+                    knownKeys.Remove(normalized);
+                }
+            }
+            GetKey(ref type); // re-init
+        }
+
+        /// <summary>
         /// Provides the key that represents a given type in the current model.
         /// </summary>
         protected abstract int GetKeyImpl(Type type);
