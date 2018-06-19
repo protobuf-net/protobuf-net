@@ -34,7 +34,7 @@ namespace ProtoBuf.Issues
             public string Line2 { get; set; }
         }
         [Fact]
-        public void Main()
+        public void GuidsAreNonZero()
         {
             List<Person> persons = new List<Person>(), cloneList;
             for (int i = 0; i < 10; i++)
