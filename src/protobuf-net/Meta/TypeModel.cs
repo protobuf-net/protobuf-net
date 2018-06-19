@@ -1272,6 +1272,14 @@ namespace ProtoBuf.Meta
                 if (knownKeys.TryGetValue(type, out var tuple))
                 {
                     // the type can be changed via ResolveProxies etc
+#if DEBUG
+                    var actualKey = GetKeyImpl(type);
+                    if(actualKey != tuple.Key)
+                    {
+                        throw new InvalidOperationException(
+                            $"Key cache failure; got {tuple.Key} instead of {actualKey} for '{type.Name}'");
+                    }
+#endif
                     type = tuple.Type;
                     return tuple.Key;
                 }
@@ -1297,23 +1305,13 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Advertise that a type's key can have changed
         /// </summary>
-        internal void ResetKeyCache(Type type)
+        internal void ResetKeyCache()
         {
-            if (type == null) return;
-            // clear
+            // clear *everything* (think: multi-level - can be many descendents)
             lock(knownKeys)
             {
-                knownKeys.Remove(type);
+                knownKeys.Clear();
             }
-            Type normalized = ResolveProxies(type);
-            if (normalized != null && normalized != type)
-            {
-                lock (knownKeys)
-                {
-                    knownKeys.Remove(normalized);
-                }
-            }
-            GetKey(ref type); // re-init
         }
 
         /// <summary>

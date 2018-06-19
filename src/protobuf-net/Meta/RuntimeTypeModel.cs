@@ -588,7 +588,7 @@ namespace ProtoBuf.Meta
                     ReleaseLock(opaqueToken);
                     if (weAdded)
                     {
-                        ResetKeyCache(origType);
+                        ResetKeyCache();
                     }
                 }
             }
@@ -685,7 +685,7 @@ namespace ProtoBuf.Meta
             finally
             {
                 ReleaseLock(opaqueToken);
-                ResetKeyCache(type);
+                ResetKeyCache();
             }
 
             return newType;

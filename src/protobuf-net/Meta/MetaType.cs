@@ -114,7 +114,7 @@ namespace ProtoBuf.Meta
             derivedMeta.SetBaseType(this); // includes ThrowIfFrozen
             if (subTypes == null) subTypes = new BasicList();
             subTypes.Add(subType);
-            model.ResetKeyCache(derivedType);
+            model.ResetKeyCache();
             return this;
         }
 #if COREFX || PROFILE259
