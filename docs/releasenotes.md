@@ -24,6 +24,10 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protogen v1.0.9
+
+- fix #406 - relative and wildcard paths (`*.proto` etc) failed on `netcoreapp2.1`, impacting the "global tool"
+
 ## protobuf-net v2.3.13
 
 - **IMPORTANT** fix #403 - key cache was incorrect in some cases involving multi-level inheritance; update from 2.3.8 or above is highly recommended

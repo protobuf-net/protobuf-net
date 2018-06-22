@@ -243,7 +243,7 @@ namespace protogen
         // with thanks to "Dave": https://stackoverflow.com/a/340454/23354
         public static String MakeRelativePath(String fromPath, String toPath)
         {
-#if NETCOREAPP2_0
+#if NETCOREAPP2_0 || NETCOREAPP2_1
             return Path.GetRelativePath(fromPath, toPath);
 #else
             if (String.IsNullOrEmpty(fromPath)) throw new ArgumentNullException("fromPath");
