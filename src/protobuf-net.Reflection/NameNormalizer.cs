@@ -176,7 +176,10 @@ namespace ProtoBuf.Reflection
         {
             var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
-            if (definition.Name.StartsWith($"{definition.Parent.Name}_"))
+
+            if (CustomNamesConversion != null && CustomNamesConversion.TryGetValue(definition.Name, out var customName))
+                return customName;
+            else if (definition.Name.StartsWith($"{definition.Parent.Name}_"))
                 return AutoCapitalize(definition.Name.Substring(definition.Parent.Name.Length + 1));
             else
                 return AutoCapitalize(definition.Name);
