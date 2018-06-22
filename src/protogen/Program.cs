@@ -98,7 +98,7 @@ namespace protogen
                             break;
                         case "--names_conversion":
                             if (!File.Exists(rhs))
-                                Console.WriteLine($"Custom name conversion rule file not found: {rhs}");
+                                Console.WriteLine($"Custom names conversion rule file not found: {rhs}");
                             else {
                                 var lines = File.ReadAllLines(rhs);
                                 namesConversion = lines.Select(line => Regex.Match(line, @"([0-9a-zA-Z_]+)=(@?[A-Za-z0-9_]+)"))
