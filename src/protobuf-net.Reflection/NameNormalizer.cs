@@ -41,7 +41,13 @@ namespace ProtoBuf.Reflection
         }
         private class DefaultNormalizer : NameNormalizer
         {
-            protected override string GetName(string identifier) => AutoCapitalize(identifier);
+            protected override string GetName(string identifier) {
+                if (CustomNamesConversion != null && CustomNamesConversion.TryGetValue(identifier, out var customName))
+                    return customName;
+                else
+                    return AutoCapitalize(identifier);
+            }
+
             /// <summary>
             /// Suggest a name with idiomatic pluralization
             /// </summary>
@@ -53,6 +59,11 @@ namespace ProtoBuf.Reflection
         protected static string AutoCapitalize(string identifier)
         {
             if (string.IsNullOrEmpty(identifier)) return identifier;
+
+            // if camel-case, make proper-case
+            if (Regex.IsMatch(identifier, @"^[a-z][a-z0-9]+[A-Z][a-zA-Z0-9]+")) {
+                return Regex.Replace(identifier, @"^([a-z])([a-z0-9]+[A-Z][a-zA-Z0-9]+)", match => match.Groups[1].Value.ToUpperInvariant() + match.Groups[2].Value);
+            }
             // if all upper-case, make proper-case
             if (Regex.IsMatch(identifier, @"^[_A-Z0-9]*$"))
             {
@@ -64,7 +75,7 @@ namespace ProtoBuf.Reflection
             {
                 return Regex.Replace(identifier, @"(^|_)([a-z0-9])([a-z0-9]*)",
                     match => match.Groups[2].Value.ToUpperInvariant() + match.Groups[3].Value.ToLowerInvariant());
-            }
+            }            
             // just remove underscores - leave their chosen casing alone
             return identifier.Replace("_", "");
         }
@@ -165,7 +176,10 @@ namespace ProtoBuf.Reflection
         {
             var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
-            return AutoCapitalize(definition.Name);
+            if (definition.Name.StartsWith($"{definition.Parent.Name}_"))
+                return AutoCapitalize(definition.Name.Substring(definition.Parent.Name.Length + 1));
+            else
+                return AutoCapitalize(definition.Name);
         }
         /// <summary>
         /// Suggest a normalized identifier
@@ -183,6 +197,8 @@ namespace ProtoBuf.Reflection
         }
 
         internal bool IsCaseSensitive { get; set; }
+
+        internal Dictionary<string, string> CustomNamesConversion { get; set; }
 
         /// <summary>
         /// Obtain a set of all names defined for a message

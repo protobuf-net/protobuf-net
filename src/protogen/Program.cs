@@ -4,7 +4,9 @@ using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace protogen
 {
@@ -14,7 +16,6 @@ namespace protogen
         {
             try
             {
-
                 string outPath = null; // -o{FILE}, --descriptor_set_out={FILE}
                 bool version = false; // --version
                 bool help = false; // -h, --help
@@ -25,6 +26,7 @@ namespace protogen
                 CodeGenerator codegen = null;
 
                 Dictionary<string, string> options = null;
+                Dictionary<string, string> namesConversion = null;
                 foreach (string arg in args)
                 {
                     string lhs = arg, rhs = "";
@@ -93,6 +95,16 @@ namespace protogen
                             Console.WriteLine($"Program: {typeof(Program).Assembly.Location}");
                             Console.WriteLine($"CodeGenerator: {typeof(CodeGenerator).Assembly.Location}");
 #endif
+                            break;
+                        case "--names_conversion":
+                            if (!File.Exists(rhs))
+                                Console.WriteLine($"Custom name conversion rule file not found: {rhs}");
+                            else {
+                                var lines = File.ReadAllLines(rhs);
+                                namesConversion = lines.Select(line => Regex.Match(line, @"([0-9a-zA-Z_]+)=(@?[A-Za-z0-9_]+)"))
+                                                       .Where(m => m.Success)
+                                                       .ToDictionary(m => m.Groups[1].Value, m => m.Groups[2].Value);
+                            }
                             break;
                         default:
                             if (lhs.StartsWith("-") || !string.IsNullOrWhiteSpace(rhs))
@@ -213,7 +225,7 @@ namespace protogen
                     }
                     
                     
-                    var files = codegen.Generate(set, options: options);
+                    var files = codegen.Generate(set, options: options, customNamesConversion: namesConversion);
                     foreach (var file in files)
                     {
                         var path = Path.Combine(outPath, file.Name);
@@ -308,6 +320,11 @@ Parse PROTO_FILES and generate output based on the options given:
                               selected code generator.
   --package=PACKAGE           Add a default package (when no package is
                               specified); can use #FILE# and #DIR# tokens.
+  --names_conversion          Specify a file that contains rules for mapping 
+                              classes fields name conversion from .proto to 
+                              target file(s) (.cs .vb). A line for each rule, 
+                              rule example: OriginNameInProtoFile=CustomName.
+                              (all rules are case sensitive)
 
 Note that PROTO_FILES can be *.proto or **/*.proto (recursive) when a single
 import location is used, to process all schema files found. In recursive mode,

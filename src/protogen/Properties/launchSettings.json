@@ -2,7 +2,7 @@
   "profiles": {
     "protogen": {
       "commandName": "Project",
-      "commandLineArgs": "--proto_path=c:\\code\\SteamKit\\Resources\\Protobufs --vb_out=c:\\code\\protogen\\vb **/*.proto --package=#DIR#.#FILE# +names=original"
+      "commandLineArgs": "--proto_path=C:\\Users\\iFeng\\Desktop\\protocol --csharp_out=C:\\Users\\iFeng\\Desktop\\protocol\\ Common.proto --package=#DIR#.#FILE#"
     }
   }
 }

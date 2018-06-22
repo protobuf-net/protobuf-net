@@ -30,7 +30,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null);
+        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null, Dictionary<string, string> customNamesConversion = null);
 
         /// <summary>
         /// Eexecute this code generator against a code file
@@ -143,7 +143,7 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null)
+        public override IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null, Dictionary<string, string> customNamesConversion = null)
         {
             foreach (var file in set.Files)
             {
@@ -154,7 +154,7 @@ namespace ProtoBuf.Reflection
                 string generated;
                 using (var buffer = new StringWriter())
                 {
-                    var ctx = new GeneratorContext(this, file, normalizer, buffer, Indent, options);
+                    var ctx = new GeneratorContext(this, file, normalizer, buffer, Indent, options, customNamesConversion);
 
                     ctx.BuildTypeIndex(); // populates for TryFind<T>
                     WriteFile(ctx, file);
@@ -462,7 +462,7 @@ namespace ProtoBuf.Reflection
             /// <summary>
             /// Create a new GeneratorContext instance
             /// </summary>
-            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken, Dictionary<string, string> options)
+            internal GeneratorContext(CommonCodeGenerator generator, FileDescriptorProto file, NameNormalizer nameNormalizer, TextWriter output, string indentToken, Dictionary<string, string> options, Dictionary<string, string> customNamesConversion)
             {
                 if (nameNormalizer == null)
                 {
@@ -484,6 +484,7 @@ namespace ProtoBuf.Reflection
                     nameNormalizer = NameNormalizer.Default;
                 }
                 nameNormalizer.IsCaseSensitive = generator.IsCaseSensitive;
+                nameNormalizer.CustomNamesConversion = customNamesConversion;
 
                 File = file;
                 NameNormalizer = nameNormalizer;
