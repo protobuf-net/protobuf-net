@@ -114,7 +114,10 @@ namespace ProtoBuf.Reflection
                 case "string":
                     return "@" + identifier;
                 default:
-                    return identifier;
+                    if (identifier.Length > 0 && char.IsDigit(identifier[0]))
+                        return $"_{identifier}";
+                    else
+                        return identifier;
             }
         }
 

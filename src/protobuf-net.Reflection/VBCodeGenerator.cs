@@ -208,9 +208,12 @@ namespace ProtoBuf
         /// </summary>
         protected override string Escape(string identifier)
         {
-            if (keywords.Contains(identifier))
+            if (identifier.Length > 0 && char.IsDigit(identifier[0]))
+                return $"_{identifier}";
+            else if (keywords.Contains(identifier))
                 return "[" + identifier + "]";
-            return identifier;
+            else
+                return identifier;
         }
 
         /// <summary>

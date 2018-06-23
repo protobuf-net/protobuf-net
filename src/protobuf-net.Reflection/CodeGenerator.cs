@@ -30,7 +30,9 @@ namespace ProtoBuf.Reflection
         /// <summary>
         /// Execute the code generator against a FileDescriptorSet, yielding a sequence of files
         /// </summary>
-        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null, Dictionary<string, string> customNamesConversion = null);
+        public virtual IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer = null, Dictionary<string, string> options = null) => Generate(set, normalizer, options, null);
+
+        public abstract IEnumerable<CodeFile> Generate(FileDescriptorSet set, NameNormalizer normalizer, Dictionary<string, string> options, Dictionary<string, string> customNamesConversion);
 
         /// <summary>
         /// Eexecute this code generator against a code file
