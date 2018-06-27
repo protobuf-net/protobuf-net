@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="MSBuild.Sdk.Extras">
   <PropertyGroup>
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net20;net35;net40;netstandard1.0;netstandard1.3;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net20;net35;net40;netstandard1.0;netstandard1.3;netstandard2.0;uap;uap10.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
     <!-- new build tools spit these out -->
