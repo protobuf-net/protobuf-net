@@ -1,8 +1,8 @@
 {
   "sdk": {
-    "version": "2.1.300",
-    "msbuild-sdks": {
-      "MSBuild.Sdk.Extras": "1.6.0"
-    }
+    "version": "2.1.300"
+  },
+  "msbuild-sdks": {
+    "MSBuild.Sdk.Extras": "1.6.20-preview"
   }
 }
