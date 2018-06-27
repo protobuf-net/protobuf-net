@@ -3,6 +3,7 @@
     "version": "2.1.300"
   },
   "msbuild-sdks": {
-    "MSBuild.Sdk.Extras": "1.6.20-preview"
+    "MSBuild.Sdk.Extras": "1.5.4",
+    "__MSBuild.Sdk.Extras": "1.6.20-preview"
   }
 }

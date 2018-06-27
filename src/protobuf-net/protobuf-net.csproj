@@ -3,10 +3,7 @@
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <!-- original (fine): <TargetFrameworks>net20;net35;net40;netstandard1.0;netstandard1.3;netstandard2.0</TargetFrameworks> -->
-    <!-- intended (hangs): <TargetFrameworks>net20;net35;net40;netstandard1.0;netstandard1.3;netstandard2.0;uap10.0</TargetFrameworks> -->
-    <!-- test (hangs): -->
-    <TargetFrameworks>uap10.0</TargetFrameworks>
+    <TargetFrameworks>net20;net35;net40;netstandard1.0;netstandard1.3;netstandard2.0;uap10.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
     <!-- new build tools spit these out -->
@@ -31,6 +28,7 @@
     <FeatureServiceModel>false</FeatureServiceModel>
     <FeatureCompiler>false</FeatureCompiler>
     <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
+    <DefineConstants>$(DefineConstants);COREFX;UAP</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.0'">
     <DefineConstants>$(DefineConstants);PROFILE259;FEAT_SAFE</DefineConstants>
