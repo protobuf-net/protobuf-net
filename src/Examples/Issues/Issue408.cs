@@ -1,12 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Reflection;
-using ProtoBuf.Meta;
+﻿using ProtoBuf.Meta;
 using Xunit;
 
 namespace ProtoBuf.Issues
 {
-    public class ValueTypeSubType
+    public class Issue408
     {
         public struct Point
         {
@@ -54,9 +51,7 @@ namespace ProtoBuf.Issues
             objectMetaType.AddSubType(1, typeof(Point));
 
             // This bug only occured in compiled type models
-            Directory.SetCurrentDirectory(@"C:\Users\Simon\Documents\GitHub\protobuf-net\src\protobuf-net\bin\Debug\net40");
-            var compiledTypeModel = model.Compile("test", "test.dll");
-            //var compiledTypeModel = Load(@"C:\Users\Simon\Documents\GitHub\protobuf-net\src\protobuf-net\bin\Debug\net40\test.dll");
+            var compiledTypeModel = model.Compile();
 
             var obj = new Point {X = 1, Y = 2};
             var clone = compiledTypeModel.DeepClone(obj);
@@ -66,22 +61,6 @@ namespace ProtoBuf.Issues
             var point = (Point) clone;
             Assert.Equal(1, point.X);
             Assert.Equal(2, point.Y);
-        }
-        
-        public static TypeModel Load(string assemblyFilePath)
-        {
-            var assembly = Assembly.LoadFrom(assemblyFilePath);
-            var types = assembly.GetTypes();
-            for(int i = 0; i < types.Length; ++i)
-            {
-                var type = types[i];
-                if (typeof(TypeModel).IsAssignableFrom(type))
-                {
-                    return (TypeModel)Activator.CreateInstance(type);
-                }
-            }
-            
-            throw new NotImplementedException();
         }
     }
 }
