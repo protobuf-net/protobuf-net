@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using Examples;
+using ProtoBuf;
 using ProtoBuf.Meta;
 using Xunit;
 
@@ -13,6 +14,13 @@ namespace Examples.Issues
             public double X { get; set; }
 
             public double Y { get; set; }
+        }
+
+        [ProtoContract]
+        public class Container
+        {
+            [ProtoMember(1)]
+            public object Value;
         }
 
         [Fact]
@@ -28,6 +36,18 @@ namespace Examples.Issues
             TestValueType(model.Compile());
         }
 
+        [Fact]
+        public void ShouldSerializeBoxedValueType()
+        {
+            var model = TypeModel.Create();
+
+            ConfigureTypeModel(model);
+            model.Add(typeof(Container), true);
+
+            TestBoxedValueType(model);
+            TestValueType(model.Compile());
+        }
+
         private static void ConfigureTypeModel(RuntimeTypeModel model)
         {
             var objectMetaType = model.Add(typeof(object), false);
@@ -37,6 +57,26 @@ namespace Examples.Issues
             metaType.AddField(3, "Y");
 
             objectMetaType.AddSubType(1, typeof(Point));
+        }
+
+        private static void TestBoxedValueType(TypeModel model)
+        {
+            var obj = new Container
+            {
+                Value = new Point {X = 42, Y = 9001}
+            };
+
+            var clone = model.DeepClone(obj);
+            Assert.NotNull(clone);
+            Assert.IsType<Container>(clone);
+
+            var container = (Container) clone;
+            Assert.NotNull(container.Value);
+            Assert.IsType<Point>(container.Value);
+
+            var point = (Point) container.Value;
+            Assert.Equal(42, point.X);
+            Assert.Equal(9001, point.Y);
         }
 
         private static void TestValueType(TypeModel model)
