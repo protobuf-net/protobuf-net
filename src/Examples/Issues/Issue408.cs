@@ -1,7 +1,10 @@
-﻿using ProtoBuf.Meta;
+﻿using System;
+using System.IO;
+using Examples;
+using ProtoBuf.Meta;
 using Xunit;
 
-namespace ProtoBuf.Issues
+namespace Examples.Issues
 {
     public class Issue408
     {
@@ -13,10 +16,20 @@ namespace ProtoBuf.Issues
         }
 
         [Fact]
-        public void CanRoundtripValueTypeSubTypes()
+        public void ShouldSerializeValueTypeSubTypes()
         {
             var model = TypeModel.Create();
 
+            ConfigureTypeModel(model);
+            model.Compile("ShouldSerializeValueTypeSubTypes", "ShouldSerializeValueTypeSubTypes.dll");
+            PEVerify.AssertValid("ShouldSerializeValueTypeSubTypes.dll");
+            TestValueType(model);
+            // This bug only occured in compiled type models
+            TestValueType(model.Compile());
+        }
+
+        private static void ConfigureTypeModel(RuntimeTypeModel model)
+        {
             var objectMetaType = model.Add(typeof(object), false);
 
             var metaType = model.Add(typeof(Point), false);
@@ -24,7 +37,16 @@ namespace ProtoBuf.Issues
             metaType.AddField(3, "Y");
 
             objectMetaType.AddSubType(1, typeof(Point));
+        }
 
+        private static void TestValueType(TypeModel model)
+        {
+            TestPoint(model);
+            TestNull(model);
+        }
+
+        private static void TestPoint(TypeModel model)
+        {
             var obj = new Point {X = 1, Y = 2};
             var clone = model.DeepClone(obj);
             Assert.NotNull(clone);
@@ -35,32 +57,12 @@ namespace ProtoBuf.Issues
             Assert.Equal(2, point.Y);
         }
 
-        [Fact]
-        public void CanRoundtripValueTypeSubTypesCompiled()
+        private static void TestNull(TypeModel model)
         {
-            // https://github.com/mgravell/protobuf-net/issues/408
-
-            var model = TypeModel.Create();
-
-            var objectMetaType = model.Add(typeof(object), false);
-
-            var metaType = model.Add(typeof(Point), false);
-            metaType.AddField(2, "X");
-            metaType.AddField(3, "Y");
-
-            objectMetaType.AddSubType(1, typeof(Point));
-
-            // This bug only occured in compiled type models
-            var compiledTypeModel = model.Compile();
-
-            var obj = new Point {X = 1, Y = 2};
-            var clone = compiledTypeModel.DeepClone(obj);
-            Assert.NotNull(clone);
-            Assert.IsType<Point>(clone);
-
-            var point = (Point) clone;
-            Assert.Equal(1, point.X);
-            Assert.Equal(2, point.Y);
+            using (var stream = new MemoryStream())
+            {
+                Assert.Throws<ArgumentNullException>(() => model.Serialize(stream, null));
+            }
         }
     }
 }
