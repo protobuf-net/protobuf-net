@@ -20,34 +20,41 @@ namespace ProtoBuf.Serializers
         static Type ResolveIReadOnlyCollection(Type declaredType, Type t)
         {
 #if WINRT || COREFX || PROFILE259
+            if (CheckIsIReadOnlyCollectionExactly(declaredType.GetTypeInfo())) return declaredType;
 			foreach (Type intImplBasic in declaredType.GetTypeInfo().ImplementedInterfaces)
             {
                 TypeInfo intImpl = intImplBasic.GetTypeInfo();
-                if (intImpl.IsGenericType && intImpl.Name.StartsWith("IReadOnlyCollection`"))
-                {
-                    if(t != null)
-                    {
-                        Type[] typeArgs = intImpl.GenericTypeArguments;
-                        if (typeArgs.Length != 1 && typeArgs[0] != t) continue;
-                    }
-                    return intImplBasic;
-                }
+                if (CheckIsIReadOnlyCollectionExactly(intImpl)) return intImplBasic;
             }
 #else
+            if (CheckIsIReadOnlyCollectionExactly(declaredType)) return declaredType;
             foreach (Type intImpl in declaredType.GetInterfaces())
             {
-                if (intImpl.IsGenericType && intImpl.Name.StartsWith("IReadOnlyCollection`"))
-                {
-                    if(t != null)
-                    {
-                        Type[] typeArgs = intImpl.GetGenericArguments();
-                        if (typeArgs.Length != 1 && typeArgs[0] != t) continue;
-                    }
-                    return intImpl;
-                }
+                if (CheckIsIReadOnlyCollectionExactly(intImpl)) return intImpl;
             }
 #endif
             return null;
+        }
+
+#if WINRT || COREFX || PROFILE259
+        static bool CheckIsIReadOnlyCollectionExactly(TypeInfo t)
+#else
+        static bool CheckIsIReadOnlyCollectionExactly(Type t)
+#endif
+        {
+            if (t != null && t.IsGenericType && t.Name.StartsWith("IReadOnlyCollection`"))
+            {
+#if WINRT || COREFX || PROFILE259
+                Type[] typeArgs = t.GenericTypeArguments;
+                if (typeArgs.Length != 1 && typeArgs[0].GetTypeInfo().Equals(t)) return false;
+#else
+                Type[] typeArgs = t.GetGenericArguments();
+                if (typeArgs.Length != 1 && typeArgs[0] != t) return false;
+#endif
+                    
+                return true;
+            }
+            return false;
         }
 
         internal static bool IdentifyImmutable(TypeModel model, Type declaredType, out MethodInfo builderFactory, out PropertyInfo isEmpty, out PropertyInfo length, out MethodInfo add, out MethodInfo addRange, out MethodInfo finish)
