@@ -12,6 +12,7 @@ To understand how protobuf-net relates to protobuf [see here](https://mgravell.g
 ## Supported Runtimes
 - .NET Framework 2.0+
 - .NET Standard 1.0+ (note that 1.0 is very restricted, and suits iOS etc; use the highest .NET Standard that works for your platform)
+- UAP 10.0(+?)
 
 It is possible to build for more specific TFMs, but *right now* I've simplified the build to those. If you need help
 with a custom build: let me know.
@@ -113,7 +114,8 @@ There is no special significance in the 7 above; it is an integer key, just like
 
 ### .proto file
 
-As an alternative to writing your classes and decorating them, You can generate your types from a .proto schema using [`protogen`](https://protogen.marcgravell.com/).
+As an alternative to writing your classes and decorating them, You can generate your types from a .proto schema using [`protogen`](https://protogen.marcgravell.com/);
+the `protogen` tool is available as a zip from that location, or [as a "global tool"](https://www.nuget.org/packages/protobuf-net.Protogen) (multi-platform).
 
 ### Alternative to attributes
 

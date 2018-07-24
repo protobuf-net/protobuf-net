@@ -15,7 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 	ProjectSection(SolutionItems) = preProject
 		Tools\bcl.proto = Tools\bcl.proto
 		Directory.build.props = Directory.build.props
-		global.json = global.json
+		..\global.json = ..\global.json
 		..\docs\index.md = ..\docs\index.md
 		Tools\protogen.proto = Tools\protogen.proto
 		..\README.md = ..\README.md
@@ -33,7 +33,7 @@ Project("{778DAE3C-4631-46EA-AA77-85C1314464D9}") = "VBTest", "VBTest\VBTest.vbp
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CSharpTest", "CSharpTest\CSharpTest.csproj", "{3C7D830B-7A76-43FD-8FFB-95E9E4231653}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.Protogen", "protobuf-net.Protogen\protobuf-net.Protogen.csproj", "{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Protogen", "protobuf-net.Protogen\protobuf-net.Protogen.csproj", "{D80F8D08-66B1-46C2-B882-7A0CE45B6C2D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

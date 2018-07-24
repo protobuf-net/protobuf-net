@@ -1894,8 +1894,8 @@ namespace ProtoBuf.Meta
                         if(field.IsStatic && field.IsLiteral)
                         {
                             object enumVal;
-#if WINRT || PORTABLE || CF || FX11 || NETSTANDARD1_3 || NETSTANDARD1_4 || PROFILE259
-							enumVal = Convert.ChangeType(field.GetValue(null), Enum.GetUnderlyingType(field.FieldType), System.Globalization.CultureInfo.InvariantCulture);
+#if WINRT || PORTABLE || CF || FX11 || NETSTANDARD1_3 || NETSTANDARD1_4 || PROFILE259 || UAP
+                            enumVal = Convert.ChangeType(field.GetValue(null), Enum.GetUnderlyingType(field.FieldType), System.Globalization.CultureInfo.InvariantCulture);
 #else
                             enumVal = field.GetRawConstantValue();
 #endif
