@@ -3,7 +3,7 @@
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net20;net35;net40;netstandard1.0;netstandard1.3;netstandard2.0;uap10.0</TargetFrameworks>
+    <TargetFrameworks>net20;net35;net40;netstandard1.0;netstandard1.3;netstandard2.0;netcoreapp2.0;netcoreapp2.1;uap10.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
     <!-- new build tools spit these out -->
@@ -12,6 +12,7 @@
     <!-- this is how we will configure the builds relatively cleanly -->
     <ImportLibs>net</ImportLibs>
     <FeatureCompiler>true</FeatureCompiler>
+    <FeatureServiceConfigurationModel>true</FeatureServiceConfigurationModel>
     <FeatureServiceModel>true</FeatureServiceModel>
     <PlatformXmlSerializer>true</PlatformXmlSerializer>
     <PlatformBinaryFormatter>true</PlatformBinaryFormatter>
@@ -46,12 +47,20 @@
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>core</ImportLibs>
-    <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceConfigurationModel>false</FeatureServiceConfigurationModel>
+    <FeatureServiceModel>true</FeatureServiceModel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>core</ImportLibs>
-    <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceConfigurationModel>false</FeatureServiceConfigurationModel>
+    <FeatureServiceModel>true</FeatureServiceModel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
+    <ImportLibs>core</ImportLibs>
+    <FeatureServiceConfigurationModel>false</FeatureServiceConfigurationModel>
+    <FeatureServiceModel>true</FeatureServiceModel>
   </PropertyGroup>
   <!-- apply the configuration options (typical via defines that switch code flows) -->
   <PropertyGroup Condition="'$(FeatureCompiler)' == 'true'">
@@ -59,6 +68,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(FeatureServiceModel)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICEMODEL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(FeatureServiceConfigurationModel)' == 'true'">
+    <DefineConstants>$(DefineConstants);FEAT_SERVICECONFIGMODEL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformXmlSerializer)' == 'true'">
     <DefineConstants>$(DefineConstants);PLAT_XMLSERIALIZER</DefineConstants>
@@ -79,5 +91,6 @@
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
   </ItemGroup>
 </Project>
