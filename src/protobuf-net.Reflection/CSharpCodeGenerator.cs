@@ -540,7 +540,8 @@ namespace ProtoBuf.Reflection
                         break;
                 }
                 var unionType = oneOf.GetUnionType();
-                ctx.WriteLine($"set {{ {fieldName} = new global::ProtoBuf.{unionType}({obj.Number}, value); }}")
+                var cast = obj.type == FieldDescriptorProto.Type.TypeEnum ? "(int)" : "";
+                ctx.WriteLine($"set {{ {fieldName} = new global::ProtoBuf.{unionType}({obj.Number}, {cast}value); }}")
                     .Outdent().WriteLine("}");
 
                 if (ctx.Supports(CSharp6))
