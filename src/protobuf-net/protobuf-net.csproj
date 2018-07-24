@@ -87,17 +87,11 @@
     <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(ImportLibs)' == 'core'">
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
-    <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
-  </ItemGroup>
   <ItemGroup Condition="'$(ImportLibs)' == 'core' and '$(FeatureServiceModel)' == 'true'">
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
   </ItemGroup>
   <ItemGroup Condition="'$(ImportLibs)' == 'core'">
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
     <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
   </ItemGroup>
 </Project>
