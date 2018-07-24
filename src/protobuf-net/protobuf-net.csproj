@@ -12,8 +12,8 @@
     <!-- this is how we will configure the builds relatively cleanly -->
     <ImportLibs>net</ImportLibs>
     <FeatureCompiler>true</FeatureCompiler>
-    <FeatureServiceConfigurationModel>true</FeatureServiceConfigurationModel>
     <FeatureServiceModel>true</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>true</FeatureServiceModelConfiguration>
     <PlatformXmlSerializer>true</PlatformXmlSerializer>
     <PlatformBinaryFormatter>true</PlatformBinaryFormatter>
     <Configurations>Debug;Release;VS</Configurations>
@@ -27,6 +27,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
     <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
     <FeatureCompiler>false</FeatureCompiler>
     <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
     <DefineConstants>$(DefineConstants);COREFX;UAP</DefineConstants>
@@ -35,31 +36,34 @@
     <DefineConstants>$(DefineConstants);PROFILE259;FEAT_SAFE</DefineConstants>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
     <FeatureCompiler>false</FeatureCompiler>
-    <PlatformXmlSerializer>false</PlatformXmlSerializer>
     <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
+    <PlatformXmlSerializer>false</PlatformXmlSerializer>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>core</ImportLibs>
     <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
+    <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>core</ImportLibs>
-    <FeatureServiceConfigurationModel>false</FeatureServiceConfigurationModel>
     <FeatureServiceModel>true</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.0'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>core</ImportLibs>
-    <FeatureServiceConfigurationModel>false</FeatureServiceConfigurationModel>
     <FeatureServiceModel>true</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>core</ImportLibs>
-    <FeatureServiceConfigurationModel>false</FeatureServiceConfigurationModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
     <FeatureServiceModel>true</FeatureServiceModel>
   </PropertyGroup>
   <!-- apply the configuration options (typical via defines that switch code flows) -->
@@ -69,7 +73,7 @@
   <PropertyGroup Condition="'$(FeatureServiceModel)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICEMODEL</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(FeatureServiceConfigurationModel)' == 'true'">
+  <PropertyGroup Condition="'$(FeatureServiceModelConfiguration)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICECONFIGMODEL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformXmlSerializer)' == 'true'">
