@@ -319,7 +319,7 @@ namespace ProtoBuf.Serializers
 
 #else
                 obj = Activator.CreateInstance(constructType
-#if !(CF || PORTABLE  || NETSTANDARD1_3 || NETSTANDARD1_4)
+#if !(CF || PORTABLE  || NETSTANDARD1_3 || NETSTANDARD1_4 || UAP)
                     , nonPublic: true
 #endif
                     );

@@ -1872,7 +1872,7 @@ namespace ProtoBuf.Meta
                         if (field.IsStatic && field.IsLiteral)
                         {
                             object enumVal;
-#if PORTABLE || CF || NETSTANDARD1_3 || NETSTANDARD1_4 || PROFILE259
+#if PORTABLE || CF || NETSTANDARD1_3 || NETSTANDARD1_4 || PROFILE259 || UAP
 							enumVal = Convert.ChangeType(field.GetValue(null), Enum.GetUnderlyingType(field.FieldType), System.Globalization.CultureInfo.InvariantCulture);
 #else
                             enumVal = field.GetRawConstantValue();
