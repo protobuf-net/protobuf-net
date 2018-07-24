@@ -24,13 +24,17 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protogen v1.0.10
+
+- fix error in generated C# when using enums in discriminated unions (#423)
+
+## protobuf-net v2.3.14
+
+- add UAP TFM
+
 ## protogen v1.0.9
 
 - fix #406 - relative and wildcard paths (`*.proto` etc) failed on `netcoreapp2.1`, impacting the "global tool"
-
-## protobuf-net v2.3.14-alpha1
-
-- attempt to add UAP TFM
 
 ## protobuf-net v2.3.13
 

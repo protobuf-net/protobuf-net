@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup>
     <VersionPrefix>2.3.14</VersionPrefix>
-    <ProtoGenVersion>1.0.9</ProtoGenVersion>
-    <VersionSuffix>alpha2</VersionSuffix>
+    <ProtoGenVersion>1.0.10</ProtoGenVersion>
+    <!--<VersionSuffix>alpha1</VersionSuffix>-->
     <RootNamespace>ProtoBuf</RootNamespace>
     <Authors>Marc Gravell</Authors>
     <OutputType>Library</OutputType>
