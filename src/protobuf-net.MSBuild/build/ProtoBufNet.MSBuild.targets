@@ -30,6 +30,8 @@
       ProtoDef="@(ProtoDef)"
       ImportPaths="@(ProtoImportPaths)"
       OutputPath="$(ProtoCodeGenerationRoot)"
+      DefaultNamespace="$(RootNamespace)"
+      Language="$(Language)"
     >
       <Output 
         TaskParameter="ProtoCodeFile"

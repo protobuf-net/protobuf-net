@@ -22,11 +22,6 @@ namespace ProtoBuf.Build
 
         static void Main(string[] args)
         {
-            var inst = MSBuildLocator.RegisterDefaults();
-
-            var c = new ConsoleOutput();
-            var f = new BuildTests(c);
-            f.BuildTest();
         }
     }
 }
