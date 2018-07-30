@@ -8,7 +8,7 @@ using Xunit;
 using ProtoBuf;
 using ProtoBuf.Meta;
 
-//#if (FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER) || (SILVERLIGHT && !PHONE7)
+//#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
 namespace Examples
 {
     using ProtoBuf.ServiceModel;

@@ -18,10 +18,7 @@ namespace ProtoBuf
         internal const int BUFFER_LENGTH = 1024;
         private static readonly CachedBuffer[] Pool = new CachedBuffer[POOL_SIZE];
 
-        internal static byte[] GetBuffer()
-        {
-            return GetBuffer(BUFFER_LENGTH);
-        }
+        internal static byte[] GetBuffer() => GetBuffer(BUFFER_LENGTH);
 
         internal static byte[] GetBuffer(int minSize)
         {
@@ -97,7 +94,7 @@ namespace ProtoBuf
 
             if (copyBytes > 0)
             {
-                Helpers.BlockCopy(buffer, copyFromIndex, newBuffer, 0, copyBytes);
+                Buffer.BlockCopy(buffer, copyFromIndex, newBuffer, 0, copyBytes);
                 ReleaseBufferToPool(ref buffer);
             }
 

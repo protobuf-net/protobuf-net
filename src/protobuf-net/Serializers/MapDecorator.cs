@@ -40,10 +40,10 @@ namespace ProtoBuf.Serializers
 #if PROFILE259
 			foreach(var prop in typeof(TDictionary).GetRuntimeProperties())
 #else
-			foreach(var prop in typeof(TDictionary).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            foreach (var prop in typeof(TDictionary).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
 #endif
-			{
-				if (prop.Name != "Item") continue;
+            {
+                if (prop.Name != "Item") continue;
                 if (prop.PropertyType != typeof(TValue)) continue;
 
                 var args = prop.GetIndexParameters();
@@ -53,12 +53,12 @@ namespace ProtoBuf.Serializers
 #if PROFILE259
 				var method = prop.SetMethod;
 #else
-				var method = prop.GetSetMethod(true);
+                var method = prop.GetSetMethod(true);
 #endif
-				if (method != null)
-				{
-					return method;
-				}
+                if (method != null)
+                {
+                    return method;
+                }
             }
             throw new InvalidOperationException("Unable to resolve indexer for map");
         }
@@ -120,7 +120,7 @@ namespace ProtoBuf.Serializers
         }
 
 #if FEAT_COMPILER
-		protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
+        protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
             Type itemType = typeof(KeyValuePair<TKey, TValue>);
             MethodInfo moveNext, current, getEnumerator = ListDecorator.GetEnumeratorInfo(ctx.Model,
@@ -294,5 +294,5 @@ namespace ProtoBuf.Serializers
             }
         }
 #endif
-	}
+    }
 }

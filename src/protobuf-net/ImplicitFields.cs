@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace ProtoBuf
+﻿namespace ProtoBuf
 {
     /// <summary>
     /// Specifies the method used to infer field tags for members of the type
@@ -21,7 +19,7 @@ namespace ProtoBuf
         /// Public properties and fields are eligible for implicit serialization;
         /// this treats the public API as a contract. Ordering beings from ImplicitFirstTag.
         /// </summary>
-        AllPublic= 1,
+        AllPublic = 1,
         /// <summary>
         /// Public and non-public fields are eligible for implicit serialization;
         /// this acts as a state/implementation serializer. Ordering beings from ImplicitFirstTag.
