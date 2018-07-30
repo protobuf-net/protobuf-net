@@ -747,11 +747,11 @@ namespace ProtoBuf.Meta
             {   // fallback: look for ICollection<T>'s Add(typedObject) method
 
                 bool forceList = listTypeInfo.IsInterface &&
-                    listTypeInfo == model.MapType(typeof(System.Collections.Generic.IEnumerable<>)).MakeGenericType(types)
+                    model.MapType(typeof(System.Collections.Generic.IEnumerable<>)).MakeGenericType(types)
 #if COREFX || PROFILE259
 					.GetTypeInfo()
 #endif
-                    ;
+                    .IsAssignableFrom(listTypeInfo);
 
 #if COREFX || PROFILE259
 				TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
