@@ -370,6 +370,12 @@ namespace ProtoBuf.Serializers
                             ctx.DiscardValue();
                             ctx.Branch(nextTest, true);
                             ctx.MarkLabel(ifMatch);
+                            if (Helpers.IsValueType(serType))
+                            {
+                                ctx.DiscardValue();
+                                ctx.LoadValue(loc);
+                                ctx.CastFromObject(serType);
+                            }
                             ser.EmitWrite(ctx, null);
                             ctx.Branch(startFields, false);
                             ctx.MarkLabel(nextTest);
@@ -684,14 +690,44 @@ namespace ProtoBuf.Serializers
                     // nothing needs doing
                     ctx.MarkLabel(allDone);
                 }
-                ctx.LoadValue(loc);
-                ctx.Cast(serType);
+
+                if (Helpers.IsValueType(serType))
+                {
+                    Compiler.CodeLabel initValue = ctx.DefineLabel();
+                    Compiler.CodeLabel hasValue = ctx.DefineLabel();
+                    using (Compiler.Local emptyValue = new Compiler.Local(ctx, serType))
+                    {
+                        ctx.LoadValue(loc);
+                        ctx.BranchIfFalse(initValue, false);
+
+                        ctx.LoadValue(loc);
+                        ctx.CastFromObject(serType);
+                        ctx.Branch(hasValue, false);
+
+                        ctx.MarkLabel(initValue);
+                        ctx.InitLocal(serType, emptyValue);
+                        ctx.LoadValue(emptyValue);
+
+                        ctx.MarkLabel(hasValue);
+                    }
+                }
+                else
+                {
+                    ctx.LoadValue(loc);
+                    ctx.Cast(serType);
+                }
+
                 serializer.EmitRead(ctx, null);
 
             }
 
             if (serializer.ReturnsValue)
             {   // update the variable
+                if (Helpers.IsValueType(serType))
+                {
+                    // but box it first in case of value type
+                    ctx.CastToObject(serType);
+                }
                 ctx.StoreValue(loc);
             }
             ctx.Branch(@continue, false); // "continue"
