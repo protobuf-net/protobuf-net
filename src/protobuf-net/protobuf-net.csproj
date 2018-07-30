@@ -13,12 +13,10 @@
     <ImportLibs>net</ImportLibs>
     <FeatureCompiler>true</FeatureCompiler>
     <FeatureServiceModel>true</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>true</FeatureServiceModelConfiguration>
     <PlatformXmlSerializer>true</PlatformXmlSerializer>
     <PlatformBinaryFormatter>true</PlatformBinaryFormatter>
     <Configurations>Debug;Release;VS</Configurations>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'VS'">
-    <TargetFrameworks>$(TargetFrameworks);net20;net35</TargetFrameworks>
   </PropertyGroup>
   <!-- define configuration per-platform -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20'">
@@ -26,6 +24,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
     <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
     <FeatureCompiler>false</FeatureCompiler>
     <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
     <DefineConstants>$(DefineConstants);COREFX;UAP</DefineConstants>
@@ -34,24 +33,29 @@
     <DefineConstants>$(DefineConstants);PROFILE259;FEAT_SAFE</DefineConstants>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
     <FeatureCompiler>false</FeatureCompiler>
-    <PlatformXmlSerializer>false</PlatformXmlSerializer>
     <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
+    <PlatformXmlSerializer>false</PlatformXmlSerializer>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>standard</ImportLibs>
     <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
+    <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>standard</ImportLibs>
-    <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceModel>true</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>none</ImportLibs>
-    <FeatureServiceModel>false</FeatureServiceModel>
+    <FeatureServiceModel>true</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
   </PropertyGroup>
   <!-- apply the configuration options (typical via defines that switch code flows) -->
   <PropertyGroup Condition="'$(FeatureCompiler)' == 'true'">
@@ -59,6 +63,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(FeatureServiceModel)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICEMODEL</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(FeatureServiceModelConfiguration)' == 'true'">
+    <DefineConstants>$(DefineConstants);FEAT_SERVICECONFIGMODEL</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformXmlSerializer)' == 'true'">
     <DefineConstants>$(DefineConstants);PLAT_XMLSERIALIZER</DefineConstants>
@@ -75,9 +82,14 @@
     <PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
     <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.3.0" />
   </ItemGroup>
+  <ItemGroup Condition="'$(ImportLibs)' == 'none' and '$(FeatureServiceModel)' == 'true'">
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(ImportLibs)' == 'standard' and '$(FeatureServiceModel)' == 'true'">
+    <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+  </ItemGroup>
   <ItemGroup Condition="'$(ImportLibs)' == 'standard'">
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
-    <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
-    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />    
   </ItemGroup>
 </Project>

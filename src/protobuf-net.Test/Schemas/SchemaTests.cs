@@ -203,6 +203,7 @@ namespace ProtoBuf.Schemas
                 psi.Arguments = $"--descriptor_set_out={protocBinPath} {path}";
                 if (includeComments) psi.Arguments += " --include_source_info";
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
+                psi.CreateNoWindow = true;
                 psi.UseShellExecute = false;
                 psi.WorkingDirectory = schemaPath;
                 proc.Start();
@@ -255,6 +256,7 @@ namespace ProtoBuf.Schemas
                     psi.FileName = "protoc";
                     psi.Arguments = $"--csharp_out={Path.GetDirectoryName(protocBinPath)} {path}";
                     psi.RedirectStandardError = psi.RedirectStandardOutput = true;
+                    psi.CreateNoWindow = true;
                     psi.UseShellExecute = false;
                     psi.WorkingDirectory = schemaPath;
                     proc.Start();

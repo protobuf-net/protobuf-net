@@ -355,6 +355,7 @@ namespace protogen.site.Controllers
                 psi.FileName = exePath;
                 psi.Arguments = arguments;
                 if (!string.IsNullOrEmpty(workingDir)) psi.WorkingDirectory = workingDir;
+                psi.CreateNoWindow = true;
                 psi.RedirectStandardError = psi.RedirectStandardOutput = true;
                 psi.UseShellExecute = false;
                 proc.Start();
