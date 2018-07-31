@@ -123,7 +123,7 @@ namespace ProtoBuf.ServiceModel
                     }
                     else
                     {
-                        using (ProtoWriter protoWriter = new ProtoWriter(ms, model, null))
+                        using (ProtoWriter protoWriter = ProtoWriter.Create(ms, model, null))
                         {
                             model.Serialize(key, graph, protoWriter);
                         }

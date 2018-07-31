@@ -1207,7 +1207,7 @@ namespace Google.Protobuf.Reflection
             var target = extension.BeginAppend();
             try
             {
-                using (var writer = new ProtoWriter(target, null, null))
+                using (var writer = ProtoWriter.Create(target, null, null))
                 {
                     var hive = OptionHive.Build(options.UninterpretedOptions);
 
@@ -1267,7 +1267,7 @@ namespace Google.Protobuf.Reflection
             {
                 if (options == null || options.Count == 0) return null;
 
-                var root = new OptionHive(null, false, default(Token));
+                var root = new OptionHive(null, false, default);
                 foreach (var option in options)
                 {
                     var level = root;
@@ -1913,7 +1913,7 @@ namespace Google.Protobuf.Reflection
                 case "uint32": return Assign(Type.TypeUint32, out @type);
                 case "uint64": return Assign(Type.TypeUint64, out @type);
                 default:
-                    type = default(Type);
+                    type = default;
                     return false;
             }
         }
@@ -1961,7 +1961,7 @@ namespace Google.Protobuf.Reflection
             }
 
             private IMessage message;
-            private string extendee;
+            private readonly string extendee;
 
             public DummyExtensions(string extendee, IMessage message)
             {

@@ -25,13 +25,13 @@ namespace Examples
 
             var ms = new MemoryStream();
             var obj = new Foo { Bar = "abc", Blap = "abc" };
-            using (var writer = new ProtoWriter(ms, model, null))
+            using (var writer = ProtoWriter.Create(ms, model, null))
             {
                 writer.Model.Serialize(writer, obj);
             }
             ms.Position = 0;
 
-            return new ProtoReader(ms, model, null);
+            return ProtoReader.Create(ms, model, null);
         }
         [Fact]
         public void ByDefaultStringsShouldBeInterned()

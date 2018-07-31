@@ -98,7 +98,7 @@ namespace LongDataTests
             {
                 Console.WriteLine($"Verifying {file.Length >> 20} MiB...");
                 watch = Stopwatch.StartNew();
-                using (var reader = new ProtoReader(file, null, null))
+                using (var reader = ProtoReader.Create(file, null, null))
                 {
                     int i = -1;
                     try

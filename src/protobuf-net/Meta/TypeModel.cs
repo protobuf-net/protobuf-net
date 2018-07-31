@@ -215,7 +215,7 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
-            using (ProtoWriter writer = new ProtoWriter(dest, this, context))
+            using (ProtoWriter writer = ProtoWriter.Create(dest, this, context))
             {
                 writer.SetRootObject(value);
                 SerializeCore(writer, value);
@@ -538,7 +538,7 @@ namespace ProtoBuf.Meta
                 type = MapType(value.GetType());
             }
             int key = GetKey(ref type);
-            using (ProtoWriter writer = new ProtoWriter(dest, this, context))
+            using (ProtoWriter writer = ProtoWriter.Create(dest, this, context))
             {
                 switch (style)
                 {
@@ -1379,7 +1379,7 @@ namespace ProtoBuf.Meta
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    using (ProtoWriter writer = new ProtoWriter(ms, this, null))
+                    using (ProtoWriter writer = ProtoWriter.Create(ms, this, null))
                     {
                         writer.SetRootObject(value);
                         Serialize(key, value, writer);
@@ -1410,7 +1410,7 @@ namespace ProtoBuf.Meta
             }
             using (MemoryStream ms = new MemoryStream())
             {
-                using (ProtoWriter writer = new ProtoWriter(ms, this, null))
+                using (ProtoWriter writer = ProtoWriter.Create(ms, this, null))
                 {
                     if (!TrySerializeAuxiliaryType(writer, type, DataFormat.Default, Serializer.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
                     writer.Close();

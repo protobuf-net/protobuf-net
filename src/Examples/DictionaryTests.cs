@@ -78,10 +78,12 @@ namespace Examples.Dictionary
         [Fact]
         public void RoundtripDictionary()
         {
-            var lookup = new Dictionary<int,string>();
-            lookup[0] = "abc";
-            lookup[4] = "def";
-            lookup[7] = "abc";
+            var lookup = new Dictionary<int, string>
+            {
+                [0] = "abc",
+                [4] = "def",
+                [7] = "abc"
+            };
 
             var clone = Serializer.DeepClone(lookup);
             
@@ -95,8 +97,7 @@ namespace Examples.Dictionary
             Assert.Equal(expected.Count, actual.Count); //, "Count");
             foreach (var pair in expected)
             {
-                TValue value;
-                Assert.True(actual.TryGetValue(pair.Key, out value)); //, "Missing: " + pair.Key);
+                Assert.True(actual.TryGetValue(pair.Key, out TValue value)); //, "Missing: " + pair.Key);
                 Assert.Equal(pair.Value, value); //, "Value: " + pair.Key);
             }
         }
@@ -265,10 +266,9 @@ namespace Examples.Dictionary
             };
 
 
-            int s1, s2, s3, d1, d2, d3;
-            int l1 = BulkTest(model, o1, out s1, out d1);
-            int l2 = BulkTest(model, o2, out s2, out d2);
-            int l3 = BulkTest(model, o2, out s3, out d3);
+            int l1 = BulkTest(model, o1, out int s1, out int d1);
+            int l2 = BulkTest(model, o2, out int s2, out int d2);
+            int l3 = BulkTest(model, o2, out int s3, out int d3);
 
             Console.WriteLine("Bytes (props)\t" + l1);
             Console.WriteLine("Ser (props)\t" + s1);
@@ -280,7 +280,7 @@ namespace Examples.Dictionary
             Console.WriteLine("Ser (kv-grouped)\t" + s3);
             Console.WriteLine("Deser (kv-grouped)\t" + d3);
 
-            var pw = new ProtoWriter(Stream.Null, null, null);
+            var pw = ProtoWriter.Create(Stream.Null, null, null);
             Stopwatch watch = Stopwatch.StartNew();
             for (int i = 0; i < LOOP; i++ ) {
                 ProtoWriter.WriteFieldHeader(1, WireType.String, pw);

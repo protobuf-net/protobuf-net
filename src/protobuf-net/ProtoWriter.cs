@@ -432,6 +432,18 @@ namespace ProtoBuf
         /// <param name="dest">The destination stream</param>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
+        public static ProtoWriter Create(Stream dest, TypeModel model, SerializationContext context = null)
+#pragma warning disable CS0618
+            => new ProtoWriter(dest, model, context);
+#pragma warning restore CS0618
+
+        /// <summary>
+        /// Creates a new writer against a stream
+        /// </summary>
+        /// <param name="dest">The destination stream</param>
+        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
+        /// <param name="context">Additional context about this serialization operation</param>
+        [Obsolete("Please use ProtoWriter.Create; this API may be removed in a future version", error: false)]
         public ProtoWriter(Stream dest, TypeModel model, SerializationContext context)
         {
             if (dest == null) throw new ArgumentNullException("dest");

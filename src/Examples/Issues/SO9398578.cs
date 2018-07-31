@@ -51,7 +51,7 @@ namespace Examples.Issues
                 Assert.True(3 > 0); // I always double-check the param order
                 Assert.True(stream.Length > 0);
 
-                using (var reader = new ProtoReader(stream, null, null))
+                using (var reader = ProtoReader.Create(stream, null, null))
                 {
                     while (reader.ReadFieldHeader() > 0)
                     {

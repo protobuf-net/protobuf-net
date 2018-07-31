@@ -44,6 +44,7 @@ namespace ProtoBuf
         /// <param name="source">The source stream</param>
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
+        [Obsolete("Please use ProtoReader.Create; this API may be removed in a future version", error: false)]
         public ProtoReader(Stream source, TypeModel model, SerializationContext context)
         {
 
@@ -67,6 +68,7 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+        [Obsolete("Please use ProtoReader.Create; this API may be removed in a future version", error: false)]
         public ProtoReader(Stream source, TypeModel model, SerializationContext context, int length)
         {
             Init(this, source, model, context, length);
@@ -79,6 +81,7 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+        [Obsolete("Please use ProtoReader.Create; this API may be removed in a future version", error: false)]
         public ProtoReader(Stream source, TypeModel model, SerializationContext context, long length)
         {
             Init(this, source, model, context, length);
@@ -467,8 +470,10 @@ namespace ProtoBuf
             if (value.Length == 0) return "";
             if (stringInterner == null)
             {
-                stringInterner = new Dictionary<string, string>();
-                stringInterner.Add(value, value);
+                stringInterner = new Dictionary<string, string>
+                {
+                    { value, value }
+                };
             }
             else if (stringInterner.TryGetValue(value, out string found))
             {
@@ -879,7 +884,7 @@ namespace ProtoBuf
                 case WireType.String:
                     int len = (int)reader.ReadUInt32Variant(false);
                     reader.wireType = WireType.None;
-                    if (len == 0) return value == null ? EmptyBlob : value;
+                    if (len == 0) return value ?? EmptyBlob;
                     int offset;
                     if (value == null || value.Length == 0)
                     {
@@ -1215,7 +1220,7 @@ namespace ProtoBuf
             try
             {
                 //TODO: replace this with stream-based, buffered raw copying
-                using (ProtoWriter writer = new ProtoWriter(dest, model, null))
+                using (ProtoWriter writer = ProtoWriter.Create(dest, model, null))
                 {
                     AppendExtensionField(writer);
                     writer.Close();
@@ -1349,14 +1354,23 @@ namespace ProtoBuf
 
         internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, int len)
             => Create(source, model, context, (long)len);
-        internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, long len)
+        /// <summary>
+        /// Creates a new reader against a stream
+        /// </summary>
+        /// <param name="source">The source stream</param>
+        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+        /// <param name="context">Additional context about this serialization operation</param>
+        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+        public static ProtoReader Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
         {
             ProtoReader reader = GetRecycled();
             if (reader == null)
             {
-                return new ProtoReader(source, model, context, len);
+#pragma warning disable CS0618
+                return new ProtoReader(source, model, context, length);
+#pragma warning restore CS0618
             }
-            Init(reader, source, model, context, len);
+            Init(reader, source, model, context, length);
             return reader;
         }
 

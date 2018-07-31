@@ -102,7 +102,7 @@ namespace ProtoBuf.unittest.Serializers
         {
             using (var ms = new MemoryStream())
             {
-                using (var pw = new ProtoWriter(ms, RuntimeTypeModel.Default, null))
+                using (var pw = ProtoWriter.Create(ms, RuntimeTypeModel.Default, null))
                 {
                     action(pw);
                 }

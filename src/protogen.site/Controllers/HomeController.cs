@@ -137,7 +137,7 @@ namespace protogen.site.Controllers
             private DecodeModel(byte[] data, bool deep, int offset, int count, int skipField = 0)
             {
                 this.data = data == null
-                    ? default(ArraySegment<byte>)
+                    ? default
                     : new ArraySegment<byte>(data, offset, count);
                 Deep = deep;
                 SkipField = skipField;
@@ -160,7 +160,7 @@ namespace protogen.site.Controllers
             public ProtoReader GetReader()
             {
                 var ms = new MemoryStream(data.Array, data.Offset, data.Count, false);
-                return new ProtoReader(ms, null, null);
+                return ProtoReader.Create(ms, null, null);
             }
             public bool ContainsValue => data.Array != null;
             public bool CouldBeProto()
