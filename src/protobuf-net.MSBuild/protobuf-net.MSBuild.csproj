@@ -6,6 +6,7 @@
     <AssemblyName>ProtoBufNet.MSBuild</AssemblyName>
     <!-- we copy the output manually below-->
     <IncludeBuildOutput>false</IncludeBuildOutput>
+    <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

@@ -5,6 +5,7 @@
     <TargetFramework>net461</TargetFramework>
     <RootNamespace>ProtoBuf.Build</RootNamespace>
     <GenerateProgramFile>false</GenerateProgramFile>
+    <NoWarn>CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
