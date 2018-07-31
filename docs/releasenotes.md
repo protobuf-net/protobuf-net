@@ -24,6 +24,13 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
+## protobuf-net v2.3.15
+
+- merge #412/fix #408 - `ReadObject`/`WriteObject` failed on value types
+- merge #421 - support `IReadOnlyCollection` members
+- merge #424 - make WCF configuration features available on TFMs that support them
+- merge #396 - remove unnecessary #if defs
+
 ## protogen v1.0.10
 
 - fix error in generated C# when using enums in discriminated unions (#423)
