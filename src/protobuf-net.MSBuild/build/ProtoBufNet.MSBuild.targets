@@ -1,0 +1,47 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask AssemblyFile="$(ProtoBufMSBuildAssembly)" TaskName="GenerateProtoBufCode"/>
+
+  <ItemGroup>
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)ProtoBufNet.MSBuild.xaml" />
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)ProtoBufNet.MSBuild.ContentType.xaml" />
+    <AvailableItemName Include="ProtoDef"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+
+    <CoreCompileDependsOn>
+      GenerateProtoCode;
+      $(CoreCompileDependsOn)
+    </CoreCompileDependsOn>
+
+  </PropertyGroup>
+
+  <Target 
+    Name="GenerateProtoCode"
+		BeforeTargets="BeforeBuild"
+		Condition="'@(ProtoDef)' != ''"
+  >
+    <PropertyGroup>
+      <ProtoCodeGenerationRoot>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)</ProtoCodeGenerationRoot>
+    </PropertyGroup>    
+    
+    <GenerateProtoBufCode
+      ProtoDef="@(ProtoDef)"
+      ImportPaths="@(ProtoImportPaths)"
+      OutputPath="$(ProtoCodeGenerationRoot)"
+      DefaultNamespace="$(RootNamespace)"
+      Language="$(Language)"
+    >
+      <Output 
+        TaskParameter="ProtoCodeFile"
+				ItemName="ProtoCodeFile"/>
+    </GenerateProtoBufCode>
+
+    <ItemGroup>
+      <Compile 
+        Include="@(ProtoCodeFile)"/>
+    </ItemGroup>
+       
+  </Target>
+</Project>

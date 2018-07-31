@@ -1,0 +1,20 @@
+﻿syntax = "proto2";
+
+enum Foo {
+  A = 1;
+  B = 2;
+  C = 0;
+}
+enum Bar {
+  D = 0;
+  E = 1;
+  F = 2;
+}
+message EnumFirstIsNonZero {
+  optional Foo optional = 1;
+  required Foo required = 2;
+}
+message EnumFirstIsZero {
+  optional Bar optional = 1;
+  required Bar required = 2;
+}

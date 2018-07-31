@@ -1,0 +1,3 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!-- This file is to prevent discovery of higher-level Directory.Build.targets -->
+</Project>

@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ProjectSchemaDefinitions 
+    xmlns="http://schemas.microsoft.com/build/2009/properties">
+
+    <ContentType
+        Name="ProtoDef" 
+        DisplayName="protobuf-net definition" 
+        ItemType="ProtoDef" />
+
+    <ItemType 
+        Name="ProtoDef" 
+        DisplayName="protobuf-net definition"/>
+
+    <FileExtension 
+        Name=".proto" 
+        ContentType="ProtoDef" />
+
+</ProjectSchemaDefinitions>
