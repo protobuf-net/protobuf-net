@@ -21,9 +21,10 @@ package Examples.Issues;
 
 message Animal {
    optional int32 NumberOfLegs = 1 [default = 0];
-   // the following represent sub-types; at most 1 should have a value
-   optional Cat Cat = 2;
-   optional Dog Dog = 3;
+   oneof subtype {
+      Cat Cat = 2;
+      Dog Dog = 3;
+   }
 }
 message Cat {
    repeated Animal AnimalsHunted = 1;

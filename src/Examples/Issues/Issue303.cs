@@ -27,8 +27,9 @@ package Examples.Issues;
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
-   // the following represent sub-types; at most 1 should have a value
-   optional cat cat = 4;
+   oneof subtype {
+      cat cat = 4;
+   }
 }
 message cat {
    repeated animal animalsHunted = 1;
@@ -52,8 +53,9 @@ package Examples.Issues;
 
 message animal {
    int32 numberOfLegs = 1; // default value could not be applied: 4
-   // the following represent sub-types; at most 1 should have a value
-   cat cat = 4;
+   oneof subtype {
+      cat cat = 4;
+   }
 }
 message cat {
    repeated animal animalsHunted = 1;
@@ -77,8 +79,9 @@ message vegetable {
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
-   // the following represent sub-types; at most 1 should have a value
-   optional cat cat = 4;
+   oneof subtype {
+      cat cat = 4;
+   }
 }
 message cat {
    repeated animal animalsHunted = 1;
@@ -104,8 +107,9 @@ package Examples.Issues;
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
-   // the following represent sub-types; at most 1 should have a value
-   optional cat cat = 4;
+   oneof subtype {
+      cat cat = 4;
+   }
 }
 message cat {
    repeated animal animalsHunted = 1;
@@ -126,8 +130,9 @@ package Examples.Issues;
 
 message animal {
    optional int32 numberOfLegs = 1 [default = 4];
-   // the following represent sub-types; at most 1 should have a value
-   optional cat cat = 4;
+   oneof subtype {
+      cat cat = 4;
+   }
 }
 message cat {
    repeated animal animalsHunted = 1;

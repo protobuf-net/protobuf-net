@@ -85,9 +85,10 @@ message ExampleContract {
 }
 message Info {
    optional string Name = 1;
-   // the following represent sub-types; at most 1 should have a value
-   optional Info_Type1 Info_Type1 = 2;
-   optional Info_Type2 Info_Type2 = 3;
+   oneof subtype {
+      Info_Type1 Info_Type1 = 2;
+      Info_Type2 Info_Type2 = 3;
+   }
 }
 message Info_Type1 {
    optional Type1 Details = 2;
@@ -229,8 +230,9 @@ message MySurrogate {
 package Examples;
 
 message Animal {
-   // the following represent sub-types; at most 1 should have a value
-   optional Cat Cat = 1;
+   oneof subtype {
+      Cat Cat = 1;
+   }
 }
 message Cat {
 }
@@ -422,13 +424,15 @@ package Examples;
 
 message A {
    optional int32 DataA = 1 [default = 0];
-   // the following represent sub-types; at most 1 should have a value
-   optional B B = 15;
+   oneof subtype {
+      B B = 15;
+   }
 }
 message B {
    optional int32 DataB = 2 [default = 0];
-   // the following represent sub-types; at most 1 should have a value
-   optional C C = 16;
+   oneof subtype {
+      C C = 16;
+   }
 }
 message C {
    optional int32 DataC = 3 [default = 0];

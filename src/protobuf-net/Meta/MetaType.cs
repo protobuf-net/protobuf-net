@@ -2008,16 +2008,25 @@ namespace ProtoBuf.Meta
                 }
                 if (subTypes != null && subTypes.Count != 0)
                 {
-                    NewLine(builder, indent + 1).Append("// the following represent sub-types; at most 1 should have a value");
                     SubType[] subTypeArr = new SubType[subTypes.Count];
                     subTypes.CopyTo(subTypeArr, 0);
                     Array.Sort(subTypeArr, SubType.Comparer.Default);
-                    foreach (SubType subType in subTypeArr)
+                    string[] fieldNames = new string[subTypeArr.Length];
+                    for(int i = 0; i < subTypeArr.Length;i++)
+                        fieldNames[i] = subTypeArr[i].DerivedType.GetSchemaTypeName();
+
+                    string fieldName = "subtype";
+                    while (Array.IndexOf(fieldNames, fieldName) >= 0)
+                        fieldName = "_" + fieldName;
+
+                    NewLine(builder, indent + 1).Append("oneof ").Append(fieldName).Append(" {");
+                    for(int i = 0; i < subTypeArr.Length; i++)
                     {
-                        string subTypeName = subType.DerivedType.GetSchemaTypeName();
-                        NewLine(builder, indent + 1).Append((syntax == ProtoSyntax.Proto2 ? "optional " : "")).Append(subTypeName)
-                            .Append(" ").Append(subTypeName).Append(" = ").Append(subType.FieldNumber).Append(';');
+                        var subTypeName = fieldNames[i];
+                        NewLine(builder, indent + 2).Append(subTypeName)
+                               .Append(" ").Append(subTypeName).Append(" = ").Append(subTypeArr[i].FieldNumber).Append(';');
                     }
+                    NewLine(builder, indent + 1).Append("}");
                 }
                 NewLine(builder, indent).Append('}');
             }
