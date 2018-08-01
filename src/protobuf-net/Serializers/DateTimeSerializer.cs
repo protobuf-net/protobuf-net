@@ -4,19 +4,21 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class DateTimeSerializer : IProtoSerializer
+    internal sealed class DateTimeSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(DateTime);
+        private static readonly Type expectedType = typeof(DateTime);
+
         public Type ExpectedType => expectedType;
 
         bool IProtoSerializer.RequiresOldValue => false;
         bool IProtoSerializer.ReturnsValue => true;
 
         private readonly bool includeKind, wellKnown;
+
         public DateTimeSerializer(DataFormat dataFormat, ProtoBuf.Meta.TypeModel model)
         {
             wellKnown = dataFormat == DataFormat.WellKnown;
-            includeKind = model != null && model.SerializeDateTimeKind();
+            includeKind = model?.SerializeDateTimeKind() == true;
         }
 
         public object Read(object value, ProtoReader source)
@@ -48,9 +50,10 @@ namespace ProtoBuf.Serializers
                 wellKnown ? nameof(BclHelpers.WriteTimestamp)
                 : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            if (wellKnown) ctx.LoadValue(valueFrom);
+            if (wellKnown) ctx.LoadValue(entity);
             ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)),
                 wellKnown ? nameof(BclHelpers.ReadTimestamp) : nameof(BclHelpers.ReadDateTime),
                 ExpectedType);
