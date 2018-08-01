@@ -63,6 +63,7 @@ message ProtogenMethodOptions {
 }
 message ProtogenOneofOptions {
   string name = 1;
+  bool isSubType = 2 [(.protobuf_net.fieldopt).name = "IsSubType"];
 }
 
 option (.protobuf_net.fileopt) = {

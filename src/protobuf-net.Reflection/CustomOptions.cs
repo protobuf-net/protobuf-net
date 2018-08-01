@@ -151,6 +151,9 @@ namespace ProtoBuf.Reflection
         [global::System.ComponentModel.DefaultValue("")]
         public string Name { get; set; } = "";
 
+        [global::ProtoBuf.ProtoMember(2, Name = @"isSubType")]
+        public bool IsSubType { get; set; }
+
     }
 
     [global::ProtoBuf.ProtoContract()]
