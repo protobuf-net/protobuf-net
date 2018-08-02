@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>ProtoBuf</RootNamespace>
-    <AssemblyName>ProtoBufNet.MSBuild</AssemblyName>
     <!-- we copy the output manually below-->
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>protobuf-net.MSBuild</PackageId>
