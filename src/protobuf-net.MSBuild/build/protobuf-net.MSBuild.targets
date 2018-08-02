@@ -3,8 +3,8 @@
   <UsingTask AssemblyFile="$(ProtoBufMSBuildAssembly)" TaskName="GenerateProtoBufCode"/>
 
   <ItemGroup>
-    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)ProtoBufNet.MSBuild.xaml" />
-    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)ProtoBufNet.MSBuild.ContentType.xaml" />
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)protobuf-net.MSBuild.xaml" />
+    <PropertyPageSchema Include="$(MSBuildThisFileDirectory)protobuf-net.MSBuild.ContentType.xaml" />
     <AvailableItemName Include="ProtoDef"/>
   </ItemGroup>
 
