@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 		Tools\protogen.proto = Tools\protogen.proto
 		..\README.md = ..\README.md
 		..\docs\releasenotes.md = ..\docs\releasenotes.md
+		version.json = version.json
 		..\docs\version.md = ..\docs\version.md
 	EndProjectSection
 EndProject
@@ -37,7 +38,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.Protogen", "pr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.MSBuild", "protobuf-net.MSBuild\protobuf-net.MSBuild.csproj", "{7A015B58-F3D4-47B1-8F54-F2011F6FE962}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "protobuf-net.MSBuild.Test", "protobuf-net.MSBuild.Test\protobuf-net.MSBuild.Test.csproj", "{1DEA1CF1-FDDC-4A44-BEEE-5E2C8CDB305F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.MSBuild.Test", "protobuf-net.MSBuild.Test\protobuf-net.MSBuild.Test.csproj", "{1DEA1CF1-FDDC-4A44-BEEE-5E2C8CDB305F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
