@@ -33,6 +33,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - update `protoc` to 3.6.1
 - give advance warning of possible removal of ProtoReader/ProtoWriter constructors
 - codegen (C#): implement "listset" option to control whether lists/maps get `set` accessors
+- `GetProto<T>` now emits `oneof`-style .proto syntax for inheritance
 
 ## protobuf-net v2.3.15
 
