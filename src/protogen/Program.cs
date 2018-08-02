@@ -115,9 +115,12 @@ namespace protogen
                 }
                 else if (version)
                 {
-                    Console.WriteLine($"protogen {GetVersion<Program>()}");
-                    Console.WriteLine($"protobuf-net {GetVersion<ProtoReader>()}");
-                    Console.WriteLine($"protobuf-net.Reflection {GetVersion<FileDescriptorSet>()}");
+                    var ver = GetVersion<Program>();
+                    Console.WriteLine($"protogen {ver}");
+                    var tmp = GetVersion<ProtoReader>();
+                    if (tmp != ver) Console.WriteLine($"protobuf-net {tmp}");
+                    tmp = GetVersion<FileDescriptorSet>();
+                    if (tmp != ver) Console.WriteLine($"protobuf-net.Reflection {tmp}");
                     return 0;
                 }
                 else if (inputFiles.Count == 0)

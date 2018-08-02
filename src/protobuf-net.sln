@@ -20,6 +20,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{0A6E81
 		Tools\protogen.proto = Tools\protogen.proto
 		..\README.md = ..\README.md
 		..\docs\releasenotes.md = ..\docs\releasenotes.md
+		Shared.ruleset = Shared.ruleset
 		version.json = version.json
 		..\docs\version.md = ..\docs\version.md
 	EndProjectSection

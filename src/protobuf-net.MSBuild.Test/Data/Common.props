@@ -2,9 +2,9 @@
 	<PropertyGroup>
     <ProtoBuildAsmRoot>$(MSBuildThisFileDirectory)../</ProtoBuildAsmRoot>
     <ProtoBuildRoot>$(MSBuildThisFileDirectory)../../../../../protobuf-net.MSBuild/build/</ProtoBuildRoot>
-    <ProtoBufMSBuildAssembly>$(ProtoBuildAsmRoot)ProtoBufNet.MSBuild.dll</ProtoBufMSBuildAssembly>
-    <ProtoBuildPropsFile>$(ProtoBuildRoot)ProtoBufNet.MSBuild.props</ProtoBuildPropsFile>
-    <ProtoBuildTargetsFile>$(ProtoBuildRoot)ProtoBufNet.MSBuild.targets</ProtoBuildTargetsFile>
+    <ProtoBufMSBuildAssembly>$(ProtoBuildAsmRoot)protobuf-net.MSBuild.dll</ProtoBufMSBuildAssembly>
+    <ProtoBuildPropsFile>$(ProtoBuildRoot)protobuf-net.MSBuild.props</ProtoBuildPropsFile>
+    <ProtoBuildTargetsFile>$(ProtoBuildRoot)protobuf-net.MSBuild.targets</ProtoBuildTargetsFile>
 	</PropertyGroup>
 
   <ItemGroup>

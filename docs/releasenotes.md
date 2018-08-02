@@ -18,11 +18,20 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - see: [protobuf-net: large data, and the future](https://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
 - gRPC?
 
-## v2.4.0 (not yet started)
+## v2.5.0 (not yet started)
 
 - build-time tooling
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
+
+## protobuf-net v2.4.? (unreleased)
+
+- new MSBuild .proto tools added (huge thanks go to Mark Pflug here)
+- switch to git-based versioning implementation; versioning now unified over all tools
+- extensions codegen (C#): add "get" and "add" implementations for "repeated"; add "set" implementations for regular
+- update "protoc" to 3.6.1
+- give advance warning of possible removal of ProtoReader/ProtoWriter constructors
+
 
 ## protobuf-net v2.3.15
 

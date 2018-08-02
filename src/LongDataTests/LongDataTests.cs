@@ -67,7 +67,9 @@ namespace LongDataTests
                 obj.Items.Add(new MyModelInner { Id = i, SomeString = "a long string that will be repeated lots and lots of times in the output data" });
             return obj;
         }
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip="long running")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         public void CanSerializeLongData()
         {
 
