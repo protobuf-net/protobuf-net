@@ -77,13 +77,18 @@ namespace protogen.site.Controllers
 
             public string LibVersion => _libVersion;
 
-            static readonly string _libVersion =
-                GetVersion(typeof(TypeModel)) + "/" + GetVersion(typeof(CodeGenerator));
+            static readonly string _libVersion;
+
+            static IndexModel()
+            {
+                var tmVer = GetVersion(typeof(TypeModel));
+                var cgVer = GetVersion(typeof(CodeGenerator));
+                _libVersion = tmVer == cgVer ? tmVer : (tmVer + "/" + cgVer);
+            }
             static string GetVersion(Type type)
             {
                 var assembly = type.GetTypeInfo().Assembly;
-                return assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-                    ?? assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
+                return assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
                     ?? assembly.GetName().Version.ToString();
             }
         }

@@ -521,7 +521,7 @@ namespace ProtoBuf.Serializers
             }
 
             Helpers.DebugAssert(((IProtoTypeSerializer)this).HasCallbacks(callbackType), "Shouldn't be calling this if there is nothing to do");
-            MethodInfo method = callbacks == null ? null : callbacks[callbackType];
+            MethodInfo method = callbacks?[callbackType];
             if (method == null && !actuallyHasInheritance)
             {
                 return;

@@ -2060,7 +2060,7 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Boolean: return ((bool)value) == false;
                     case ProtoTypeCode.Byte: return ((byte)value) == (byte)0;
                     case ProtoTypeCode.Char: return ((char)value) == (char)0;
-                    case ProtoTypeCode.DateTime: return ((DateTime)value) == default(DateTime);
+                    case ProtoTypeCode.DateTime: return ((DateTime)value) == default;
                     case ProtoTypeCode.Decimal: return ((decimal)value) == 0M;
                     case ProtoTypeCode.Double: return ((double)value) == (double)0;
                     case ProtoTypeCode.Int16: return ((short)value) == (short)0;

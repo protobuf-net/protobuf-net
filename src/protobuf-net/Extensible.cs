@@ -173,7 +173,7 @@ namespace ProtoBuf
         /// <returns>True if data for the field was present, false otherwise.</returns>
         public static bool TryGetValue<TValue>(IExtensible instance, int tag, DataFormat format, bool allowDefinedTag, out TValue value)
         {
-            value = default(TValue);
+            value = default;
             bool set = false;
             foreach (TValue val in ExtensibleUtil.GetExtendedValues<TValue>(instance, tag, format, true, allowDefinedTag))
             {

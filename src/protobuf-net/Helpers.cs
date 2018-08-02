@@ -556,7 +556,7 @@ namespace ProtoBuf
 #if PORTABLE || COREFX || PROFILE259
             if (member is PropertyInfo prop) return prop.PropertyType;
             FieldInfo fld = member as FieldInfo;
-            return fld == null ? null : fld.FieldType;
+            return fld?.FieldType;
 #else
             switch (member.MemberType)
             {
@@ -586,8 +586,7 @@ namespace ProtoBuf
         internal static byte[] GetBuffer(MemoryStream ms)
         {
 #if COREFX
-            ArraySegment<byte> segment;
-            if(!ms.TryGetBuffer(out segment))
+            if(!ms.TryGetBuffer(out var segment))
             {
                 throw new InvalidOperationException("Unable to obtain underlying MemoryStream buffer");
             } else if(segment.Offset != 0)

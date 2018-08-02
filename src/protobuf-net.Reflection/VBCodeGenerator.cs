@@ -13,7 +13,7 @@ namespace ProtoBuf
     /// </summary>
     public class VBCodeGenerator : CommonCodeGenerator
     {
-        private static Version VB14 = new Version(14, 0), VB11 = new Version(11, 0);
+        private static readonly Version VB14 = new Version(14, 0), VB11 = new Version(11, 0);
 
         /// <summary>
         /// Reusable code-generator instance
@@ -735,11 +735,11 @@ namespace ProtoBuf
 
             if (isMap)
             {
-                ctx.WriteLine("REM #error map extensions not yet implemented");
+                ctx.WriteLine("REM #error map extensions not yet implemented; please file an issue");
             }
             else if (field.label == FieldDescriptorProto.Label.LabelRepeated)
             {
-                ctx.WriteLine("REM #error repeated extensions not yet implemented");
+                ctx.WriteLine("REM #error repeated extensions not yet implemented; please file an issue");
             }
             else
             {

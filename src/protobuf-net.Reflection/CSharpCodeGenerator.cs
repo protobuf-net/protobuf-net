@@ -655,26 +655,26 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteExtension(GeneratorContext ctx, FieldDescriptorProto field)
         {
-            var type = GetTypeName(ctx, field, out string dataFormat, out bool isMap);
+            var type = GetTypeName(ctx, field, out string dataFormat, out bool isMap, false);
+            var nonNullableType = GetTypeName(ctx, field, out _, out _, true);
+            var msg = ctx.TryFind<DescriptorProto>(field.Extendee);
+            var extendee = MakeRelativeName(field, msg, ctx.NameNormalizer);
+
+            var @this = field.Parent is FileDescriptorProto ? "this " : "";
+            string name = ctx.NameNormalizer.GetName(field);
+            TextWriter tw;
 
             if (isMap)
             {
-                ctx.WriteLine("#error map extensions not yet implemented");
-            }
-            else if (field.label == FieldDescriptorProto.Label.LabelRepeated)
-            {
-                ctx.WriteLine("#error repeated extensions not yet implemented");
+                ctx.WriteLine("#error map extensions not yet implemented; please file an issue");
             }
             else
             {
-                var msg = ctx.TryFind<DescriptorProto>(field.Extendee);
-                var extendee = MakeRelativeName(field, msg, ctx.NameNormalizer);
+                bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
 
-                var @this = field.Parent is FileDescriptorProto ? "this " : "";
-                string name = ctx.NameNormalizer.GetName(field);
-                ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj)");
-
-                TextWriter tw;
+                var getMethodName = isRepeated ? nameof(Extensible.GetValues) : nameof(Extensible.GetValue);
+                if(isRepeated) ctx.WriteLine($"{GetAccess(GetAccess(field))} static global::System.Collections.Generic.IEnumerable<{nonNullableType}> Get{name}({@this}{extendee} obj)");
+                else ctx.WriteLine($"{GetAccess(GetAccess(field))} static {type} Get{name}({@this}{extendee} obj)");
                 if (ctx.Supports(CSharp6))
                 {
                     tw = ctx.Indent().Write($"=> ");
@@ -684,23 +684,35 @@ namespace ProtoBuf.Reflection
                     ctx.WriteLine("{").Indent();
                     tw = ctx.Write("return ");
                 }
-                var defaultValue = ctx.Supports(CSharp7_1) ? "default" : $"default({type})";
-                tw.Write($"obj == null ? {defaultValue} : global::ProtoBuf.Extensible.GetValue<{type}>(obj, {field.Number}");
+                var defaultValue = isRepeated ? "null" : ctx.Supports(CSharp7_1) ? "default" : $"default({type})";
+                tw.Write($"obj == null ? {defaultValue} : global::ProtoBuf.Extensible.{getMethodName}<{(isRepeated ? nonNullableType : type)}>(obj, {field.Number}");
                 if (!string.IsNullOrEmpty(dataFormat))
                 {
                     tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
                 }
                 tw.WriteLine(");");
+                if (ctx.Supports(CSharp6)) ctx.Outdent().WriteLine();
+                else ctx.Outdent().WriteLine("}").WriteLine();
+
+                var setAccessorName = isRepeated ? "Add" : "Set";
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} static void {setAccessorName}{name}({@this}{extendee} obj, {nonNullableType} value)");
                 if (ctx.Supports(CSharp6))
                 {
-                    ctx.Outdent().WriteLine();
+                    tw = ctx.Indent().Write($"=> ");
                 }
                 else
                 {
-                    ctx.Outdent().WriteLine("}").WriteLine();
+                    ctx.WriteLine("{").Indent();
+                    tw = ctx.Write("");
                 }
-
-                //  GetValue<TValue>(IExtensible instance, int tag, DataFormat format)
+                tw.Write($"global::ProtoBuf.Extensible.AppendValue<{nonNullableType}>(obj, {field.Number}");
+                if (!string.IsNullOrEmpty(dataFormat))
+                {
+                    tw.Write($", global::ProtoBuf.DataFormat.{dataFormat}");
+                }
+                tw.WriteLine(", value);");
+                if (ctx.Supports(CSharp6)) ctx.Outdent().WriteLine();
+                else ctx.Outdent().WriteLine("}").WriteLine();
             }
         }
 
@@ -769,7 +781,8 @@ namespace ProtoBuf.Reflection
             }
         }
 
-        private string GetTypeName(GeneratorContext ctx, FieldDescriptorProto field, out string dataFormat, out bool isMap)
+        private string GetTypeName(GeneratorContext ctx, FieldDescriptorProto field, out string dataFormat, out bool isMap,
+            bool nonNullable = false)
         {
             dataFormat = "";
             isMap = false;
@@ -825,20 +838,20 @@ namespace ProtoBuf.Reflection
                     {
                         case WellKnownTypeTimestamp:
                             dataFormat = "WellKnown";
-                            return "global::System.DateTime?";
+                            return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
                         case WellKnownTypeDuration:
                             dataFormat = "WellKnown";
-                            return "global::System.TimeSpan?";
+                            return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
                         case ".bcl.NetObjectProxy":
                             return "object";
                         case ".bcl.DateTime":
-                            return "global::System.DateTime?";
+                            return nonNullable ? "global::System.DateTime" : "global::System.DateTime?";
                         case ".bcl.TimeSpan":
-                            return "global::System.TimeSpan?";
+                            return nonNullable ? "global::System.TimeSpan" : "global::System.TimeSpan?";
                         case ".bcl.Decimal":
-                            return "decimal?";
+                            return nonNullable ? "decimal" : "decimal?";
                         case ".bcl.Guid":
-                            return "global::System.Guid?";
+                            return nonNullable ? "global::System.Guid" : "global::System.Guid?";
                     }
                     var msgType = ctx.TryFind<DescriptorProto>(field.TypeName);
                     if (field.type == FieldDescriptorProto.Type.TypeGroup)

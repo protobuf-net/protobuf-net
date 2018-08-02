@@ -4,49 +4,72 @@
 
 #pragma warning disable CS1591, CS0612, CS3021, IDE1006
 [global::ProtoBuf.ProtoContract()]
-public partial class StatusMessage : global::ProtoBuf.IExtensible
+public partial class SystemConfig : global::ProtoBuf.IExtensible
 {
     private global::ProtoBuf.IExtension __pbn__extensionData;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
         => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
+    [global::ProtoBuf.ProtoMember(11, Name = @"identifiers")]
+    public bool Identifiers
+    {
+        get { return __pbn__Identifiers.GetValueOrDefault(); }
+        set { __pbn__Identifiers = value; }
+    }
+    public bool ShouldSerializeIdentifiers() => __pbn__Identifiers != null;
+    public void ResetIdentifiers() => __pbn__Identifiers = null;
+    private bool? __pbn__Identifiers;
+
+    [global::ProtoBuf.ProtoMember(10, Name = @"relation")]
+    public bool[] Relations { get; set; }
+
+    [global::ProtoBuf.ProtoMember(18)]
+    public bool timeConfig
+    {
+        get { return __pbn__timeConfig.GetValueOrDefault(); }
+        set { __pbn__timeConfig = value; }
+    }
+    public bool ShouldSerializetimeConfig() => __pbn__timeConfig != null;
+    public void ResettimeConfig() => __pbn__timeConfig = null;
+    private bool? __pbn__timeConfig;
+
+    [global::ProtoBuf.ProtoMember(19, Name = @"mode")]
+    public bool Mode
+    {
+        get { return __pbn__Mode.GetValueOrDefault(); }
+        set { __pbn__Mode = value; }
+    }
+    public bool ShouldSerializeMode() => __pbn__Mode != null;
+    public void ResetMode() => __pbn__Mode = null;
+    private bool? __pbn__Mode;
+
+    [global::ProtoBuf.ProtoMember(20, Name = @"connection")]
+    public bool[] Connections { get; set; }
+
 }
 
-[global::ProtoBuf.ProtoContract()]
-public partial class Test : global::ProtoBuf.IExtensible
+[global::ProtoBuf.ProtoContract(Name = @"SystemConfig_e")]
+public partial class SystemConfige : global::ProtoBuf.IExtensible
 {
     private global::ProtoBuf.IExtension __pbn__extensionData;
     global::ProtoBuf.IExtension global::ProtoBuf.IExtensible.GetExtensionObject(bool createIfMissing)
         => global::ProtoBuf.Extensible.GetExtensionObject(ref __pbn__extensionData, createIfMissing);
 
-    [global::ProtoBuf.ProtoMember(3, Name = @"directive")]
-    public ControlDirective Directive
+    public static class Extensions
     {
-        get { return __pbn__Content.Is(3) ? ((ControlDirective)__pbn__Content.Int32) : default; }
-        set { __pbn__Content = new global::ProtoBuf.DiscriminatedUnion32Object(3, (int)value); }
+        public static global::System.Collections.Generic.IEnumerable<global::System.DateTime> GetSystemIsOnPeripherals(SystemConfig obj)
+            => obj == null ? null : global::ProtoBuf.Extensible.GetValues<global::System.DateTime>(obj, 900001, global::ProtoBuf.DataFormat.WellKnown);
+
+        public static void AddSystemIsOnPeripherals(SystemConfig obj, global::System.DateTime value)
+            => global::ProtoBuf.Extensible.AppendValue<global::System.DateTime>(obj, 900001, global::ProtoBuf.DataFormat.WellKnown, value);
+
+        public static global::System.DateTime? GetSystemOwnedByAccount(SystemConfig obj)
+            => obj == null ? default : global::ProtoBuf.Extensible.GetValue<global::System.DateTime?>(obj, 900002, global::ProtoBuf.DataFormat.WellKnown);
+
+        public static void SetSystemOwnedByAccount(SystemConfig obj, global::System.DateTime value)
+            => global::ProtoBuf.Extensible.AppendValue<global::System.DateTime>(obj, 900002, global::ProtoBuf.DataFormat.WellKnown, value);
+
     }
-    public bool ShouldSerializeDirective() => __pbn__Content.Is(3);
-    public void ResetDirective() => global::ProtoBuf.DiscriminatedUnion32Object.Reset(ref __pbn__Content, 3);
-
-    private global::ProtoBuf.DiscriminatedUnion32Object __pbn__Content;
-
-    [global::ProtoBuf.ProtoMember(4, Name = @"status")]
-    public StatusMessage Status
-    {
-        get { return __pbn__Content.Is(4) ? ((StatusMessage)__pbn__Content.Object) : default; }
-        set { __pbn__Content = new global::ProtoBuf.DiscriminatedUnion32Object(4, value); }
-    }
-    public bool ShouldSerializeStatus() => __pbn__Content.Is(4);
-    public void ResetStatus() => global::ProtoBuf.DiscriminatedUnion32Object.Reset(ref __pbn__Content, 4);
-
-}
-
-[global::ProtoBuf.ProtoContract()]
-public enum ControlDirective
-{
-    A = 0,
-    B = 1,
-    C = 2,
 }
 
 #pragma warning restore CS1591, CS0612, CS3021, IDE1006

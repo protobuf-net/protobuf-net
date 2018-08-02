@@ -93,11 +93,10 @@ namespace ProtoBuf.Meta
         public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType, DataFormat dataFormat, object defaultValue)
             : this(model, fieldNumber, memberType, itemType, defaultType, dataFormat)
         {
-            if (member == null) throw new ArgumentNullException("member");
             if (parentType == null) throw new ArgumentNullException("parentType");
             if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
 
-            this.originalMember = member;
+            this.originalMember = member ?? throw new ArgumentNullException("member");
             this.parentType = parentType;
             if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
             //#if WINRT
@@ -505,9 +504,8 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    WireType wireType;
-                    Type finalType = itemType == null ? memberType : itemType;
-                    ser = TryGetCoreSerializer(model, dataFormat, finalType, out wireType, AsReference, DynamicType, OverwriteList, true);
+                    Type finalType = itemType ?? memberType;
+                    ser = TryGetCoreSerializer(model, dataFormat, finalType, out WireType wireType, AsReference, DynamicType, OverwriteList, true);
                     if (ser == null)
                     {
                         throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
