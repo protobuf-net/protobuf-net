@@ -1,7 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/AArnott/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
-  "assemblyVersion": "2.4",
-  "version": "2.4",
+  "version": "2.3.16",
   "nugetPackageVersion": {
     "semVer": 2
   },
