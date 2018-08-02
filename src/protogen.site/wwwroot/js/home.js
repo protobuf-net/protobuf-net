@@ -41,6 +41,9 @@ require(['vs/editor/editor.main', 'js/proto3lang'], function (_, proto3lang)
         if ($('#opt_oneof').is(":checked")) {
             postData.oneof = $('#opt_oneof').val();
         }
+        if ($('#opt_listset').is(":checked")) {
+            postData.oneof = $('#opt_listset').val();
+        }
         jQuery.post("/generate", postData, function(data, textStatus, jqXHR)
         {
             if (data === null || data === undefined)

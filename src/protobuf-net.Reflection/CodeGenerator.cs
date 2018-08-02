@@ -495,6 +495,21 @@ namespace ProtoBuf.Reflection
                 _options = options;
 
                 OneOfEnums = (File.Options?.GetOptions()?.EmitOneOfEnum ?? false) || (_options != null && _options.TryGetValue("oneof", out var oneof) && string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase));
+
+                EmitListSetters = IsEnabled("listset");
+            }
+
+            internal bool EmitListSetters { get; }
+            internal bool IsEnabled(string key)
+            {
+                var option = GetCustomOption(key);
+                if (string.IsNullOrWhiteSpace(option)) return false;
+                option = option.Trim();
+                if (option == "1") return true;
+                if (string.Equals("yes", option, StringComparison.OrdinalIgnoreCase)) return true;
+                if (string.Equals("true", option, StringComparison.OrdinalIgnoreCase)) return true;
+                if (string.Equals("on", option, StringComparison.OrdinalIgnoreCase)) return true;
+                return false;
             }
 
             private Dictionary<string, string> _options;

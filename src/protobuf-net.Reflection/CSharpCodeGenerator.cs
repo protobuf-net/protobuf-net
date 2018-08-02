@@ -477,6 +477,7 @@ namespace ProtoBuf.Reflection
             if (isRepeated)
             {
                 var mapMsgType = isMap ? ctx.TryFind<DescriptorProto>(obj.TypeName) : null;
+                bool allowSet = ctx.EmitListSetters;
                 if (mapMsgType != null)
                 {
                     var keyTypeName = GetTypeName(ctx, mapMsgType.Fields.Single(x => x.Number == 1),
@@ -499,11 +500,11 @@ namespace ProtoBuf.Reflection
                     tw.WriteLine(first ? "]" : ")]");
                     if (ctx.Supports(CSharp6))
                     {
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
+                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; {(allowSet ? "set; " : "")}}} = new global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}>();");
                     }
                     else
                     {
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; private set; }}");
+                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.Dictionary<{keyTypeName}, {valueTypeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
                     }
                 }
                 else if (UseArray(obj))
@@ -512,11 +513,11 @@ namespace ProtoBuf.Reflection
                 }
                 else if (ctx.Supports(CSharp6))
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; }} = new global::System.Collections.Generic.List<{typeName}>();");
+                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; {(allowSet ? "set; " : "")}}} = new global::System.Collections.Generic.List<{typeName}>();");
                 }
                 else
                 {
-                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; private set; }}");
+                    ctx.WriteLine($"{GetAccess(GetAccess(obj))} global::System.Collections.Generic.List<{typeName}> {Escape(name)} {{ get; {(allowSet ? "" : "private ")}set; }}");
                 }
             }
             else if (oneOf != null)

@@ -307,6 +307,7 @@ Parse PROTO_FILES and generate output based on the options given:
                               selected code generator.
   +names={auto|original}      Specify naming convention rules.
   +oneof={default|enum}       Specify whether 'oneof' should generate enums.
+  +listset={yes|no}           Specify whether lists should emit setters
   +OPTION=VALUE               Specify a custom OPTION/VALUE pair for the
                               selected code generator.
   --package=PACKAGE           Add a default package (when no package is

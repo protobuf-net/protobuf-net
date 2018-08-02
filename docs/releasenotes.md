@@ -27,11 +27,12 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 ## protobuf-net v2.4.? (unreleased)
 
 - new MSBuild .proto tools added (huge thanks go to Mark Pflug here)
+- fix error where extension GetValues might only report the last item
 - switch to git-based versioning implementation; versioning now unified over all tools
-- extensions codegen (C#): add "get" and "add" implementations for "repeated"; add "set" implementations for regular
-- update "protoc" to 3.6.1
+- extensions codegen (C#): add `Get*` and `Add*` implementations for `repeated`; add `Set*` implementations for regular
+- update `protoc` to 3.6.1
 - give advance warning of possible removal of ProtoReader/ProtoWriter constructors
-
+- codegen (C#): implement "listset" option to control whether lists/maps get `set` accessors
 
 ## protobuf-net v2.3.15
 
