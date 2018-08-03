@@ -33,7 +33,7 @@ namespace ProtoBuf.Reflection
         {
             if (!tokens.Peek(out Token val))
             {
-                throw new ParserException(tokens.Previous, "Unexpected end of file", true);
+                throw new ParserException(tokens.Previous, "Unexpected end of file", true, ErrorCode.UnexpectedEOF);
             }
             return val;
         }
@@ -118,7 +118,7 @@ namespace ProtoBuf.Reflection
             var value = tokens.ConsumeString();
 
             if (!EnumCache<T>.TryGet(token.Value, out T val))
-                token.Throw("Unable to parse " + typeof(T).Name);
+                token.Throw(ErrorCode.InvalidEnum, "Unable to parse " + typeof(T).Name);
             return val;
         }
 
@@ -201,7 +201,7 @@ namespace ProtoBuf.Reflection
             tokens.Consume();
 
             if (TryParseInt32(token.Value, out int val, max)) return val;
-            throw token.Throw("Unable to parse integer");
+            throw token.Throw(ErrorCode.InvalidInteger, "Unable to parse integer");
         }
 
         internal static string ConsumeString(this Peekable<Token> tokens, bool asBytes = false)
@@ -270,7 +270,7 @@ namespace ProtoBuf.Reflection
                     tokens.Consume();
                     return token.Value;
                 default:
-                    throw token.Throw();
+                    throw token.Throw(ErrorCode.InvalidString);
             }
         }
 
@@ -462,7 +462,7 @@ namespace ProtoBuf.Reflection
             tokens.Consume();
             if (string.Equals("true", token.Value, StringComparison.OrdinalIgnoreCase)) return true;
             if (string.Equals("false", token.Value, StringComparison.OrdinalIgnoreCase)) return false;
-            throw token.Throw("Unable to parse boolean");
+            throw token.Throw(ErrorCode.InvalidBoolean, "Unable to parse boolean");
         }
 
         private static TokenType Identify(char c)
@@ -609,17 +609,17 @@ namespace ProtoBuf.Reflection
         }
         internal static bool TryParseDouble(string token, out double val)
         {
-            if(token == "nan")
+            if (token == "nan")
             {
                 val = double.NaN;
                 return true;
             }
-            if(token == "inf")
+            if (token == "inf")
             {
                 val = double.PositiveInfinity;
                 return true;
             }
-            if(token == "-inf")
+            if (token == "-inf")
             {
                 val = double.NegativeInfinity;
                 return true;

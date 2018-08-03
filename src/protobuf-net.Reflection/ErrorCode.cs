@@ -37,5 +37,14 @@
         InvalidEscapeSequence = 29,
         GroupNamesStartUpperCase = 30,
         UnknownParseError = 31,
+        ExpectedToken = 32,
+        ExpectedArity = 33,
+        InvalidMapUsage = 34,
+        ParseFailExtensionRange = 35,
+        ParseFailReservedRange = 36,
+        InvalidEnum = 37,
+        UnexpectedEOF = 38,
+        InvalidString = 39,
+        SyntaxErrorUnknownEntity = 40,
     }
 }

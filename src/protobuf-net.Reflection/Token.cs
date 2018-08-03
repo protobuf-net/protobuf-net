@@ -35,8 +35,8 @@ namespace ProtoBuf.Reflection
         }
         public override string ToString() => $"({LineNumber},{ColumnNumber}) '{Value}'";
 
-        internal Exception Throw(string error = null, bool isError = true) =>
-            throw new ParserException(this, string.IsNullOrWhiteSpace(error) ? $"syntax error: '{Value}'" : error, isError);
+        internal Exception Throw(ErrorCode errorCode, string error = null, bool isError = true) =>
+            throw new ParserException(this, string.IsNullOrWhiteSpace(error) ? $"syntax error: '{Value}'" : error, isError, errorCode);
 
         internal void Assert(TokenType type, string value = null)
         {
@@ -44,14 +44,14 @@ namespace ProtoBuf.Reflection
             {
                 if (type != Type || value != Value)
                 {
-                    Throw($"expected {type} '{value}'");
+                    Throw(ErrorCode.ExpectedToken, $"expected {type} '{value}'");
                 }
             }
             else
             {
                 if (type != Type)
                 {
-                    Throw($"expected {type}");
+                    Throw(ErrorCode.ExpectedToken, $"expected {type}");
                 }
             }
         }

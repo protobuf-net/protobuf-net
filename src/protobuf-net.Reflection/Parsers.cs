@@ -461,7 +461,7 @@ namespace Google.Protobuf.Reflection
                 }
                 else
                 {
-                    tokens.Read().Throw("unable to parse extension range");
+                    tokens.Read().Throw(ErrorCode.ParseFailExtensionRange, "unable to parse extension range");
                 }
             }
             ctx.AbortState = AbortState.None;
@@ -494,7 +494,7 @@ namespace Google.Protobuf.Reflection
                         }
                         else
                         {
-                            tokens.Read().Throw("unable to parse reserved range");
+                            tokens.Read().Throw(ErrorCode.ParseFailReservedRange, "unable to parse reserved range");
                         }
                     }
                     break;
@@ -527,12 +527,12 @@ namespace Google.Protobuf.Reflection
                         }
                         else
                         {
-                            token.Throw();
+                            token.Throw(ErrorCode.ParseFailReservedRange);
                         }
                     }
                     break;
                 default:
-                    throw token.Throw();
+                    throw token.Throw(ErrorCode.ParseFailReservedRange);
             }
             ctx.AbortState = AbortState.None;
         }
@@ -716,7 +716,7 @@ namespace Google.Protobuf.Reflection
             }
             else if (tokens.Peek(out var token))
             {
-                token.Throw();
+                token.Throw(ErrorCode.SyntaxErrorUnknownEntity);
             } // else EOF
         }
 
@@ -1748,13 +1748,13 @@ namespace Google.Protobuf.Reflection
             else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2 && !isOneOf)
             {
                 // required in proto2
-                throw tokens.Read().Throw("expected 'repeated' / 'required' / 'optional'");
+                throw tokens.Read().Throw(ErrorCode.ExpectedArity, "expected 'repeated' / 'required' / 'optional'");
             }
 
             var typeToken = tokens.Read();
             if (typeToken.Is(TokenType.AlphaNumeric, "map"))
             {
-                tokens.Previous.Throw($"'{tokens.Previous.Value}' can not be used with 'map'");
+                tokens.Previous.Throw(ErrorCode.InvalidMapUsage, $"'{tokens.Previous.Value}' can not be used with 'map'");
             }
             string typeName = tokens.Consume(TokenType.AlphaNumeric);
 
@@ -2387,7 +2387,7 @@ namespace ProtoBuf.Reflection
             Message = ex.Message;
             IsError = ex.IsError;
             Text = ex.Text ?? "";
-            TypedCode =  ProtoBuf.ErrorCode.Undefined;
+            TypedCode = ex.ErrorCode;
         }
         /// <summary>
         /// True if this instance represents a non-fatal warning

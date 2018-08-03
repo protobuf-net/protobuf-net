@@ -58,7 +58,8 @@ namespace ProtoBuf.Reflection
             }
             catch (Exception ex)
             {
-                set.Errors.Add(new Error(default, ex.Message, true, ErrorCode.Undefined));
+                var errorCode = ex is ParserException pe ? pe.ErrorCode : ErrorCode.Undefined;
+                set.Errors.Add(new Error(default, ex.Message, true, errorCode));
             }
             var errors = set.GetErrors();
 

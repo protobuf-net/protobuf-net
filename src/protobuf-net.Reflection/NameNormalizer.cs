@@ -15,7 +15,8 @@ namespace ProtoBuf.Reflection
         public string Text { get; }
         public string LineContents { get; }
         public bool IsError { get; }
-        internal ParserException(Token token, string message, bool isError)
+        internal ErrorCode ErrorCode { get; }
+        internal ParserException(Token token, string message, bool isError, ErrorCode errorCode)
             : base(message ?? "error")
         {
             ColumnNumber = token.ColumnNumber;
@@ -24,6 +25,7 @@ namespace ProtoBuf.Reflection
             LineContents = token.LineContents;
             Text = token.Value ?? "";
             IsError = isError;
+            ErrorCode = errorCode;
         }
     }
     /// <summary>
