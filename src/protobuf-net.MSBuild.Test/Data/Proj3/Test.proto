@@ -1,0 +1,7 @@
+﻿message Header{
+  required string name = 1;
+  required int32 tabletype =2;
+  required int32 version = 3;
+  required int32 precision = 4;
+  required int32 numfields = 4;
+}

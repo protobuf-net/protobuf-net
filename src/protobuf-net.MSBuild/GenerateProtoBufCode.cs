@@ -83,6 +83,24 @@ namespace ProtoBuf.MSBuild
             }
 
             set.Process();
+
+            var errors = set.GetErrors();
+            if(errors != null && errors.Length > 0)
+            {
+                foreach(var error in errors)
+                {
+                    if (error.IsError)
+                    {
+                        this.Log.LogError(null, null, null, error.File, error.LineNumber, error.ColumnNumber, 0, 0, error.Message);
+                    }
+                    else if(error.IsWarning)
+                    {
+                        this.Log.LogWarning(null, null, null, error.File, error.LineNumber, error.ColumnNumber, 0, 0, error.Message);
+                    }
+                }
+                return false;
+            }
+
             var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             var codeFiles = new List<ITaskItem>();
