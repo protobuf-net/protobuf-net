@@ -31,7 +31,7 @@
             }
             int headerEnd = reader.Position;
                     
-            <p data-offset="@start">@Model.AsHex(start, headerEnd - start) = field <b>@(field)</b>, type <b>@(reader.WireType)</b></p>
+            <p data-offset="@start">@Model.AsHex(start, headerEnd - start) = field <b>@(field)</b>, type <b>@(reader.WireType == ProtoBuf.WireType.Variant ? "Varint" : reader.WireType.ToString())</b></p>
             switch(reader.WireType)
             {
                 case ProtoBuf.WireType.Variant:
