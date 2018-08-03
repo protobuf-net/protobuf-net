@@ -58,7 +58,7 @@ namespace ProtoBuf.Reflection
             }
             catch (Exception ex)
             {
-                set.Errors.Add(new Error(default, ex.Message, true));
+                set.Errors.Add(new Error(default, ex.Message, true, ErrorCode.Undefined));
             }
             var errors = set.GetErrors();
 

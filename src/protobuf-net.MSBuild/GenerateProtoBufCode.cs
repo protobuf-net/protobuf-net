@@ -89,13 +89,16 @@ namespace ProtoBuf.MSBuild
             {
                 foreach(var error in errors)
                 {
+                    var endCol = error.LineNumber + error.Text.Length;
+                    int errNum = error.ErrorNumber;
+                    var errCode = errNum == 0 ? null : ("PBN" + errNum.ToString("0000"));
                     if (error.IsError)
                     {
-                        this.Log.LogError(null, null, null, error.File, error.LineNumber, error.ColumnNumber, 0, 0, error.Message);
+                        this.Log.LogError("protogen", errCode, null, error.File, error.LineNumber, error.ColumnNumber, error.LineNumber, endCol, error.Message);
                     }
                     else if(error.IsWarning)
                     {
-                        this.Log.LogWarning(null, null, null, error.File, error.LineNumber, error.ColumnNumber, 0, 0, error.Message);
+                        this.Log.LogWarning("protogen", errCode, null, error.File, error.LineNumber, error.ColumnNumber, error.LineNumber, endCol, error.Message);
                     }
                 }
                 return false;

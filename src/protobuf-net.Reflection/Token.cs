@@ -68,11 +68,11 @@ namespace ProtoBuf.Reflection
             if(ctx.Syntax != FileDescriptorProto.SyntaxProto2)
             {
                 var msg = "'" + Value + "' requires " + FileDescriptorProto.SyntaxProto2 + " syntax";
-                ctx.Errors.Error(this, msg);
+                ctx.Errors.Error(this, msg, ErrorCode.ProtoSyntaxRequireProto2);
             }
         }
 
         internal Error TypeNotFound(string typeName = null) => new Error(this,
-            $"type not found: '{(string.IsNullOrWhiteSpace(typeName) ? Value : typeName)}'", true);
+            $"type not found: '{(string.IsNullOrWhiteSpace(typeName) ? Value : typeName)}'", true, ErrorCode.TypeNotFound);
     }
 }

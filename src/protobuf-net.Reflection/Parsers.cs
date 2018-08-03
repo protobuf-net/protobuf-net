@@ -157,7 +157,7 @@ namespace Google.Protobuf.Reflection
                     {
                         if (!(ImportValidator?.Invoke(import.Path) ?? true))
                         {
-                            Errors.Error(import.Token, $"import of {import.Path} is disallowed");
+                            Errors.Error(import.Token, $"import of {import.Path} is disallowed", ErrorCode.ImportNotPermitted);
                         }
                         else if (Add(import.Path, false, null, file))
                         {
@@ -165,7 +165,7 @@ namespace Google.Protobuf.Reflection
                         }
                         else
                         {
-                            Errors.Error(import.Token, $"unable to find: '{import.Path}'");
+                            Errors.Error(import.Token, $"unable to find: '{import.Path}'", ErrorCode.ImportNotFound);
                         }
                     }
                 }
@@ -359,7 +359,7 @@ namespace Google.Protobuf.Reflection
                 case FieldDescriptorProto.Type.TypeGroup:
                 case FieldDescriptorProto.Type.TypeFloat:
                 case FieldDescriptorProto.Type.TypeDouble:
-                    ctx.Errors.Error(tokens.Previous, "invalid map key type (only integral and string types are allowed)");
+                    ctx.Errors.Error(tokens.Previous, "invalid map key type (only integral and string types are allowed)", ErrorCode.InvalidMapKeyType);
                     break;
             }
             tokens.Consume(TokenType.Symbol, ",");
@@ -481,7 +481,7 @@ namespace Google.Protobuf.Reflection
                         var conflict = Fields.Find(x => x.Name == name);
                         if (conflict != null)
                         {
-                            ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by field {conflict.Number}");
+                            ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by field {conflict.Number}", ErrorCode.FieldDuplicatedNumber);
                         }
                         ReservedNames.Add(name);
 
@@ -510,7 +510,8 @@ namespace Google.Protobuf.Reflection
                         var conflict = Fields.Find(x => x.Number >= from && x.Number <= to);
                         if (conflict != null)
                         {
-                            ctx.Errors.Error(tokens.Previous, $"field {conflict.Number} is already in use by '{conflict.Name}'");
+                            ctx.Errors.Error(tokens.Previous, $"field {conflict.Number} is already in use by '{conflict.Name}'", ErrorCode.FieldDuplicatedNumber
+                                );
                         }
                         ReservedRanges.Add(new ReservedRange { Start = from, End = to + 1 });
 
@@ -677,7 +678,7 @@ namespace Google.Protobuf.Reflection
 
                 if (!AddImport(path, isPublic, tokens.Previous))
                 {
-                    ctx.Errors.Warn(tokens.Previous, $"duplicate import: '{path}'");
+                    ctx.Errors.Warn(tokens.Previous, $"duplicate import: '{path}'", ErrorCode.ImportDuplicated);
                 }
                 tokens.Consume(TokenType.Symbol, ";");
                 ctx.AbortState = AbortState.None;
@@ -687,7 +688,7 @@ namespace Google.Protobuf.Reflection
                 ctx.AbortState = AbortState.Statement;
                 if (MessageTypes.Count > 0 || EnumTypes.Count > 0 || Extensions.Count > 0)
                 {
-                    ctx.Errors.Error(tokens.Previous, "syntax must be set before types are defined");
+                    ctx.Errors.Error(tokens.Previous, "syntax must be set before types are defined", ErrorCode.ProtoSyntaxPreceedTypes);
                 }
                 tokens.Consume(TokenType.Symbol, "=");
                 Syntax = tokens.Consume(TokenType.StringLiteral);
@@ -697,7 +698,7 @@ namespace Google.Protobuf.Reflection
                     case SyntaxProto3:
                         break;
                     default:
-                        ctx.Errors.Error(tokens.Previous, $"unknown syntax '{Syntax}'");
+                        ctx.Errors.Error(tokens.Previous, $"unknown syntax '{Syntax}'", ErrorCode.ProtoSyntaxInvalid);
                         break;
                 }
                 tokens.Consume(TokenType.Symbol, ";");
@@ -733,7 +734,7 @@ namespace Google.Protobuf.Reflection
                 // finish up
                 if (string.IsNullOrWhiteSpace(Syntax))
                 {
-                    ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'");
+                    ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
                 }
 #pragma warning disable RCS1156 // Use string.Length instead of comparison with empty string.
                 if (Syntax == "" || Syntax == SyntaxProto2)
@@ -1047,7 +1048,7 @@ namespace Google.Protobuf.Reflection
                             if (!string.IsNullOrWhiteSpace(field.DefaultValue)
                                 & !@enum.Values.Any(x => x.Name == field.DefaultValue))
                             {
-                                ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'");
+                                ctx.Errors.Error(field.TypeToken, $"enum {@enum.Name} does not contain value '{field.DefaultValue}'", ErrorCode.EnumValueNotFound);
                             }
                             fqn = @enum?.FullyQualifiedName;
                         }
@@ -1080,7 +1081,7 @@ namespace Google.Protobuf.Reflection
                         bool canPack = FieldDescriptorProto.CanPack(field.type);
                         if (!canPack)
                         {
-                            ctx.Errors.Error(field.TypeToken, $"field of type {field.type} cannot be packed");
+                            ctx.Errors.Error(field.TypeToken, $"field of type {field.type} cannot be packed", ErrorCode.PackedFieldInvalidType);
                             field.Options.Packed = false;
                         }
                     }
@@ -1170,7 +1171,7 @@ namespace Google.Protobuf.Reflection
                     }
                     if (IncludeInOutput && !import.Used)
                     {
-                        ctx.Errors.Warn(import.Token, $"import not used: '{import.Path}'");
+                        ctx.Errors.Warn(import.Token, $"import not used: '{import.Path}'", ErrorCode.ImportNotUsed);
                     }
                 }
                 // note that Dependencies should stay in declaration order to be consistent with protoc
@@ -1321,7 +1322,7 @@ namespace Google.Protobuf.Reflection
             {
                 if (!resolveOnly)
                 {
-                    ctx.Errors.Error(option.Token, $"unable to resolve custom option '{option.Name}' for '{extendee}'");
+                    ctx.Errors.Error(option.Token, $"unable to resolve custom option '{option.Name}' for '{extendee}'", ErrorCode.MissingCustomOption);
                 }
                 return;
             }
@@ -1399,7 +1400,7 @@ namespace Google.Protobuf.Reflection
                     {
                         foreach (var values in option.Options)
                         {
-                            ctx.Errors.Error(option.Token, $"unable to assign custom option '{option.Name}' for '{extendee}'");
+                            ctx.Errors.Error(option.Token, $"unable to assign custom option '{option.Name}' for '{extendee}'", ErrorCode.MissingCustomOption);
                         }
                     }
                     break;
@@ -1408,7 +1409,7 @@ namespace Google.Protobuf.Reflection
 
                     foreach (var child in option.Children)
                     {
-                        ctx.Errors.Error(option.Token, $"unable to assign custom option '{child.Name}' for '{extendee}'");
+                        ctx.Errors.Error(option.Token, $"unable to assign custom option '{child.Name}' for '{extendee}'", ErrorCode.MissingCustomOption);
                     }
                     foreach (var value in option.Options)
                     {
@@ -1418,7 +1419,7 @@ namespace Google.Protobuf.Reflection
                             case FieldDescriptorProto.Type.TypeFloat:
                                 if (!TokenExtensions.TryParseSingle(value.AggregateValue, out var f32))
                                 {
-                                    ctx.Errors.Error(option.Token, $"invalid value for floating point '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                    ctx.Errors.Error(option.Token, $"invalid value for floating point '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidFloatingPoint);
                                     continue;
                                 }
                                 if (ShouldWrite(field, value.AggregateValue, "0"))
@@ -1430,7 +1431,7 @@ namespace Google.Protobuf.Reflection
                             case FieldDescriptorProto.Type.TypeDouble:
                                 if (!TokenExtensions.TryParseDouble(value.AggregateValue, out var f64))
                                 {
-                                    ctx.Errors.Error(option.Token, $"invalid value for floating point '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                    ctx.Errors.Error(option.Token, $"invalid value for floating point '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidFloatingPoint);
                                     continue;
                                 }
                                 if (ShouldWrite(field, value.AggregateValue, "0"))
@@ -1449,7 +1450,7 @@ namespace Google.Protobuf.Reflection
                                         i32 = 0;
                                         break;
                                     default:
-                                        ctx.Errors.Error(option.Token, $"invalid value for boolean '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        ctx.Errors.Error(option.Token, $"invalid value for boolean '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidBoolean);
                                         continue;
                                 }
                                 if (ShouldWrite(field, value.AggregateValue, "false"))
@@ -1463,7 +1464,7 @@ namespace Google.Protobuf.Reflection
                                 {
                                     if (!TokenExtensions.TryParseUInt32(value.AggregateValue, out var ui32))
                                     {
-                                        ctx.Errors.Error(option.Token, $"invalid value for unsigned integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        ctx.Errors.Error(option.Token, $"invalid value for unsigned integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidInteger);
                                         continue;
                                     }
                                     if (ShouldWrite(field, value.AggregateValue, "0"))
@@ -1486,7 +1487,7 @@ namespace Google.Protobuf.Reflection
                                 {
                                     if (!TokenExtensions.TryParseUInt64(value.AggregateValue, out var ui64))
                                     {
-                                        ctx.Errors.Error(option.Token, $"invalid value for unsigned integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        ctx.Errors.Error(option.Token, $"invalid value for unsigned integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidInteger);
                                         continue;
                                     }
                                     if (ShouldWrite(field, value.AggregateValue, "0"))
@@ -1509,7 +1510,7 @@ namespace Google.Protobuf.Reflection
                             case FieldDescriptorProto.Type.TypeSfixed32:
                                 if (!TokenExtensions.TryParseInt32(value.AggregateValue, out i32))
                                 {
-                                    ctx.Errors.Error(option.Token, $"invalid value for integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                    ctx.Errors.Error(option.Token, $"invalid value for integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidInteger);
                                     continue;
                                 }
                                 if (ShouldWrite(field, value.AggregateValue, "0"))
@@ -1535,7 +1536,7 @@ namespace Google.Protobuf.Reflection
                                 {
                                     if (!TokenExtensions.TryParseInt64(value.AggregateValue, out var i64))
                                     {
-                                        ctx.Errors.Error(option.Token, $"invalid value for integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        ctx.Errors.Error(option.Token, $"invalid value for integer '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidInteger);
                                         continue;
                                     }
                                     if (ShouldWrite(field, value.AggregateValue, "0"))
@@ -1562,7 +1563,7 @@ namespace Google.Protobuf.Reflection
                                     var found = @enum.Values.Find(x => x.Name == value.AggregateValue);
                                     if (found == null)
                                     {
-                                        ctx.Errors.Error(option.Token, $"invalid value for enum '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                        ctx.Errors.Error(option.Token, $"invalid value for enum '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.EnumValueNotFound);
                                         continue;
                                     }
                                     else
@@ -1576,7 +1577,7 @@ namespace Google.Protobuf.Reflection
                                 }
                                 else
                                 {
-                                    ctx.Errors.Error(option.Token, $"unable to resolve enum '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                    ctx.Errors.Error(option.Token, $"unable to resolve enum '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.EnumValueNotFound);
                                     continue;
                                 }
                                 break;
@@ -1595,7 +1596,7 @@ namespace Google.Protobuf.Reflection
                                         {
                                             if (!LoadBytes(ms, value.AggregateValue))
                                             {
-                                                ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
+                                                ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidEscapeSequence);
                                                 continue;
                                             }
 #if NETSTANDARD1_3
@@ -1611,7 +1612,7 @@ namespace Google.Protobuf.Reflection
                                 }
                                 break;
                             default:
-                                ctx.Errors.Error(option.Token, $"{field.type} options not yet implemented: '{option.Name}' = '{value.AggregateValue}'");
+                                ctx.Errors.Error(option.Token, $"{field.type} options not yet implemented: '{option.Name}' = '{value.AggregateValue}'", ErrorCode.OptionsNotImplemented);
                                 continue;
                         }
                         value.Applied = true;
@@ -1718,10 +1719,10 @@ namespace Google.Protobuf.Reflection
 
         internal static bool TryParse(ParserContext ctx, IMessage parent, bool isOneOf, out FieldDescriptorProto field)
         {
-            void NotAllowedOneOf(ParserContext context)
+            void NotAllowedOneOf(ParserContext context, ErrorCode errorCode)
             {
                 var token = ctx.Tokens.Previous;
-                context.Errors.Error(token, $"'{token.Value}' not allowed with 'oneof'");
+                context.Errors.Error(token, $"'{token.Value}' not allowed with 'oneof'", errorCode);
             }
             var tokens = ctx.Tokens;
             ctx.AbortState = AbortState.Statement;
@@ -1729,18 +1730,18 @@ namespace Google.Protobuf.Reflection
 
             if (tokens.ConsumeIf(TokenType.AlphaNumeric, "repeated"))
             {
-                if (isOneOf) NotAllowedOneOf(ctx);
+                if (isOneOf) NotAllowedOneOf(ctx, ErrorCode.OneOfRepeated);
                 label = Label.LabelRepeated;
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "required"))
             {
-                if (isOneOf) NotAllowedOneOf(ctx);
+                if (isOneOf) NotAllowedOneOf(ctx, ErrorCode.OneOfRequired);
                 else tokens.Previous.RequireProto2(ctx);
                 label = Label.LabelRequired;
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "optional"))
             {
-                if (isOneOf) NotAllowedOneOf(ctx);
+                if (isOneOf) NotAllowedOneOf(ctx, ErrorCode.OneOfOptional);
                 else tokens.Previous.RequireProto2(ctx);
                 label = Label.LabelOptional;
             }
@@ -1776,11 +1777,11 @@ namespace Google.Protobuf.Reflection
 
             if (number < 1 || number > parent.MaxField)
             {
-                ctx.Errors.Error(numberToken, $"field numbers must be in the range 1-{parent.MaxField}");
+                ctx.Errors.Error(numberToken, $"field numbers must be in the range 1-{parent.MaxField}", ErrorCode.FieldNumberInvalid);
             }
             else if (number >= FirstReservedField && number <= LastReservedField)
             {
-                ctx.Errors.Warn(numberToken, $"field numbers in the range {FirstReservedField}-{LastReservedField} are reserved; this may cause problems on many implementations");
+                ctx.Errors.Warn(numberToken, $"field numbers in the range {FirstReservedField}-{LastReservedField} are reserved; this may cause problems on many implementations", ErrorCode.FieldNumberReserved);
             }
             ctx.CheckNames(parent, name, nameToken);
             if (parent is DescriptorProto parentTyped)
@@ -1788,15 +1789,15 @@ namespace Google.Protobuf.Reflection
                 var conflict = parentTyped.Fields.Find(x => x.Number == number);
                 if (conflict != null)
                 {
-                    ctx.Errors.Error(numberToken, $"field {number} is already in use by '{conflict.Name}'");
+                    ctx.Errors.Error(numberToken, $"field {number} is already in use by '{conflict.Name}'", ErrorCode.FieldDuplicatedNumber);
                 }
                 if (parentTyped.ReservedNames.Contains(name))
                 {
-                    ctx.Errors.Error(nameToken, $"field '{name}' is reserved");
+                    ctx.Errors.Error(nameToken, $"field '{name}' is reserved", ErrorCode.FieldNameReserved);
                 }
                 if (parentTyped.ReservedRanges.Any(x => x.Start <= number && x.End > number))
                 {
-                    ctx.Errors.Error(numberToken, $"field {number} is reserved");
+                    ctx.Errors.Error(numberToken, $"field {number} is reserved", ErrorCode.FieldNumberReserved);
                 }
             }
 
@@ -1811,7 +1812,7 @@ namespace Google.Protobuf.Reflection
                 var firstChar = typeName[0].ToString();
                 if (firstChar.ToLowerInvariant() == firstChar)
                 {
-                    ctx.Errors.Error(nameToken, "group names must start with an upper-case letter");
+                    ctx.Errors.Error(nameToken, "group names must start with an upper-case letter", ErrorCode.GroupNamesStartUpperCase);
                 }
                 name = typeName.ToLowerInvariant();
                 if (ctx.TryReadObject<DescriptorProto>(out var grpType))
@@ -2077,7 +2078,7 @@ namespace Google.Protobuf.Reflection
             {
                 case "map_entry":
                     MapEntry = ctx.Tokens.ConsumeBoolean();
-                    ctx.Errors.Error(ctx.Tokens.Previous, "'map_entry' should not be set explicitly; use 'map<TKey,TValue>' instead");
+                    ctx.Errors.Error(ctx.Tokens.Previous, "'map_entry' should not be set explicitly; use 'map<TKey,TValue>' instead", ErrorCode.MapUseMapEntry);
                     return true;
                 case "message_set_wire_format": MessageSetWireFormat = ctx.Tokens.ConsumeBoolean(); return true;
                 case "no_standard_descriptor_accessor": NoStandardDescriptorAccessor = ctx.Tokens.ConsumeBoolean(); return true;
@@ -2222,10 +2223,10 @@ namespace ProtoBuf.Reflection
 {
     internal static class ErrorExtensions
     {
-        public static void Warn(this List<Error> errors, Token token, string message)
-            => errors.Add(new Error(token, message, false));
-        public static void Error(this List<Error> errors, Token token, string message)
-            => errors.Add(new Error(token, message, true));
+        public static void Warn(this List<Error> errors, Token token, string message, ErrorCode code)
+            => errors.Add(new Error(token, message, false, code));
+        public static void Error(this List<Error> errors, Token token, string message, ErrorCode code)
+            => errors.Add(new Error(token, message, true, code));
         public static void Error(this List<Error> errors, ParserException ex)
             => errors.Add(new Error(ex));
     }
@@ -2302,15 +2303,15 @@ namespace ProtoBuf.Reflection
             List<Error> errors = new List<Error>();
             using (var reader = new StringReader(stdout))
             {
-                Add(reader, errors);
+                Add(reader, errors, ProtoBuf.ErrorCode.ProtocError);
             }
             using (var reader = new StringReader(stderr))
             {
-                Add(reader, errors);
+                Add(reader, errors, ProtoBuf.ErrorCode.ProtocError);
             }
             return errors.ToArray();
         }
-        private static void Add(TextReader lines, List<Error> errors)
+        private static void Add(TextReader lines, List<Error> errors, ErrorCode code)
         {
             string line;
             while ((line = lines.ReadLine()) != null)
@@ -2343,7 +2344,7 @@ namespace ProtoBuf.Reflection
                         columnNumber = 1;
                     s = s.Substring(match.Length).Trim();
                 }
-                errors.Add(new Error(new Token(" ", lineNumber, columnNumber, TokenType.None, "", 0, file), s, isError));
+                errors.Add(new Error(new Token(" ", lineNumber, columnNumber, TokenType.None, "", 0, file), s, isError, code));
             }
         }
         internal string ToString(bool includeType) => Text.Length == 0
@@ -2360,7 +2361,7 @@ namespace ProtoBuf.Reflection
 
         private static readonly Error[] noErrors = new Error[0];
 
-        internal Error(Token token, string message, bool isError)
+        internal Error(Token token, string message, bool isError, ErrorCode code)
         {
             ColumnNumber = token.ColumnNumber;
             LineNumber = token.LineNumber;
@@ -2369,7 +2370,14 @@ namespace ProtoBuf.Reflection
             Message = message;
             IsError = isError;
             Text = token.Value;
+            TypedCode = code;
         }
+        
+        private ErrorCode TypedCode { get; }
+        /// <summary>
+        /// The error code defined for this scenario
+        /// </summary>
+        public int ErrorNumber => (int)TypedCode;
         internal Error(ParserException ex)
         {
             ColumnNumber = ex.ColumnNumber;
@@ -2379,6 +2387,7 @@ namespace ProtoBuf.Reflection
             Message = ex.Message;
             IsError = ex.IsError;
             Text = ex.Text ?? "";
+            TypedCode =  ProtoBuf.ErrorCode.Undefined;
         }
         /// <summary>
         /// True if this instance represents a non-fatal warning
@@ -2458,7 +2467,7 @@ namespace ProtoBuf.Reflection
                 if (Tokens.Peek(out var stateAfter) && stateBefore == stateAfter)
                 {
                     // we didn't move! avoid looping forever failing to do the same thing
-                    Errors.Error(stateAfter, "unknown error");
+                    Errors.Error(stateAfter, "unknown error", ErrorCode.UnknownParseError);
                     state = stateAfter.Is(TokenType.Symbol, "}")
                         ? AbortState.Object : AbortState.Statement;
                 }
@@ -2594,7 +2603,7 @@ namespace ProtoBuf.Reflection
                         case "false":
                             break;
                         default:
-                            Errors.Error(token, "expected 'true' or 'false'");
+                            Errors.Error(token, "expected 'true' or 'false'", ErrorCode.InvalidBoolean);
                             break;
                     }
                     break;
@@ -2612,7 +2621,7 @@ namespace ProtoBuf.Reflection
                             }
                             else
                             {
-                                Errors.Error(token, "invalid floating-point number");
+                                Errors.Error(token, "invalid floating-point number", ErrorCode.InvalidFloatingPoint);
                             }
                             break;
                     }
@@ -2631,7 +2640,7 @@ namespace ProtoBuf.Reflection
                             }
                             else
                             {
-                                Errors.Error(token, "invalid floating-point number");
+                                Errors.Error(token, "invalid floating-point number", ErrorCode.InvalidFloatingPoint);
                             }
                             break;
                     }
@@ -2646,7 +2655,7 @@ namespace ProtoBuf.Reflection
                         }
                         else
                         {
-                            Errors.Error(token, "invalid integer");
+                            Errors.Error(token, "invalid integer", ErrorCode.InvalidInteger);
                         }
                     }
                     break;
@@ -2659,7 +2668,7 @@ namespace ProtoBuf.Reflection
                         }
                         else
                         {
-                            Errors.Error(token, "invalid unsigned integer");
+                            Errors.Error(token, "invalid unsigned integer", ErrorCode.InvalidInteger);
                         }
                     }
                     break;
@@ -2673,7 +2682,7 @@ namespace ProtoBuf.Reflection
                         }
                         else
                         {
-                            Errors.Error(token, "invalid integer");
+                            Errors.Error(token, "invalid integer", ErrorCode.InvalidInteger);
                         }
                     }
                     break;
@@ -2686,7 +2695,7 @@ namespace ProtoBuf.Reflection
                         }
                         else
                         {
-                            Errors.Error(token, "invalid unsigned integer");
+                            Errors.Error(token, "invalid unsigned integer", ErrorCode.InvalidInteger);
                         }
                     }
                     break;
@@ -2696,7 +2705,7 @@ namespace ProtoBuf.Reflection
                 case FieldDescriptorProto.Type.TypeEnum:
                     break;
                 default:
-                    Errors.Error(token, $"default value not handled: {type}={defaultValue}");
+                    Errors.Error(token, $"default value not handled: {type}={defaultValue}", ErrorCode.DefaultValueNotHandled);
                     break;
             }
         }
@@ -2832,7 +2841,7 @@ namespace ProtoBuf.Reflection
 #if DEBUG && NETSTANDARD1_3
              + $" ({caller})"
 #endif
-                    );
+                     , ErrorCode.FieldDuplicatedName);
             }
         }
     }
