@@ -69,7 +69,7 @@ namespace ProtoBuf.Build
                 o.WriteLine(prop.Name + ": " + prop.EvaluatedValue + " (" + prop.UnevaluatedValue + ")");
             }
         }
-
+                
         string BuildProject(string projFile)
         {
             var pc = new ProjectCollection(gp);
@@ -96,6 +96,23 @@ namespace ProtoBuf.Build
         public void VBCodeGenTest()
         {
             var exepath = BuildProject("Data/Proj2/Proj.vbproj");
+        }
+
+        [Fact]
+        public void CodeGenErrors()
+        {
+            var testLogger = new TestLogger();
+            var projFile = "Data/Proj3/Proj.csproj";
+
+            var pc = new ProjectCollection(gp);
+            var proj = pc.LoadProject(projFile);
+            var restored = proj.Build("Restore", new[] { logger });
+            if (!restored) LogProps(proj);
+            Assert.True(restored, "Failed to restore packages");
+            var result = proj.Build(new ILogger[] { logger, testLogger });
+            Assert.False(result);
+            Assert.Equal(1, testLogger.Errors.Count);
+            Assert.Equal(1, testLogger.Warnings.Count);
         }
     }
 }
