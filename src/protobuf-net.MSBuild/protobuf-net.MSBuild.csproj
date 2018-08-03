@@ -27,9 +27,7 @@
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj">
       <PrivateAssets>All</PrivateAssets>
     </ProjectReference>
-    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj">
-      <PrivateAssets>All</PrivateAssets>
-    </ProjectReference>
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj"/>
   </ItemGroup>
 
   <Target Name="CopyBuildFiles" AfterTargets="CoreBuild" BeforeTargets="_CalculateInputsOutputsForPack">
