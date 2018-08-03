@@ -20,6 +20,7 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 ## v2.3.17
 
 - (#430/#431) - ensure build output from `protobuf-net.MSBuild` makes it into build output; add error codes
+- #429 - use `$IntermediateOutputPath` correctly from build tools
 
 ## v2.3.16
 
