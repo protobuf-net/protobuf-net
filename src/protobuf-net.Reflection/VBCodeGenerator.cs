@@ -46,7 +46,7 @@ namespace ProtoBuf
         /// </summary>
         protected override string DefaultFileExtension => "vb";
 
-        static HashSet<string> keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        private static readonly HashSet<string> keywords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "AddHandler",
             "AddressOf",
@@ -228,7 +228,6 @@ namespace ProtoBuf
                 ctx.WriteLine($"#Disable Warning BC40008, BC40055, IDE1006").WriteLine();
             }
 
-
             var @namespace = ctx.NameNormalizer.GetName(file);
 
             if (!string.IsNullOrWhiteSpace(@namespace))
@@ -236,8 +235,8 @@ namespace ProtoBuf
                 state = @namespace;
                 ctx.WriteLine($"Namespace {@namespace}").Indent();
             }
-
         }
+
         /// <summary>
         /// End a file
         /// </summary>
@@ -253,100 +252,104 @@ namespace ProtoBuf
                 ctx.WriteLine($"#Enable Warning BC40008, BC40055, IDE1006").WriteLine();
             }
         }
+
         /// <summary>
         /// Start an enum
         /// </summary>
-        protected override void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto obj, ref object state)
+        protected override void WriteEnumHeader(GeneratorContext ctx, EnumDescriptorProto @enum, ref object state)
         {
-            var name = ctx.NameNormalizer.GetName(obj);
-            var tw = ctx.Write($@"<Global.ProtoBuf.ProtoContract(");
-            if (name != obj.Name) tw.Write($@"Name := ""{obj.Name}""");
+            var name = ctx.NameNormalizer.GetName(@enum);
+            var tw = ctx.Write("<Global.ProtoBuf.ProtoContract(");
+            if (name != @enum.Name) tw.Write($@"Name := ""{@enum.Name}""");
             tw.WriteLine(")> _");
-            WriteOptions(ctx, obj.Options);
-            ctx.WriteLine($"{GetAccess(GetAccess(obj))} Enum {Escape(name)}").Indent();
+            WriteOptions(ctx, @enum.Options);
+            ctx.WriteLine($"{GetAccess(GetAccess(@enum))} Enum {Escape(name)}").Indent();
         }
         /// <summary>
         /// End an enum
         /// </summary>
 
-        protected override void WriteEnumFooter(GeneratorContext ctx, EnumDescriptorProto obj, ref object state)
+        protected override void WriteEnumFooter(GeneratorContext ctx, EnumDescriptorProto @enum, ref object state)
         {
             ctx.Outdent().WriteLine("End Enum").WriteLine();
         }
+
         /// <summary>
         /// Write an enum value
         /// </summary>
-        protected override void WriteEnumValue(GeneratorContext ctx, EnumValueDescriptorProto obj, ref object state)
+        protected override void WriteEnumValue(GeneratorContext ctx, EnumValueDescriptorProto @enum, ref object state)
         {
-            var name = ctx.NameNormalizer.GetName(obj);
-            if (name != obj.Name)
+            var name = ctx.NameNormalizer.GetName(@enum);
+            if (name != @enum.Name)
             {
-                var tw = ctx.Write($@"<Global.ProtoBuf.ProtoEnum(");
-                tw.Write($@"Name := ""{obj.Name}""");
+                var tw = ctx.Write("<Global.ProtoBuf.ProtoEnum(");
+                tw.Write($@"Name := ""{@enum.Name}""");
                 tw.WriteLine(")> _");
             }
 
-            WriteOptions(ctx, obj.Options);
-            ctx.WriteLine($"{Escape(name)} = {obj.Number}");
+            WriteOptions(ctx, @enum.Options);
+            ctx.WriteLine($"{Escape(name)} = {@enum.Number}");
         }
         private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
 
         /// <summary>
         /// Emit  the discriminator accessor for 'oneof' groups
         /// </summary>
-        protected override void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        protected override void WriteOneOfDiscriminator(GeneratorContext ctx, OneofDescriptorProto oneof, ref object state)
         {
-            var name = ctx.NameNormalizer.GetName(obj);
-            var fieldName = GetOneOfFieldName(obj);
+            var name = ctx.NameNormalizer.GetName(oneof);
+            var fieldName = GetOneOfFieldName(oneof);
             ctx.WriteLine($"Public ReadOnly Property {name}{OneOfEnumSuffixDiscriminator} As {name}{OneOfEnumSuffixEnum}").Indent().WriteLine("Get").Indent()
                 .WriteLine($"Return {fieldName}.Discriminator")
                 .Outdent().WriteLine("End Get").Outdent().WriteLine("End Property").WriteLine();
         }
+
         /// <summary>
         /// Emit the end of an enum declaration for 'oneof' groups
         /// </summary>
-        protected override void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        protected override void WriteOneOfEnumFooter(GeneratorContext ctx, OneofDescriptorProto oneof, ref object state)
         {
             ctx.Outdent().WriteLine("End Enum").WriteLine();
         }
+
         /// <summary>
         /// Emit the start of an enum declaration for 'oneof' groups, including the 0/None element
         /// </summary>
-        protected override void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto obj, ref object state)
+        protected override void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto oneof, ref object state)
         {
-            ctx.WriteLine($"Public Enum {Escape(ctx.NameNormalizer.GetName(obj))}{OneOfEnumSuffixEnum}").Indent().WriteLine("None = 0");
+            ctx.WriteLine($"Public Enum {Escape(ctx.NameNormalizer.GetName(oneof))}{OneOfEnumSuffixEnum}").Indent().WriteLine("None = 0");
         }
 
         /// <summary>
         /// Emit a field-based entry for a 'oneof' groups's enum
         /// </summary>
-        protected override void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto obj, ref object state)
+        protected override void WriteOneOfEnumValue(GeneratorContext ctx, FieldDescriptorProto field, ref object state)
         {
-            var name = ctx.NameNormalizer.GetName(obj);
-            ctx.WriteLine($"{Escape(name)} = {obj.Number}");
+            var name = ctx.NameNormalizer.GetName(field);
+            ctx.WriteLine($"{Escape(name)} = {field.Number}");
         }
 
         /// <summary>
         /// End a message
         /// </summary>
-        protected override void WriteMessageFooter(GeneratorContext ctx, DescriptorProto obj, ref object state)
+        protected override void WriteMessageFooter(GeneratorContext ctx, DescriptorProto message, ref object state)
         {
             ctx.Outdent().WriteLine("End Class").WriteLine();
         }
         /// <summary>
         /// Start a message
         /// </summary>
-        protected override void WriteMessageHeader(GeneratorContext ctx, DescriptorProto obj, ref object state)
+        protected override void WriteMessageHeader(GeneratorContext ctx, DescriptorProto message, ref object state)
         {
-            var name = ctx.NameNormalizer.GetName(obj);
-            var tw = ctx.Write($@"<Global.ProtoBuf.ProtoContract(");
-            if (name != obj.Name) tw.Write($@"Name := ""{obj.Name}""");
+            var name = ctx.NameNormalizer.GetName(message);
+            var tw = ctx.Write("<Global.ProtoBuf.ProtoContract(");
+            if (name != message.Name) tw.Write($@"Name := ""{message.Name}""");
             tw.WriteLine(")> _");
-            WriteOptions(ctx, obj.Options);
-            ctx.WriteLine($"Partial {GetAccess(GetAccess(obj))} Class {Escape(name)}");
+            WriteOptions(ctx, message.Options);
+            ctx.WriteLine($"Partial {GetAccess(GetAccess(message))} Class {Escape(name)}");
             ctx.Indent().WriteLine("Implements Global.ProtoBuf.IExtensible").WriteLine();
 
-            if (obj.Options?.MessageSetWireFormat == true)
+            if (message.Options?.MessageSetWireFormat == true)
             {
                 ctx.WriteLine("REM #error message_set_wire_format is not currently implemented").WriteLine();
             }
@@ -366,7 +369,7 @@ namespace ProtoBuf
             }
         }
 
-        const string FieldPrefix = "__pbn__";
+        private const string FieldPrefix = "__pbn__";
 
         /// <summary>
         /// Get the language specific keyword representing an access level
@@ -422,7 +425,7 @@ namespace ProtoBuf
                         EnumValueDescriptorProto found = null;
                         if (!string.IsNullOrEmpty(defaultValue))
                         {
-                            found = enumType.Values.FirstOrDefault(x => x.Name == defaultValue);
+                            found = enumType.Values.Find(x => x.Name == defaultValue);
                         }
                         else if (ctx.Syntax == FileDescriptorProto.SyntaxProto2)
                         {
@@ -449,8 +452,8 @@ namespace ProtoBuf
                 {
                     switch (typeName)
                     {
-                        case "UInteger": defaultValue = defaultValue + "UI"; break;
-                        case "ULong": defaultValue = defaultValue + "UL"; break;
+                        case "UInteger": defaultValue += "UI"; break;
+                        case "ULong": defaultValue += "UL"; break;
                     }
                 }
             }
@@ -460,51 +463,51 @@ namespace ProtoBuf
         /// <summary>
         /// Write a field
         /// </summary>
-        protected override void WriteField(GeneratorContext ctx, FieldDescriptorProto obj, ref object state, OneOfStub[] oneOfs)
+        protected override void WriteField(GeneratorContext ctx, FieldDescriptorProto field, ref object state, OneOfStub[] oneOfs)
         {
-            var name = ctx.NameNormalizer.GetName(obj);
+            var name = ctx.NameNormalizer.GetName(field);
 
-            var tw = ctx.Write($@"<Global.ProtoBuf.ProtoMember({obj.Number}");
-            if (name != obj.Name)
+            var tw = ctx.Write($"<Global.ProtoBuf.ProtoMember({field.Number}");
+            if (name != field.Name)
             {
-                tw.Write($@", Name := ""{obj.Name}""");
+                tw.Write($@", Name := ""{field.Name}""");
             }
-            var options = obj.Options?.GetOptions();
+            var options = field.Options?.GetOptions();
             if (options?.AsReference == true)
             {
-                tw.Write($@", AsReference := True");
+                tw.Write(", AsReference := True");
             }
             if (options?.DynamicType == true)
             {
-                tw.Write($@", DynamicType := True");
+                tw.Write(", DynamicType := True");
             }
 
-            bool isOptional = obj.label == FieldDescriptorProto.Label.LabelOptional;
-            bool isRepeated = obj.label == FieldDescriptorProto.Label.LabelRepeated;
+            bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
+            bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
 
-            OneOfStub oneOf = obj.ShouldSerializeOneofIndex() ? oneOfs?[obj.OneofIndex] : null;
+            OneOfStub oneOf = field.ShouldSerializeOneofIndex() ? oneOfs?[field.OneofIndex] : null;
             if (oneOf != null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
             }
             bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
-                && obj.type != FieldDescriptorProto.Type.TypeMessage
-                && obj.type != FieldDescriptorProto.Type.TypeGroup;
+                && field.type != FieldDescriptorProto.Type.TypeMessage
+                && field.type != FieldDescriptorProto.Type.TypeGroup;
 
             bool suppressDefaultAttribute = !isOptional;
-            var typeName = GetTypeName(ctx, obj, out var dataFormat, out var isMap);
+            var typeName = GetTypeName(ctx, field, out var dataFormat, out var isMap);
 
-            string defaultValue = GetDefaultValue(ctx, obj, typeName);
+            string defaultValue = GetDefaultValue(ctx, field, typeName);
 
             if (!string.IsNullOrWhiteSpace(dataFormat))
             {
                 tw.Write($", DataFormat := Global.ProtoBuf.DataFormat.{dataFormat}");
             }
-            if (obj.IsPacked(ctx.Syntax))
+            if (field.IsPacked(ctx.Syntax))
             {
                 tw.Write($", IsPacked := True");
             }
-            if (obj.label == FieldDescriptorProto.Label.LabelRequired)
+            if (field.label == FieldDescriptorProto.Label.LabelRequired)
             {
                 tw.Write($", IsRequired := True");
             }
@@ -513,10 +516,10 @@ namespace ProtoBuf
             {
                 ctx.WriteLine($"<Global.System.ComponentModel.DefaultValue({defaultValue})> _");
             }
-            WriteOptions(ctx, obj.Options);
+            WriteOptions(ctx, field.Options);
             if (isRepeated)
             {
-                var mapMsgType = isMap ? ctx.TryFind<DescriptorProto>(obj.TypeName) : null;
+                var mapMsgType = isMap ? ctx.TryFind<DescriptorProto>(field.TypeName) : null;
                 if (mapMsgType != null)
                 {
                     var keyTypeName = GetTypeName(ctx, mapMsgType.Fields.Single(x => x.Number == 1),
@@ -540,28 +543,28 @@ namespace ProtoBuf
 
                     if (ctx.Supports(VB14))
                     {
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} Readonly Property {Escape(name)} As New Global.System.Collections.Generic.Dictionary(Of {keyTypeName}, {valueTypeName})");
+                        ctx.WriteLine($"{GetAccess(GetAccess(field))} Readonly Property {Escape(name)} As New Global.System.Collections.Generic.Dictionary(Of {keyTypeName}, {valueTypeName})");
                     }
                     else
                     {
                         var fieldName = FieldPrefix + name;
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} Readonly Property {Escape(name)} As Global.System.Collections.Generic.Dictionary(Of {keyTypeName}, {valueTypeName})").Indent()
+                        ctx.WriteLine($"{GetAccess(GetAccess(field))} Readonly Property {Escape(name)} As Global.System.Collections.Generic.Dictionary(Of {keyTypeName}, {valueTypeName})").Indent()
                             .WriteLine("Get").Indent()
                             .WriteLine($"Return {fieldName}")
                             .Outdent().WriteLine("End Get").Outdent().WriteLine("End Property").WriteLine()
                             .WriteLine($"Private ReadOnly {fieldName} As New Global.System.Collections.Generic.Dictionary(Of {keyTypeName}, {valueTypeName})").WriteLine();
                     }
                 }
-                else if (UseArray(obj))
+                else if (UseArray(field))
                 {
                     if (ctx.Supports(VB11))
                     {
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}()");
+                        ctx.WriteLine($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}()");
                     }
                     else
                     {
                         var fieldName = FieldPrefix + name;
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}()")
+                        ctx.WriteLine($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}()")
                             .Indent().WriteLine("Get").Indent().WriteLine($"Return {fieldName}").Outdent().WriteLine("End Get").Outdent()
                             .Indent().WriteLine($"Set(ByVal value as {typeName}())").Indent().WriteLine($"{fieldName} = value").Outdent().WriteLine("End Set").Outdent()
                             .WriteLine("End Property").WriteLine()
@@ -570,15 +573,14 @@ namespace ProtoBuf
                 }
                 else
                 {
-
                     if (ctx.Supports(VB14))
                     {
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} Readonly Property {Escape(name)} As New Global.System.Collections.Generic.List(Of {typeName})");
+                        ctx.WriteLine($"{GetAccess(GetAccess(field))} Readonly Property {Escape(name)} As New Global.System.Collections.Generic.List(Of {typeName})");
                     }
                     else
                     {
                         var fieldName = FieldPrefix + name;
-                        ctx.WriteLine($"{GetAccess(GetAccess(obj))} Readonly Property {Escape(name)} As Global.System.Collections.Generic.List(Of {typeName})").Indent()
+                        ctx.WriteLine($"{GetAccess(GetAccess(field))} Readonly Property {Escape(name)} As Global.System.Collections.Generic.List(Of {typeName})").Indent()
                             .WriteLine("Get").Indent()
                             .WriteLine($"Return {fieldName}")
                             .Outdent().WriteLine("End Get").Outdent().WriteLine("End Property").WriteLine()
@@ -590,19 +592,19 @@ namespace ProtoBuf
             {
                 var defValue = string.IsNullOrWhiteSpace(defaultValue) ? $"CType(Nothing, {typeName})" : defaultValue;
                 var fieldName = GetOneOfFieldName(oneOf.OneOf);
-                var storage = oneOf.GetStorage(obj.type, obj.TypeName);
-                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}").Indent().WriteLine("Get").Indent();
-                switch (obj.type)
+                var storage = oneOf.GetStorage(field.type, field.TypeName);
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}").Indent().WriteLine("Get").Indent();
+                switch (field.type)
                 {
                     case FieldDescriptorProto.Type.TypeMessage:
                     case FieldDescriptorProto.Type.TypeGroup:
                     case FieldDescriptorProto.Type.TypeEnum:
                     case FieldDescriptorProto.Type.TypeBytes:
                     case FieldDescriptorProto.Type.TypeString:
-                        ctx.WriteLine($"Return If({fieldName}.Is({obj.Number}), CType({fieldName}.{storage}, {typeName}), {defValue})");
+                        ctx.WriteLine($"Return If({fieldName}.Is({field.Number}), CType({fieldName}.{storage}, {typeName}), {defValue})");
                         break;
                     default:
-                        ctx.WriteLine($"Return If({fieldName}.Is({obj.Number}), {fieldName}.{storage}, {defValue})");
+                        ctx.WriteLine($"Return If({fieldName}.Is({field.Number}), {fieldName}.{storage}, {defValue})");
                         break;
                 }
                 ctx.Outdent().WriteLine("End Get");
@@ -610,15 +612,15 @@ namespace ProtoBuf
                 var unionType = oneOf.GetUnionType();
 
                 ctx.WriteLine($"Set(ByVal value As {typeName})").Indent()
-                    .WriteLine($"{fieldName} = New Global.ProtoBuf.{unionType}({obj.Number}, value)").Outdent().WriteLine("End Set");
+                    .WriteLine($"{fieldName} = New Global.ProtoBuf.{unionType}({field.Number}, value)").Outdent().WriteLine("End Set");
 
                 ctx.Outdent().WriteLine("End Property").WriteLine();
 
-                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Function ShouldSerialize{name}() As Boolean").Indent()
-                    .WriteLine($"Return {fieldName}.Is({obj.Number})").Outdent()
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} Function ShouldSerialize{name}() As Boolean").Indent()
+                    .WriteLine($"Return {fieldName}.Is({field.Number})").Outdent()
                     .WriteLine("End Function").WriteLine()
-                    .WriteLine($"{GetAccess(GetAccess(obj))} Sub Reset{name}()").Indent()
-                    .WriteLine($"Global.ProtoBuf.{unionType}.Reset({fieldName}, {obj.Number})")
+                    .WriteLine($"{GetAccess(GetAccess(field))} Sub Reset{name}()").Indent()
+                    .WriteLine($"Global.ProtoBuf.{unionType}.Reset({fieldName}, {field.Number})")
                     .Outdent().WriteLine("End Sub");
 
                 if (oneOf.IsFirst())
@@ -630,7 +632,7 @@ namespace ProtoBuf
             {
                 string fieldName = FieldPrefix + name, fieldType;
                 bool isRef = false;
-                switch (obj.type)
+                switch (field.type)
                 {
                     case FieldDescriptorProto.Type.TypeString:
                     case FieldDescriptorProto.Type.TypeBytes:
@@ -642,7 +644,7 @@ namespace ProtoBuf
                         break;
                 }
 
-                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}").Indent()
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}").Indent()
                     .WriteLine("Get").Indent();
 
                 if (!string.IsNullOrWhiteSpace(defaultValue))
@@ -662,10 +664,10 @@ namespace ProtoBuf
                     .WriteLine($"{fieldName} = value").Outdent().WriteLine("End Set").
                     Outdent().WriteLine("End Property");
 
-                ctx.WriteLine($"{GetAccess(GetAccess(obj))} Function ShouldSerialize{name}() As Boolean").Indent()
+                ctx.WriteLine($"{GetAccess(GetAccess(field))} Function ShouldSerialize{name}() As Boolean").Indent()
                     .WriteLine($"Return Not ({fieldName} Is Nothing)").Outdent()
                     .WriteLine("End Function")
-                    .WriteLine($"{GetAccess(GetAccess(obj))} Sub Reset{name}()").Indent()
+                    .WriteLine($"{GetAccess(GetAccess(field))} Sub Reset{name}()").Indent()
                     .WriteLine($"{fieldName} = Nothing").Outdent().WriteLine("End Sub");
 
                 ctx.WriteLine($"Private {fieldName} As {fieldType}");
@@ -674,14 +676,14 @@ namespace ProtoBuf
             {
                 if (ctx.Supports(VB11))
                 {
-                    tw = ctx.Write($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}");
+                    tw = ctx.Write($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}");
                     if (!string.IsNullOrWhiteSpace(defaultValue)) tw.Write($" = {defaultValue}");
                     tw.WriteLine();
                 }
                 else
                 {
                     var fieldName = FieldPrefix + name;
-                    tw = ctx.WriteLine($"{GetAccess(GetAccess(obj))} Property {Escape(name)} As {typeName}")
+                    tw = ctx.WriteLine($"{GetAccess(GetAccess(field))} Property {Escape(name)} As {typeName}")
                         .Indent().WriteLine("Get").Indent().WriteLine($"Return {fieldName}").Outdent().WriteLine("End Get").Outdent()
                         .Indent().WriteLine($"Set(ByVal value as {typeName})").Indent().WriteLine($"{fieldName} = value").Outdent().WriteLine("End Set").Outdent()
                         .WriteLine("End Property").WriteLine()
@@ -696,33 +698,33 @@ namespace ProtoBuf
         /// <summary>
         /// Starts an extgensions block
         /// </summary>
-        protected override void WriteExtensionsHeader(GeneratorContext ctx, FileDescriptorProto obj, ref object state)
+        protected override void WriteExtensionsHeader(GeneratorContext ctx, FileDescriptorProto file, ref object state)
         {
-            var name = obj?.Options?.GetOptions()?.ExtensionTypeName;
+            var name = file?.Options?.GetOptions()?.ExtensionTypeName;
             if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
             ctx.WriteLine("<Global.System.Runtime.CompilerServices.Extension> _")
-               .WriteLine($"{GetAccess(GetAccess(obj))} Module {Escape(name)}").Indent();
+               .WriteLine($"{GetAccess(GetAccess(file))} Module {Escape(name)}").Indent();
         }
         /// <summary>
         /// Ends an extgensions block
         /// </summary>
-        protected override void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto obj, ref object state)
+        protected override void WriteExtensionsFooter(GeneratorContext ctx, FileDescriptorProto file, ref object state)
         {
             ctx.Outdent().WriteLine("End Module");
         }
         /// <summary>
         /// Starts an extensions block
         /// </summary>
-        protected override void WriteExtensionsHeader(GeneratorContext ctx, DescriptorProto obj, ref object state)
+        protected override void WriteExtensionsHeader(GeneratorContext ctx, DescriptorProto message, ref object state)
         {
-            var name = obj?.Options?.GetOptions()?.ExtensionTypeName;
+            var name = message?.Options?.GetOptions()?.ExtensionTypeName;
             if (string.IsNullOrWhiteSpace(name)) name = "Extensions";
             //ctx.WriteLine($"{GetAccess(GetAccess(obj))} Module {Escape(name)}").Indent();
         }
         /// <summary>
         /// Ends an extensions block
         /// </summary>
-        protected override void WriteExtensionsFooter(GeneratorContext ctx, DescriptorProto obj, ref object state)
+        protected override void WriteExtensionsFooter(GeneratorContext ctx, DescriptorProto message, ref object state)
         {
             // ctx.Outdent().WriteLine("End Module");
         }
@@ -880,9 +882,9 @@ namespace ProtoBuf
 
             var declaringType = field.Parent;
 
-            if (declaringType is IType)
+            if (declaringType is IType type)
             {
-                var name = FindNameFromCommonAncestor((IType)declaringType, target, normalizer);
+                var name = FindNameFromCommonAncestor(type, target, normalizer);
                 if (!string.IsNullOrWhiteSpace(name)) return name;
             }
             return Escape(field.TypeName); // give up!
@@ -909,8 +911,8 @@ namespace ProtoBuf
             // trivial case; asking for self, or asking for immediate child
             if (ReferenceEquals(declaring, target) || ReferenceEquals(declaring, target.Parent))
             {
-                if (target is DescriptorProto) return Escape(normalizer.GetName((DescriptorProto)target));
-                if (target is EnumDescriptorProto) return Escape(normalizer.GetName((EnumDescriptorProto)target));
+                if (target is DescriptorProto message) return Escape(normalizer.GetName(message));
+                if (target is EnumDescriptorProto @enum) return Escape(normalizer.GetName(@enum));
                 return null;
             }
 
@@ -937,8 +939,8 @@ namespace ProtoBuf
                 if (!ReferenceEquals(target, declaring))
                 {
                     // special-case: if both are the package (file), and they have the same namespace: we're OK
-                    if (target is FileDescriptorProto && declaring is FileDescriptorProto &&
-                        normalizer.GetName((FileDescriptorProto)declaring) == normalizer.GetName((FileDescriptorProto)target))
+                    if (target is FileDescriptorProto && declaring is FileDescriptorProto
+                        && normalizer.GetName((FileDescriptorProto)declaring) == normalizer.GetName((FileDescriptorProto)target))
                     {
                         // that's fine, keep going
                     }
@@ -954,8 +956,8 @@ namespace ProtoBuf
             if (yStack.Count == 0)
             {
                 target = origTarget;
-                if (target is DescriptorProto) return Escape(normalizer.GetName((DescriptorProto)target));
-                if (target is EnumDescriptorProto) return Escape(normalizer.GetName((EnumDescriptorProto)target));
+                if (target is DescriptorProto message) return Escape(normalizer.GetName(message));
+                if (target is EnumDescriptorProto @enum) return Escape(normalizer.GetName(@enum));
                 return null;
             }
 
@@ -965,9 +967,9 @@ namespace ProtoBuf
                 target = yStack.Pop();
 
                 string nextName;
-                if (target is FileDescriptorProto) nextName = normalizer.GetName((FileDescriptorProto)target);
-                else if (target is DescriptorProto) nextName = normalizer.GetName((DescriptorProto)target);
-                else if (target is EnumDescriptorProto) nextName = normalizer.GetName((EnumDescriptorProto)target);
+                if (target is FileDescriptorProto file) nextName = normalizer.GetName(file);
+                else if (target is DescriptorProto message) nextName = normalizer.GetName(message);
+                else if (target is EnumDescriptorProto @enum) nextName = normalizer.GetName(@enum);
                 else return null;
 
                 if (!string.IsNullOrWhiteSpace(nextName))
@@ -980,16 +982,7 @@ namespace ProtoBuf
             return sb.ToString();
         }
 
-        static bool IsAncestorOrSelf(IType parent, IType child)
-        {
-            while (parent != null)
-            {
-                if (ReferenceEquals(parent, child)) return true;
-                parent = parent.Parent;
-            }
-            return false;
-        }
-        const string WellKnownTypeTimestamp = ".google.protobuf.Timestamp",
+        private const string WellKnownTypeTimestamp = ".google.protobuf.Timestamp",
                      WellKnownTypeDuration = ".google.protobuf.Duration";
     }
 }

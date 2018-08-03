@@ -2,7 +2,7 @@
 // Consider using 'partial classes' to extend these types
 // Input: protogen.proto
 
-#pragma warning disable CS1591, CS0612, CS3021, IDE1006
+#pragma warning disable CS0612, CS1591, CS3021, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
 namespace ProtoBuf.Reflection
 {
 
@@ -174,28 +174,52 @@ namespace ProtoBuf.Reflection
         public static ProtogenFileOptions GetOptions(this global::Google.Protobuf.Reflection.FileOptions obj)
             => obj == null ? default : global::ProtoBuf.Extensible.GetValue<ProtogenFileOptions>(obj, 1037);
 
+        public static void SetOptions(this global::Google.Protobuf.Reflection.FileOptions obj, ProtogenFileOptions value)
+            => global::ProtoBuf.Extensible.AppendValue<ProtogenFileOptions>(obj, 1037, value);
+
         public static ProtogenMessageOptions GetOptions(this global::Google.Protobuf.Reflection.MessageOptions obj)
             => obj == null ? default : global::ProtoBuf.Extensible.GetValue<ProtogenMessageOptions>(obj, 1037);
+
+        public static void SetOptions(this global::Google.Protobuf.Reflection.MessageOptions obj, ProtogenMessageOptions value)
+            => global::ProtoBuf.Extensible.AppendValue<ProtogenMessageOptions>(obj, 1037, value);
 
         public static ProtogenFieldOptions GetOptions(this global::Google.Protobuf.Reflection.FieldOptions obj)
             => obj == null ? default : global::ProtoBuf.Extensible.GetValue<ProtogenFieldOptions>(obj, 1037);
 
+        public static void SetOptions(this global::Google.Protobuf.Reflection.FieldOptions obj, ProtogenFieldOptions value)
+            => global::ProtoBuf.Extensible.AppendValue<ProtogenFieldOptions>(obj, 1037, value);
+
         public static ProtogenEnumOptions GetOptions(this global::Google.Protobuf.Reflection.EnumOptions obj)
             => obj == null ? default : global::ProtoBuf.Extensible.GetValue<ProtogenEnumOptions>(obj, 1037);
+
+        public static void SetOptions(this global::Google.Protobuf.Reflection.EnumOptions obj, ProtogenEnumOptions value)
+            => global::ProtoBuf.Extensible.AppendValue<ProtogenEnumOptions>(obj, 1037, value);
 
         public static ProtogenEnumValueOptions GetOptions(this global::Google.Protobuf.Reflection.EnumValueOptions obj)
             => obj == null ? default : global::ProtoBuf.Extensible.GetValue<ProtogenEnumValueOptions>(obj, 1037);
 
+        public static void SetOptions(this global::Google.Protobuf.Reflection.EnumValueOptions obj, ProtogenEnumValueOptions value)
+            => global::ProtoBuf.Extensible.AppendValue<ProtogenEnumValueOptions>(obj, 1037, value);
+
         public static ProtogenServiceOptions GetOptions(this global::Google.Protobuf.Reflection.ServiceOptions obj)
             => obj == null ? default : global::ProtoBuf.Extensible.GetValue<ProtogenServiceOptions>(obj, 1037);
+
+        public static void SetOptions(this global::Google.Protobuf.Reflection.ServiceOptions obj, ProtogenServiceOptions value)
+            => global::ProtoBuf.Extensible.AppendValue<ProtogenServiceOptions>(obj, 1037, value);
 
         public static ProtogenMethodOptions GetOptions(this global::Google.Protobuf.Reflection.MethodOptions obj)
             => obj == null ? default : global::ProtoBuf.Extensible.GetValue<ProtogenMethodOptions>(obj, 1037);
 
+        public static void SetOptions(this global::Google.Protobuf.Reflection.MethodOptions obj, ProtogenMethodOptions value)
+            => global::ProtoBuf.Extensible.AppendValue<ProtogenMethodOptions>(obj, 1037, value);
+
         public static ProtogenOneofOptions GetOptions(this global::Google.Protobuf.Reflection.OneofOptions obj)
             => obj == null ? default : global::ProtoBuf.Extensible.GetValue<ProtogenOneofOptions>(obj, 1037);
+
+        public static void SetOptions(this global::Google.Protobuf.Reflection.OneofOptions obj, ProtogenOneofOptions value)
+            => global::ProtoBuf.Extensible.AppendValue<ProtogenOneofOptions>(obj, 1037, value);
 
     }
 }
 
-#pragma warning restore CS1591, CS0612, CS3021, IDE1006
+#pragma warning restore CS0612, CS1591, CS3021, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192

@@ -2,7 +2,7 @@
 
 namespace ProtoBuf.Reflection
 {
-    partial class CommonCodeGenerator
+    public partial class CommonCodeGenerator
     {
         /// <summary>
         /// Represents the union summary of a one-of declaration
@@ -114,7 +114,7 @@ namespace ProtoBuf.Reflection
                         return "Object";
                 }
             }
-            internal static OneOfStub[] Build(GeneratorContext context, DescriptorProto message)
+            internal static OneOfStub[] Build(DescriptorProto message)
             {
                 if (message.OneofDecls.Count == 0) return null;
                 var stubs = new OneOfStub[message.OneofDecls.Count];

@@ -6,22 +6,22 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Reflection;
 
 namespace Google.Protobuf.Reflection
 {
 #pragma warning disable CS1591
 
-    interface IType
+    internal interface IType
     {
         IType Parent { get; }
         string FullyQualifiedName { get; }
 
         IType Find(string name);
     }
-    partial class FileDescriptorSet
+    public partial class FileDescriptorSet
     {
         internal const string Namespace = ".google.protobuf.";
         public Func<string, bool> ImportValidator { get; set; }
@@ -74,7 +74,7 @@ namespace Google.Protobuf.Reflection
         /// Default package to use when none is specified; can use #FILE# and #DIR# tokens
         /// </summary>
         public string DefaultPackage { get; set; }
-        string GetDefaultPackageName(string path)
+        private string GetDefaultPackageName(string path)
         {
             if (string.IsNullOrWhiteSpace(DefaultPackage)) return null;
 
@@ -98,10 +98,9 @@ namespace Google.Protobuf.Reflection
             }
             return File.OpenText(found);
         }
-        static Stream TryGetEmbedded(string name)
+        private static Stream TryGetEmbedded(string name)
         {
-            if (string.IsNullOrWhiteSpace(name)
-                || !name.EndsWith(".proto")) return null;
+            if (string.IsNullOrWhiteSpace(name) || !name.EndsWith(".proto")) return null;
 
             if (name.StartsWith("google/")
                 || name.StartsWith("protobuf-net/"))
@@ -118,7 +117,7 @@ namespace Google.Protobuf.Reflection
             }
             return null;
         }
-        string FindFile(string file)
+        private string FindFile(string file)
         {
             string rel;
             foreach (var path in importPaths)
@@ -128,16 +127,16 @@ namespace Google.Protobuf.Reflection
             }
             return null;
         }
-        bool TryResolve(string name, FileDescriptorProto from, out FileDescriptorProto descriptor)
+        private bool TryResolve(string name, FileDescriptorProto from, out FileDescriptorProto descriptor)
         {
-            descriptor = Files.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+            descriptor = Files.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
 
             if (descriptor == null && from != null && AllowNameOnlyImport && Path.GetFileName(name) == name) // only if no folder specified
             {
                 try
                 {
                     var inSameFolder = Path.Combine(Path.GetDirectoryName(from.Name), name);
-                    descriptor = Files.FirstOrDefault(x => string.Equals(x.Name, inSameFolder, StringComparison.OrdinalIgnoreCase));
+                    descriptor = Files.Find(x => string.Equals(x.Name, inSameFolder, StringComparison.OrdinalIgnoreCase));
                 }
                 catch { } // ignore
             }
@@ -150,7 +149,7 @@ namespace Google.Protobuf.Reflection
             do
             {
                 didSomething = false;
-                var file = Files.FirstOrDefault(x => x.HasPendingImports);
+                var file = Files.Find(x => x.HasPendingImports);
                 if (file != null)
                 {
                     // note that GetImports clears the flag
@@ -180,7 +179,7 @@ namespace Google.Protobuf.Reflection
             {
                 using (var ctx = new ParserContext(file, null, Errors))
                 {
-                    file.BuildTypeHierarchy(this, ctx);
+                    file.BuildTypeHierarchy(this);
                 }
             }
             foreach (var file in Files)
@@ -225,7 +224,7 @@ namespace Google.Protobuf.Reflection
         internal FileDescriptorProto GetFile(FileDescriptorProto from, string path)
             => TryResolve(path, from, out var descriptor) ? descriptor : null;
     }
-    partial class DescriptorProto : ISchemaObject, IType, IMessage
+    public partial class DescriptorProto : ISchemaObject, IType, IMessage
     {
         public static byte[] GetExtensionData(IExtensible obj)
         {
@@ -235,7 +234,7 @@ namespace Google.Protobuf.Reflection
             var s = ext.BeginQuery();
             try
             {
-                if (s is MemoryStream) return ((MemoryStream)s).ToArray();
+                if (s is MemoryStream ms) return (ms).ToArray();
 
                 byte[] buffer = new byte[len];
                 int offset = 0, read;
@@ -276,8 +275,8 @@ namespace Google.Protobuf.Reflection
         string IType.FullyQualifiedName => FullyQualifiedName;
         IType IType.Find(string name)
         {
-            return (IType)NestedTypes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
-                ?? (IType)EnumTypes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+            return (IType)NestedTypes.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? (IType)EnumTypes.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
         internal string FullyQualifiedName { get; set; }
 
@@ -285,8 +284,6 @@ namespace Google.Protobuf.Reflection
 
         internal int MaxField => (Options?.MessageSetWireFormat == true) ? int.MaxValue : FieldDescriptorProto.DefaultMaxField;
         int IMessage.MaxField => MaxField;
-
-
         internal static bool TryParse(ParserContext ctx, IHazNames parent, out DescriptorProto obj)
         {
             var name = ctx.Tokens.Consume(TokenType.AlphaNumeric);
@@ -343,8 +340,6 @@ namespace Google.Protobuf.Reflection
                     Fields.Add(obj);
             }
         }
-
-
         private void ParseMap(ParserContext ctx)
         {
             ctx.AbortState = AbortState.Statement;
@@ -472,8 +467,6 @@ namespace Google.Protobuf.Reflection
             ctx.AbortState = AbortState.None;
         }
 
-
-
         private void ParseReservedRanges(ParserContext ctx)
         {
             ctx.AbortState = AbortState.Statement;
@@ -485,7 +478,7 @@ namespace Google.Protobuf.Reflection
                     while (true)
                     {
                         var name = tokens.Consume(TokenType.StringLiteral);
-                        var conflict = Fields.FirstOrDefault(x => x.Name == name);
+                        var conflict = Fields.Find(x => x.Name == name);
                         if (conflict != null)
                         {
                             ctx.Errors.Error(tokens.Previous, $"'{conflict.Name}' is already in use by field {conflict.Number}");
@@ -514,7 +507,7 @@ namespace Google.Protobuf.Reflection
                             tokens.Consume();
                             to = tokens.ConsumeInt32();
                         }
-                        var conflict = Fields.FirstOrDefault(x => x.Number >= from && x.Number <= to);
+                        var conflict = Fields.Find(x => x.Number >= from && x.Number <= to);
                         if (conflict != null)
                         {
                             ctx.Errors.Error(tokens.Previous, $"field {conflict.Number} is already in use by '{conflict.Name}'");
@@ -552,7 +545,7 @@ namespace Google.Protobuf.Reflection
         }
     }
 
-    partial class OneofDescriptorProto : ISchemaObject
+    public partial class OneofDescriptorProto : ISchemaObject
     {
         internal DescriptorProto Parent { get; set; }
         internal static void Parse(ParserContext ctx, DescriptorProto parent)
@@ -581,13 +574,13 @@ namespace Google.Protobuf.Reflection
             {
                 if (FieldDescriptorProto.TryParse(ctx, Parent, true, out var field))
                 {
-                    field.OneofIndex = Parent.OneofDecls.Count() - 1;
+                    field.OneofIndex = Parent.OneofDecls.Count - 1;
                     Parent.Fields.Add(field);
                 }
             }
         }
     }
-    partial class OneofOptions : ISchemaOptions
+    public partial class OneofOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(OneofOptions);
         public byte[] ExtensionData
@@ -598,13 +591,13 @@ namespace Google.Protobuf.Reflection
         bool ISchemaOptions.Deprecated { get { return false; } set { } }
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
     }
-    partial class FileDescriptorProto : ISchemaObject, IMessage, IType
+    public partial class FileDescriptorProto : ISchemaObject, IMessage, IType
     {
         internal static FileDescriptorProto GetFile(IType type)
         {
             while (type != null)
             {
-                if (type is FileDescriptorProto) return (FileDescriptorProto)type;
+                if (type is FileDescriptorProto file) return file;
                 type = type.Parent;
             }
             return null;
@@ -620,8 +613,8 @@ namespace Google.Protobuf.Reflection
         IType IType.Parent => null;
         IType IType.Find(string name)
         {
-            return (IType)MessageTypes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
-                ?? (IType)EnumTypes.FirstOrDefault(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
+            return (IType)MessageTypes.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase))
+                ?? (IType)EnumTypes.Find(x => string.Equals(x.Name, name, StringComparison.OrdinalIgnoreCase));
         }
         internal bool HasPendingImports { get; private set; }
         internal FileDescriptorSet Parent { get; private set; }
@@ -637,10 +630,10 @@ namespace Google.Protobuf.Reflection
             }
             return _imports;
         }
-        readonly List<Import> _imports = new List<Import>();
+        private readonly List<Import> _imports = new List<Import>();
         internal bool AddImport(string path, bool isPublic, Token token)
         {
-            var existing = _imports.FirstOrDefault(x => string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase));
+            var existing = _imports.Find(x => string.Equals(x.Path, path, StringComparison.OrdinalIgnoreCase));
             if (existing != null)
             {
                 // we'll allow this to upgrade
@@ -688,13 +681,11 @@ namespace Google.Protobuf.Reflection
                 }
                 tokens.Consume(TokenType.Symbol, ";");
                 ctx.AbortState = AbortState.None;
-
-
             }
             else if (tokens.ConsumeIf(TokenType.AlphaNumeric, "syntax"))
             {
                 ctx.AbortState = AbortState.Statement;
-                if (MessageTypes.Any() || EnumTypes.Any() || Extensions.Any())
+                if (MessageTypes.Count > 0 || EnumTypes.Count > 0 || Extensions.Count > 0)
                 {
                     ctx.Errors.Error(tokens.Previous, "syntax must be set before types are defined");
                 }
@@ -744,14 +735,14 @@ namespace Google.Protobuf.Reflection
                 {
                     ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'");
                 }
+#pragma warning disable RCS1156 // Use string.Length instead of comparison with empty string.
                 if (Syntax == "" || Syntax == SyntaxProto2)
+#pragma warning restore RCS1156 // Use string.Length instead of comparison with empty string.
                 {
                     Syntax = null; // for output compatibility; is blank even if set to proto2 explicitly
                 }
             }
         }
-
-
         internal bool TryResolveEnum(string typeName, IType parent, out EnumDescriptorProto @enum, bool allowImports, bool treatAllAsPublic = false)
         {
             if (TryResolveType(typeName, parent, out var type, allowImports, true, treatAllAsPublic))
@@ -895,7 +886,7 @@ namespace Google.Protobuf.Reflection
                     }
                 }
 
-                return file.TryResolveType(tn, file, out tp, ai, false, treatAllAsPublic);
+                return file.TryResolveType(tn, file, out tp, ai, false, taap);
             }
 
             bool isRooted = typeName.StartsWith(".");
@@ -962,10 +953,9 @@ namespace Google.Protobuf.Reflection
 
             type = null;
             return false;
-
         }
 
-        static void SetParents(string prefix, EnumDescriptorProto parent)
+        private static void SetParents(string prefix, EnumDescriptorProto parent)
         {
             parent.FullyQualifiedName = prefix + "." + parent.Name;
             foreach (var val in parent.Values)
@@ -973,7 +963,7 @@ namespace Google.Protobuf.Reflection
                 val.Parent = parent;
             }
         }
-        static void SetParents(string prefix, DescriptorProto parent)
+        private static void SetParents(string prefix, DescriptorProto parent)
         {
             var fqn = parent.FullyQualifiedName = prefix + "." + parent.Name;
             foreach (var field in parent.Fields)
@@ -995,7 +985,7 @@ namespace Google.Protobuf.Reflection
                 ext.Parent = parent;
             }
         }
-        internal void BuildTypeHierarchy(FileDescriptorSet set, ParserContext ctx)
+        internal void BuildTypeHierarchy(FileDescriptorSet set)
         {
             // build the tree starting at the root
             Parent = set;
@@ -1016,7 +1006,7 @@ namespace Google.Protobuf.Reflection
             }
         }
 
-        static bool ShouldResolveType(FieldDescriptorProto.Type type)
+        private static bool ShouldResolveType(FieldDescriptorProto.Type type)
         {
             switch (type)
             {
@@ -1033,7 +1023,10 @@ namespace Google.Protobuf.Reflection
         {
             foreach (var field in fields)
             {
-                if (options) ResolveOptions(ctx, field.Options);
+                if (options)
+                {
+                    ResolveOptions(ctx, field.Options);
+                }
                 else
                 {
                     if (!string.IsNullOrEmpty(field.TypeName) && ShouldResolveType(field.type))
@@ -1098,9 +1091,13 @@ namespace Google.Protobuf.Reflection
         private void ResolveTypes(ParserContext ctx, ServiceDescriptorProto service, bool options)
         {
             if (options) ResolveOptions(ctx, service.Options);
+
             foreach (var method in service.Methods)
             {
-                if (options) ResolveOptions(ctx, method.Options);
+                if (options)
+                {
+                    ResolveOptions(ctx, method.Options);
+                }
                 else
                 {
                     if (!TryResolveMessage(method.InputType, this, out var msg, true))
@@ -1137,7 +1134,6 @@ namespace Google.Protobuf.Reflection
                 ResolveTypes(ctx, nested, options);
             }
         }
-
 
         IEnumerable<string> IHazNames.GetNames()
         {
@@ -1222,10 +1218,9 @@ namespace Google.Protobuf.Reflection
             {
                 extension.EndAppend(target, true);
             }
-
         }
 
-        class OptionHive
+        private class OptionHive
         {
             public OptionHive(string name, bool isExtension, Token token)
             {
@@ -1274,7 +1269,7 @@ namespace Google.Protobuf.Reflection
                     OptionHive nextLevel = null;
                     foreach (var name in option.Names)
                     {
-                        nextLevel = level.Children.FirstOrDefault(x => x.Name == name.name_part && x.IsExtension == name.IsExtension);
+                        nextLevel = level.Children.Find(x => x.Name == name.name_part && x.IsExtension == name.IsExtension);
                         if (nextLevel == null)
                         {
                             nextLevel = new OptionHive(name.name_part, name.IsExtension, name.Token);
@@ -1315,7 +1310,7 @@ namespace Google.Protobuf.Reflection
             }
             else if (file.TryResolveMessage(extendee, null, out var msg, true))
             {
-                field = msg.Fields.FirstOrDefault(x => x.Name == option.Name);
+                field = msg.Fields.Find(x => x.Name == option.Name);
             }
             else
             {
@@ -1564,7 +1559,7 @@ namespace Google.Protobuf.Reflection
                             case FieldDescriptorProto.Type.TypeEnum:
                                 if (file.TryResolveEnum(field.TypeName, null, out var @enum, true, true))
                                 {
-                                    var found = @enum.Values.FirstOrDefault(x => x.Name == value.AggregateValue);
+                                    var found = @enum.Values.Find(x => x.Name == value.AggregateValue);
                                     if (found == null)
                                     {
                                         ctx.Errors.Error(option.Token, $"invalid value for enum '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'");
@@ -1591,7 +1586,9 @@ namespace Google.Protobuf.Reflection
                                 {
                                     ProtoWriter.WriteFieldHeader(field.Number, WireType.String, writer);
                                     if (value.AggregateValue == null || value.AggregateValue.IndexOf('\\') < 0)
+                                    {
                                         ProtoWriter.WriteString(value.AggregateValue ?? "", writer);
+                                    }
                                     else
                                     {
                                         using (var ms = new MemoryStream(value.AggregateValue.Length))
@@ -1662,7 +1659,7 @@ namespace Google.Protobuf.Reflection
         }
     }
 
-    partial class EnumDescriptorProto : ISchemaObject, IType
+    public partial class EnumDescriptorProto : ISchemaObject, IType
     {
         public override string ToString() => Name;
         internal IType Parent { get; set; }
@@ -1697,11 +1694,9 @@ namespace Google.Protobuf.Reflection
             }
             ctx.AbortState = AbortState.None;
         }
-
     }
-    partial class FieldDescriptorProto : ISchemaObject
+    public partial class FieldDescriptorProto : ISchemaObject
     {
-
         public bool IsPacked(string syntax)
         {
             if (label != Label.LabelRepeated) return false;
@@ -1709,12 +1704,7 @@ namespace Google.Protobuf.Reflection
             var exp = Options?.Packed;
             if (exp.HasValue) return exp.GetValueOrDefault();
 
-            if (syntax != FileDescriptorProto.SyntaxProto2 && FieldDescriptorProto.CanPack(type))
-            {
-                return true;
-            }
-
-            return false;
+            return syntax != FileDescriptorProto.SyntaxProto2 && FieldDescriptorProto.CanPack(type);
         }
         public override string ToString() => Name;
         internal const int DefaultMaxField = 536870911;
@@ -1795,8 +1785,7 @@ namespace Google.Protobuf.Reflection
             ctx.CheckNames(parent, name, nameToken);
             if (parent is DescriptorProto parentTyped)
             {
-
-                var conflict = parentTyped.Fields.FirstOrDefault(x => x.Number == number);
+                var conflict = parentTyped.Fields.Find(x => x.Number == number);
                 if (conflict != null)
                 {
                     ctx.Errors.Error(numberToken, $"field {number} is already in use by '{conflict.Name}'");
@@ -1860,10 +1849,9 @@ namespace Google.Protobuf.Reflection
             ctx.AbortState = AbortState.None;
             return true;
         }
-        static readonly char[] Underscores = { '_' };
+        private static readonly char[] Underscores = { '_' };
         internal static string GetJsonName(string name)
             => Regex.Replace(name, "_+([0-9a-zA-Z])", match => match.Groups[1].Value.ToUpperInvariant()).TrimEnd(Underscores);
-
 
         internal static bool CanPack(Type type)
         {
@@ -1927,7 +1915,7 @@ namespace Google.Protobuf.Reflection
 
         void ISchemaObject.ReadOne(ParserContext ctx) => throw new InvalidOperationException();
 
-        class DummyExtensions : ISchemaObject, IHazNames, IMessage
+        private class DummyExtensions : ISchemaObject, IHazNames, IMessage
         {
             int IMessage.MaxField => message.MaxField;
             List<DescriptorProto> IMessage.Types => message.Types;
@@ -1960,7 +1948,7 @@ namespace Google.Protobuf.Reflection
                 ctx.AbortState = AbortState.None;
             }
 
-            private IMessage message;
+            private readonly IMessage message;
             private readonly string extendee;
 
             public DummyExtensions(string extendee, IMessage message)
@@ -1979,7 +1967,7 @@ namespace Google.Protobuf.Reflection
         List<FieldDescriptorProto> Fields { get; }
     }
 
-    partial class ServiceDescriptorProto : ISchemaObject
+    public partial class ServiceDescriptorProto : ISchemaObject
     {
         internal static bool TryParse(ParserContext ctx, out ServiceDescriptorProto obj)
         {
@@ -2009,7 +1997,7 @@ namespace Google.Protobuf.Reflection
         }
     }
 
-    partial class MethodDescriptorProto : ISchemaObject
+    public partial class MethodDescriptorProto : ISchemaObject
     {
         internal Token InputTypeToken { get; set; }
         internal Token OutputTypeToken { get; set; }
@@ -2061,7 +2049,7 @@ namespace Google.Protobuf.Reflection
         }
     }
 
-    partial class EnumValueDescriptorProto
+    public partial class EnumValueDescriptorProto
     {
         internal static EnumValueDescriptorProto Parse(ParserContext ctx)
         {
@@ -2079,9 +2067,8 @@ namespace Google.Protobuf.Reflection
             return obj;
         }
         internal EnumDescriptorProto Parent { get; set; }
-
     }
-    partial class MessageOptions : ISchemaOptions
+    public partial class MessageOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(MessageOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
@@ -2103,7 +2090,7 @@ namespace Google.Protobuf.Reflection
             set { DescriptorProto.SetExtensionData(this, value); }
         }
     }
-    partial class MethodOptions : ISchemaOptions
+    public partial class MethodOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(MethodOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
@@ -2120,7 +2107,7 @@ namespace Google.Protobuf.Reflection
             set { DescriptorProto.SetExtensionData(this, value); }
         }
     }
-    partial class ServiceOptions : ISchemaOptions
+    public partial class ServiceOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(ServiceOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
@@ -2132,9 +2119,9 @@ namespace Google.Protobuf.Reflection
         }
     }
 
-    partial class UninterpretedOption
+    public partial class UninterpretedOption
     {
-        partial class NamePart
+        public partial class NamePart
         {
             public override string ToString() => IsExtension ? ("(" + name_part + ")") : name_part;
             internal Token Token { get; set; }
@@ -2142,7 +2129,8 @@ namespace Google.Protobuf.Reflection
         internal bool Applied { get; set; }
         internal Token Token { get; set; }
     }
-    partial class EnumOptions : ISchemaOptions
+
+    public partial class EnumOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(EnumOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
@@ -2159,7 +2147,7 @@ namespace Google.Protobuf.Reflection
             set { DescriptorProto.SetExtensionData(this, value); }
         }
     }
-    partial class EnumValueOptions : ISchemaOptions
+    public partial class EnumValueOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(EnumValueOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key) => false;
@@ -2170,7 +2158,7 @@ namespace Google.Protobuf.Reflection
             set { DescriptorProto.SetExtensionData(this, value); }
         }
     }
-    partial class FieldOptions : ISchemaOptions
+    public partial class FieldOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(FieldOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
@@ -2192,7 +2180,7 @@ namespace Google.Protobuf.Reflection
             set { DescriptorProto.SetExtensionData(this, value); }
         }
     }
-    partial class FileOptions : ISchemaOptions
+    public partial class FileOptions : ISchemaOptions
     {
         string ISchemaOptions.Extendee => FileDescriptorSet.Namespace + nameof(FileOptions);
         bool ISchemaOptions.ReadOne(ParserContext ctx, string key)
@@ -2322,7 +2310,7 @@ namespace ProtoBuf.Reflection
             }
             return errors.ToArray();
         }
-        static void Add(TextReader lines, List<Error> errors)
+        private static void Add(TextReader lines, List<Error> errors)
         {
             string line;
             while ((line = lines.ReadLine()) != null)
@@ -2425,11 +2413,11 @@ namespace ProtoBuf.Reflection
         /// </summary>
         public int ColumnNumber { get; }
     }
-    enum AbortState
+    internal enum AbortState
     {
         None, Statement, Object
     }
-    interface ISchemaOptions
+    internal interface ISchemaOptions
     {
         List<UninterpretedOption> UninterpretedOptions { get; }
         bool Deprecated { get; set; }
@@ -2438,12 +2426,12 @@ namespace ProtoBuf.Reflection
         string Extendee { get; }
     }
 
-    interface IHazNames
+    internal interface IHazNames
     {
         IEnumerable<string> GetNames();
     }
 
-    interface ISchemaObject
+    internal interface ISchemaObject
     {
         void ReadOne(ParserContext ctx);
     }
@@ -2491,15 +2479,13 @@ namespace ProtoBuf.Reflection
             var tokens = Tokens;
             while (tokens.Peek(out var token))
             {
-                if (tokens.ConsumeIf(TokenType.Symbol, ";"))
-                { }
-                else
+                if (!tokens.ConsumeIf(TokenType.Symbol, ";"))
                 {
                     ReadOne(obj);
                 }
             }
         }
-        static readonly char[] Period = { '.' };
+        private static readonly char[] Period = { '.' };
         private void ReadOption<T>(ref T obj, ISchemaObject parent, List<UninterpretedOption.NamePart> existingNameParts = null) where T : class, ISchemaOptions, new()
         {
             var tokens = Tokens;
@@ -2558,7 +2544,6 @@ namespace ProtoBuf.Reflection
             }
             else
             {
-
                 var field = parent as FieldDescriptorProto;
                 bool isField = typeof(T) == typeof(FieldOptions) && field != null;
                 var singleKey = (nameParts.Count == 1 && !nameParts[0].IsExtension) ? nameParts[0].name_part : null;
@@ -2716,9 +2701,9 @@ namespace ProtoBuf.Reflection
             }
         }
 
-        static readonly char[] ExponentChars = { 'e', 'E' };
-        static readonly string[] ExponentFormats = { "e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9", "e10" };
-        static string Format(float val)
+        private static readonly char[] ExponentChars = { 'e', 'E' };
+        private static readonly string[] ExponentFormats = { "e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9", "e10" };
+        private static string Format(float val)
         {
             string s = val.ToString(CultureInfo.InvariantCulture);
             if (s.IndexOfAny(ExponentChars) < 0) return s;
@@ -2729,10 +2714,9 @@ namespace ProtoBuf.Reflection
                 if (float.TryParse(tmp, NumberStyles.Any, CultureInfo.InvariantCulture, out var x) && x == val) return tmp;
             }
             return val.ToString("e", CultureInfo.InvariantCulture);
-
         }
 
-        static string Format(double val)
+        private static string Format(double val)
         {
             string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
             if (s.IndexOfAny(ExponentChars) < 0) return s;
@@ -2756,10 +2740,7 @@ namespace ProtoBuf.Reflection
                     {
                         break;
                     }
-                    else if (tokens.ConsumeIf(TokenType.Symbol, ","))
-                    {
-                    }
-                    else
+                    else if (!tokens.ConsumeIf(TokenType.Symbol, ","))
                     {
                         ReadOption(ref obj, parent);
                     }
@@ -2801,9 +2782,7 @@ namespace ProtoBuf.Reflection
                 tokens.Consume(TokenType.Symbol, "{");
                 while (tokens.Peek(out var token) && !token.Is(TokenType.Symbol, "}"))
                 {
-                    if (tokens.ConsumeIf(TokenType.Symbol, ";"))
-                    { }
-                    else
+                    if (!tokens.ConsumeIf(TokenType.Symbol, ";"))
                     {
                         ReadOne(obj);
                     }

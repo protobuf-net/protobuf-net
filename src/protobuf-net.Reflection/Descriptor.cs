@@ -2,7 +2,7 @@
 // Consider using 'partial classes' to extend these types
 // Input: descriptor.proto
 
-#pragma warning disable CS1591, CS0612, CS3021, IDE1006
+#pragma warning disable CS0612, CS1591, CS3021, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192
 namespace Google.Protobuf.Reflection
 {
 
@@ -1309,4 +1309,4 @@ namespace Google.Protobuf.Reflection
 
 }
 
-#pragma warning restore CS1591, CS0612, CS3021, IDE1006
+#pragma warning restore CS0612, CS1591, CS3021, IDE1006, RCS1036, RCS1057, RCS1085, RCS1192

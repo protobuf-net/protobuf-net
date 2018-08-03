@@ -21,7 +21,7 @@ namespace ProtoBuf.Reflection
         {
             bool haveData = _havePeek || Peek(out T val);
             _prev = _peek;
-            _havePeek = false;            
+            _havePeek = false;
             return haveData;
         }
         public bool Peek(out T next)
@@ -42,7 +42,7 @@ namespace ProtoBuf.Reflection
             }
             if (_eof)
             {
-                next = default(T);
+                next = default;
                 return false;
             }
             next = _peek;
