@@ -2,29 +2,26 @@
 
 Packages are available on NuGet: [protobuf-net](https://www.nuget.org/packages/protobuf-net)
 
-If you prefer to build from source:
+protobuf-net needs to be built with MSBuild, due to some of the target platforms.
 
-    git clone https://github.com/mgravell/protobuf-net.git
-    cd protobuf-net\src\protobuf-net
-    dotnet restore
-    dotnet build -c Release
-
-(it will tell you where the dlls and package have been written)
-
-Alternatively, use Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) to build `src\protobuf-net.sln`
+The easiest way to do this is via Visual Studio 2017 ([community edition is free](https://www.visualstudio.com/downloads/)) - build `src\protobuf-net.sln`
 
 ## v3.* (not yet started)
 
 - see: [protobuf-net: large data, and the future](https://blog.marcgravell.com/2017/05/protobuf-net-large-data-and-future.html)
 - gRPC?
 
-## v2.5.0 (not yet started)
+## v2.4.0 (not yet started)
 
 - build-time tooling
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
-## protobuf-net v2.3.16
+## v2.3.17
+
+- (#430/#431) - ensure build output from `protobuf-net.MSBuild` makes it into build output; add error codes
+
+## v2.3.16
 
 - new MSBuild .proto tools added (huge thanks go to Mark Pflug here)
 - fix error where extension GetValues might only report the last item

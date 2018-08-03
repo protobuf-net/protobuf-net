@@ -26,10 +26,10 @@ namespace ProtoBuf.Build
 
     public class BuildTests : IClassFixture<MSBuildFixture>
     {
-        ILogger logger;
+        readonly ILogger logger;
         ITestOutputHelper o;
 
-        static Dictionary<string, string> gp =
+        static readonly Dictionary<string, string> gp =
             new Dictionary<string, string>
             {
                 ["Configuration"] = "Debug",
@@ -111,8 +111,8 @@ namespace ProtoBuf.Build
             Assert.True(restored, "Failed to restore packages");
             var result = proj.Build(new ILogger[] { logger, testLogger });
             Assert.False(result);
-            Assert.Equal(1, testLogger.Errors.Count);
-            Assert.Equal(1, testLogger.Warnings.Count);
+            Assert.Single(testLogger.Errors);
+            Assert.Single(testLogger.Warnings);
         }
     }
 }
