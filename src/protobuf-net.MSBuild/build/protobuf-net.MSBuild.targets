@@ -23,7 +23,7 @@
 		Condition="'@(ProtoDef)' != ''"
   >
     <PropertyGroup>
-      <ProtoCodeGenerationRoot>$([System.IO.Path]::GetFullPath($(IntermediateOutputPath)))</ProtoCodeGenerationRoot>
+      <ProtoCodeGenerationRoot>$(IntermediateOutputPath)</ProtoCodeGenerationRoot>
     </PropertyGroup>    
     
     <GenerateProtoBufCode
