@@ -24,7 +24,7 @@ Alternatively, use Visual Studio 2017 ([community edition is free](https://www.v
 - `dynamic` API over types known only via descriptors loaded at runtime
 - `Any` support
 
-## protobuf-net v2.3.16 (unreleased)
+## protobuf-net v2.3.16
 
 - new MSBuild .proto tools added (huge thanks go to Mark Pflug here)
 - fix error where extension GetValues might only report the last item
