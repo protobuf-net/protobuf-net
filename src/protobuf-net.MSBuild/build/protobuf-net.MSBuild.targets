@@ -23,7 +23,7 @@
 		Condition="'@(ProtoDef)' != ''"
   >
     <PropertyGroup>
-      <ProtoCodeGenerationRoot>$(MSBuildProjectDirectory)\$(IntermediateOutputPath)</ProtoCodeGenerationRoot>
+      <ProtoCodeGenerationRoot>$(IntermediateOutputPath)</ProtoCodeGenerationRoot>
     </PropertyGroup>    
     
     <GenerateProtoBufCode
