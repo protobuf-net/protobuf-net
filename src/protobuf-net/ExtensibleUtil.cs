@@ -68,7 +68,7 @@ namespace ProtoBuf
             }
             finally
             {
-                ProtoReader.Recycle(reader);
+                reader?.Recycle();
                 extn.EndQuery(stream);
             }
         }

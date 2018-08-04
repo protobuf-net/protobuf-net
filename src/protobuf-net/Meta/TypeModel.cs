@@ -370,7 +370,7 @@ namespace ProtoBuf.Meta
             }
             finally
             {
-                ProtoReader.Recycle(reader);
+                reader?.Recycle();
             }
         }
 
@@ -594,7 +594,7 @@ namespace ProtoBuf.Meta
             }
             finally
             {
-                ProtoReader.Recycle(reader);
+                reader?.Recycle();
             }
         }
 
@@ -687,7 +687,7 @@ namespace ProtoBuf.Meta
             }
             finally
             {
-                ProtoReader.Recycle(reader);
+                reader?.Recycle();
             }
         }
 
@@ -1394,7 +1394,7 @@ namespace ProtoBuf.Meta
                     }
                     finally
                     {
-                        ProtoReader.Recycle(reader);
+                        reader?.Recycle();
                     }
                 }
             }
@@ -1426,7 +1426,7 @@ namespace ProtoBuf.Meta
                 }
                 finally
                 {
-                    ProtoReader.Recycle(reader);
+                    reader?.Recycle();
                 }
             }
         }

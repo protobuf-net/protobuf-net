@@ -11,15 +11,13 @@ namespace ProtoBuf
     /// A stateful reader, used to read a protobuf stream. Typical usage would be (sequentially) to call
     /// ReadFieldHeader and (after matching the field) an appropriate Read* method.
     /// </summary>
-    public sealed class ProtoReader : IDisposable
+    public abstract partial class ProtoReader : IDisposable
     {
-        Stream source;
-        byte[] ioBuffer;
-        TypeModel model;
-        int fieldNumber, depth, ioIndex, available;
-        long position64, blockEnd64, dataRemaining64;
+        TypeModel _model;
+        int _fieldNumber, _depth;
+        long blockEnd64, _position64;
         WireType wireType;
-        bool isFixedLength, internStrings;
+        bool internStrings;
         private NetObjectCache netCache;
 
         // this is how many outstanding objects do not currently have
@@ -31,25 +29,18 @@ namespace ProtoBuf
         /// <summary>
         /// Gets the number of the field being processed.
         /// </summary>
-        public int FieldNumber => fieldNumber;
+        public int FieldNumber => _fieldNumber;
 
         /// <summary>
         /// Indicates the underlying proto serialization format on the wire.
         /// </summary>
-        public WireType WireType => wireType;
-
-        /// <summary>
-        /// Creates a new reader against a stream
-        /// </summary>
-        /// <param name="source">The source stream</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        [Obsolete("Please use ProtoReader.Create; this API may be removed in a future version", error: false)]
-        public ProtoReader(Stream source, TypeModel model, SerializationContext context)
+        public WireType WireType
         {
-
-            Init(this, source, model, context, TO_EOF);
+            get => wireType;
+            private protected set => wireType = value;
         }
+
+
 
         internal const long TO_EOF = -1;
 
@@ -61,53 +52,26 @@ namespace ProtoBuf
         /// </summary>
         public bool InternStrings { get { return internStrings; } set { internStrings = value; } }
 
-        /// <summary>
-        /// Creates a new reader against a stream
-        /// </summary>
-        /// <param name="source">The source stream</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
-        [Obsolete("Please use ProtoReader.Create; this API may be removed in a future version", error: false)]
-        public ProtoReader(Stream source, TypeModel model, SerializationContext context, int length)
-        {
-            Init(this, source, model, context, length);
-        }
+        private protected ProtoReader() { }
 
         /// <summary>
-        /// Creates a new reader against a stream
+        /// Initialize the reader
         /// </summary>
-        /// <param name="source">The source stream</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
-        [Obsolete("Please use ProtoReader.Create; this API may be removed in a future version", error: false)]
-        public ProtoReader(Stream source, TypeModel model, SerializationContext context, long length)
+        internal void Init(TypeModel model, SerializationContext context)
         {
-            Init(this, source, model, context, length);
-        }
-
-        private static void Init(ProtoReader reader, Stream source, TypeModel model, SerializationContext context, long length)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (!source.CanRead) throw new ArgumentException("Cannot read from stream", nameof(source));
-            reader.source = source;
-            reader.ioBuffer = BufferPool.GetBuffer();
-            reader.model = model;
-            bool isFixedLength = length >= 0;
-            reader.isFixedLength = isFixedLength;
-            reader.dataRemaining64 = isFixedLength ? length : 0;
+            _model = model;
 
             if (context == null) { context = SerializationContext.Default; }
             else { context.Freeze(); }
-            reader.context = context;
-            reader.position64 = 0;
-            reader.available = reader.depth = reader.fieldNumber = reader.ioIndex = 0;
-            reader.blockEnd64 = long.MaxValue;
-            reader.internStrings = RuntimeTypeModel.Default.InternStrings;
-            reader.wireType = WireType.None;
-            reader.trapCount = 1;
-            if (reader.netCache == null) reader.netCache = new NetObjectCache();
+            this.context = context;
+            _position64 = 0;
+            _depth = _fieldNumber = 0;
+            
+            blockEnd64 = long.MaxValue;
+            internStrings = RuntimeTypeModel.Default.InternStrings;
+            wireType = WireType.None;
+            trapCount = 1;
+            if (netCache == null) netCache = new NetObjectCache();
         }
 
         private SerializationContext context;
@@ -122,12 +86,9 @@ namespace ProtoBuf
         /// underlying stream; in many typical use-cases the stream is used for different
         /// processes, so it is assumed that the consumer will Dispose their stream separately.
         /// </summary>
-        public void Dispose()
+        public virtual void Dispose()
         {
-            // importantly, this does **not** own the stream, and does not dispose it
-            source = null;
-            model = null;
-            BufferPool.ReleaseBufferToPool(ref ioBuffer);
+            _model = null;
             if (stringInterner != null)
             {
                 stringInterner.Clear();
@@ -135,150 +96,26 @@ namespace ProtoBuf
             }
             if (netCache != null) netCache.Clear();
         }
-        internal int TryReadUInt32VariantWithoutMoving(bool trimNegative, out uint value)
-        {
-            if (available < 10) Ensure(10, false);
-            if (available == 0)
-            {
-                value = 0;
-                return 0;
-            }
-            int readPos = ioIndex;
-            value = ioBuffer[readPos++];
-            if ((value & 0x80) == 0) return 1;
-            value &= 0x7F;
-            if (available == 1) throw EoF(this);
-
-            uint chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 7;
-            if ((chunk & 0x80) == 0) return 2;
-            if (available == 2) throw EoF(this);
-
-            chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 14;
-            if ((chunk & 0x80) == 0) return 3;
-            if (available == 3) throw EoF(this);
-
-            chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 21;
-            if ((chunk & 0x80) == 0) return 4;
-            if (available == 4) throw EoF(this);
-
-            chunk = ioBuffer[readPos];
-            value |= chunk << 28; // can only use 4 bits from this chunk
-            if ((chunk & 0xF0) == 0) return 5;
-
-            if (trimNegative // allow for -ve values
-                && (chunk & 0xF0) == 0xF0
-                && available >= 10
-                    && ioBuffer[++readPos] == 0xFF
-                    && ioBuffer[++readPos] == 0xFF
-                    && ioBuffer[++readPos] == 0xFF
-                    && ioBuffer[++readPos] == 0xFF
-                    && ioBuffer[++readPos] == 0x01)
-            {
-                return 10;
-            }
-            throw AddErrorData(new OverflowException(), this);
-        }
-
-        private uint ReadUInt32Variant(bool trimNegative)
-        {
-            int read = TryReadUInt32VariantWithoutMoving(trimNegative, out uint value);
-            if (read > 0)
-            {
-                ioIndex += read;
-                available -= read;
-                position64 += read;
-                return value;
-            }
-            throw EoF(this);
-        }
-
-        private bool TryReadUInt32Variant(out uint value)
-        {
-            int read = TryReadUInt32VariantWithoutMoving(false, out value);
-            if (read > 0)
-            {
-                ioIndex += read;
-                available -= read;
-                position64 += read;
-                return true;
-            }
-            return false;
-        }
 
         /// <summary>
         /// Reads an unsigned 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        public uint ReadUInt32()
-        {
-            switch (wireType)
-            {
-                case WireType.Variant:
-                    return ReadUInt32Variant(false);
-                case WireType.Fixed32:
-                    if (available < 4) Ensure(4, true);
-                    position64 += 4;
-                    available -= 4;
-                    return ((uint)ioBuffer[ioIndex++])
-                        | (((uint)ioBuffer[ioIndex++]) << 8)
-                        | (((uint)ioBuffer[ioIndex++]) << 16)
-                        | (((uint)ioBuffer[ioIndex++]) << 24);
-                case WireType.Fixed64:
-                    ulong val = ReadUInt64();
-                    checked { return (uint)val; }
-                default:
-                    throw CreateWireTypeException();
-            }
-        }
+        public abstract uint ReadUInt32();
+        
+        /// <summary>
+        /// Returns the position of the current reader (note that this is not necessarily the same as the position
+        /// in the underlying stream, if multiple readers are used on the same stream)
+        /// </summary>
+        public int Position { get { return checked((int)LongPosition); } }
 
         /// <summary>
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
         /// in the underlying stream, if multiple readers are used on the same stream)
         /// </summary>
-        public int Position { get { return checked((int)position64); } }
+        public long LongPosition { get { return _position64; } }
 
-        /// <summary>
-        /// Returns the position of the current reader (note that this is not necessarily the same as the position
-        /// in the underlying stream, if multiple readers are used on the same stream)
-        /// </summary>
-        public long LongPosition { get { return position64; } }
-        internal void Ensure(int count, bool strict)
-        {
-            Helpers.DebugAssert(available <= count, "Asking for data without checking first");
-            if (count > ioBuffer.Length)
-            {
-                BufferPool.ResizeAndFlushLeft(ref ioBuffer, count, ioIndex, available);
-                ioIndex = 0;
-            }
-            else if (ioIndex + count >= ioBuffer.Length)
-            {
-                // need to shift the buffer data to the left to make space
-                Buffer.BlockCopy(ioBuffer, ioIndex, ioBuffer, 0, available);
-                ioIndex = 0;
-            }
-            count -= available;
-            int writePos = ioIndex + available, bytesRead;
-            int canRead = ioBuffer.Length - writePos;
-            if (isFixedLength)
-            {   // throttle it if needed
-                if (dataRemaining64 < canRead) canRead = (int)dataRemaining64;
-            }
-            while (count > 0 && canRead > 0 && (bytesRead = source.Read(ioBuffer, writePos, canRead)) > 0)
-            {
-                available += bytesRead;
-                count -= bytesRead;
-                canRead -= bytesRead;
-                writePos += bytesRead;
-                if (isFixedLength) { dataRemaining64 -= bytesRead; }
-            }
-            if (strict && count > 0)
-            {
-                throw EoF(this);
-            }
-
-        }
+        private protected void Advance(long count) => _position64 += count;
+        
         /// <summary>
         /// Reads a signed 16-bit integer from the stream: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
@@ -313,38 +150,17 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a signed 32-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        public int ReadInt32()
-        {
-            switch (wireType)
-            {
-                case WireType.Variant:
-                    return (int)ReadUInt32Variant(true);
-                case WireType.Fixed32:
-                    if (available < 4) Ensure(4, true);
-                    position64 += 4;
-                    available -= 4;
-                    return ((int)ioBuffer[ioIndex++])
-                        | (((int)ioBuffer[ioIndex++]) << 8)
-                        | (((int)ioBuffer[ioIndex++]) << 16)
-                        | (((int)ioBuffer[ioIndex++]) << 24);
-                case WireType.Fixed64:
-                    long l = ReadInt64();
-                    checked { return (int)l; }
-                case WireType.SignedVariant:
-                    return Zag(ReadUInt32Variant(true));
-                default:
-                    throw CreateWireTypeException();
-            }
-        }
+        public abstract int ReadInt32();
+
         private const long Int64Msb = ((long)1) << 63;
         private const int Int32Msb = ((int)1) << 31;
-        private static int Zag(uint ziggedValue)
+        private protected static int Zag(uint ziggedValue)
         {
             int value = (int)ziggedValue;
             return (-(value & 0x01)) ^ ((value >> 1) & ~ProtoReader.Int32Msb);
         }
 
-        private static long Zag(ulong ziggedValue)
+        private protected static long Zag(ulong ziggedValue)
         {
             long value = (long)ziggedValue;
             return (-(value & 0x01L)) ^ ((value >> 1) & ~ProtoReader.Int64Msb);
@@ -352,119 +168,10 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a signed 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
-        public long ReadInt64()
-        {
-            switch (wireType)
-            {
-                case WireType.Variant:
-                    return (long)ReadUInt64Variant();
-                case WireType.Fixed32:
-                    return ReadInt32();
-                case WireType.Fixed64:
-                    if (available < 8) Ensure(8, true);
-                    position64 += 8;
-                    available -= 8;
-
-#if NETCOREAPP2_1
-                    var result = System.Buffers.Binary.BinaryPrimitives.ReadInt64LittleEndian(ioBuffer.AsSpan(ioIndex, 8));
-
-                    ioIndex+= 8;
-
-                    return result;
-#else
-                    return ((long)ioBuffer[ioIndex++])
-                        | (((long)ioBuffer[ioIndex++]) << 8)
-                        | (((long)ioBuffer[ioIndex++]) << 16)
-                        | (((long)ioBuffer[ioIndex++]) << 24)
-                        | (((long)ioBuffer[ioIndex++]) << 32)
-                        | (((long)ioBuffer[ioIndex++]) << 40)
-                        | (((long)ioBuffer[ioIndex++]) << 48)
-                        | (((long)ioBuffer[ioIndex++]) << 56);
-#endif
-                case WireType.SignedVariant:
-                    return Zag(ReadUInt64Variant());
-                default:
-                    throw CreateWireTypeException();
-            }
-        }
-
-        private int TryReadUInt64VariantWithoutMoving(out ulong value)
-        {
-            if (available < 10) Ensure(10, false);
-            if (available == 0)
-            {
-                value = 0;
-                return 0;
-            }
-            int readPos = ioIndex;
-            value = ioBuffer[readPos++];
-            if ((value & 0x80) == 0) return 1;
-            value &= 0x7F;
-            if (available == 1) throw EoF(this);
-
-            ulong chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 7;
-            if ((chunk & 0x80) == 0) return 2;
-            if (available == 2) throw EoF(this);
-
-            chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 14;
-            if ((chunk & 0x80) == 0) return 3;
-            if (available == 3) throw EoF(this);
-
-            chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 21;
-            if ((chunk & 0x80) == 0) return 4;
-            if (available == 4) throw EoF(this);
-
-            chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 28;
-            if ((chunk & 0x80) == 0) return 5;
-            if (available == 5) throw EoF(this);
-
-            chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 35;
-            if ((chunk & 0x80) == 0) return 6;
-            if (available == 6) throw EoF(this);
-
-            chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 42;
-            if ((chunk & 0x80) == 0) return 7;
-            if (available == 7) throw EoF(this);
-
-
-            chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 49;
-            if ((chunk & 0x80) == 0) return 8;
-            if (available == 8) throw EoF(this);
-
-            chunk = ioBuffer[readPos++];
-            value |= (chunk & 0x7F) << 56;
-            if ((chunk & 0x80) == 0) return 9;
-            if (available == 9) throw EoF(this);
-
-            chunk = ioBuffer[readPos];
-            value |= chunk << 63; // can only use 1 bit from this chunk
-
-            if ((chunk & ~(ulong)0x01) != 0) throw AddErrorData(new OverflowException(), this);
-            return 10;
-        }
-
-        private ulong ReadUInt64Variant()
-        {
-            int read = TryReadUInt64VariantWithoutMoving(out ulong value);
-            if (read > 0)
-            {
-                ioIndex += read;
-                available -= read;
-                position64 += read;
-                return value;
-            }
-            throw EoF(this);
-        }
+        public abstract long ReadInt64();
 
         private Dictionary<string, string> stringInterner;
-        private string Intern(string value)
+        private protected string Intern(string value)
         {
             if (value == null) return null;
             if (value.Length == 0) return "";
@@ -487,31 +194,15 @@ namespace ProtoBuf
         }
 
 #if COREFX
-        static readonly Encoding encoding = Encoding.UTF8;
+        private protected static readonly Encoding UTF8 = Encoding.UTF8;
 #else
-        static readonly UTF8Encoding encoding = new UTF8Encoding();
+        private protected readonly UTF8Encoding UTF8 = new UTF8Encoding();
 #endif
         /// <summary>
         /// Reads a string from the stream (using UTF8); supported wire-types: String
         /// </summary>
-        public string ReadString()
-        {
-            if (wireType == WireType.String)
-            {
-                int bytes = (int)ReadUInt32Variant(false);
-                if (bytes == 0) return "";
-                if (available < bytes) Ensure(bytes, true);
+        public abstract string ReadString();
 
-                string s = encoding.GetString(ioBuffer, ioIndex, bytes);
-
-                if (internStrings) { s = Intern(s); }
-                available -= bytes;
-                position64 += bytes;
-                ioIndex += bytes;
-                return s;
-            }
-            throw CreateWireTypeException();
-        }
         /// <summary>
         /// Throws an exception indication that the given value cannot be mapped to an enum.
         /// </summary>
@@ -521,7 +212,7 @@ namespace ProtoBuf
             throw AddErrorData(new ProtoException("No " + desc + " enum is mapped to the wire-value " + value.ToString()), this);
         }
 
-        private Exception CreateWireTypeException()
+        private protected Exception CreateWireTypeException()
         {
             return CreateException("Invalid wire-type; this usually means you have over-written a file without truncating or setting the length; see https://stackoverflow.com/q/2152978/23354");
         }
@@ -566,16 +257,16 @@ namespace ProtoBuf
 
         internal static object ReadTypedObject(object value, int key, ProtoReader reader, Type type)
         {
-            if (reader.model == null)
+            if (reader._model == null)
             {
                 throw AddErrorData(new InvalidOperationException("Cannot deserialize sub-objects unless a model is provided"), reader);
             }
             SubItemToken token = ProtoReader.StartSubItem(reader);
             if (key >= 0)
             {
-                value = reader.model.Deserialize(key, value, reader);
+                value = reader._model.Deserialize(key, value, reader);
             }
-            else if (type != null && reader.model.TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null))
+            else if (type != null && reader._model.TryDeserializeAuxiliaryType(reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null))
             {
                 // ok
             }
@@ -600,24 +291,26 @@ namespace ProtoBuf
             {
                 case WireType.EndGroup:
                     if (value64 >= 0) throw AddErrorData(new ArgumentException("token"), reader);
-                    if (-(int)value64 != reader.fieldNumber) throw reader.CreateException("Wrong group was ended"); // wrong group ended!
+                    if (-(int)value64 != reader._fieldNumber) throw reader.CreateException("Wrong group was ended"); // wrong group ended!
                     reader.wireType = WireType.None; // this releases ReadFieldHeader
-                    reader.depth--;
+                    reader._depth--;
                     break;
                 // case WireType.None: // TODO reinstate once reads reset the wire-type
                 default:
-                    if (value64 < reader.position64) throw reader.CreateException($"Sub-message not read entirely; expected {value64}, was {reader.position64}");
-                    if (reader.blockEnd64 != reader.position64 && reader.blockEnd64 != long.MaxValue)
+                    if (value64 < reader._position64) throw reader.CreateException($"Sub-message not read entirely; expected {value64}, was {reader._position64}");
+                    if (reader.blockEnd64 != reader._position64 && reader.blockEnd64 != long.MaxValue)
                     {
                         throw reader.CreateException("Sub-message not read correctly");
                     }
                     reader.blockEnd64 = value64;
-                    reader.depth--;
+                    reader._depth--;
                     break;
                     /*default:
                         throw reader.BorkedIt(); */
             }
         }
+
+        private protected abstract ulong ReadUInt64Variant();
 
         /// <summary>
         /// Begins consuming a nested message in the stream; supported wire-types: StartGroup, String
@@ -630,18 +323,29 @@ namespace ProtoBuf
             {
                 case WireType.StartGroup:
                     reader.wireType = WireType.None; // to prevent glitches from double-calling
-                    reader.depth++;
-                    return new SubItemToken((long)(-reader.fieldNumber));
+                    reader._depth++;
+                    return new SubItemToken((long)(-reader._fieldNumber));
                 case WireType.String:
                     long len = (long)reader.ReadUInt64Variant();
                     if (len < 0) throw AddErrorData(new InvalidOperationException(), reader);
                     long lastEnd = reader.blockEnd64;
-                    reader.blockEnd64 = reader.position64 + len;
-                    reader.depth++;
+                    reader.blockEnd64 = reader._position64 + len;
+                    reader._depth++;
                     return new SubItemToken(lastEnd);
                 default:
                     throw reader.CreateWireTypeException(); // throws
             }
+        }
+
+        private protected bool TryReadUInt32Variant(out uint value)
+        {
+            int read = TryReadUInt32VariantWithoutMoving(false, out value);
+            if (read > 0)
+            {
+                SkipBytes(read);
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -653,25 +357,25 @@ namespace ProtoBuf
             // at the end of a group the caller must call EndSubItem to release the
             // reader (which moves the status to Error, since ReadFieldHeader must
             // then be called)
-            if (blockEnd64 <= position64 || wireType == WireType.EndGroup) { return 0; }
+            if (blockEnd64 <= _position64 || wireType == WireType.EndGroup) { return 0; }
 
             if (TryReadUInt32Variant(out uint tag) && tag != 0)
             {
                 wireType = (WireType)(tag & 7);
-                fieldNumber = (int)(tag >> 3);
-                if (fieldNumber < 1) throw new ProtoException("Invalid field in source data: " + fieldNumber.ToString());
+                _fieldNumber = (int)(tag >> 3);
+                if (_fieldNumber < 1) throw new ProtoException("Invalid field in source data: " + _fieldNumber.ToString());
             }
             else
             {
                 wireType = WireType.None;
-                fieldNumber = 0;
+                _fieldNumber = 0;
             }
             if (wireType == ProtoBuf.WireType.EndGroup)
             {
-                if (depth > 0) return 0; // spoof an end, but note we still set the field-number
+                if (_depth > 0) return 0; // spoof an end, but note we still set the field-number
                 throw new ProtoException("Unexpected end-group in source data; this usually means the source data is corrupt");
             }
-            return fieldNumber;
+            return _fieldNumber;
         }
         /// <summary>
         /// Looks ahead to see whether the next field in the stream is what we expect
@@ -680,7 +384,7 @@ namespace ProtoBuf
         public bool TryReadFieldHeader(int field)
         {
             // check for virtual end of stream
-            if (blockEnd64 <= position64 || wireType == WireType.EndGroup) { return false; }
+            if (blockEnd64 <= _position64 || wireType == WireType.EndGroup) { return false; }
 
             int read = TryReadUInt32VariantWithoutMoving(false, out uint tag);
             WireType tmpWireType; // need to catch this to exclude (early) any "end group" tokens
@@ -688,19 +392,19 @@ namespace ProtoBuf
                 && (tmpWireType = (WireType)(tag & 7)) != WireType.EndGroup)
             {
                 wireType = tmpWireType;
-                fieldNumber = field;
-                position64 += read;
-                ioIndex += read;
-                available -= read;
+                _fieldNumber = field;
+                SkipBytes(read);
                 return true;
             }
             return false;
         }
 
+        internal abstract int TryReadUInt32VariantWithoutMoving(bool trimNegative, out uint value);
+
         /// <summary>
         /// Get the TypeModel associated with this reader
         /// </summary>
-        public TypeModel Model { get { return model; } }
+        public TypeModel Model { get { return _model; } }
 
         /// <summary>
         /// Compares the streams current wire-type to the hinted wire-type, updating the reader if necessary; for example,
@@ -733,6 +437,8 @@ namespace ProtoBuf
             }
         }
 
+        internal abstract void SkipBytes(long count);
+
         /// <summary>
         /// Discards the data for the current field.
         /// </summary>
@@ -741,48 +447,25 @@ namespace ProtoBuf
             switch (wireType)
             {
                 case WireType.Fixed32:
-                    if (available < 4) Ensure(4, true);
-                    available -= 4;
-                    ioIndex += 4;
-                    position64 += 4;
+                    SkipBytes(4);
                     return;
                 case WireType.Fixed64:
-                    if (available < 8) Ensure(8, true);
-                    available -= 8;
-                    ioIndex += 8;
-                    position64 += 8;
+                    SkipBytes(8);
                     return;
                 case WireType.String:
                     long len = (long)ReadUInt64Variant();
-                    if (len <= available)
-                    { // just jump it!
-                        available -= (int)len;
-                        ioIndex += (int)len;
-                        position64 += len;
-                        return;
-                    }
-                    // everything remaining in the buffer is garbage
-                    position64 += len; // assumes success, but if it fails we're screwed anyway
-                    len -= available; // discount anything we've got to-hand
-                    ioIndex = available = 0; // note that we have no data in the buffer
-                    if (isFixedLength)
-                    {
-                        if (len > dataRemaining64) throw EoF(this);
-                        // else assume we're going to be OK
-                        dataRemaining64 -= len;
-                    }
-                    ProtoReader.Seek(source, len, ioBuffer);
+                    SkipBytes(len);
                     return;
                 case WireType.Variant:
                 case WireType.SignedVariant:
                     ReadUInt64Variant(); // and drop it
                     return;
                 case WireType.StartGroup:
-                    int originalFieldNumber = this.fieldNumber;
-                    depth++; // need to satisfy the sanity-checks in ReadFieldHeader
+                    int originalFieldNumber = this._fieldNumber;
+                    _depth++; // need to satisfy the sanity-checks in ReadFieldHeader
                     while (ReadFieldHeader() > 0) { SkipField(); }
-                    depth--;
-                    if (wireType == WireType.EndGroup && fieldNumber == originalFieldNumber)
+                    _depth--;
+                    if (wireType == WireType.EndGroup && _fieldNumber == originalFieldNumber)
                     { // we expect to exit in a similar state to how we entered
                         wireType = ProtoBuf.WireType.None;
                         return;
@@ -798,31 +481,8 @@ namespace ProtoBuf
         /// <summary>
         /// Reads an unsigned 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        public ulong ReadUInt64()
-        {
-            switch (wireType)
-            {
-                case WireType.Variant:
-                    return ReadUInt64Variant();
-                case WireType.Fixed32:
-                    return ReadUInt32();
-                case WireType.Fixed64:
-                    if (available < 8) Ensure(8, true);
-                    position64 += 8;
-                    available -= 8;
+        public abstract ulong ReadUInt64();
 
-                    return ((ulong)ioBuffer[ioIndex++])
-                        | (((ulong)ioBuffer[ioIndex++]) << 8)
-                        | (((ulong)ioBuffer[ioIndex++]) << 16)
-                        | (((ulong)ioBuffer[ioIndex++]) << 24)
-                        | (((ulong)ioBuffer[ioIndex++]) << 32)
-                        | (((ulong)ioBuffer[ioIndex++]) << 40)
-                        | (((ulong)ioBuffer[ioIndex++]) << 48)
-                        | (((ulong)ioBuffer[ioIndex++]) << 56);
-                default:
-                    throw CreateWireTypeException();
-            }
-        }
         /// <summary>
         /// Reads a single-precision number from the stream; supported wire-types: Fixed32, Fixed64
         /// </summary>
@@ -872,64 +532,15 @@ namespace ProtoBuf
             }
         }
 
-        private static readonly byte[] EmptyBlob = new byte[0];
+        private protected static readonly byte[] EmptyBlob = new byte[0];
         /// <summary>
         /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
         /// </summary>
         public static byte[] AppendBytes(byte[] value, ProtoReader reader)
-        {
-            if (reader == null) throw new ArgumentNullException(nameof(reader));
-            switch (reader.wireType)
-            {
-                case WireType.String:
-                    int len = (int)reader.ReadUInt32Variant(false);
-                    reader.wireType = WireType.None;
-                    if (len == 0) return value ?? EmptyBlob;
-                    int offset;
-                    if (value == null || value.Length == 0)
-                    {
-                        offset = 0;
-                        value = new byte[len];
-                    }
-                    else
-                    {
-                        offset = value.Length;
-                        byte[] tmp = new byte[value.Length + len];
-                        Buffer.BlockCopy(value, 0, tmp, 0, value.Length);
-                        value = tmp;
-                    }
-                    // value is now sized with the final length, and (if necessary)
-                    // contains the old data up to "offset"
-                    reader.position64 += len; // assume success
-                    while (len > reader.available)
-                    {
-                        if (reader.available > 0)
-                        {
-                            // copy what we *do* have
-                            Buffer.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, reader.available);
-                            len -= reader.available;
-                            offset += reader.available;
-                            reader.ioIndex = reader.available = 0; // we've drained the buffer
-                        }
-                        //  now refill the buffer (without overflowing it)
-                        int count = len > reader.ioBuffer.Length ? reader.ioBuffer.Length : len;
-                        if (count > 0) reader.Ensure(count, true);
-                    }
-                    // at this point, we know that len <= available
-                    if (len > 0)
-                    {   // still need data, but we have enough buffered
-                        Buffer.BlockCopy(reader.ioBuffer, reader.ioIndex, value, offset, len);
-                        reader.ioIndex += len;
-                        reader.available -= len;
-                    }
-                    return value;
-                case WireType.Variant:
-                    return new byte[0];
-                default:
-                    throw reader.CreateWireTypeException();
-            }
-        }
+            => reader.AppendBytes(value);
 
+        private protected abstract byte[] AppendBytes(byte[] value);
+        
         //static byte[] ReadBytes(Stream stream, int length)
         //{
         //    if (stream == null) throw new ArgumentNullException("stream");
@@ -1195,15 +806,18 @@ namespace ProtoBuf
             if (exception != null && source != null && !exception.Data.Contains("protoSource"))
             {
                 exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
-                    source.fieldNumber, source.wireType, source.position64, source.depth));
+                    source._fieldNumber, source.wireType, source.LongPosition, source._depth));
             }
 #endif
             return exception;
         }
 
-        private static Exception EoF(ProtoReader source)
+        /// <summary>
+        /// Create an EOF
+        /// </summary>
+        protected static Exception EoF(ProtoReader reader)
         {
-            return AddErrorData(new EndOfStreamException(), source);
+            return AddErrorData(new EndOfStreamException(), reader);
         }
 
         /// <summary>
@@ -1220,7 +834,7 @@ namespace ProtoBuf
             try
             {
                 //TODO: replace this with stream-based, buffered raw copying
-                using (ProtoWriter writer = ProtoWriter.Create(dest, model, null))
+                using (ProtoWriter writer = ProtoWriter.Create(dest, _model, null))
                 {
                     AppendExtensionField(writer);
                     writer.Close();
@@ -1233,7 +847,7 @@ namespace ProtoBuf
         private void AppendExtensionField(ProtoWriter writer)
         {
             //TODO: replace this with stream-based, buffered raw copying
-            ProtoWriter.WriteFieldHeader(fieldNumber, wireType, writer);
+            ProtoWriter.WriteFieldHeader(_fieldNumber, wireType, writer);
             switch (wireType)
             {
                 case WireType.Fixed32:
@@ -1270,21 +884,21 @@ namespace ProtoBuf
         {
             if (source == null) throw new ArgumentNullException("source");
             // check for virtual end of stream
-            if (source.blockEnd64 <= source.position64 || wireType == WireType.EndGroup) { return false; }
+            if (source.blockEnd64 <= source.LongPosition || wireType == WireType.EndGroup) { return false; }
             source.wireType = wireType;
             return true;
         }
 
         internal int GetTypeKey(ref Type type)
         {
-            return model.GetKey(ref type);
+            return _model.GetKey(ref type);
         }
 
         internal NetObjectCache NetCache => netCache;
 
         internal Type DeserializeType(string value)
         {
-            return TypeModel.DeserializeType(model, value);
+            return TypeModel.DeserializeType(_model, value);
         }
 
         internal void SetRootObject(object value)
@@ -1311,7 +925,7 @@ namespace ProtoBuf
         /// </summary>
         public Type ReadType()
         {
-            return TypeModel.DeserializeType(model, ReadString());
+            return TypeModel.DeserializeType(_model, ReadString());
         }
 
         internal void TrapNextObject(int newObjectKey)
@@ -1320,18 +934,8 @@ namespace ProtoBuf
             netCache.SetKeyedObject(newObjectKey, null); // use null as a temp
         }
 
-        internal void CheckFullyConsumed()
-        {
-            if (isFixedLength)
-            {
-                if (dataRemaining64 != 0) throw new ProtoException("Incorrect number of bytes consumed");
-            }
-            else
-            {
-                if (available != 0) throw new ProtoException("Unconsumed data left in the buffer; this suggests corrupt input");
-            }
-        }
-
+        internal abstract void CheckFullyConsumed();
+        
         /// <summary>
         /// Merge two objects using the details from the current reader; this is used to change the type
         /// of objects when an inheritance relationship is discovered later than usual during deserilazation.
@@ -1350,87 +954,7 @@ namespace ProtoBuf
             }
         }
 
-        #region RECYCLER
 
-        internal static ProtoReader Create(Stream source, TypeModel model, SerializationContext context, int len)
-            => Create(source, model, context, (long)len);
-        /// <summary>
-        /// Creates a new reader against a stream
-        /// </summary>
-        /// <param name="source">The source stream</param>
-        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
-        /// <param name="context">Additional context about this serialization operation</param>
-        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
-        public static ProtoReader Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
-        {
-            ProtoReader reader = GetRecycled();
-            if (reader == null)
-            {
-#pragma warning disable CS0618
-                return new ProtoReader(source, model, context, length);
-#pragma warning restore CS0618
-            }
-            Init(reader, source, model, context, length);
-            return reader;
-        }
-
-#if !PLAT_NO_THREADSTATIC
-        [ThreadStatic]
-        private static ProtoReader lastReader;
-
-        private static ProtoReader GetRecycled()
-        {
-            ProtoReader tmp = lastReader;
-            lastReader = null;
-            return tmp;
-        }
-        internal static void Recycle(ProtoReader reader)
-        {
-            if (reader != null)
-            {
-                reader.Dispose();
-                lastReader = reader;
-            }
-        }
-#elif !PLAT_NO_INTERLOCKED
-        private static object lastReader;
-        private static ProtoReader GetRecycled()
-        {
-            return (ProtoReader)System.Threading.Interlocked.Exchange(ref lastReader, null);
-        }
-        internal static void Recycle(ProtoReader reader)
-        {
-            if(reader != null)
-            {
-                reader.Dispose();
-                System.Threading.Interlocked.Exchange(ref lastReader, reader);
-            }
-        }
-#else
-        private static readonly object recycleLock = new object();
-        private static ProtoReader lastReader;
-        private static ProtoReader GetRecycled()
-        {
-            lock(recycleLock)
-            {
-                ProtoReader tmp = lastReader;
-                lastReader = null;
-                return tmp;
-            }            
-        }
-        internal static void Recycle(ProtoReader reader)
-        {
-            if(reader != null)
-            {
-                reader.Dispose();
-                lock(recycleLock)
-                {
-                    lastReader = reader;
-                }
-            }
-        }
-#endif
-
-        #endregion
+        internal virtual void Recycle() { }
     }
 }

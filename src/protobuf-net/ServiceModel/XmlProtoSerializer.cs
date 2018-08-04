@@ -174,7 +174,7 @@ namespace ProtoBuf.ServiceModel
                 }
                 finally
                 {
-                    ProtoReader.Recycle(protoReader);
+                    protoReader?.Recycle();
                 }
             }
 
@@ -196,7 +196,7 @@ namespace ProtoBuf.ServiceModel
                     }
                     finally
                     {
-                        ProtoReader.Recycle(protoReader);
+                        protoReader?.Recycle();
                     }
                 }
             }

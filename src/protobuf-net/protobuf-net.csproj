@@ -3,7 +3,7 @@
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net20;net35;net40;netstandard1.0;netstandard1.3;netstandard2.0;uap10.0;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net20;net35;net40;net462;netstandard1.0;netstandard1.3;netstandard2.0;uap10.0;netcoreapp2.1</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
     <!-- new build tools spit these out -->
@@ -17,10 +17,18 @@
     <PlatformXmlSerializer>true</PlatformXmlSerializer>
     <PlatformBinaryFormatter>true</PlatformBinaryFormatter>
     <Configurations>Debug;Release;VS</Configurations>
+    <PlatformMemoryStreamBuffer>true</PlatformMemoryStreamBuffer>
   </PropertyGroup>
   <!-- define configuration per-platform -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20'">
     <FeatureServiceModel>false</FeatureServiceModel>
+    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
+    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
+    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
     <FeatureServiceModel>false</FeatureServiceModel>
@@ -37,6 +45,7 @@
     <FeatureCompiler>false</FeatureCompiler>
     <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
     <PlatformXmlSerializer>false</PlatformXmlSerializer>
+    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
@@ -61,6 +70,9 @@
   <PropertyGroup Condition="'$(FeatureCompiler)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(PlatformMemoryStreamBuffer)' == 'true'">
+    <DefineConstants>$(DefineConstants);PLAT_MEMORY_STREAM_BUFFER</DefineConstants>
+  </PropertyGroup>  
   <PropertyGroup Condition="'$(FeatureServiceModel)' == 'true'">
     <DefineConstants>$(DefineConstants);FEAT_SERVICEMODEL</DefineConstants>
   </PropertyGroup>
