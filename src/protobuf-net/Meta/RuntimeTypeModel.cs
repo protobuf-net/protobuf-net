@@ -175,8 +175,7 @@ namespace ProtoBuf.Meta
                 Type tmp = Helpers.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
 
-                WireType defaultWireType;
-                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out defaultWireType, false, false, false, false) != null);
+                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out var defaultWireType, false, false, false, false) != null);
                 if (!isInbuiltType)
                 {
                     //Agenerate just relative to the supplied type
@@ -304,8 +303,7 @@ namespace ProtoBuf.Meta
             {
                 if (metaType.IsAutoTuple)
                 {
-                    MemberInfo[] mapping;
-                    if (MetaType.ResolveTupleConstructor(metaType.Type, out mapping) != null)
+                    if (MetaType.ResolveTupleConstructor(metaType.Type, out var mapping) != null)
                     {
                         for (int i = 0; i < mapping.Length; i++)
                         {
@@ -1036,9 +1034,11 @@ namespace ProtoBuf.Meta
         /// <returns>An instance of the newly created compiled type-model</returns>
         public TypeModel Compile(string name, string path)
         {
-            CompilerOptions options = new CompilerOptions();
-            options.TypeName = name;
-            options.OutputPath = path;
+            var options = new CompilerOptions()
+            {
+                TypeName = name,
+                OutputPath = path,
+            };
             return Compile(options);
         }
 #endif
@@ -1064,7 +1064,6 @@ namespace ProtoBuf.Meta
                 typeName = Guid.NewGuid().ToString();
             }
 
-
             string assemblyName, moduleName;
             if (path == null)
             {
@@ -1087,8 +1086,7 @@ namespace ProtoBuf.Meta
             AssemblyName an = new AssemblyName();
             an.Name = assemblyName;
             AssemblyBuilder asm = AppDomain.CurrentDomain.DefineDynamicAssembly(an,
-                (save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.Run)
-                );
+                save ? AssemblyBuilderAccess.RunAndSave : AssemblyBuilderAccess.Run);
             ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
                                         : asm.DefineDynamicModule(moduleName);
 #endif
@@ -1097,17 +1095,9 @@ namespace ProtoBuf.Meta
 
             TypeBuilder type = WriteBasicTypeModel(options, typeName, module);
 
-            int index;
-            bool hasInheritance;
-            SerializerPair[] methodPairs;
-            Compiler.CompilerContext.ILVersion ilVersion;
-            WriteSerializers(options, assemblyName, type, out index, out hasInheritance, out methodPairs, out ilVersion);
+            WriteSerializers(options, assemblyName, type, out var index, out var hasInheritance, out var methodPairs, out var ilVersion);
 
-            ILGenerator il;
-            int knownTypesCategory;
-            FieldBuilder knownTypes;
-            Type knownTypesLookupType;
-            WriteGetKeyImpl(type, hasInheritance, methodPairs, ilVersion, assemblyName, out il, out knownTypesCategory, out knownTypes, out knownTypesLookupType);
+            WriteGetKeyImpl(type, hasInheritance, methodPairs, ilVersion, assemblyName, out var il, out var knownTypesCategory, out var knownTypes, out var knownTypesLookupType);
 
             // trivial flags
             il = Override(type, "SerializeDateTimeKind");
@@ -1575,7 +1565,6 @@ namespace ProtoBuf.Meta
                     AttributeMap[] assemblyAttribsMap = AttributeMap.Create(this, assembly);
                     for (int i = 0; i < assemblyAttribsMap.Length; i++)
                     {
-
                         if (assemblyAttribsMap[i].AttributeType != internalsVisibleToAttribType) continue;
 
                         object privelegedAssemblyObj;
@@ -1960,10 +1949,10 @@ namespace ProtoBuf.Meta
             if (factory != null)
             {
                 if (type != null && Helpers.IsValueType(type)) throw new InvalidOperationException();
-                if (!factory.IsStatic) throw new ArgumentException("A factory-method must be static", "factory");
-                if ((type != null && factory.ReturnType != type) && factory.ReturnType != MapType(typeof(object))) throw new ArgumentException("The factory-method must return object" + (type == null ? "" : (" or " + type.FullName)), "factory");
+                if (!factory.IsStatic) throw new ArgumentException("A factory-method must be static", nameof(factory));
+                if ((type != null && factory.ReturnType != type) && factory.ReturnType != MapType(typeof(object))) throw new ArgumentException("The factory-method must return object" + (type == null ? "" : (" or " + type.FullName)), nameof(factory));
 
-                if (!CallbackSet.CheckCallbackParameters(this, factory)) throw new ArgumentException("Invalid factory signature in " + factory.DeclaringType.FullName + "." + factory.Name, "factory");
+                if (!CallbackSet.CheckCallbackParameters(this, factory)) throw new ArgumentException("Invalid factory signature in " + factory.DeclaringType.FullName + "." + factory.Name, nameof(factory));
             }
         }
 

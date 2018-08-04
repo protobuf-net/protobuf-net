@@ -18,17 +18,21 @@
     <PlatformBinaryFormatter>true</PlatformBinaryFormatter>
     <Configurations>Debug;Release;VS</Configurations>
     <PlatformMemoryStreamBuffer>true</PlatformMemoryStreamBuffer>
+    <PlatformSpans>true</PlatformSpans>
   </PropertyGroup>
   <!-- define configuration per-platform -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20'">
     <FeatureServiceModel>false</FeatureServiceModel>
     <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
+    <PlatformSpans>false</PlatformSpans>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
     <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
+    <PlatformSpans>false</PlatformSpans>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
     <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
+    <PlatformSpans>false</PlatformSpans>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
     <FeatureServiceModel>false</FeatureServiceModel>
@@ -46,6 +50,7 @@
     <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
     <PlatformXmlSerializer>false</PlatformXmlSerializer>
     <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
+    <PlatformSpans>false</PlatformSpans>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
@@ -82,6 +87,9 @@
   <PropertyGroup Condition="'$(PlatformXmlSerializer)' == 'true'">
     <DefineConstants>$(DefineConstants);PLAT_XMLSERIALIZER</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(PlatformSpans)' == 'true'">
+    <DefineConstants>$(DefineConstants);PLAT_SPANS</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformBinaryFormatter)' == 'true'">
     <DefineConstants>$(DefineConstants);PLAT_BINARYFORMATTER</DefineConstants>
   </PropertyGroup>
@@ -99,6 +107,9 @@
   </ItemGroup>
   <ItemGroup Condition="'$(ImportLibs)' == 'standard' and '$(FeatureServiceModel)' == 'true'">
     <PackageReference Include="System.ServiceModel.Primitives" Version="4.5.3" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(ImportLibs)' != 'none' and '$(PlatformSpans)' == 'true'">
+    <PackageReference Include="System.Memory" Version="4.5.1" />
   </ItemGroup>
   <ItemGroup Condition="'$(ImportLibs)' == 'standard'">
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />

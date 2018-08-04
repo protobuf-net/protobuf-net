@@ -30,7 +30,8 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Gets the member (field/property) which this member relates to.
         /// </summary>
-        public MemberInfo Member { get { return originalMember; } }
+        public MemberInfo Member => originalMember;
+
         /// <summary>
         /// Gets the backing member (field/property) which this member relates to
         /// </summary>
@@ -93,12 +94,12 @@ namespace ProtoBuf.Meta
         public ValueMember(RuntimeTypeModel model, Type parentType, int fieldNumber, MemberInfo member, Type memberType, Type itemType, Type defaultType, DataFormat dataFormat, object defaultValue)
             : this(model, fieldNumber, memberType, itemType, defaultType, dataFormat)
         {
-            if (parentType == null) throw new ArgumentNullException("parentType");
-            if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
+            if (parentType == null) throw new ArgumentNullException(nameof(parentType));
+            if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
 
-            this.originalMember = member ?? throw new ArgumentNullException("member");
+            this.originalMember = member ?? throw new ArgumentNullException(nameof(member));
             this.parentType = parentType;
-            if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException("fieldNumber");
+            if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             //#if WINRT
             if (defaultValue != null && model.MapType(defaultValue.GetType()) != memberType)
             //#else
@@ -339,7 +340,7 @@ namespace ProtoBuf.Meta
                         || getSpecified.IsStatic
                         || getSpecified.GetParameters().Length != 0)
                     {
-                        throw new ArgumentException("Invalid pattern for checking member-specified", "getSpecified");
+                        throw new ArgumentException("Invalid pattern for checking member-specified", nameof(getSpecified));
                     }
                 }
                 if (setSpecified != null)
@@ -350,7 +351,7 @@ namespace ProtoBuf.Meta
                         || (args = setSpecified.GetParameters()).Length != 1
                         || args[0].ParameterType != model.MapType(typeof(bool)))
                     {
-                        throw new ArgumentException("Invalid pattern for setting member-specified", "setSpecified");
+                        throw new ArgumentException("Invalid pattern for setting member-specified", nameof(setSpecified));
                     }
                 }
 
@@ -759,7 +760,6 @@ namespace ProtoBuf.Meta
             return null;
         }
 
-
         private string name;
         internal void SetName(string name)
         {
@@ -814,11 +814,9 @@ namespace ProtoBuf.Meta
 
         internal string GetSchemaTypeName(bool applyNetObjectProxy, ref RuntimeTypeModel.CommonImports imports)
         {
-            Type effectiveType = ItemType;
-            if (effectiveType == null) effectiveType = MemberType;
+            Type effectiveType = ItemType ?? MemberType;
             return model.GetSchemaTypeName(effectiveType, DataFormat, applyNetObjectProxy && AsReference, applyNetObjectProxy && DynamicType, ref imports);
         }
-
 
         internal sealed class Comparer : System.Collections.IComparer, IComparer<ValueMember>
         {

@@ -27,17 +27,14 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
         /// </summary>
-        protected internal Type MapType(Type type)
-        {
-            return MapType(type, true);
-        }
+        protected internal Type MapType(Type type) => type;
+
+#pragma warning disable RCS1163 // Unused parameter.
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
         /// </summary>
-        protected internal virtual Type MapType(Type type, bool demand)
-        {
-            return type;
-        }
+        protected internal Type MapType(Type type, bool demand) => type;
+#pragma warning restore RCS1163 // Unused parameter.
 
         private WireType GetWireType(ProtoTypeCode code, DataFormat format, ref Type type, out int modelKey)
         {
@@ -82,7 +79,6 @@ namespace ProtoBuf.Meta
             return WireType.None;
         }
 
-
         /// <summary>
         /// This is the more "complete" version of Serialize, which handles single instances of mapped types.
         /// The value is written as a complete field, including field-header and (for sub-objects) a
@@ -99,7 +95,6 @@ namespace ProtoBuf.Meta
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
             // note the "ref type" here normalizes against proxies
             WireType wireType = GetWireType(typecode, format, ref type, out int modelKey);
-
 
             if (modelKey >= 0)
             {   // write the header, but defer to the model
@@ -318,7 +313,6 @@ namespace ProtoBuf.Meta
             }
             do
             {
-
                 bool expectPrefix = expectedField > 0 || resolver != null;
                 len = ProtoReader.ReadLongLengthPrefix(source, expectPrefix, style, out int actualField, out int tmpBytesRead);
                 if (tmpBytesRead == 0) return value;
@@ -551,7 +545,7 @@ namespace ProtoBuf.Meta
                         ProtoWriter.WriteObject(value, key, writer, style, fieldNumber);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("style");
+                        throw new ArgumentOutOfRangeException(nameof(style));
                 }
                 writer.Close();
             }
@@ -702,7 +696,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public object Deserialize(ProtoReader source, object value, System.Type type)
         {
-            if (source == null) throw new ArgumentNullException("source");
+            if (source == null) throw new ArgumentNullException(nameof(source));
             bool autoCreate = PrepareDeserialize(value, ref type);
             if (value != null) source.SetRootObject(value);
             object obj = DeserializeCore(source, type, value, autoCreate);
@@ -730,7 +724,7 @@ namespace ProtoBuf.Meta
         internal static MethodInfo ResolveListAdd(TypeModel model, Type listType, Type itemType, out bool isList)
         {
 #if COREFX || PROFILE259
-			TypeInfo listTypeInfo = listType.GetTypeInfo();
+            TypeInfo listTypeInfo = listType.GetTypeInfo();
 #else
             Type listTypeInfo = listType;
 #endif
@@ -740,21 +734,20 @@ namespace ProtoBuf.Meta
             isList = model.MapType(ilist).IsAssignableFrom(listTypeInfo);
 #endif
             Type[] types = { itemType };
-            MethodInfo add = Helpers.GetInstanceMethod(listTypeInfo, "Add", types);
+            MethodInfo add = Helpers.GetInstanceMethod(listTypeInfo, nameof(IList.Add), types);
 
 #if !NO_GENERICS
             if (add == null)
             {   // fallback: look for ICollection<T>'s Add(typedObject) method
-
-                bool forceList = listTypeInfo.IsInterface &&
-                    model.MapType(typeof(System.Collections.Generic.IEnumerable<>)).MakeGenericType(types)
+                bool forceList = listTypeInfo.IsInterface
+                    && model.MapType(typeof(System.Collections.Generic.IEnumerable<>)).MakeGenericType(types)
 #if COREFX || PROFILE259
-					.GetTypeInfo()
+                    .GetTypeInfo()
 #endif
                     .IsAssignableFrom(listTypeInfo);
 
 #if COREFX || PROFILE259
-				TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
+                TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
 #else
                 Type constuctedListType = model.MapType(typeof(System.Collections.Generic.ICollection<>)).MakeGenericType(types);
 #endif
@@ -766,15 +759,14 @@ namespace ProtoBuf.Meta
 
             if (add == null)
             {
-
 #if COREFX || PROFILE259
-				foreach (Type tmpType in listTypeInfo.ImplementedInterfaces)
+                foreach (Type tmpType in listTypeInfo.ImplementedInterfaces)
 #else
                 foreach (Type interfaceType in listTypeInfo.GetInterfaces())
 #endif
                 {
 #if COREFX || PROFILE259
-					TypeInfo interfaceType = tmpType.GetTypeInfo();
+                    TypeInfo interfaceType = tmpType.GetTypeInfo();
 #endif
                     if (interfaceType.Name == "IProducerConsumerCollection`1" && interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
                     {
@@ -803,10 +795,10 @@ namespace ProtoBuf.Meta
 #if PROFILE259
 			TypeInfo listTypeInfo = listType.GetTypeInfo();
             if (listType == typeof(string) || listType.IsArray
-                || !typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(listTypeInfo)) return null;
+                || !typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(listTypeInfo)) { return null; }
 #else
             if (listType == model.MapType(typeof(string)) || listType.IsArray
-                || !model.MapType(typeof(IEnumerable)).IsAssignableFrom(listType)) return null;
+                || !model.MapType(typeof(IEnumerable)).IsAssignableFrom(listType)) { return null; }
 #endif
 
             BasicList candidates = new BasicList();
@@ -884,18 +876,16 @@ namespace ProtoBuf.Meta
 
         private static void TestEnumerableListPatterns(TypeModel model, BasicList candidates, Type iType)
         {
-
 #if COREFX || PROFILE259
-			TypeInfo iTypeInfo = iType.GetTypeInfo();
+            TypeInfo iTypeInfo = iType.GetTypeInfo();
             if (iTypeInfo.IsGenericType)
             {
                 Type typeDef = iTypeInfo.GetGenericTypeDefinition();
-                if(
+                if (
                    typeDef == model.MapType(typeof(System.Collections.Generic.IEnumerable<>))
                 || typeDef == model.MapType(typeof(System.Collections.Generic.ICollection<>))
                 || typeDef.GetTypeInfo().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
                 {
-                        
                     Type[] iTypeArgs = iTypeInfo.GenericTypeArguments;
                     if (!candidates.Contains(iTypeArgs[0]))
                     {
@@ -924,7 +914,7 @@ namespace ProtoBuf.Meta
         private static bool CheckDictionaryAccessors(TypeModel model, Type pair, Type value)
         {
 #if COREFX || PROFILE259
-			TypeInfo finalType = pair.GetTypeInfo();
+            TypeInfo finalType = pair.GetTypeInfo();
             return finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
                 && finalType.GenericTypeArguments[1] == value;
 #else
@@ -1003,25 +993,25 @@ namespace ProtoBuf.Meta
             }
 
 #if COREFX || PROFILE259
-			TypeInfo listTypeInfo = listType.GetTypeInfo();
-            if (!listTypeInfo.IsClass || listTypeInfo.IsAbstract ||
-                Helpers.GetConstructor(listTypeInfo, Helpers.EmptyTypes, true) == null)
+            TypeInfo listTypeInfo = listType.GetTypeInfo();
+            if (!listTypeInfo.IsClass || listTypeInfo.IsAbstract
+                || Helpers.GetConstructor(listTypeInfo, Helpers.EmptyTypes, true) == null)
 #else
-            if (!listType.IsClass || listType.IsAbstract ||
-                Helpers.GetConstructor(listType, Helpers.EmptyTypes, true) == null)
+            if (!listType.IsClass || listType.IsAbstract
+                || Helpers.GetConstructor(listType, Helpers.EmptyTypes, true) == null)
 #endif
             {
                 string fullName;
                 bool handled = false;
 #if COREFX || PROFILE259
-				if (listTypeInfo.IsInterface &&
+                if (listTypeInfo.IsInterface &&
 #else
                 if (listType.IsInterface &&
 #endif
                     (fullName = listType.FullName) != null && fullName.IndexOf("Dictionary") >= 0) // have to try to be frugal here...
                 {
 #if COREFX || PROFILE259
-					TypeInfo finalType = listType.GetTypeInfo();
+                    TypeInfo finalType = listType.GetTypeInfo();
                     if (finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
                     {
                         Type[] genericTypes = listType.GenericTypeArguments;
@@ -1064,13 +1054,16 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
+        /// <para>
         /// This is the more "complete" version of Deserialize, which handles single instances of mapped types.
         /// The value is read as a complete field, including field-header and (for sub-objects) a
         /// length-prefix..kmc  
-        /// 
+        /// </para>
+        /// <para>
         /// In addition to that, this provides support for:
         ///  - basic values; individual int / string / Guid / etc
         ///  - IList sets of any type handled by TryDeserializeAuxiliaryType
+        /// </para>
         /// </summary>
         internal bool TryDeserializeAuxiliaryType(ProtoReader reader, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
         {
@@ -1108,8 +1101,9 @@ namespace ProtoBuf.Meta
             {
                 // for convenience (re complex exit conditions), additional exit test here:
                 // if we've got the value, are only looking for one, and we aren't a list - then exit
+#pragma warning disable RCS1218 // Simplify code branching.
                 if (found && asListItem) break;
-
+#pragma warning restore RCS1218 // Simplify code branching.
 
                 // read the next item
                 int fieldNumber = reader.ReadFieldHeader();
@@ -1164,7 +1158,6 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Guid: value = BclHelpers.ReadGuid(reader); continue;
                     case ProtoTypeCode.Uri: value = new Uri(reader.ReadString(), UriKind.RelativeOrAbsolute); continue;
                 }
-
             }
             if (!found && !asListItem && autoCreate)
             {
@@ -1208,7 +1201,7 @@ namespace ProtoBuf.Meta
             if (fullName != null && fullName.StartsWith("System.Data.Entity.DynamicProxies."))
             {
 #if COREFX || PROFILE259
-				return type.GetTypeInfo().BaseType;
+                return type.GetTypeInfo().BaseType;
 #else
                 return type.BaseType;
 #endif
@@ -1228,7 +1221,7 @@ namespace ProtoBuf.Meta
                     case "NHibernate.Proxy.DynamicProxy.IProxy":
                     case "NHibernate.Intercept.IFieldInterceptorAccessor":
 #if COREFX || PROFILE259
-						return type.GetTypeInfo().BaseType;
+                        return type.GetTypeInfo().BaseType;
 #else
                         return type.BaseType;
 #endif
@@ -1243,7 +1236,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool IsDefined(Type type) => GetKey(ref type) >= 0;
 
-        readonly Dictionary<Type, KnownTypeKey> knownKeys = new Dictionary<Type, KnownTypeKey>();
+        private readonly Dictionary<Type, KnownTypeKey> knownKeys = new Dictionary<Type, KnownTypeKey>();
 
         // essentially just a ValueTuple<int,Type> - I just don't want the extra dependency
         private readonly struct KnownTypeKey
@@ -1308,7 +1301,7 @@ namespace ProtoBuf.Meta
         internal void ResetKeyCache()
         {
             // clear *everything* (think: multi-level - can be many descendents)
-            lock(knownKeys)
+            lock (knownKeys)
             {
                 knownKeys.Clear();
             }
@@ -1454,12 +1447,12 @@ namespace ProtoBuf.Meta
             {
                 Type baseType = type
 #if COREFX || PROFILE259
-					.GetTypeInfo()
+                    .GetTypeInfo()
 #endif
                     .BaseType;
                 if (baseType != null && baseType
 #if COREFX || PROFILE259
-					.GetTypeInfo()
+                    .GetTypeInfo()
 #endif
                     .IsGenericType && baseType.GetGenericTypeDefinition().Name == "GeneratedMessage`2")
                 {
@@ -1475,7 +1468,7 @@ namespace ProtoBuf.Meta
         {
             return new NotSupportedException("Nested or jagged lists and arrays are not supported: " + (type?.FullName ?? "(null)"));
         }
-        
+
         /// <summary>
         /// Indicates that the given type cannot be constructed; it may still be possible to 
         /// deserialize into existing instances.
@@ -1502,7 +1495,6 @@ namespace ProtoBuf.Meta
 
         internal static Type DeserializeType(TypeModel model, string value)
         {
-
             if (model != null)
             {
                 TypeFormatEventHandler handler = model.DynamicTypeFormatting;
@@ -1591,11 +1583,13 @@ namespace ProtoBuf.Meta
             throw new NotSupportedException();
         }
 
+#pragma warning disable RCS1159 // Use EventHandler<T>.
         /// <summary>
         /// Used to provide custom services for writing and parsing type names when using dynamic types. Both parsing and formatting
         /// are provided on a single API as it is essential that both are mapped identically at all times.
         /// </summary>
         public event TypeFormatEventHandler DynamicTypeFormatting;
+#pragma warning restore RCS1159 // Use EventHandler<T>.
 
 #if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
         /// <summary>
@@ -1617,36 +1611,18 @@ namespace ProtoBuf.Meta
                 this.model = model ?? throw new ArgumentNullException(nameof(model));
                 this.type = type ?? throw new ArgumentNullException(nameof(type));
             }
-            private System.Runtime.Serialization.SerializationBinder binder;
-            public System.Runtime.Serialization.SerializationBinder Binder
-            {
-                get { return binder; }
-                set { binder = value; }
-            }
 
-            private System.Runtime.Serialization.StreamingContext context;
-            public System.Runtime.Serialization.StreamingContext Context
-            {
-                get { return context; }
-                set { context = value; }
-            }
+            public System.Runtime.Serialization.SerializationBinder Binder { get; set; }
 
-            public object Deserialize(Stream source)
-            {
-                return model.Deserialize(source, null, type, (long)-1, Context);
-            }
+            public System.Runtime.Serialization.StreamingContext Context { get; set; }
 
-            public void Serialize(Stream destination, object graph)
-            {
-                model.Serialize(destination, graph, Context);
-            }
+            public object Deserialize(Stream serializationStream)
+                => model.Deserialize(serializationStream, null, type, (long)-1, Context);
 
-            private System.Runtime.Serialization.ISurrogateSelector surrogateSelector;
-            public System.Runtime.Serialization.ISurrogateSelector SurrogateSelector
-            {
-                get { return surrogateSelector; }
-                set { surrogateSelector = value; }
-            }
+            public void Serialize(Stream serializationStream, object graph)
+                => model.Serialize(serializationStream, graph, Context);
+
+            public System.Runtime.Serialization.ISurrogateSelector SurrogateSelector { get; set; }
         }
 #endif
 

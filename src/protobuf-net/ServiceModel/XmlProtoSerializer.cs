@@ -57,7 +57,7 @@ namespace ProtoBuf.ServiceModel
             if (key < 0) throw new ArgumentOutOfRangeException(nameof(type), "Type not recognised by the model: " + type.FullName);
         }
 
-        static int GetKey(TypeModel model, ref Type type, out bool isList)
+        private static int GetKey(TypeModel model, ref Type type, out bool isList)
         {
             if (model != null && type != null)
             {

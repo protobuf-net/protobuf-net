@@ -218,7 +218,7 @@ namespace ProtoBuf.Compiler
             {
                 if (methodPairs[i].MetaKey == metaKey) { return read ? methodPairs[i].Deserialize : methodPairs[i].Serialize; }
             }
-            throw new ArgumentException("Meta-key not found", "metaKey");
+            throw new ArgumentException("Meta-key not found", nameof(metaKey));
         }
 
         internal int MapMetaKeyToCompiledKey(int metaKey)
@@ -229,7 +229,7 @@ namespace ProtoBuf.Compiler
             {
                 if (methodPairs[i].MetaKey == metaKey) return i;
             }
-            throw new ArgumentException("Key could not be mapped: " + metaKey.ToString(), "metaKey");
+            throw new ArgumentException("Key could not be mapped: " + metaKey.ToString(), nameof(metaKey));
         }
 
 
@@ -510,12 +510,12 @@ namespace ProtoBuf.Compiler
                 ParameterInfo[] pis = method.GetParameters();
                 if (pis.Length == 2 && pis[1].ParameterType == writerType) return method;
             }
-            throw new ArgumentException("No suitable method found for: " + methodName, "methodName");
+            throw new ArgumentException("No suitable method found for: " + methodName, nameof(methodName));
         }
 
         internal void EmitWrite(Type helperType, string methodName, Compiler.Local valueFrom)
         {
-            if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException("methodName");
+            if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             MethodInfo method = helperType.GetMethod(
                 methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             if (method == null || method.ReturnType != MapType(typeof(void))) throw new ArgumentException("methodName");
@@ -744,38 +744,34 @@ namespace ProtoBuf.Compiler
                 }
                 bool isPublic;
 #if COREFX
-                if (member is TypeInfo)
+                if (member is TypeInfo ti)
                 {
-                    TypeInfo ti = (TypeInfo)member;
                     do
                     {
                         isPublic = ti.IsNestedPublic || ti.IsPublic || ((ti.IsNested || ti.IsNestedAssembly || ti.IsNestedFamORAssem) && InternalsVisible(ti.Assembly));
                     } while (isPublic && ti.IsNested && (ti = ti.DeclaringType.GetTypeInfo()) != null);
                 }
-                else if (member is FieldInfo)
+                else if (member is FieldInfo field)
                 {
-                    FieldInfo field = ((FieldInfo)member);
                     isPublic = field.IsPublic || ((field.IsAssembly || field.IsFamilyOrAssembly) && InternalsVisible(Helpers.GetAssembly(field.DeclaringType)));
                 }
                 else if (member is PropertyInfo)
                 {
                     isPublic = true; // defer to get/set
                 }
-                else if (member is ConstructorInfo)
+                else if (member is ConstructorInfo ctor)
                 {
-                    ConstructorInfo ctor = ((ConstructorInfo)member);
                     isPublic = ctor.IsPublic || ((ctor.IsAssembly || ctor.IsFamilyOrAssembly) && InternalsVisible(Helpers.GetAssembly(ctor.DeclaringType)));
                 }
-                else if (member is MethodInfo)
+                else if (member is MethodInfo method)
                 {
-                    MethodInfo method = ((MethodInfo)member);
                     isPublic = method.IsPublic || ((method.IsAssembly || method.IsFamilyOrAssembly) && InternalsVisible(Helpers.GetAssembly(method.DeclaringType)));
                     if (!isPublic)
                     {
                         // allow calls to TypeModel protected methods, and methods we are in the process of creating
                         if (
-                                member is MethodBuilder ||
-                                member.DeclaringType == MapType(typeof(TypeModel)))
+                                member is MethodBuilder
+                                || member.DeclaringType == MapType(typeof(TypeModel)))
                             isPublic = true;
                     }
                 }
@@ -814,8 +810,8 @@ namespace ProtoBuf.Compiler
                         {
                             // allow calls to TypeModel protected methods, and methods we are in the process of creating
                             if (
-                                member is MethodBuilder ||
-                                member.DeclaringType == MapType(typeof(TypeModel))) isPublic = true;
+                                member is MethodBuilder
+                                || member.DeclaringType == MapType(typeof(TypeModel))) isPublic = true;
                         }
                         break;
                     case MemberTypes.Property:
@@ -860,9 +856,9 @@ namespace ProtoBuf.Compiler
         {
             MemberInfo member = field;
             CheckAccessibility(ref member);
-            if (member is PropertyInfo)
+            if (member is PropertyInfo prop)
             {
-                LoadValue((PropertyInfo)member);
+                LoadValue(prop);
             }
             else
             {
@@ -1163,8 +1159,8 @@ namespace ProtoBuf.Compiler
 
                 Type type = local.Type;
                 // check if **never** disposable
-                if ((Helpers.IsValueType(type) || Helpers.IsSealed(type)) &&
-                    !ctx.MapType(typeof(IDisposable)).IsAssignableFrom(type))
+                if ((Helpers.IsValueType(type) || Helpers.IsSealed(type))
+                    && !ctx.MapType(typeof(IDisposable)).IsAssignableFrom(type))
                 {
                     return; // nothing to do! easiest "using" block ever
                     // (note that C# wouldn't allow this as a "using" block,

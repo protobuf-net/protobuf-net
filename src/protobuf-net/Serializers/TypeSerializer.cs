@@ -9,7 +9,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class TypeSerializer : IProtoTypeSerializer
+    internal sealed class TypeSerializer : IProtoTypeSerializer
     {
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {
@@ -81,7 +81,7 @@ namespace ProtoBuf.Serializers
 
             if (Helpers.GetUnderlyingType(forType) != null)
             {
-                throw new ArgumentException("Cannot create a TypeSerializer for nullable types", "forType");
+                throw new ArgumentException("Cannot create a TypeSerializer for nullable types", nameof(forType));
             }
 
 #if COREFX || PROFILE259
@@ -106,7 +106,7 @@ namespace ProtoBuf.Serializers
 #endif
             if (constructType != forType && useConstructor && !hasConstructor)
             {
-                throw new ArgumentException("The supplied default implementation cannot be created: " + constructType.FullName, "constructType");
+                throw new ArgumentException("The supplied default implementation cannot be created: " + constructType.FullName, nameof(constructType));
             }
         }
 #if COREFX || PROFILE259
@@ -301,7 +301,7 @@ namespace ProtoBuf.Serializers
             }
             return result;
         }
-        object CreateInstance(ProtoReader source, bool includeLocalCallback)
+        private object CreateInstance(ProtoReader source, bool includeLocalCallback)
         {
             //Helpers.DebugWriteLine("* creating : " + forType.FullName);
             object obj;
@@ -509,7 +509,6 @@ namespace ProtoBuf.Serializers
             bool actuallyHasInheritance = false;
             if (CanHaveInheritance)
             {
-
                 for (int i = 0; i < serializers.Length; i++)
                 {
                     IProtoSerializer ser = serializers[i];
@@ -537,8 +536,8 @@ namespace ProtoBuf.Serializers
                     IProtoSerializer ser = serializers[i];
                     IProtoTypeSerializer typeser;
                     Type serType = ser.ExpectedType;
-                    if (serType != forType &&
-                        (typeser = (IProtoTypeSerializer)ser).HasCallbacks(callbackType))
+                    if (serType != forType
+                        && (typeser = (IProtoTypeSerializer)ser).HasCallbacks(callbackType))
                     {
                         Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
                         ctx.CopyValue();
@@ -718,7 +717,6 @@ namespace ProtoBuf.Serializers
                 }
 
                 serializer.EmitRead(ctx, null);
-
             }
 
             if (serializer.ReturnsValue)
@@ -793,6 +791,5 @@ namespace ProtoBuf.Serializers
         }
 #endif
     }
-
 }
 #endif

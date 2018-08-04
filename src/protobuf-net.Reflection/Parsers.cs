@@ -2372,7 +2372,7 @@ namespace ProtoBuf.Reflection
             Text = token.Value;
             TypedCode = code;
         }
-        
+
         private ErrorCode TypedCode { get; }
         /// <summary>
         /// The error code defined for this scenario
