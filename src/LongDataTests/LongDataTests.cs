@@ -22,8 +22,7 @@ namespace LongDataTests
             {
                 int hash = -12323424;
                 hash = (hash * -17) + Id.GetHashCode();
-                hash = (hash * -17) + (SomeString?.GetHashCode() ?? 0);
-                return hash;
+                return (hash * -17) + (SomeString?.GetHashCode() ?? 0);
             }
         }
 
@@ -53,14 +52,13 @@ namespace LongDataTests
         {
             public override int GetHashCode()
             {
-                int hash = -12323424;
-                hash = (hash * -17) + (Group?.GetHashCode() ?? 0);
-                return hash;
+                const int hash = -12323424;
+                return (hash * -17) + (Group?.GetHashCode() ?? 0);
             }
             [ProtoMember(2, DataFormat = DataFormat.Group)]
             public MyModelOuter Group { get; set; }
         }
-        static MyModelOuter CreateOuterModel(int count)
+        private static MyModelOuter CreateOuterModel(int count)
         {
             var obj = new MyModelOuter();
             for (int i = 0; i < count; i++)
@@ -72,8 +70,6 @@ namespace LongDataTests
 #pragma warning restore xUnit1004 // Test methods should not be skipped
         public void CanSerializeLongData()
         {
-
-
             Console.WriteLine($"PID: {Process.GetCurrentProcess().Id}");
             const string path = "large.data";
             var watch = Stopwatch.StartNew();

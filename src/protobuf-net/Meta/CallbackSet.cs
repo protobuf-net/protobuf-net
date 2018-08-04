@@ -25,7 +25,7 @@ namespace ProtoBuf.Meta
                     case TypeModel.CallbackType.AfterSerialize: return afterSerialize;
                     case TypeModel.CallbackType.BeforeDeserialize: return beforeDeserialize;
                     case TypeModel.CallbackType.AfterDeserialize: return afterDeserialize;
-                    default: throw new ArgumentException("Callback type not supported: " + callbackType.ToString(), "callbackType");
+                    default: throw new ArgumentException("Callback type not supported: " + callbackType.ToString(), nameof(callbackType));
                 }
             }
         }
@@ -41,7 +41,7 @@ namespace ProtoBuf.Meta
 #if PLAT_BINARYFORMATTER
                 else if (paramType == model.MapType(typeof(System.Runtime.Serialization.StreamingContext))) { }
 #endif
-                else return false;
+                else { return false; }
             }
             return true;
         }

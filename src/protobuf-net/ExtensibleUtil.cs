@@ -14,7 +14,6 @@ namespace ProtoBuf
     /// </summary>
     internal static class ExtensibleUtil
     {
-
 #if !NO_RUNTIME
         /// <summary>
         /// All this does is call GetExtendedValuesTyped with the correct type for "instance";
@@ -38,7 +37,9 @@ namespace ProtoBuf
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
             if (tag <= 0) throw new ArgumentOutOfRangeException(nameof(tag));
+#pragma warning disable RCS1227 // Validate arguments correctly.
             IExtension extn = instance.GetExtensionObject(false);
+#pragma warning restore RCS1227 // Validate arguments correctly.
 
             if (extn == null)
             {

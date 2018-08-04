@@ -359,7 +359,7 @@ namespace ProtoBuf.Reflection
 
             const int STATE_NORMAL = 0, STATE_ESCAPE = 1, STATE_OCTAL = 2, STATE_HEX = 3;
             int state = STATE_NORMAL;
-            if (value == null || value.Length == 0) return;
+            if (string.IsNullOrEmpty(value)) return;
 
             if (ms == null) ms = new MemoryStream(value.Length);
             uint escapedCodePoint = 0;
