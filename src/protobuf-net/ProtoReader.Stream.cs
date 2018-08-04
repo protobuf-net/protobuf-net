@@ -114,7 +114,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal override int TryReadUInt32VariantWithoutMoving(bool trimNegative, out uint value)
+            internal override int TryReadUInt32VarintWithoutMoving(bool trimNegative, out uint value)
             {
                 if (_available < 10) Ensure(10, false);
                 if (_available == 0)
@@ -167,7 +167,7 @@ namespace ProtoBuf
                 Advance(8);
                 _available -= 8;
 
-#if NETCOREAPP2_1
+#if PLAT_SPANS
                 var result = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(_ioBuffer.AsSpan(_ioIndex, 8));
                 _ioIndex += 8;
                 return result;
@@ -214,7 +214,7 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override int TryReadUInt64VariantWithoutMoving(out ulong value)
+            private protected override int TryReadUInt64VarintWithoutMoving(out ulong value)
             {
                 if (_available < 10) Ensure(10, false);
                 if (_available == 0)
@@ -281,7 +281,6 @@ namespace ProtoBuf
 
                 string s = UTF8.GetString(_ioBuffer, _ioIndex, bytes);
 
-                if (InternStrings) { s = Intern(s); }
                 _available -= bytes;
                 Advance(bytes);
                 _ioIndex += bytes;
@@ -296,11 +295,17 @@ namespace ProtoBuf
                 if (_available < 4) Ensure(4, true);
                 Advance(4);
                 _available -= 4;
+#if PLAT_SPANS
+                var result = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(_ioBuffer.AsSpan(_ioIndex, 4));
+                _ioIndex += 4;
+                return result;
+#else
                 var buffer = _ioBuffer;
                 return ((uint)buffer[_ioIndex++])
                     | (((uint)buffer[_ioIndex++]) << 8)
                     | (((uint)buffer[_ioIndex++]) << 16)
                     | (((uint)buffer[_ioIndex++]) << 24);
+#endif
             }
 
             internal void Ensure(int count, bool strict)

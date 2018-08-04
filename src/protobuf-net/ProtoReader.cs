@@ -92,9 +92,9 @@ namespace ProtoBuf
             if (netCache != null) netCache.Clear();
         }
 
-        private uint ReadUInt32Variant(bool trimNegative)
+        private uint ReadUInt32Varint(bool trimNegative)
         {
-            int read = TryReadUInt32VariantWithoutMoving(trimNegative, out uint value);
+            int read = TryReadUInt32VarintWithoutMoving(trimNegative, out uint value);
             if (read > 0)
             {
                 ImplSkipBytes(read);
@@ -103,9 +103,9 @@ namespace ProtoBuf
             throw EoF(this);
         }
 
-        private ulong ReadUInt64Variant()
+        private ulong ReadUInt64Varint()
         {
-            int read = TryReadUInt64VariantWithoutMoving(out ulong value);
+            int read = TryReadUInt64VarintWithoutMoving(out ulong value);
             if (read > 0)
             {
                 ImplSkipBytes(read);
@@ -114,7 +114,7 @@ namespace ProtoBuf
             throw EoF(this);
         }
 
-        private protected abstract int TryReadUInt64VariantWithoutMoving(out ulong value);
+        private protected abstract int TryReadUInt64VarintWithoutMoving(out ulong value);
 
         /// <summary>
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
@@ -169,7 +169,7 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.Variant:
-                    return ReadUInt32Variant(false);
+                    return ReadUInt32Varint(false);
                 case WireType.Fixed32:
                     return ImplReadUInt32Fixed();
                 case WireType.Fixed64:
@@ -188,14 +188,14 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.Variant:
-                    return (int)ReadUInt32Variant(true);
+                    return (int)ReadUInt32Varint(true);
                 case WireType.Fixed32:
                     return (int)ImplReadUInt32Fixed();
                 case WireType.Fixed64:
                     long l = ReadInt64();
                     checked { return (int)l; }
                 case WireType.SignedVariant:
-                    return Zag(ReadUInt32Variant(true));
+                    return Zag(ReadUInt32Varint(true));
                 default:
                     throw CreateWireTypeException();
             }
@@ -225,13 +225,13 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.Variant:
-                    return (long)ReadUInt64Variant();
+                    return (long)ReadUInt64Varint();
                 case WireType.Fixed32:
                     return (int)ImplReadUInt32Fixed();
                 case WireType.Fixed64:
                     return (long)ImplReadUInt64Fixed();
                 case WireType.SignedVariant:
-                    return Zag(ReadUInt64Variant());
+                    return Zag(ReadUInt64Varint());
                 default:
                     throw CreateWireTypeException();
             }
@@ -272,9 +272,11 @@ namespace ProtoBuf
         {
             if (WireType == WireType.String)
             {
-                int bytes = (int)ReadUInt32Variant(false);
+                int bytes = (int)ReadUInt32Varint(false);
                 if (bytes == 0) return "";
-                return ImplReadString(bytes);
+                var s = ImplReadString(bytes);
+                if (InternStrings) { s = Intern(s); }
+                return s;
             }
             throw CreateWireTypeException();
         }
@@ -402,7 +404,7 @@ namespace ProtoBuf
                     reader._depth++;
                     return new SubItemToken((long)(-reader._fieldNumber));
                 case WireType.String:
-                    long len = (long)reader.ReadUInt64Variant();
+                    long len = (long)reader.ReadUInt64Varint();
                     if (len < 0) throw AddErrorData(new InvalidOperationException(), reader);
                     long lastEnd = reader.blockEnd64;
                     reader.blockEnd64 = reader.LongPosition + len;
@@ -413,9 +415,9 @@ namespace ProtoBuf
             }
         }
 
-        private protected bool TryReadUInt32Variant(out uint value)
+        private protected bool TryReadUInt32Varint(out uint value)
         {
-            int read = TryReadUInt32VariantWithoutMoving(false, out value);
+            int read = TryReadUInt32VarintWithoutMoving(false, out value);
             if (read > 0)
             {
                 ImplSkipBytes(read);
@@ -435,7 +437,7 @@ namespace ProtoBuf
             // then be called)
             if (blockEnd64 <= LongPosition || WireType == WireType.EndGroup) { return 0; }
 
-            if (TryReadUInt32Variant(out uint tag) && tag != 0)
+            if (TryReadUInt32Varint(out uint tag) && tag != 0)
             {
                 WireType = (WireType)(tag & 7);
                 _fieldNumber = (int)(tag >> 3);
@@ -462,7 +464,7 @@ namespace ProtoBuf
             // check for virtual end of stream
             if (blockEnd64 <= LongPosition || WireType == WireType.EndGroup) { return false; }
 
-            int read = TryReadUInt32VariantWithoutMoving(false, out uint tag);
+            int read = TryReadUInt32VarintWithoutMoving(false, out uint tag);
             WireType tmpWireType; // need to catch this to exclude (early) any "end group" tokens
             if (read > 0 && ((int)tag >> 3) == field
                 && (tmpWireType = (WireType)(tag & 7)) != WireType.EndGroup)
@@ -475,7 +477,7 @@ namespace ProtoBuf
             return false;
         }
 
-        internal abstract int TryReadUInt32VariantWithoutMoving(bool trimNegative, out uint value);
+        internal abstract int TryReadUInt32VarintWithoutMoving(bool trimNegative, out uint value);
 
         /// <summary>
         /// Get the TypeModel associated with this reader
@@ -531,12 +533,12 @@ namespace ProtoBuf
                     ImplSkipBytes(8);
                     return;
                 case WireType.String:
-                    long len = (long)ReadUInt64Variant();
+                    long len = (long)ReadUInt64Varint();
                     ImplSkipBytes(len);
                     return;
                 case WireType.Variant:
                 case WireType.SignedVariant:
-                    ReadUInt64Variant(); // and drop it
+                    ReadUInt64Varint(); // and drop it
                     return;
                 case WireType.StartGroup:
                     int originalFieldNumber = this._fieldNumber;
@@ -565,7 +567,7 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.Variant:
-                    return ReadUInt64Variant();
+                    return ReadUInt64Varint();
                 case WireType.Fixed32:
                     return ImplReadUInt32Fixed();
                 case WireType.Fixed64:
@@ -637,7 +639,7 @@ namespace ProtoBuf
                 switch (WireType)
                 {
                     case WireType.String:
-                        int len = (int)ReadUInt32Variant(false);
+                        int len = (int)ReadUInt32Varint(false);
                         WireType = WireType.None;
                         if (len == 0) return value ?? EmptyBlob;
                         int offset;
@@ -719,7 +721,7 @@ namespace ProtoBuf
         /// </summary>
         public static int DirectReadVarintInt32(Stream source)
         {
-            int bytes = TryReadUInt64Variant(source, out ulong val);
+            int bytes = TryReadUInt64Varint(source, out ulong val);
             if (bytes <= 0) throw EoF(null);
             return checked((int)val);
         }
@@ -792,7 +794,7 @@ namespace ProtoBuf
                     bytesRead = 0;
                     if (expectHeader)
                     {
-                        tmpBytesRead = ProtoReader.TryReadUInt64Variant(source, out val);
+                        tmpBytesRead = ProtoReader.TryReadUInt64Varint(source, out val);
                         bytesRead += tmpBytesRead;
                         if (tmpBytesRead > 0)
                         {
@@ -801,7 +803,7 @@ namespace ProtoBuf
                                 throw new InvalidOperationException();
                             }
                             fieldNumber = (int)(val >> 3);
-                            tmpBytesRead = ProtoReader.TryReadUInt64Variant(source, out val);
+                            tmpBytesRead = ProtoReader.TryReadUInt64Varint(source, out val);
                             bytesRead += tmpBytesRead;
                             if (bytesRead == 0)
                             { // got a header, but no length
@@ -816,7 +818,7 @@ namespace ProtoBuf
                         }
                     }
                     // check for a length
-                    tmpBytesRead = ProtoReader.TryReadUInt64Variant(source, out val);
+                    tmpBytesRead = ProtoReader.TryReadUInt64Varint(source, out val);
                     bytesRead += tmpBytesRead;
                     return bytesRead < 0 ? -1 : (long)val;
 
@@ -854,7 +856,7 @@ namespace ProtoBuf
         }
         /// <summary>Read a varint if possible</summary>
         /// <returns>The number of bytes consumed; 0 if no data available</returns>
-        private static int TryReadUInt64Variant(Stream source, out ulong value)
+        private static int TryReadUInt64Varint(Stream source, out ulong value)
         {
             value = 0;
             int b = source.ReadByte();

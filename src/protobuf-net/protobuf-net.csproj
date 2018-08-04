@@ -19,6 +19,7 @@
     <Configurations>Debug;Release;VS</Configurations>
     <PlatformMemoryStreamBuffer>true</PlatformMemoryStreamBuffer>
     <PlatformSpans>true</PlatformSpans>
+    <PlatformSpanOverloads>false</PlatformSpanOverloads>
   </PropertyGroup>
   <!-- define configuration per-platform -->
   <PropertyGroup Condition="'$(TargetFramework)' == 'net20'">
@@ -70,6 +71,7 @@
     <ImportLibs>none</ImportLibs>
     <FeatureServiceModel>true</FeatureServiceModel>
     <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
+    <PlatformSpanOverloads>true</PlatformSpanOverloads>
   </PropertyGroup>
   <!-- apply the configuration options (typical via defines that switch code flows) -->
   <PropertyGroup Condition="'$(FeatureCompiler)' == 'true'">
@@ -89,6 +91,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformSpans)' == 'true'">
     <DefineConstants>$(DefineConstants);PLAT_SPANS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(PlatformSpans)' == 'true' and '$(PlatformSpanOverloads)' == 'true'">
+    <DefineConstants>$(DefineConstants);PLAT_SPAN_OVERLOADS</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformBinaryFormatter)' == 'true'">
     <DefineConstants>$(DefineConstants);PLAT_BINARYFORMATTER</DefineConstants>
