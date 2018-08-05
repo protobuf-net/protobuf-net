@@ -3,6 +3,7 @@ using ProtoBuf.Meta;
 using System;
 using System.Buffers;
 using System.Buffers.Binary;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -67,7 +68,7 @@ namespace ProtoBuf
                 {
                     if (!_source.MoveNext())
                     {
-                        if (throwIfEOF) throw EoF(this);
+                        if (throwIfEOF) ThrowEoF(this);
                         return 0;
                     }
                     _current = _source.Current;
@@ -79,7 +80,10 @@ namespace ProtoBuf
             internal static ReadOnlySequenceProtoReader GetRecycled()
             {
                 var tmp = s_lastReader;
-                s_lastReader = null;
+                if (tmp != null)
+                {
+                    s_lastReader = null;
+                }
                 return tmp;
             }
 
@@ -219,108 +223,108 @@ namespace ProtoBuf
             }
             private int TryReadUInt32VarintWithoutMoving(bool trimNegative, ReadOnlySpan<byte> span, out uint value)
             {
-                var available = span.Length;
-                if (available == 0)
+                if (0 >= (uint)span.Length)
                 {
                     value = 0;
                     return 0;
                 }
-                int readPos = 0;
-                value = span[readPos++];
+
+                value = span[0];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
-                if (available == 1) throw EoF(this);
 
-                uint chunk = span[readPos++];
+                if (1 >= (uint)span.Length) ThrowEoF(this);
+                uint chunk = span[1];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
-                if (available == 2) throw EoF(this);
 
-                chunk = span[readPos++];
+                if (2 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[2];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
-                if (available == 3) throw EoF(this);
 
-                chunk = span[readPos++];
+                if (3 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[3];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
-                if (available == 4) throw EoF(this);
 
-                chunk = span[readPos];
+                if (4 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[4];
                 value |= chunk << 28; // can only use 4 bits from this chunk
                 if ((chunk & 0xF0) == 0) return 5;
 
                 if (trimNegative // allow for -ve values
                     && (chunk & 0xF0) == 0xF0
-                    && available >= 10
-                        && span[++readPos] == 0xFF
-                        && span[++readPos] == 0xFF
-                        && span[++readPos] == 0xFF
-                        && span[++readPos] == 0xFF
-                        && span[++readPos] == 0x01)
+                    && 9 < (uint)span.Length
+                        && span[5] == 0xFF
+                        && span[6] == 0xFF
+                        && span[7] == 0xFF
+                        && span[8] == 0xFF
+                        && span[9] == 0x01)
                 {
                     return 10;
                 }
-                throw AddErrorData(new OverflowException(), this);
+
+                ThrowOverflow(this);
+                return 0;
             }
+
             private int TryReadUInt64VarintWithoutMoving(ReadOnlySpan<byte> span, out ulong value)
             {
-                var available = span.Length;
-                if (available == 0)
+                if (0 >= (uint)span.Length)
                 {
                     value = 0;
                     return 0;
                 }
-                int readPos = 0;
-                value = span[readPos++];
+                value = span[0];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
-                if (available == 1) throw EoF(this);
 
-                ulong chunk = span[readPos++];
+                if (1 >= (uint)span.Length) ThrowEoF(this);
+                ulong chunk = span[1];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
-                if (available == 2) throw EoF(this);
 
-                chunk = span[readPos++];
+                if (2 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[2];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
-                if (available == 3) throw EoF(this);
 
-                chunk = span[readPos++];
+                if (3 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[3];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
-                if (available == 4) throw EoF(this);
 
-                chunk = span[readPos++];
+                if (4 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[4];
                 value |= (chunk & 0x7F) << 28;
                 if ((chunk & 0x80) == 0) return 5;
-                if (available == 5) throw EoF(this);
 
-                chunk = span[readPos++];
+                if (5 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[5];
                 value |= (chunk & 0x7F) << 35;
                 if ((chunk & 0x80) == 0) return 6;
-                if (available == 6) throw EoF(this);
 
-                chunk = span[readPos++];
+                if (6 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[6];
                 value |= (chunk & 0x7F) << 42;
                 if ((chunk & 0x80) == 0) return 7;
-                if (available == 7) throw EoF(this);
 
-                chunk = span[readPos++];
+                if (7 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[7];
                 value |= (chunk & 0x7F) << 49;
                 if ((chunk & 0x80) == 0) return 8;
-                if (available == 8) throw EoF(this);
 
-                chunk = span[readPos++];
+                if (8 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[8];
                 value |= (chunk & 0x7F) << 56;
                 if ((chunk & 0x80) == 0) return 9;
-                if (available == 9) throw EoF(this);
 
-                chunk = span[readPos];
+                if (9 >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[9];
                 value |= chunk << 63; // can only use 1 bit from this chunk
 
-                if ((chunk & ~(ulong)0x01) != 0) throw AddErrorData(new OverflowException(), this);
+                if ((chunk & ~(ulong)0x01) != 0) ThrowOverflow(this);
                 return 10;
             }
 

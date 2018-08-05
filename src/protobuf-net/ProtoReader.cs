@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using ProtoBuf.Meta;
 
@@ -95,23 +96,23 @@ namespace ProtoBuf
         private uint ReadUInt32Varint(bool trimNegative)
         {
             int read = TryReadUInt32VarintWithoutMoving(trimNegative, out uint value);
-            if (read > 0)
+            if (read <= 0)
             {
-                ImplSkipBytes(read);
-                return value;
+                ThrowEoF(this);
             }
-            throw EoF(this);
+            ImplSkipBytes(read);
+            return value;
         }
 
         private ulong ReadUInt64Varint()
         {
             int read = TryReadUInt64VarintWithoutMoving(out ulong value);
-            if (read > 0)
+            if (read <= 0)
             {
-                ImplSkipBytes(read);
-                return value;
+                ThrowEoF(this);
             }
-            throw EoF(this);
+            ImplSkipBytes(read);
+            return value;
         }
 
         private protected abstract int TryReadUInt64VarintWithoutMoving(out ulong value);
@@ -949,14 +950,6 @@ namespace ProtoBuf
         }
 
         /// <summary>
-        /// Create an EOF
-        /// </summary>
-        protected static Exception EoF(ProtoReader reader)
-        {
-            return AddErrorData(new EndOfStreamException(), reader);
-        }
-
-        /// <summary>
         /// Copies the current field into the instance as extension data
         /// </summary>
         public void AppendExtensionData(IExtensible instance)
@@ -1089,5 +1082,39 @@ namespace ProtoBuf
         }
 
         internal abstract void Recycle();
+
+        /// <summary>
+        /// Create an EOF
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        protected static Exception EoF(ProtoReader reader)
+        {
+            return AddErrorData(new EndOfStreamException(), reader);
+        }
+
+        /// <summary>
+        /// throw an EOF
+        /// </summary>
+        protected static void ThrowEoF(ProtoReader reader)
+        {
+            throw EoF(reader);
+        }
+
+        /// <summary>
+        /// Create an Overflow
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Exception Overflow(ProtoReader reader)
+        {
+            return AddErrorData(new OverflowException(), reader);
+        }
+
+        /// <summary>
+        /// Throw an Overflow
+        /// </summary>
+        protected static void ThrowOverflow(ProtoReader reader)
+        {
+            throw Overflow(reader);
+        }
     }
 }
