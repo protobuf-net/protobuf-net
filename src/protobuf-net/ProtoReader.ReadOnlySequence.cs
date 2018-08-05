@@ -394,44 +394,44 @@ namespace ProtoBuf
 
             private int TryParseUInt32Varint(bool trimNegative, ReadOnlySpan<byte> span, int offset, out uint value)
             {
-                if (0 >= (uint)span.Length)
+                if (offset >= (uint)span.Length)
                 {
                     value = 0;
                     return 0;
                 }
 
-                value = span[0];
+                value = span[offset++];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
 
-                if (1 >= (uint)span.Length) ThrowEoF(this);
-                uint chunk = span[1];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                uint chunk = span[offset++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
 
-                if (2 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[2];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
 
-                if (3 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[3];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
 
-                if (4 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[4];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= chunk << 28; // can only use 4 bits from this chunk
                 if ((chunk & 0xF0) == 0) return 5;
 
                 if (trimNegative // allow for -ve values
                     && (chunk & 0xF0) == 0xF0
-                    && 9 < (uint)span.Length
-                        && span[5] == 0xFF
-                        && span[6] == 0xFF
-                        && span[7] == 0xFF
-                        && span[8] == 0xFF
-                        && span[9] == 0x01)
+                    && offset + 4 < (uint)span.Length
+                        && span[offset] == 0xFF
+                        && span[offset + 1] == 0xFF
+                        && span[offset + 2] == 0xFF
+                        && span[offset + 3] == 0xFF
+                        && span[offset + 4] == 0x01)
                 {
                     return 10;
                 }
@@ -441,57 +441,57 @@ namespace ProtoBuf
             }
             private int TryParseUInt64Varint(ReadOnlySpan<byte> span, int offset, out ulong value)
             {
-                if (0 >= (uint)span.Length)
+                if (offset >= (uint)span.Length)
                 {
                     value = 0;
                     return 0;
                 }
-                value = span[0];
+                value = span[offset++];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
 
-                if (1 >= (uint)span.Length) ThrowEoF(this);
-                ulong chunk = span[1];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                ulong chunk = span[offset++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
 
-                if (2 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[2];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
 
-                if (3 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[3];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
 
-                if (4 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[4];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= (chunk & 0x7F) << 28;
                 if ((chunk & 0x80) == 0) return 5;
 
-                if (5 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[5];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= (chunk & 0x7F) << 35;
                 if ((chunk & 0x80) == 0) return 6;
 
-                if (6 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[6];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= (chunk & 0x7F) << 42;
                 if ((chunk & 0x80) == 0) return 7;
 
-                if (7 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[7];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= (chunk & 0x7F) << 49;
                 if ((chunk & 0x80) == 0) return 8;
 
-                if (8 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[8];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset++];
                 value |= (chunk & 0x7F) << 56;
                 if ((chunk & 0x80) == 0) return 9;
 
-                if (9 >= (uint)span.Length) ThrowEoF(this);
-                chunk = span[9];
+                if (offset >= (uint)span.Length) ThrowEoF(this);
+                chunk = span[offset];
                 value |= chunk << 63; // can only use 1 bit from this chunk
 
                 if ((chunk & ~(ulong)0x01) != 0) ThrowOverflow(this);
