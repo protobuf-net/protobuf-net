@@ -150,22 +150,22 @@ namespace ProtoBuf
                 value = _ioBuffer[readPos++];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
-                if (_available == 1) throw EoF(this);
+                if (_available == 1) ThrowEoF(this);
 
                 uint chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
-                if (_available == 2) throw EoF(this);
+                if (_available == 2) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
-                if (_available == 3) throw EoF(this);
+                if (_available == 3) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
-                if (_available == 4) throw EoF(this);
+                if (_available == 4) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos];
                 value |= chunk << 28; // can only use 4 bits from this chunk
@@ -182,7 +182,8 @@ namespace ProtoBuf
                 {
                     return 10;
                 }
-                throw AddErrorData(new OverflowException(), this);
+                ThrowOverflow(this);
+                return 0;
             }
 
             private protected override ulong ImplReadUInt64Fixed(ref State state)
@@ -250,47 +251,47 @@ namespace ProtoBuf
                 value = _ioBuffer[readPos++];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
-                if (_available == 1) throw EoF(this);
+                if (_available == 1) ThrowEoF(this);
 
                 ulong chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
-                if (_available == 2) throw EoF(this);
+                if (_available == 2) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
-                if (_available == 3) throw EoF(this);
+                if (_available == 3) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
-                if (_available == 4) throw EoF(this);
+                if (_available == 4) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 28;
                 if ((chunk & 0x80) == 0) return 5;
-                if (_available == 5) throw EoF(this);
+                if (_available == 5) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 35;
                 if ((chunk & 0x80) == 0) return 6;
-                if (_available == 6) throw EoF(this);
+                if (_available == 6) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 42;
                 if ((chunk & 0x80) == 0) return 7;
-                if (_available == 7) throw EoF(this);
+                if (_available == 7) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 49;
                 if ((chunk & 0x80) == 0) return 8;
-                if (_available == 8) throw EoF(this);
+                if (_available == 8) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 56;
                 if ((chunk & 0x80) == 0) return 9;
-                if (_available == 9) throw EoF(this);
+                if (_available == 9) ThrowEoF(this);
 
                 chunk = _ioBuffer[readPos];
                 value |= chunk << 63; // can only use 1 bit from this chunk
@@ -363,7 +364,7 @@ namespace ProtoBuf
                 }
                 if (strict && count > 0)
                 {
-                    throw EoF(this);
+                    ThrowEoF(this);
                 }
             }
 
@@ -405,7 +406,7 @@ namespace ProtoBuf
 
                 if (_isFixedLength)
                 {
-                    if (count > _dataRemaining64) throw EoF(this);
+                    if (count > _dataRemaining64) ThrowEoF(this);
                     // else assume we're going to be OK
                     _dataRemaining64 -= count;
                 }
