@@ -263,7 +263,7 @@ namespace ProtoBuf
 #if COREFX
         private protected static readonly Encoding UTF8 = Encoding.UTF8;
 #else
-        private protected readonly UTF8Encoding UTF8 = new UTF8Encoding();
+        private protected static readonly UTF8Encoding UTF8 = new UTF8Encoding();
 #endif
         /// <summary>
         /// Reads a string from the stream (using UTF8); supported wire-types: String
@@ -380,7 +380,7 @@ namespace ProtoBuf
                     if (value64 < reader.LongPosition) throw reader.CreateException($"Sub-message not read entirely; expected {value64}, was {reader.LongPosition}");
                     if (reader.blockEnd64 != reader.LongPosition && reader.blockEnd64 != long.MaxValue)
                     {
-                        throw reader.CreateException("Sub-message not read correctly");
+                        throw reader.CreateException($"Sub-message not read correctly (end {reader.blockEnd64} vs {reader.LongPosition})");
                     }
                     reader.blockEnd64 = value64;
                     reader._depth--;
@@ -889,7 +889,10 @@ namespace ProtoBuf
 
         internal void CheckFullyConsumed()
         {
-            if (!IsFullyConsumed) throw new ProtoException("Incorrect number of bytes consumed");
+            if (!IsFullyConsumed)
+            {
+                throw AddErrorData(new ProtoException("Incorrect number of bytes consumed"), this);
+            }
         }
 
         internal static void Seek(Stream source, long count, byte[] buffer)

@@ -1,9 +1,14 @@
-﻿<Project Sdk="MSBuild.Sdk.Extras">
+﻿<!-- problems building? try using Sdk="Microsoft.NET.Sdk" instead of Sdk="MSBuild.Sdk.Extras",
+and remove the uap10.0 build target -->
+
+<Project Sdk="Microsoft.NET.Sdk">
+<!--<Project Sdk="MSBuild.Sdk.Extras">-->
   <PropertyGroup>
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net20;net35;net40;net462;netstandard1.0;netstandard1.3;netstandard2.0;uap10.0;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net20;net35;net40;net462;netstandard1.0;netstandard1.3;netstandard2.0;netcoreapp2.1</TargetFrameworks>
+    <!--uap10.0;-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
     <!-- new build tools spit these out -->

@@ -214,8 +214,7 @@ namespace protogen
                             Serializer.Serialize(fds, set);
                         }
                     }
-                    
-                    
+
                     var files = codegen.Generate(set, options: options);
                     foreach (var file in files)
                     {
@@ -316,7 +315,6 @@ Parse PROTO_FILES and generate output based on the options given:
 Note that PROTO_FILES can be *.proto or **/*.proto (recursive) when a single
 import location is used, to process all schema files found. In recursive mode,
 imports from the current directory can also be specified by name-only.");
-
         }
     }
 }

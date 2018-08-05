@@ -52,8 +52,6 @@ namespace ProtoBuf
                 return span;
             }
 
-
-
             [MethodImpl(MethodImplOptions.NoInlining)]
             private int ReadNextBuffer(bool throwIfEOF)
             {
@@ -197,19 +195,19 @@ namespace ProtoBuf
 
             internal override int TryReadUInt32VarintWithoutMoving(bool trimNegative, out uint value)
             {
-                if (GetSomeData() >= 10) return TryReadUInt32VarintWithoutMoving(trimNegative, Peek(10), out value);
+                if (GetSomeData(false) >= 10) return TryReadUInt32VarintWithoutMoving(trimNegative, Peek(10), out value);
 
                 Span<byte> span = stackalloc byte[10];
                 var read = ImplPeekBytes(span);
-                return TryReadUInt32VarintWithoutMoving(trimNegative, span.Slice(read), out value);
+                return TryReadUInt32VarintWithoutMoving(trimNegative, span.Slice(0, read), out value);
             }
             private protected override int TryReadUInt64VarintWithoutMoving(out ulong value)
             {
-                if (GetSomeData() >= 10) return TryReadUInt64VarintWithoutMoving(Peek(10), out value);
+                if (GetSomeData(false) >= 10) return TryReadUInt64VarintWithoutMoving(Peek(10), out value);
 
                 Span<byte> span = stackalloc byte[10];
                 var read = ImplPeekBytes(span);
-                return TryReadUInt64VarintWithoutMoving(span.Slice(read), out value);
+                return TryReadUInt64VarintWithoutMoving(span.Slice(0, read), out value);
             }
             private int TryReadUInt32VarintWithoutMoving(bool trimNegative, ReadOnlySpan<byte> span, out uint value)
             {
