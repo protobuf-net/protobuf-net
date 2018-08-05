@@ -3,6 +3,7 @@ using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace ProtoBuf
@@ -103,24 +104,24 @@ namespace ProtoBuf
         private uint ReadUInt32Varint(ref State state, Read32VarintMode mode)
         {
             int read = ImplTryReadUInt32VarintWithoutMoving(ref state, mode, out uint value);
-            if (read > 0)
+            if (read <= 0)
             {
-                ImplSkipBytes(ref state, read, false);
-                return value;
+                if (mode == Read32VarintMode.FieldHeader) return 0;
+                ThrowEoF(this);
             }
-            if (mode == Read32VarintMode.FieldHeader) return 0;
-            throw EoF(this);
+            ImplSkipBytes(ref state, read, false);
+            return value;
         }
 
         private ulong ReadUInt64Varint(ref State state)
         {
             int read = ImplTryReadUInt64VarintWithoutMoving(ref state, out ulong value);
-            if (read > 0)
+            if (read <= 0)
             {
-                ImplSkipBytes(ref state, read, false);
-                return value;
+                ThrowEoF(this);
             }
-            throw EoF(this);
+            ImplSkipBytes(ref state, read, false);
+            return value;
         }
 
         private protected abstract int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value);
@@ -856,13 +857,13 @@ namespace ProtoBuf
         //    {
         //        length -= read;
         //    }
-        //    if (length > 0) throw EoF(null);
+        //    if (length > 0) ThrowEoF(null);
         //    return buffer;
         //}
         private static int ReadByteOrThrow(Stream source)
         {
             int val = source.ReadByte();
-            if (val < 0) throw EoF(null);
+            if (val < 0) ThrowEoF(null);
             return val;
         }
 
@@ -901,7 +902,7 @@ namespace ProtoBuf
         public static int DirectReadVarintInt32(Stream source)
         {
             int bytes = TryReadUInt64Varint(source, out ulong val);
-            if (bytes <= 0) throw EoF(null);
+            if (bytes <= 0) ThrowEoF(null);
             return checked((int)val);
         }
 
@@ -917,7 +918,7 @@ namespace ProtoBuf
                 count -= read;
                 offset += read;
             }
-            if (count > 0) throw EoF(null);
+            if (count > 0) ThrowEoF(null);
         }
 
         /// <summary>
@@ -986,7 +987,7 @@ namespace ProtoBuf
                             bytesRead += tmpBytesRead;
                             if (bytesRead == 0)
                             { // got a header, but no length
-                                throw EoF(null);
+                                ThrowEoF(null);
                             }
                             return (long)val;
                         }
@@ -1047,7 +1048,7 @@ namespace ProtoBuf
             while (bytesRead < 9)
             {
                 b = source.ReadByte();
-                if (b < 0) throw EoF(null);
+                if (b < 0) ThrowEoF(null);
                 value |= ((ulong)b & 0x7F) << shift;
                 shift += 7;
                 bytesRead++;
@@ -1055,7 +1056,7 @@ namespace ProtoBuf
                 if ((b & 0x80) == 0) return bytesRead;
             }
             b = source.ReadByte();
-            if (b < 0) throw EoF(null);
+            if (b < 0) ThrowEoF(null);
             if ((b & 1) == 0) // only use 1 bit from the last byte
             {
                 value |= ((ulong)b & 0x7F) << shift;
@@ -1113,7 +1114,7 @@ namespace ProtoBuf
                     BufferPool.ReleaseBufferToPool(ref buffer);
                 }
             }
-            if (count > 0) throw EoF(null);
+            if (count > 0) ThrowEoF(null);
         }
         internal static Exception AddErrorData(Exception exception, ProtoReader source)
         {
@@ -1125,14 +1126,6 @@ namespace ProtoBuf
             }
 #endif
             return exception;
-        }
-
-        /// <summary>
-        /// Create an EOF
-        /// </summary>
-        protected static Exception EoF(ProtoReader reader)
-        {
-            return AddErrorData(new EndOfStreamException(), reader);
         }
 
         /// <summary>
@@ -1288,5 +1281,39 @@ namespace ProtoBuf
         }
 
         internal abstract void Recycle();
+
+        /// <summary>
+        /// Create an EOF
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Exception EoF(ProtoReader reader)
+        {
+            return AddErrorData(new EndOfStreamException(), reader);
+        }
+
+        /// <summary>
+        /// throw an EOF
+        /// </summary>
+        protected static void ThrowEoF(ProtoReader reader)
+        {
+            throw EoF(reader);
+        }
+
+        /// <summary>
+        /// Create an Overflow
+        /// </summary>
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Exception Overflow(ProtoReader reader)
+        {
+            return AddErrorData(new OverflowException(), reader);
+        }
+
+        /// <summary>
+        /// Throw an Overflow
+        /// </summary>
+        protected static void ThrowOverflow(ProtoReader reader)
+        {
+            throw Overflow(reader);
+        }
     }
 }
