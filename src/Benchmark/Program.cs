@@ -36,11 +36,21 @@ namespace Benchmark
         {
             var b = new Benchmarks();
             b.Setup();
+            using (var reader = b.ReadMS(out var state))
+            {
+                var dal = (DAL.Database)b.Model.Deserialize(ref state, reader, null, typeof(DAL.Database));
+                Console.WriteLine(dal.Orders.Count);
+            }
             using (var reader = b.ReadROS(out var state))
             {
                 var dal = (DAL.Database)b.Model.Deserialize(ref state, reader, null, typeof(DAL.Database));
                 Console.WriteLine(dal.Orders.Count);
-
+            }
+            using (var reader = b.ReadStatefulROS(out var state))
+            {
+                var dal = (DAL.Database)b.Model.Deserialize(ref state, reader, null, typeof(DAL.Database));
+                Console.WriteLine(dal.Orders.Count);
+            }
                 /*
 0A = field 1, type String           == Database.Orders
 A1-01 = length 161
@@ -65,7 +75,6 @@ payload = ...
                 //while (reader.ReadFieldHeader(ref state) != 0)
                 //    reader.SkipField(ref state);
                 //ProtoReader.EndSubItem(tok, reader);
-            }
         }
         private static void TestWriteRead()
         {
