@@ -423,7 +423,7 @@ namespace ProtoBuf
                     throw reader.CreateWireTypeException(); // throws
             }
         }
-        
+
         /// <summary>
         /// Reads a field header from the stream, setting the wire-type and retuning the field number. If no
         /// more fields are available, then 0 is returned. This methods respects sub-messages.

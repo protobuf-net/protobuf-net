@@ -91,8 +91,8 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType AddSubType(int fieldNumber, Type derivedType, DataFormat dataFormat)
         {
-            if (derivedType == null) throw new ArgumentNullException("derivedType");
-            if (fieldNumber < 1) throw new ArgumentOutOfRangeException("fieldNumber");
+            if (derivedType == null) throw new ArgumentNullException(nameof(derivedType));
+            if (fieldNumber < 1) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
 #if COREFX || COREFX || PROFILE259
 			if (!(typeInfo.IsClass || typeInfo.IsInterface) || typeInfo.IsSealed) {
 #else
@@ -103,7 +103,7 @@ namespace ProtoBuf.Meta
             }
             if (!IsValidSubType(derivedType))
             {
-                throw new ArgumentException(derivedType.Name + " is not a valid sub-type of " + Type.Name, "derivedType");
+                throw new ArgumentException(derivedType.Name + " is not a valid sub-type of " + Type.Name, nameof(derivedType));
             }
             MetaType derivedMeta = model[derivedType];
             ThrowIfFrozen();
@@ -123,7 +123,7 @@ namespace ProtoBuf.Meta
 #endif
         private void SetBaseType(MetaType baseType)
         {
-            if (baseType == null) throw new ArgumentNullException("baseType");
+            if (baseType == null) throw new ArgumentNullException(nameof(baseType));
             if (this.baseType == baseType) return;
             if (this.baseType != null) throw new InvalidOperationException($"Type '{this.baseType.Type.FullName}' can only participate in one inheritance hierarchy");
 
@@ -230,7 +230,6 @@ namespace ProtoBuf.Meta
                     MetaType mt;
                     if (key >= 0 && (mt = model[tmp]) != null && mt.surrogate == null) // <=== need to exclude surrogate to avoid chance of infinite loop
                     {
-
                         sb.Append(mt.GetSchemaTypeName());
                     }
                     else
@@ -302,8 +301,8 @@ namespace ProtoBuf.Meta
         internal MetaType(RuntimeTypeModel model, Type type, MethodInfo factory)
         {
             this.factory = factory;
-            if (model == null) throw new ArgumentNullException("model");
-            if (type == null) throw new ArgumentNullException("type");
+            if (model == null) throw new ArgumentNullException(nameof(model));
+            if (type == null) throw new ArgumentNullException(nameof(type));
 
             if (type.IsArray) throw InbuiltType(type);
             IProtoSerializer coreSerializer = model.TryGetBasicTypeSerializer(type);
@@ -456,8 +455,7 @@ namespace ProtoBuf.Meta
                 MethodInfo method = tmp.HasCallbacks ? tmp.Callbacks.BeforeDeserialize : null;
                 if (method != null)
                 {
-                    if (baseCtorCallbacks == null) baseCtorCallbacks = new BasicList();
-                    baseCtorCallbacks.Add(method);
+                    (baseCtorCallbacks ?? (baseCtorCallbacks = new BasicList())).Add(method);
                 }
                 tmp = tmp.BaseType;
             }
@@ -540,12 +538,18 @@ namespace ProtoBuf.Meta
                     Type knownType = null;
                     try
                     {
-                        if (item.TryGet("knownTypeName", out tmp)) knownType = model.GetType((string)tmp, Type
+                        if (item.TryGet("knownTypeName", out tmp))
+                        {
+                            knownType = model.GetType((string)tmp, Type
 #if COREFX || PROFILE259
-							.GetTypeInfo()
+                            .GetTypeInfo()
 #endif
                             .Assembly);
-                        else if (item.TryGet("knownType", out tmp)) knownType = (Type)tmp;
+                        }
+                        else if (item.TryGet("knownType", out tmp))
+                        {
+                            knownType = (Type)tmp;
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -773,7 +777,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        static MethodInfo Coalesce(MethodInfo[] arr, int x, int y)
+        private static MethodInfo Coalesce(MethodInfo[] arr, int x, int y)
         {
             MethodInfo mi = arr[x] ?? arr[y];
             return mi;
@@ -903,7 +907,6 @@ namespace ProtoBuf.Meta
                 if (notMapped) continue;
                 found++;
                 result = ctors[i];
-
             }
             return found == 1 ? result : null;
         }
@@ -979,7 +982,6 @@ namespace ProtoBuf.Meta
                             }
                         }
                     }
-
                 }
                 done = true;
             }
@@ -1085,7 +1087,6 @@ namespace ProtoBuf.Meta
 
             Type effectiveType = Helpers.GetMemberType(member);
 
-
             Type itemType = null;
             Type defaultType = null;
 
@@ -1132,7 +1133,7 @@ namespace ProtoBuf.Meta
             {
                 if (attrib.TryGet("Value", out object tmp)) defaultValue = tmp;
             }
-            ValueMember vm = ((isEnum || normalizedAttribute.Tag > 0))
+            ValueMember vm = (isEnum || normalizedAttribute.Tag > 0)
                 ? new ValueMember(model, Type, normalizedAttribute.Tag, member, effectiveType, itemType, defaultType, normalizedAttribute.DataFormat, defaultValue)
                     : null;
             if (vm != null)
@@ -1184,7 +1185,6 @@ namespace ProtoBuf.Meta
                         }
                     }
                 }
-
             }
             return vm;
         }
@@ -1364,7 +1364,7 @@ namespace ProtoBuf.Meta
         /// </summary>     
         public MetaType Add(params string[] memberNames)
         {
-            if (memberNames == null) throw new ArgumentNullException("memberNames");
+            if (memberNames == null) throw new ArgumentNullException(nameof(memberNames));
             int next = GetNextFieldNumber();
             for (int i = 0; i < memberNames.Length; i++)
             {
@@ -1410,7 +1410,7 @@ namespace ProtoBuf.Meta
             MemberInfo[] members = Type.GetMember(memberName, Helpers.IsEnum(Type) ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (members != null && members.Length == 1) mi = members[0];
 #endif
-            if (mi == null) throw new ArgumentException("Unable to determine member: " + memberName, "memberName");
+            if (mi == null) throw new ArgumentException("Unable to determine member: " + memberName, nameof(memberName));
 
             Type miType;
             PropertyInfo pi = null;
@@ -1455,7 +1455,7 @@ namespace ProtoBuf.Meta
 #if PROFILE259
 				var backingMembers = Type.GetTypeInfo().DeclaredMembers;
 	            var memberInfos = backingMembers as MemberInfo[] ?? backingMembers.ToArray();
-	            if (memberInfos.Count() == 1)
+	            if (memberInfos.Length == 1)
 	            {
 		            MemberInfo first = memberInfos.FirstOrDefault();
 		            if (first is FieldInfo)
@@ -1529,7 +1529,6 @@ namespace ProtoBuf.Meta
                     if (type.IsInterface)
 #endif
                     {
-
                         Type[] genArgs;
 #if COREFX || PROFILE259
 						if (typeInfo.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
@@ -1753,7 +1752,6 @@ namespace ProtoBuf.Meta
                 MetaType tmp;
                 while ((tmp = source.baseType) != null) source = tmp;
                 return source;
-
             }
             finally
             {
@@ -1805,7 +1803,6 @@ namespace ProtoBuf.Meta
             }
             else if (IsAutoTuple)
             { // key-value-pair etc
-
                 if (ResolveTupleConstructor(Type, out MemberInfo[] mapping) != null)
                 {
                     NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
@@ -1867,7 +1864,6 @@ namespace ProtoBuf.Meta
                             NewLine(builder, indent + 1).Append(field.Name).Append(" = ").Append(enumVal).Append(";");
                         }
                     }
-
                 }
                 else
                 {
@@ -1935,7 +1931,7 @@ namespace ProtoBuf.Meta
                         builder.Append(schemaTypeName).Append(" ")
                              .Append(member.Name).Append(" = ").Append(member.FieldNumber);
 
-                        if (syntax == ProtoSyntax.Proto2 && member.DefaultValue != null && member.IsRequired == false)
+                        if (syntax == ProtoSyntax.Proto2 && member.DefaultValue != null && !member.IsRequired)
                         {
                             if (member.DefaultValue is string)
                             {
@@ -2044,7 +2040,7 @@ namespace ProtoBuf.Meta
                 if (value == null) return false;
                 switch (Helpers.GetTypeCode(value.GetType()))
                 {
-                    case ProtoTypeCode.Boolean: return (!(bool)value);
+                    case ProtoTypeCode.Boolean: return !(bool)value;
                     case ProtoTypeCode.Byte: return ((byte)value) == 0;
                     case ProtoTypeCode.Char: return ((char)value) == '\0';
                     case ProtoTypeCode.DateTime: return ((DateTime)value) == default;
@@ -2055,7 +2051,7 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Int64: return ((long)value) == 0;
                     case ProtoTypeCode.SByte: return ((sbyte)value) == 0;
                     case ProtoTypeCode.Single: return ((float)value) == 0;
-                    case ProtoTypeCode.String: return ((string)value) == "";
+                    case ProtoTypeCode.String: return value != null && ((string)value).Length == 0;
                     case ProtoTypeCode.TimeSpan: return ((TimeSpan)value) == TimeSpan.Zero;
                     case ProtoTypeCode.UInt16: return ((ushort)value) == 0;
                     case ProtoTypeCode.UInt32: return ((uint)value) == 0;

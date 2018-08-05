@@ -6,7 +6,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class ArrayDecorator : ProtoDecoratorBase
+    internal sealed class ArrayDecorator : ProtoDecoratorBase
     {
         private readonly int fieldNumber;
         private const byte
@@ -26,7 +26,7 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(underlyingItemType == Tail.ExpectedType
                 || (Tail.ExpectedType == model.MapType(typeof(object)) && !Helpers.IsValueType(underlyingItemType)), "invalid tail");
             Helpers.DebugAssert(Tail.ExpectedType != model.MapType(typeof(byte)), "Should have used BlobSerializer");
-            if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
+            if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             if (!ListDecorator.CanPack(packedWireType))
             {
                 if (writePacked) throw new InvalidOperationException("Only simple data-types can use packed encoding");
@@ -37,10 +37,10 @@ namespace ProtoBuf.Serializers
             if (writePacked) options |= OPTIONS_WritePacked;
             if (overwriteList) options |= OPTIONS_OverwriteList;
             if (supportNull) options |= OPTIONS_SupportNull;
-            this.arrayType = arrayType;
+            ExpectedType = arrayType;
         }
-        readonly Type arrayType, itemType; // this is, for example, typeof(int[])
-        public override Type ExpectedType { get { return arrayType; } }
+        private readonly Type itemType; // this is, for example, typeof(int[])
+        public override Type ExpectedType { get; }
         public override bool RequiresOldValue { get { return AppendToCollection; } }
         public override bool ReturnsValue { get { return true; } }
         private bool CanUsePackedPrefix() => CanUsePackedPrefix(packedWireType, itemType);
@@ -64,7 +64,7 @@ namespace ProtoBuf.Serializers
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             // int i and T[] arr
-            using (Compiler.Local arr = ctx.GetLocalWithValue(arrayType, valueFrom))
+            using (Compiler.Local arr = ctx.GetLocalWithValue(ExpectedType, valueFrom))
             using (Compiler.Local i = new ProtoBuf.Compiler.Local(ctx, ctx.MapType(typeof(int))))
             {
                 bool writePacked = (options & OPTIONS_WritePacked) != 0;
@@ -225,7 +225,7 @@ namespace ProtoBuf.Serializers
                     list.Add(Tail.Read(null, source));
                 } while (source.TryReadFieldHeader(field));
             }
-            int oldLen = AppendToCollection ? ((value == null ? 0 : ((Array)value).Length)) : 0;
+            int oldLen = AppendToCollection ? (value == null ? 0 : ((Array)value).Length) : 0;
             Array result = Array.CreateInstance(itemType, oldLen + list.Count);
             if (oldLen != 0) ((Array)value).CopyTo(result, 0);
             list.CopyTo(result, oldLen);
@@ -235,8 +235,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
-            Type listType;
-            listType = ctx.MapType(typeof(System.Collections.Generic.List<>)).MakeGenericType(itemType);
+            Type listType = ctx.MapType(typeof(System.Collections.Generic.List<>)).MakeGenericType(itemType);
             Type expected = ExpectedType;
             using (Compiler.Local oldArr = AppendToCollection ? ctx.GetLocalWithValue(expected, valueFrom) : null)
             using (Compiler.Local newArr = new Compiler.Local(ctx, expected))
@@ -276,7 +275,6 @@ namespace ProtoBuf.Serializers
                         ctx.LoadValue(list);
                         ctx.LoadValue(newArr);
                         ctx.LoadValue(oldLen);
-
                     }
                     else
                     {
@@ -301,8 +299,6 @@ namespace ProtoBuf.Serializers
                 }
                 ctx.LoadValue(newArr);
             }
-
-
         }
 #endif
     }

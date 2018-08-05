@@ -1,4 +1,5 @@
-﻿using System;
+﻿#pragma warning disable RCS1213
+using System;
 using ProtoBuf;
 using System.Runtime.Serialization;
 #if !COREFX
@@ -49,10 +50,10 @@ namespace DAL
 #endif
     }
 #if !COREFX
-    
+
     public class NWindTests
     {
-        static readonly string[] nwindPaths = { @"NWind\nwind.proto.bin", @"Tools\nwind.proto.bin", @"nwind.proto.bin" };
+        private static readonly string[] nwindPaths = { @"NWind\nwind.proto.bin", @"Tools\nwind.proto.bin", "nwind.proto.bin" };
         public static string GetNWindBinPath()
         {
             for (int i = 0; i < nwindPaths.Length; i++)
@@ -70,29 +71,25 @@ namespace DAL
                 return (T)model.Deserialize(fs, null, typeof(T));
             }
         }
-        
+
         [Fact]
         public void LoadTestDefaultModel()
         {
             Database db = LoadDatabaseFromFile<Database>(RuntimeTypeModel.Default);
             DbMetrics("Database", db);
-
         }
 
         [Fact]
         public void LoadTestCustomModel()
         {
             var model = TypeModel.Create();
-            Database db;
-            
-            db = LoadDatabaseFromFile<Database>(model);
+            Database db = LoadDatabaseFromFile<Database>(model);
             DbMetrics("Database", db);
 
             model.CompileInPlace();
             db = LoadDatabaseFromFile<Database>(model);
             DbMetrics("Database", db);
 
-            
             db = LoadDatabaseFromFile<Database>(model.Compile());
             DbMetrics("Database", db);
 
@@ -127,7 +124,6 @@ namespace DAL
                     Console.WriteLine("(press any key)");
                     Console.ReadKey();
                 }
-
             }
         }
 
@@ -137,10 +133,9 @@ namespace DAL
             // just show it can do *something*!
 
             string proto = Serializer.GetProto<Database>();
-
         }
 
-        static void DbMetrics(string caption, Database database)
+        private static void DbMetrics(string caption, Database database)
         {
             int orders = database.Orders.Count;
             int lines = database.Orders.SelectMany(ord => ord.Lines).Count();
@@ -151,9 +146,8 @@ namespace DAL
 
             Console.WriteLine("{0}\torders {1}; lines {2}; units {3}; value {4:C}",
                 caption, orders, lines, totalQty, totalValue);
-
         }
-        static Database ReadFromFile(string path)
+        private static Database ReadFromFile(string path)
         {
             Database database;
             using (Stream fs = File.OpenRead(path))
@@ -163,7 +157,7 @@ namespace DAL
             }
             return database;
         }
-        static void WriteToFile(string path, Database database)
+        private static void WriteToFile(string path, Database database)
         {
             using (Stream fs = File.Create(path))
             {
@@ -172,15 +166,15 @@ namespace DAL
             }
         }
 
-        static Database ReadFromDatabase(NorthwindDataContext ctx) {
+        private static Database ReadFromDatabase(NorthwindDataContext ctx) {
             Database db = new Database();
-        
+
             DataLoadOptions opt = new DataLoadOptions();
             opt.AssociateWith<Order>(order => order.Lines);
             ctx.LoadOptions = opt;
             db.Orders.AddRange(ctx.Orders);
 
-            return db;            
+            return db;
         }
     }
 #endif

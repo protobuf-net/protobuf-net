@@ -866,8 +866,8 @@ namespace ProtoBuf.Meta
                     if ((Type)candidates[0] == listType) return null; // recursive
                     return (Type)candidates[0];
                 case 2:
-                    if ((Type)candidates[0] != listType && CheckDictionaryAccessors(model, (Type)candidates[0], (Type)candidates[1])) return (Type)candidates[0];
-                    if ((Type)candidates[1] != listType && CheckDictionaryAccessors(model, (Type)candidates[1], (Type)candidates[0])) return (Type)candidates[1];
+                    if ((Type)candidates[0] != listType && CheckDictionaryAccessors((Type)candidates[0], (Type)candidates[1])) return (Type)candidates[0];
+                    if ((Type)candidates[1] != listType && CheckDictionaryAccessors((Type)candidates[1], (Type)candidates[0])) return (Type)candidates[1];
                     break;
             }
 
@@ -911,14 +911,14 @@ namespace ProtoBuf.Meta
 #endif
         }
 
-        private static bool CheckDictionaryAccessors(TypeModel model, Type pair, Type value)
+        private static bool CheckDictionaryAccessors(Type pair, Type value)
         {
 #if COREFX || PROFILE259
             TypeInfo finalType = pair.GetTypeInfo();
             return finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
                 && finalType.GenericTypeArguments[1] == value;
 #else
-            return pair.IsGenericType && pair.GetGenericTypeDefinition() == model.MapType(typeof(System.Collections.Generic.KeyValuePair<,>))
+            return pair.IsGenericType && pair.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
                 && pair.GetGenericArguments()[1] == value;
 #endif
         }
@@ -1640,11 +1640,11 @@ namespace ProtoBuf.Meta
 
         internal virtual Type GetType(string fullName, Assembly context)
         {
-            return ResolveKnownType(fullName, this, context);
+            return ResolveKnownType(fullName, context);
         }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
-        internal static Type ResolveKnownType(string name, TypeModel model, Assembly assembly)
+        internal static Type ResolveKnownType(string name, Assembly assembly)
         {
             if (string.IsNullOrEmpty(name)) return null;
             try

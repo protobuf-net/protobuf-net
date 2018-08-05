@@ -72,7 +72,6 @@ namespace ProtoBuf
                 return span;
             }
 
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void Skip(int bytes)
             {
@@ -269,7 +268,7 @@ namespace ProtoBuf
                     Log($"T32* - {read}:{value}");
                     return read;
                 }
-                
+
                 if (GetSomeData(false) >= 10)
                 {
                     var span = Peek(out var offset);
@@ -280,8 +279,8 @@ namespace ProtoBuf
                 }
                 return TryReadUInt32VarintWithoutMovingSlow(mode, out value);
             }
-            int previewFieldBytes;
-            ulong previewField;
+            private int previewFieldBytes;
+            private ulong previewField;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private ulong PeekPreviewField()
@@ -296,7 +295,7 @@ namespace ProtoBuf
                 Debug.Assert(previewFieldBytes != 0);
                 Skip(previewFieldBytes);
                 Log($"<CPF - {previewFieldBytes}:{previewField}");
-                previewFieldBytes = 0;                
+                previewFieldBytes = 0;
                 return previewField;
             }
 
@@ -326,10 +325,12 @@ namespace ProtoBuf
                 }
             }
             [Conditional("VERBOSE")]
-            void Log(string message)
+            private void Log(string message)
             {
 #if VERBOSE
                 Console.WriteLine("[" + LongPosition.ToString() + "] " + message);
+#else
+                Debug.WriteLine("[" + LongPosition.ToString() + "] " + message);
 #endif
             }
             [MethodImpl(MethodImplOptions.NoInlining)]

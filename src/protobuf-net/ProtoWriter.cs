@@ -300,7 +300,9 @@ namespace ProtoBuf
                 }
                 Helpers.DebugWriteLine(instance == null ? "<null>" : instance.ToString());
 #endif
+#pragma warning disable RCS1097 // Remove redundant 'ToString' call.
                 throw new ProtoException("Possible recursion detected (offset: " + (recursionStack.Count - hitLevel).ToString() + " level(s)): " + instance.ToString());
+#pragma warning restore RCS1097 // Remove redundant 'ToString' call.
             }
             recursionStack.Add(instance);
         }
@@ -890,7 +892,9 @@ namespace ProtoBuf
         public static void ThrowEnumException(ProtoWriter writer, object enumValue)
         {
             if (writer == null) throw new ArgumentNullException(nameof(writer));
+#pragma warning disable RCS1097 // Remove redundant 'ToString' call.
             string rhs = enumValue == null ? "<null>" : (enumValue.GetType().FullName + "." + enumValue.ToString());
+#pragma warning restore RCS1097 // Remove redundant 'ToString' call.
             throw new ProtoException("No wire-value is mapped to the enum " + rhs + " at position " + writer.position64.ToString());
         }
 

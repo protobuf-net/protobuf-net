@@ -8,13 +8,12 @@ using System.Reflection;
 
 namespace protogen
 {
-    class Program
+    internal static class Program
     {
-        static int Main(string[] args)
+        private static int Main(string[] args)
         {
             try
             {
-
                 string outPath = null; // -o{FILE}, --descriptor_set_out={FILE}
                 bool version = false; // --version
                 bool help = false; // -h, --help
@@ -44,7 +43,6 @@ namespace protogen
                         lhs = "--proto_path";
                         rhs = arg.Substring(2);
                     }
-
 
                     if(lhs.StartsWith("+"))
                     {
@@ -115,7 +113,7 @@ namespace protogen
                 }
                 else if (version)
                 {
-                    var ver = GetVersion<Program>();
+                    var ver = GetVersion(typeof(Program));
                     Console.WriteLine($"protogen {ver}");
                     var tmp = GetVersion<ProtoReader>();
                     if (tmp != ver) Console.WriteLine($"protobuf-net {tmp}");
@@ -162,7 +160,7 @@ namespace protogen
 
                     // add the library area for auto-imports (library inbuilts)
                     set.AddImportPath(Path.GetDirectoryName(typeof(Program).Assembly.Location));
-                    
+
                     if(inputFiles.Count == 1 && importPaths.Count == 1)
                     {
                         SearchOption? searchOption = null;
@@ -187,7 +185,7 @@ namespace protogen
                             }
                         }
                     }
-                    
+
                     foreach (var input in inputFiles)
                     {
                         if (!set.Add(input, true))
@@ -196,7 +194,7 @@ namespace protogen
                             exitCode = 1;
                         }
                     }
-                    
+
                     if(exitCode != 0) return exitCode;
                     set.Process();
                     var errors = set.GetErrors();
@@ -243,13 +241,13 @@ namespace protogen
         }
 
         // with thanks to "Dave": https://stackoverflow.com/a/340454/23354
-        public static String MakeRelativePath(String fromPath, String toPath)
+        public static string MakeRelativePath(string fromPath, string toPath)
         {
 #if NETCOREAPP2_0 || NETCOREAPP2_1
             return Path.GetRelativePath(fromPath, toPath);
 #else
-            if (String.IsNullOrEmpty(fromPath)) throw new ArgumentNullException("fromPath");
-            if (String.IsNullOrEmpty(toPath)) throw new ArgumentNullException("toPath");
+            if (String.IsNullOrEmpty(fromPath)) throw new ArgumentNullException(nameof(fromPath));
+            if (String.IsNullOrEmpty(toPath)) throw new ArgumentNullException(nameof(toPath));
 
             Uri fromUri = new Uri(fromPath, UriKind.RelativeOrAbsolute);
             if (!fromUri.IsAbsoluteUri)
@@ -276,12 +274,13 @@ namespace protogen
 #endif
         }
 
-        static string GetVersion<T>()
+        private static string GetVersion<T>() => GetVersion(typeof(T));
+        private static string GetVersion(Type type)
         {
 #if NETCOREAPP1_1
-            var attrib = typeof(T).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+            var attrib = type.GetTypeInfo().Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
 #else
-            var attribs = typeof(T).Assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
+            var attribs = type.Assembly.GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false);
             var attrib = attribs.Length == 0 ? null : attribs[0] as AssemblyInformationalVersionAttribute;
 #endif
             return attrib?.InformationalVersion ?? "(unknown)";

@@ -1,4 +1,6 @@
-﻿using BenchmarkDotNet.Attributes;
+﻿#pragma warning disable RCS1213
+
+using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using ProtoBuf;
 using ProtoBuf.Meta;
@@ -11,32 +13,31 @@ namespace Benchmark
     public static class Program
     {
         [ProtoContract]
-        class Foo
+        private class Foo
         {
             [ProtoMember(1)]
             public Bar Bar { get; set; }
         }
         [ProtoContract]
-        class Bar
+        private class Bar
         {
             [ProtoMember(1)]
             public int Id { get; set; }
         }
 
-        static void Main()
+        private static void Main()
         {
             //ParseNWind();
             //TestWriteRead();
             Console.WriteLine(BenchmarkRunner.Run<Benchmarks>());
         }
-        static void ParseNWind()
+        private static void ParseNWind()
         {
             var b = new Benchmarks();
             b.Setup();
             using (var reader = b.ReadROS())
             {
                 // var dal = b.Model.Deserialize(reader, null, typeof(DAL.Database));
-
 
                 /*
 0A = field 1, type String           == Database.Orders
@@ -89,13 +90,13 @@ payload = ...
                                         Console.WriteLine($"\tId={reader.ReadInt32()}");
                                         break;
                                     default:
-                                        throw new NotImplementedException();
+                                        throw new InvalidOperationException("wasn't expecting that");
                                 }
                             }
                             ProtoReader.EndSubItem(tok, reader);
                             break;
                         default:
-                            throw new NotImplementedException();
+                            throw new InvalidOperationException("wasn't expecting that");
                     }
                 }
             }
