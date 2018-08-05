@@ -73,7 +73,9 @@ namespace DAL
 
         private List<OrderLine> _Lines;
 
+#pragma warning disable CS0414
         private bool serializing;
+#pragma warning restore CS0414
 
         #region Extensibility Method Definitions
         partial void OnLoaded();
@@ -462,8 +464,6 @@ namespace DAL
     {
 
         private static PropertyChangingEventArgs emptyChangingEventArgs = new PropertyChangingEventArgs("");
-
-        private int _OrderID;
 
         private int _ProductID;
 
