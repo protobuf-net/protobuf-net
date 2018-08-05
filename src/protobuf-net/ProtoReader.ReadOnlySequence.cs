@@ -191,36 +191,59 @@ namespace ProtoBuf
             {
                 if (GetSomeData() >= 4) return BinaryPrimitives.ReadUInt32LittleEndian(Consume(4));
 
-                Span<byte> span = stackalloc byte[4];
-                ImplReadBytes(span);
-                return BinaryPrimitives.ReadUInt32LittleEndian(span);
+                return ViaStackAlloc();
+
+                uint ViaStackAlloc()
+                {
+                    Span<byte> span = stackalloc byte[4];
+                    ImplReadBytes(span);
+                    return BinaryPrimitives.ReadUInt32LittleEndian(span);
+                }
             }
 
             private protected override ulong ImplReadUInt64Fixed()
             {
                 if (GetSomeData() >= 8) return BinaryPrimitives.ReadUInt64LittleEndian(Consume(8));
 
-                Span<byte> span = stackalloc byte[8];
-                ImplReadBytes(span);
-                return BinaryPrimitives.ReadUInt64LittleEndian(span);
+                return ViaStackAlloc();
+
+                ulong ViaStackAlloc()
+                {
+                    Span<byte> span = stackalloc byte[8];
+                    ImplReadBytes(span);
+                    return BinaryPrimitives.ReadUInt64LittleEndian(span);
+                }
             }
 
             internal override int TryReadUInt32VarintWithoutMoving(bool trimNegative, out uint value)
             {
                 if (GetSomeData(false) >= 10) return TryReadUInt32VarintWithoutMoving(trimNegative, Peek(10), out value);
 
-                Span<byte> span = stackalloc byte[10];
-                var read = ImplPeekBytes(span);
-                return TryReadUInt32VarintWithoutMoving(trimNegative, span.Slice(0, read), out value);
+                return ViaStackAlloc(trimNegative, out value);
+
+                int ViaStackAlloc(bool trimNeg, out uint val)
+                {
+                    Span<byte> span = stackalloc byte[10];
+                    var read = ImplPeekBytes(span);
+                    return TryReadUInt32VarintWithoutMoving(trimNeg, span.Slice(0, read), out val);
+                }
             }
+
+
             private protected override int TryReadUInt64VarintWithoutMoving(out ulong value)
             {
                 if (GetSomeData(false) >= 10) return TryReadUInt64VarintWithoutMoving(Peek(10), out value);
 
-                Span<byte> span = stackalloc byte[10];
-                var read = ImplPeekBytes(span);
-                return TryReadUInt64VarintWithoutMoving(span.Slice(0, read), out value);
+                return ViaStackAlloc(out value);
+
+                int ViaStackAlloc(out ulong val)
+                {
+                    Span<byte> span = stackalloc byte[10];
+                    var read = ImplPeekBytes(span);
+                    return TryReadUInt64VarintWithoutMoving(span.Slice(0, read), out val);
+                }
             }
+
             private int TryReadUInt32VarintWithoutMoving(bool trimNegative, ReadOnlySpan<byte> span, out uint value)
             {
                 if (0 >= (uint)span.Length)
