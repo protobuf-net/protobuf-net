@@ -227,6 +227,11 @@ namespace ProtoBuf
                 }
                 else
                 {
+                    return ViaStackAlloc();
+                }
+
+                uint ViaStackAlloc()
+                {
                     Span<byte> span = stackalloc byte[4];
                     ImplReadBytes(span);
                     var val = BinaryPrimitives.ReadUInt32LittleEndian(span);
@@ -251,6 +256,11 @@ namespace ProtoBuf
                 }
                 else
                 {
+                    return ViaStackAlloc();
+                }
+
+                ulong ViaStackAlloc()
+                {
                     Span<byte> span = stackalloc byte[8];
                     ImplReadBytes(span);
                     var val = BinaryPrimitives.ReadUInt64LittleEndian(span);
@@ -259,11 +269,12 @@ namespace ProtoBuf
                 }
             }
 
+
             private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
             {
-                var read = previewFieldBytes;
-                if (read != 0)
+                if (previewFieldBytes != 0)
                 {
+                    var read = previewFieldBytes;
                     value = checked((uint)PeekPreviewField());
                     Log($"T32* - {read}:{value}");
                     return read;
@@ -272,12 +283,26 @@ namespace ProtoBuf
                 if (GetSomeData(false) >= 10)
                 {
                     var span = Peek(out var offset);
-                    read = TryParseUInt32Varint(mode == Read32VarintMode.Signed, span, offset, out value);
+                    var read = TryParseUInt32Varint(mode == Read32VarintMode.Signed, span, offset, out value);
                     Log($"T32 - {read}:{value}");
                     if (read != 0 && mode == Read32VarintMode.FieldHeader) ReadPreviewField(value, span, offset + read);
                     return read;
                 }
-                return TryReadUInt32VarintWithoutMovingSlow(mode, out value);
+                else
+                {
+                    return ViaStackAlloc(mode, out value);
+                }
+
+                int ViaStackAlloc(Read32VarintMode m, out uint val)
+                {
+                    Span<byte> span = stackalloc byte[20];
+                    var available = ImplPeekBytes(span);
+                    if (available != 20) span = span.Slice(0, available);
+                    var read = TryParseUInt32Varint(m == Read32VarintMode.Signed, span, 0, out val);
+                    Log($"T32! - {read}:{val}");
+                    if (read != 0 && m == Read32VarintMode.FieldHeader) ReadPreviewField(val, span, read);
+                    return read;
+                }
             }
             private int previewFieldBytes;
             private ulong previewField;
@@ -333,22 +358,12 @@ namespace ProtoBuf
                 Debug.WriteLine("[" + LongPosition.ToString() + "] " + message);
 #endif
             }
-            [MethodImpl(MethodImplOptions.NoInlining)]
-            private int TryReadUInt32VarintWithoutMovingSlow(Read32VarintMode mode, out uint value)
-            {
-                Span<byte> span = stackalloc byte[20];
-                var available = ImplPeekBytes(span);
-                if (available != 20) span = span.Slice(0, available);
-                var read = TryParseUInt32Varint(mode == Read32VarintMode.Signed, span, 0, out value);
-                Log($"T32! - {read}:{value}");
-                if (read != 0 && mode == Read32VarintMode.FieldHeader) ReadPreviewField(value, span, read);
-                return read;
-            }
+
             private protected override int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value)
             {
-                var read = previewFieldBytes;
-                if (read != 0)
+                if (previewFieldBytes != 0)
                 {
+                    var read = previewFieldBytes;
                     value = checked((uint)PeekPreviewField());
                     Log($"T64* - {read}:{value}");
                     return read;
@@ -356,18 +371,27 @@ namespace ProtoBuf
 
                 if (GetSomeData(false) >= 10)
                 {
-                    read = TryParseUInt64Varint(Peek(out var offset), offset, out value);
+                    var read = TryParseUInt64Varint(Peek(out var offset), offset, out value);
                     Log($"T64 - {read}:{value}");
                     return read;
                 }
+                else
+                {
+                    return ViaStackAlloc(out value);
+                }
 
-                Span<byte> span = stackalloc byte[10];
-                read = ImplPeekBytes(span);
-                if (read != 10) span = span.Slice(0, read);
-                read = TryParseUInt64Varint(span, 0, out value);
-                Log($"T64! - {read}:{value}");
-                return read;
+                int ViaStackAlloc(out ulong val)
+                {
+                    Span<byte> span = stackalloc byte[10];
+                    var read = ImplPeekBytes(span);
+                    if (read != 10) span = span.Slice(0, read);
+                    read = TryParseUInt64Varint(span, 0, out val);
+                    Log($"T64! - {read}:{val}");
+                    return read;
+                }
             }
+
+
             private int TryParseUInt32Varint(bool trimNegative, ReadOnlySpan<byte> span, int offset, out uint value)
             {
                 if (0 >= (uint)span.Length)
