@@ -52,6 +52,14 @@ namespace ProtoBuf
                 return span;
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void Skip(int bytes)
+            {
+                _offsetInCurrent += bytes;
+                _remainingInCurrent -= bytes;
+                LongPosition += bytes;
+            }
+
             [MethodImpl(MethodImplOptions.NoInlining)]
             private int ReadNextBuffer(bool throwIfEOF)
             {
@@ -130,7 +138,7 @@ namespace ProtoBuf
                 while (count != 0)
                 {
                     var take = (int)Math.Min(GetSomeData(), count);
-                    Consume(take);
+                    Skip(take);
                     count -= take;
                 }
             }
