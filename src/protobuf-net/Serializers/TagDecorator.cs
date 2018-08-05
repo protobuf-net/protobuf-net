@@ -66,12 +66,12 @@ namespace ProtoBuf.Serializers
 
         private bool NeedsHint => ((int)wireType & ~7) != 0;
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(fieldNumber == source.FieldNumber);
             if (strict) { source.Assert(wireType); }
             else if (NeedsHint) { source.Hint(wireType); }
-            return Tail.Read(value, source);
+            return Tail.Read(ref state, value, source);
         }
 
         public override void Write(object value, ProtoWriter dest)

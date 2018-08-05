@@ -9,7 +9,7 @@ namespace ProtoBuf.Serializers
     {
         private readonly MemberInfo[] members;
         private readonly ConstructorInfo ctor;
-        private IProtoSerializer[] tails;
+        private readonly IProtoSerializer[] tails;
         public TupleSerializer(RuntimeTypeModel model, ConstructorInfo ctor, MemberInfo[] members)
         {
             this.ctor = ctor ?? throw new ArgumentNullException(nameof(ctor));
@@ -93,7 +93,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             object[] values = new object[members.Length];
             bool invokeCtor = false;
@@ -104,17 +104,17 @@ namespace ProtoBuf.Serializers
             for (int i = 0; i < values.Length; i++)
                 values[i] = GetValue(value, i);
             int field;
-            while ((field = source.ReadFieldHeader()) > 0)
+            while ((field = source.ReadFieldHeader(ref state)) > 0)
             {
                 invokeCtor = true;
                 if (field <= tails.Length)
                 {
                     IProtoSerializer tail = tails[field - 1];
-                    values[field - 1] = tails[field - 1].Read(tail.RequiresOldValue ? values[field - 1] : null, source);
+                    values[field - 1] = tails[field - 1].Read(ref state, tail.RequiresOldValue ? values[field - 1] : null, source);
                 }
                 else
                 {
-                    source.SkipField();
+                    source.SkipField(ref state);
                 }
             }
             return invokeCtor ? ctor.Invoke(values) : value;

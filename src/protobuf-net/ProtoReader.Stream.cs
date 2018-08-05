@@ -13,6 +13,7 @@ namespace ProtoBuf
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+        [Obsolete(UseStateAPI, false)]
         public static ProtoReader Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
         {
             var reader = StreamProtoReader.GetRecycled();
@@ -23,6 +24,29 @@ namespace ProtoBuf
 #pragma warning restore CS0618
             }
             reader.Init(source, model, context, length);
+            return reader;
+        }
+
+        /// <summary>
+        /// Creates a new reader against a stream
+        /// </summary>
+        /// <param name="source">The source stream</param>
+        /// <param name="state">Reader state</param>
+        /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to deserialize sub-objects</param>
+        /// <param name="context">Additional context about this serialization operation</param>
+        /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
+        public static ProtoReader Create(out State state, Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
+        {
+            state = default; // not used by this API
+#pragma warning disable CS0618 // Type or member is obsolete
+            return Create(source, model, context, length);
+#pragma warning restore CS0618 // Type or member is obsolete
+        }
+
+        internal static ProtoReader CreateSolid(out SolidState state, Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
+        {
+            var reader = Create(out var liquid, source, model, context, length);
+            state = liquid.Solidify();
             return reader;
         }
 
@@ -114,7 +138,7 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override int TryReadUInt32VarintWithoutMoving(Read32VarintMode mode, out uint value)
+            private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
             {
                 if (_available < 10) Ensure(10, false);
                 if (_available == 0)
@@ -161,7 +185,7 @@ namespace ProtoBuf
                 throw AddErrorData(new OverflowException(), this);
             }
 
-            private protected override ulong ImplReadUInt64Fixed()
+            private protected override ulong ImplReadUInt64Fixed(ref State state)
             {
                 if (_available < 8) Ensure(8, true);
                 Advance(8);
@@ -183,7 +207,7 @@ namespace ProtoBuf
                     | (((ulong)buffer[_ioIndex++]) << 56);
 #endif
             }
-            private protected override void ImplReadBytes(ArraySegment<byte> target)
+            private protected override void ImplReadBytes(ref State state, ArraySegment<byte> target)
             {
                 var value = target.Array;
                 var offset = target.Offset;
@@ -214,7 +238,7 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override int TryReadUInt64VarintWithoutMoving(out ulong value)
+            private protected override int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value)
             {
                 if (_available < 10) Ensure(10, false);
                 if (_available == 0)
@@ -275,7 +299,7 @@ namespace ProtoBuf
                 return 10;
             }
 
-            private protected override string ImplReadString(int bytes)
+            private protected override string ImplReadString(ref State state, int bytes)
             {
                 if (_available < bytes) Ensure(bytes, true);
 
@@ -287,10 +311,10 @@ namespace ProtoBuf
                 return s;
             }
 
-            private protected override bool IsFullyConsumed =>
+            private protected override bool IsFullyConsumed(ref State state) =>
                 (_isFixedLength ? _dataRemaining64 : _available) == 0;
 
-            private protected override uint ImplReadUInt32Fixed()
+            private protected override uint ImplReadUInt32Fixed(ref State state)
             {
                 if (_available < 4) Ensure(4, true);
                 Advance(4);
@@ -360,7 +384,7 @@ namespace ProtoBuf
                 lastReader = this;
             }
 
-            private protected override void ImplSkipBytes(long count, bool preservePreviewField)
+            private protected override void ImplSkipBytes(ref State state, long count, bool preservePreviewField)
             {
                 if (_available < count && count < 128)
                 {

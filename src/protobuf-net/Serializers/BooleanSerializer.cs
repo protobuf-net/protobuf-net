@@ -3,11 +3,9 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class BooleanSerializer : IProtoSerializer
+    internal sealed class BooleanSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(bool);
-
-        public BooleanSerializer(ProtoBuf.Meta.TypeModel model) { }
+        private static readonly Type expectedType = typeof(bool);
 
         public Type ExpectedType => expectedType;
 
@@ -16,10 +14,10 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteBoolean((bool)value, dest);
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadBoolean();
+            return source.ReadBoolean(ref state);
         }
 
         bool IProtoSerializer.RequiresOldValue => false;
@@ -31,7 +29,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteBoolean", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadBoolean", ExpectedType);
         }

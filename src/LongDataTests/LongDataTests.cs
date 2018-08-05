@@ -96,22 +96,22 @@ namespace LongDataTests
             {
                 Console.WriteLine($"Verifying {file.Length >> 20} MiB...");
                 watch = Stopwatch.StartNew();
-                using (var reader = ProtoReader.Create(file, null, null))
+                using (var reader = ProtoReader.Create(out var state, file, null, null))
                 {
                     int i = -1;
                     try
                     {
-                        Assert.Equal(2, reader.ReadFieldHeader());
+                        Assert.Equal(2, reader.ReadFieldHeader(ref state));
                         Assert.Equal(WireType.StartGroup, reader.WireType);
-                        var tok = ProtoReader.StartSubItem(reader);
+                        var tok = ProtoReader.StartSubItem(ref state, reader);
 
                         for (i = 0; i < COUNT; i++)
                         {
-                            Assert.Equal(1, reader.ReadFieldHeader());
+                            Assert.Equal(1, reader.ReadFieldHeader(ref state));
                             Assert.Equal(WireType.String, reader.WireType);
-                            reader.SkipField();
+                            reader.SkipField(ref state);
                         }
-                        Assert.False(reader.ReadFieldHeader() > 0);
+                        Assert.False(reader.ReadFieldHeader(ref state) > 0);
                         ProtoReader.EndSubItem(tok, reader);
                     }
                     catch

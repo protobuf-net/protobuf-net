@@ -3,11 +3,9 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class DecimalSerializer : IProtoSerializer
+    internal sealed class DecimalSerializer : IProtoSerializer
     {
         static readonly Type expectedType = typeof(decimal);
-
-        public DecimalSerializer(ProtoBuf.Meta.TypeModel model) { }
 
         public Type ExpectedType => expectedType;
 
@@ -15,10 +13,10 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return BclHelpers.ReadDecimal(source);
+            return BclHelpers.ReadDecimal(ref state, source);
         }
 
         public void Write(object value, ProtoWriter dest)

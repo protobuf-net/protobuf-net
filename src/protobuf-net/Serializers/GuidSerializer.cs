@@ -3,11 +3,9 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class GuidSerializer : IProtoSerializer
+    internal sealed class GuidSerializer : IProtoSerializer
     {
         static readonly Type expectedType = typeof(Guid);
-
-        public GuidSerializer(ProtoBuf.Meta.TypeModel model) { }
 
         public Type ExpectedType { get { return expectedType; } }
 
@@ -20,10 +18,10 @@ namespace ProtoBuf.Serializers
             BclHelpers.WriteGuid((Guid)value, dest);
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return BclHelpers.ReadGuid(source);
+            return BclHelpers.ReadGuid(ref state, source);
         }
 
 #if FEAT_COMPILER

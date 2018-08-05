@@ -3,14 +3,9 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class UInt32Serializer : IProtoSerializer
+    internal sealed class UInt32Serializer : IProtoSerializer
     {
         static readonly Type expectedType = typeof(uint);
-
-        public UInt32Serializer(ProtoBuf.Meta.TypeModel model)
-        {
-
-        }
 
         public Type ExpectedType => expectedType;
 
@@ -18,10 +13,10 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadUInt32();
+            return source.ReadUInt32(ref state);
         }
 
         public void Write(object value, ProtoWriter dest)

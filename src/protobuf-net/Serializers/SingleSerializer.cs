@@ -10,18 +10,14 @@ namespace ProtoBuf.Serializers
 
         public Type ExpectedType { get { return expectedType; } }
 
-        public SingleSerializer(TypeModel model)
-        {
-        }
-
         bool IProtoSerializer.RequiresOldValue => false;
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadSingle();
+            return source.ReadSingle(ref state);
         }
 
         public void Write(object value, ProtoWriter dest)

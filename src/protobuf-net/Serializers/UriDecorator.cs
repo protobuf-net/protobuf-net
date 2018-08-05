@@ -8,13 +8,10 @@ using ProtoBuf.Compiler;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class UriDecorator : ProtoDecoratorBase
+    internal sealed class UriDecorator : ProtoDecoratorBase
     {
         static readonly Type expectedType = typeof(Uri);
-        public UriDecorator(ProtoBuf.Meta.TypeModel model, IProtoSerializer tail) : base(tail)
-        {
-
-        }
+        public UriDecorator(IProtoSerializer tail) : base(tail) { }
 
         public override Type ExpectedType => expectedType;
 
@@ -27,10 +24,10 @@ namespace ProtoBuf.Serializers
             Tail.Write(((Uri)value).OriginalString, dest);
         }
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // not expecting incoming
-            string s = (string)Tail.Read(null, source);
+            string s = (string)Tail.Read(ref state, null, source);
             return s.Length == 0 ? null : new Uri(s, UriKind.RelativeOrAbsolute);
         }
 

@@ -72,9 +72,9 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        object IProtoSerializer.Read(object value, ProtoReader source)
+        object IProtoSerializer.Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
-            return ProtoReader.ReadObject(value, key, source);
+            return ProtoReader.ReadObject(ref state, value, key, source);
         }
 
 #if FEAT_COMPILER

@@ -3,11 +3,9 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class Int64Serializer : IProtoSerializer
+    internal sealed class Int64Serializer : IProtoSerializer
     {
         static readonly Type expectedType = typeof(long);
-
-        public Int64Serializer(ProtoBuf.Meta.TypeModel model) { }
 
         public Type ExpectedType => expectedType;
 
@@ -15,10 +13,10 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadInt64();
+            return source.ReadInt64(ref state);
         }
 
         public void Write(object value, ProtoWriter dest)
@@ -31,7 +29,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteInt64", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadInt64", ExpectedType);
         }

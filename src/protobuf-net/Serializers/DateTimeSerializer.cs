@@ -21,16 +21,16 @@ namespace ProtoBuf.Serializers
             includeKind = model?.SerializeDateTimeKind() == true;
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             if (wellKnown)
             {
-                return BclHelpers.ReadTimestamp(source);
+                return BclHelpers.ReadTimestamp(ref state, source);
             }
             else
             {
                 Helpers.DebugAssert(value == null); // since replaces
-                return BclHelpers.ReadDateTime(source);
+                return BclHelpers.ReadDateTime(ref state, source);
             }
         }
 

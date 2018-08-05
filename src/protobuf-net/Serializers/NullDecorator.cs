@@ -134,19 +134,19 @@ namespace ProtoBuf.Serializers
         }
 #endif
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
-            SubItemToken tok = ProtoReader.StartSubItem(source);
+            SubItemToken tok = ProtoReader.StartSubItem(ref state, source);
             int field;
-            while ((field = source.ReadFieldHeader()) > 0)
+            while ((field = source.ReadFieldHeader(ref state)) > 0)
             {
                 if (field == Tag)
                 {
-                    value = Tail.Read(value, source);
+                    value = Tail.Read(ref state, value, source);
                 }
                 else
                 {
-                    source.SkipField();
+                    source.SkipField(ref state);
                 }
             }
             ProtoReader.EndSubItem(tok, source);

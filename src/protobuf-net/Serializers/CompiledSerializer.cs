@@ -4,7 +4,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class CompiledSerializer : IProtoTypeSerializer
+    internal sealed class CompiledSerializer : IProtoTypeSerializer
     {
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
         {
@@ -28,8 +28,7 @@ namespace ProtoBuf.Serializers
 
         public static CompiledSerializer Wrap(IProtoTypeSerializer head, TypeModel model)
         {
-            CompiledSerializer result = head as CompiledSerializer;
-            if (result == null)
+            if (!(head is CompiledSerializer result))
             {
                 result = new CompiledSerializer(head, model);
                 Helpers.DebugAssert(((IProtoTypeSerializer)result).ExpectedType == head.ExpectedType);
@@ -59,9 +58,9 @@ namespace ProtoBuf.Serializers
             serializer(value, dest);
         }
 
-        object IProtoSerializer.Read(object value, ProtoReader source)
+        object IProtoSerializer.Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
-            return deserializer(value, source);
+            return deserializer(ref state, value, source);
         }
 
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

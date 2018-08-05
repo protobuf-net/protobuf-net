@@ -169,8 +169,8 @@ namespace ProtoBuf.ServiceModel
                 ProtoReader protoReader = null;
                 try
                 {
-                    protoReader = ProtoReader.Create(Stream.Null, model, null, ProtoReader.TO_EOF);
-                    return model.Deserialize(key, null, protoReader);
+                    protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
+                    return model.Deserialize(ref state, key, null, protoReader);
                 }
                 finally
                 {
@@ -191,8 +191,8 @@ namespace ProtoBuf.ServiceModel
                     ProtoReader protoReader = null;
                     try
                     {
-                        protoReader = ProtoReader.Create(ms, model, null, ProtoReader.TO_EOF);
-                        result = model.Deserialize(key, null, protoReader);
+                        protoReader = ProtoReader.Create(out var state, ms, model, null, ProtoReader.TO_EOF);
+                        result = model.Deserialize(ref state, key, null, protoReader);
                     }
                     finally
                     {

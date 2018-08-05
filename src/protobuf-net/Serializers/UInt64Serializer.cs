@@ -7,20 +7,16 @@ namespace ProtoBuf.Serializers
     {
         static readonly Type expectedType = typeof(ulong);
 
-        public UInt64Serializer(ProtoBuf.Meta.TypeModel model)
-        {
-
-        }
         public Type ExpectedType => expectedType;
 
         bool IProtoSerializer.RequiresOldValue => false;
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadUInt64();
+            return source.ReadUInt64(ref state);
         }
 
         public void Write(object value, ProtoWriter dest)

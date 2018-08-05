@@ -168,7 +168,7 @@ namespace ProtoBuf.Serializers
             this.finish = finish;
         }
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             object builderInstance = builderFactory.Invoke(null, null);
             int field = source.FieldNumber;
@@ -192,10 +192,10 @@ namespace ProtoBuf.Serializers
 
             if (packedWireType != WireType.None && source.WireType == WireType.String)
             {
-                SubItemToken token = ProtoReader.StartSubItem(source);
+                SubItemToken token = ProtoReader.StartSubItem(ref state, source);
                 while (ProtoReader.HasSubValue(packedWireType, source))
                 {
-                    args[0] = Tail.Read(null, source);
+                    args[0] = Tail.Read(ref state, null, source);
                     add.Invoke(builderInstance, args);
                 }
                 ProtoReader.EndSubItem(token, source);
@@ -204,9 +204,9 @@ namespace ProtoBuf.Serializers
             {
                 do
                 {
-                    args[0] = Tail.Read(null, source);
+                    args[0] = Tail.Read(ref state, null, source);
                     add.Invoke(builderInstance, args);
-                } while (source.TryReadFieldHeader(field));
+                } while (source.TryReadFieldHeader(ref state, field));
             }
 
             return finish.Invoke(builderInstance, null);

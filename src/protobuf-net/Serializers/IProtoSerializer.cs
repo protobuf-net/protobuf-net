@@ -1,10 +1,9 @@
 ﻿#if !NO_RUNTIME
 using System;
 
-
 namespace ProtoBuf.Serializers
 {
-    interface IProtoSerializer
+    internal interface IProtoSerializer
     {
         /// <summary>
         /// The type that this serializer is intended to work for.
@@ -23,8 +22,9 @@ namespace ProtoBuf.Serializers
         /// </summary>
         /// <param name="value">The current value, if appropriate.</param>
         /// <param name="source">The reader providing the input data.</param>
+        /// <param name="state">Reader state</param>
         /// <returns>The updated / replacement value.</returns>
-        object Read(object value, ProtoReader source);
+        object Read(ref ProtoReader.State state, object value, ProtoReader source);
 
         /// <summary>
         /// Indicates whether a Read operation <em>replaces</em> the existing value, or

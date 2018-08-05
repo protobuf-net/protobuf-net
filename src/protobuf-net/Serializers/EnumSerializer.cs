@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class EnumSerializer : IProtoSerializer
+    internal sealed class EnumSerializer : IProtoSerializer
     {
         public readonly struct EnumPair
         {
@@ -95,10 +95,10 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            int wireValue = source.ReadInt32();
+            int wireValue = source.ReadInt32(ref state);
             if (map == null)
             {
                 return WireToEnum(wireValue);
@@ -171,7 +171,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ProtoTypeCode typeCode = GetTypeCode();
             if (map == null)

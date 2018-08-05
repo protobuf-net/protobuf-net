@@ -5,7 +5,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class DefaultValueDecorator : ProtoDecoratorBase
+    internal sealed class DefaultValueDecorator : ProtoDecoratorBase
     {
         public override Type ExpectedType => Tail.ExpectedType;
 
@@ -33,9 +33,9 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
-            return Tail.Read(value, source);
+            return Tail.Read(ref state, value, source);
         }
 
 #if FEAT_COMPILER

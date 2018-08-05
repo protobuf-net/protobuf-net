@@ -3,13 +3,12 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class TimeSpanSerializer : IProtoSerializer
+    internal sealed class TimeSpanSerializer : IProtoSerializer
     {
         static readonly Type expectedType = typeof(TimeSpan);
         private readonly bool wellKnown;
         public TimeSpanSerializer(DataFormat dataFormat, ProtoBuf.Meta.TypeModel model)
         {
-
             wellKnown = dataFormat == DataFormat.WellKnown;
         }
         public Type ExpectedType => expectedType;
@@ -18,16 +17,16 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             if (wellKnown)
             {
-                return BclHelpers.ReadDuration(source);
+                return BclHelpers.ReadDuration(ref state, source);
             }
             else
             {
                 Helpers.DebugAssert(value == null); // since replaces
-                return BclHelpers.ReadTimeSpan(source);
+                return BclHelpers.ReadTimeSpan(ref state, source);
             }
         }
 
@@ -49,9 +48,9 @@ namespace ProtoBuf.Serializers
             ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)),
                 wellKnown ? nameof(BclHelpers.WriteDuration) : nameof(BclHelpers.WriteTimeSpan), valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            if (wellKnown) ctx.LoadValue(valueFrom);
+            if (wellKnown) ctx.LoadValue(entity);
             ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)),
                 wellKnown ? nameof(BclHelpers.ReadDuration) : nameof(BclHelpers.ReadTimeSpan),
                 ExpectedType);

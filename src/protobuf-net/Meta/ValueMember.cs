@@ -548,7 +548,7 @@ namespace ProtoBuf.Meta
                     }
                     if (MemberType == model.MapType(typeof(Uri)))
                     {
-                        ser = new UriDecorator(model, ser);
+                        ser = new UriDecorator(ser);
                     }
 #if PORTABLE
                     else if(memberType.FullName == typeof(Uri).FullName)
@@ -636,65 +636,65 @@ namespace ProtoBuf.Meta
             {
                 case ProtoTypeCode.Int32:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return new Int32Serializer(model);
+                    return new Int32Serializer();
                 case ProtoTypeCode.UInt32:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return new UInt32Serializer(model);
+                    return new UInt32Serializer();
                 case ProtoTypeCode.Int64:
                     defaultWireType = GetIntWireType(dataFormat, 64);
-                    return new Int64Serializer(model);
+                    return new Int64Serializer();
                 case ProtoTypeCode.UInt64:
                     defaultWireType = GetIntWireType(dataFormat, 64);
-                    return new UInt64Serializer(model);
+                    return new UInt64Serializer();
                 case ProtoTypeCode.String:
                     defaultWireType = WireType.String;
                     if (asReference)
                     {
                         return new NetObjectSerializer(model, model.MapType(typeof(string)), 0, BclHelpers.NetObjectOptions.AsReference);
                     }
-                    return new StringSerializer(model);
+                    return new StringSerializer();
                 case ProtoTypeCode.Single:
                     defaultWireType = WireType.Fixed32;
-                    return new SingleSerializer(model);
+                    return new SingleSerializer();
                 case ProtoTypeCode.Double:
                     defaultWireType = WireType.Fixed64;
-                    return new DoubleSerializer(model);
+                    return new DoubleSerializer();
                 case ProtoTypeCode.Boolean:
                     defaultWireType = WireType.Variant;
-                    return new BooleanSerializer(model);
+                    return new BooleanSerializer();
                 case ProtoTypeCode.DateTime:
                     defaultWireType = GetDateTimeWireType(dataFormat);
                     return new DateTimeSerializer(dataFormat, model);
                 case ProtoTypeCode.Decimal:
                     defaultWireType = WireType.String;
-                    return new DecimalSerializer(model);
+                    return new DecimalSerializer();
                 case ProtoTypeCode.Byte:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return new ByteSerializer(model);
+                    return new ByteSerializer();
                 case ProtoTypeCode.SByte:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return new SByteSerializer(model);
+                    return new SByteSerializer();
                 case ProtoTypeCode.Char:
                     defaultWireType = WireType.Variant;
-                    return new CharSerializer(model);
+                    return new CharSerializer();
                 case ProtoTypeCode.Int16:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return new Int16Serializer(model);
+                    return new Int16Serializer();
                 case ProtoTypeCode.UInt16:
                     defaultWireType = GetIntWireType(dataFormat, 32);
-                    return new UInt16Serializer(model);
+                    return new UInt16Serializer();
                 case ProtoTypeCode.TimeSpan:
                     defaultWireType = GetDateTimeWireType(dataFormat);
                     return new TimeSpanSerializer(dataFormat, model);
                 case ProtoTypeCode.Guid:
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return new GuidSerializer(model);
+                    return new GuidSerializer();
                 case ProtoTypeCode.Uri:
                     defaultWireType = WireType.String;
-                    return new StringSerializer(model);
+                    return new StringSerializer();
                 case ProtoTypeCode.ByteArray:
                     defaultWireType = WireType.String;
-                    return new BlobSerializer(model, overwriteList);
+                    return new BlobSerializer(overwriteList);
                 case ProtoTypeCode.Type:
                     defaultWireType = WireType.String;
                     return new SystemTypeSerializer(model);

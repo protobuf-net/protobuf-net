@@ -122,7 +122,7 @@ namespace ProtoBuf
                 _source = default;
             }
 
-            private protected override void ImplReadBytes(ArraySegment<byte> target)
+            private protected override void ImplReadBytes(ref State state, ArraySegment<byte> target)
                 => ImplReadBytes(new Span<byte>(target.Array, target.Offset, target.Count));
 
             private void ImplReadBytes(Span<byte> target)
@@ -154,7 +154,7 @@ namespace ProtoBuf
                 return available;
             }
 
-            private protected override void ImplSkipBytes(long count, bool preservePreviewField)
+            private protected override void ImplSkipBytes(ref State state, long count, bool preservePreviewField)
             {
                 while (count != 0)
                 {
@@ -168,7 +168,7 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override string ImplReadString(int bytes)
+            private protected override string ImplReadString(ref State state, int bytes)
             {
                 var available = GetSomeData();
                 if (available >= bytes)
@@ -211,7 +211,7 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override uint ImplReadUInt32Fixed()
+            private protected override uint ImplReadUInt32Fixed(ref State state)
             {
                 if (previewFieldBytes != 0)
                 {
@@ -235,7 +235,7 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override ulong ImplReadUInt64Fixed()
+            private protected override ulong ImplReadUInt64Fixed(ref State state)
             {
                 if (previewFieldBytes != 0)
                 {
@@ -259,7 +259,7 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override int TryReadUInt32VarintWithoutMoving(Read32VarintMode mode, out uint value)
+            private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
             {
                 var read = previewFieldBytes;
                 if (read != 0)
@@ -344,7 +344,7 @@ namespace ProtoBuf
                 if (read != 0 && mode == Read32VarintMode.FieldHeader) ReadPreviewField(value, span, read);
                 return read;
             }
-            private protected override int TryReadUInt64VarintWithoutMoving(out ulong value)
+            private protected override int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value)
             {
                 var read = previewFieldBytes;
                 if (read != 0)
@@ -473,7 +473,7 @@ namespace ProtoBuf
                 return 10;
             }
 
-            private protected override bool IsFullyConsumed => GetSomeData(false) == 0;
+            private protected override bool IsFullyConsumed(ref State state) => GetSomeData(false) == 0;
         }
     }
 }

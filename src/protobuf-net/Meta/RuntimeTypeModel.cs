@@ -791,22 +791,23 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="key">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be modified (can be null).</param>
+        /// <param name="state">Reader state</param>
         /// <param name="source">The binary stream to apply to the instance (cannot be null).</param>
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        protected internal override object Deserialize(int key, object value, ProtoReader source)
+        protected internal override object Deserialize(ref ProtoReader.State state, int key, object value, ProtoReader source)
         {
             //Helpers.DebugWriteLine("Deserialize", value);
             IProtoSerializer ser = ((MetaType)types[key]).Serializer;
             if (value == null && Helpers.IsValueType(ser.ExpectedType))
             {
                 if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType);
-                return ser.Read(value, source);
+                return ser.Read(ref state, value, source);
             }
             else
             {
-                return ser.Read(value, source);
+                return ser.Read(ref state, value, source);
             }
         }
 

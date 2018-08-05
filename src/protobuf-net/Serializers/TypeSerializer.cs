@@ -184,14 +184,14 @@ namespace ProtoBuf.Serializers
             if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize, dest.Context);
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             if (isRootType && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize, source.Context); }
             int fieldNumber, lastFieldNumber = 0, lastFieldIndex = 0;
             bool fieldHandled;
 
             //Helpers.DebugWriteLine(">> Reading fields for " + forType.FullName);
-            while ((fieldNumber = source.ReadFieldHeader()) > 0)
+            while ((fieldNumber = source.ReadFieldHeader(ref state)) > 0)
             {
                 fieldHandled = false;
                 if (fieldNumber < lastFieldNumber)
@@ -224,11 +224,11 @@ namespace ProtoBuf.Serializers
 
                         if (ser.ReturnsValue)
                         {
-                            value = ser.Read(value, source);
+                            value = ser.Read(ref state, value, source);
                         }
                         else
                         { // pop
-                            ser.Read(value, source);
+                            ser.Read(ref state, value, source);
                         }
 
                         lastFieldIndex = i;
@@ -243,11 +243,11 @@ namespace ProtoBuf.Serializers
                     if (value == null) value = CreateInstance(source, true);
                     if (isExtensible)
                     {
-                        source.AppendExtensionData((IExtensible)value);
+                        source.AppendExtensionData(ref state, (IExtensible)value);
                     }
                     else
                     {
-                        source.SkipField();
+                        source.SkipField(ref state);
                     }
                 }
             }

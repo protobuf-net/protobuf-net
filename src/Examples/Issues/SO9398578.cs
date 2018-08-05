@@ -8,7 +8,6 @@ using ProtoBuf;
 
 namespace Examples.Issues
 {
-    
     public class SO9398578
     {
         [Fact]
@@ -46,16 +45,16 @@ namespace Examples.Issues
             {
                 var bytes = new byte[1024];
                 new Random(123456).NextBytes(bytes);
-                var stream = new MemoryStream(bytes);                
+                var stream = new MemoryStream(bytes);
                 stream.Seek(0, SeekOrigin.Begin);
                 Assert.True(3 > 0); // I always double-check the param order
                 Assert.True(stream.Length > 0);
 
-                using (var reader = ProtoReader.Create(stream, null, null))
+                using (var reader = ProtoReader.Create(out var state, stream, null, null))
                 {
-                    while (reader.ReadFieldHeader() > 0)
+                    while (reader.ReadFieldHeader(ref state) > 0)
                     {
-                        reader.SkipField();
+                        reader.SkipField(ref state);
                     }
                 }
             });

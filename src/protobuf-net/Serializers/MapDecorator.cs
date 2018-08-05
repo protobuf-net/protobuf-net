@@ -73,43 +73,43 @@ namespace ProtoBuf.Serializers
 
         private bool AppendToCollection { get; }
 
-        public override object Read(object untyped, ProtoReader source)
+        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
-            TDictionary typed = AppendToCollection ? ((TDictionary)untyped) : null;
+            TDictionary typed = AppendToCollection ? ((TDictionary)value) : null;
             if (typed == null) typed = (TDictionary)Activator.CreateInstance(concreteType);
 
             do
             {
                 var key = DefaultKey;
-                var value = DefaultValue;
-                SubItemToken token = ProtoReader.StartSubItem(source);
+                var typedValue = DefaultValue;
+                SubItemToken token = ProtoReader.StartSubItem(ref state, source);
                 int field;
-                while ((field = source.ReadFieldHeader()) > 0)
+                while ((field = source.ReadFieldHeader(ref state)) > 0)
                 {
                     switch (field)
                     {
                         case 1:
-                            key = (TKey)keyTail.Read(null, source);
+                            key = (TKey)keyTail.Read(ref state, null, source);
                             break;
                         case 2:
-                            value = (TValue)Tail.Read(Tail.RequiresOldValue ? (object)value : null, source);
+                            typedValue = (TValue)Tail.Read(ref state, Tail.RequiresOldValue ? (object)typedValue : null, source);
                             break;
                         default:
-                            source.SkipField();
+                            source.SkipField(ref state);
                             break;
                     }
                 }
 
                 ProtoReader.EndSubItem(token, source);
-                typed[key] = value;
-            } while (source.TryReadFieldHeader(fieldNumber));
+                typed[key] = typedValue;
+            } while (source.TryReadFieldHeader(ref state, fieldNumber));
 
             return typed;
         }
 
-        public override void Write(object untyped, ProtoWriter dest)
+        public override void Write(object value, ProtoWriter dest)
         {
-            foreach (var pair in (TDictionary)untyped)
+            foreach (var pair in (TDictionary)value)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest);
                 var token = ProtoWriter.StartSubItem(null, dest);

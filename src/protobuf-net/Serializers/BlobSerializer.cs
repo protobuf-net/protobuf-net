@@ -9,22 +9,22 @@ using System.Reflection.Emit;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class BlobSerializer : IProtoSerializer
+    internal sealed class BlobSerializer : IProtoSerializer
     {
         public Type ExpectedType { get { return expectedType; } }
 
-        static readonly Type expectedType = typeof(byte[]);
+        private static readonly Type expectedType = typeof(byte[]);
 
-        public BlobSerializer(ProtoBuf.Meta.TypeModel model, bool overwriteList)
+        public BlobSerializer(bool overwriteList)
         {
             this.overwriteList = overwriteList;
         }
 
         private readonly bool overwriteList;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
-            return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, source);
+            return ProtoReader.AppendBytes(ref state, overwriteList ? null : (byte[])value, source);
         }
 
         public void Write(object value, ProtoWriter dest)

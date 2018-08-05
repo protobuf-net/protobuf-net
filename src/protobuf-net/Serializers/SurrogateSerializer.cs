@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class SurrogateSerializer : IProtoTypeSerializer
+    internal sealed class SurrogateSerializer : IProtoTypeSerializer
     {
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
 #if FEAT_COMPILER
@@ -26,7 +26,7 @@ namespace ProtoBuf.Serializers
 
         private readonly Type forType, declaredType;
         private readonly MethodInfo toTail, fromTail;
-        IProtoTypeSerializer rootTail;
+        private readonly IProtoTypeSerializer rootTail;
 
         public SurrogateSerializer(TypeModel model, Type forType, Type declaredType, IProtoTypeSerializer rootTail)
         {
@@ -116,14 +116,14 @@ namespace ProtoBuf.Serializers
             rootTail.Write(toTail.Invoke(null, new object[] { value }), writer);
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             // convert the incoming value
             object[] args = { value };
             value = toTail.Invoke(null, args);
 
             // invoke the tail and convert the outgoing value
-            args[0] = rootTail.Read(value, source);
+            args[0] = rootTail.Read(ref state, value, source);
             return fromTail.Invoke(null, args);
         }
 

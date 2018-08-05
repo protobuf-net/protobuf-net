@@ -20,10 +20,10 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteType((Type)value, dest);
         }
 
-        object IProtoSerializer.Read(object value, ProtoReader source)
+        object IProtoSerializer.Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadType();
+            return source.ReadType(ref state);
         }
 
         bool IProtoSerializer.RequiresOldValue => false;

@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class ParseableSerializer : IProtoSerializer
+    internal sealed class ParseableSerializer : IProtoSerializer
     {
         private readonly MethodInfo parse;
         public static ParseableSerializer TryCreate(Type type, TypeModel model)
@@ -67,10 +67,10 @@ namespace ProtoBuf.Serializers
         bool IProtoSerializer.RequiresOldValue { get { return false; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return parse.Invoke(null, new object[] { source.ReadString() });
+            return parse.Invoke(null, new object[] { source.ReadString(ref state) });
         }
 
         public void Write(object value, ProtoWriter dest)
@@ -99,7 +99,7 @@ namespace ProtoBuf.Serializers
             }
             ctx.EmitBasicWrite("WriteString", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadString", ctx.MapType(typeof(string)));
             ctx.EmitCall(parse);

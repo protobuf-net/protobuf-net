@@ -26,10 +26,10 @@ namespace ProtoBuf.Serializers
             if (value != null) Tail.Write(value, dest);
         }
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
             Helpers.DebugAssert(value != null);
-            object newValue = Tail.Read((Tail.RequiresOldValue ? field.GetValue(value) : null), source);
+            object newValue = Tail.Read(ref state, (Tail.RequiresOldValue ? field.GetValue(value) : null), source);
             if (newValue != null) field.SetValue(value, newValue);
             return null;
         }

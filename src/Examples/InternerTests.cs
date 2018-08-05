@@ -5,7 +5,6 @@ using System.IO;
 
 namespace Examples
 {
-    
     public class InternerTests
     {
         [ProtoContract]
@@ -17,7 +16,7 @@ namespace Examples
             public string Blap { get; set; }
         }
 
-        static ProtoReader GetReader()
+        private static ProtoReader GetReader(out ProtoReader.State state)
         {
             var model = TypeModel.Create();
             model.Add(typeof(Foo), true);
@@ -31,15 +30,15 @@ namespace Examples
             }
             ms.Position = 0;
 
-            return ProtoReader.Create(ms, model, null);
+            return ProtoReader.Create(out state, ms, model, null);
         }
         [Fact]
         public void ByDefaultStringsShouldBeInterned()
         {
             Foo foo;
-            using (var reader = GetReader())
+            using (var reader = GetReader(out var state))
             {
-                foo = (Foo)reader.Model.Deserialize(reader, null, typeof(Foo));
+                foo = (Foo)reader.Model.Deserialize(ref state, reader, null, typeof(Foo));
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
@@ -50,10 +49,10 @@ namespace Examples
         public void ExplicitEnabledStringsShouldBeInterned()
         {
             Foo foo;
-            using (var reader = GetReader())
+            using (var reader = GetReader(out var state))
             {
                 reader.InternStrings = true;
-                foo = (Foo)reader.Model.Deserialize(reader, null, typeof(Foo));
+                foo = (Foo)reader.Model.Deserialize(ref state, reader, null, typeof(Foo));
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
@@ -64,16 +63,15 @@ namespace Examples
         public void ExplicitDisabledStringsShouldNotBeInterned()
         {
             Foo foo;
-            using (var reader = GetReader())
+            using (var reader = GetReader(out var state))
             {
                 reader.InternStrings = false;
-                foo = (Foo)reader.Model.Deserialize(reader, null, typeof(Foo));
+                foo = (Foo)reader.Model.Deserialize(ref state, reader, null, typeof(Foo));
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
 
             Assert.False(ReferenceEquals(foo.Bar, foo.Blap));
         }
-
     }
 }
