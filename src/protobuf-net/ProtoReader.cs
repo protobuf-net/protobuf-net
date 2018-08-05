@@ -1,9 +1,9 @@
 ﻿
+using ProtoBuf.Meta;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-using ProtoBuf.Meta;
 
 namespace ProtoBuf
 {
@@ -59,7 +59,7 @@ namespace ProtoBuf
             if (context == null) { context = SerializationContext.Default; }
             else { context.Freeze(); }
             this.context = context;
-            LongPosition = 0;
+            _longPosition = 0;
             _depth = _fieldNumber = 0;
 
             blockEnd64 = long.MaxValue;
@@ -92,14 +92,22 @@ namespace ProtoBuf
             if (netCache != null) netCache.Clear();
         }
 
-        private uint ReadUInt32Varint(bool trimNegative)
+        private protected enum Read32VarintMode
         {
-            int read = TryReadUInt32VarintWithoutMoving(trimNegative, out uint value);
+            FieldHeader,
+            Unsigned,
+            Signed,
+        }
+
+        private uint ReadUInt32Varint(Read32VarintMode mode)
+        {
+            int read = TryReadUInt32VarintWithoutMoving(mode, out uint value);
             if (read > 0)
             {
-                ImplSkipBytes(read);
+                ImplSkipBytes(read, false);
                 return value;
             }
+            if (mode == Read32VarintMode.FieldHeader) return 0;
             throw EoF(this);
         }
 
@@ -108,7 +116,7 @@ namespace ProtoBuf
             int read = TryReadUInt64VarintWithoutMoving(out ulong value);
             if (read > 0)
             {
-                ImplSkipBytes(read);
+                ImplSkipBytes(read, false);
                 return value;
             }
             throw EoF(this);
@@ -126,9 +134,10 @@ namespace ProtoBuf
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
         /// in the underlying stream, if multiple readers are used on the same stream)
         /// </summary>
-        public long LongPosition { get; private set; }
+        public long LongPosition => _longPosition;
+        private long _longPosition;
 
-        private protected void Advance(long count) => LongPosition += count;
+        private protected void Advance(long count) => _longPosition += count;
 
         /// <summary>
         /// Reads a signed 16-bit integer from the stream: Variant, Fixed32, Fixed64, SignedVariant
@@ -169,7 +178,7 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.Variant:
-                    return ReadUInt32Varint(false);
+                    return ReadUInt32Varint(Read32VarintMode.Signed);
                 case WireType.Fixed32:
                     return ImplReadUInt32Fixed();
                 case WireType.Fixed64:
@@ -188,14 +197,14 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.Variant:
-                    return (int)ReadUInt32Varint(true);
+                    return (int)ReadUInt32Varint(Read32VarintMode.Signed);
                 case WireType.Fixed32:
                     return (int)ImplReadUInt32Fixed();
                 case WireType.Fixed64:
                     long l = ReadInt64();
                     checked { return (int)l; }
                 case WireType.SignedVariant:
-                    return Zag(ReadUInt32Varint(true));
+                    return Zag(ReadUInt32Varint(Read32VarintMode.Signed));
                 default:
                     throw CreateWireTypeException();
             }
@@ -272,7 +281,7 @@ namespace ProtoBuf
         {
             if (WireType == WireType.String)
             {
-                int bytes = (int)ReadUInt32Varint(false);
+                int bytes = (int)ReadUInt32Varint(Read32VarintMode.Unsigned);
                 if (bytes == 0) return "";
                 var s = ImplReadString(bytes);
                 if (InternStrings) { s = Intern(s); }
@@ -294,7 +303,7 @@ namespace ProtoBuf
 
         private protected Exception CreateWireTypeException()
         {
-            return CreateException("Invalid wire-type; this usually means you have over-written a file without truncating or setting the length; see https://stackoverflow.com/q/2152978/23354");
+            return CreateException($"Invalid wire-type ({WireType}); this usually means you have over-written a file without truncating or setting the length; see https://stackoverflow.com/q/2152978/23354");
         }
 
         private Exception CreateException(string message)
@@ -414,18 +423,7 @@ namespace ProtoBuf
                     throw reader.CreateWireTypeException(); // throws
             }
         }
-
-        private protected bool TryReadUInt32Varint(out uint value)
-        {
-            int read = TryReadUInt32VarintWithoutMoving(false, out value);
-            if (read > 0)
-            {
-                ImplSkipBytes(read);
-                return true;
-            }
-            return false;
-        }
-
+        
         /// <summary>
         /// Reads a field header from the stream, setting the wire-type and retuning the field number. If no
         /// more fields are available, then 0 is returned. This methods respects sub-messages.
@@ -437,8 +435,10 @@ namespace ProtoBuf
             // then be called)
             if (blockEnd64 <= LongPosition || WireType == WireType.EndGroup) { return 0; }
 
-            if (TryReadUInt32Varint(out uint tag) && tag != 0)
+            var read = TryReadUInt32VarintWithoutMoving(Read32VarintMode.FieldHeader, out uint tag);
+            if (read != 0)
             {
+                ImplSkipBytes(read, true);
                 WireType = (WireType)(tag & 7);
                 _fieldNumber = (int)(tag >> 3);
                 if (_fieldNumber < 1) throw new ProtoException("Invalid field in source data: " + _fieldNumber.ToString());
@@ -464,20 +464,20 @@ namespace ProtoBuf
             // check for virtual end of stream
             if (blockEnd64 <= LongPosition || WireType == WireType.EndGroup) { return false; }
 
-            int read = TryReadUInt32VarintWithoutMoving(false, out uint tag);
+            int read = TryReadUInt32VarintWithoutMoving(Read32VarintMode.FieldHeader, out uint tag);
             WireType tmpWireType; // need to catch this to exclude (early) any "end group" tokens
             if (read > 0 && ((int)tag >> 3) == field
                 && (tmpWireType = (WireType)(tag & 7)) != WireType.EndGroup)
             {
                 WireType = tmpWireType;
                 _fieldNumber = field;
-                ImplSkipBytes(read);
+                ImplSkipBytes(read, true);
                 return true;
             }
             return false;
         }
 
-        internal abstract int TryReadUInt32VarintWithoutMoving(bool trimNegative, out uint value);
+        private protected abstract int TryReadUInt32VarintWithoutMoving(Read32VarintMode mode, out uint value);
 
         /// <summary>
         /// Get the TypeModel associated with this reader
@@ -517,7 +517,7 @@ namespace ProtoBuf
             }
         }
 
-        internal abstract void ImplSkipBytes(long count);
+        private protected abstract void ImplSkipBytes(long count, bool preservePreviewField);
 
         /// <summary>
         /// Discards the data for the current field.
@@ -527,14 +527,14 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.Fixed32:
-                    ImplSkipBytes(4);
+                    ImplSkipBytes(4, false);
                     return;
                 case WireType.Fixed64:
-                    ImplSkipBytes(8);
+                    ImplSkipBytes(8, false);
                     return;
                 case WireType.String:
                     long len = (long)ReadUInt64Varint();
-                    ImplSkipBytes(len);
+                    ImplSkipBytes(len, false);
                     return;
                 case WireType.Variant:
                 case WireType.SignedVariant:
@@ -639,7 +639,7 @@ namespace ProtoBuf
                 switch (WireType)
                 {
                     case WireType.String:
-                        int len = (int)ReadUInt32Varint(false);
+                        int len = (int)ReadUInt32Varint(Read32VarintMode.Signed);
                         WireType = WireType.None;
                         if (len == 0) return value ?? EmptyBlob;
                         int offset;

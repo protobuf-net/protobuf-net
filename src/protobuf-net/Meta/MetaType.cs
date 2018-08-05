@@ -670,7 +670,7 @@ namespace ProtoBuf.Meta
                         var backingFieldName = $"<{property.Name}>k__BackingField";
                         foreach (var fieldMemeber in foundList)
                         {
-                            if ((fieldMemeber as FieldInfo != null) && fieldMemeber.Name == backingFieldName)
+                            if ((fieldMemeber is FieldInfo) && fieldMemeber.Name == backingFieldName)
                             {
                                 backingField = fieldMemeber;
                                 break;

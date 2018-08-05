@@ -114,7 +114,7 @@ namespace ProtoBuf
                 }
             }
 
-            internal override int TryReadUInt32VarintWithoutMoving(bool trimNegative, out uint value)
+            private protected override int TryReadUInt32VarintWithoutMoving(Read32VarintMode mode, out uint value)
             {
                 if (_available < 10) Ensure(10, false);
                 if (_available == 0)
@@ -147,7 +147,7 @@ namespace ProtoBuf
                 value |= chunk << 28; // can only use 4 bits from this chunk
                 if ((chunk & 0xF0) == 0) return 5;
 
-                if (trimNegative // allow for -ve values
+                if (mode == Read32VarintMode.Signed // allow for -ve values
                     && (chunk & 0xF0) == 0xF0
                     && _available >= 10
                         && _ioBuffer[++readPos] == 0xFF
@@ -308,7 +308,7 @@ namespace ProtoBuf
 #endif
             }
 
-            internal void Ensure(int count, bool strict)
+            private void Ensure(int count, bool strict)
             {
                 Helpers.DebugAssert(_available <= count, "Asking for data without checking first");
                 if (count > _ioBuffer.Length)
@@ -360,7 +360,7 @@ namespace ProtoBuf
                 lastReader = this;
             }
 
-            internal override void ImplSkipBytes(long count)
+            private protected override void ImplSkipBytes(long count, bool preservePreviewField)
             {
                 if (_available < count && count < 128)
                 {
