@@ -125,6 +125,10 @@ payload = ...
             state = default;
             return ProtoReader.Create(_ros, Model);
         }
+        public ProtoReader ReadStatefulROS(out ProtoReader.State state)
+        {
+            return ProtoReader.Create(out state, _ros, Model);
+        }
 
         public TypeModel Model => RuntimeTypeModel.Default;
 
@@ -146,10 +150,19 @@ payload = ...
                 GC.KeepAlive(dal);
             }
         }
-        [Benchmark(Description = "ReadOnlySequence<byte>")]
+        [Benchmark(Description = "ROS")]
         public void ReadOnlySequence()
         {
             using (var reader = ReadROS(out var state))
+            {
+                var dal = Model.Deserialize(ref state, reader, null, typeof(DAL.Database));
+                GC.KeepAlive(dal);
+            }
+        }
+        [Benchmark(Description = "Stateful ROS")]
+        public void ReadOnlySequence_Stateful()
+        {
+            using (var reader = ReadStatefulROS(out var state))
             {
                 var dal = Model.Deserialize(ref state, reader, null, typeof(DAL.Database));
                 GC.KeepAlive(dal);
