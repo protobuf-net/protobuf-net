@@ -20,6 +20,11 @@ namespace ProtoBuf
         /// <param name="context">Additional context about this serialization operation</param>
         public static ProtoReader Create(out State state, ReadOnlySequence<byte> source, TypeModel model, SerializationContext context = null)
         {
+            if(source.IsSingleSegment)
+            {
+                return Create(out state, source.First, model, context);
+            }
+
             var reader = StatefulReadOnlySequenceProtoReader.GetRecycled()
                 ?? new StatefulReadOnlySequenceProtoReader();
             reader.Init(out state, source, model, context);
