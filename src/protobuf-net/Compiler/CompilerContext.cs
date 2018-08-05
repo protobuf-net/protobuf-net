@@ -6,6 +6,7 @@ using ProtoBuf.Meta;
 using ProtoBuf.Serializers;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Collections.Generic;
 
 namespace ProtoBuf.Compiler
 {
@@ -254,6 +255,9 @@ namespace ProtoBuf.Compiler
             TraceCompile(">> " + traceName);
         }
 
+        readonly OpCode? _state;
+        readonly OpCode _readerWriter;
+
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
         {
             MetadataVersion = ILVersion.Net2;
@@ -267,11 +271,14 @@ namespace ProtoBuf.Compiler
             {
                 returnType = typeof(void);
                 paramTypes = new Type[] { typeof(object), typeof(ProtoWriter) };
+                _readerWriter = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
             }
             else
             {
                 returnType = typeof(object);
-                paramTypes = new Type[] { typeof(object), typeof(ProtoReader) };
+                paramTypes = new Type[] { typeof(object), ProtoReader.State.ByRefType, typeof(ProtoReader) };
+                _state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
+                _readerWriter = isStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3;
             }
             int uniqueIdentifier;
 #if PLAT_NO_INTERLOCKED
@@ -389,12 +396,21 @@ namespace ProtoBuf.Compiler
             }
             locals.Add(value); // create a new slot
         }
-
-        public void LoadReaderWriter()
+        public void LoadWriter()
         {
-            Emit(isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2);
+            if (!isWriter) throw new InvalidOperationException("Tried to load writer, but was a reader");
+            Emit(_readerWriter);
+        }
+        public void LoadReader()
+        {
+            if (isWriter) throw new InvalidOperationException("Tried to load reader, but was a writer");
+            Emit(_readerWriter);
         }
 
+        public void LoadState()
+        {
+            if (_state != null) Emit(_state.GetValueOrDefault());
+        }
         public void StoreValue(Local local)
         {
             if (local == this.InputValue)
@@ -466,29 +482,57 @@ namespace ProtoBuf.Compiler
             return result;
         }
 
-        internal void EmitBasicRead(string methodName, Type expectedType)
+        static class ReadMethods<T>
         {
-            MethodInfo method = MapType(typeof(ProtoReader)).GetMethod(
-                methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            if (method == null || method.ReturnType != expectedType
-                || method.GetParameters().Length != 0)
+            static readonly Dictionary<string, MethodInfo> s_helperMethods;
+            static ReadMethods()
             {
-                throw new ArgumentException(nameof(methodName));
+                s_helperMethods = new Dictionary<string, MethodInfo>(StringComparer.Ordinal);
+                foreach (var method in typeof(T).GetMethods(
+                    BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static))
+                {
+                    if (method.IsDefined(typeof(ObsoleteAttribute), true)) continue;
+                    var p = method.GetParameters();
+                    if (method.IsStatic)
+                    {
+                        if (p.Length == 2 && p[0].ParameterType == ProtoReader.State.ByRefType
+                            && p[1].ParameterType == typeof(ProtoReader))
+                            s_helperMethods.Add(method.Name, method);
+                    }
+                    else if(typeof(T) == typeof(ProtoReader))
+                    {
+                        if (p.Length == 1 && p[0].ParameterType == ProtoReader.State.ByRefType)
+                            s_helperMethods.Add(method.Name, method);
+                    }
+                }
             }
-            LoadReaderWriter();
-            EmitCall(method);
+
+            internal static bool Find(string methodName, out MethodInfo method)
+                => s_helperMethods.TryGetValue(methodName, out method);
         }
 
-        internal void EmitBasicRead(Type helperType, string methodName, Type expectedType)
+        internal void EmitBasicRead(string methodName, Type expectedType)
+            => EmitBasicRead<ProtoReader>(methodName, expectedType);
+        internal void EmitBasicRead<T>(string methodName, Type expectedType)
         {
-            MethodInfo method = helperType.GetMethod(
-                methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (method == null || method.ReturnType != expectedType
-                || method.GetParameters().Length != 1)
+            if(!ReadMethods<T>.Find(methodName, out var method))
             {
-                throw new ArgumentException(nameof(methodName));
+                throw new ArgumentException($"No suitable '{methodName}' method found on {typeof(T).Name}");
             }
-            LoadReaderWriter();
+            if (method.ReturnType != expectedType)
+            {
+                throw new ArgumentException($"Method '{methodName}' has wrong return type; got {method.ReturnType.Name}, expected {expectedType.Name}");
+            }
+            if (method.IsStatic)
+            {
+                LoadState();
+                LoadReader();
+            }
+            else
+            {
+                LoadReader();
+                LoadState();
+            }
             EmitCall(method);
         }
 
@@ -496,7 +540,7 @@ namespace ProtoBuf.Compiler
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             LoadValue(fromValue);
-            LoadReaderWriter();
+            LoadWriter();
             EmitCall(GetWriterMethod(methodName));
         }
 
@@ -518,9 +562,9 @@ namespace ProtoBuf.Compiler
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             MethodInfo method = helperType.GetMethod(
                 methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (method == null || method.ReturnType != MapType(typeof(void))) throw new ArgumentException("methodName");
+            if (method == null || method.ReturnType != MapType(typeof(void))) throw new ArgumentException(nameof(methodName));
             LoadValue(valueFrom);
-            LoadReaderWriter();
+            LoadWriter();
             EmitCall(method);
         }
 
@@ -528,8 +572,7 @@ namespace ProtoBuf.Compiler
 
         public void EmitCall(MethodInfo method, Type targetType)
         {
-            Helpers.DebugAssert(method != null);
-            MemberInfo member = method;
+            MemberInfo member = method ?? throw new ArgumentNullException(nameof(method));
             CheckAccessibility(ref member);
             OpCode opcode;
             if (method.IsStatic || Helpers.IsValueType(method.DeclaringType))
@@ -1408,7 +1451,8 @@ namespace ProtoBuf.Compiler
 
         internal void LoadSerializationContext()
         {
-            LoadReaderWriter();
+            if (isWriter) LoadWriter();
+            else LoadReader();
             LoadValue((isWriter ? typeof(ProtoWriter) : typeof(ProtoReader)).GetProperty("Context"));
         }
 

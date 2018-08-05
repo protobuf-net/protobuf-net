@@ -434,17 +434,17 @@ namespace ProtoBuf
         public static object ReadObject(object value, int key, ProtoReader reader)
         {
             State state = default;
-            return ReadTypedObject(ref state, value, key, reader, null);
+            return ReadTypedObject(value, key, ref state, reader, null);
         }
 
         /// <summary>
         /// Reads (merges) a sub-message from the stream, internally calling StartSubItem and EndSubItem, and (in between)
         /// parsing the message in accordance with the model associated with the reader
         /// </summary>
-        public static object ReadObject(ref State state, object value, int key, ProtoReader reader)
-            => ReadTypedObject(ref state, value, key, reader, null);
+        public static object ReadObject(object value, int key, ref State state, ProtoReader reader)
+            => ReadTypedObject(value, key, ref state, reader, null);
 
-        internal static object ReadTypedObject(ref State state, object value, int key, ProtoReader reader, Type type)
+        internal static object ReadTypedObject(object value, int key, ref State state, ProtoReader reader, Type type)
         {
             if (reader._model == null)
             {
@@ -809,7 +809,7 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
         /// </summary>
-        public static byte[] AppendBytes(ref State state, byte[] value, ProtoReader reader)
+        public static byte[] AppendBytes(byte[] value, ref State state, ProtoReader reader)
             => reader.AppendBytes(ref state, value);
 
         private protected byte[] AppendBytes(ref State state, byte[] value)
@@ -1184,7 +1184,7 @@ namespace ProtoBuf
                     ProtoWriter.WriteInt64(ReadInt64(ref state), writer);
                     return;
                 case WireType.String:
-                    ProtoWriter.WriteBytes(AppendBytes(ref state, null, this), writer);
+                    ProtoWriter.WriteBytes(AppendBytes(null, ref state, this), writer);
                     return;
                 case WireType.StartGroup:
                     SubItemToken readerToken = StartSubItem(ref state, this),

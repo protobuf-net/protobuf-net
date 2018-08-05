@@ -9,6 +9,8 @@ namespace ProtoBuf
         /// </summary>
         public ref struct State
         {
+            internal static readonly Type ByRefType = typeof(State).MakeByRefType();
+            internal static readonly Type[] ByRefTypeArray = new[] { ByRefType };
             internal SolidState Solidify() => default;
         }
 

@@ -16,7 +16,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom) { EmitWrite(ctx, valueFrom); }
         protected abstract void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom);
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom) { EmitRead(ctx, valueFrom); }
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity) { EmitRead(ctx, entity); }
         protected abstract void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom);
 #endif
     }

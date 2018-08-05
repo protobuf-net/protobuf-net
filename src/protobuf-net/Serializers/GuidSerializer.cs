@@ -27,12 +27,12 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)), "WriteGuid", valueFrom);
+            ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)), nameof(BclHelpers.WriteGuid), valueFrom);
         }
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)), "ReadGuid", ExpectedType);
+            ctx.EmitBasicRead<BclHelpers>(nameof(BclHelpers.ReadGuid), ExpectedType);
         }
 #endif
 

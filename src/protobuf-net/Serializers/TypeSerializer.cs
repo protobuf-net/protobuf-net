@@ -432,7 +432,7 @@ namespace ProtoBuf.Serializers
                 if (isExtensible)
                 {
                     ctx.LoadValue(loc);
-                    ctx.LoadReaderWriter();
+                    ctx.LoadWriter();
                     ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("AppendExtensionData"));
                 }
                 // post-callbacks
@@ -621,17 +621,19 @@ namespace ProtoBuf.Serializers
                 }
 
                 EmitCreateIfNull(ctx, loc);
-                ctx.LoadReaderWriter();
+                ctx.LoadReader();
+                ctx.LoadState();
                 if (isExtensible)
                 {
                     ctx.LoadValue(loc);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("AppendExtensionData"));
+                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("AppendExtensionData",
+                        new[] { ProtoReader.State.ByRefType, typeof(IExtensible) }));
                 }
                 else
                 {
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField"));
+                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField",
+                        ProtoReader.State.ByRefTypeArray));
                 }
-
                 ctx.MarkLabel(@continue);
                 ctx.EmitBasicRead("ReadFieldHeader", ctx.MapType(typeof(int)));
                 ctx.CopyValue();
@@ -678,10 +680,12 @@ namespace ProtoBuf.Serializers
                     ctx.BranchIfTrue(allDone, false); // not null, but of the correct type
 
                     // otherwise, need to convert it
-                    ctx.LoadReaderWriter();
+                    ctx.LoadReader();
                     ctx.LoadValue(loc);
                     ((IProtoTypeSerializer)serializer).EmitCreateInstance(ctx);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("Merge"));
+
+                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("Merge",
+                        new[] { typeof(ProtoReader), typeof(object), typeof(object)}));
                     ctx.Cast(expected);
                     ctx.StoreValue(loc); // Merge always returns a value
 
@@ -760,7 +764,7 @@ namespace ProtoBuf.Serializers
             {
                 // track root object creation
                 ctx.CopyValue();
-                ctx.LoadReaderWriter();
+                ctx.LoadReader();
                 ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("NoteObject",
                         BindingFlags.Static | BindingFlags.Public));
             }

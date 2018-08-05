@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+﻿#pragma warning disable RCS1165
+using ProtoBuf.Meta;
 using System;
 #if FEAT_COMPILER
 using ProtoBuf.Compiler;
@@ -156,11 +157,11 @@ namespace ProtoBuf.Serializers
 
                     ctx.LoadValue(fieldNumber);
                     ctx.LoadValue((int)wireType);
-                    ctx.LoadReaderWriter();
+                    ctx.LoadWriter();
                     ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("WriteFieldHeader"));
 
                     ctx.LoadNullRef();
-                    ctx.LoadReaderWriter();
+                    ctx.LoadWriter();
                     ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("StartSubItem"));
                     ctx.StoreValue(token);
 
@@ -173,7 +174,7 @@ namespace ProtoBuf.Serializers
                     ctx.WriteNullCheckedTail(typeof(TValue), Tail, null);
 
                     ctx.LoadValue(token);
-                    ctx.LoadReaderWriter();
+                    ctx.LoadWriter();
                     ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("EndSubItem"));
 
                     ctx.MarkLabel(@next);
@@ -231,8 +232,10 @@ namespace ProtoBuf.Serializers
                 }
 
                 // token = ProtoReader.StartSubItem(reader);
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem"));
+                ctx.LoadState();
+                ctx.LoadReader();
+                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem",
+                    new[] { ProtoReader.State.ByRefType, typeof(ProtoReader) }));
                 ctx.StoreValue(token);
 
                 Compiler.CodeLabel @continue = ctx.DefineLabel(), processField = ctx.DefineLabel();
@@ -247,8 +250,9 @@ namespace ProtoBuf.Serializers
 
                 // case 0: default: reader.SkipField();
                 ctx.MarkLabel(@default);
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField"));
+                ctx.LoadReader();
+                ctx.LoadState();
+                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField", ProtoReader.State.ByRefTypeArray));
                 ctx.Branch(@continue, false);
 
                 // case 1: key = ...
@@ -272,7 +276,7 @@ namespace ProtoBuf.Serializers
 
                 // ProtoReader.EndSubItem(token, reader);
                 ctx.LoadValue(token);
-                ctx.LoadReaderWriter();
+                ctx.LoadReader();
                 ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem"));
 
                 // list[key] = value;
@@ -282,9 +286,11 @@ namespace ProtoBuf.Serializers
                 ctx.EmitCall(indexerSet);
 
                 // while reader.TryReadFieldReader(fieldNumber)
-                ctx.LoadReaderWriter();
+                ctx.LoadReader();
+                ctx.LoadState();
                 ctx.LoadValue(this.fieldNumber);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("TryReadFieldHeader"));
+                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("TryReadFieldHeader",
+                    new[] { ProtoReader.State.ByRefType, typeof(int) }));
                 ctx.BranchIfTrue(redoFromStart, false);
 
                 if (ReturnsValue)
@@ -296,3 +302,4 @@ namespace ProtoBuf.Serializers
 #endif
     }
 }
+#pragma warning restore RCS1165

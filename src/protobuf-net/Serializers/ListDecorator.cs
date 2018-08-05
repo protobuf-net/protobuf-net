@@ -186,12 +186,12 @@ namespace ProtoBuf.Serializers
                 Compiler.CodeLabel readPacked = packedWireType == WireType.None ? new Compiler.CodeLabel() : ctx.DefineLabel();
                 if (packedWireType != WireType.None)
                 {
-                    ctx.LoadReaderWriter();
+                    ctx.LoadReader();
                     ctx.LoadValue(typeof(ProtoReader).GetProperty("WireType"));
                     ctx.LoadValue((int)WireType.String);
                     ctx.BranchIfEqual(readPacked, false);
                 }
-                ctx.LoadReaderWriter();
+                ctx.LoadReader();
                 ctx.LoadValue(typeof(ProtoReader).GetProperty("FieldNumber"));
                 ctx.StoreValue(fieldNumber);
 
@@ -200,9 +200,11 @@ namespace ProtoBuf.Serializers
 
                 EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
 
-                ctx.LoadReaderWriter();
+                ctx.LoadReader();
+                ctx.LoadState();
                 ctx.LoadValue(fieldNumber);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("TryReadFieldHeader"));
+                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("TryReadFieldHeader",
+                    new[] { ProtoReader.State.ByRefType, typeof(int) }));
                 ctx.BranchIfTrue(@continue, false);
 
                 if (packedWireType != WireType.None)
@@ -211,13 +213,15 @@ namespace ProtoBuf.Serializers
                     ctx.Branch(allDone, false);
                     ctx.MarkLabel(readPacked);
 
-                    ctx.LoadReaderWriter();
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem"));
+                    ctx.LoadState();
+                    ctx.LoadReader();                    
+                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem",
+                        new[] { ProtoReader.State.ByRefType, typeof(ProtoReader) }));
 
                     Compiler.CodeLabel testForData = ctx.DefineLabel(), noMoreData = ctx.DefineLabel();
                     ctx.MarkLabel(testForData);
                     ctx.LoadValue((int)packedWireType);
-                    ctx.LoadReaderWriter();
+                    ctx.LoadReader();
                     ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("HasSubValue"));
                     ctx.BranchIfFalse(noMoreData, false);
 
@@ -225,7 +229,7 @@ namespace ProtoBuf.Serializers
                     ctx.Branch(testForData, false);
 
                     ctx.MarkLabel(noMoreData);
-                    ctx.LoadReaderWriter();
+                    ctx.LoadReader();
                     ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem"));
                     ctx.MarkLabel(allDone);
                 }
@@ -421,16 +425,16 @@ namespace ProtoBuf.Serializers
                     {
                         ctx.LoadValue(fieldNumber);
                         ctx.LoadValue((int)WireType.String);
-                        ctx.LoadReaderWriter();
+                        ctx.LoadWriter();
                         ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("WriteFieldHeader"));
 
                         ctx.LoadValue(list);
-                        ctx.LoadReaderWriter();
+                        ctx.LoadWriter();
                         ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("StartSubItem"));
                         ctx.StoreValue(token);
 
                         ctx.LoadValue(fieldNumber);
-                        ctx.LoadReaderWriter();
+                        ctx.LoadWriter();
                         ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("SetPackedField"));
                     }
 
@@ -462,7 +466,7 @@ namespace ProtoBuf.Serializers
                     if (writePacked)
                     {
                         ctx.LoadValue(token);
-                        ctx.LoadReaderWriter();
+                        ctx.LoadWriter();
                         ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("EndSubItem"));
                     }
                 }

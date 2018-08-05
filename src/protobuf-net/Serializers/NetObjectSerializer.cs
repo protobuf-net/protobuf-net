@@ -27,7 +27,7 @@ namespace ProtoBuf.Serializers
 
         public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
-            return BclHelpers.ReadNetObject(ref state, value, source, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
+            return BclHelpers.ReadNetObject(value, ref state, source, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
         }
 
         public void Write(object value, ProtoWriter dest)
@@ -40,19 +40,22 @@ namespace ProtoBuf.Serializers
         {
             ctx.LoadValue(entity);
             ctx.CastToObject(ExpectedType);
-            ctx.LoadReaderWriter();
+            ctx.LoadState();
+            ctx.LoadReader();
             ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
             if (ExpectedType == ctx.MapType(typeof(object))) ctx.LoadNullRef();
             else ctx.LoadValue(ExpectedType);
             ctx.LoadValue((int)options);
-            ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("ReadNetObject"));
+            ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("ReadNetObject",
+                new[] { typeof(object), ProtoReader.State.ByRefType, typeof(ProtoReader),
+                typeof(int), typeof(Type), typeof(BclHelpers.NetObjectOptions)}));
             ctx.CastFromObject(ExpectedType);
         }
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue(valueFrom);
             ctx.CastToObject(ExpectedType);
-            ctx.LoadReaderWriter();
+            ctx.LoadWriter();
             ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
             ctx.LoadValue((int)options);
             ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("WriteNetObject"));

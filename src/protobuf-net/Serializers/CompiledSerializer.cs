@@ -60,7 +60,7 @@ namespace ProtoBuf.Serializers
 
         object IProtoSerializer.Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
-            return deserializer(ref state, value, source);
+            return deserializer(value, ref state, source);
         }
 
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

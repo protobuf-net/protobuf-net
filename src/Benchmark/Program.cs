@@ -27,6 +27,7 @@ namespace Benchmark
 
         private static void Main()
         {
+            //RuntimeTypeModel.Default.AutoCompile = true;
             //ParseNWind();
             //TestWriteRead();
             Console.WriteLine(BenchmarkRunner.Run<Benchmarks>());
@@ -37,7 +38,8 @@ namespace Benchmark
             b.Setup();
             using (var reader = b.ReadROS(out var state))
             {
-                // var dal = b.Model.Deserialize(reader, null, typeof(DAL.Database));
+                var dal = (DAL.Database)b.Model.Deserialize(ref state, reader, null, typeof(DAL.Database));
+                Console.WriteLine(dal.Orders.Count);
 
                 /*
 0A = field 1, type String           == Database.Orders
@@ -50,19 +52,19 @@ payload = ...
 12 = field 2, type String           == Order.CustomerID
 05 = length 5
                  */
-                int field = reader.ReadFieldHeader(ref state);
-                Console.WriteLine($"field {field}, {reader.WireType}");
-                var tok = ProtoReader.StartSubItem(ref state, reader);
-                Console.WriteLine(tok.ToString());
-                field = reader.ReadFieldHeader(ref state);
-                Console.WriteLine($"field {field}, {reader.WireType}");
-                Console.WriteLine($"OrderID = {reader.ReadInt32(ref state)}");
-                field = reader.ReadFieldHeader(ref state);
-                Console.WriteLine($"field {field}, {reader.WireType}");
-                Console.WriteLine($"CustomerID = {reader.ReadString(ref state)}");
-                while (reader.ReadFieldHeader(ref state) != 0)
-                    reader.SkipField(ref state);
-                ProtoReader.EndSubItem(tok, reader);
+                //int field = reader.ReadFieldHeader(ref state);
+                //Console.WriteLine($"field {field}, {reader.WireType}");
+                //var tok = ProtoReader.StartSubItem(ref state, reader);
+                //Console.WriteLine(tok.ToString());
+                //field = reader.ReadFieldHeader(ref state);
+                //Console.WriteLine($"field {field}, {reader.WireType}");
+                //Console.WriteLine($"OrderID = {reader.ReadInt32(ref state)}");
+                //field = reader.ReadFieldHeader(ref state);
+                //Console.WriteLine($"field {field}, {reader.WireType}");
+                //Console.WriteLine($"CustomerID = {reader.ReadString(ref state)}");
+                //while (reader.ReadFieldHeader(ref state) != 0)
+                //    reader.SkipField(ref state);
+                //ProtoReader.EndSubItem(tok, reader);
             }
         }
         private static void TestWriteRead()

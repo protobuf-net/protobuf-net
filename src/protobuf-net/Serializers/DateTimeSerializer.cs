@@ -54,7 +54,7 @@ namespace ProtoBuf.Serializers
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (wellKnown) ctx.LoadValue(entity);
-            ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)),
+            ctx.EmitBasicRead<BclHelpers>(
                 wellKnown ? nameof(BclHelpers.ReadTimestamp) : nameof(BclHelpers.ReadDateTime),
                 ExpectedType);
         }

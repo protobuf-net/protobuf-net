@@ -24,7 +24,7 @@ namespace ProtoBuf.Serializers
 
         public object Read(ref ProtoReader.State state, object value, ProtoReader source)
         {
-            return ProtoReader.AppendBytes(ref state, overwriteList ? null : (byte[])value, source);
+            return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, ref state, source);
         }
 
         public void Write(object value, ProtoWriter dest)
@@ -39,7 +39,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteBytes", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (overwriteList)
             {
@@ -47,11 +47,13 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                ctx.LoadValue(valueFrom);
+                ctx.LoadValue(entity);
             }
-            ctx.LoadReaderWriter();
+            ctx.LoadState();
+            ctx.LoadReader();
             ctx.EmitCall(ctx.MapType(typeof(ProtoReader))
-               .GetMethod("AppendBytes"));
+               .GetMethod(nameof(ProtoReader.AppendBytes),
+               new[] { typeof(byte[]), ProtoReader.State.ByRefType, typeof(ProtoReader)}));
         }
 #endif
     }

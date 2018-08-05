@@ -18,8 +18,9 @@ namespace ProtoBuf
     /// Provides support for common .NET types that do not have a direct representation
     /// in protobuf, using the definitions from bcl.proto
     /// </summary>
-    public static class BclHelpers
+    public class BclHelpers // should really be static, but I'm cheating with a <T>
     {
+        private BclHelpers() { }
         /// <summary>
         /// Creates a new instance of the specified type, bypassing the constructor.
         /// </summary>
@@ -602,13 +603,13 @@ namespace ProtoBuf
         public static object ReadNetObject(object value, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
             ProtoReader.State state = default;
-            return ReadNetObject(ref state, value, source, key, type, options);
+            return ReadNetObject(value, ref state, source, key, type, options);
         }
 
         /// <summary>
         /// Reads an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        public static object ReadNetObject(ref ProtoReader.State state, object value, ProtoReader source, int key, Type type, NetObjectOptions options)
+        public static object ReadNetObject(object value, ref ProtoReader.State state, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
             SubItemToken token = ProtoReader.StartSubItem(ref state, source);
             int fieldNumber;
@@ -674,7 +675,7 @@ namespace ProtoBuf
                         }
                         else
                         {
-                            value = ProtoReader.ReadTypedObject(ref state, oldValue, key, source, type);
+                            value = ProtoReader.ReadTypedObject(oldValue, key, ref state, source, type);
                         }
 
                         if (newObjectKey >= 0)

@@ -30,7 +30,7 @@ namespace ProtoBuf.Serializers
             ctx.EmitBasicWrite("WriteDouble", valueFrom);
         }
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadDouble", ExpectedType);
         }

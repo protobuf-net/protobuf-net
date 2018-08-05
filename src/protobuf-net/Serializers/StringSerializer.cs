@@ -27,7 +27,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteString", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadString", ExpectedType);
         }

@@ -1178,7 +1178,7 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.DateTime: value = BclHelpers.ReadDateTime(ref state, reader); continue;
                     case ProtoTypeCode.Decimal: value = BclHelpers.ReadDecimal(ref state, reader); continue;
                     case ProtoTypeCode.String: value = reader.ReadString(ref state); continue;
-                    case ProtoTypeCode.ByteArray: value = ProtoReader.AppendBytes(ref state, (byte[])value, reader); continue;
+                    case ProtoTypeCode.ByteArray: value = ProtoReader.AppendBytes((byte[])value, ref state, reader); continue;
                     case ProtoTypeCode.TimeSpan: value = BclHelpers.ReadTimeSpan(ref state, reader); continue;
                     case ProtoTypeCode.Guid: value = BclHelpers.ReadGuid(ref state, reader); continue;
                     case ProtoTypeCode.Uri: value = new Uri(reader.ReadString(ref state), UriKind.RelativeOrAbsolute); continue;

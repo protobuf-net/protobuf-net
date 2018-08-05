@@ -1264,7 +1264,7 @@ namespace ProtoBuf.Meta
                 {
                     il.Emit(OpCodes.Ldarg_2);
                     il.Emit(OpCodes.Ldarg_3);
-                    il.EmitCall(OpCodes.Call, EmitBoxedSerializer(type, i, keyType, methodPairs, this, ilVersion, assemblyName), null);
+                    il.EmitCall(OpCodes.Call, EmitBoxedDeserializer(type, i, keyType, methodPairs, this, ilVersion, assemblyName), null);
                     ctx.Return();
                 }
                 else
@@ -1444,7 +1444,7 @@ namespace ProtoBuf.Meta
 ,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     metaType.Type, new Type[] { metaType.Type, MapType(typeof(ProtoReader)) });
-
+                
                 SerializerPair pair = new SerializerPair(
                     GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
                     writeMethod, readMethod, writeMethod.GetILGenerator(), readMethod.GetILGenerator());
@@ -1575,11 +1575,12 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private static MethodBuilder EmitBoxedSerializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName)
+        private static MethodBuilder EmitBoxedDeserializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName)
         {
             MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i.ToString(), MethodAttributes.Static, CallingConventions.Standard,
-                model.MapType(typeof(object)), new Type[] { model.MapType(typeof(object)), model.MapType(typeof(ProtoReader)) });
+                model.MapType(typeof(object)),
+                new Type[] { model.MapType(typeof(object)), ProtoReader.State.ByRefType, model.MapType(typeof(ProtoReader)) });
             Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName, model.MapType(typeof(object)), "BoxedSerializer " + valueType.Name);
             ctx.LoadValue(ctx.InputValue);
             Compiler.CodeLabel @null = ctx.DefineLabel();
@@ -1588,7 +1589,8 @@ namespace ProtoBuf.Meta
             Type mappedValueType = valueType;
             ctx.LoadValue(ctx.InputValue);
             ctx.CastFromObject(mappedValueType);
-            ctx.LoadReaderWriter();
+            ctx.LoadState();
+            ctx.LoadReader();
             ctx.EmitCall(dedicated);
             ctx.CastToObject(mappedValueType);
             ctx.Return();
@@ -1600,7 +1602,8 @@ namespace ProtoBuf.Meta
                 ctx.LoadAddress(typedVal, mappedValueType);
                 ctx.EmitCtor(mappedValueType);
                 ctx.LoadValue(typedVal);
-                ctx.LoadReaderWriter();
+                ctx.LoadState();
+                ctx.LoadReader();
                 ctx.EmitCall(dedicated);
                 ctx.CastToObject(mappedValueType);
                 ctx.Return();

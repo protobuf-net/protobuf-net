@@ -39,8 +39,10 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local token = new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))))
             using (Compiler.Local field = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
             {
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem"));
+                ctx.LoadState();
+                ctx.LoadReader();
+                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem",
+                    new[] { ProtoReader.State.ByRefType, typeof(ProtoReader)}));
                 ctx.StoreValue(token);
 
                 Compiler.CodeLabel next = ctx.DefineLabel(), processField = ctx.DefineLabel(), end = ctx.DefineLabel();
@@ -57,8 +59,9 @@ namespace ProtoBuf.Serializers
                 ctx.BranchIfLess(end, false);
 
                 // default: skip
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField"));
+                ctx.LoadReader();
+                ctx.LoadState();
+                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField", ProtoReader.State.ByRefTypeArray));
                 ctx.Branch(next, true);
 
                 // process
@@ -88,7 +91,7 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(end);
 
                 ctx.LoadValue(token);
-                ctx.LoadReaderWriter();
+                ctx.LoadReader();
                 ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem"));
                 ctx.LoadValue(oldValue); // load the old value
             }
@@ -99,7 +102,7 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local token = new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))))
             {
                 ctx.LoadNullRef();
-                ctx.LoadReaderWriter();
+                ctx.LoadWriter();
                 ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("StartSubItem"));
                 ctx.StoreValue(token);
 
@@ -128,7 +131,7 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(@end);
 
                 ctx.LoadValue(token);
-                ctx.LoadReaderWriter();
+                ctx.LoadReader();
                 ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("EndSubItem"));
             }
         }

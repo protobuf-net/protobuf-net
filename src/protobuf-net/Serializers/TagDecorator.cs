@@ -86,7 +86,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.LoadValue((int)fieldNumber);
             ctx.LoadValue((int)wireType);
-            ctx.LoadReaderWriter();
+            ctx.LoadWriter();
             ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("WriteFieldHeader"));
             Tail.EmitWrite(ctx, valueFrom);
         }
@@ -95,7 +95,7 @@ namespace ProtoBuf.Serializers
         {
             if (strict || NeedsHint)
             {
-                ctx.LoadReaderWriter();
+                ctx.LoadReader();
                 ctx.LoadValue((int)wireType);
                 ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod(strict ? "Assert" : "Hint"));
             }

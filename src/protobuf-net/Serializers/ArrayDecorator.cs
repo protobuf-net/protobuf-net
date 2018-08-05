@@ -77,7 +77,7 @@ namespace ProtoBuf.Serializers
                     {
                         ctx.LoadValue(fieldNumber);
                         ctx.LoadValue((int)WireType.String);
-                        ctx.LoadReaderWriter();
+                        ctx.LoadWriter();
                         ctx.EmitCall(mappedWriter.GetMethod("WriteFieldHeader"));
 
                         if (fixedLengthPacked)
@@ -85,18 +85,18 @@ namespace ProtoBuf.Serializers
                             // write directly - no need for buffering
                             ctx.LoadLength(arr, false);
                             ctx.LoadValue((int)packedWireType);
-                            ctx.LoadReaderWriter();
+                            ctx.LoadWriter();
                             ctx.EmitCall(mappedWriter.GetMethod("WritePackedPrefix"));
                         }
                         else
                         {
                             ctx.LoadValue(arr);
-                            ctx.LoadReaderWriter();
+                            ctx.LoadWriter();
                             ctx.EmitCall(mappedWriter.GetMethod("StartSubItem"));
                             ctx.StoreValue(token);
                         }
                         ctx.LoadValue(fieldNumber);
-                        ctx.LoadReaderWriter();
+                        ctx.LoadWriter();
                         ctx.EmitCall(mappedWriter.GetMethod("SetPackedField"));
                     }
                     EmitWriteArrayLoop(ctx, i, arr);
@@ -106,13 +106,13 @@ namespace ProtoBuf.Serializers
                         if (fixedLengthPacked)
                         {
                             ctx.LoadValue(fieldNumber);
-                            ctx.LoadReaderWriter();
+                            ctx.LoadWriter();
                             ctx.EmitCall(mappedWriter.GetMethod("ClearPackedField"));
                         }
                         else
                         {
                             ctx.LoadValue(token);
-                            ctx.LoadReaderWriter();
+                            ctx.LoadWriter();
                             ctx.EmitCall(mappedWriter.GetMethod("EndSubItem"));
                         }
                     }

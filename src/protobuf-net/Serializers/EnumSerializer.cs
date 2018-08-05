@@ -162,7 +162,7 @@ namespace ProtoBuf.Serializers
                         ctx.Branch(@continue, false);
                         ctx.MarkLabel(tryNextValue);
                     }
-                    ctx.LoadReaderWriter();
+                    ctx.LoadWriter();
                     ctx.LoadValue(loc);
                     ctx.CastToObject(ExpectedType);
                     ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("ThrowEnumException"));
@@ -230,7 +230,7 @@ namespace ProtoBuf.Serializers
                         ctx.MarkLabel(tryNextGroup);
                     }
                     // throw source.CreateEnumException(ExpectedType, wireValue);
-                    ctx.LoadReaderWriter();
+                    ctx.LoadReader();
                     ctx.LoadValue(ExpectedType);
                     ctx.LoadValue(wireValue);
                     ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("ThrowEnumException"));
