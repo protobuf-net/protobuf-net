@@ -96,9 +96,9 @@ namespace ProtoBuf
 
         private protected enum Read32VarintMode
         {
-            FieldHeader,
-            Unsigned,
             Signed,
+            Unsigned,
+            FieldHeader,
         }
 
         private uint ReadUInt32Varint(ref State state, Read32VarintMode mode)
@@ -109,7 +109,7 @@ namespace ProtoBuf
                 if (mode == Read32VarintMode.FieldHeader) return 0;
                 ThrowEoF(this);
             }
-            ImplSkipBytes(ref state, read, false);
+            ImplSkipBytes(ref state, read);
             return value;
         }
 
@@ -120,7 +120,7 @@ namespace ProtoBuf
             {
                 ThrowEoF(this);
             }
-            ImplSkipBytes(ref state, read, false);
+            ImplSkipBytes(ref state, read);
             return value;
         }
 
@@ -560,7 +560,7 @@ namespace ProtoBuf
             var read = ImplTryReadUInt32VarintWithoutMoving(ref state, Read32VarintMode.FieldHeader, out uint tag);
             if (read != 0)
             {
-                ImplSkipBytes(ref state, read, true);
+                ImplSkipBytes(ref state, read);
                 WireType = (WireType)(tag & 7);
                 _fieldNumber = (int)(tag >> 3);
                 if (_fieldNumber < 1) throw new ProtoException("Invalid field in source data: " + _fieldNumber.ToString());
@@ -605,7 +605,7 @@ namespace ProtoBuf
             {
                 WireType = tmpWireType;
                 _fieldNumber = field;
-                ImplSkipBytes(ref state, read, true);
+                ImplSkipBytes(ref state, read);
                 return true;
             }
             return false;
@@ -651,7 +651,7 @@ namespace ProtoBuf
             }
         }
 
-        private protected abstract void ImplSkipBytes(ref State state, long count, bool preservePreviewField);
+        private protected abstract void ImplSkipBytes(ref State state, long count);
 
         /// <summary>
         /// Discards the data for the current field.
@@ -671,14 +671,14 @@ namespace ProtoBuf
             switch (WireType)
             {
                 case WireType.Fixed32:
-                    ImplSkipBytes(ref state, 4, false);
+                    ImplSkipBytes(ref state, 4);
                     return;
                 case WireType.Fixed64:
-                    ImplSkipBytes(ref state, 8, false);
+                    ImplSkipBytes(ref state, 8);
                     return;
                 case WireType.String:
                     long len = (long)ReadUInt64Varint(ref state);
-                    ImplSkipBytes(ref state, len, false);
+                    ImplSkipBytes(ref state, len);
                     return;
                 case WireType.Variant:
                 case WireType.SignedVariant:

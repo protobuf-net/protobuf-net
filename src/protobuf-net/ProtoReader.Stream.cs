@@ -385,7 +385,7 @@ namespace ProtoBuf
                 lastReader = this;
             }
 
-            private protected override void ImplSkipBytes(ref State state, long count, bool preservePreviewField)
+            private protected override void ImplSkipBytes(ref State state, long count)
             {
                 if (_available < count && count < 128)
                 {

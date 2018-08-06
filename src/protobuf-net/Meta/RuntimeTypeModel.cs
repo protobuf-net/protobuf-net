@@ -428,7 +428,7 @@ namespace ProtoBuf.Meta
             {
                 if (metaType.Type == type)
                 {
-                    if (metaType.Pending) WaitOnLock(metaType);
+                    if (metaType.Pending) WaitOnLock();
                     return metaType;
                 }
             }
@@ -451,7 +451,7 @@ namespace ProtoBuf.Meta
             return ((BasicType)value).Type == (Type)ctx;
         }
 
-        private void WaitOnLock(MetaType type)
+        private void WaitOnLock()
         {
             int opaqueToken = 0;
             try
@@ -511,7 +511,7 @@ namespace ProtoBuf.Meta
                 metaType = (MetaType)types[key];
                 if (metaType.Pending)
                 {
-                    WaitOnLock(metaType);
+                    WaitOnLock();
                 }
                 return key;
             }
@@ -594,7 +594,9 @@ namespace ProtoBuf.Meta
             return key;
         }
 
+#pragma warning disable RCS1163 // Unused parameter.
         private MetaType RecogniseCommonTypes(Type type)
+#pragma warning restore RCS1163 // Unused parameter.
         {
             //            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             //            {
@@ -1444,7 +1446,7 @@ namespace ProtoBuf.Meta
 ,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     metaType.Type, new Type[] { metaType.Type, MapType(typeof(ProtoReader)) });
-                
+
                 SerializerPair pair = new SerializerPair(
                     GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
                     writeMethod, readMethod, writeMethod.GetILGenerator(), readMethod.GetILGenerator());

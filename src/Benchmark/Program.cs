@@ -46,12 +46,12 @@ namespace Benchmark
                 var dal = (DAL.Database)b.Model.Deserialize(ref state, reader, null, typeof(DAL.Database));
                 Console.WriteLine(dal.Orders.Count);
             }
-            using (var reader = b.ReadStatefulROS(out var state))
+            using (var reader = b.ReadROM(out var state))
             {
                 var dal = (DAL.Database)b.Model.Deserialize(ref state, reader, null, typeof(DAL.Database));
                 Console.WriteLine(dal.Orders.Count);
             }
-                /*
+            /*
 0A = field 1, type String           == Database.Orders
 A1-01 = length 161
 payload = ...
@@ -61,30 +61,30 @@ payload = ...
 
 12 = field 2, type String           == Order.CustomerID
 05 = length 5
-                 */
-                //int field = reader.ReadFieldHeader(ref state);
-                //Console.WriteLine($"field {field}, {reader.WireType}");
-                //var tok = ProtoReader.StartSubItem(ref state, reader);
-                //Console.WriteLine(tok.ToString());
-                //field = reader.ReadFieldHeader(ref state);
-                //Console.WriteLine($"field {field}, {reader.WireType}");
-                //Console.WriteLine($"OrderID = {reader.ReadInt32(ref state)}");
-                //field = reader.ReadFieldHeader(ref state);
-                //Console.WriteLine($"field {field}, {reader.WireType}");
-                //Console.WriteLine($"CustomerID = {reader.ReadString(ref state)}");
-                //while (reader.ReadFieldHeader(ref state) != 0)
-                //    reader.SkipField(ref state);
-                //ProtoReader.EndSubItem(tok, reader);
+             */
+            //int field = reader.ReadFieldHeader(ref state);
+            //Console.WriteLine($"field {field}, {reader.WireType}");
+            //var tok = ProtoReader.StartSubItem(ref state, reader);
+            //Console.WriteLine(tok.ToString());
+            //field = reader.ReadFieldHeader(ref state);
+            //Console.WriteLine($"field {field}, {reader.WireType}");
+            //Console.WriteLine($"OrderID = {reader.ReadInt32(ref state)}");
+            //field = reader.ReadFieldHeader(ref state);
+            //Console.WriteLine($"field {field}, {reader.WireType}");
+            //Console.WriteLine($"CustomerID = {reader.ReadString(ref state)}");
+            //while (reader.ReadFieldHeader(ref state) != 0)
+            //    reader.SkipField(ref state);
+            //ProtoReader.EndSubItem(tok, reader);
         }
         private static void TestWriteRead()
         {
             var ms = new MemoryStream();
             Serializer.Serialize(ms, new Foo { Bar = new Bar { Id = 42 } });
             using (var reader = ProtoReader.Create(
+                out var state,
                 new ReadOnlySequence<byte>(ms.GetBuffer(), 0, (int)ms.Length),
                 RuntimeTypeModel.Default))
             {
-                ProtoReader.State state = default;
                 while (reader.ReadFieldHeader(ref state) > 0)
                 {
                     Console.WriteLine($"pos {reader.Position}, field {reader.FieldNumber}, type {reader.WireType}");
@@ -112,11 +112,10 @@ payload = ...
                     }
                 }
             }
-            using (var reader = ProtoReader.Create(
+            using (var reader = ProtoReader.Create(out var state,
                 new ReadOnlySequence<byte>(ms.GetBuffer(), 0, (int)ms.Length),
                 RuntimeTypeModel.Default))
             {
-                ProtoReader.State state = default;
                 var foo = (Foo)RuntimeTypeModel.Default.Deserialize(ref state, reader, null, typeof(Foo));
                 Console.WriteLine(foo.Bar.Id);
             }
@@ -128,15 +127,16 @@ payload = ...
     {
         private MemoryStream _ms;
         private ReadOnlySequence<byte> _ros;
-        public ProtoReader ReadMS(out ProtoReader.State state) => ProtoReader.Create(out state, _ms, Model);
+        public ProtoReader ReadMS(out ProtoReader.State state)
+            => ProtoReader.Create(out state, _ms, Model);
+
         public ProtoReader ReadROS(out ProtoReader.State state)
+            => ProtoReader.Create(out state, _ros, Model);
+
+        public ProtoReader ReadROM(out ProtoReader.State state)
         {
-            state = default;
-            return ProtoReader.Create(_ros, Model);
-        }
-        public ProtoReader ReadStatefulROS(out ProtoReader.State state)
-        {
-            return ProtoReader.Create(out state, _ros, Model);
+            if (!_ros.IsSingleSegment) throw new InvalidOperationException("Expected single segment");
+            return ProtoReader.Create(out state, _ros.First, Model);
         }
 
         public TypeModel Model => RuntimeTypeModel.Default;
@@ -159,7 +159,8 @@ payload = ...
                 GC.KeepAlive(dal);
             }
         }
-        [Benchmark(Description = "ROS")]
+
+        [Benchmark]
         public void ReadOnlySequence()
         {
             using (var reader = ReadROS(out var state))
@@ -168,10 +169,10 @@ payload = ...
                 GC.KeepAlive(dal);
             }
         }
-        [Benchmark(Description = "Stateful ROS")]
-        public void ReadOnlySequence_Stateful()
+        [Benchmark]
+        public void ReadOnlyMemory()
         {
-            using (var reader = ReadStatefulROS(out var state))
+            using (var reader = ReadROM(out var state))
             {
                 var dal = Model.Deserialize(ref state, reader, null, typeof(DAL.Database));
                 GC.KeepAlive(dal);
