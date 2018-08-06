@@ -40,7 +40,9 @@ namespace ProtoBuf
         /// </summary>
         public static T DeepClone<T>(T instance)
         {
+#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
             return instance == null ? instance : (T)RuntimeTypeModel.Default.DeepClone(instance);
+#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
         }
 
         /// <summary>
@@ -86,7 +88,9 @@ namespace ProtoBuf
         /// <param name="destination">The destination stream to write to.</param>
         public static void Serialize<T>(Stream destination, T instance)
         {
+#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
             if (instance != null)
+#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
             {
                 RuntimeTypeModel.Default.Serialize(destination, instance);
             }
@@ -170,7 +174,9 @@ namespace ProtoBuf
         public static void Merge<T>(System.Xml.XmlReader reader, T instance) where T : System.Xml.Serialization.IXmlSerializable
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
+#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
             if (instance == null) throw new ArgumentNullException(nameof(instance));
+#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
 
             const int LEN = 4096;
             byte[] buffer = new byte[LEN];
