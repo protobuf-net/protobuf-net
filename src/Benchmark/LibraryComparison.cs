@@ -6,14 +6,14 @@ using System.IO;
 
 namespace Benchmark
 {
-    [ClrJob, CoreJob, MemoryDiagnoser]
+    [ClrJob, CoreJob]
     public class LibraryComparison
     {
-        //[Benchmark(Baseline = true)]
-        //public protoc.Database Google()
-        //{
-        //    return protoc.Database.Parser.ParseFrom(_data);
-        //}
+        [Benchmark(Baseline = true)]
+        public protoc.Database Google()
+        {
+            return protoc.Database.Parser.ParseFrom(_data);
+        }
 
         private byte[] _data;
 

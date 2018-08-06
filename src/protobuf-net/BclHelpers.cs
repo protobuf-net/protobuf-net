@@ -18,7 +18,7 @@ namespace ProtoBuf
     /// Provides support for common .NET types that do not have a direct representation
     /// in protobuf, using the definitions from bcl.proto
     /// </summary>
-    public class BclHelpers // should really be static, but I'm cheating with a <T>
+    public sealed class BclHelpers // should really be static, but I'm cheating with a <T>
     {
         private BclHelpers() { }
         /// <summary>
@@ -194,6 +194,43 @@ namespace ProtoBuf
         /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
         public static TimeSpan ReadDuration(ref ProtoReader.State state, ProtoReader source)
+        {
+#if PLAT_SPANS
+            if (source.WireType == WireType.String && state.RemainingInCurrent >= 20)
+            {
+                var ts = TryReadDurationFast(ref state, source);
+                if (ts.HasValue) return ts.GetValueOrDefault();
+            }
+#endif
+            return ReadDurationFallback(ref state, source);
+        }
+
+#if PLAT_SPANS
+        private static TimeSpan? TryReadDurationFast(ref ProtoReader.State state, ProtoReader source)
+        {
+            int offset = state.OffsetInCurrent;
+            var span = state.Span;
+            int prefixLength = ProtoReader.State.ParseVarintUInt32(span, offset, out var len);
+            offset += prefixLength;
+            if (len == 0) return TimeSpan.Zero;
+
+            if ((prefixLength + len) > state.RemainingInCurrent) return null; // don't have entire submessage
+
+            if (span[offset] != (1 << 3)) return null; // expected field 1
+            var msgOffset = 1 + ProtoReader.State.TryParseUInt64Varint(span, 1 + offset, out var seconds);
+            ulong nanos = 0;
+            if (msgOffset < len)
+            {
+                if (span[msgOffset++ + offset] != (2 << 3)) return null; // expected field 2
+                msgOffset += ProtoReader.State.TryParseUInt64Varint(span, msgOffset + offset, out nanos);
+            }
+            if (msgOffset != len) return null; // expected no more fields
+            state.Skip(prefixLength + (int)len);
+            source.Advance(prefixLength + len);
+            return FromDurationSeconds((long)seconds, (int)(long)nanos);
+        }
+#endif
+        private static TimeSpan ReadDurationFallback(ref ProtoReader.State state, ProtoReader source)
         {
             long seconds = 0;
             int nanos = 0;

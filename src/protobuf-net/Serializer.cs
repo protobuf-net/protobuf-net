@@ -157,7 +157,9 @@ namespace ProtoBuf
         public static void Serialize<T>(System.Xml.XmlWriter writer, T instance) where T : System.Xml.Serialization.IXmlSerializable
         {
             if (writer == null) throw new ArgumentNullException(nameof(writer));
+#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
             if (instance == null) throw new ArgumentNullException(nameof(instance));
+#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
 
             using (MemoryStream ms = new MemoryStream())
             {

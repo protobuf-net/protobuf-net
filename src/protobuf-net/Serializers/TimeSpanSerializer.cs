@@ -5,9 +5,9 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class TimeSpanSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(TimeSpan);
+        private static readonly Type expectedType = typeof(TimeSpan);
         private readonly bool wellKnown;
-        public TimeSpanSerializer(DataFormat dataFormat, ProtoBuf.Meta.TypeModel model)
+        public TimeSpanSerializer(DataFormat dataFormat)
         {
             wellKnown = dataFormat == DataFormat.WellKnown;
         }

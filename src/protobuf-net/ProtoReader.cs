@@ -139,7 +139,7 @@ namespace ProtoBuf
         public long LongPosition => _longPosition;
         private long _longPosition;
 
-        private protected void Advance(long count) => _longPosition += count;
+        internal void Advance(long count) => _longPosition += count;
 
         /// <summary>
         /// Reads a signed 16-bit integer from the stream: Variant, Fixed32, Fixed64, SignedVariant

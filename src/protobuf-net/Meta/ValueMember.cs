@@ -685,7 +685,7 @@ namespace ProtoBuf.Meta
                     return new UInt16Serializer();
                 case ProtoTypeCode.TimeSpan:
                     defaultWireType = GetDateTimeWireType(dataFormat);
-                    return new TimeSpanSerializer(dataFormat, model);
+                    return new TimeSpanSerializer(dataFormat);
                 case ProtoTypeCode.Guid:
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return new GuidSerializer();
