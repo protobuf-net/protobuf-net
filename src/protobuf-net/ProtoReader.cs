@@ -44,7 +44,7 @@ namespace ProtoBuf
         /// <summary>
         /// Gets / sets a flag indicating whether strings should be checked for repetition; if
         /// true, any repeated UTF-8 byte sequence will result in the same String instance, rather
-        /// than a second instance of the same string. Enabled by default. Note that this uses
+        /// than a second instance of the same string. Disabled by default. Note that this uses
         /// a <i>custom</i> interner - the system-wide string interner is not used.
         /// </summary>
         public bool InternStrings { get; set; }
@@ -327,7 +327,7 @@ namespace ProtoBuf
             if (value.Length == 0) return "";
             if (stringInterner == null)
             {
-                stringInterner = new Dictionary<string, string>
+                stringInterner = new Dictionary<string, string>(StringComparer.Ordinal)
                 {
                     { value, value }
                 };

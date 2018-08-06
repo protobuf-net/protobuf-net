@@ -33,7 +33,7 @@ namespace ProtoBuf.Meta
            OPTIONS_AllowParseableTypes = 64,
            OPTIONS_AutoAddProtoContractTypesOnly = 128,
            OPTIONS_IncludeDateTimeKind = 256,
-           OPTIONS_DoNotInternStrings = 512;
+           OPTIONS_InternStrings = 512;
 
         private bool GetOption(ushort option)
         {
@@ -121,8 +121,8 @@ namespace ProtoBuf.Meta
         /// <remarks>Note this does not use the global .NET string interner</remarks>
         public bool InternStrings
         {
-            get { return !GetOption(OPTIONS_DoNotInternStrings); }
-            set { SetOption(OPTIONS_DoNotInternStrings, !value); }
+            get { return GetOption(OPTIONS_InternStrings); }
+            set { SetOption(OPTIONS_InternStrings, value); }
         }
 
         /// <summary>
