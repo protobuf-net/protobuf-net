@@ -49,7 +49,7 @@ namespace ProtoBuf
             }
 
             private protected override int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value)
-                => ReadOnlySequenceProtoReader.TryParseUInt64Varint(Peek(in state, out var offset), offset, out value, this);
+                => ReadOnlySequenceProtoReader.TryParseUInt64Varint(this, state.OffsetInCurrent, out value, state.Span);
 
             private protected override uint ImplReadUInt32Fixed(ref State state)
                 => BinaryPrimitives.ReadUInt32LittleEndian(Consume(ref state, 4));
@@ -89,18 +89,11 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private ReadOnlySpan<byte> Peek(in State state, int bytes)
+            private ReadOnlySpan<byte> Peek(ref State state, int bytes)
                 => state.Span.Slice(state.OffsetInCurrent, bytes);
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private ReadOnlySpan<byte> Peek(in State state, out int offset)
-            {
-                offset = state.OffsetInCurrent;
-                return state.Span;
-            }
-
             private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
-                => ReadOnlySequenceProtoReader.TryParseUInt32Varint(mode == Read32VarintMode.Signed, Peek(in state, out var offset), offset, out value, this);
+                => ReadOnlySequenceProtoReader.TryParseUInt32Varint(this, state.OffsetInCurrent, mode == Read32VarintMode.Signed, out value, state.Span);
 
             private protected override void ImplSkipBytes(ref State state, long count, bool preservePreviewField)
             {

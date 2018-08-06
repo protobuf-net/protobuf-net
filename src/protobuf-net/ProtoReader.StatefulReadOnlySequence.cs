@@ -89,20 +89,37 @@ namespace ProtoBuf
             {
                 if (GetSomeData(ref state, false) >= 10)
                 {
-                    var read = ReadOnlySequenceProtoReader.TryParseUInt64Varint(Peek(state, out var offset), offset, out value, this);
+                    var read = ReadOnlySequenceProtoReader.TryParseUInt64Varint(this, state.OffsetInCurrent, out value, state.Span);
                     return read;
                 }
                 else
                 {
-                    return ViaStackAlloc(in state, out value);
+                    return ViaStackAlloc(ref state, out value);
                 }
 
-                int ViaStackAlloc(in State s, out ulong val)
+                int ViaStackAlloc(ref State s, out ulong val)
                 {
                     Span<byte> span = stackalloc byte[10];
-                    var read = ImplPeekBytes(in s, span);
-                    if (read != 10) span = span.Slice(0, read);
-                    return ReadOnlySequenceProtoReader.TryParseUInt64Varint(span, 0, out val, this);
+                    Span<byte> target = span;
+
+                    var currentBuffer = Peek(ref s, Math.Min(target.Length, s.RemainingInCurrent));
+                    currentBuffer.CopyTo(target);
+                    int available = currentBuffer.Length;
+                    target = target.Slice(available);
+
+                    var iterCopy = _source;
+                    while (!target.IsEmpty && iterCopy.MoveNext())
+                    {
+                        var nextBuffer = iterCopy.Current.Span;
+                        var take = Math.Min(nextBuffer.Length, target.Length);
+
+                        nextBuffer.Slice(0, take).CopyTo(target);
+                        target = target.Slice(take);
+                        available += take;
+                    }
+
+                    if (available != 10) span = span.Slice(0, available);
+                    return ReadOnlySequenceProtoReader.TryParseUInt64Varint(this, 0, out val, span);
                 }
             }
 
@@ -217,56 +234,43 @@ namespace ProtoBuf
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private ReadOnlySpan<byte> Peek(in State state, int bytes)
+            private ReadOnlySpan<byte> Peek(ref State state, int bytes)
                 => state.Span.Slice(state.OffsetInCurrent, bytes);
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private ReadOnlySpan<byte> Peek(in State state, out int offset)
-            {
-                offset = state.OffsetInCurrent;
-                return state.Span;
-            }
 
             private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
             {
                 if (GetSomeData(ref state, false) >= 10)
                 {
-                    var span = Peek(in state, out var offset);
-                    var read = ReadOnlySequenceProtoReader.TryParseUInt32Varint(mode == Read32VarintMode.Signed, span, offset, out value, this);
+                    var read = ReadOnlySequenceProtoReader.TryParseUInt32Varint(this, state.OffsetInCurrent, mode == Read32VarintMode.Signed, out value, state.Span);
                     return read;
                 }
                 else
                 {
-                    return ViaStackAlloc(in state, mode, out value);
+                    return ViaStackAlloc(ref state, mode, out value);
                 }
-                int ViaStackAlloc(in State s, Read32VarintMode m, out uint val)
+                int ViaStackAlloc(ref State s, Read32VarintMode m, out uint val)
                 {
                     Span<byte> span = stackalloc byte[20];
-                    var available = ImplPeekBytes(in s, span);
+                    Span<byte> target = span;
+                    var currentBuffer = Peek(ref s, Math.Min(target.Length, s.RemainingInCurrent));
+                    currentBuffer.CopyTo(target);
+                    int available = currentBuffer.Length;
+                    target = target.Slice(available);
+
+                    var iterCopy = _source;
+                    while (!target.IsEmpty && iterCopy.MoveNext())
+                    {
+                        var nextBuffer = iterCopy.Current.Span;
+                        var take = Math.Min(nextBuffer.Length, target.Length);
+
+                        nextBuffer.Slice(0, take).CopyTo(target);
+                        target = target.Slice(take);
+                        available += take;
+                    }
                     if (available != 20) span = span.Slice(0, available);
-                    var read = ReadOnlySequenceProtoReader.TryParseUInt32Varint(m == Read32VarintMode.Signed, span, 0, out val, this);
+                    var read = ReadOnlySequenceProtoReader.TryParseUInt32Varint(this, 0, m == Read32VarintMode.Signed, out val, span);
                     return read;
                 }
-            }
-
-            private int ImplPeekBytes(in State state, Span<byte> target)
-            {
-                var currentBuffer = Peek(in state, Math.Min(target.Length, state.RemainingInCurrent));
-                currentBuffer.CopyTo(target);
-                int available = currentBuffer.Length;
-                target = target.Slice(available);
-
-                var iterCopy = _source;
-                while (!target.IsEmpty && iterCopy.MoveNext())
-                {
-                    var nextBuffer = iterCopy.Current.Span;
-                    var take = Math.Min(nextBuffer.Length, target.Length);
-
-                    nextBuffer.Slice(0, take).CopyTo(target);
-                    target = target.Slice(take);
-                    available += take;
-                }
-                return available;
             }
 
             private protected override void ImplSkipBytes(ref State state, long count, bool preservePreviewField)
