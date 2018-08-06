@@ -9,13 +9,13 @@ namespace Benchmark
     {
         private static void Main()
         {
-            //var obj = new LibraryComparison();
-            //obj.Setup();
-            //for(int i = 0; i< 10000; i++)
-            //{
-            //    obj.ProtobufNet_Manual();
-            //}
-            Console.WriteLine(BenchmarkRunner.Run<LibraryComparison>());
+            var obj = new LibraryComparison();
+            obj.Setup();
+            for (int i = 0; i < 10000; i++)
+            {
+                var db = obj.ProtobufNet_Manual();
+            }
+            //Console.WriteLine(BenchmarkRunner.Run<LibraryComparison>());
         }
     }
 }
