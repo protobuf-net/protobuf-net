@@ -1,0 +1,31 @@
+﻿syntax = "proto3";
+package DAL;
+import "google/protobuf/Timestamp.proto";
+
+message Database {
+   repeated Order Orders = 1;
+}
+message Order {
+   int32 OrderID = 1;
+   string CustomerID = 2;
+   int32 EmployeeID = 3;
+   .google.protobuf.Timestamp OrderDate = 4;
+   .google.protobuf.Timestamp RequiredDate = 5;
+   .google.protobuf.Timestamp ShippedDate = 6;
+   int32 ShipVia = 7;
+   double Freight = 8;
+   string ShipName = 9;
+   string ShipAddress = 10;
+   string ShipCity = 11;
+   string ShipRegion = 12;
+   string ShipPostalCode = 13;
+   string ShipCountry = 14;
+   repeated OrderLine Lines = 15;
+}
+message OrderLine {
+   int32 OrderID = 1;
+   int32 ProductID = 2;
+   double UnitPrice = 3;
+   sint32 Quantity = 4;
+   float Discount = 5;
+}
