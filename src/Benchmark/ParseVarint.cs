@@ -7,7 +7,7 @@ namespace Benchmark
     // Chunk_Slow2 is winner
     public class ParseVarint
     {
-        const int OperationsPerInvoke = 100;
+        private const int OperationsPerInvoke = 100;
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
         public ulong Chunk_Fast()
         {
@@ -126,7 +126,7 @@ namespace Benchmark
                     return 5;
             }
         }
-        static void ThrowOverflow(object obj) => throw new OverflowException();
+        private static void ThrowOverflow(object obj) => throw new OverflowException();
 
         private static int TryParseUInt32VarintSlow2(ReadOnlySpan<byte> span, out uint value)
         {
@@ -220,6 +220,5 @@ namespace Benchmark
                 new byte[] { 0xF0, 0xF0, 0xF0, 0x04, 0xFF, },
                 new byte[] { 0xF0, 0xF0, 0xF0, 0xF0, 0x04, },
             };
-
     }
 }

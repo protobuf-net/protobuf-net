@@ -89,7 +89,7 @@ namespace ProtoBuf
             }
 #else
             internal SolidState Solidify() => default;
-            internal int ReadVarintUInt32(out uint tag) => throw new NotImplementedException();
+            internal int ReadVarintUInt32(out uint tag) => throw new NotSupportedException();
             internal int RemainingInCurrent => 0;
 #endif
         }

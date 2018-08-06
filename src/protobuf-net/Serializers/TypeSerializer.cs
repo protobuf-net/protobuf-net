@@ -31,7 +31,7 @@ namespace ProtoBuf.Serializers
         private readonly CallbackSet callbacks;
         private readonly MethodInfo[] baseCtorCallbacks;
         private readonly MethodInfo factory;
-        public TypeSerializer(TypeModel model, Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
+        public TypeSerializer(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(fieldNumbers != null);
@@ -92,7 +92,7 @@ namespace ProtoBuf.Serializers
             {
                 if (typeInfo.IsValueType || !isRootType || hasSubTypes)
 #else
-            if (model.MapType(iextensible).IsAssignableFrom(forType))
+            if (iextensible.IsAssignableFrom(forType))
             {
                 if (forType.IsValueType || !isRootType || hasSubTypes)
 #endif

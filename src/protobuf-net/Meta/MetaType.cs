@@ -401,7 +401,7 @@ namespace ProtoBuf.Meta
                 Type defaultType = null;
                 ResolveListTypes(model, Type, ref itemType, ref defaultType);
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
-                return new TypeSerializer(model, Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
+                return new TypeSerializer(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
             }
             if (surrogate != null)
             {
@@ -466,7 +466,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return new TypeSerializer(model, Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
+            return new TypeSerializer(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
         }
 
         [Flags]

@@ -589,9 +589,9 @@ namespace ProtoBuf
             }
             return _fieldNumber;
         }
-        static void ThrowInvalidField(int fieldNumber)
+        private static void ThrowInvalidField(int fieldNumber)
             => throw new ProtoException("Invalid field in source data: " + fieldNumber.ToString());
-        static void ThrowUnexpectedEndGroup()
+        private static void ThrowUnexpectedEndGroup()
             => throw new ProtoException("Unexpected end-group in source data; this usually means the source data is corrupt");
 
         /// <summary>

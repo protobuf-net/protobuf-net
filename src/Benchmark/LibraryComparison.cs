@@ -59,9 +59,7 @@ namespace Benchmark
             }
         }
 
-
-
-        static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Database obj)
+        private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Database obj)
         {
             SubItemToken tok;
             int field;
@@ -86,7 +84,7 @@ namespace Benchmark
                 }
             }
         }
-        static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Order obj)
+        private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Order obj)
         {
             SubItemToken tok;
             int field;
@@ -154,7 +152,7 @@ namespace Benchmark
             }
         }
 
-        static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.OrderLine obj)
+        private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.OrderLine obj)
         {
             int field;
             if (obj == null) obj = new protogen.OrderLine();
