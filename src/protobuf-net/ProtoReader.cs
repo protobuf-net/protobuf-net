@@ -557,31 +557,42 @@ namespace ProtoBuf
             // then be called)
             if (blockEnd64 <= LongPosition || WireType == WireType.EndGroup) { return 0; }
 
-            uint tag;
-            int read;
             if (state.RemainingInCurrent >= 5)
             {
-                read = state.ReadVarintUInt32(out tag);
+                var read = state.ReadVarintUInt32(out var tag);
                 Advance(read);
+                return SetTag(tag);
             }
-            else
+            return ReadFieldHeaderFallback(ref state);
+        }
+        private int ReadFieldHeaderFallback(ref State state)
+        {
+            int read = ImplTryReadUInt32VarintWithoutMoving(ref state, Read32VarintMode.FieldHeader, out var tag);
+            if (read == 0)
             {
-                read = ImplTryReadUInt32VarintWithoutMoving(ref state, Read32VarintMode.FieldHeader, out tag);
-                if (read != 0)
-                {
-                    ImplSkipBytes(ref state, read);
-                }
+                WireType = 0;
+                return _fieldNumber = 0;
             }
-            WireType = (WireType)(tag & 7);
-            _fieldNumber = (int)(tag >> 3);
-            if (read != 0 && _fieldNumber < 1) throw new ProtoException("Invalid field in source data: " + _fieldNumber.ToString());
-            if (WireType == ProtoBuf.WireType.EndGroup)
+            ImplSkipBytes(ref state, read);
+            return SetTag(tag);
+        }
+#if !(NET20 || NET35 || NET40)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+#endif
+        private int SetTag(uint tag)
+        {
+            if((_fieldNumber = (int)(tag >> 3)) < 1) ThrowInvalidField(_fieldNumber);
+            if ((WireType = (WireType)(tag & 7)) == WireType.EndGroup)
             {
                 if (_depth > 0) return 0; // spoof an end, but note we still set the field-number
-                throw new ProtoException("Unexpected end-group in source data; this usually means the source data is corrupt");
+                ThrowUnexpectedEndGroup();
             }
             return _fieldNumber;
         }
+        static void ThrowInvalidField(int fieldNumber)
+            => throw new ProtoException("Invalid field in source data: " + fieldNumber.ToString());
+        static void ThrowUnexpectedEndGroup()
+            => throw new ProtoException("Unexpected end-group in source data; this usually means the source data is corrupt");
 
         /// <summary>
         /// Looks ahead to see whether the next field in the stream is what we expect
