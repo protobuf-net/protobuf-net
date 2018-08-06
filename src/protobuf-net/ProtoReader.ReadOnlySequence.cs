@@ -88,14 +88,9 @@ namespace ProtoBuf
 
             private protected override int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value)
             {
-                if (GetSomeData(ref state, false) >= 10)
-                {
-                    return ReadOnlyMemoryProtoReader.TryParseUInt64Varint(this, state.OffsetInCurrent, out value, state.Span);
-                }
-                else
-                {
-                    return ViaStackAlloc(ref state, out value);
-                }
+                return GetSomeData(ref state, false) >= 10
+                    ? ReadOnlyMemoryProtoReader.TryParseUInt64Varint(this, state.OffsetInCurrent, out value, state.Span)
+                    : ViaStackAlloc(ref state, out value);
 
                 int ViaStackAlloc(ref State s, out ulong val)
                 {
@@ -125,15 +120,9 @@ namespace ProtoBuf
 
             private protected override uint ImplReadUInt32Fixed(ref State state)
             {
-                if (GetSomeData(ref state) >= 4)
-                {
-                    var val = BinaryPrimitives.ReadUInt32LittleEndian(Consume(ref state, 4));
-                    return val;
-                }
-                else
-                {
-                    return ViaStackAlloc(ref state);
-                }
+                return GetSomeData(ref state) >= 4
+                    ? BinaryPrimitives.ReadUInt32LittleEndian(Consume(ref state, 4))
+                    : ViaStackAlloc(ref state);
 
                 uint ViaStackAlloc(ref State st)
                 {
@@ -146,22 +135,15 @@ namespace ProtoBuf
                         Consume(ref st, take).CopyTo(target);
                         target = target.Slice(take);
                     }
-                    var val = BinaryPrimitives.ReadUInt32LittleEndian(span);
-                    return val;
+                    return BinaryPrimitives.ReadUInt32LittleEndian(span);
                 }
             }
 
             private protected override ulong ImplReadUInt64Fixed(ref State state)
             {
-                if (GetSomeData(ref state) >= 8)
-                {
-                    var val = BinaryPrimitives.ReadUInt64LittleEndian(Consume(ref state, 8));
-                    return val;
-                }
-                else
-                {
-                    return ViaStackAlloc(ref state);
-                }
+                return GetSomeData(ref state) >= 8
+                    ? BinaryPrimitives.ReadUInt64LittleEndian(Consume(ref state, 8))
+                    : ViaStackAlloc(ref state);
 
                 ulong ViaStackAlloc(ref State st)
                 {
@@ -174,20 +156,16 @@ namespace ProtoBuf
                         Consume(ref st, take).CopyTo(target);
                         target = target.Slice(take);
                     }
-                    var val = BinaryPrimitives.ReadUInt64LittleEndian(span);
-                    return val;
+                    return BinaryPrimitives.ReadUInt64LittleEndian(span);
                 }
             }
 
             private protected override string ImplReadString(ref State state, int bytes)
             {
-                var available = GetSomeData(ref state);
-                if (available >= bytes)
-                {
-                    return ReadOnlyMemoryProtoReader.ToString(
-                        Consume(ref state, bytes, out var offset), offset, bytes);
-                }
-                return ImplReadStringMultiSegment(ref state, bytes);
+                return GetSomeData(ref state) >= bytes
+                    ? ReadOnlyMemoryProtoReader.ToString(Consume(
+                        ref state, bytes, out var offset), offset, bytes)
+                    : ImplReadStringMultiSegment(ref state, bytes);
             }
 
             private string ImplReadStringMultiSegment(ref State state, int bytes)
@@ -239,14 +217,11 @@ namespace ProtoBuf
 
             private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
             {
-                if (GetSomeData(ref state, false) >= 10)
-                {
-                    return ReadOnlyMemoryProtoReader.TryParseUInt32Varint(this, state.OffsetInCurrent, mode == Read32VarintMode.Signed, out value, state.Span);
-                }
-                else
-                {
-                    return ViaStackAlloc(ref state, mode, out value);
-                }
+                return GetSomeData(ref state, false) >= 10
+                    ? ReadOnlyMemoryProtoReader.TryParseUInt32Varint(this, state.OffsetInCurrent,
+                        mode == Read32VarintMode.Signed, out value, state.Span)
+                    : ViaStackAlloc(ref state, mode, out value);
+
                 int ViaStackAlloc(ref State s, Read32VarintMode m, out uint val)
                 {
                     Span<byte> span = stackalloc byte[20];
