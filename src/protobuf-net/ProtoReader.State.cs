@@ -24,15 +24,33 @@ namespace ProtoBuf
                 OffsetInCurrent = 0;
                 RemainingInCurrent = Span.Length;
             }
-            internal ReadOnlySpan<byte> Span;
-            internal ReadOnlyMemory<byte> _memory;
+            internal ReadOnlySpan<byte> Span { get; private set; }
+            private ReadOnlyMemory<byte> _memory;
             internal int OffsetInCurrent { get; private set; }
             internal int RemainingInCurrent { get; private set; }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal void Consume(int bytes)
+            internal void Skip(int bytes)
             {
                 OffsetInCurrent += bytes;
                 RemainingInCurrent -= bytes;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal ReadOnlySpan<byte> Consume(int bytes)
+            {
+                var s = Span.Slice(OffsetInCurrent, bytes);
+                OffsetInCurrent += bytes;
+                RemainingInCurrent -= bytes;
+                return s;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal ReadOnlySpan<byte> Consume(int bytes, out int offset)
+            {
+                offset = OffsetInCurrent;
+                OffsetInCurrent += bytes;
+                RemainingInCurrent -= bytes;
+                return Span;
             }
 #else
             internal SolidState Solidify() => default;
