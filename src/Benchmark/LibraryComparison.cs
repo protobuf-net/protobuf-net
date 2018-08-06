@@ -9,26 +9,25 @@ namespace Benchmark
     [ClrJob, CoreJob, MemoryDiagnoser]
     public class LibraryComparison
     {
-        [Benchmark(Baseline = true)]
-        public protoc.Database Google()
-        {
-            return protoc.Database.Parser.ParseFrom(_data);
-        }
+        //[Benchmark(Baseline = true)]
+        //public protoc.Database Google()
+        //{
+        //    return protoc.Database.Parser.ParseFrom(_data);
+        //}
 
         private byte[] _data;
 
-        [Benchmark(Description = "protobuf-net")]
-        public protogen.Database ProtobufNet()
+        [Benchmark(Description = "ROM")]
+        public protogen.Database ROM()
         {
             var model = RuntimeTypeModel.Default;
-            using (var reader = ProtoBuf.ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
+            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
             {
                 return (protogen.Database)model.Deserialize(ref state, reader, null, typeof(protogen.Database));
             }
         }
-
-        [Benchmark(Description = "protobuf-net/*")]
-        public protogen.Database ProtobufNet_Manual()
+        [Benchmark(Description = "ROM*")]
+        public protogen.Database ROM_Manual()
         {
             var model = RuntimeTypeModel.Default;
             using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
@@ -38,6 +37,29 @@ namespace Benchmark
                 return obj;
             }
         }
+
+        [Benchmark(Description = "MemoryStream")]
+        public protogen.Database MemoryStream()
+        {
+            var model = RuntimeTypeModel.Default;
+            using (var reader = ProtoReader.Create(out var state, new MemoryStream(_data), model))
+            {
+                return (protogen.Database)model.Deserialize(ref state, reader, null, typeof(protogen.Database));
+            }
+        }
+        [Benchmark(Description = "MemoryStream*")]
+        public protogen.Database MemoryStream_Manual()
+        {
+            var model = RuntimeTypeModel.Default;
+            using (var reader = ProtoReader.Create(out var state, new MemoryStream(_data), model))
+            {
+                protogen.Database obj = default;
+                Merge(reader, ref state, ref obj);
+                return obj;
+            }
+        }
+
+
 
         static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Database obj)
         {

@@ -30,7 +30,7 @@ namespace BenchmarkBaseline
         [GlobalSetup]
         public void Setup()
         {
-            var data = File.ReadAllBytes("nwind.proto.bin");
+            var data = File.ReadAllBytes("test.bin");
             _ms = new MemoryStream(data);
         }
 
@@ -40,7 +40,7 @@ namespace BenchmarkBaseline
             _ms.Position = 0;
             using (var reader = ReadMS())
             {
-                var dal = Model.Deserialize(reader, null, typeof(DAL.Database));
+                var dal = Model.Deserialize(reader, null, typeof(protogen.Database));
                 GC.KeepAlive(dal);
             }
         }

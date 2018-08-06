@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\Benchmark\DataContext.cs"/>
+    <Compile Include="..\Benchmark\DataContext.cs" />
     <None Include="..\Tools\nwind.proto.bin" Link="nwind.proto.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -15,7 +15,13 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.11.0" />
-    <PackageReference Include="protobuf-net" Version="2.3.17"/>
+    <PackageReference Include="protobuf-net" Version="2.3.17" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="test.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
