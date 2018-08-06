@@ -133,9 +133,9 @@ namespace ProtoBuf
         public static void Serialize<T>(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context, T instance) where T : class, System.Runtime.Serialization.ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
-            if (info == null) throw new ArgumentNullException("info");
-            if (instance == null) throw new ArgumentNullException("instance");
-            if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", "instance");
+            if (info == null) throw new ArgumentNullException(nameof(info));
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", nameof(instance));
             using (MemoryStream ms = new MemoryStream())
             {
                 RuntimeTypeModel.Default.Serialize(ms, instance, context);
@@ -152,8 +152,8 @@ namespace ProtoBuf
         /// <param name="writer">The destination XmlWriter to write to.</param>
         public static void Serialize<T>(System.Xml.XmlWriter writer, T instance) where T : System.Xml.Serialization.IXmlSerializable
         {
-            if (writer == null) throw new ArgumentNullException("writer");
-            if (instance == null) throw new ArgumentNullException("instance");
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
 
             using (MemoryStream ms = new MemoryStream())
             {
@@ -169,8 +169,8 @@ namespace ProtoBuf
         /// <param name="reader">The XmlReader containing the data to apply to the instance (cannot be null).</param>
         public static void Merge<T>(System.Xml.XmlReader reader, T instance) where T : System.Xml.Serialization.IXmlSerializable
         {
-            if (reader == null) throw new ArgumentNullException("reader");
-            if (instance == null) throw new ArgumentNullException("instance");
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
 
             const int LEN = 4096;
             byte[] buffer = new byte[LEN];
@@ -217,9 +217,9 @@ namespace ProtoBuf
         public static void Merge<T>(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context, T instance) where T : class, System.Runtime.Serialization.ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
-            if (info == null) throw new ArgumentNullException("info");
-            if (instance == null) throw new ArgumentNullException("instance");
-            if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", "instance");
+            if (info == null) throw new ArgumentNullException(nameof(info));
+            if (instance == null) throw new ArgumentNullException(nameof(instance));
+            if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", nameof(instance));
 
             byte[] buffer = (byte[])info.GetValue(ProtoBinaryField, typeof(byte[]));
             using (MemoryStream ms = new MemoryStream(buffer))
@@ -381,7 +381,6 @@ namespace ProtoBuf
         /// </summary>
         public const int ListItemTag = 1;
 
-
 #if !NO_RUNTIME
         /// <summary>
         /// Provides non-generic access to the default serializer.
@@ -471,11 +470,13 @@ namespace ProtoBuf
             /// <summary>
             /// Precompiles the serializer for a given type.
             /// </summary>
-            public static void PrepareSerializer(Type t)
+#pragma warning disable RCS1163
+            public static void PrepareSerializer(Type type)
+#pragma warning restore RCS1163
             {
 #if FEAT_COMPILER
                 RuntimeTypeModel model = RuntimeTypeModel.Default;
-                model[model.MapType(t)].CompileInPlace();
+                model[model.MapType(type)].CompileInPlace();
 #endif
             }
         }
