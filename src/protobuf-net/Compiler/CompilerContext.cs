@@ -7,6 +7,7 @@ using ProtoBuf.Serializers;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace ProtoBuf.Compiler
 {
@@ -253,11 +254,26 @@ namespace ProtoBuf.Compiler
             this.MetadataVersion = metadataVersion;
             if (inputType != null) InputValue = new Local(null, inputType);
             TraceCompile(">> " + traceName);
+
+            GetOpCodes(isWriter, isStatic, out _state, out _readerWriter);
         }
 
         readonly OpCode? _state;
         readonly OpCode _readerWriter;
 
+        static void GetOpCodes(bool isWriter, bool isStatic, out OpCode? state, out OpCode readerWriter)
+        {
+            if (isWriter)
+            {
+                state = null;
+                readerWriter = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
+            }
+            else
+            {
+                state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
+                readerWriter = isStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3;
+            }
+        }
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
         {
             MetadataVersion = ILVersion.Net2;
@@ -267,18 +283,16 @@ namespace ProtoBuf.Compiler
             NonPublic = true;
             Type[] paramTypes;
             Type returnType;
+            GetOpCodes(isWriter, isStatic, out _state, out _readerWriter);
             if (isWriter)
             {
                 returnType = typeof(void);
                 paramTypes = new Type[] { typeof(object), typeof(ProtoWriter) };
-                _readerWriter = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
             }
             else
             {
                 returnType = typeof(object);
                 paramTypes = new Type[] { typeof(object), ProtoReader.State.ByRefType, typeof(ProtoReader) };
-                _state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
-                _readerWriter = isStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3;
             }
             int uniqueIdentifier;
 #if PLAT_NO_INTERLOCKED
@@ -499,7 +513,7 @@ namespace ProtoBuf.Compiler
                             && p[1].ParameterType == typeof(ProtoReader))
                             s_helperMethods.Add(method.Name, method);
                     }
-                    else if(typeof(T) == typeof(ProtoReader))
+                    else if (typeof(T) == typeof(ProtoReader))
                     {
                         if (p.Length == 1 && p[0].ParameterType == ProtoReader.State.ByRefType)
                             s_helperMethods.Add(method.Name, method);
@@ -515,7 +529,7 @@ namespace ProtoBuf.Compiler
             => EmitBasicRead<ProtoReader>(methodName, expectedType);
         internal void EmitBasicRead<T>(string methodName, Type expectedType)
         {
-            if(!ReadMethods<T>.Find(methodName, out var method))
+            if (!ReadMethods<T>.Find(methodName, out var method))
             {
                 throw new ArgumentException($"No suitable '{methodName}' method found on {typeof(T).Name}");
             }

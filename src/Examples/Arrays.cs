@@ -111,6 +111,10 @@ namespace Examples
             Assert.True(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, CompileInPlace");
             Assert.True(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, CompileInPlace");
 
+            clone = (WithAndWithoutOverwrite)model.Compile("TestOverwriteVersusAppendTypeModel", "TestOverwriteVersusAppend.dll").DeepClone(orig);
+            Assert.True(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, CompileToFile");
+            Assert.True(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, CompileToFile");
+
             clone = (WithAndWithoutOverwrite)(model.Compile()).DeepClone(orig);
             Assert.True(clone.Overwrite.SequenceEqual(new[] { 9, 10 }), "Overwrite, Compile");
             Assert.True(clone.Append.SequenceEqual(new[] { 1, 2, 3, 7, 8 }), "Append, Compile");

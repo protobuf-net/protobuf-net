@@ -1246,14 +1246,14 @@ namespace ProtoBuf.Meta
                 ctx.Return();
             }
 
-            il = Override(type, "Deserialize");
+            il = Override(type, nameof(TypeModel.Deserialize));
             ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, MapType(typeof(object)), "Deserialize " + type.Name);
-            // arg0 = this, arg1 = key, arg2=obj, arg3=source
+            // arg0 = this, arg1 = state, arg2 = key, arg3 = obj, arg4 = source
             for (int i = 0; i < jumpTable.Length; i++)
             {
                 jumpTable[i] = ctx.DefineLabel();
             }
-            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_2);
             ctx.Switch(jumpTable);
             ctx.LoadNullRef();
             ctx.Return();
@@ -1264,16 +1264,18 @@ namespace ProtoBuf.Meta
                 Type keyType = pair.Type.Type;
                 if (Helpers.IsValueType(keyType))
                 {
-                    il.Emit(OpCodes.Ldarg_2);
                     il.Emit(OpCodes.Ldarg_3);
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Ldarg_S, (byte)4);
                     il.EmitCall(OpCodes.Call, EmitBoxedDeserializer(type, i, keyType, methodPairs, this, ilVersion, assemblyName), null);
                     ctx.Return();
                 }
                 else
                 {
-                    il.Emit(OpCodes.Ldarg_2);
-                    ctx.CastFromObject(keyType);
                     il.Emit(OpCodes.Ldarg_3);
+                    ctx.CastFromObject(keyType);
+                    il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Ldarg_S, (byte)4);
                     il.EmitCall(OpCodes.Call, pair.Deserialize, null);
                     ctx.Return();
                 }
@@ -1445,7 +1447,7 @@ namespace ProtoBuf.Meta
 #endif
 ,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
-                    metaType.Type, new Type[] { metaType.Type, MapType(typeof(ProtoReader)) });
+                    metaType.Type, new Type[] { metaType.Type, ProtoReader.State.ByRefType, MapType(typeof(ProtoReader)) });
 
                 SerializerPair pair = new SerializerPair(
                     GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
