@@ -131,7 +131,7 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(@end);
 
                 ctx.LoadValue(token);
-                ctx.LoadReader();
+                ctx.LoadWriter();
                 ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("EndSubItem"));
             }
         }

@@ -33,7 +33,7 @@ namespace Examples
             return ProtoReader.Create(out state, ms, model, null);
         }
         [Fact]
-        public void ByDefaultStringsShouldBeInterned()
+        public void ByDefaultStringsShouldNotBeInterned()
         {
             Foo foo;
             using (var reader = GetReader(out var state))
@@ -42,8 +42,8 @@ namespace Examples
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
-
-            Assert.True(ReferenceEquals(foo.Bar, foo.Blap));
+            
+            Assert.False(ReferenceEquals(foo.Bar, foo.Blap));
         }
         [Fact]
         public void ExplicitEnabledStringsShouldBeInterned()

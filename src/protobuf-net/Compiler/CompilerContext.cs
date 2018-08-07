@@ -412,12 +412,18 @@ namespace ProtoBuf.Compiler
         }
         public void LoadWriter()
         {
-            if (!isWriter) throw new InvalidOperationException("Tried to load writer, but was a reader");
+            if (!isWriter)
+            {
+                throw new InvalidOperationException("Tried to load writer, but was a reader");
+            }
             Emit(_readerWriter);
         }
         public void LoadReader()
         {
-            if (isWriter) throw new InvalidOperationException("Tried to load reader, but was a writer");
+            if (isWriter)
+            {
+                throw new InvalidOperationException("Tried to load reader, but was a writer");
+            }
             Emit(_readerWriter);
         }
 
