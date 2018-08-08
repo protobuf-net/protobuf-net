@@ -2714,14 +2714,14 @@ namespace ProtoBuf.Reflection
         private static string Format(float val)
         {
             string s = val.ToString(CultureInfo.InvariantCulture);
-            return s.IndexOfAny(ExponentChars) < 0) ? s
+            return s.IndexOfAny(ExponentChars) < 0 ? s
                 : val.ToString("0e+00", CultureInfo.InvariantCulture);
         }
 
         private static string Format(double val)
         {
             string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
-            return s.IndexOfAny(ExponentChars) < 0) ? s
+            return s.IndexOfAny(ExponentChars) < 0 ? s
                 :  val.ToString("0e+00", CultureInfo.InvariantCulture);
         }
 
