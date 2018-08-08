@@ -10,7 +10,7 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class UriDecorator : ProtoDecoratorBase
     {
-        static readonly Type expectedType = typeof(Uri);
+        private static readonly Type expectedType = typeof(Uri);
         public UriDecorator(IProtoSerializer tail) : base(tail) { }
 
         public override Type ExpectedType => expectedType;
@@ -24,10 +24,10 @@ namespace ProtoBuf.Serializers
             Tail.Write(((Uri)value).OriginalString, dest);
         }
 
-        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // not expecting incoming
-            string s = (string)Tail.Read(ref state, null, source);
+            string s = (string)Tail.Read(source, ref state, null);
             return s.Length == 0 ? null : new Uri(s, UriKind.RelativeOrAbsolute);
         }
 

@@ -435,28 +435,28 @@ namespace ProtoBuf
         public static object ReadObject(object value, int key, ProtoReader reader)
         {
             State state = default;
-            return ReadTypedObject(value, key, ref state, reader, null);
+            return ReadTypedObject(reader, ref state, value, key, null);
         }
 
         /// <summary>
         /// Reads (merges) a sub-message from the stream, internally calling StartSubItem and EndSubItem, and (in between)
         /// parsing the message in accordance with the model associated with the reader
         /// </summary>
-        public static object ReadObject(object value, int key, ref State state, ProtoReader reader)
-            => ReadTypedObject(value, key, ref state, reader, null);
+        public static object ReadObject(object value, int key, ProtoReader reader, ref State state)
+            => ReadTypedObject(reader, ref state, value, key, null);
 
-        internal static object ReadTypedObject(object value, int key, ref State state, ProtoReader reader, Type type)
+        internal static object ReadTypedObject(ProtoReader reader, ref State state, object value, int key, Type type)
         {
             if (reader._model == null)
             {
                 throw AddErrorData(new InvalidOperationException("Cannot deserialize sub-objects unless a model is provided"), reader);
             }
-            SubItemToken token = ProtoReader.StartSubItem(ref state, reader);
+            SubItemToken token = ProtoReader.StartSubItem(reader, ref state);
             if (key >= 0)
             {
-                value = reader._model.Deserialize(ref state, key, value, reader);
+                value = reader._model.DeserializeCore(reader, ref state, key, value);
             }
-            else if (type != null && reader._model.TryDeserializeAuxiliaryType(ref state, reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null))
+            else if (type != null && reader._model.TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null))
             {
                 // ok
             }
@@ -508,13 +508,13 @@ namespace ProtoBuf
         public static SubItemToken StartSubItem(ProtoReader reader)
         {
             State state = default;
-            return StartSubItem(ref state, reader);
+            return StartSubItem(reader, ref state);
         }
         /// <summary>
         /// Begins consuming a nested message in the stream; supported wire-types: StartGroup, String
         /// </summary>
         /// <remarks>The token returned must be help and used when callining EndSubItem</remarks>
-        public static SubItemToken StartSubItem(ref State state, ProtoReader reader)
+        public static SubItemToken StartSubItem(ProtoReader reader, ref State state)
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
             switch (reader.WireType)
@@ -826,7 +826,7 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
         /// </summary>
-        public static byte[] AppendBytes(byte[] value, ref State state, ProtoReader reader)
+        public static byte[] AppendBytes(byte[] value, ProtoReader reader, ref State state)
             => reader.AppendBytes(ref state, value);
 
         private protected byte[] AppendBytes(ref State state, byte[] value)
@@ -1193,10 +1193,10 @@ namespace ProtoBuf
                     ProtoWriter.WriteInt64(ReadInt64(ref state), writer);
                     return;
                 case WireType.String:
-                    ProtoWriter.WriteBytes(AppendBytes(null, ref state, this), writer);
+                    ProtoWriter.WriteBytes(AppendBytes(null, this, ref state), writer);
                     return;
                 case WireType.StartGroup:
-                    SubItemToken readerToken = StartSubItem(ref state, this),
+                    SubItemToken readerToken = StartSubItem(this, ref state),
                         writerToken = ProtoWriter.StartSubItem(null, writer);
                     while (ReadFieldHeader(ref state) > 0) { AppendExtensionField(ref state, writer); }
                     EndSubItem(readerToken, this);

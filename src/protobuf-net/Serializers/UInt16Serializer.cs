@@ -5,7 +5,7 @@ namespace ProtoBuf.Serializers
 {
     internal class UInt16Serializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(ushort);
+        private static readonly Type expectedType = typeof(ushort);
 
         public virtual Type ExpectedType => expectedType;
 
@@ -13,7 +13,7 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public virtual object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public virtual object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return source.ReadUInt16(ref state);

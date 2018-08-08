@@ -43,7 +43,9 @@ namespace ProtoBuf.Compiler
         }
 #endif
         [System.Diagnostics.Conditional("DEBUG_COMPILE")]
+#pragma warning disable RCS1163 // Unused parameter.
         private void TraceCompile(string value)
+#pragma warning restore RCS1163 // Unused parameter.
         {
 #if DEBUG_COMPILE
             if (!string.IsNullOrWhiteSpace(value))
@@ -255,23 +257,26 @@ namespace ProtoBuf.Compiler
             if (inputType != null) InputValue = new Local(null, inputType);
             TraceCompile(">> " + traceName);
 
-            GetOpCodes(isWriter, isStatic, out _state, out _readerWriter);
+            GetOpCodes(isWriter, isStatic, out _state, out _readerWriter, out _inputArg);
         }
 
-        readonly OpCode? _state;
-        readonly OpCode _readerWriter;
+        private readonly OpCode? _state;
+        private readonly OpCode _readerWriter;
+        private readonly byte _inputArg;
 
-        static void GetOpCodes(bool isWriter, bool isStatic, out OpCode? state, out OpCode readerWriter)
+        private static void GetOpCodes(bool isWriter, bool isStatic, out OpCode? state, out OpCode readerWriter, out byte inputArg)
         {
             if (isWriter)
             {
                 state = null;
                 readerWriter = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
+                inputArg = (byte)(isStatic ? 0 : 1);
             }
             else
             {
+                readerWriter = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
                 state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
-                readerWriter = isStatic ? OpCodes.Ldarg_2 : OpCodes.Ldarg_3;
+                inputArg = (byte)(isStatic ? 2 : 3);
             }
         }
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
@@ -283,7 +288,7 @@ namespace ProtoBuf.Compiler
             NonPublic = true;
             Type[] paramTypes;
             Type returnType;
-            GetOpCodes(isWriter, isStatic, out _state, out _readerWriter);
+            GetOpCodes(isWriter, isStatic, out _state, out _readerWriter, out _inputArg);
             if (isWriter)
             {
                 returnType = typeof(void);
@@ -292,7 +297,7 @@ namespace ProtoBuf.Compiler
             else
             {
                 returnType = typeof(object);
-                paramTypes = new Type[] { typeof(object), ProtoReader.State.ByRefType, typeof(ProtoReader) };
+                paramTypes = new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object) };
             }
             int uniqueIdentifier;
 #if PLAT_NO_INTERLOCKED
@@ -418,26 +423,25 @@ namespace ProtoBuf.Compiler
             }
             Emit(_readerWriter);
         }
-        public void LoadReader()
+        public void LoadReader(bool withState)
         {
             if (isWriter)
             {
                 throw new InvalidOperationException("Tried to load reader, but was a writer");
             }
             Emit(_readerWriter);
+            if (withState && _state.HasValue)
+            {
+                Emit(_state.GetValueOrDefault());
+            }
         }
 
-        public void LoadState()
-        {
-            if (_state != null) Emit(_state.GetValueOrDefault());
-        }
         public void StoreValue(Local local)
         {
             if (local == this.InputValue)
             {
-                byte b = isStatic ? (byte)0 : (byte)1;
-                il.Emit(OpCodes.Starg_S, b);
-                TraceCompile(OpCodes.Starg_S + ": $" + b);
+                il.Emit(OpCodes.Starg_S, _inputArg);
+                TraceCompile(OpCodes.Starg_S + ": $" + _inputArg);
             }
             else
             {
@@ -448,11 +452,9 @@ namespace ProtoBuf.Compiler
                     case 2: Emit(OpCodes.Stloc_2); break;
                     case 3: Emit(OpCodes.Stloc_3); break;
                     default:
-
                         OpCode code = UseShortForm(local) ? OpCodes.Stloc_S : OpCodes.Stloc;
                         il.Emit(code, local.Value);
                         TraceCompile(code + ": $" + local.Value);
-
                         break;
                 }
             }
@@ -463,7 +465,17 @@ namespace ProtoBuf.Compiler
             if (local == null) { /* nothing to do; top of stack */}
             else if (local == this.InputValue)
             {
-                Emit(isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1);
+                switch(_inputArg)
+                {
+                    case 0: Emit(OpCodes.Ldarg_0); break;
+                    case 1: Emit(OpCodes.Ldarg_1); break;
+                    case 2: Emit(OpCodes.Ldarg_2); break;
+                    case 3: Emit(OpCodes.Ldarg_3); break;
+                    default:
+                        il.Emit(OpCodes.Ldarg_S, _inputArg);
+                        TraceCompile(OpCodes.Ldarg_S + ": $" + _inputArg);
+                        break;
+                }
             }
             else
             {
@@ -502,9 +514,9 @@ namespace ProtoBuf.Compiler
             return result;
         }
 
-        static class ReadMethods<T>
+        private static class ReadMethods<T>
         {
-            static readonly Dictionary<string, MethodInfo> s_helperMethods;
+            private static readonly Dictionary<string, MethodInfo> s_helperMethods;
             static ReadMethods()
             {
                 s_helperMethods = new Dictionary<string, MethodInfo>(StringComparer.Ordinal);
@@ -515,13 +527,15 @@ namespace ProtoBuf.Compiler
                     var p = method.GetParameters();
                     if (method.IsStatic)
                     {
-                        if (p.Length == 2 && p[0].ParameterType == ProtoReader.State.ByRefType
-                            && p[1].ParameterType == typeof(ProtoReader))
+                        if (p.Length == 2 && p[0].ParameterType == typeof(ProtoReader)
+                            && p[1].ParameterType == ProtoReader.State.ByRefStateType)
+                        {
                             s_helperMethods.Add(method.Name, method);
+                        }
                     }
                     else if (typeof(T) == typeof(ProtoReader))
                     {
-                        if (p.Length == 1 && p[0].ParameterType == ProtoReader.State.ByRefType)
+                        if (p.Length == 1 && p[0].ParameterType == ProtoReader.State.ByRefStateType)
                             s_helperMethods.Add(method.Name, method);
                     }
                 }
@@ -543,16 +557,7 @@ namespace ProtoBuf.Compiler
             {
                 throw new ArgumentException($"Method '{methodName}' has wrong return type; got {method.ReturnType.Name}, expected {expectedType.Name}");
             }
-            if (method.IsStatic)
-            {
-                LoadState();
-                LoadReader();
-            }
-            else
-            {
-                LoadReader();
-                LoadState();
-            }
+            LoadReader(true);
             EmitCall(method);
         }
 
@@ -1003,8 +1008,8 @@ namespace ProtoBuf.Compiler
 
                 if (local == this.InputValue)
                 {
-                    il.Emit(OpCodes.Ldarga_S, isStatic ? (byte)0 : (byte)1);
-                    TraceCompile(OpCodes.Ldarga_S + ": $" + (isStatic ? 0 : 1));
+                    il.Emit(OpCodes.Ldarga_S, _inputArg);
+                    TraceCompile(OpCodes.Ldarga_S + ": $" + _inputArg);
                 }
                 else
                 {
@@ -1472,7 +1477,7 @@ namespace ProtoBuf.Compiler
         internal void LoadSerializationContext()
         {
             if (isWriter) LoadWriter();
-            else LoadReader();
+            else LoadReader(false);
             LoadValue((isWriter ? typeof(ProtoWriter) : typeof(ProtoReader)).GetProperty("Context"));
         }
 

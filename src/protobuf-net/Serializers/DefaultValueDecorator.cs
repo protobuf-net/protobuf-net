@@ -20,7 +20,7 @@ namespace ProtoBuf.Serializers
             Type type = model.MapType(defaultValue.GetType());
             if (type != tail.ExpectedType)
             {
-                throw new ArgumentException("Default value is of incorrect type", "defaultValue");
+                throw new ArgumentException("Default value is of incorrect type", nameof(defaultValue));
             }
             this.defaultValue = defaultValue;
         }
@@ -33,9 +33,9 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            return Tail.Read(ref state, value, source);
+            return Tail.Read(source, ref state, value);
         }
 
 #if FEAT_COMPILER
@@ -93,7 +93,6 @@ namespace ProtoBuf.Serializers
                     ctx.EmitCall(method);
                     ctx.BranchIfTrue(label, false);
                     break;
-
             }
         }
         private void EmitBranchIfDefaultValue(Compiler.CompilerContext ctx, Compiler.CodeLabel label)

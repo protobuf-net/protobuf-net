@@ -5,8 +5,8 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class CharSerializer : UInt16Serializer
     {
-        static readonly Type expectedType = typeof(char);
-        
+        private static readonly Type expectedType = typeof(char);
+
         public override Type ExpectedType => expectedType;
 
         public override void Write(object value, ProtoWriter dest)
@@ -14,7 +14,7 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteUInt16((ushort)(char)value, dest);
         }
 
-        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return (char)source.ReadUInt16(ref state);

@@ -19,16 +19,15 @@ namespace ProtoBuf.Serializers
                 TypedValue = (Enum)Enum.ToObject(type, raw);
             }
         }
-
-        private readonly Type enumType;
         private readonly EnumPair[] map;
         public EnumSerializer(Type enumType, EnumPair[] map)
         {
-            this.enumType = enumType ?? throw new ArgumentNullException(nameof(enumType));
+            ExpectedType = enumType ?? throw new ArgumentNullException(nameof(enumType));
             this.map = map;
             if (map != null)
             {
                 for (int i = 1; i < map.Length; i++)
+                {
                     for (int j = 0; j < i; j++)
                     {
                         if (map[i].WireValue == map[j].WireValue && !Equals(map[i].RawValue, map[j].RawValue))
@@ -40,18 +39,17 @@ namespace ProtoBuf.Serializers
                             throw new ProtoException("Multiple enums with deserialized-value " + map[i].RawValue);
                         }
                     }
-
+                }
             }
         }
 
         private ProtoTypeCode GetTypeCode()
         {
-            Type type = Helpers.GetUnderlyingType(enumType);
-            if (type == null) type = enumType;
+            Type type = Helpers.GetUnderlyingType(ExpectedType) ?? ExpectedType;
             return Helpers.GetTypeCode(type);
         }
 
-        public Type ExpectedType => enumType;
+        public Type ExpectedType { get; }
 
         bool IProtoSerializer.RequiresOldValue => false;
 
@@ -82,20 +80,20 @@ namespace ProtoBuf.Serializers
             {
                 switch (GetTypeCode())
                 { // convert from int then box 
-                    case ProtoTypeCode.Byte: return Enum.ToObject(enumType, (byte)value);
-                    case ProtoTypeCode.SByte: return Enum.ToObject(enumType, (sbyte)value);
-                    case ProtoTypeCode.Int16: return Enum.ToObject(enumType, (short)value);
-                    case ProtoTypeCode.Int32: return Enum.ToObject(enumType, value);
-                    case ProtoTypeCode.Int64: return Enum.ToObject(enumType, (long)value);
-                    case ProtoTypeCode.UInt16: return Enum.ToObject(enumType, (ushort)value);
-                    case ProtoTypeCode.UInt32: return Enum.ToObject(enumType, (uint)value);
-                    case ProtoTypeCode.UInt64: return Enum.ToObject(enumType, (ulong)value);
+                    case ProtoTypeCode.Byte: return Enum.ToObject(ExpectedType, (byte)value);
+                    case ProtoTypeCode.SByte: return Enum.ToObject(ExpectedType, (sbyte)value);
+                    case ProtoTypeCode.Int16: return Enum.ToObject(ExpectedType, (short)value);
+                    case ProtoTypeCode.Int32: return Enum.ToObject(ExpectedType, value);
+                    case ProtoTypeCode.Int64: return Enum.ToObject(ExpectedType, (long)value);
+                    case ProtoTypeCode.UInt16: return Enum.ToObject(ExpectedType, (ushort)value);
+                    case ProtoTypeCode.UInt32: return Enum.ToObject(ExpectedType, (uint)value);
+                    case ProtoTypeCode.UInt64: return Enum.ToObject(ExpectedType, (ulong)value);
                     default: throw new InvalidOperationException();
                 }
             }
         }
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
             int wireValue = source.ReadInt32(ref state);
@@ -230,7 +228,7 @@ namespace ProtoBuf.Serializers
                         ctx.MarkLabel(tryNextGroup);
                     }
                     // throw source.CreateEnumException(ExpectedType, wireValue);
-                    ctx.LoadReader();
+                    ctx.LoadReader(false);
                     ctx.LoadValue(ExpectedType);
                     ctx.LoadValue(wireValue);
                     ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("ThrowEnumException"));

@@ -5,7 +5,7 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class GuidSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(Guid);
+        private static readonly Type expectedType = typeof(Guid);
 
         public Type ExpectedType { get { return expectedType; } }
 
@@ -18,10 +18,10 @@ namespace ProtoBuf.Serializers
             BclHelpers.WriteGuid((Guid)value, dest);
         }
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return BclHelpers.ReadGuid(ref state, source);
+            return BclHelpers.ReadGuid(source, ref state);
         }
 
 #if FEAT_COMPILER

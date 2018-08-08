@@ -4,14 +4,9 @@
 
 namespace ProtoBuf.Serializers
 {
-    sealed class SystemTypeSerializer : IProtoSerializer
+    internal sealed class SystemTypeSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(Type);
-
-        public SystemTypeSerializer(ProtoBuf.Meta.TypeModel model)
-        {
-
-        }
+        private static readonly Type expectedType = typeof(Type);
 
         public Type ExpectedType => expectedType;
 
@@ -20,7 +15,7 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteType((Type)value, dest);
         }
 
-        object IProtoSerializer.Read(ref ProtoReader.State state, object value, ProtoReader source)
+        object IProtoSerializer.Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return source.ReadType(ref state);
@@ -35,7 +30,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteType", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadType", ExpectedType);
         }

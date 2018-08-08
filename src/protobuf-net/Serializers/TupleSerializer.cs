@@ -5,7 +5,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class TupleSerializer : IProtoTypeSerializer
+    internal sealed class TupleSerializer : IProtoTypeSerializer
     {
         private readonly MemberInfo[] members;
         private readonly ConstructorInfo ctor;
@@ -19,13 +19,12 @@ namespace ProtoBuf.Serializers
             ParameterInfo[] parameters = ctor.GetParameters();
             for (int i = 0; i < members.Length; i++)
             {
-                WireType wireType;
                 Type finalType = parameters[i].ParameterType;
 
                 Type itemType = null, defaultType = null;
 
                 MetaType.ResolveListTypes(model, finalType, ref itemType, ref defaultType);
-                Type tmp = itemType == null ? finalType : itemType;
+                Type tmp = itemType ?? finalType;
 
                 bool asReference = false;
                 int typeIndex = model.FindOrAddAuto(tmp, false, true, false);
@@ -33,7 +32,7 @@ namespace ProtoBuf.Serializers
                 {
                     asReference = model[tmp].AsReferenceDefault;
                 }
-                IProtoSerializer tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out wireType, asReference, false, false, true), serializer;
+                IProtoSerializer tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out WireType wireType, asReference, false, false, true), serializer;
                 if (tail == null)
                 {
                     throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
@@ -72,16 +71,13 @@ namespace ProtoBuf.Serializers
         object IProtoTypeSerializer.CreateInstance(ProtoReader source) { throw new NotSupportedException(); }
         private object GetValue(object obj, int index)
         {
-            PropertyInfo prop;
-            FieldInfo field;
-
-            if ((prop = members[index] as PropertyInfo) != null)
+            if (members[index] is PropertyInfo prop)
             {
                 if (obj == null)
                     return Helpers.IsValueType(prop.PropertyType) ? Activator.CreateInstance(prop.PropertyType) : null;
                 return prop.GetValue(obj, null);
             }
-            else if ((field = members[index] as FieldInfo) != null)
+            else if (members[index] is FieldInfo field)
             {
                 if (obj == null)
                     return Helpers.IsValueType(field.FieldType) ? Activator.CreateInstance(field.FieldType) : null;
@@ -93,7 +89,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             object[] values = new object[members.Length];
             bool invokeCtor = false;
@@ -110,7 +106,7 @@ namespace ProtoBuf.Serializers
                 if (field <= tails.Length)
                 {
                     IProtoSerializer tail = tails[field - 1];
-                    values[field - 1] = tails[field - 1].Read(ref state, tail.RequiresOldValue ? values[field - 1] : null, source);
+                    values[field - 1] = tails[field - 1].Read(source, ref state, tail.RequiresOldValue ? values[field - 1] : null);
                 }
                 else
                 {
@@ -133,16 +129,15 @@ namespace ProtoBuf.Serializers
 
         public bool ReturnsValue => false;
 
-        Type GetMemberType(int index)
+        bool IProtoTypeSerializer.CanCreateInstance() { return false; }
+
+#if FEAT_COMPILER
+        private Type GetMemberType(int index)
         {
             Type result = Helpers.GetMemberType(members[index]);
             if (result == null) throw new InvalidOperationException();
             return result;
         }
-
-        bool IProtoTypeSerializer.CanCreateInstance() { return false; }
-
-#if FEAT_COMPILER
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             using (Compiler.Local loc = ctx.GetLocalWithValue(ctor.DeclaringType, valueFrom))
@@ -303,9 +298,8 @@ namespace ProtoBuf.Serializers
                         }
 
                         ctx.MarkLabel(notRecognised);
-                        ctx.LoadReader();
-                        ctx.LoadState();
-                        ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField", ProtoReader.State.ByRefTypeArray));
+                        ctx.LoadReader(true);
+                        ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
 
                         ctx.MarkLabel(@continue);
                         ctx.EmitBasicRead("ReadFieldHeader", ctx.MapType(typeof(int)));
@@ -331,7 +325,6 @@ namespace ProtoBuf.Serializers
                     }
                 }
             }
-
         }
 #endif
     }

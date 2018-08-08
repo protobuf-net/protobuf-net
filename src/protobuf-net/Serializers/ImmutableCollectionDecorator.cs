@@ -6,11 +6,13 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class ImmutableCollectionDecorator : ListDecorator
+    internal sealed class ImmutableCollectionDecorator : ListDecorator
     {
         protected override bool RequireAdd { get { return false; } }
 
-        static Type ResolveIReadOnlyCollection(Type declaredType, Type t)
+#pragma warning disable RCS1163 // Unused parameter.
+        private static Type ResolveIReadOnlyCollection(Type declaredType, Type t)
+#pragma warning restore RCS1163 // Unused parameter.
         {
 #if COREFX || PROFILE259
             if (CheckIsIReadOnlyCollectionExactly(declaredType.GetTypeInfo())) return declaredType;
@@ -30,9 +32,9 @@ namespace ProtoBuf.Serializers
         }
 
 #if WINRT || COREFX || PROFILE259
-        static bool CheckIsIReadOnlyCollectionExactly(TypeInfo t)
+        private static bool CheckIsIReadOnlyCollectionExactly(TypeInfo t)
 #else
-        static bool CheckIsIReadOnlyCollectionExactly(Type t)
+        private static bool CheckIsIReadOnlyCollectionExactly(Type t)
 #endif
         {
             if (t != null && t.IsGenericType && t.Name.StartsWith("IReadOnlyCollection`"))
@@ -44,7 +46,7 @@ namespace ProtoBuf.Serializers
                 Type[] typeArgs = t.GetGenericArguments();
                 if (typeArgs.Length != 1 && typeArgs[0] != t) return false;
 #endif
-                    
+
                 return true;
             }
             return false;
@@ -107,7 +109,10 @@ namespace ProtoBuf.Serializers
 #endif
             {
                 if (!method.IsStatic || method.Name != "CreateBuilder" || !method.IsGenericMethodDefinition || method.GetParameters().Length != 0
-                    || method.GetGenericArguments().Length != typeArgs.Length) continue;
+                    || method.GetGenericArguments().Length != typeArgs.Length)
+                {
+                    continue;
+                }
 
                 builderFactory = method.MakeGenericMethod(typeArgs);
                 break;
@@ -120,13 +125,14 @@ namespace ProtoBuf.Serializers
 #else
             Type typeInfo = declaredType;
 #endif
-            isEmpty = Helpers.GetProperty(typeInfo, "IsDefaultOrEmpty", false); //struct based immutabletypes can have both a "default" and "empty" state
-            if (isEmpty == null) isEmpty = Helpers.GetProperty(typeInfo, "IsEmpty", false);
+            isEmpty = Helpers.GetProperty(typeInfo, "IsDefaultOrEmpty", false)
+                ?? Helpers.GetProperty(typeInfo, "IsEmpty", false); //struct based immutabletypes can have both a "default" and "empty" state
+
             if (isEmpty == null)
             {
                 //Fallback to checking length if a "IsEmpty" property is not found
-                length = Helpers.GetProperty(typeInfo, "Length", false);
-                if (length == null) length = Helpers.GetProperty(typeInfo, "Count", false);
+                length = Helpers.GetProperty(typeInfo, "Length", false)
+                    ?? Helpers.GetProperty(typeInfo, "Count", false);
 
                 if (length == null) length = Helpers.GetProperty(ResolveIReadOnlyCollection(declaredType, effectiveType[0]), "Count", false);
 
@@ -168,7 +174,7 @@ namespace ProtoBuf.Serializers
             this.finish = finish;
         }
 
-        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             object builderInstance = builderFactory.Invoke(null, null);
             int field = source.FieldNumber;
@@ -192,10 +198,10 @@ namespace ProtoBuf.Serializers
 
             if (packedWireType != WireType.None && source.WireType == WireType.String)
             {
-                SubItemToken token = ProtoReader.StartSubItem(ref state, source);
+                SubItemToken token = ProtoReader.StartSubItem(source, ref state);
                 while (ProtoReader.HasSubValue(packedWireType, source))
                 {
-                    args[0] = Tail.Read(ref state, null, source);
+                    args[0] = Tail.Read(source, ref state, null);
                     add.Invoke(builderInstance, args);
                 }
                 ProtoReader.EndSubItem(token, source);
@@ -204,7 +210,7 @@ namespace ProtoBuf.Serializers
             {
                 do
                 {
-                    args[0] = Tail.Read(ref state, null, source);
+                    args[0] = Tail.Read(source, ref state, null);
                     add.Invoke(builderInstance, args);
                 } while (source.TryReadFieldHeader(ref state, field));
             }
@@ -283,7 +289,6 @@ namespace ProtoBuf.Serializers
                             }
                         }
                     }
-
 
                     ctx.MarkLabel(done);
                 }

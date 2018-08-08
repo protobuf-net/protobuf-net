@@ -58,9 +58,9 @@ namespace ProtoBuf.Serializers
             serializer(value, dest);
         }
 
-        object IProtoSerializer.Read(ref ProtoReader.State state, object value, ProtoReader source)
+        object IProtoSerializer.Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            return deserializer(value, ref state, source);
+            return deserializer(source, ref state, value);
         }
 
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

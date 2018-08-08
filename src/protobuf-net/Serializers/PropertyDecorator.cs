@@ -6,11 +6,10 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class PropertyDecorator : ProtoDecoratorBase
+    internal sealed class PropertyDecorator : ProtoDecoratorBase
     {
-        public override Type ExpectedType => forType;
+        public override Type ExpectedType { get; }
         private readonly PropertyInfo property;
-        private readonly Type forType;
         public override bool RequiresOldValue => true;
         public override bool ReturnsValue => false;
         private readonly bool readOptionsWriteValue;
@@ -20,7 +19,7 @@ namespace ProtoBuf.Serializers
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(property != null);
-            this.forType = forType;
+            ExpectedType = forType;
             this.property = property;
             SanityCheck(model, property, tail, out readOptionsWriteValue, true, true);
             shadowSetter = GetShadowSetter(model, property);
@@ -28,7 +27,7 @@ namespace ProtoBuf.Serializers
 
         private static void SanityCheck(TypeModel model, PropertyInfo property, IProtoSerializer tail, out bool writeValue, bool nonPublic, bool allowInternal)
         {
-            if (property == null) throw new ArgumentNullException("property");
+            if (property == null) throw new ArgumentNullException(nameof(property));
 
             writeValue = tail.ReturnsValue && (GetShadowSetter(model, property) != null || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic, allowInternal) != null));
             if (!property.CanRead || Helpers.GetGetMethod(property, nonPublic, allowInternal) == null)
@@ -41,7 +40,7 @@ namespace ProtoBuf.Serializers
                 throw new InvalidOperationException("Cannot apply changes to property " + property.DeclaringType.FullName + "." + property.Name);
             }
         }
-        static MethodInfo GetShadowSetter(TypeModel model, PropertyInfo property)
+        private static MethodInfo GetShadowSetter(TypeModel model, PropertyInfo property)
         {
 #if COREFX
             MethodInfo method = Helpers.GetInstanceMethod(property.DeclaringType.GetTypeInfo(), "Set" + property.Name, new Type[] { property.PropertyType });
@@ -65,12 +64,12 @@ namespace ProtoBuf.Serializers
             if (value != null) Tail.Write(value, dest);
         }
 
-        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value != null);
 
             object oldVal = Tail.RequiresOldValue ? property.GetValue(value, null) : null;
-            object newVal = Tail.Read(ref state, oldVal, source);
+            object newVal = Tail.Read(source, ref state, oldVal);
             if (readOptionsWriteValue && newVal != null) // if the tail returns a null, intepret that as *no assign*
             {
                 if (shadowSetter == null)
@@ -140,7 +139,6 @@ namespace ProtoBuf.Serializers
                             ctx.MarkLabel(allDone);
                         }
                     }
-
                 }
                 else
                 { // don't want return value; drop it if anything there

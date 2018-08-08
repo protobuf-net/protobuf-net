@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class MemberSpecifiedDecorator : ProtoDecoratorBase
+    internal sealed class MemberSpecifiedDecorator : ProtoDecoratorBase
     {
         public override Type ExpectedType => Tail.ExpectedType;
 
@@ -29,9 +29,9 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            object result = Tail.Read(ref state, value, source);
+            object result = Tail.Read(source, ref state, value);
             if (setSpecified != null) setSpecified.Invoke(value, new object[] { true });
             return result;
         }
@@ -53,7 +53,6 @@ namespace ProtoBuf.Serializers
                 Tail.EmitWrite(ctx, loc);
                 ctx.MarkLabel(done);
             }
-
         }
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

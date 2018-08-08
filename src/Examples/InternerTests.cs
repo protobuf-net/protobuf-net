@@ -38,7 +38,7 @@ namespace Examples
             Foo foo;
             using (var reader = GetReader(out var state))
             {
-                foo = (Foo)reader.Model.Deserialize(ref state, reader, null, typeof(Foo));
+                foo = (Foo)reader.Model.Deserialize(reader, ref state, null, typeof(Foo));
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
@@ -52,7 +52,7 @@ namespace Examples
             using (var reader = GetReader(out var state))
             {
                 reader.InternStrings = true;
-                foo = (Foo)reader.Model.Deserialize(ref state, reader, null, typeof(Foo));
+                foo = (Foo)reader.Model.Deserialize(reader, ref state, null, typeof(Foo));
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
@@ -66,7 +66,7 @@ namespace Examples
             using (var reader = GetReader(out var state))
             {
                 reader.InternStrings = false;
-                foo = (Foo)reader.Model.Deserialize(ref state, reader, null, typeof(Foo));
+                foo = (Foo)reader.Model.Deserialize(reader, ref state, null, typeof(Foo));
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");

@@ -184,7 +184,7 @@ namespace ProtoBuf.Serializers
             if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize, dest.Context);
         }
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             if (isRootType && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize, source.Context); }
             int fieldNumber, lastFieldNumber = 0, lastFieldIndex = 0;
@@ -224,11 +224,11 @@ namespace ProtoBuf.Serializers
 
                         if (ser.ReturnsValue)
                         {
-                            value = ser.Read(ref state, value, source);
+                            value = ser.Read(source, ref state, value);
                         }
                         else
                         { // pop
-                            ser.Read(ref state, value, source);
+                            ser.Read(source, ref state, value);
                         }
 
                         lastFieldIndex = i;
@@ -621,18 +621,16 @@ namespace ProtoBuf.Serializers
                 }
 
                 EmitCreateIfNull(ctx, loc);
-                ctx.LoadReader();
-                ctx.LoadState();
+                ctx.LoadReader(true);
                 if (isExtensible)
                 {
                     ctx.LoadValue(loc);
                     ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("AppendExtensionData",
-                        new[] { ProtoReader.State.ByRefType, typeof(IExtensible) }));
+                        new[] { ProtoReader.State.ByRefStateType, typeof(IExtensible) }));
                 }
                 else
                 {
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField",
-                        ProtoReader.State.ByRefTypeArray));
+                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
                 }
                 ctx.MarkLabel(@continue);
                 ctx.EmitBasicRead("ReadFieldHeader", ctx.MapType(typeof(int)));
@@ -680,7 +678,7 @@ namespace ProtoBuf.Serializers
                     ctx.BranchIfTrue(allDone, false); // not null, but of the correct type
 
                     // otherwise, need to convert it
-                    ctx.LoadReader();
+                    ctx.LoadReader(false);
                     ctx.LoadValue(loc);
                     ((IProtoTypeSerializer)serializer).EmitCreateInstance(ctx);
 
@@ -764,7 +762,7 @@ namespace ProtoBuf.Serializers
             {
                 // track root object creation
                 ctx.CopyValue();
-                ctx.LoadReader();
+                ctx.LoadReader(false);
                 ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("NoteObject",
                         BindingFlags.Static | BindingFlags.Public));
             }

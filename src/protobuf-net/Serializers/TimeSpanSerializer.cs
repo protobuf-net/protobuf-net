@@ -17,16 +17,16 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             if (wellKnown)
             {
-                return BclHelpers.ReadDuration(ref state, source);
+                return BclHelpers.ReadDuration(source, ref state);
             }
             else
             {
                 Helpers.DebugAssert(value == null); // since replaces
-                return BclHelpers.ReadTimeSpan(ref state, source);
+                return BclHelpers.ReadTimeSpan(source, ref state);
             }
         }
 

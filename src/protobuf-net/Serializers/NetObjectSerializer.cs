@@ -25,9 +25,9 @@ namespace ProtoBuf.Serializers
 
         public bool RequiresOldValue => true;
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            return BclHelpers.ReadNetObject(value, ref state, source, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
+            return BclHelpers.ReadNetObject(source, ref state, value, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
         }
 
         public void Write(object value, ProtoWriter dest)
@@ -38,18 +38,21 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.LoadValue(entity);
-            ctx.CastToObject(ExpectedType);
-            ctx.LoadState();
-            ctx.LoadReader();
-            ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
-            if (ExpectedType == ctx.MapType(typeof(object))) ctx.LoadNullRef();
-            else ctx.LoadValue(ExpectedType);
-            ctx.LoadValue((int)options);
-            ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("ReadNetObject",
-                new[] { typeof(object), ProtoReader.State.ByRefType, typeof(ProtoReader),
-                typeof(int), typeof(Type), typeof(BclHelpers.NetObjectOptions)}));
-            ctx.CastFromObject(ExpectedType);
+            using (var val = ctx.GetLocalWithValue(ExpectedType, entity))
+            {
+                ctx.LoadReader(true);
+                ctx.LoadValue(val);
+                ctx.CastToObject(ExpectedType);
+                ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
+                if (ExpectedType == ctx.MapType(typeof(object))) ctx.LoadNullRef();
+                else ctx.LoadValue(ExpectedType);
+                ctx.LoadValue((int)options);
+
+                ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("ReadNetObject",
+                    new[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object),
+                    typeof(int), typeof(Type), typeof(BclHelpers.NetObjectOptions)}));
+                ctx.CastFromObject(ExpectedType);
+            }
         }
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

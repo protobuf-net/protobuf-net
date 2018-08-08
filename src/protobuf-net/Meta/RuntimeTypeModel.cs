@@ -803,18 +803,18 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        protected internal override object Deserialize(ref ProtoReader.State state, int key, object value, ProtoReader source)
+        protected internal override object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value)
         {
             //Helpers.DebugWriteLine("Deserialize", value);
             IProtoSerializer ser = ((MetaType)types[key]).Serializer;
             if (value == null && Helpers.IsValueType(ser.ExpectedType))
             {
                 if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType);
-                return ser.Read(ref state, value, source);
+                return ser.Read(source, ref state, value);
             }
             else
             {
-                return ser.Read(ref state, value, source);
+                return ser.Read(source, ref state, value);
             }
         }
 
@@ -934,7 +934,15 @@ namespace ProtoBuf.Meta
 
         private static ILGenerator Override(TypeBuilder type, string name)
         {
-            MethodInfo baseMethod = type.BaseType.GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
+            MethodInfo baseMethod;
+            try
+            {
+                baseMethod = type.BaseType.GetMethod(name, BindingFlags.NonPublic | BindingFlags.Instance);
+            }
+            catch (Exception ex)
+            {
+                throw new ArgumentException($"Unable to resolve '{name}': {ex.Message}", nameof(name), ex);
+            }
 
             ParameterInfo[] parameters = baseMethod.GetParameters();
             Type[] paramTypes = new Type[parameters.Length];
@@ -1141,7 +1149,7 @@ namespace ProtoBuf.Meta
             var il = Override(type, nameof(TypeModel.GetInternStrings));
             il.Emit(InternStrings ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Ret);
-            
+
             type.DefineDefaultConstructor(MethodAttributes.Public);
             il = type.DefineTypeInitializer().GetILGenerator();
             switch (knownTypesCategory)
@@ -1255,14 +1263,17 @@ namespace ProtoBuf.Meta
                 ctx.Return();
             }
 
-            il = Override(type, nameof(TypeModel.Deserialize));
+            il = Override(type, nameof(TypeModel.DeserializeCore));
             ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, MapType(typeof(object)), "Deserialize " + type.Name);
             // arg0 = this, arg1 = state, arg2 = key, arg3 = obj, arg4 = source
+
+            // arg0 = this, arg1 = source, arg2 = state, arg3 = key, arg4 = obj
+
             for (int i = 0; i < jumpTable.Length; i++)
             {
                 jumpTable[i] = ctx.DefineLabel();
             }
-            il.Emit(OpCodes.Ldarg_2);
+            il.Emit(OpCodes.Ldarg_3);
             ctx.Switch(jumpTable);
             ctx.LoadNullRef();
             ctx.Return();
@@ -1273,18 +1284,18 @@ namespace ProtoBuf.Meta
                 Type keyType = pair.Type.Type;
                 if (Helpers.IsValueType(keyType))
                 {
-                    il.Emit(OpCodes.Ldarg_3);
                     il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Ldarg_2);
                     il.Emit(OpCodes.Ldarg_S, (byte)4);
                     il.EmitCall(OpCodes.Call, EmitBoxedDeserializer(type, i, keyType, methodPairs, this, ilVersion, assemblyName), null);
                     ctx.Return();
                 }
                 else
                 {
-                    il.Emit(OpCodes.Ldarg_3);
-                    ctx.CastFromObject(keyType);
                     il.Emit(OpCodes.Ldarg_1);
+                    il.Emit(OpCodes.Ldarg_2);
                     il.Emit(OpCodes.Ldarg_S, (byte)4);
+                    ctx.CastFromObject(keyType);
                     il.EmitCall(OpCodes.Call, pair.Deserialize, null);
                     ctx.Return();
                 }
@@ -1456,7 +1467,7 @@ namespace ProtoBuf.Meta
 #endif
 ,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
-                    metaType.Type, new Type[] { metaType.Type, ProtoReader.State.ByRefType, MapType(typeof(ProtoReader)) });
+                    metaType.Type, new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, metaType.Type });
 
                 SerializerPair pair = new SerializerPair(
                     GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
@@ -1593,17 +1604,16 @@ namespace ProtoBuf.Meta
             MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i.ToString(), MethodAttributes.Static, CallingConventions.Standard,
                 model.MapType(typeof(object)),
-                new Type[] { model.MapType(typeof(object)), ProtoReader.State.ByRefType, model.MapType(typeof(ProtoReader)) });
+                new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object) });
             Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName, model.MapType(typeof(object)), "BoxedSerializer " + valueType.Name);
             ctx.LoadValue(ctx.InputValue);
             Compiler.CodeLabel @null = ctx.DefineLabel();
             ctx.BranchIfFalse(@null, true);
 
             Type mappedValueType = valueType;
+            ctx.LoadReader(true);
             ctx.LoadValue(ctx.InputValue);
             ctx.CastFromObject(mappedValueType);
-            ctx.LoadState();
-            ctx.LoadReader();
             ctx.EmitCall(dedicated);
             ctx.CastToObject(mappedValueType);
             ctx.Return();
@@ -1614,9 +1624,8 @@ namespace ProtoBuf.Meta
                 // create a new valueType
                 ctx.LoadAddress(typedVal, mappedValueType);
                 ctx.EmitCtor(mappedValueType);
+                ctx.LoadReader(true);
                 ctx.LoadValue(typedVal);
-                ctx.LoadState();
-                ctx.LoadReader();
                 ctx.EmitCall(dedicated);
                 ctx.CastToObject(mappedValueType);
                 ctx.Return();
@@ -1658,7 +1667,7 @@ namespace ProtoBuf.Meta
         }
 
 #if DEBUG
-        int lockCount;
+        private int lockCount;
         /// <summary>
         /// Gets how many times a model lock was taken
         /// </summary>

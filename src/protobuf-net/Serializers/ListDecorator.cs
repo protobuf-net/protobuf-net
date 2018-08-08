@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    class ListDecorator : ProtoDecoratorBase
+    internal class ListDecorator : ProtoDecoratorBase
     {
         internal static bool CanPack(WireType wireType)
         {
@@ -68,7 +68,7 @@ namespace ProtoBuf.Serializers
             if (returnList) options |= OPTIONS_ReturnList;
             if (overwriteList) options |= OPTIONS_OverwriteList;
             if (supportNull) options |= OPTIONS_SupportNull;
-            if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException("fieldNumber");
+            if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             if (!CanPack(packedWireType))
             {
                 if (writePacked) throw new InvalidOperationException("Only simple data-types can use packed encoding");
@@ -78,16 +78,15 @@ namespace ProtoBuf.Serializers
             this.fieldNumber = fieldNumber;
             if (writePacked) options |= OPTIONS_WritePacked;
             this.packedWireType = packedWireType;
-            if (declaredType == null) throw new ArgumentNullException("declaredType");
-            if (declaredType.IsArray) throw new ArgumentException("Cannot treat arrays as lists", "declaredType");
+            if (declaredType == null) throw new ArgumentNullException(nameof(declaredType));
+            if (declaredType.IsArray) throw new ArgumentException("Cannot treat arrays as lists", nameof(declaredType));
             this.declaredType = declaredType;
             this.concreteType = concreteType;
 
             // look for a public list.Add(typedObject) method
             if (RequireAdd)
             {
-                bool isList;
-                add = TypeModel.ResolveListAdd(model, declaredType, tail.ExpectedType, out isList);
+                add = TypeModel.ResolveListAdd(model, declaredType, tail.ExpectedType, out var isList);
                 if (isList)
                 {
                     options |= OPTIONS_IsList;
@@ -99,7 +98,6 @@ namespace ProtoBuf.Serializers
                 }
                 if (add == null) throw new InvalidOperationException("Unable to resolve a suitable Add method for " + declaredType.FullName);
             }
-
         }
         protected virtual bool RequireAdd => true;
 
@@ -186,12 +184,12 @@ namespace ProtoBuf.Serializers
                 Compiler.CodeLabel readPacked = packedWireType == WireType.None ? new Compiler.CodeLabel() : ctx.DefineLabel();
                 if (packedWireType != WireType.None)
                 {
-                    ctx.LoadReader();
+                    ctx.LoadReader(false);
                     ctx.LoadValue(typeof(ProtoReader).GetProperty("WireType"));
                     ctx.LoadValue((int)WireType.String);
                     ctx.BranchIfEqual(readPacked, false);
                 }
-                ctx.LoadReader();
+                ctx.LoadReader(false);
                 ctx.LoadValue(typeof(ProtoReader).GetProperty("FieldNumber"));
                 ctx.StoreValue(fieldNumber);
 
@@ -200,11 +198,10 @@ namespace ProtoBuf.Serializers
 
                 EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
 
-                ctx.LoadReader();
-                ctx.LoadState();
+                ctx.LoadReader(true);
                 ctx.LoadValue(fieldNumber);
                 ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("TryReadFieldHeader",
-                    new[] { ProtoReader.State.ByRefType, typeof(int) }));
+                    new[] { ProtoReader.State.ByRefStateType, typeof(int) }));
                 ctx.BranchIfTrue(@continue, false);
 
                 if (packedWireType != WireType.None)
@@ -213,15 +210,14 @@ namespace ProtoBuf.Serializers
                     ctx.Branch(allDone, false);
                     ctx.MarkLabel(readPacked);
 
-                    ctx.LoadState();
-                    ctx.LoadReader();                    
+                    ctx.LoadReader(true);
                     ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem",
-                        new[] { ProtoReader.State.ByRefType, typeof(ProtoReader) }));
+                        ProtoReader.State.ReaderStateTypeArray));
 
                     Compiler.CodeLabel testForData = ctx.DefineLabel(), noMoreData = ctx.DefineLabel();
                     ctx.MarkLabel(testForData);
                     ctx.LoadValue((int)packedWireType);
-                    ctx.LoadReader();
+                    ctx.LoadReader(false);
                     ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("HasSubValue"));
                     ctx.BranchIfFalse(noMoreData, false);
 
@@ -229,7 +225,7 @@ namespace ProtoBuf.Serializers
                     ctx.Branch(testForData, false);
 
                     ctx.MarkLabel(noMoreData);
-                    ctx.LoadReader();
+                    ctx.LoadReader(false);
                     ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem"));
                     ctx.MarkLabel(allDone);
                 }
@@ -318,7 +314,6 @@ namespace ProtoBuf.Serializers
             => GetEnumeratorInfo(model, ExpectedType, Tail.ExpectedType, out moveNext, out current);
         internal static MethodInfo GetEnumeratorInfo(TypeModel model, Type expectedType, Type itemType, out MethodInfo moveNext, out MethodInfo current)
         {
-
 #if COREFX
             TypeInfo enumeratorType = null, iteratorType;
 #else
@@ -370,7 +365,7 @@ namespace ProtoBuf.Serializers
                 enumeratorType = tmp;
 #endif
             }
-;
+
 #if PROFILE259
 			if (enumeratorType != null && enumeratorType.GetTypeInfo().IsAssignableFrom(expectedType
 #else
@@ -478,14 +473,14 @@ namespace ProtoBuf.Serializers
         {
             SubItemToken token;
             bool writePacked = WritePacked;
-            bool fixedSizePacked = writePacked & CanUsePackedPrefix() && value is ICollection;
+            bool fixedSizePacked = (writePacked & CanUsePackedPrefix()) && value is ICollection;
             if (writePacked)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
                 if (fixedSizePacked)
                 {
                     ProtoWriter.WritePackedPrefix(((ICollection)value).Count, packedWireType, dest);
-                    token = default(SubItemToken);
+                    token = default;
                 }
                 else
                 {
@@ -519,7 +514,7 @@ namespace ProtoBuf.Serializers
         private bool CanUsePackedPrefix() =>
             ArrayDecorator.CanUsePackedPrefix(packedWireType, Tail.ExpectedType);
 
-        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             try
             {
@@ -529,13 +524,13 @@ namespace ProtoBuf.Serializers
                 bool isList = IsList && !SuppressIList;
                 if (packedWireType != WireType.None && source.WireType == WireType.String)
                 {
-                    SubItemToken token = ProtoReader.StartSubItem(ref state, source);
+                    SubItemToken token = ProtoReader.StartSubItem(source, ref state);
                     if (isList)
                     {
                         IList list = (IList)value;
                         while (ProtoReader.HasSubValue(packedWireType, source))
                         {
-                            list.Add(Tail.Read(ref state, null, source));
+                            list.Add(Tail.Read(source, ref state, null));
                         }
                     }
                     else
@@ -543,7 +538,7 @@ namespace ProtoBuf.Serializers
                         object[] args = new object[1];
                         while (ProtoReader.HasSubValue(packedWireType, source))
                         {
-                            args[0] = Tail.Read(ref state, null, source);
+                            args[0] = Tail.Read(source, ref state, null);
                             add.Invoke(value, args);
                         }
                     }
@@ -556,7 +551,7 @@ namespace ProtoBuf.Serializers
                         IList list = (IList)value;
                         do
                         {
-                            list.Add(Tail.Read(ref state, null, source));
+                            list.Add(Tail.Read(source, ref state, null));
                         } while (source.TryReadFieldHeader(ref state, field));
                     }
                     else
@@ -564,7 +559,7 @@ namespace ProtoBuf.Serializers
                         object[] args = new object[1];
                         do
                         {
-                            args[0] = Tail.Read(ref state, null, source);
+                            args[0] = Tail.Read(source, ref state, null);
                             add.Invoke(value, args);
                         } while (source.TryReadFieldHeader(ref state, field));
                     }
@@ -577,7 +572,6 @@ namespace ProtoBuf.Serializers
                 throw;
             }
         }
-
     }
 }
 #endif

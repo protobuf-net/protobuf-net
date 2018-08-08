@@ -5,7 +5,7 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class DecimalSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(decimal);
+        private static readonly Type expectedType = typeof(decimal);
 
         public Type ExpectedType => expectedType;
 
@@ -13,10 +13,10 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return BclHelpers.ReadDecimal(ref state, source);
+            return BclHelpers.ReadDecimal(source, ref state);
         }
 
         public void Write(object value, ProtoWriter dest)
@@ -29,7 +29,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)), nameof(BclHelpers.WriteDecimal), valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead<BclHelpers>(nameof(BclHelpers.ReadDecimal), ExpectedType);
         }

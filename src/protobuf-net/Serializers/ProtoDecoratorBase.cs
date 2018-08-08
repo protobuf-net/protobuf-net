@@ -11,7 +11,7 @@ namespace ProtoBuf.Serializers
         public abstract bool ReturnsValue { get; }
         public abstract bool RequiresOldValue { get; }
         public abstract void Write(object value, ProtoWriter dest);
-        public abstract object Read(ref ProtoReader.State state, object value, ProtoReader source);
+        public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
 
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom) { EmitWrite(ctx, valueFrom); }

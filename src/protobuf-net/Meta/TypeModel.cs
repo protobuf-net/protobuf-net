@@ -349,11 +349,11 @@ namespace ProtoBuf.Meta
                 int key = GetKey(ref type);
                 if (key >= 0 && !Helpers.IsEnum(type))
                 {
-                    value = Deserialize(ref state, key, value, reader);
+                    value = DeserializeCore(reader, ref state, key, value);
                 }
                 else
                 {
-                    if (!(TryDeserializeAuxiliaryType(ref state, reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null) || len == 0))
+                    if (!(TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null) || len == 0))
                     {
                         TypeModel.ThrowUnexpectedType(type); // throws
                     }
@@ -582,7 +582,7 @@ namespace ProtoBuf.Meta
             {
                 reader = ProtoReader.Create(out var state, source, this, context, ProtoReader.TO_EOF);
                 if (value != null) reader.SetRootObject(value);
-                object obj = DeserializeCore(ref state, reader, type, value, autoCreate);
+                object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
                 reader.CheckFullyConsumed(ref state);
                 return obj;
             }
@@ -675,7 +675,7 @@ namespace ProtoBuf.Meta
             {
                 reader = ProtoReader.Create(out var state, source, this, context, length);
                 if (value != null) reader.SetRootObject(value);
-                object obj = DeserializeCore(ref state, reader, type, value, autoCreate);
+                object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
                 reader.CheckFullyConsumed(ref state);
                 return obj;
             }
@@ -695,10 +695,10 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         [Obsolete(ProtoReader.UseStateAPI, false)]
-        public object Deserialize(ProtoReader source, object value, System.Type type)
+        public object Deserialize(ProtoReader source, object value, Type type)
         {
             ProtoReader.State state = default;
-            return Deserialize(ref state, source, value, type);
+            return Deserialize(source, ref state, value, type);
         }
 
         /// <summary>
@@ -711,25 +711,25 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object Deserialize(ref ProtoReader.State state, ProtoReader source, object value, System.Type type)
+        public object Deserialize(ProtoReader source, ref ProtoReader.State state, object value, System.Type type)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             bool autoCreate = PrepareDeserialize(value, ref type);
             if (value != null) source.SetRootObject(value);
-            object obj = DeserializeCore(ref state, source, type, value, autoCreate);
+            object obj = DeserializeAny(source, ref state, type, value, autoCreate);
             source.CheckFullyConsumed(ref state);
             return obj;
         }
 
-        private object DeserializeCore(ref ProtoReader.State state, ProtoReader reader, Type type, object value, bool noAutoCreate)
+        private object DeserializeAny(ProtoReader reader, ref ProtoReader.State state, Type type, object value, bool noAutoCreate)
         {
             int key = GetKey(ref type);
             if (key >= 0 && !Helpers.IsEnum(type))
             {
-                return Deserialize(ref state, key, value, reader);
+                return DeserializeCore(reader, ref state, key, value);
             }
             // this returns true to say we actively found something, but a value is assigned either way (or throws)
-            TryDeserializeAuxiliaryType(ref state, reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, noAutoCreate, false, null);
+            TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, noAutoCreate, false, null);
             return value;
         }
 
@@ -950,7 +950,7 @@ namespace ProtoBuf.Meta
             object[] args = isList ? null : new object[1];
             BasicList arraySurrogate = listType.IsArray ? new BasicList() : null;
 
-            while (TryDeserializeAuxiliaryType(ref state, reader, format, tag, itemType, ref nextItem, true, true, true, true, value ?? listType))
+            while (TryDeserializeAuxiliaryType(reader, ref state, format, tag, itemType, ref nextItem, true, true, true, true, value ?? listType))
             {
                 found = true;
                 if (value == null && arraySurrogate == null)
@@ -1070,10 +1070,10 @@ namespace ProtoBuf.Meta
             return Activator.CreateInstance(concreteListType);
         }
 
-        internal bool TryDeserializeAuxiliaryType(ref ProtoReader.SolidState state, ProtoReader reader, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
+        internal bool TryDeserializeAuxiliaryType(ProtoReader reader, ref ProtoReader.SolidState state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
         {
             var liquid = state.Liquify();
-            var result = TryDeserializeAuxiliaryType(ref liquid, reader, format, tag, type, ref value,
+            var result = TryDeserializeAuxiliaryType(reader, ref liquid, format, tag, type, ref value,
                 skipOtherFields, asListItem, autoCreate, insideList, parentListOrType);
             state = liquid.Solidify();
             return result;
@@ -1090,7 +1090,7 @@ namespace ProtoBuf.Meta
         ///  - IList sets of any type handled by TryDeserializeAuxiliaryType
         /// </para>
         /// </summary>
-        internal bool TryDeserializeAuxiliaryType(ref ProtoReader.State state, ProtoReader reader, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
+        internal bool TryDeserializeAuxiliaryType(ProtoReader reader, ref ProtoReader.State state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
             Type itemType = null;
@@ -1152,12 +1152,12 @@ namespace ProtoBuf.Meta
                     {
                         case WireType.String:
                         case WireType.StartGroup:
-                            SubItemToken token = ProtoReader.StartSubItem(ref state, reader);
-                            value = Deserialize(ref state, modelKey, value, reader);
+                            SubItemToken token = ProtoReader.StartSubItem(reader, ref state);
+                            value = DeserializeCore(reader, ref state, modelKey, value);
                             ProtoReader.EndSubItem(token, reader);
                             continue;
                         default:
-                            value = Deserialize(ref state, modelKey, value, reader);
+                            value = DeserializeCore(reader, ref state, modelKey, value);
                             continue;
                     }
                 }
@@ -1175,12 +1175,12 @@ namespace ProtoBuf.Meta
                     case ProtoTypeCode.Char: value = (char)reader.ReadUInt16(ref state); continue;
                     case ProtoTypeCode.Double: value = reader.ReadDouble(ref state); continue;
                     case ProtoTypeCode.Single: value = reader.ReadSingle(ref state); continue;
-                    case ProtoTypeCode.DateTime: value = BclHelpers.ReadDateTime(ref state, reader); continue;
-                    case ProtoTypeCode.Decimal: value = BclHelpers.ReadDecimal(ref state, reader); continue;
+                    case ProtoTypeCode.DateTime: value = BclHelpers.ReadDateTime(reader, ref state); continue;
+                    case ProtoTypeCode.Decimal: value = BclHelpers.ReadDecimal(reader, ref state); continue;
                     case ProtoTypeCode.String: value = reader.ReadString(ref state); continue;
-                    case ProtoTypeCode.ByteArray: value = ProtoReader.AppendBytes((byte[])value, ref state, reader); continue;
-                    case ProtoTypeCode.TimeSpan: value = BclHelpers.ReadTimeSpan(ref state, reader); continue;
-                    case ProtoTypeCode.Guid: value = BclHelpers.ReadGuid(ref state, reader); continue;
+                    case ProtoTypeCode.ByteArray: value = ProtoReader.AppendBytes((byte[])value, reader, ref state); continue;
+                    case ProtoTypeCode.TimeSpan: value = BclHelpers.ReadTimeSpan(reader, ref state); continue;
+                    case ProtoTypeCode.Guid: value = BclHelpers.ReadGuid(reader, ref state); continue;
                     case ProtoTypeCode.Uri: value = new Uri(reader.ReadString(ref state), UriKind.RelativeOrAbsolute); continue;
                 }
             }
@@ -1354,7 +1354,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        protected internal abstract object Deserialize(ref ProtoReader.State state, int key, object value, ProtoReader source);
+        protected internal abstract object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value);
 
         //internal ProtoSerializer Create(IProtoSerializer head)
         //{
@@ -1409,7 +1409,7 @@ namespace ProtoBuf.Meta
                     try
                     {
                         reader = ProtoReader.Create(out var state, ms, this, null, ProtoReader.TO_EOF);
-                        return Deserialize(ref state, key, null, reader);
+                        return DeserializeCore(reader, ref state, key, null);
                     }
                     finally
                     {
@@ -1440,7 +1440,7 @@ namespace ProtoBuf.Meta
                 {
                     reader = ProtoReader.Create(out var state, ms, this, null, ProtoReader.TO_EOF);
                     value = null; // start from scratch!
-                    TryDeserializeAuxiliaryType(ref state, reader, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null);
+                    TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null);
                     return value;
                 }
                 finally
@@ -1663,15 +1663,10 @@ namespace ProtoBuf.Meta
 #endif
 
 #if DEBUG // this is used by some unit tests only, to ensure no buffering when buffering is disabled
-        private bool forwardsOnly;
         /// <summary>
         /// If true, buffering of nested objects is disabled
         /// </summary>
-        public bool ForwardsOnly
-        {
-            get { return forwardsOnly; }
-            set { forwardsOnly = value; }
-        }
+        public bool ForwardsOnly { get; set; }
 #endif
 
         internal virtual Type GetType(string fullName, Assembly context)

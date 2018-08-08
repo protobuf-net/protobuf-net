@@ -2,6 +2,6 @@
 namespace ProtoBuf.Compiler
 {
     internal delegate void ProtoSerializer(object value, ProtoWriter dest);
-    internal delegate object ProtoDeserializer(object value, ref ProtoReader.State state, ProtoReader source);
+    internal delegate object ProtoDeserializer(ProtoReader source, ref ProtoReader.State state, object value);
 }
 #endif

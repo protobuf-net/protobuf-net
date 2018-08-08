@@ -6,18 +6,16 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class TagDecorator : ProtoDecoratorBase, IProtoTypeSerializer
+    internal sealed class TagDecorator : ProtoDecoratorBase, IProtoTypeSerializer
     {
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {
-            IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
-            return pts != null && pts.HasCallbacks(callbackType);
+            return Tail is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);
         }
 
         public bool CanCreateInstance()
         {
-            IProtoTypeSerializer pts = Tail as IProtoTypeSerializer;
-            return pts != null && pts.CanCreateInstance();
+            return Tail is IProtoTypeSerializer pts && pts.CanCreateInstance();
         }
 
         public object CreateInstance(ProtoReader source)
@@ -66,12 +64,12 @@ namespace ProtoBuf.Serializers
 
         private bool NeedsHint => ((int)wireType & ~7) != 0;
 
-        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(fieldNumber == source.FieldNumber);
             if (strict) { source.Assert(wireType); }
             else if (NeedsHint) { source.Hint(wireType); }
-            return Tail.Read(ref state, value, source);
+            return Tail.Read(source, ref state, value);
         }
 
         public override void Write(object value, ProtoWriter dest)
@@ -79,7 +77,6 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest);
             Tail.Write(value, dest);
         }
-
 
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -95,7 +92,7 @@ namespace ProtoBuf.Serializers
         {
             if (strict || NeedsHint)
             {
-                ctx.LoadReader();
+                ctx.LoadReader(false);
                 ctx.LoadValue((int)wireType);
                 ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod(strict ? "Assert" : "Hint"));
             }
@@ -103,6 +100,5 @@ namespace ProtoBuf.Serializers
         }
 #endif
     }
-
 }
 #endif

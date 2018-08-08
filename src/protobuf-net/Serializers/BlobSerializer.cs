@@ -22,9 +22,9 @@ namespace ProtoBuf.Serializers
 
         private readonly bool overwriteList;
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, ref state, source);
+            return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, source, ref state);
         }
 
         public void Write(object value, ProtoWriter dest)
@@ -49,11 +49,10 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadValue(entity);
             }
-            ctx.LoadState();
-            ctx.LoadReader();
+            ctx.LoadReader(true);
             ctx.EmitCall(ctx.MapType(typeof(ProtoReader))
                .GetMethod(nameof(ProtoReader.AppendBytes),
-               new[] { typeof(byte[]), ProtoReader.State.ByRefType, typeof(ProtoReader)}));
+               new[] { typeof(byte[]), typeof(ProtoReader), ProtoReader.State.ByRefStateType}));
         }
 #endif
     }

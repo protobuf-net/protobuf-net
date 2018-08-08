@@ -5,7 +5,7 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class Int32Serializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(int);
+        private static readonly Type expectedType = typeof(int);
 
         public Type ExpectedType => expectedType;
 
@@ -13,7 +13,7 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return source.ReadInt32(ref state);

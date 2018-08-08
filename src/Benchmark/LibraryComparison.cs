@@ -23,7 +23,7 @@ namespace Benchmark
             var model = RuntimeTypeModel.Default;
             using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
             {
-                return (protogen.Database)model.Deserialize(ref state, reader, null, typeof(protogen.Database));
+                return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
             }
         }
         [Benchmark(Description = "ROM*")]
@@ -44,7 +44,7 @@ namespace Benchmark
             var model = RuntimeTypeModel.Default;
             using (var reader = ProtoReader.Create(out var state, new MemoryStream(_data), model))
             {
-                return (protogen.Database)model.Deserialize(ref state, reader, null, typeof(protogen.Database));
+                return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
             }
         }
         [Benchmark(Description = "MemoryStream*")]
@@ -72,7 +72,7 @@ namespace Benchmark
                         do
                         {
                             protogen.Order _1 = default;
-                            tok = ProtoReader.StartSubItem(ref state, reader);
+                            tok = ProtoReader.StartSubItem(reader, ref state);
                             Merge(reader, ref state, ref _1);
                             ProtoReader.EndSubItem(tok, reader);
                             obj.Orders.Add(_1);
@@ -103,13 +103,13 @@ namespace Benchmark
                         obj.EmployeeID = reader.ReadInt32(ref state);
                         break;
                     case 4:
-                        obj.OrderDate = BclHelpers.ReadTimestamp(ref state, reader);
+                        obj.OrderDate = BclHelpers.ReadTimestamp(reader, ref state);
                         break;
                     case 5:
-                        obj.RequiredDate = BclHelpers.ReadTimestamp(ref state, reader);
+                        obj.RequiredDate = BclHelpers.ReadTimestamp(reader, ref state);
                         break;
                     case 6:
-                        obj.ShippedDate = BclHelpers.ReadTimestamp(ref state, reader);
+                        obj.ShippedDate = BclHelpers.ReadTimestamp(reader, ref state);
                         break;
                     case 7:
                         obj.ShipVia = reader.ReadInt32(ref state);
@@ -139,7 +139,7 @@ namespace Benchmark
                         do
                         {
                             protogen.OrderLine _15 = default;
-                            tok = ProtoReader.StartSubItem(ref state, reader);
+                            tok = ProtoReader.StartSubItem(reader, ref state);
                             Merge(reader, ref state, ref _15);
                             ProtoReader.EndSubItem(tok, reader);
                             obj.Lines.Add(_15);

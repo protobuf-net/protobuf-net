@@ -11,8 +11,8 @@ namespace ProtoBuf
         /// </summary>
         public ref struct State
         {
-            internal static readonly Type ByRefType = typeof(State).MakeByRefType();
-            internal static readonly Type[] ByRefTypeArray = new[] { ByRefType };
+            internal static readonly Type ByRefStateType = typeof(State).MakeByRefType();
+            internal static readonly Type[] StateTypeArray = new[] { ByRefStateType }, ReaderStateTypeArray = new [] { typeof(ProtoReader), ByRefStateType };
 #if PLAT_SPANS
             internal SolidState Solidify() => new SolidState(
                 _memory.Slice(OffsetInCurrent, RemainingInCurrent));

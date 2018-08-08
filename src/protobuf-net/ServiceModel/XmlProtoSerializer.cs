@@ -170,7 +170,7 @@ namespace ProtoBuf.ServiceModel
                 try
                 {
                     protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
-                    return model.Deserialize(ref state, key, null, protoReader);
+                    return model.DeserializeCore(protoReader, ref state, key, null);
                 }
                 finally
                 {
@@ -192,7 +192,7 @@ namespace ProtoBuf.ServiceModel
                     try
                     {
                         protoReader = ProtoReader.Create(out var state, ms, model, null, ProtoReader.TO_EOF);
-                        result = model.Deserialize(ref state, key, null, protoReader);
+                        result = model.DeserializeCore(protoReader, ref state, key, null);
                     }
                     finally
                     {

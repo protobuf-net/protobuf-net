@@ -3,9 +3,9 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class Int16Serializer : IProtoSerializer
+    internal sealed class Int16Serializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(short);
+        private static readonly Type expectedType = typeof(short);
 
         public Type ExpectedType => expectedType;
 
@@ -13,7 +13,7 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return source.ReadInt16(ref state);

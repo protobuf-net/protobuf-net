@@ -56,7 +56,7 @@ namespace ProtoBuf
             {
                 SerializationContext ctx = new SerializationContext();
                 reader = ProtoReader.CreateSolid(out var state, stream, model, ctx, ProtoReader.TO_EOF);
-                while (model.TryDeserializeAuxiliaryType(ref state, reader, format, tag, type, ref value, true, true, false, false, null) && value != null)
+                while (model.TryDeserializeAuxiliaryType(reader, ref state, format, tag, type, ref value, true, true, false, false, null) && value != null)
                 {
                     if (!singleton)
                     {

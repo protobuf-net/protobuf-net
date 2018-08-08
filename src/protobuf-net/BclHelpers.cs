@@ -166,15 +166,15 @@ namespace ProtoBuf
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
             ProtoReader.State state = default;
-            return ReadTimeSpan(ref state, source);
+            return ReadTimeSpan(source, ref state);
         }
 
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>        
-        public static TimeSpan ReadTimeSpan(ref ProtoReader.State state, ProtoReader source)
+        public static TimeSpan ReadTimeSpan(ProtoReader source, ref ProtoReader.State state)
         {
-            long ticks = ReadTimeSpanTicks(ref state, source, out DateTimeKind kind);
+            long ticks = ReadTimeSpanTicks(source, ref state, out DateTimeKind kind);
             if (ticks == long.MinValue) return TimeSpan.MinValue;
             if (ticks == long.MaxValue) return TimeSpan.MaxValue;
             return TimeSpan.FromTicks(ticks);
@@ -187,26 +187,26 @@ namespace ProtoBuf
         public static TimeSpan ReadDuration(ProtoReader source)
         {
             ProtoReader.State state = default;
-            return ReadDuration(ref state, source);
+            return ReadDuration(source, ref state);
         }
 
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
-        public static TimeSpan ReadDuration(ref ProtoReader.State state, ProtoReader source)
+        public static TimeSpan ReadDuration(ProtoReader source, ref ProtoReader.State state)
         {
 #if PLAT_SPANS
             if (source.WireType == WireType.String && state.RemainingInCurrent >= 20)
             {
-                var ts = TryReadDurationFast(ref state, source);
+                var ts = TryReadDurationFast(source, ref state);
                 if (ts.HasValue) return ts.GetValueOrDefault();
             }
 #endif
-            return ReadDurationFallback(ref state, source);
+            return ReadDurationFallback(source, ref state);
         }
 
 #if PLAT_SPANS
-        private static TimeSpan? TryReadDurationFast(ref ProtoReader.State state, ProtoReader source)
+        private static TimeSpan? TryReadDurationFast(ProtoReader source, ref ProtoReader.State state)
         {
             int offset = state.OffsetInCurrent;
             var span = state.Span;
@@ -230,11 +230,11 @@ namespace ProtoBuf
             return FromDurationSeconds((long)seconds, (int)(long)nanos);
         }
 #endif
-        private static TimeSpan ReadDurationFallback(ref ProtoReader.State state, ProtoReader source)
+        private static TimeSpan ReadDurationFallback(ProtoReader source, ref ProtoReader.State state)
         {
             long seconds = 0;
             int nanos = 0;
-            SubItemToken token = ProtoReader.StartSubItem(ref state, source);
+            SubItemToken token = ProtoReader.StartSubItem(source, ref state);
             int fieldNumber;
             while ((fieldNumber = source.ReadFieldHeader(ref state)) > 0)
             {
@@ -287,18 +287,18 @@ namespace ProtoBuf
         public static DateTime ReadTimestamp(ProtoReader source)
         {
             ProtoReader.State state = default;
-            return ReadTimestamp(ref state, source);
+            return ReadTimestamp(source, ref state);
         }
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
-        public static DateTime ReadTimestamp(ref ProtoReader.State state, ProtoReader source)
+        public static DateTime ReadTimestamp(ProtoReader source, ref ProtoReader.State state)
         {
             // note: DateTime is only defined for just over 0000 to just below 10000;
             // TimeSpan has a range of +/- 10,675,199 days === 29k years;
             // so we can just use epoch time delta
-            return TimestampEpoch + ReadDuration(ref state, source);
+            return TimestampEpoch + ReadDuration(source, ref state);
         }
 
         /// <summary>
@@ -339,15 +339,15 @@ namespace ProtoBuf
         public static DateTime ReadDateTime(ProtoReader source)
         {
             ProtoReader.State state = default;
-            return ReadDateTime(ref state, source);
+            return ReadDateTime(source, ref state);
         }
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream
         /// </summary>
-        public static DateTime ReadDateTime(ref ProtoReader.State state, ProtoReader source)
+        public static DateTime ReadDateTime(ProtoReader source, ref ProtoReader.State state)
         {
-            long ticks = ReadTimeSpanTicks(ref state, source, out DateTimeKind kind);
+            long ticks = ReadTimeSpanTicks(source, ref state, out DateTimeKind kind);
             if (ticks == long.MinValue) return DateTime.MinValue;
             if (ticks == long.MaxValue) return DateTime.MaxValue;
             return EpochOrigin[(int)kind].AddTicks(ticks);
@@ -399,14 +399,14 @@ namespace ProtoBuf
             WriteTimeSpanImpl(delta, dest, includeKind ? value.Kind : DateTimeKind.Unspecified);
         }
 
-        private static long ReadTimeSpanTicks(ref ProtoReader.State state, ProtoReader source, out DateTimeKind kind)
+        private static long ReadTimeSpanTicks(ProtoReader source, ref ProtoReader.State state, out DateTimeKind kind)
         {
             kind = DateTimeKind.Unspecified;
             switch (source.WireType)
             {
                 case WireType.String:
                 case WireType.StartGroup:
-                    SubItemToken token = ProtoReader.StartSubItem(ref state, source);
+                    SubItemToken token = ProtoReader.StartSubItem(source, ref state);
                     int fieldNumber;
                     TimeSpanScale scale = TimeSpanScale.Days;
                     long value = 0;
@@ -479,19 +479,19 @@ namespace ProtoBuf
         public static decimal ReadDecimal(ProtoReader reader)
         {
             ProtoReader.State state = default;
-            return ReadDecimal(ref state, reader);
+            return ReadDecimal(reader, ref state);
         }
         /// <summary>
         /// Parses a decimal from a protobuf stream
         /// </summary>
-        public static decimal ReadDecimal(ref ProtoReader.State state, ProtoReader reader)
+        public static decimal ReadDecimal(ProtoReader reader, ref ProtoReader.State state)
         {
             ulong low = 0;
             uint high = 0;
             uint signScale = 0;
 
             int fieldNumber;
-            SubItemToken token = ProtoReader.StartSubItem(ref state, reader);
+            SubItemToken token = ProtoReader.StartSubItem(reader, ref state);
             while ((fieldNumber = reader.ReadFieldHeader(ref state)) > 0)
             {
                 switch (fieldNumber)
@@ -568,17 +568,17 @@ namespace ProtoBuf
         public static Guid ReadGuid(ProtoReader source)
         {
             ProtoReader.State state = default;
-            return ReadGuid(ref state, source);
+            return ReadGuid(source, ref state);
         }
 
         /// <summary>
         /// Parses a Guid from a protobuf stream
         /// </summary>
-        public static Guid ReadGuid(ref ProtoReader.State state, ProtoReader source)
+        public static Guid ReadGuid(ProtoReader source, ref ProtoReader.State state)
         {
             ulong low = 0, high = 0;
             int fieldNumber;
-            SubItemToken token = ProtoReader.StartSubItem(ref state, source);
+            SubItemToken token = ProtoReader.StartSubItem(source, ref state);
             while ((fieldNumber = source.ReadFieldHeader(ref state)) > 0)
             {
                 switch (fieldNumber)
@@ -640,15 +640,15 @@ namespace ProtoBuf
         public static object ReadNetObject(object value, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
             ProtoReader.State state = default;
-            return ReadNetObject(value, ref state, source, key, type, options);
+            return ReadNetObject(source, ref state, value, key, type, options);
         }
 
         /// <summary>
         /// Reads an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
-        public static object ReadNetObject(object value, ref ProtoReader.State state, ProtoReader source, int key, Type type, NetObjectOptions options)
+        public static object ReadNetObject(ProtoReader source, ref ProtoReader.State state, object value, int key, Type type, NetObjectOptions options)
         {
-            SubItemToken token = ProtoReader.StartSubItem(ref state, source);
+            SubItemToken token = ProtoReader.StartSubItem(source, ref state);
             int fieldNumber;
             int newObjectKey = -1, newTypeKey = -1, tmp;
             while ((fieldNumber = source.ReadFieldHeader(ref state)) > 0)
@@ -712,7 +712,7 @@ namespace ProtoBuf
                         }
                         else
                         {
-                            value = ProtoReader.ReadTypedObject(oldValue, key, ref state, source, type);
+                            value = ProtoReader.ReadTypedObject(source, ref state, oldValue, key, type);
                         }
 
                         if (newObjectKey >= 0)

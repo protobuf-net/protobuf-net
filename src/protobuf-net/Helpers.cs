@@ -56,7 +56,9 @@ namespace ProtoBuf
 #endif
         }
         [System.Diagnostics.Conditional("TRACE")]
+#pragma warning disable RCS1163 // Unused parameter.
         public static void TraceWriteLine(string message)
+#pragma warning restore RCS1163 // Unused parameter.
         {
 #if TRACE
 #if CF2 || PORTABLE || COREFX || PROFILE259
@@ -141,7 +143,7 @@ namespace ProtoBuf
         }
         internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name)
         {
-            return GetInstanceMethod(declaringType.AsType(), name); ;
+            return GetInstanceMethod(declaringType.AsType(), name);
         }
         internal static MethodInfo GetStaticMethod(Type declaringType, string name)
         {
@@ -191,7 +193,7 @@ namespace ProtoBuf
             switch (found.Count)
             {
                 case 0: return null;
-                case 1: return found.First();
+                case 1: return found[0];
                 default: throw new AmbiguousMatchException(name);
             }
         }
@@ -209,7 +211,7 @@ namespace ProtoBuf
         }
         internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name)
         {
-            return GetInstanceMethod(declaringType.AsType(), name); ;
+            return GetInstanceMethod(declaringType.AsType(), name);
         }
         internal static MethodInfo GetStaticMethod(Type declaringType, string name)
         {
@@ -233,8 +235,7 @@ namespace ProtoBuf
             var methods = declaringType.GetRuntimeMethods();
             foreach (MethodInfo method in methods)
             {
-                if (method.Name == name &&
-                    IsMatch(method.GetParameters(), parameterTypes))
+                if (method.Name == name && IsMatch(method.GetParameters(), parameterTypes))
                 {
                     return method;
                 }
@@ -246,8 +247,7 @@ namespace ProtoBuf
             var methods = declaringType.GetRuntimeMethods();
             foreach (MethodInfo method in methods)
             {
-                if (method.Name == name &&
-                    IsMatch(method.GetParameters(), parameterTypes))
+                if (method.Name == name && IsMatch(method.GetParameters(), parameterTypes))
                 {
                     return method;
                 }
@@ -517,12 +517,10 @@ namespace ProtoBuf
         }
 #endif
 
-
         internal static object ParseEnum(Type type, string value)
         {
             return Enum.Parse(type, value, true);
         }
-
 
         internal static MemberInfo[] GetInstanceFieldsAndProperties(Type type, bool publicOnly)
         {

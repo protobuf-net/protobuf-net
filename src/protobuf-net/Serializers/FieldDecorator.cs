@@ -4,18 +4,19 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class FieldDecorator : ProtoDecoratorBase
+    internal sealed class FieldDecorator : ProtoDecoratorBase
     {
-        public override Type ExpectedType => forType;
+        public override Type ExpectedType { get; }
+
         private readonly FieldInfo field;
-        private readonly Type forType;
+
         public override bool RequiresOldValue => true;
         public override bool ReturnsValue => false;
         public FieldDecorator(Type forType, FieldInfo field, IProtoSerializer tail) : base(tail)
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(field != null);
-            this.forType = forType;
+            ExpectedType = forType;
             this.field = field;
         }
 
@@ -26,14 +27,13 @@ namespace ProtoBuf.Serializers
             if (value != null) Tail.Write(value, dest);
         }
 
-        public override object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value != null);
-            object newValue = Tail.Read(ref state, (Tail.RequiresOldValue ? field.GetValue(value) : null), source);
+            object newValue = Tail.Read(source, ref state, Tail.RequiresOldValue ? field.GetValue(value) : null);
             if (newValue != null) field.SetValue(value, newValue);
             return null;
         }
-
 
 #if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

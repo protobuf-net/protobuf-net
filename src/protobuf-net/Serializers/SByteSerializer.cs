@@ -5,15 +5,15 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class SByteSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(sbyte);
-        
+        private static readonly Type expectedType = typeof(sbyte);
+
         public Type ExpectedType => expectedType;
 
         bool IProtoSerializer.RequiresOldValue => false;
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(ref ProtoReader.State state, object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
             return source.ReadSByte(ref state);

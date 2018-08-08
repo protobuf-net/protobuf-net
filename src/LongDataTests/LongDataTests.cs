@@ -103,7 +103,7 @@ namespace LongDataTests
                     {
                         Assert.Equal(2, reader.ReadFieldHeader(ref state));
                         Assert.Equal(WireType.StartGroup, reader.WireType);
-                        var tok = ProtoReader.StartSubItem(ref state, reader);
+                        var tok = ProtoReader.StartSubItem(reader, ref state);
 
                         for (i = 0; i < COUNT; i++)
                         {
