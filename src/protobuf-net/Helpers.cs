@@ -14,6 +14,7 @@ using System.Linq;
 using System.Reflection;
 #endif
 
+#pragma warning disable RCS1163
 namespace ProtoBuf
 {
     /// <summary>
@@ -56,9 +57,7 @@ namespace ProtoBuf
 #endif
         }
         [System.Diagnostics.Conditional("TRACE")]
-#pragma warning disable RCS1163 // Unused parameter.
         public static void TraceWriteLine(string message)
-#pragma warning restore RCS1163 // Unused parameter.
         {
 #if TRACE
 #if CF2 || PORTABLE || COREFX || PROFILE259
@@ -433,6 +432,7 @@ namespace ProtoBuf
             return method;
 #endif
         }
+
         internal static MethodInfo GetSetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
         {
             if (property == null) return null;
@@ -634,3 +634,4 @@ namespace ProtoBuf
         Type = 104
     }
 }
+#pragma warning restore RCS1163

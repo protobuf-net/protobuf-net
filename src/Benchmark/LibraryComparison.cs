@@ -43,16 +43,19 @@ namespace Benchmark
         public protogen.Database MemoryStream()
         {
             var model = RuntimeTypeModel.Default;
-            using (var reader = ProtoReader.Create(out var state, new MemoryStream(_data), model))
+            using (var reader = ProtoReader.Create(out var state, Exposable(_data), model))
             {
                 return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
             }
         }
+        private static MemoryStream Exposable(byte[] data)
+            => new MemoryStream(data, 0, data.Length, false, true);
+
         [Benchmark(Description = "MemoryStream*")]
         public protogen.Database MemoryStream_Manual()
         {
             var model = RuntimeTypeModel.Default;
-            using (var reader = ProtoReader.Create(out var state, new MemoryStream(_data), model))
+            using (var reader = ProtoReader.Create(out var state, Exposable(_data), model))
             {
                 protogen.Database obj = default;
                 Merge(reader, ref state, ref obj);

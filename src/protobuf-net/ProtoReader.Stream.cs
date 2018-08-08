@@ -6,6 +6,13 @@ namespace ProtoBuf
 {
     public partial class ProtoReader
     {
+        internal static bool PreferSpans { get; set; }
+#if PLAT_SPAN_OVERLOADS
+            = true;
+#else
+            = false;
+#endif
+
         /// <summary>
         /// Creates a new reader against a stream
         /// </summary>
@@ -37,6 +44,14 @@ namespace ProtoBuf
         /// <param name="length">The number of bytes to read, or -1 to read until the end of the stream</param>
         public static ProtoReader Create(out State state, Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
         {
+#if PLAT_SPAN_OVERLOADS
+            if (PreferSpans && TryGetSegmentRespectingPosition(source, out var segment, length))
+            {
+                return Create(out state, new System.Buffers.ReadOnlySequence<byte>(
+                    segment.Array, segment.Offset, segment.Count), model, context);
+            }
+#endif
+
             state = default; // not used by this API
 #pragma warning disable CS0618 // Type or member is obsolete
             return Create(source, model, context, length);
@@ -48,6 +63,29 @@ namespace ProtoBuf
             var reader = Create(out var liquid, source, model, context, length);
             state = liquid.Solidify();
             return reader;
+        }
+
+#pragma warning disable RCS1163
+        internal static bool TryGetSegmentRespectingPosition(Stream source, out ArraySegment<byte> data, long length)
+#pragma warning restore RCS1163
+        {
+#if PLAT_MEMORY_STREAM_BUFFER
+            if (source is MemoryStream ms && ms.TryGetBuffer(out var segment))
+            {
+                int pos = checked((int)ms.Position);
+                var count = segment.Count - pos;
+                var offset = segment.Offset + pos;
+
+                if (length >= 0 && length < count)
+                {   // make sure we apply a length limit
+                    count = (int)length;
+                }
+                data = new ArraySegment<byte>(segment.Array, offset, count);
+                return true;
+            }
+#endif
+            data = default;
+            return false;
         }
 
         private sealed class StreamProtoReader : ProtoReader
@@ -96,34 +134,26 @@ namespace ProtoBuf
                 if (source == null) throw new ArgumentNullException(nameof(source));
                 if (!source.CanRead) throw new ArgumentException("Cannot read from stream", nameof(source));
 
-#if PLAT_MEMORY_STREAM_BUFFER
-                if (source is MemoryStream ms && ms.TryGetBuffer(out var segment))
+                if (TryGetSegmentRespectingPosition(source, out var segment, length))
                 {
                     _ioBuffer = segment.Array;
-                    int pos = checked((int)ms.Position);
-                    _available = segment.Count - pos;
-                    _ioIndex = segment.Offset + pos;
+                    length = _available = segment.Count;
+                    _ioIndex = segment.Offset;
 
-                    if (length >= 0)
-                    {   // make sure we apply it
-                        if (length < _available) _available = (int)length;
-                    }
-                    else
-                    {
-                        length = _available;
-                    }
+                    // don't set _isFixedLength/_dataRemaining64; despite it
+                    // sounding right: it isn't
                 }
                 else
-#endif
                 {
                     _source = source;
                     _ioBuffer = BufferPool.GetBuffer();
                     _available = _ioIndex = 0;
-                }
 
-                bool isFixedLength = length >= 0;
-                _isFixedLength = isFixedLength;
-                _dataRemaining64 = isFixedLength ? length : 0;
+
+                    bool isFixedLength = length >= 0;
+                    _isFixedLength = isFixedLength;
+                    _dataRemaining64 = isFixedLength ? length : 0;
+                }
             }
 
             public override void Dispose()
@@ -336,31 +366,34 @@ namespace ProtoBuf
             private void Ensure(int count, bool strict)
             {
                 Helpers.DebugAssert(_available <= count, "Asking for data without checking first");
-                if (count > _ioBuffer.Length)
+                if (_source != null)
                 {
-                    BufferPool.ResizeAndFlushLeft(ref _ioBuffer, count, _ioIndex, _available);
-                    _ioIndex = 0;
-                }
-                else if (_ioIndex + count >= _ioBuffer.Length)
-                {
-                    // need to shift the buffer data to the left to make space
-                    Buffer.BlockCopy(_ioBuffer, _ioIndex, _ioBuffer, 0, _available);
-                    _ioIndex = 0;
-                }
-                count -= _available;
-                int writePos = _ioIndex + _available, bytesRead;
-                int canRead = _ioBuffer.Length - writePos;
-                if (_isFixedLength)
-                {   // throttle it if needed
-                    if (_dataRemaining64 < canRead) canRead = (int)_dataRemaining64;
-                }
-                while (count > 0 && canRead > 0 && (bytesRead = _source.Read(_ioBuffer, writePos, canRead)) > 0)
-                {
-                    _available += bytesRead;
-                    count -= bytesRead;
-                    canRead -= bytesRead;
-                    writePos += bytesRead;
-                    if (_isFixedLength) { _dataRemaining64 -= bytesRead; }
+                    if (count > _ioBuffer.Length)
+                    {
+                        BufferPool.ResizeAndFlushLeft(ref _ioBuffer, count, _ioIndex, _available);
+                        _ioIndex = 0;
+                    }
+                    else if (_ioIndex + count >= _ioBuffer.Length)
+                    {
+                        // need to shift the buffer data to the left to make space
+                        Buffer.BlockCopy(_ioBuffer, _ioIndex, _ioBuffer, 0, _available);
+                        _ioIndex = 0;
+                    }
+                    count -= _available;
+                    int writePos = _ioIndex + _available, bytesRead;
+                    int canRead = _ioBuffer.Length - writePos;
+                    if (_isFixedLength)
+                    {   // throttle it if needed
+                        if (_dataRemaining64 < canRead) canRead = (int)_dataRemaining64;
+                    }
+                    while (count > 0 && canRead > 0 && (bytesRead = _source.Read(_ioBuffer, writePos, canRead)) > 0)
+                    {
+                        _available += bytesRead;
+                        count -= bytesRead;
+                        canRead -= bytesRead;
+                        writePos += bytesRead;
+                        if (_isFixedLength) { _dataRemaining64 -= bytesRead; }
+                    }
                 }
                 if (strict && count > 0)
                 {
