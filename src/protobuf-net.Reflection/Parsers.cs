@@ -2711,31 +2711,18 @@ namespace ProtoBuf.Reflection
         }
 
         private static readonly char[] ExponentChars = { 'e', 'E' };
-        private static readonly string[] ExponentFormats = { "e0", "e1", "e2", "e3", "e4", "e5", "e6", "e7", "e8", "e9", "e10" };
         private static string Format(float val)
         {
             string s = val.ToString(CultureInfo.InvariantCulture);
-            if (s.IndexOfAny(ExponentChars) < 0) return s;
-
-            foreach (var format in ExponentFormats)
-            {
-                var tmp = val.ToString(format, CultureInfo.InvariantCulture);
-                if (float.TryParse(tmp, NumberStyles.Any, CultureInfo.InvariantCulture, out var x) && x == val) return tmp;
-            }
-            return val.ToString("e", CultureInfo.InvariantCulture);
+            return s.IndexOfAny(ExponentChars) < 0) ? s
+                : val.ToString("0e+00", CultureInfo.InvariantCulture);
         }
 
         private static string Format(double val)
         {
             string s = val.ToString(CultureInfo.InvariantCulture).ToUpperInvariant();
-            if (s.IndexOfAny(ExponentChars) < 0) return s;
-
-            foreach (var format in ExponentFormats)
-            {
-                var tmp = val.ToString(format, CultureInfo.InvariantCulture);
-                if (double.TryParse(tmp, NumberStyles.Any, CultureInfo.InvariantCulture, out var x) && x == val) return tmp;
-            }
-            return val.ToString("e", CultureInfo.InvariantCulture);
+            return s.IndexOfAny(ExponentChars) < 0) ? s
+                :  val.ToString("0e+00", CultureInfo.InvariantCulture);
         }
 
         public T ParseOptionBlock<T>(T obj, ISchemaObject parent = null) where T : class, ISchemaOptions, new()
