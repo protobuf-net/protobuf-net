@@ -65,7 +65,7 @@ namespace ProtoBuf
             _depth = _fieldNumber = 0;
 
             blockEnd64 = long.MaxValue;
-            InternStrings = RuntimeTypeModel.Default.InternStrings;
+            InternStrings = (model ?? RuntimeTypeModel.Default).InternStrings;
             WireType = WireType.None;
             trapCount = 1;
             if (netCache == null) netCache = new NetObjectCache();

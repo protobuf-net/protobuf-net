@@ -115,11 +115,28 @@ namespace Examples
         }
 
         [Fact]
-        public void StringInterned()
+        public void StringNotInterned()
         {
+            var model = TypeModel.Create();
+            model.InternStrings = false;
+
             var obj = new StringInternedType { Foo = GetString(), Bar = GetString() };
             Assert.False(ReferenceEquals(obj.Foo, obj.Bar));
-            var clone = Serializer.DeepClone(obj);
+            var clone = (StringInternedType)model.DeepClone(obj);
+            Assert.Equal(obj.Foo, clone.Foo);
+            Assert.Equal(obj.Bar, clone.Bar);
+            Assert.False(ReferenceEquals(clone.Foo, clone.Bar));
+        }
+
+        [Fact]
+        public void StringInterned()
+        {
+            var model = TypeModel.Create();
+            model.InternStrings = true;
+
+            var obj = new StringInternedType { Foo = GetString(), Bar = GetString() };
+            Assert.False(ReferenceEquals(obj.Foo, obj.Bar));
+            var clone = (StringInternedType)model.DeepClone(obj);
             Assert.Equal(obj.Foo, clone.Foo);
             Assert.Equal(obj.Bar, clone.Bar);
             Assert.True(ReferenceEquals(clone.Foo, clone.Bar));

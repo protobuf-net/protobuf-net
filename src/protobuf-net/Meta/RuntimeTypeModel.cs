@@ -119,11 +119,16 @@ namespace ProtoBuf.Meta
         /// Global switch that determines whether a single instance of the same string should be used during deserialization.
         /// </summary>
         /// <remarks>Note this does not use the global .NET string interner</remarks>
-        public bool InternStrings
+        public new bool InternStrings
         {
             get { return GetOption(OPTIONS_InternStrings); }
             set { SetOption(OPTIONS_InternStrings, value); }
         }
+
+        /// <summary>
+        /// Global switch that determines whether a single instance of the same string should be used during deserialization.
+        /// </summary>
+        protected internal override bool GetInternStrings() => InternStrings;
 
         /// <summary>
         /// Should the <c>Kind</c> be included on date/time values?
@@ -1104,7 +1109,7 @@ namespace ProtoBuf.Meta
 
             Compiler.CompilerContext ctx = WriteSerializeDeserialize(assemblyName, type, methodPairs, ilVersion, ref il);
 
-            WriteConstructors(type, ref index, methodPairs, ref il, knownTypesCategory, knownTypes, knownTypesLookupType, ctx);
+            WriteConstructors(type, ref index, methodPairs, knownTypesCategory, knownTypes, knownTypesLookupType, ctx);
 
 #if COREFX
             Type finalType = type.CreateTypeInfo().AsType();
@@ -1131,8 +1136,12 @@ namespace ProtoBuf.Meta
             return (TypeModel)Activator.CreateInstance(finalType);
         }
 
-        private void WriteConstructors(TypeBuilder type, ref int index, SerializerPair[] methodPairs, ref ILGenerator il, int knownTypesCategory, FieldBuilder knownTypes, Type knownTypesLookupType, Compiler.CompilerContext ctx)
+        private void WriteConstructors(TypeBuilder type, ref int index, SerializerPair[] methodPairs, int knownTypesCategory, FieldBuilder knownTypes, Type knownTypesLookupType, Compiler.CompilerContext ctx)
         {
+            var il = Override(type, nameof(TypeModel.GetInternStrings));
+            il.Emit(InternStrings ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+            il.Emit(OpCodes.Ret);
+            
             type.DefineDefaultConstructor(MethodAttributes.Public);
             il = type.DefineTypeInitializer().GetILGenerator();
             switch (knownTypesCategory)
