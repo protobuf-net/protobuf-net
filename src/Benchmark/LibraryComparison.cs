@@ -10,10 +10,11 @@ namespace Benchmark
     public class LibraryComparison
     {
         //[Benchmark(Baseline = true)]
-        //public protoc.Database Google()
-        //{
-        //    return protoc.Database.Parser.ParseFrom(_data);
-        //}
+        //[Benchmark]
+        public protoc.Database Google()
+        {
+            return protoc.Database.Parser.ParseFrom(_data);
+        }
 
         private byte[] _data;
 
@@ -63,6 +64,35 @@ namespace Benchmark
             }
         }
 
+        [Benchmark(Description = "ROM_CIP")]
+        public protogen.Database ROM_CIP()
+        {
+            var model = _cip;
+            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
+            {
+                return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+            }
+        }
+
+        [Benchmark(Description = "ROM_C")]
+        public protogen.Database ROM_C()
+        {
+            var model = _c;
+            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
+            {
+                return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+            }
+        }
+
+        [Benchmark(Description = "ROM_DLL")]
+        public protogen.Database ROM_DLL()
+        {
+            var model = _dll;
+            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
+            {
+                return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+            }
+        }
         private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Database obj)
         {
             SubItemToken tok;
@@ -191,6 +221,20 @@ namespace Benchmark
         public void Setup()
         {
             _data = File.ReadAllBytes("test.bin");
+            var model = TypeModel.Create();
+            model.Add(typeof(protogen.Database), true);
+            model.Add(typeof(protogen.Order), true);
+            model.Add(typeof(protogen.OrderLine), true);
+            model.CompileInPlace();
+            _cip = model;
+            _c = model.Compile();
+#if !NETCOREAPP2_1
+            _dll = model.Compile("MySerializer", "DalSerializer.dll");
+#endif
+
         }
+#pragma warning disable CS0649
+        TypeModel _cip, _c, _dll;
+#pragma warning restore CS0649
     }
 }

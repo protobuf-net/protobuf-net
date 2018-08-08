@@ -149,7 +149,6 @@ namespace ProtoBuf
                     _ioBuffer = BufferPool.GetBuffer();
                     _available = _ioIndex = 0;
 
-
                     bool isFixedLength = length >= 0;
                     _isFixedLength = isFixedLength;
                     _dataRemaining64 = isFixedLength ? length : 0;

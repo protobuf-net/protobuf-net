@@ -1049,7 +1049,9 @@ namespace ProtoBuf.Meta
             var options = new CompilerOptions()
             {
                 TypeName = name,
+#pragma warning disable CS0618
                 OutputPath = path,
+#pragma warning restore CS0618
             };
             return Compile(options);
         }
