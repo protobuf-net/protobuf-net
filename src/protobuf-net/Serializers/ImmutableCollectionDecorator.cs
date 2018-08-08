@@ -131,10 +131,9 @@ namespace ProtoBuf.Serializers
             if (isEmpty == null)
             {
                 //Fallback to checking length if a "IsEmpty" property is not found
-                length = Helpers.GetProperty(typeInfo, "Length", false)
-                    ?? Helpers.GetProperty(typeInfo, "Count", false);
-
-                if (length == null) length = Helpers.GetProperty(ResolveIReadOnlyCollection(declaredType, effectiveType[0]), "Count", false);
+                length = (Helpers.GetProperty(typeInfo, "Length", false)
+                    ?? Helpers.GetProperty(typeInfo, "Count", false))
+                    ?? Helpers.GetProperty(ResolveIReadOnlyCollection(declaredType, effectiveType[0]), "Count", false);
 
                 if (length == null) return false;
             }
