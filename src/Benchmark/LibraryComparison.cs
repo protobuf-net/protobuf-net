@@ -9,11 +9,11 @@ namespace Benchmark
     [ClrJob, CoreJob]
     public class LibraryComparison
     {
-        [Benchmark(Baseline = true)]
-        public protoc.Database Google()
-        {
-            return protoc.Database.Parser.ParseFrom(_data);
-        }
+        //[Benchmark(Baseline = true)]
+        //public protoc.Database Google()
+        //{
+        //    return protoc.Database.Parser.ParseFrom(_data);
+        //}
 
         private byte[] _data;
 
@@ -38,7 +38,8 @@ namespace Benchmark
             }
         }
 
-        [Benchmark(Description = "MemoryStream")]
+        //[Benchmark(Description = "MemoryStream")]
+        [Benchmark(Description = "MemoryStream", Baseline = true)]
         public protogen.Database MemoryStream()
         {
             var model = RuntimeTypeModel.Default;
