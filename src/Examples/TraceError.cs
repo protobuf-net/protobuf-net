@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Xunit;
-using ProtoBuf;
+﻿using ProtoBuf;
 using System.IO;
+using Xunit;
 
 namespace Examples
 {
@@ -39,7 +35,7 @@ namespace Examples
                 Serializer.Deserialize<TraceErrorData>(ms2);
             });
             Assert.True(ex.Data.Contains("protoSource"), "Missing protoSource");
-            Assert.Equal("tag=2; wire-type=String; offset=4; depth=0", ex.Data["protoSource"]);
+            Assert.Matches(@"tag=2; wire-type=String; offset=\d+; depth=0", (string)ex.Data["protoSource"]);
         }
     }
 }

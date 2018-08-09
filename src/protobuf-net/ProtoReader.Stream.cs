@@ -7,11 +7,11 @@ namespace ProtoBuf
     public partial class ProtoReader
     {
         internal static bool PreferSpans { get; set; }
-//#if PLAT_SPAN_OVERLOADS
-//            = true;
-//#else
+#if PLAT_SPAN_OVERLOADS
+            = true;
+#else
             = false;
-//#endif
+#endif
 
         /// <summary>
         /// Creates a new reader against a stream
