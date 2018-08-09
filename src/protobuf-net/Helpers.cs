@@ -74,7 +74,9 @@ namespace ProtoBuf
 #if DEBUG
             if (!condition)
             {
+#pragma warning disable RCS1178 // Call Debug.Fail instead of Debug.Assert.
                 System.Diagnostics.Debug.Assert(false, message);
+#pragma warning restore RCS1178 // Call Debug.Fail instead of Debug.Assert.
             }
 #endif
         }

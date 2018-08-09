@@ -139,7 +139,7 @@ namespace ProtoBuf
                 case WireType.None:
                 case WireType.EndGroup:
                 default:
-                    throw new ArgumentException("Invalid wire-type: " + wireType.ToString(), "wireType");
+                    throw new ArgumentException("Invalid wire-type: " + wireType.ToString(), nameof(wireType));
             }
 #endif
             if (writer.packedFieldNumber == 0)

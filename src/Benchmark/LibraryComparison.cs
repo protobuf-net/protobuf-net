@@ -49,6 +49,7 @@ namespace Benchmark
                 return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
             }
         }
+
         private static MemoryStream Exposable(byte[] data)
             => new MemoryStream(data, 0, data.Length, false, true);
 
@@ -93,6 +94,17 @@ namespace Benchmark
                 return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
             }
         }
+
+        [Benchmark(Description = "ROM_AUTO")]
+        public protogen.Database ROM_AUTO()
+        {
+            var model = _auto;
+            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
+            {
+                return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+            }
+        }
+
         private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Database obj)
         {
             SubItemToken tok;
@@ -231,10 +243,11 @@ namespace Benchmark
 #if !NETCOREAPP2_1
             _dll = model.Compile("MySerializer", "DalSerializer.dll");
 #endif
-
+            _auto = TypeModel.CreateForAssembly<protogen.Database>();
         }
+
 #pragma warning disable CS0649
-        TypeModel _cip, _c, _dll;
+        TypeModel _cip, _c, _dll, _auto;
 #pragma warning restore CS0649
     }
 }

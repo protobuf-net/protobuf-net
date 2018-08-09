@@ -1205,6 +1205,80 @@ namespace ProtoBuf.Meta
         {
             return new RuntimeTypeModel(false);
         }
+#if FEAT_COMPILER
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static TypeModel CreateForAssembly<T>()
+#if COREFX
+            => CreateForAssembly(typeof(T).GetTypeInfo().Assembly);
+#else
+            => CreateForAssembly(typeof(T).Assembly);
+#endif
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static TypeModel CreateForAssembly(Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+#if COREFX
+            return CreateForAssembly(type.GetTypeInfo().Assembly);
+#else
+            return CreateForAssembly(type.Assembly);
+#endif
+        }
+
+        /// <summary>
+        /// Create a model that serializes all types from an assembly
+        /// </summary>
+        public static TypeModel CreateForAssembly(Assembly assembly)
+#if NETSTANDARD1_3
+            => CreateForAssemblyImpl(assembly);
+#else
+            => (TypeModel)s_assemblyModels[assembly ?? throw new ArgumentNullException(nameof(assembly))]
+            ?? CreateForAssemblyImpl(assembly);
+#endif
+
+#if NETSTANDARD1_3
+        private readonly static Dictionary<Assembly, TypeModel> s_assemblyModels = new Dictionary<Assembly, TypeModel>();
+#else
+        private readonly static Hashtable s_assemblyModels = new Hashtable();
+#endif
+
+        private static TypeModel CreateForAssemblyImpl(Assembly assembly)
+        {
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            lock (assembly)
+            {
+#if NETSTANDARD1_3
+                if (s_assemblyModels.TryGetValue(assembly, out var found)) return found;
+#else
+                var found = (TypeModel)s_assemblyModels[assembly];
+                if (found != null) return found;
+#endif
+
+                RuntimeTypeModel model = null;
+                foreach (var type in assembly.GetTypes())
+                {
+#if NETSTANDARD1_3
+                    if (type.GetTypeInfo().IsDefined(typeof(ProtoContractAttribute), true))
+#else
+                    if (type.IsDefined(typeof(ProtoContractAttribute), true))
+#endif
+                    {
+                        (model ?? (model = Create())).Add(type, true);
+                    }
+                }
+                if (model == null)
+                    throw new InvalidOperationException($"No types marked [ProtoContract] found in assembly '{assembly.GetName().Name}'");
+                var compiled = model.Compile();
+                s_assemblyModels[assembly] = compiled;
+                return compiled;
+            }
+        }
+#endif
 #endif
 
         /// <summary>

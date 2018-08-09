@@ -138,12 +138,15 @@ namespace ProtoBuf
         /// in the underlying stream, if multiple readers are used on the same stream)
         /// </summary>
         [Obsolete(UseStateAPI, false)]
-        public long LongPosition => _longPosition;        private long _longPosition;        internal void Advance(long count) => _longPosition += count;
+        public long LongPosition => _longPosition;        private long _longPosition;        internal void Advance(long count) => _longPosition += count;
+
         /// <summary>
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
         /// in the underlying stream, if multiple readers are used on the same stream)
         /// </summary>
+#pragma warning disable RCS1163 // Unused parameter.
         public long GetPosition(ref State state) => _longPosition;
+#pragma warning restore RCS1163 // Unused parameter.
 
         /// <summary>
         /// Reads a signed 16-bit integer from the stream: Variant, Fixed32, Fixed64, SignedVariant
@@ -1083,7 +1086,7 @@ namespace ProtoBuf
             }
         }
 
-        static void ThrowEoF()
+        private static void ThrowEoF()
         {
             State state = default;
             ThrowEoF(null, ref state);
@@ -1171,7 +1174,9 @@ namespace ProtoBuf
             }
             if (count > 0) ThrowEoF();
         }
+#pragma warning disable RCS1163
         internal static Exception AddErrorData(Exception exception, ProtoReader source, ref State state)
+#pragma warning restore RCS1163
         {
 #if !CF && !PORTABLE
             if (exception != null && source != null && !exception.Data.Contains("protoSource"))
