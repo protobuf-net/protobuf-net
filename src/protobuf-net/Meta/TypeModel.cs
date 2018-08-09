@@ -358,7 +358,7 @@ namespace ProtoBuf.Meta
                         TypeModel.ThrowUnexpectedType(type); // throws
                     }
                 }
-                bytesRead += reader.LongPosition;
+                bytesRead += reader.GetPosition(ref state);
                 haveObject = true;
                 return value;
             }
@@ -1141,7 +1141,7 @@ namespace ProtoBuf.Meta
                         continue;
                     }
                     throw ProtoReader.AddErrorData(new InvalidOperationException(
-                        "Expected field " + tag.ToString() + ", but found " + fieldNumber.ToString()), reader);
+                        "Expected field " + tag.ToString() + ", but found " + fieldNumber.ToString()), reader, ref state);
                 }
                 found = true;
                 reader.Hint(wiretype); // handle signed data etc
@@ -1154,7 +1154,7 @@ namespace ProtoBuf.Meta
                         case WireType.StartGroup:
                             SubItemToken token = ProtoReader.StartSubItem(reader, ref state);
                             value = DeserializeCore(reader, ref state, modelKey, value);
-                            ProtoReader.EndSubItem(token, reader);
+                            ProtoReader.EndSubItem(token, reader, ref state);
                             continue;
                         default:
                             value = DeserializeCore(reader, ref state, modelKey, value);

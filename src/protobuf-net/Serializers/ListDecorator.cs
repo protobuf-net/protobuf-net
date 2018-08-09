@@ -225,8 +225,9 @@ namespace ProtoBuf.Serializers
                     ctx.Branch(testForData, false);
 
                     ctx.MarkLabel(noMoreData);
-                    ctx.LoadReader(false);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem"));
+                    ctx.LoadReader(true);
+                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem",
+                        new[] { typeof(SubItemToken), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
                     ctx.MarkLabel(allDone);
                 }
             }
@@ -542,7 +543,7 @@ namespace ProtoBuf.Serializers
                             add.Invoke(value, args);
                         }
                     }
-                    ProtoReader.EndSubItem(token, source);
+                    ProtoReader.EndSubItem(token, source, ref state);
                 }
                 else
                 {

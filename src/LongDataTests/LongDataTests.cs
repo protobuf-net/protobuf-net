@@ -112,11 +112,11 @@ namespace LongDataTests
                             reader.SkipField(ref state);
                         }
                         Assert.False(reader.ReadFieldHeader(ref state) > 0);
-                        ProtoReader.EndSubItem(tok, reader);
+                        ProtoReader.EndSubItem(tok, reader, ref state);
                     }
                     catch
                     {
-                        Console.WriteLine($"field 2, {i} of {COUNT}, @ {reader.LongPosition}");
+                        Console.WriteLine($"field 2, {i} of {COUNT}, @ {reader.GetPosition(ref state)}");
                         throw;
                     }
                 }

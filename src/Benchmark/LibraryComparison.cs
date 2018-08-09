@@ -108,7 +108,7 @@ namespace Benchmark
                             protogen.Order _1 = default;
                             tok = ProtoReader.StartSubItem(reader, ref state);
                             Merge(reader, ref state, ref _1);
-                            ProtoReader.EndSubItem(tok, reader);
+                            ProtoReader.EndSubItem(tok, reader, ref state);
                             obj.Orders.Add(_1);
                         } while (reader.TryReadFieldHeader(ref state, 1));
                         break;
@@ -175,7 +175,7 @@ namespace Benchmark
                             protogen.OrderLine _15 = default;
                             tok = ProtoReader.StartSubItem(reader, ref state);
                             Merge(reader, ref state, ref _15);
-                            ProtoReader.EndSubItem(tok, reader);
+                            ProtoReader.EndSubItem(tok, reader, ref state);
                             obj.Lines.Add(_15);
                         } while (reader.TryReadFieldHeader(ref state, 1));
                         break;

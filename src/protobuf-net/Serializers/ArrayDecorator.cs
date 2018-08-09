@@ -216,7 +216,7 @@ namespace ProtoBuf.Serializers
                 {
                     list.Add(Tail.Read(source, ref state, null));
                 }
-                ProtoReader.EndSubItem(token, source);
+                ProtoReader.EndSubItem(token, source, ref state);
             }
             else
             {

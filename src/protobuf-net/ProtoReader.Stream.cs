@@ -7,11 +7,11 @@ namespace ProtoBuf
     public partial class ProtoReader
     {
         internal static bool PreferSpans { get; set; }
-#if PLAT_SPAN_OVERLOADS
-            = true;
-#else
+//#if PLAT_SPAN_OVERLOADS
+//            = true;
+//#else
             = false;
-#endif
+//#endif
 
         /// <summary>
         /// Creates a new reader against a stream
@@ -45,7 +45,7 @@ namespace ProtoBuf
         public static ProtoReader Create(out State state, Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
         {
 #if PLAT_SPAN_OVERLOADS
-            if (PreferSpans && TryGetSegmentRespectingPosition(source, out var segment, length))
+            if (PreferSpans && TryConsumeSegmentRespectingPosition(source, out var segment, length))
             {
                 return Create(out state, new System.Buffers.ReadOnlySequence<byte>(
                     segment.Array, segment.Offset, segment.Count), model, context);
@@ -66,11 +66,12 @@ namespace ProtoBuf
         }
 
 #pragma warning disable RCS1163
-        internal static bool TryGetSegmentRespectingPosition(Stream source, out ArraySegment<byte> data, long length)
+        internal static bool TryConsumeSegmentRespectingPosition(Stream source, out ArraySegment<byte> data, long length)
 #pragma warning restore RCS1163
         {
 #if PLAT_MEMORY_STREAM_BUFFER
-            if (source is MemoryStream ms && ms.TryGetBuffer(out var segment))
+            if (source is MemoryStream ms && ms.CanSeek
+                && ms.TryGetBuffer(out var segment))
             {
                 int pos = checked((int)ms.Position);
                 var count = segment.Count - pos;
@@ -81,6 +82,8 @@ namespace ProtoBuf
                     count = (int)length;
                 }
                 data = new ArraySegment<byte>(segment.Array, offset, count);
+                // skip the data in the source
+                ms.Seek(count, SeekOrigin.Current);
                 return true;
             }
 #endif
@@ -134,7 +137,7 @@ namespace ProtoBuf
                 if (source == null) throw new ArgumentNullException(nameof(source));
                 if (!source.CanRead) throw new ArgumentException("Cannot read from stream", nameof(source));
 
-                if (TryGetSegmentRespectingPosition(source, out var segment, length))
+                if (TryConsumeSegmentRespectingPosition(source, out var segment, length))
                 {
                     _ioBuffer = segment.Array;
                     length = _available = segment.Count;
@@ -169,7 +172,7 @@ namespace ProtoBuf
 
             private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
             {
-                if (_available < 10) Ensure(10, false);
+                if (_available < 10) Ensure(ref state, 10, false);
                 if (_available == 0)
                 {
                     value = 0;
@@ -179,22 +182,22 @@ namespace ProtoBuf
                 value = _ioBuffer[readPos++];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
-                if (_available == 1) ThrowEoF(this);
+                if (_available == 1) ThrowEoF(this, ref state);
 
                 uint chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
-                if (_available == 2) ThrowEoF(this);
+                if (_available == 2) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
-                if (_available == 3) ThrowEoF(this);
+                if (_available == 3) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
-                if (_available == 4) ThrowEoF(this);
+                if (_available == 4) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos];
                 value |= chunk << 28; // can only use 4 bits from this chunk
@@ -211,13 +214,13 @@ namespace ProtoBuf
                 {
                     return 10;
                 }
-                ThrowOverflow(this);
+                ThrowOverflow(this, ref state);
                 return 0;
             }
 
             private protected override ulong ImplReadUInt64Fixed(ref State state)
             {
-                if (_available < 8) Ensure(8, true);
+                if (_available < 8) Ensure(ref state, 8, true);
                 Advance(8);
                 _available -= 8;
 
@@ -257,7 +260,7 @@ namespace ProtoBuf
                     }
                     //  now refill the buffer (without overflowing it)
                     int count = len > _ioBuffer.Length ? _ioBuffer.Length : len;
-                    if (count > 0) Ensure(count, true);
+                    if (count > 0) Ensure(ref state, count, true);
                 }
                 // at this point, we know that len <= available
                 if (len > 0)
@@ -270,7 +273,7 @@ namespace ProtoBuf
 
             private protected override int ImplTryReadUInt64VarintWithoutMoving(ref State state, out ulong value)
             {
-                if (_available < 10) Ensure(10, false);
+                if (_available < 10) Ensure(ref state, 10, false);
                 if (_available == 0)
                 {
                     value = 0;
@@ -280,58 +283,58 @@ namespace ProtoBuf
                 value = _ioBuffer[readPos++];
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
-                if (_available == 1) ThrowEoF(this);
+                if (_available == 1) ThrowEoF(this, ref state);
 
                 ulong chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
-                if (_available == 2) ThrowEoF(this);
+                if (_available == 2) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
-                if (_available == 3) ThrowEoF(this);
+                if (_available == 3) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
-                if (_available == 4) ThrowEoF(this);
+                if (_available == 4) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 28;
                 if ((chunk & 0x80) == 0) return 5;
-                if (_available == 5) ThrowEoF(this);
+                if (_available == 5) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 35;
                 if ((chunk & 0x80) == 0) return 6;
-                if (_available == 6) ThrowEoF(this);
+                if (_available == 6) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 42;
                 if ((chunk & 0x80) == 0) return 7;
-                if (_available == 7) ThrowEoF(this);
+                if (_available == 7) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 49;
                 if ((chunk & 0x80) == 0) return 8;
-                if (_available == 8) ThrowEoF(this);
+                if (_available == 8) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos++];
                 value |= (chunk & 0x7F) << 56;
                 if ((chunk & 0x80) == 0) return 9;
-                if (_available == 9) ThrowEoF(this);
+                if (_available == 9) ThrowEoF(this, ref state);
 
                 chunk = _ioBuffer[readPos];
                 value |= chunk << 63; // can only use 1 bit from this chunk
 
-                if ((chunk & ~(ulong)0x01) != 0) throw AddErrorData(new OverflowException(), this);
+                if ((chunk & ~(ulong)0x01) != 0) throw AddErrorData(new OverflowException(), this, ref state);
                 return 10;
             }
 
             private protected override string ImplReadString(ref State state, int bytes)
             {
-                if (_available < bytes) Ensure(bytes, true);
+                if (_available < bytes) Ensure(ref state, bytes, true);
 
                 string s = UTF8.GetString(_ioBuffer, _ioIndex, bytes);
 
@@ -346,7 +349,7 @@ namespace ProtoBuf
 
             private protected override uint ImplReadUInt32Fixed(ref State state)
             {
-                if (_available < 4) Ensure(4, true);
+                if (_available < 4) Ensure(ref state, 4, true);
                 Advance(4);
                 _available -= 4;
 #if PLAT_SPANS
@@ -362,7 +365,7 @@ namespace ProtoBuf
 #endif
             }
 
-            private void Ensure(int count, bool strict)
+            private void Ensure(ref State state, int count, bool strict)
             {
                 Helpers.DebugAssert(_available <= count, "Asking for data without checking first");
                 if (_source != null)
@@ -396,7 +399,7 @@ namespace ProtoBuf
                 }
                 if (strict && count > 0)
                 {
-                    ThrowEoF(this);
+                    ThrowEoF(this, ref state);
                 }
             }
 
@@ -421,7 +424,7 @@ namespace ProtoBuf
             {
                 if (_available < count && count < 128)
                 {
-                    Ensure((int)count, true);
+                    Ensure(ref state, (int)count, true);
                 }
 
                 if (count <= _available)
@@ -438,7 +441,7 @@ namespace ProtoBuf
 
                 if (_isFixedLength)
                 {
-                    if (count > _dataRemaining64) ThrowEoF(this);
+                    if (count > _dataRemaining64) ThrowEoF(this, ref state);
                     // else assume we're going to be OK
                     _dataRemaining64 -= count;
                 }

@@ -251,7 +251,7 @@ namespace ProtoBuf
                         break;
                 }
             }
-            ProtoReader.EndSubItem(token, source);
+            ProtoReader.EndSubItem(token, source, ref state);
             return FromDurationSeconds(seconds, nanos);
         }
 
@@ -418,7 +418,7 @@ namespace ProtoBuf
                                 scale = (TimeSpanScale)source.ReadInt32(ref state);
                                 break;
                             case FieldTimeSpanValue:
-                                source.Assert(WireType.SignedVariant);
+                                source.Assert(ref state, WireType.SignedVariant);
                                 value = source.ReadInt64(ref state);
                                 break;
                             case FieldTimeSpanKind:
@@ -438,7 +438,7 @@ namespace ProtoBuf
                                 break;
                         }
                     }
-                    ProtoReader.EndSubItem(token, source);
+                    ProtoReader.EndSubItem(token, source, ref state);
                     switch (scale)
                     {
                         case TimeSpanScale.Days:
@@ -502,7 +502,7 @@ namespace ProtoBuf
                     default: reader.SkipField(ref state); break;
                 }
             }
-            ProtoReader.EndSubItem(token, reader);
+            ProtoReader.EndSubItem(token, reader, ref state);
 
             int lo = (int)(low & 0xFFFFFFFFL),
                 mid = (int)((low >> 32) & 0xFFFFFFFFL),
@@ -588,7 +588,7 @@ namespace ProtoBuf
                     default: source.SkipField(ref state); break;
                 }
             }
-            ProtoReader.EndSubItem(token, source);
+            ProtoReader.EndSubItem(token, source, ref state);
             if (low == 0 && high == 0) return Guid.Empty;
             uint a = (uint)(low >> 32), b = (uint)low, c = (uint)(high >> 32), d = (uint)high;
             return new Guid((int)b, (short)a, (short)(a >> 16),
@@ -746,7 +746,7 @@ namespace ProtoBuf
             {
                 throw new ProtoException("Object key in input stream, but reference-tracking was not expected");
             }
-            ProtoReader.EndSubItem(token, source);
+            ProtoReader.EndSubItem(token, source, ref state);
 
             return value;
         }

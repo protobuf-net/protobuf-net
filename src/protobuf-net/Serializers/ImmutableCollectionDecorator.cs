@@ -203,7 +203,7 @@ namespace ProtoBuf.Serializers
                     args[0] = Tail.Read(source, ref state, null);
                     add.Invoke(builderInstance, args);
                 }
-                ProtoReader.EndSubItem(token, source);
+                ProtoReader.EndSubItem(token, source, ref state);
             }
             else
             {

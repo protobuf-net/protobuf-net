@@ -99,7 +99,7 @@ namespace ProtoBuf.Serializers
                     }
                 }
 
-                ProtoReader.EndSubItem(token, source);
+                ProtoReader.EndSubItem(token, source, ref state);
                 typed[key] = typedValue;
             } while (source.TryReadFieldHeader(ref state, fieldNumber));
 
@@ -273,8 +273,9 @@ namespace ProtoBuf.Serializers
 
                 // ProtoReader.EndSubItem(token, reader);
                 ctx.LoadValue(token);
-                ctx.LoadReader(false);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem"));
+                ctx.LoadReader(true);
+                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem",
+                    new[] { typeof(SubItemToken), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
 
                 // list[key] = value;
                 ctx.LoadAddress(list, ExpectedType);

@@ -9,15 +9,15 @@ namespace Benchmark
     {
         private static void Main()
         {
-            //var obj = new LibraryComparison();
-            //obj.Setup();
-            //obj.MemoryStream();
+            var obj = new LibraryComparison();
+            obj.Setup();
+            obj.MemoryStream();
             //for (int i = 0; i < 10000; i++)
             //{
             //    var db = obj.ROM_Manual();
             //    GC.KeepAlive(db);
             //}
-            Console.WriteLine(BenchmarkRunner.Run<LibraryComparison>());
+            //Console.WriteLine(BenchmarkRunner.Run<LibraryComparison>());
         }
     }
 }

@@ -9,10 +9,8 @@ using ProtoBuf.Meta;
 
 namespace Examples
 {
-    
     public class TestAutoFields
     {
-
         [ProtoContract]
         [ProtoPartialMember(2, "IncludeIndirect")]
         [ProtoPartialIgnore("IgnoreIndirect")]
@@ -110,11 +108,7 @@ namespace Examples
         {
             const bool inherit = false;
             var field = typeof(ImplicitFieldPOCO).GetField(nameof(ImplicitFieldPOCO.H_nonSerialized));
-#if COREFX
-            Attribute[] all = System.Linq.Enumerable.ToArray(field.GetCustomAttributes(inherit));
-#else
             Attribute[] all = field.GetCustomAttributes(inherit).Cast<Attribute>().ToArray();
-#endif
             bool hasNonSerialized = all.Any(x => x.GetType().FullName == "System.NonSerializedAttribute");
 
             Assert.True(hasNonSerialized); // we can detect it in regular .net, though

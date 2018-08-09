@@ -177,7 +177,7 @@ namespace protogen.site.Controllers
                         {
                             reader.SkipField(ref state);
                         }
-                        return reader.Position == Count; // MemoryStream will let you seek out of bounds!
+                        return reader.GetPosition(ref state) == Count; // MemoryStream will let you seek out of bounds!
                     }
                 }
                 catch

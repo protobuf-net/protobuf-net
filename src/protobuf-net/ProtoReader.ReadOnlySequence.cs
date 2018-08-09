@@ -61,7 +61,7 @@ namespace ProtoBuf
                 }
 #endif
             }
-            internal static int TryParseUInt32Varint(ProtoReader @this, int offset, bool trimNegative, out uint value, ReadOnlySpan<byte> span)
+            internal static int TryParseUInt32Varint(ProtoReader @this, ref State state, int offset, bool trimNegative, out uint value, ReadOnlySpan<byte> span)
             {
                 if ((uint)offset >= (uint)span.Length)
                 {
@@ -73,22 +73,22 @@ namespace ProtoBuf
                 if ((value & 0x80) == 0) return 1;
                 value &= 0x7F;
 
-                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this);
+                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this, ref state);
                 uint chunk = span[offset++];
                 value |= (chunk & 0x7F) << 7;
                 if ((chunk & 0x80) == 0) return 2;
 
-                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this);
+                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this, ref state);
                 chunk = span[offset++];
                 value |= (chunk & 0x7F) << 14;
                 if ((chunk & 0x80) == 0) return 3;
 
-                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this);
+                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this, ref state);
                 chunk = span[offset++];
                 value |= (chunk & 0x7F) << 21;
                 if ((chunk & 0x80) == 0) return 4;
 
-                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this);
+                if ((uint)offset >= (uint)span.Length) ThrowEoF(@this, ref state);
                 chunk = span[offset++];
                 value |= chunk << 28; // can only use 4 bits from this chunk
                 if ((chunk & 0xF0) == 0) return 5;
@@ -105,7 +105,7 @@ namespace ProtoBuf
                     return 10;
                 }
 
-                ThrowOverflow(@this);
+                ThrowOverflow(@this, ref state);
                 return 0;
             }
 
@@ -153,7 +153,7 @@ namespace ProtoBuf
                 {
                     if (!_source.MoveNext())
                     {
-                        if (throwIfEOF) ThrowEoF(this);
+                        if (throwIfEOF) ThrowEoF(this, ref state);
                         return 0;
                     }
                     state.Init(_source.Current);
@@ -298,13 +298,14 @@ namespace ProtoBuf
             private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
             {
                 return state.RemainingInCurrent >= 10
-                    ? TryParseUInt32Varint(this, state.OffsetInCurrent,
+                    ? TryParseUInt32Varint(this, ref state, state.OffsetInCurrent,
                         mode == Read32VarintMode.Signed, out value, state.Span)
                     : ViaStackAlloc(ref state, mode, out value);
 
-                int ViaStackAlloc(ref State s, Read32VarintMode m, out uint val)
+                unsafe int ViaStackAlloc(ref State s, Read32VarintMode m, out uint val)
                 {
-                    Span<byte> span = stackalloc byte[10];
+                    byte* stack = stackalloc byte[10]; // because otherwise compiler is convinced we're screwing up
+                    Span<byte> span = new Span<byte>(stack, 10);
                     Span<byte> target = span;
                     var currentBuffer = Peek(ref s, Math.Min(target.Length, s.RemainingInCurrent));
                     currentBuffer.CopyTo(target);
@@ -322,7 +323,7 @@ namespace ProtoBuf
                         available += take;
                     }
                     if (available != 10) span = span.Slice(0, available);
-                    return TryParseUInt32Varint(this, 0, m == Read32VarintMode.Signed, out val, span);
+                    return TryParseUInt32Varint(this, ref s, 0, m == Read32VarintMode.Signed, out val, span);
                 }
             }
 
