@@ -105,6 +105,16 @@ namespace Benchmark
             }
         }
 
+        [Benchmark(Description = "MemoryStream_AUTO")]
+        public protogen.Database MemoryStream_AUTO()
+        {
+            var model = _auto;
+            using (var reader = ProtoReader.Create(out var state, new MemoryStream(_data), model))
+            {
+                return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+            }
+        }
+
         private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Database obj)
         {
             SubItemToken tok;

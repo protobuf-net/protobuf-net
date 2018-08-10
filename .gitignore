@@ -25,3 +25,4 @@ BenchmarkDotNet.Artifacts/
 filedata.bin
 *.binlog
 src/VBTest/*
+src/Benchmark/DalSerializer.dll
