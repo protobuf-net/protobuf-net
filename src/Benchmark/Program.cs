@@ -11,7 +11,7 @@ namespace Benchmark
         {
             //var obj = new LibraryComparison();
             //obj.Setup();
-            //obj.MemoryStream();
+            //obj.MemoryStream_AUTO();
             //for (int i = 0; i < 10000; i++)
             //{
             //    var db = obj.ROM_Manual();

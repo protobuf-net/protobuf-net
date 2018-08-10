@@ -6,6 +6,8 @@
     "semVer": 2
   },
   "publicReleaseRefSpec": [
-    "^refs/heads/master$"
+    "^refs/heads/master$",
+    "^refs/tags/v\\d+\\.\\d+",
+    "^refs/heads/split-reader"
   ]
 }
