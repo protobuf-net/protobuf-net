@@ -5,7 +5,7 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class UInt32Serializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(uint);
+        private static readonly Type expectedType = typeof(uint);
 
         public Type ExpectedType => expectedType;
 

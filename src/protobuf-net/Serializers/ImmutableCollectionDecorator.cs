@@ -52,11 +52,11 @@ namespace ProtoBuf.Serializers
             return false;
         }
 
-        internal static bool IdentifyImmutable(TypeModel model, Type declaredType, out MethodInfo builderFactory, out PropertyInfo isEmpty, out PropertyInfo length, out MethodInfo add, out MethodInfo addRange, out MethodInfo finish)
+        internal static bool IdentifyImmutable(Type declaredType, out MethodInfo builderFactory, out PropertyInfo isEmpty, out PropertyInfo length, out MethodInfo add, out MethodInfo addRange, out MethodInfo finish)
         {
             builderFactory = add = addRange = finish = null;
             isEmpty = length = null;
-            if (model == null || declaredType == null) return false;
+            if (declaredType == null) return false;
 #if COREFX || PROFILE259
 			TypeInfo declaredTypeInfo = declaredType.GetTypeInfo();
 #else
@@ -94,11 +94,11 @@ namespace ProtoBuf.Serializers
             if (i <= 0) return false;
             name = declaredTypeInfo.IsInterface ? name.Substring(1, i - 1) : name.Substring(0, i);
 
-            Type outerType = model.GetType(declaredType.Namespace + "." + name, declaredTypeInfo.Assembly);
+            Type outerType = TypeModel.ResolveKnownType(declaredType.Namespace + "." + name, declaredTypeInfo.Assembly);
             // I hate special-cases...
             if (outerType == null && name == "ImmutableSet")
             {
-                outerType = model.GetType(declaredType.Namespace + ".ImmutableHashSet", declaredTypeInfo.Assembly);
+                outerType = TypeModel.ResolveKnownType(declaredType.Namespace + ".ImmutableHashSet", declaredTypeInfo.Assembly);
             }
             if (outerType == null) return false;
 
@@ -158,9 +158,9 @@ namespace ProtoBuf.Serializers
 
         private readonly MethodInfo builderFactory, add, addRange, finish;
         private readonly PropertyInfo isEmpty, length;
-        internal ImmutableCollectionDecorator(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull,
+        internal ImmutableCollectionDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull,
             MethodInfo builderFactory, PropertyInfo isEmpty, PropertyInfo length, MethodInfo add, MethodInfo addRange, MethodInfo finish)
-            : base(model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull)
+            : base(declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull)
         {
             this.builderFactory = builderFactory;
             this.isEmpty = isEmpty;
@@ -255,7 +255,7 @@ namespace ProtoBuf.Serializers
                     else
                     {
                         // loop and call Add repeatedly
-                        MethodInfo moveNext, current, getEnumerator = GetEnumeratorInfo(ctx.Model, out moveNext, out current);
+                        MethodInfo moveNext, current, getEnumerator = GetEnumeratorInfo(out moveNext, out current);
                         Helpers.DebugAssert(moveNext != null);
                         Helpers.DebugAssert(current != null);
                         Helpers.DebugAssert(getEnumerator != null);

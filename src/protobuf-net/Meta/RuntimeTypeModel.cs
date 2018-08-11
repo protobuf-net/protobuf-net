@@ -1146,7 +1146,9 @@ namespace ProtoBuf.Meta
             return (TypeModel)Activator.CreateInstance(finalType);
         }
 
+#pragma warning disable RCS1163 // Unused parameter.
         private void WriteConstructors(TypeBuilder type, ref int index, SerializerPair[] methodPairs, int knownTypesCategory, FieldBuilder knownTypes, Type knownTypesLookupType, Compiler.CompilerContext ctx)
+#pragma warning restore RCS1163 // Unused parameter.
         {
             var il = Override(type, nameof(TypeModel.GetInternStrings));
             il.Emit(InternStrings ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
@@ -1525,7 +1527,7 @@ namespace ProtoBuf.Meta
                 Type versionAttribType = null;
                 try
                 { // this is best-endeavours only
-                    versionAttribType = GetType("System.Runtime.Versioning.TargetFrameworkAttribute", Helpers.GetAssembly(typeof(string)));
+                    versionAttribType = TypeModel.ResolveKnownType("System.Runtime.Versioning.TargetFrameworkAttribute", Helpers.GetAssembly(typeof(string)));
                 }
                 catch { /* don't stress */ }
                 if (versionAttribType != null)

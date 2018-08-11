@@ -18,7 +18,7 @@ namespace ProtoBuf.Serializers
         private readonly byte options;
         private readonly WireType packedWireType;
 
-        public ArrayDecorator(TypeModel model, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList, bool supportNull)
+        public ArrayDecorator(IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList, bool supportNull)
             : base(tail)
         {
             Helpers.DebugAssert(arrayType != null, "arrayType should be non-null");

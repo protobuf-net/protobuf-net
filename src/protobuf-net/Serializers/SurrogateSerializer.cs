@@ -28,7 +28,7 @@ namespace ProtoBuf.Serializers
         private readonly MethodInfo toTail, fromTail;
         private readonly IProtoTypeSerializer rootTail;
 
-        public SurrogateSerializer(TypeModel model, Type forType, Type declaredType, IProtoTypeSerializer rootTail)
+        public SurrogateSerializer(Type forType, Type declaredType, IProtoTypeSerializer rootTail)
         {
             Helpers.DebugAssert(forType != null, "forType");
             Helpers.DebugAssert(declaredType != null, "declaredType");
@@ -39,10 +39,10 @@ namespace ProtoBuf.Serializers
             ExpectedType = forType;
             this.declaredType = declaredType;
             this.rootTail = rootTail;
-            toTail = GetConversion(model, true);
-            fromTail = GetConversion(model, false);
+            toTail = GetConversion(true);
+            fromTail = GetConversion(false);
         }
-        private static bool HasCast(TypeModel model, Type type, Type from, Type to, out MethodInfo op)
+        private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
         {
 #if PROFILE259
 			System.Collections.Generic.List<MethodInfo> list = new System.Collections.Generic.List<MethodInfo>();
@@ -98,11 +98,11 @@ namespace ProtoBuf.Serializers
             return false;
         }
 
-        public MethodInfo GetConversion(TypeModel model, bool toTail)
+        public MethodInfo GetConversion(bool toTail)
         {
             Type to = toTail ? declaredType : ExpectedType;
             Type from = toTail ? ExpectedType : declaredType;
-            if (HasCast(model, declaredType, from, to, out MethodInfo op) || HasCast(model, ExpectedType, from, to, out op))
+            if (HasCast(declaredType, from, to, out MethodInfo op) || HasCast(ExpectedType, from, to, out op))
             {
                 return op;
             }

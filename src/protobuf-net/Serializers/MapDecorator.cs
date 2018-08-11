@@ -124,7 +124,7 @@ namespace ProtoBuf.Serializers
         protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
             Type itemType = typeof(KeyValuePair<TKey, TValue>);
-            MethodInfo moveNext, current, getEnumerator = ListDecorator.GetEnumeratorInfo(ctx.Model,
+            MethodInfo moveNext, current, getEnumerator = ListDecorator.GetEnumeratorInfo(
                 ExpectedType, itemType, out moveNext, out current);
             Type enumeratorType = getEnumerator.ReturnType;
 

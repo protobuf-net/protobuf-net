@@ -407,7 +407,7 @@ namespace ProtoBuf.Meta
             {
                 MetaType mt = model[surrogate], mtBase;
                 while ((mtBase = mt.baseType) != null) { mt = mtBase; }
-                return new SurrogateSerializer(model, Type, surrogate, mt.Serializer);
+                return new SurrogateSerializer(Type, surrogate, mt.Serializer);
             }
             if (IsAutoTuple)
             {
@@ -540,7 +540,7 @@ namespace ProtoBuf.Meta
                     {
                         if (item.TryGet("knownTypeName", out tmp))
                         {
-                            knownType = model.GetType((string)tmp, Type
+                            knownType = TypeModel.ResolveKnownType((string)tmp, Type
 #if COREFX || PROFILE259
                             .GetTypeInfo()
 #endif

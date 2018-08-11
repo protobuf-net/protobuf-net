@@ -740,7 +740,7 @@ namespace ProtoBuf.Meta
 #else
         private static readonly System.Type ilist = typeof(IList);
 #endif
-        internal static MethodInfo ResolveListAdd(TypeModel model, Type listType, Type itemType, out bool isList)
+        internal static MethodInfo ResolveListAdd(Type listType, Type itemType, out bool isList)
         {
 #if COREFX || PROFILE259
             TypeInfo listTypeInfo = listType.GetTypeInfo();
@@ -942,9 +942,9 @@ namespace ProtoBuf.Meta
 #endif
         }
 
-        private bool TryDeserializeList(ref ProtoReader.State state, TypeModel model, ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
+        private bool TryDeserializeList(ref ProtoReader.State state, ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
         {
-            MethodInfo addMethod = TypeModel.ResolveListAdd(model, listType, itemType, out bool isList);
+            MethodInfo addMethod = TypeModel.ResolveListAdd(listType, itemType, out bool isList);
             if (addMethod == null) throw new NotSupportedException("Unknown list variant: " + listType.FullName);
             bool found = false;
             object nextItem = null;
@@ -1110,7 +1110,7 @@ namespace ProtoBuf.Meta
                 if (itemType != null)
                 {
                     if (insideList) throw TypeModel.CreateNestedListsNotSupported((parentListOrType as Type) ?? (parentListOrType?.GetType()));
-                    found = TryDeserializeList(ref state, this, reader, format, tag, type, itemType, ref value);
+                    found = TryDeserializeList(ref state, reader, format, tag, type, itemType, ref value);
                     if (!found && autoCreate)
                     {
                         value = CreateListInstance(type, itemType);
@@ -1744,11 +1744,6 @@ namespace ProtoBuf.Meta
         /// </summary>
         public bool ForwardsOnly { get; set; }
 #endif
-
-        internal virtual Type GetType(string fullName, Assembly context)
-        {
-            return ResolveKnownType(fullName, context);
-        }
 
         [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
         internal static Type ResolveKnownType(string name, Assembly assembly)

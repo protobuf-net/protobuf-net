@@ -372,7 +372,7 @@ namespace ProtoBuf.Meta
 #else
                 var info = MemberType;
 #endif
-                if (ImmutableCollectionDecorator.IdentifyImmutable(model, MemberType, out _, out _, out _, out _, out _, out _))
+                if (ImmutableCollectionDecorator.IdentifyImmutable(MemberType, out _, out _, out _, out _, out _, out _))
                 {
                     return false;
                 }
@@ -517,7 +517,7 @@ namespace ProtoBuf.Meta
                             throw new NotSupportedException("Packed encodings cannot support null values");
                         }
                         ser = new TagDecorator(NullDecorator.Tag, wireType, IsStrict, ser);
-                        ser = new NullDecorator(model, ser);
+                        ser = new NullDecorator(ser);
                         ser = new TagDecorator(FieldNumber, WireType.StartGroup, false, ser);
                     }
                     else
@@ -534,11 +534,11 @@ namespace ProtoBuf.Meta
                             , "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
                         if (MemberType.IsArray)
                         {
-                            ser = new ArrayDecorator(model, ser, FieldNumber, IsPacked, wireType, MemberType, OverwriteList, SupportNull);
+                            ser = new ArrayDecorator(ser, FieldNumber, IsPacked, wireType, MemberType, OverwriteList, SupportNull);
                         }
                         else
                         {
-                            ser = ListDecorator.Create(model, MemberType, DefaultType, ser, FieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(member), OverwriteList, SupportNull);
+                            ser = ListDecorator.Create(MemberType, DefaultType, ser, FieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(member), OverwriteList, SupportNull);
                         }
                     }
                     else if (_defaultValue != null && !IsRequired && getSpecified == null)

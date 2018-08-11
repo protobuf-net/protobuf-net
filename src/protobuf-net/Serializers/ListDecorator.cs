@@ -44,9 +44,9 @@ namespace ProtoBuf.Serializers
         private bool ReturnList { get { return (options & OPTIONS_ReturnList) != 0; } }
         protected readonly WireType packedWireType;
 
-        internal static ListDecorator Create(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
+        internal static ListDecorator Create(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
         {
-            if (returnList && ImmutableCollectionDecorator.IdentifyImmutable(model, declaredType,
+            if (returnList && ImmutableCollectionDecorator.IdentifyImmutable(declaredType,
                 out MethodInfo builderFactory,
                 out PropertyInfo isEmpty,
                 out PropertyInfo length,
@@ -55,14 +55,14 @@ namespace ProtoBuf.Serializers
                 out MethodInfo finish))
             {
                 return new ImmutableCollectionDecorator(
-                    model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull,
+                    declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull,
                     builderFactory, isEmpty, length, add, addRange, finish);
             }
 
-            return new ListDecorator(model, declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull);
+            return new ListDecorator(declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull);
         }
 
-        protected ListDecorator(TypeModel model, Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
+        protected ListDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull)
             : base(tail)
         {
             if (returnList) options |= OPTIONS_ReturnList;
@@ -86,7 +86,7 @@ namespace ProtoBuf.Serializers
             // look for a public list.Add(typedObject) method
             if (RequireAdd)
             {
-                add = TypeModel.ResolveListAdd(model, declaredType, tail.ExpectedType, out var isList);
+                add = TypeModel.ResolveListAdd(declaredType, tail.ExpectedType, out var isList);
                 if (isList)
                 {
                     options |= OPTIONS_IsList;
@@ -311,9 +311,9 @@ namespace ProtoBuf.Serializers
 #else
         private static readonly System.Type ienumeratorType = typeof(IEnumerator), ienumerableType = typeof(IEnumerable);
 #endif
-        protected MethodInfo GetEnumeratorInfo(TypeModel model, out MethodInfo moveNext, out MethodInfo current)
-            => GetEnumeratorInfo(model, ExpectedType, Tail.ExpectedType, out moveNext, out current);
-        internal static MethodInfo GetEnumeratorInfo(TypeModel model, Type expectedType, Type itemType, out MethodInfo moveNext, out MethodInfo current)
+        protected MethodInfo GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current)
+            => GetEnumeratorInfo(ExpectedType, Tail.ExpectedType, out moveNext, out current);
+        internal static MethodInfo GetEnumeratorInfo(Type expectedType, Type itemType, out MethodInfo moveNext, out MethodInfo current)
         {
 #if COREFX
             TypeInfo enumeratorType = null, iteratorType;
@@ -407,7 +407,7 @@ namespace ProtoBuf.Serializers
         {
             using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
             {
-                MethodInfo getEnumerator = GetEnumeratorInfo(ctx.Model, out MethodInfo moveNext, out MethodInfo current);
+                MethodInfo getEnumerator = GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current);
                 Helpers.DebugAssert(moveNext != null);
                 Helpers.DebugAssert(current != null);
                 Helpers.DebugAssert(getEnumerator != null);

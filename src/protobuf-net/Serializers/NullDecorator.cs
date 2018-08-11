@@ -9,7 +9,7 @@ namespace ProtoBuf.Serializers
     internal sealed class NullDecorator : ProtoDecoratorBase
     {
         public const int Tag = 1;
-        public NullDecorator(TypeModel model, IProtoSerializer tail) : base(tail)
+        public NullDecorator(IProtoSerializer tail) : base(tail)
         {
             if (!tail.ReturnsValue)
                 throw new NotSupportedException("NullDecorator only supports implementations that return values");
