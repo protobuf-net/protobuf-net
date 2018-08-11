@@ -16,14 +16,14 @@ namespace ProtoBuf.Serializers
         private readonly int fieldNumber;
         private readonly WireType wireType;
 
-        internal MapDecorator(TypeModel model, Type concreteType, IProtoSerializer keyTail, IProtoSerializer valueTail,
+        internal MapDecorator(Type concreteType, IProtoSerializer keyTail, IProtoSerializer valueTail,
             int fieldNumber, WireType wireType, WireType keyWireType, WireType valueWireType, bool overwriteList)
             : base(DefaultValue == null
                   ? (IProtoSerializer)new TagDecorator(2, valueWireType, false, valueTail)
-                  : (IProtoSerializer)new DefaultValueDecorator(model, DefaultValue, new TagDecorator(2, valueWireType, false, valueTail)))
+                  : (IProtoSerializer)new DefaultValueDecorator(DefaultValue, new TagDecorator(2, valueWireType, false, valueTail)))
         {
             this.wireType = wireType;
-            this.keyTail = new DefaultValueDecorator(model, DefaultKey, new TagDecorator(1, keyWireType, false, keyTail));
+            this.keyTail = new DefaultValueDecorator(DefaultKey, new TagDecorator(1, keyWireType, false, keyTail));
             this.fieldNumber = fieldNumber;
             this.concreteType = concreteType ?? typeof(TDictionary);
 

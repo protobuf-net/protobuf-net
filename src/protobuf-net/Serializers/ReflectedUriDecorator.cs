@@ -20,7 +20,7 @@ namespace ProtoBuf.Serializers
 
         private readonly ConstructorInfo typeConstructor;
 
-        public ReflectedUriDecorator(Type type, ProtoBuf.Meta.TypeModel model, IProtoSerializer tail) : base(tail)
+        public ReflectedUriDecorator(Type type, IProtoSerializer tail) : base(tail)
         {
             expectedType = type;
 

@@ -3,6 +3,10 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
+    internal static class PrimitiveSerializer<T> where T : class, IProtoSerializer, new()
+    {
+        public static readonly T Singleton = new T();
+    }
     internal interface IProtoSerializer
     {
         /// <summary>

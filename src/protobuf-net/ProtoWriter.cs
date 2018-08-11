@@ -489,7 +489,6 @@ namespace ProtoBuf
         private int ioIndex;
         // note that this is used by some of the unit tests and should not be removed
         internal static long GetLongPosition(ProtoWriter writer) { return writer.position64; }
-        internal static int GetPosition(ProtoWriter writer) { return checked((int)writer.position64); }
         private long position64;
         private static void DemandSpace(int required, ProtoWriter writer)
         {

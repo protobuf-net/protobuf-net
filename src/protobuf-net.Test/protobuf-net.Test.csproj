@@ -8,11 +8,11 @@
     <Configurations>Debug;Release;VS</Configurations>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp2.1'">
-    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net452'">
-    <DefineConstants>FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;FX30</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="basic.proto" />

@@ -14,10 +14,10 @@ namespace ProtoBuf.Serializers
         public override bool ReturnsValue => Tail.ReturnsValue;
 
         private readonly object defaultValue;
-        public DefaultValueDecorator(TypeModel model, object defaultValue, IProtoSerializer tail) : base(tail)
+        public DefaultValueDecorator(object defaultValue, IProtoSerializer tail) : base(tail)
         {
             if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
-            Type type = model.MapType(defaultValue.GetType());
+            Type type = defaultValue.GetType();
             if (type != tail.ExpectedType)
             {
                 throw new ArgumentException("Default value is of incorrect type", nameof(defaultValue));

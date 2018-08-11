@@ -37,11 +37,11 @@ namespace ProtoBuf.unittest.Serializers
             byte[] data;
             using (MemoryStream ms = new MemoryStream())
             {
-                int reported;
-                using (ProtoWriter writer = new ProtoWriter(ms, RuntimeTypeModel.Default, null))
+                long reported;
+                using (ProtoWriter writer = ProtoWriter.Create(ms, RuntimeTypeModel.Default, null))
                 {
                     serializer(obj, writer);
-                    reported = ProtoWriter.GetPosition(writer);
+                    reported = ProtoWriter.GetLongPosition(writer);
                 }
                 data = ms.ToArray();
                 Assert.Equal(reported, data.Length); //, message + ":reported/actual");

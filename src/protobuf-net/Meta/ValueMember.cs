@@ -496,7 +496,7 @@ namespace ProtoBuf.Meta
                     var ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetConstructors(
                         BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
                     if (ctors.Length != 1) throw new InvalidOperationException("Unable to resolve MapDecorator constructor");
-                    ser = (IProtoSerializer)ctors[0].Invoke(new object[] {model, concreteType, keySer, valueSer, FieldNumber,
+                    ser = (IProtoSerializer)ctors[0].Invoke(new object[] {concreteType, keySer, valueSer, FieldNumber,
                         DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String, keyWireType, valueWireType, OverwriteList });
 #endif
                 }
@@ -538,13 +538,13 @@ namespace ProtoBuf.Meta
                         }
                         else
                         {
-                            ser = ListDecorator.Create(model, MemberType, DefaultType, ser, FieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(model, member), OverwriteList, SupportNull);
+                            ser = ListDecorator.Create(model, MemberType, DefaultType, ser, FieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(member), OverwriteList, SupportNull);
                         }
                     }
                     else if (_defaultValue != null && !IsRequired && getSpecified == null)
                     {   // note: "ShouldSerialize*" / "*Specified" / etc ^^^^ take precedence over defaultValue,
                         // as does "IsRequired"
-                        ser = new DefaultValueDecorator(model, _defaultValue, ser);
+                        ser = new DefaultValueDecorator(_defaultValue, ser);
                     }
                     if (MemberType == model.MapType(typeof(Uri)))
                     {
@@ -562,7 +562,7 @@ namespace ProtoBuf.Meta
                 {
                     if (member is PropertyInfo prop)
                     {
-                        ser = new PropertyDecorator(model, ParentType, prop, ser);
+                        ser = new PropertyDecorator(ParentType, prop, ser);
                     }
                     else if (member is FieldInfo fld)
                     {
@@ -608,11 +608,6 @@ namespace ProtoBuf.Meta
                     return WireType.String;
                 default: throw new InvalidOperationException();
             }
-        }
-
-        private static class PrimitiveSerializer<T> where T : class, IProtoSerializer, new()
-        {
-            public static readonly T Singleton = new T();
         }
 
         internal static IProtoSerializer TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType,

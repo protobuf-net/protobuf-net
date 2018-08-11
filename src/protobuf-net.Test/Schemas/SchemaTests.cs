@@ -142,8 +142,12 @@ namespace ProtoBuf.Schemas
             p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
             p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
             p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
-            var results = csharp.CompileAssemblyFromSource(p, sourceFiles);
-            Assert.Empty(results.Errors);
+            try
+            {
+                var results = csharp.CompileAssemblyFromSource(p, sourceFiles);
+                Assert.Empty(results.Errors);
+            }
+            catch (PlatformNotSupportedException) { }
         }
 
         [Fact]
@@ -179,8 +183,13 @@ namespace ProtoBuf.Schemas
             p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
             p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
             p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
-            var results = vb.CompileAssemblyFromSource(p, sourceFiles);
-            Assert.Empty(results.Errors);
+
+            try
+            {
+                var results = vb.CompileAssemblyFromSource(p, sourceFiles);
+                Assert.Empty(results.Errors);
+            }
+            catch (PlatformNotSupportedException) { }
         }
 
         [Theory]
