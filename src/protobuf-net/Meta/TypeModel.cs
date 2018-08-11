@@ -12,13 +12,6 @@ namespace ProtoBuf.Meta
     /// </summary>
     public abstract class TypeModel
     {
-#if COREFX
-        internal TypeInfo MapType(TypeInfo type)
-        {
-            return type;
-        }
-#endif
-
         /// <summary>
         /// Should the <c>Kind</c> be included on date/time values?
         /// </summary>
