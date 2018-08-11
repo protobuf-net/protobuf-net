@@ -11,11 +11,11 @@ namespace ProtoBuf.Serializers
 
         private readonly BclHelpers.NetObjectOptions options;
 
-        public NetObjectSerializer(TypeModel model, Type type, int key, BclHelpers.NetObjectOptions options)
+        public NetObjectSerializer(Type type, int key, BclHelpers.NetObjectOptions options)
         {
             bool dynamicType = (options & BclHelpers.NetObjectOptions.DynamicType) != 0;
             this.key = dynamicType ? -1 : key;
-            ExpectedType = dynamicType ? model.MapType(typeof(object)) : type;
+            ExpectedType = dynamicType ? typeof(object) : type;
             this.options = options;
         }
 
@@ -44,11 +44,11 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(val);
                 ctx.CastToObject(ExpectedType);
                 ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
-                if (ExpectedType == ctx.MapType(typeof(object))) ctx.LoadNullRef();
+                if (ExpectedType == typeof(object)) ctx.LoadNullRef();
                 else ctx.LoadValue(ExpectedType);
                 ctx.LoadValue((int)options);
 
-                ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("ReadNetObject",
+                ctx.EmitCall(typeof(BclHelpers).GetMethod("ReadNetObject",
                     new[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object),
                     typeof(int), typeof(Type), typeof(BclHelpers.NetObjectOptions)}));
                 ctx.CastFromObject(ExpectedType);
@@ -61,7 +61,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadWriter();
             ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
             ctx.LoadValue((int)options);
-            ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("WriteNetObject"));
+            ctx.EmitCall(typeof(BclHelpers).GetMethod("WriteNetObject"));
         }
 #endif
     }

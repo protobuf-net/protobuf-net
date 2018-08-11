@@ -98,7 +98,7 @@ namespace ProtoBuf.Meta
             ParentType = parentType;
             if (fieldNumber < 1 && !Helpers.IsEnum(parentType)) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             //#if WINRT
-            if (defaultValue != null && model.MapType(defaultValue.GetType()) != memberType)
+            if (defaultValue != null && (defaultValue.GetType() != memberType))
             //#else
             //            if (defaultValue != null && !memberType.IsInstanceOfType(defaultValue))
             //#endif
@@ -332,7 +332,7 @@ namespace ProtoBuf.Meta
             {
                 if (getSpecified != null)
                 {
-                    if (getSpecified.ReturnType != model.MapType(typeof(bool))
+                    if (getSpecified.ReturnType != typeof(bool)
                         || getSpecified.IsStatic
                         || getSpecified.GetParameters().Length != 0)
                     {
@@ -342,10 +342,10 @@ namespace ProtoBuf.Meta
                 if (setSpecified != null)
                 {
                     ParameterInfo[] args;
-                    if (setSpecified.ReturnType != model.MapType(typeof(void))
+                    if (setSpecified.ReturnType != typeof(void)
                         || setSpecified.IsStatic
                         || (args = setSpecified.GetParameters()).Length != 1
-                        || args[0].ParameterType != model.MapType(typeof(bool)))
+                        || args[0].ParameterType != typeof(bool))
                     {
                         throw new ArgumentException("Invalid pattern for setting member-specified", nameof(setSpecified));
                     }
@@ -530,7 +530,7 @@ namespace ProtoBuf.Meta
                         Type underlyingItemType = SupportNull ? ItemType : Helpers.GetUnderlyingType(ItemType) ?? ItemType;
 
                         Helpers.DebugAssert(underlyingItemType == ser.ExpectedType
-                            || (ser.ExpectedType == model.MapType(typeof(object)) && !Helpers.IsValueType(underlyingItemType))
+                            || (ser.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType))
                             , "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
                         if (MemberType.IsArray)
                         {
@@ -546,7 +546,7 @@ namespace ProtoBuf.Meta
                         // as does "IsRequired"
                         ser = new DefaultValueDecorator(_defaultValue, ser);
                     }
-                    if (MemberType == model.MapType(typeof(Uri)))
+                    if (MemberType == typeof(Uri))
                     {
                         ser = new UriDecorator(ser);
                     }
@@ -650,7 +650,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.String;
                     if (asReference)
                     {
-                        return new NetObjectSerializer(model, model.MapType(typeof(string)), 0, BclHelpers.NetObjectOptions.AsReference);
+                        return new NetObjectSerializer(typeof(string), 0, BclHelpers.NetObjectOptions.AsReference);
                     }
                     return PrimitiveSerializer<StringSerializer>.Singleton;
                 case ProtoTypeCode.Single:
@@ -744,7 +744,7 @@ namespace ProtoBuf.Meta
                         if (meta.UseConstructor) options |= BclHelpers.NetObjectOptions.UseConstructor;
                     }
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return new NetObjectSerializer(model, type, key, options);
+                    return new NetObjectSerializer(type, key, options);
                 }
                 if (key >= 0)
                 {

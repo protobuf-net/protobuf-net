@@ -322,7 +322,7 @@ namespace ProtoBuf.Meta
 #if COREFX || PROFILE259
 				EnumPassthru = typeInfo.IsDefined(typeof(FlagsAttribute), false);
 #else
-                EnumPassthru = type.IsDefined(model.MapType(typeof(FlagsAttribute)), false);
+                EnumPassthru = type.IsDefined(typeof(FlagsAttribute), false);
 #endif
             }
         }
@@ -377,7 +377,7 @@ namespace ProtoBuf.Meta
         {
             get
             {
-                Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(model, Type);
+                Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
                 return itemType != null;
             }
         }
@@ -387,7 +387,7 @@ namespace ProtoBuf.Meta
             {
                 return new TagDecorator(ProtoBuf.Serializer.ListItemTag, WireType.Variant, false, new EnumSerializer(Type, GetEnumMap()));
             }
-            Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(model, Type);
+            Type itemType = IgnoreListHandling ? null : TypeModel.GetListItemType(Type);
             if (itemType != null)
             {
                 if (surrogate != null)
@@ -429,7 +429,7 @@ namespace ProtoBuf.Meta
 #if COREFX || PROFILE259
 					if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type.GetTypeInfo()))
 #else
-                    if (!subType.DerivedType.IgnoreListHandling && model.MapType(ienumerable).IsAssignableFrom(subType.DerivedType.Type))
+                    if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type))
 #endif
                     {
                         throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
@@ -658,7 +658,7 @@ namespace ProtoBuf.Meta
             foreach (MemberInfo member in foundList)
             {
                 if (member.DeclaringType != Type) continue;
-                if (member.IsDefined(model.MapType(typeof(ProtoIgnoreAttribute)), true)) continue;
+                if (member.IsDefined(typeof(ProtoIgnoreAttribute), true)) continue;
                 if (partialIgnores != null && partialIgnores.Contains(member.Name)) continue;
 
                 bool forced = false, isPublic, isField;
@@ -768,7 +768,7 @@ namespace ProtoBuf.Meta
 #if COREFX || PROFILE259
 			if (effectiveType.GetTypeInfo().IsSubclassOf(typeof(Delegate))) effectiveType = null;
 #else
-            if (effectiveType.IsSubclassOf(model.MapType(typeof(Delegate)))) effectiveType = null;
+            if (effectiveType.IsSubclassOf(typeof(Delegate))) effectiveType = null;
 #endif
             if (effectiveType != null)
             {
@@ -1154,7 +1154,7 @@ namespace ProtoBuf.Meta
                 else
                 {
                     MethodInfo method = Helpers.GetInstanceMethod(finalType, "ShouldSerialize" + member.Name, Helpers.EmptyTypes);
-                    if (method != null && method.ReturnType == model.MapType(typeof(bool)))
+                    if (method != null && method.ReturnType == typeof(bool))
                     {
                         vm.SetSpecified(method, null);
                     }
@@ -1305,7 +1305,7 @@ namespace ProtoBuf.Meta
             if (surrogateType != null)
             {
                 // note that BuildSerializer checks the **CURRENT TYPE** is OK to be surrogated
-                if (surrogateType != null && Helpers.IsAssignableFrom(model.MapType(typeof(IEnumerable)), surrogateType))
+                if (surrogateType != null && Helpers.IsAssignableFrom(typeof(IEnumerable), surrogateType))
                 {
                     throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
                 }
@@ -1487,7 +1487,7 @@ namespace ProtoBuf.Meta
                     throw new NotSupportedException("Multi-dimensional arrays are not supported");
                 }
                 itemType = type.GetElementType();
-                if (itemType == model.MapType(typeof(byte)))
+                if (itemType == typeof(byte))
                 {
                     defaultType = itemType = null;
                 }
@@ -1497,7 +1497,7 @@ namespace ProtoBuf.Meta
                 }
             }
             // handle lists
-            if (itemType == null) { itemType = TypeModel.GetListItemType(model, type); }
+            if (itemType == null) { itemType = TypeModel.GetListItemType(type); }
 
             // check for nested data (not allowed)
             if (itemType != null)
@@ -1534,15 +1534,15 @@ namespace ProtoBuf.Meta
 						if (typeInfo.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
                             && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = typeInfo.GenericTypeArguments))
 #else
-                        if (type.IsGenericType && type.GetGenericTypeDefinition() == model.MapType(typeof(System.Collections.Generic.IDictionary<,>))
-                            && itemType == model.MapType(typeof(System.Collections.Generic.KeyValuePair<,>)).MakeGenericType(genArgs = type.GetGenericArguments()))
+                        if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
+                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
 #endif
                         {
-                            defaultType = model.MapType(typeof(System.Collections.Generic.Dictionary<,>)).MakeGenericType(genArgs);
+                            defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
                         }
                         else
                         {
-                            defaultType = model.MapType(typeof(System.Collections.Generic.List<>)).MakeGenericType(itemType);
+                            defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
                         }
                     }
                 }
@@ -1796,7 +1796,7 @@ namespace ProtoBuf.Meta
 
             if (IsList)
             {
-                string itemTypeName = model.GetSchemaTypeName(TypeModel.GetListItemType(model, Type), DataFormat.Default, false, false, ref imports);
+                string itemTypeName = model.GetSchemaTypeName(TypeModel.GetListItemType(Type), DataFormat.Default, false, false, ref imports);
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
                 NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
                 NewLine(builder, indent).Append('}');
@@ -1836,7 +1836,7 @@ namespace ProtoBuf.Meta
 #if COREFX || PROFILE259
                     .GetTypeInfo()
 #endif
-.IsDefined(model.MapType(typeof(FlagsAttribute)), false))
+                        .IsDefined(typeof(FlagsAttribute), true))
                     {
                         NewLine(builder, indent + 1).Append("// this is a composite/flags enumeration");
                     }

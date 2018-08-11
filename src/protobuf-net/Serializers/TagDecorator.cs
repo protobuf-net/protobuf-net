@@ -84,7 +84,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue((int)fieldNumber);
             ctx.LoadValue((int)wireType);
             ctx.LoadWriter();
-            ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("WriteFieldHeader"));
+            ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
             Tail.EmitWrite(ctx, valueFrom);
         }
 
@@ -96,12 +96,12 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue((int)wireType);
                 if (strict)
                 {
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("Assert",
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("Assert",
                         new[] { ProtoReader.State.ByRefStateType, typeof(WireType) }));
                 }
                 else
                 {
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("Hint"));
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("Hint"));
                 }
             }
             Tail.EmitRead(ctx, valueFrom);

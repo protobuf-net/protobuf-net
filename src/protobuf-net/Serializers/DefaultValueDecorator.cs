@@ -14,6 +14,7 @@ namespace ProtoBuf.Serializers
         public override bool ReturnsValue => Tail.ReturnsValue;
 
         private readonly object defaultValue;
+
         public DefaultValueDecorator(object defaultValue, IProtoSerializer tail) : base(tail)
         {
             if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
@@ -86,7 +87,7 @@ namespace ProtoBuf.Serializers
                     MethodInfo method = type.GetMethod("op_Equality", BindingFlags.Public | BindingFlags.Static,
                         null, new Type[] { type, type }, null);
 #endif
-                    if (method == null || method.ReturnType != ctx.MapType(typeof(bool)))
+                    if (method == null || method.ReturnType != typeof(bool))
                     {
                         throw new InvalidOperationException("No suitable equality operator found for default-values of type: " + type.FullName);
                     }
@@ -224,7 +225,7 @@ namespace ProtoBuf.Serializers
                         else
                         {
                             ctx.LoadValue(ts.Ticks);
-                            ctx.EmitCall(ctx.MapType(typeof(TimeSpan)).GetMethod("FromTicks"));
+                            ctx.EmitCall(typeof(TimeSpan).GetMethod("FromTicks"));
                         }
                         EmitBeq(ctx, label, expected);
                         break;
@@ -238,7 +239,7 @@ namespace ProtoBuf.Serializers
                 case ProtoTypeCode.DateTime:
                     {
                         ctx.LoadValue(((DateTime)defaultValue).ToBinary());
-                        ctx.EmitCall(ctx.MapType(typeof(DateTime)).GetMethod("FromBinary"));
+                        ctx.EmitCall(typeof(DateTime).GetMethod("FromBinary"));
 
                         EmitBeq(ctx, label, expected);
                         break;

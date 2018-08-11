@@ -163,7 +163,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadWriter();
                     ctx.LoadValue(loc);
                     ctx.CastToObject(ExpectedType);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("ThrowEnumException"));
+                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("ThrowEnumException"));
                     ctx.MarkLabel(@continue);
                 }
             }
@@ -174,7 +174,7 @@ namespace ProtoBuf.Serializers
             ProtoTypeCode typeCode = GetTypeCode();
             if (map == null)
             {
-                ctx.EmitBasicRead("ReadInt32", ctx.MapType(typeof(int)));
+                ctx.EmitBasicRead("ReadInt32", typeof(int));
                 ctx.ConvertFromInt32(typeCode, false);
             }
             else
@@ -187,9 +187,9 @@ namespace ProtoBuf.Serializers
                     values[i] = map[i].RawValue;
                 }
                 using (Compiler.Local result = new Compiler.Local(ctx, ExpectedType))
-                using (Compiler.Local wireValue = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
+                using (Compiler.Local wireValue = new Compiler.Local(ctx, typeof(int)))
                 {
-                    ctx.EmitBasicRead("ReadInt32", ctx.MapType(typeof(int)));
+                    ctx.EmitBasicRead("ReadInt32", typeof(int));
                     ctx.StoreValue(wireValue);
                     Compiler.CodeLabel @continue = ctx.DefineLabel();
                     foreach (BasicList.Group group in BasicList.GetContiguousGroups(wireValues, values))
@@ -231,7 +231,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadReader(true);
                     ctx.LoadValue(ExpectedType);
                     ctx.LoadValue(wireValue);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("ThrowEnumException",
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("ThrowEnumException",
                         new[] { ProtoReader.State.ByRefStateType, typeof(Type), typeof(int) }));
                     ctx.MarkLabel(@continue);
                     ctx.LoadValue(result);

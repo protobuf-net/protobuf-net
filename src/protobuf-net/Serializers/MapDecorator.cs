@@ -149,7 +149,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadAddress(iter, enumeratorType);
                     ctx.EmitCall(current, enumeratorType);
 
-                    if (itemType != ctx.MapType(typeof(object)) && current.ReturnType == ctx.MapType(typeof(object)))
+                    if (itemType != typeof(object) && current.ReturnType == typeof(object))
                     {
                         ctx.CastFromObject(itemType);
                     }
@@ -158,11 +158,11 @@ namespace ProtoBuf.Serializers
                     ctx.LoadValue(fieldNumber);
                     ctx.LoadValue((int)wireType);
                     ctx.LoadWriter();
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("WriteFieldHeader"));
+                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
 
                     ctx.LoadNullRef();
                     ctx.LoadWriter();
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("StartSubItem"));
+                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("StartSubItem"));
                     ctx.StoreValue(token);
 
                     ctx.LoadAddress(kvp, itemType);
@@ -175,7 +175,7 @@ namespace ProtoBuf.Serializers
 
                     ctx.LoadValue(token);
                     ctx.LoadWriter();
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("EndSubItem"));
+                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("EndSubItem"));
 
                     ctx.MarkLabel(@next);
                     ctx.LoadAddress(iter, enumeratorType);
@@ -191,7 +191,7 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken)))
             using (Compiler.Local key = new Compiler.Local(ctx, typeof(TKey)))
             using (Compiler.Local @value = new Compiler.Local(ctx, typeof(TValue)))
-            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
+            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
                 if (!AppendToCollection)
                 { // always new
@@ -233,7 +233,7 @@ namespace ProtoBuf.Serializers
 
                 // token = ProtoReader.StartSubItem(reader);
                 ctx.LoadReader(true);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem", ProtoReader.State.ReaderStateTypeArray));
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem", ProtoReader.State.ReaderStateTypeArray));
                 ctx.StoreValue(token);
 
                 Compiler.CodeLabel @continue = ctx.DefineLabel(), processField = ctx.DefineLabel();
@@ -249,7 +249,7 @@ namespace ProtoBuf.Serializers
                 // case 0: default: reader.SkipField();
                 ctx.MarkLabel(@default);
                 ctx.LoadReader(true);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
                 ctx.Branch(@continue, false);
 
                 // case 1: key = ...
@@ -265,7 +265,7 @@ namespace ProtoBuf.Serializers
 
                 // (fieldNumber = reader.ReadFieldHeader()) > 0
                 ctx.MarkLabel(@continue);
-                ctx.EmitBasicRead("ReadFieldHeader", ctx.MapType(typeof(int)));
+                ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
                 ctx.CopyValue();
                 ctx.StoreValue(fieldNumber);
                 ctx.LoadValue(0);
@@ -274,7 +274,7 @@ namespace ProtoBuf.Serializers
                 // ProtoReader.EndSubItem(token, reader);
                 ctx.LoadValue(token);
                 ctx.LoadReader(true);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem",
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
                     new[] { typeof(SubItemToken), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
 
                 // list[key] = value;
@@ -286,7 +286,7 @@ namespace ProtoBuf.Serializers
                 // while reader.TryReadFieldReader(fieldNumber)
                 ctx.LoadReader(true);
                 ctx.LoadValue(this.fieldNumber);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("TryReadFieldHeader",
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader",
                     new[] { ProtoReader.State.ByRefStateType, typeof(int) }));
                 ctx.BranchIfTrue(redoFromStart, false);
 

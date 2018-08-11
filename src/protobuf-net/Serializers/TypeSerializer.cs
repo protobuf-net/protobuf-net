@@ -386,12 +386,12 @@ namespace ProtoBuf.Serializers
 
                     if (constructType != null && constructType != ExpectedType)
                     {
-                        using (Compiler.Local actualType = new Compiler.Local(ctx, ctx.MapType(typeof(System.Type))))
+                        using (Compiler.Local actualType = new Compiler.Local(ctx, typeof(Type)))
                         {
                             // would have jumped to "fields" if an expected sub-type, so two options:
                             // a: *exactly* that type, b: an *unexpected* type
                             ctx.LoadValue(loc);
-                            ctx.EmitCall(ctx.MapType(typeof(object)).GetMethod("GetType"));
+                            ctx.EmitCall(typeof(object).GetMethod("GetType"));
                             ctx.CopyValue();
                             ctx.StoreValue(actualType);
                             ctx.LoadValue(ExpectedType);
@@ -407,7 +407,7 @@ namespace ProtoBuf.Serializers
                         // would have jumped to "fields" if an expected sub-type, so two options:
                         // a: *exactly* that type, b: an *unexpected* type
                         ctx.LoadValue(loc);
-                        ctx.EmitCall(ctx.MapType(typeof(object)).GetMethod("GetType"));
+                        ctx.EmitCall(typeof(object).GetMethod("GetType"));
                         ctx.LoadValue(ExpectedType);
                         ctx.BranchIfEqual(startFields, true);
                     }
@@ -415,8 +415,8 @@ namespace ProtoBuf.Serializers
                     // is handled by ThrowUnexpectedSubtype
                     ctx.LoadValue(ExpectedType);
                     ctx.LoadValue(loc);
-                    ctx.EmitCall(ctx.MapType(typeof(object)).GetMethod("GetType"));
-                    ctx.EmitCall(ctx.MapType(typeof(TypeModel)).GetMethod("ThrowUnexpectedSubtype",
+                    ctx.EmitCall(typeof(object).GetMethod("GetType"));
+                    ctx.EmitCall(typeof(TypeModel).GetMethod("ThrowUnexpectedSubtype",
                         BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
                 }
                 // fields
@@ -433,7 +433,7 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.LoadValue(loc);
                     ctx.LoadWriter();
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("AppendExtensionData"));
+                    ctx.EmitCall(typeof(ProtoWriter).GetMethod("AppendExtensionData"));
                 }
                 // post-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
@@ -450,20 +450,20 @@ namespace ProtoBuf.Serializers
                 for (int i = 0; i < parameters.Length; i++)
                 {
                     Type parameterType = parameters[i].ParameterType;
-                    if (parameterType == ctx.MapType(typeof(SerializationContext)))
+                    if (parameterType == typeof(SerializationContext))
                     {
                         ctx.LoadSerializationContext();
                     }
-                    else if (parameterType == ctx.MapType(typeof(System.Type)))
+                    else if (parameterType == typeof(Type))
                     {
                         Type tmp = constructType ?? type;
                         ctx.LoadValue(tmp);
                     }
 #if PLAT_BINARYFORMATTER
-                    else if (parameterType == ctx.MapType(typeof(System.Runtime.Serialization.StreamingContext)))
+                    else if (parameterType == typeof(System.Runtime.Serialization.StreamingContext))
                     {
                         ctx.LoadSerializationContext();
-                        MethodInfo op = ctx.MapType(typeof(SerializationContext)).GetMethod("op_Implicit", new Type[] { ctx.MapType(typeof(SerializationContext)) });
+                        MethodInfo op = typeof(SerializationContext).GetMethod("op_Implicit", new Type[] { typeof(SerializationContext) });
                         if (op != null)
                         { // it isn't always! (framework versions, etc)
                             ctx.EmitCall(op);
@@ -481,7 +481,7 @@ namespace ProtoBuf.Serializers
                     ctx.EmitCall(method);
                     if (constructType != null)
                     {
-                        if (method.ReturnType == ctx.MapType(typeof(object)))
+                        if (method.ReturnType == typeof(object))
                         {
                             ctx.CastFromObject(type);
                         }
@@ -562,7 +562,7 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(valueFrom != null);
 
             using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
-            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
+            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
                 // pre-callbacks
                 if (HasCallbacks(TypeModel.CallbackType.BeforeDeserialize))
@@ -625,15 +625,15 @@ namespace ProtoBuf.Serializers
                 if (isExtensible)
                 {
                     ctx.LoadValue(loc);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("AppendExtensionData",
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("AppendExtensionData",
                         new[] { ProtoReader.State.ByRefStateType, typeof(IExtensible) }));
                 }
                 else
                 {
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
                 }
                 ctx.MarkLabel(@continue);
-                ctx.EmitBasicRead("ReadFieldHeader", ctx.MapType(typeof(int)));
+                ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
                 ctx.CopyValue();
                 ctx.StoreValue(fieldNumber);
                 ctx.LoadValue(0);
@@ -682,7 +682,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadValue(loc);
                     ((IProtoTypeSerializer)serializer).EmitCreateInstance(ctx);
 
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("Merge",
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("Merge",
                         new[] { typeof(ProtoReader), typeof(object), typeof(object)}));
                     ctx.Cast(expected);
                     ctx.StoreValue(loc); // Merge always returns a value
@@ -743,7 +743,7 @@ namespace ProtoBuf.Serializers
             else if (!useConstructor)
             {   // DataContractSerializer style
                 ctx.LoadValue(constructType);
-                ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("GetUninitializedObject"));
+                ctx.EmitCall(typeof(BclHelpers).GetMethod("GetUninitializedObject"));
                 ctx.Cast(ExpectedType);
             }
             else if (Helpers.IsClass(constructType) && hasConstructor)
@@ -753,7 +753,7 @@ namespace ProtoBuf.Serializers
             else
             {
                 ctx.LoadValue(ExpectedType);
-                ctx.EmitCall(ctx.MapType(typeof(TypeModel)).GetMethod("ThrowCannotCreateInstance",
+                ctx.EmitCall(typeof(TypeModel).GetMethod("ThrowCannotCreateInstance",
                     BindingFlags.Static | BindingFlags.Public));
                 ctx.LoadNullRef();
                 callNoteObject = false;
@@ -763,7 +763,7 @@ namespace ProtoBuf.Serializers
                 // track root object creation
                 ctx.CopyValue();
                 ctx.LoadReader(false);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("NoteObject",
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("NoteObject",
                         BindingFlags.Static | BindingFlags.Public));
             }
             if (baseCtorCallbacks != null)

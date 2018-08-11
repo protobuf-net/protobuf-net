@@ -77,7 +77,7 @@ namespace ProtoBuf.Serializers
                     effectiveType = typeArgs;
                     break; // fine
                 case 2:
-                    Type kvp = model.MapType(typeof(System.Collections.Generic.KeyValuePair<,>));
+                    Type kvp = typeof(System.Collections.Generic.KeyValuePair<,>);
                     if (kvp == null) return false;
                     kvp = kvp.MakeGenericType(typeArgs);
                     effectiveType = new Type[] { kvp };
@@ -117,7 +117,7 @@ namespace ProtoBuf.Serializers
                 builderFactory = method.MakeGenericMethod(typeArgs);
                 break;
             }
-            Type voidType = model.MapType(typeof(void));
+            Type voidType = typeof(void);
             if (builderFactory == null || builderFactory.ReturnType == null || builderFactory.ReturnType == voidType) return false;
 
 #if COREFX
@@ -149,11 +149,8 @@ namespace ProtoBuf.Serializers
             addRange = Helpers.GetInstanceMethod(builderFactory.ReturnType, "AddRange", new Type[] { declaredType });
             if (addRange == null)
             {
-                Type enumerable = model.MapType(typeof(System.Collections.Generic.IEnumerable<>), false);
-                if (enumerable != null)
-                {
-                    addRange = Helpers.GetInstanceMethod(builderFactory.ReturnType, "AddRange", new Type[] { enumerable.MakeGenericType(effectiveType) });
-                }
+                Type enumerable = typeof(System.Collections.Generic.IEnumerable<>);
+                addRange = Helpers.GetInstanceMethod(builderFactory.ReturnType, "AddRange", new Type[] { enumerable.MakeGenericType(effectiveType) });
             }
 
             return true;
@@ -247,7 +244,7 @@ namespace ProtoBuf.Serializers
                         ctx.BranchIfFalse(done, false); // old list is empty; nothing to add
                     }
 
-                    Type voidType = ctx.MapType(typeof(void));
+                    Type voidType = typeof(void);
                     if (addRange != null)
                     {
                         ctx.LoadValue(builder);

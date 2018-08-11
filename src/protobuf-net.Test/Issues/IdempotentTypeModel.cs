@@ -49,7 +49,7 @@ namespace ProtoBuf.Issues
         [ProtoContract]
         public class ProtoList<T>
         {
-            [ProtoMember(1, IsRequired = false, Name = @"List", DataFormat = ProtoBuf.DataFormat.Default)]
+            [ProtoMember(1, IsRequired = false, Name = "List", DataFormat = ProtoBuf.DataFormat.Default)]
             [System.ComponentModel.DefaultValue(null)]
             public IList<T> List { get; set; }
         }

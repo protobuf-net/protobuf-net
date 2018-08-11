@@ -247,7 +247,7 @@ namespace ProtoBuf.Serializers
 
                     if (!Helpers.IsValueType(ExpectedType)) ctx.MarkLabel(skipOld);
 
-                    using (Compiler.Local fieldNumber = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
+                    using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
                     {
                         Compiler.CodeLabel @continue = ctx.DefineLabel(),
                                            processField = ctx.DefineLabel(),
@@ -299,10 +299,10 @@ namespace ProtoBuf.Serializers
 
                         ctx.MarkLabel(notRecognised);
                         ctx.LoadReader(true);
-                        ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
+                        ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
 
                         ctx.MarkLabel(@continue);
-                        ctx.EmitBasicRead("ReadFieldHeader", ctx.MapType(typeof(int)));
+                        ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
                         ctx.CopyValue();
                         ctx.StoreValue(fieldNumber);
                         ctx.LoadValue(0);

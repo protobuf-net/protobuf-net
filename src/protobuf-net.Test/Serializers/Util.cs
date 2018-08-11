@@ -10,7 +10,7 @@ using ProtoBuf.Compiler;
 
 namespace ProtoBuf.unittest.Serializers
 {
-    static partial class Util
+    internal static partial class Util
     {
 #if !NO_INTERNAL_CONTEXT
         public static void Test(object value, Type innerType, Func<IProtoSerializer, IProtoSerializer> ctor,
@@ -32,7 +32,9 @@ namespace ProtoBuf.unittest.Serializers
             Test(value, compiled, "compiled", expected);
         }
 
+#pragma warning disable RCS1163 // Unused parameter.
         public static void Test(object obj, ProtoSerializer serializer, string message, byte[] expected)
+#pragma warning restore RCS1163 // Unused parameter.
         {
             byte[] data;
             using (MemoryStream ms = new MemoryStream())
@@ -106,7 +108,7 @@ namespace ProtoBuf.unittest.Serializers
                 {
                     action(pw);
                 }
-                string s = GetHex(ms.ToArray());               
+                string s = GetHex(ms.ToArray());
                 Assert.Equal(expectedHex, s);
             }
         }

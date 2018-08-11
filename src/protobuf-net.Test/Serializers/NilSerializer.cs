@@ -21,7 +21,7 @@ namespace ProtoBuf.Serializers
         private readonly Type type;
         public bool ReturnsValue { get { return true; } }
         public bool RequiresOldValue { get { return true; } }
-        public object Read(ProtoReader reader, ref ProtoReader.State state, object value) { return value; }
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value) { return value; }
         Type IProtoSerializer.ExpectedType { get { return type; } }
         public NilSerializer(Type type) { this.type = type; }
         void IProtoSerializer.Write(object value, ProtoWriter dest) { }

@@ -66,7 +66,7 @@ namespace ProtoBuf.Serializers
                 {
                     if (convertAttributeType == null)
                     {
-                        convertAttributeType = model.MapType(typeof(ProtoConverterAttribute), false);
+                        convertAttributeType = typeof(ProtoConverterAttribute);
                         if (convertAttributeType == null)
                         { // attribute isn't defined in the source assembly: stop looking
                             break;

@@ -179,7 +179,7 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                il.Emit(OpCodes.Castclass, MapType(typeof(object)));
+                il.Emit(OpCodes.Castclass, typeof(object));
                 TraceCompile(OpCodes.Castclass + ": " + type);
             }
         }
@@ -571,7 +571,7 @@ namespace ProtoBuf.Compiler
 
         private MethodInfo GetWriterMethod(string methodName)
         {
-            Type writerType = MapType(typeof(ProtoWriter));
+            Type writerType = typeof(ProtoWriter);
             MethodInfo[] methods = writerType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             foreach (MethodInfo method in methods)
             {
@@ -587,7 +587,7 @@ namespace ProtoBuf.Compiler
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             MethodInfo method = helperType.GetMethod(
                 methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            if (method == null || method.ReturnType != MapType(typeof(void))) throw new ArgumentException(nameof(methodName));
+            if (method == null || method.ReturnType != typeof(void)) throw new ArgumentException(nameof(methodName));
             LoadValue(valueFrom);
             LoadWriter();
             EmitCall(method);
@@ -763,7 +763,7 @@ namespace ProtoBuf.Compiler
                 }
             }
             bool isTrusted = false;
-            Type attributeType = MapType(typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute));
+            Type attributeType = typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute);
             if (attributeType == null) return false;
 
 #if COREFX
@@ -836,7 +836,7 @@ namespace ProtoBuf.Compiler
                         // allow calls to TypeModel protected methods, and methods we are in the process of creating
                         if (
                                 member is MethodBuilder
-                                || member.DeclaringType == MapType(typeof(TypeModel)))
+                                || member.DeclaringType == typeof(TypeModel))
                         {
                             isPublic = true;
                         }
@@ -878,7 +878,7 @@ namespace ProtoBuf.Compiler
                             // allow calls to TypeModel protected methods, and methods we are in the process of creating
                             if (
                                 member is MethodBuilder
-                                || member.DeclaringType == MapType(typeof(TypeModel)))
+                                || member.DeclaringType == typeof(TypeModel))
                             {
                                 isPublic = true;
                             }
@@ -1104,7 +1104,7 @@ namespace ProtoBuf.Compiler
             else
             {
                 // too many to jump easily (especially on Android) - need to split up (note: uses a local pulled from the stack)
-                using (Local val = GetLocalWithValue(MapType(typeof(int)), null))
+                using (Local val = GetLocalWithValue(typeof(int), null))
                 {
                     int count = jumpTable.Length, offset = 0;
                     int blockCount = count / MAX_JUMPS;
@@ -1227,20 +1227,19 @@ namespace ProtoBuf.Compiler
             /// </summary>
             public UsingBlock(CompilerContext ctx, Local local)
             {
-                if (ctx == null) throw new ArgumentNullException(nameof(ctx));
                 if (local == null) throw new ArgumentNullException(nameof(local));
 
                 Type type = local.Type;
                 // check if **never** disposable
                 if ((Helpers.IsValueType(type) || Helpers.IsSealed(type))
-                    && !ctx.MapType(typeof(IDisposable)).IsAssignableFrom(type))
+                    && !typeof(IDisposable).IsAssignableFrom(type))
                 {
                     return; // nothing to do! easiest "using" block ever
                     // (note that C# wouldn't allow this as a "using" block,
                     // but we'll be generous and simply not do anything)
                 }
                 this.local = local;
-                this.ctx = ctx;
+                this.ctx = ctx ?? throw new ArgumentNullException(nameof(ctx));
                 label = ctx.BeginTry();
             }
             public void Dispose()
@@ -1249,7 +1248,7 @@ namespace ProtoBuf.Compiler
 
                 ctx.EndTry(label, false);
                 ctx.BeginFinally();
-                Type disposableType = ctx.MapType(typeof(IDisposable));
+                Type disposableType = typeof(IDisposable);
                 MethodInfo dispose = disposableType.GetMethod("Dispose");
                 Type type = local.Type;
                 // remember that we've already (in the .ctor) excluded the case
@@ -1381,7 +1380,7 @@ namespace ProtoBuf.Compiler
         {
             il.Emit(OpCodes.Ldtoken, type);
             TraceCompile(OpCodes.Ldtoken + ": " + type);
-            EmitCall(MapType(typeof(System.Type)).GetMethod("GetTypeFromHandle"));
+            EmitCall(typeof(Type).GetMethod("GetTypeFromHandle"));
         }
 
         internal void ConvertToInt32(ProtoTypeCode typeCode, bool uint32Overflow)
@@ -1441,7 +1440,7 @@ namespace ProtoBuf.Compiler
                 LoadValue((int)(((uint)bits[3]) >> 31)); // isNegative (bool, but int for CLI purposes)
                 LoadValue((bits[3] >> 16) & 0xFF); // scale (byte, but int for CLI purposes)
 
-                EmitCtor(MapType(typeof(decimal)), new Type[] { MapType(typeof(int)), MapType(typeof(int)), MapType(typeof(int)), MapType(typeof(bool)), MapType(typeof(byte)) });
+                EmitCtor(typeof(decimal), new Type[] { typeof(int), typeof(int), typeof(int), typeof(bool), typeof(byte) });
             }
         }
 
@@ -1464,8 +1463,8 @@ namespace ProtoBuf.Compiler
                 {
                     LoadValue(bytes[i]);
                 }
-                EmitCtor(MapType(typeof(Guid)), new Type[] { MapType(typeof(int)), MapType(typeof(short)), MapType(typeof(short)),
-                            MapType(typeof(byte)), MapType(typeof(byte)), MapType(typeof(byte)), MapType(typeof(byte)), MapType(typeof(byte)), MapType(typeof(byte)), MapType(typeof(byte)), MapType(typeof(byte)) });
+                EmitCtor(typeof(Guid), new Type[] { typeof(int), typeof(short), typeof(short),
+                            typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte), typeof(byte) });
             }
         }
 
@@ -1479,11 +1478,6 @@ namespace ProtoBuf.Compiler
             if (isWriter) LoadWriter();
             else LoadReader(false);
             LoadValue((isWriter ? typeof(ProtoWriter) : typeof(ProtoReader)).GetProperty("Context"));
-        }
-
-        internal Type MapType(Type type)
-        {
-            return Model.MapType(type);
         }
 
         public ILVersion MetadataVersion { get; }

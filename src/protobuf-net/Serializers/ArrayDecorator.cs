@@ -9,12 +9,15 @@ namespace ProtoBuf.Serializers
     internal sealed class ArrayDecorator : ProtoDecoratorBase
     {
         private readonly int fieldNumber;
+
         private const byte
                    OPTIONS_WritePacked = 1,
                    OPTIONS_OverwriteList = 2,
                    OPTIONS_SupportNull = 4;
+
         private readonly byte options;
         private readonly WireType packedWireType;
+
         public ArrayDecorator(TypeModel model, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, Type arrayType, bool overwriteList, bool supportNull)
             : base(tail)
         {
@@ -24,8 +27,8 @@ namespace ProtoBuf.Serializers
             Type underlyingItemType = supportNull ? itemType : (Helpers.GetUnderlyingType(itemType) ?? itemType);
 
             Helpers.DebugAssert(underlyingItemType == Tail.ExpectedType
-                || (Tail.ExpectedType == model.MapType(typeof(object)) && !Helpers.IsValueType(underlyingItemType)), "invalid tail");
-            Helpers.DebugAssert(Tail.ExpectedType != model.MapType(typeof(byte)), "Should have used BlobSerializer");
+                || (Tail.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType)), "invalid tail");
+            Helpers.DebugAssert(Tail.ExpectedType != typeof(byte), "Should have used BlobSerializer");
             if ((writePacked || packedWireType != WireType.None) && fieldNumber <= 0) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             if (!ListDecorator.CanPack(packedWireType))
             {
@@ -39,6 +42,7 @@ namespace ProtoBuf.Serializers
             if (supportNull) options |= OPTIONS_SupportNull;
             ExpectedType = arrayType;
         }
+
         private readonly Type itemType; // this is, for example, typeof(int[])
         public override Type ExpectedType { get; }
         public override bool RequiresOldValue { get { return AppendToCollection; } }
@@ -65,14 +69,14 @@ namespace ProtoBuf.Serializers
         {
             // int i and T[] arr
             using (Compiler.Local arr = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            using (Compiler.Local i = new ProtoBuf.Compiler.Local(ctx, ctx.MapType(typeof(int))))
+            using (Compiler.Local i = new ProtoBuf.Compiler.Local(ctx, typeof(int)))
             {
                 bool writePacked = (options & OPTIONS_WritePacked) != 0;
                 bool fixedLengthPacked = writePacked && CanUsePackedPrefix();
 
-                using (Compiler.Local token = (writePacked && !fixedLengthPacked) ? new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))) : null)
+                using (Compiler.Local token = (writePacked && !fixedLengthPacked) ? new Compiler.Local(ctx, typeof(SubItemToken)) : null)
                 {
-                    Type mappedWriter = ctx.MapType(typeof(ProtoWriter));
+                    Type mappedWriter = typeof(ProtoWriter);
                     if (writePacked)
                     {
                         ctx.LoadValue(fieldNumber);
@@ -205,6 +209,7 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
+
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             int field = source.FieldNumber;
@@ -235,7 +240,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
-            Type listType = ctx.MapType(typeof(System.Collections.Generic.List<>)).MakeGenericType(itemType);
+            Type listType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
             Type expected = ExpectedType;
             using (Compiler.Local oldArr = AppendToCollection ? ctx.GetLocalWithValue(expected, valueFrom) : null)
             using (Compiler.Local newArr = new Compiler.Local(ctx, expected))
@@ -246,9 +251,9 @@ namespace ProtoBuf.Serializers
                 ListDecorator.EmitReadList(ctx, list, Tail, listType.GetMethod("Add"), packedWireType, false);
 
                 // leave this "using" here, as it can share the "FieldNumber" local with EmitReadList
-                using (Compiler.Local oldLen = AppendToCollection ? new ProtoBuf.Compiler.Local(ctx, ctx.MapType(typeof(int))) : null)
+                using (Compiler.Local oldLen = AppendToCollection ? new ProtoBuf.Compiler.Local(ctx, typeof(int)) : null)
                 {
-                    Type[] copyToArrayInt32Args = new Type[] { ctx.MapType(typeof(Array)), ctx.MapType(typeof(int)) };
+                    Type[] copyToArrayInt32Args = new Type[] { typeof(Array), typeof(int) };
 
                     if (AppendToCollection)
                     {
@@ -292,7 +297,7 @@ namespace ProtoBuf.Serializers
                     MethodInfo copyTo = listType.GetMethod("CopyTo", copyToArrayInt32Args);
                     if (copyTo == null)
                     { // fallback: CopyTo(Array, int)
-                        copyToArrayInt32Args[1] = ctx.MapType(typeof(Array));
+                        copyToArrayInt32Args[1] = typeof(Array);
                         copyTo = listType.GetMethod("CopyTo", copyToArrayInt32Args);
                     }
                     ctx.EmitCall(copyTo);

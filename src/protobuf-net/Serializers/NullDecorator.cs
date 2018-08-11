@@ -17,7 +17,7 @@ namespace ProtoBuf.Serializers
             Type tailType = tail.ExpectedType;
             if (Helpers.IsValueType(tailType))
             {
-                ExpectedType = model.MapType(typeof(Nullable<>)).MakeGenericType(tailType);
+                ExpectedType = typeof(Nullable<>).MakeGenericType(tailType);
             }
             else
             {
@@ -35,11 +35,11 @@ namespace ProtoBuf.Serializers
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             using (Compiler.Local oldValue = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            using (Compiler.Local token = new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))))
-            using (Compiler.Local field = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
+            using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken)))
+            using (Compiler.Local field = new Compiler.Local(ctx, typeof(int)))
             {
                 ctx.LoadReader(true);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem",
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
                     ProtoReader.State.ReaderStateTypeArray));
                 ctx.StoreValue(token);
 
@@ -47,7 +47,7 @@ namespace ProtoBuf.Serializers
 
                 ctx.MarkLabel(next);
 
-                ctx.EmitBasicRead("ReadFieldHeader", ctx.MapType(typeof(int)));
+                ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
                 ctx.CopyValue();
                 ctx.StoreValue(field);
                 ctx.LoadValue(Tag); // = 1 - process
@@ -58,7 +58,7 @@ namespace ProtoBuf.Serializers
 
                 // default: skip
                 ctx.LoadReader(true);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
                 ctx.Branch(next, true);
 
                 // process
@@ -89,7 +89,7 @@ namespace ProtoBuf.Serializers
 
                 ctx.LoadValue(token);
                 ctx.LoadReader(true);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem",
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
                     new[] { typeof(SubItemToken), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
                 ctx.LoadValue(oldValue); // load the old value
             }
@@ -97,11 +97,11 @@ namespace ProtoBuf.Serializers
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             using (Compiler.Local valOrNull = ctx.GetLocalWithValue(ExpectedType, valueFrom))
-            using (Compiler.Local token = new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))))
+            using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken)))
             {
                 ctx.LoadNullRef();
                 ctx.LoadWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("StartSubItem"));
+                ctx.EmitCall(typeof(ProtoWriter).GetMethod("StartSubItem"));
                 ctx.StoreValue(token);
 
                 if (Helpers.IsValueType(ExpectedType))
@@ -130,7 +130,7 @@ namespace ProtoBuf.Serializers
 
                 ctx.LoadValue(token);
                 ctx.LoadWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("EndSubItem"));
+                ctx.EmitCall(typeof(ProtoWriter).GetMethod("EndSubItem"));
             }
         }
 #endif

@@ -50,7 +50,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(entity);
             }
             ctx.LoadReader(true);
-            ctx.EmitCall(ctx.MapType(typeof(ProtoReader))
+            ctx.EmitCall(typeof(ProtoReader)
                .GetMethod(nameof(ProtoReader.AppendBytes),
                new[] { typeof(byte[]), typeof(ProtoReader), ProtoReader.State.ByRefStateType}));
         }

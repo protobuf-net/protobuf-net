@@ -179,7 +179,7 @@ namespace ProtoBuf.Serializers
 
         internal static void EmitReadList(ProtoBuf.Compiler.CompilerContext ctx, Compiler.Local list, IProtoSerializer tail, MethodInfo add, WireType packedWireType, bool castListForAdd)
         {
-            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
+            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
                 Compiler.CodeLabel readPacked = packedWireType == WireType.None ? new Compiler.CodeLabel() : ctx.DefineLabel();
                 if (packedWireType != WireType.None)
@@ -200,7 +200,7 @@ namespace ProtoBuf.Serializers
 
                 ctx.LoadReader(true);
                 ctx.LoadValue(fieldNumber);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("TryReadFieldHeader",
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader",
                     new[] { ProtoReader.State.ByRefStateType, typeof(int) }));
                 ctx.BranchIfTrue(@continue, false);
 
@@ -211,14 +211,14 @@ namespace ProtoBuf.Serializers
                     ctx.MarkLabel(readPacked);
 
                     ctx.LoadReader(true);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem",
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
                         ProtoReader.State.ReaderStateTypeArray));
 
                     Compiler.CodeLabel testForData = ctx.DefineLabel(), noMoreData = ctx.DefineLabel();
                     ctx.MarkLabel(testForData);
                     ctx.LoadValue((int)packedWireType);
                     ctx.LoadReader(false);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("HasSubValue"));
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("HasSubValue"));
                     ctx.BranchIfFalse(noMoreData, false);
 
                     EmitReadAndAddItem(ctx, list, tail, add, castListForAdd);
@@ -226,7 +226,7 @@ namespace ProtoBuf.Serializers
 
                     ctx.MarkLabel(noMoreData);
                     ctx.LoadReader(true);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem",
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
                         new[] { typeof(SubItemToken), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
                     ctx.MarkLabel(allDone);
                 }
@@ -284,7 +284,7 @@ namespace ProtoBuf.Serializers
             Type addParamType = add.GetParameters()[0].ParameterType;
             if (addParamType != itemType)
             {
-                if (addParamType == ctx.MapType(typeof(object)))
+                if (addParamType == typeof(object))
                 {
                     ctx.CastToObject(itemType);
                 }
@@ -299,7 +299,7 @@ namespace ProtoBuf.Serializers
                 }
             }
             ctx.EmitCall(add, list.Type);
-            if (add.ReturnType != ctx.MapType(typeof(void)))
+            if (add.ReturnType != typeof(void))
             {
                 ctx.DiscardValue();
             }
@@ -337,15 +337,15 @@ namespace ProtoBuf.Serializers
                 PropertyInfo prop = Helpers.GetProperty(iteratorType, "Current", false);
                 current = prop == null ? null : Helpers.GetGetMethod(prop, false, false);
 #if PROFILE259
-				if (moveNext == null && (model.MapType(ienumeratorType).GetTypeInfo().IsAssignableFrom(iteratorType.GetTypeInfo())))
+				if (moveNext == null && (ienumeratorType.GetTypeInfo().IsAssignableFrom(iteratorType.GetTypeInfo())))
 #else
-                if (moveNext == null && (model.MapType(ienumeratorType).IsAssignableFrom(iteratorType)))
+                if (moveNext == null && (ienumeratorType.IsAssignableFrom(iteratorType)))
 #endif
                 {
-                    moveNext = Helpers.GetInstanceMethod(model.MapType(ienumeratorType), "MoveNext", null);
+                    moveNext = Helpers.GetInstanceMethod(ienumeratorType, "MoveNext", null);
                 }
                 // fully typed
-                if (moveNext != null && moveNext.ReturnType == model.MapType(typeof(bool))
+                if (moveNext != null && moveNext.ReturnType == typeof(bool)
                     && current != null && current.ReturnType == itemType)
                 {
                     return getEnumerator;
@@ -354,8 +354,7 @@ namespace ProtoBuf.Serializers
             }
 
             // try IEnumerable<T>
-            Type tmp = model.MapType(typeof(System.Collections.Generic.IEnumerable<>), false);
-
+            Type tmp = typeof(System.Collections.Generic.IEnumerable<>);
             if (tmp != null)
             {
                 tmp = tmp.MakeGenericType(itemType);
@@ -386,12 +385,12 @@ namespace ProtoBuf.Serializers
                 iteratorType = getReturnType;
 #endif
 
-                moveNext = Helpers.GetInstanceMethod(model.MapType(ienumeratorType), "MoveNext");
+                moveNext = Helpers.GetInstanceMethod(ienumeratorType, "MoveNext");
                 current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current", false), false, false);
                 return getEnumerator;
             }
             // give up and fall-back to non-generic IEnumerable
-            enumeratorType = model.MapType(ienumerableType);
+            enumeratorType = ienumerableType;
             getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
             getReturnType = getEnumerator.ReturnType;
             iteratorType = getReturnType
@@ -415,23 +414,23 @@ namespace ProtoBuf.Serializers
                 Type enumeratorType = getEnumerator.ReturnType;
                 bool writePacked = WritePacked;
                 using (Compiler.Local iter = new Compiler.Local(ctx, enumeratorType))
-                using (Compiler.Local token = writePacked ? new Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))) : null)
+                using (Compiler.Local token = writePacked ? new Compiler.Local(ctx, typeof(SubItemToken)) : null)
                 {
                     if (writePacked)
                     {
                         ctx.LoadValue(fieldNumber);
                         ctx.LoadValue((int)WireType.String);
                         ctx.LoadWriter();
-                        ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("WriteFieldHeader"));
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
 
                         ctx.LoadValue(list);
                         ctx.LoadWriter();
-                        ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("StartSubItem"));
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("StartSubItem"));
                         ctx.StoreValue(token);
 
                         ctx.LoadValue(fieldNumber);
                         ctx.LoadWriter();
-                        ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("SetPackedField"));
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("SetPackedField"));
                     }
 
                     ctx.LoadAddress(list, ExpectedType);
@@ -447,7 +446,7 @@ namespace ProtoBuf.Serializers
                         ctx.LoadAddress(iter, enumeratorType);
                         ctx.EmitCall(current, enumeratorType);
                         Type itemType = Tail.ExpectedType;
-                        if (itemType != ctx.MapType(typeof(object)) && current.ReturnType == ctx.MapType(typeof(object)))
+                        if (itemType != typeof(object) && current.ReturnType == typeof(object))
                         {
                             ctx.CastFromObject(itemType);
                         }
@@ -463,7 +462,7 @@ namespace ProtoBuf.Serializers
                     {
                         ctx.LoadValue(token);
                         ctx.LoadWriter();
-                        ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("EndSubItem"));
+                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("EndSubItem"));
                     }
                 }
             }

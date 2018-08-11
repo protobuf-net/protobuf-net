@@ -31,14 +31,14 @@ namespace ProtoBuf.Serializers
 #else
             MethodInfo method = type.GetMethod("Parse",
                 BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
-                null, new Type[] { model.MapType(typeof(string)) }, null);
+                null, new Type[] { typeof(string) }, null);
 #endif
             if (method != null && method.ReturnType == type)
             {
                 if (Helpers.IsValueType(type))
                 {
                     MethodInfo toString = GetCustomToString(type);
-                    if (toString == null || toString.ReturnType != model.MapType(typeof(string))) return null; // need custom ToString, fools
+                    if (toString == null || toString.ReturnType != typeof(string)) return null; // need custom ToString, fools
                 }
                 return new ParseableSerializer(method);
             }
@@ -95,13 +95,13 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                ctx.EmitCall(ctx.MapType(typeof(object)).GetMethod("ToString"));
+                ctx.EmitCall(typeof(object).GetMethod("ToString"));
             }
             ctx.EmitBasicWrite("WriteString", valueFrom);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadString", ctx.MapType(typeof(string)));
+            ctx.EmitBasicRead("ReadString", typeof(string));
             ctx.EmitCall(parse);
         }
 #endif

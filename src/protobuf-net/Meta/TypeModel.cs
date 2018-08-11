@@ -27,12 +27,14 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
         /// </summary>
+        [Obsolete]
         protected internal Type MapType(Type type) => type;
 
 #pragma warning disable RCS1163 // Unused parameter.
         /// <summary>
         /// Resolve a System.Type to the compiler-specific type
         /// </summary>
+        [Obsolete]
         protected internal Type MapType(Type type, bool demand) => type;
 #pragma warning restore RCS1163 // Unused parameter.
 
@@ -458,7 +460,7 @@ namespace ProtoBuf.Meta
             public new T Current { get { return (T)base.Current; } }
             void IDisposable.Dispose() { }
             public DeserializeItemsIterator(TypeModel model, Stream source, PrefixStyle style, int expectedField, SerializationContext context)
-                : base(model, source, model.MapType(typeof(T)), style, expectedField, null, context) { }
+                : base(model, source, typeof(T), style, expectedField, null, context) { }
         }
 
         private class DeserializeItemsIterator : IEnumerator, IEnumerable
@@ -529,7 +531,7 @@ namespace ProtoBuf.Meta
             if (type == null)
             {
                 if (value == null) throw new ArgumentNullException(nameof(value));
-                type = MapType(value.GetType());
+                type = value.GetType();
             }
             int key = GetKey(ref type);
             using (ProtoWriter writer = ProtoWriter.Create(dest, this, context))
@@ -602,7 +604,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    type = MapType(value.GetType());
+                    type = value.GetType();
                 }
             }
 
@@ -746,9 +748,9 @@ namespace ProtoBuf.Meta
             Type listTypeInfo = listType;
 #endif
 #if PROFILE259
-			isList = model.MapType(ilist).GetTypeInfo().IsAssignableFrom(listTypeInfo);
+			isList = ilist.GetTypeInfo().IsAssignableFrom(listTypeInfo);
 #else
-            isList = model.MapType(ilist).IsAssignableFrom(listTypeInfo);
+            isList = ilist.IsAssignableFrom(listTypeInfo);
 #endif
             Type[] types = { itemType };
             MethodInfo add = Helpers.GetInstanceMethod(listTypeInfo, nameof(IList.Add), types);
@@ -757,7 +759,7 @@ namespace ProtoBuf.Meta
             if (add == null)
             {   // fallback: look for ICollection<T>'s Add(typedObject) method
                 bool forceList = listTypeInfo.IsInterface
-                    && model.MapType(typeof(System.Collections.Generic.IEnumerable<>)).MakeGenericType(types)
+                    && typeof(System.Collections.Generic.IEnumerable<>).MakeGenericType(types)
 #if COREFX || PROFILE259
                     .GetTypeInfo()
 #endif
@@ -766,7 +768,7 @@ namespace ProtoBuf.Meta
 #if COREFX || PROFILE259
                 TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
 #else
-                Type constuctedListType = model.MapType(typeof(System.Collections.Generic.ICollection<>)).MakeGenericType(types);
+                Type constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types);
 #endif
                 if (forceList || constuctedListType.IsAssignableFrom(listTypeInfo))
                 {
@@ -796,16 +798,16 @@ namespace ProtoBuf.Meta
 
             if (add == null)
             {   // fallback: look for a public list.Add(object) method
-                types[0] = model.MapType(typeof(object));
+                types[0] = typeof(object);
                 add = Helpers.GetInstanceMethod(listTypeInfo, "Add", types);
             }
             if (add == null && isList)
             {   // fallback: look for IList's Add(object) method
-                add = Helpers.GetInstanceMethod(model.MapType(ilist), "Add", types);
+                add = Helpers.GetInstanceMethod(ilist, "Add", types);
             }
             return add;
         }
-        internal static Type GetListItemType(TypeModel model, Type listType)
+        internal static Type GetListItemType(Type listType)
         {
             Helpers.DebugAssert(listType != null);
 
@@ -814,8 +816,8 @@ namespace ProtoBuf.Meta
             if (listType == typeof(string) || listType.IsArray
                 || !typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(listTypeInfo)) { return null; }
 #else
-            if (listType == model.MapType(typeof(string)) || listType.IsArray
-                || !model.MapType(typeof(IEnumerable)).IsAssignableFrom(listType)) { return null; }
+            if (listType == typeof(string) || listType.IsArray
+                || !typeof(IEnumerable).IsAssignableFrom(listType)) { return null; }
 #endif
 
             BasicList candidates = new BasicList();
@@ -839,16 +841,16 @@ namespace ProtoBuf.Meta
 
             if (!isQueueStack)
             {
-                TestEnumerableListPatterns(model, candidates, listType);
+                TestEnumerableListPatterns(candidates, listType);
 #if PROFILE259
 				foreach (Type iType in listTypeInfo.ImplementedInterfaces)
                 {
-                    TestEnumerableListPatterns(model, candidates, iType);
+                    TestEnumerableListPatterns(candidates, iType);
                 }
 #else
                 foreach (Type iType in listType.GetInterfaces())
                 {
-                    TestEnumerableListPatterns(model, candidates, iType);
+                    TestEnumerableListPatterns(candidates, iType);
                 }
 #endif
             }
@@ -870,7 +872,7 @@ namespace ProtoBuf.Meta
             {
                 if (indexer.Name != "Item" || candidates.Contains(indexer.PropertyType)) continue;
                 ParameterInfo[] args = indexer.GetIndexParameters();
-                if (args.Length != 1 || args[0].ParameterType != model.MapType(typeof(int))) continue;
+                if (args.Length != 1 || args[0].ParameterType != typeof(int)) continue;
                 candidates.Add(indexer.PropertyType);
             }
 #endif
@@ -891,7 +893,7 @@ namespace ProtoBuf.Meta
             return null;
         }
 
-        private static void TestEnumerableListPatterns(TypeModel model, BasicList candidates, Type iType)
+        private static void TestEnumerableListPatterns(BasicList candidates, Type iType)
         {
 #if COREFX || PROFILE259
             TypeInfo iTypeInfo = iType.GetTypeInfo();
@@ -899,8 +901,8 @@ namespace ProtoBuf.Meta
             {
                 Type typeDef = iTypeInfo.GetGenericTypeDefinition();
                 if (
-                   typeDef == model.MapType(typeof(System.Collections.Generic.IEnumerable<>))
-                || typeDef == model.MapType(typeof(System.Collections.Generic.ICollection<>))
+                   typeDef == typeof(System.Collections.Generic.IEnumerable<>)
+                || typeDef == typeof(System.Collections.Generic.ICollection<>)
                 || typeDef.GetTypeInfo().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
                 {
                     Type[] iTypeArgs = iTypeInfo.GenericTypeArguments;
@@ -914,8 +916,8 @@ namespace ProtoBuf.Meta
             if (iType.IsGenericType)
             {
                 Type typeDef = iType.GetGenericTypeDefinition();
-                if (typeDef == model.MapType(typeof(System.Collections.Generic.IEnumerable<>))
-                    || typeDef == model.MapType(typeof(System.Collections.Generic.ICollection<>))
+                if (typeDef == typeof(System.Collections.Generic.IEnumerable<>)
+                    || typeDef == typeof(System.Collections.Generic.ICollection<>)
                     || typeDef.FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
                 {
                     Type[] iTypeArgs = iType.GetGenericArguments();
@@ -1100,7 +1102,7 @@ namespace ProtoBuf.Meta
             bool found = false;
             if (wiretype == WireType.None)
             {
-                itemType = GetListItemType(this, type);
+                itemType = GetListItemType(type);
                 if (itemType == null && type.IsArray && type.GetArrayRank() == 1 && type != typeof(byte[]))
                 {
                     itemType = type.GetElementType();
@@ -1668,7 +1670,7 @@ namespace ProtoBuf.Meta
                 }
                 else
                 {
-                    itemType = GetListItemType(this, type);
+                    itemType = GetListItemType(type);
                 }
                 if (itemType != null) return CanSerialize(itemType, allowBasic, allowContract, false);
             }

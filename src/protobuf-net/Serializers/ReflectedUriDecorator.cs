@@ -79,7 +79,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadNullRef();
             ctx.Branch(@end, true);
             ctx.MarkLabel(@nonEmpty);
-            ctx.EmitCtor(expectedType, ctx.MapType(typeof(string)));
+            ctx.EmitCtor(expectedType, typeof(string));
             ctx.MarkLabel(@end);
             
         }

@@ -46,7 +46,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)),
+            ctx.EmitWrite(typeof(BclHelpers),
                 wellKnown ? nameof(BclHelpers.WriteTimestamp)
                 : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom);
         }

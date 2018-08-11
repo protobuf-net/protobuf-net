@@ -31,7 +31,7 @@ namespace ProtoBuf.Serializers
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadUInt16", ctx.MapType(typeof(ushort)));
+            ctx.EmitBasicRead("ReadUInt16", typeof(ushort));
         }
 #endif
     }

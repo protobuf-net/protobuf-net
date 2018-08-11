@@ -84,9 +84,9 @@ namespace ProtoBuf.Serializers
             if (method == null) return false;
 
             using (Compiler.Local val = ctx.GetLocalWithValue(type, valueFrom))
-            using (Compiler.Local token = new ProtoBuf.Compiler.Local(ctx, ctx.MapType(typeof(SubItemToken))))
+            using (Compiler.Local token = new ProtoBuf.Compiler.Local(ctx, typeof(SubItemToken)))
             {
-                Type rwType = ctx.MapType(read ? typeof(ProtoReader) : typeof(ProtoWriter));
+                Type rwType = read ? typeof(ProtoReader) : typeof(ProtoWriter);
 
                 if (read)
                 {
@@ -101,7 +101,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadWriter();
                 }
                 ctx.EmitCall(Helpers.GetStaticMethod(rwType, "StartSubItem",
-                    read ? ProtoReader.State.ReaderStateTypeArray : new Type[] { ctx.MapType(typeof(object)), rwType }));
+                    read ? ProtoReader.State.ReaderStateTypeArray : new Type[] { typeof(object), rwType }));
                 ctx.StoreValue(token);
 
                 if (read)
@@ -123,13 +123,13 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.LoadReader(true);
                     ctx.EmitCall(Helpers.GetStaticMethod(rwType, "EndSubItem",
-                        new Type[] { ctx.MapType(typeof(SubItemToken)), rwType, ProtoReader.State.ByRefStateType }));
+                        new Type[] { typeof(SubItemToken), rwType, ProtoReader.State.ByRefStateType }));
                 }
                 else
                 {
                     ctx.LoadWriter();
                     ctx.EmitCall(Helpers.GetStaticMethod(rwType, "EndSubItem",
-                        new Type[] { ctx.MapType(typeof(SubItemToken)), rwType }));
+                        new Type[] { typeof(SubItemToken), rwType }));
                 }
             }
             return true;
@@ -142,7 +142,7 @@ namespace ProtoBuf.Serializers
                 if (Helpers.IsValueType(type)) ctx.CastToObject(type);
                 ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key)); // re-map for formality, but would expect identical, else dedicated method
                 ctx.LoadWriter();
-                ctx.EmitCall(Helpers.GetStaticMethod(ctx.MapType(typeof(ProtoWriter)), recursionCheck ? "WriteObject" : "WriteRecursionSafeObject", new Type[] { ctx.MapType(typeof(object)), ctx.MapType(typeof(int)), ctx.MapType(typeof(ProtoWriter)) }));
+                ctx.EmitCall(Helpers.GetStaticMethod(typeof(ProtoWriter), recursionCheck ? "WriteObject" : "WriteRecursionSafeObject", new Type[] { typeof(object), typeof(int), typeof(ProtoWriter) }));
             }
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
@@ -153,7 +153,7 @@ namespace ProtoBuf.Serializers
                 if (Helpers.IsValueType(type)) ctx.CastToObject(type);
                 ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key)); // re-map for formality, but would expect identical, else dedicated method
                 ctx.LoadReader(true);
-                ctx.EmitCall(Helpers.GetStaticMethod(ctx.MapType(typeof(ProtoReader)), "ReadObject",
+                ctx.EmitCall(Helpers.GetStaticMethod(typeof(ProtoReader), "ReadObject",
                     new[] { typeof(object), typeof(int), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
                 ctx.CastFromObject(type);
             }

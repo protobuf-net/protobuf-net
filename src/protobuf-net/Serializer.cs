@@ -33,7 +33,7 @@ namespace ProtoBuf
         /// <returns>The .proto definition as a string</returns>
         public static string GetProto<T>(ProtoSyntax syntax)
         {
-            return RuntimeTypeModel.Default.GetSchema(RuntimeTypeModel.Default.MapType(typeof(T)), syntax);
+            return RuntimeTypeModel.Default.GetSchema(typeof(T), syntax);
         }
         /// <summary>
         /// Create a deep clone of the supplied instance; any sub-items are also cloned.
@@ -305,7 +305,7 @@ namespace ProtoBuf
         public static T DeserializeWithLengthPrefix<T>(Stream source, PrefixStyle style, int fieldNumber)
         {
             RuntimeTypeModel model = RuntimeTypeModel.Default;
-            return (T)model.DeserializeWithLengthPrefix(source, null, model.MapType(typeof(T)), style, fieldNumber);
+            return (T)model.DeserializeWithLengthPrefix(source, null, typeof(T), style, fieldNumber);
         }
 
         /// <summary>
@@ -322,7 +322,7 @@ namespace ProtoBuf
         public static T MergeWithLengthPrefix<T>(Stream source, T instance, PrefixStyle style)
         {
             RuntimeTypeModel model = RuntimeTypeModel.Default;
-            return (T)model.DeserializeWithLengthPrefix(source, instance, model.MapType(typeof(T)), style, 0);
+            return (T)model.DeserializeWithLengthPrefix(source, instance, typeof(T), style, 0);
         }
 
         /// <summary>
@@ -354,7 +354,7 @@ namespace ProtoBuf
         public static void SerializeWithLengthPrefix<T>(Stream destination, T instance, PrefixStyle style, int fieldNumber)
         {
             RuntimeTypeModel model = RuntimeTypeModel.Default;
-            model.SerializeWithLengthPrefix(destination, instance, model.MapType(typeof(T)), style, fieldNumber);
+            model.SerializeWithLengthPrefix(destination, instance, typeof(T), style, fieldNumber);
         }
 
         /// <summary>Indicates the number of bytes expected for the next message.</summary>
@@ -451,7 +451,7 @@ namespace ProtoBuf
             {
                 if (instance == null) throw new ArgumentNullException(nameof(instance));
                 RuntimeTypeModel model = RuntimeTypeModel.Default;
-                model.SerializeWithLengthPrefix(destination, instance, model.MapType(instance.GetType()), style, fieldNumber);
+                model.SerializeWithLengthPrefix(destination, instance, instance.GetType(), style, fieldNumber);
             }
             /// <summary>
             /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
@@ -484,7 +484,7 @@ namespace ProtoBuf
             {
 #if FEAT_COMPILER
                 RuntimeTypeModel model = RuntimeTypeModel.Default;
-                model[model.MapType(type)].CompileInPlace();
+                model[type].CompileInPlace();
 #endif
             }
         }

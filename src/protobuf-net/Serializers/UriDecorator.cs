@@ -50,7 +50,7 @@ namespace ProtoBuf.Serializers
             ctx.Branch(@end, true);
             ctx.MarkLabel(@nonEmpty);
             ctx.LoadValue((int)UriKind.RelativeOrAbsolute);
-            ctx.EmitCtor(ctx.MapType(typeof(Uri)), ctx.MapType(typeof(string)), ctx.MapType(typeof(UriKind)));
+            ctx.EmitCtor(typeof(Uri), typeof(string), typeof(UriKind));
             ctx.MarkLabel(@end);
         }
 #endif
