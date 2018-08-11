@@ -19,9 +19,9 @@ namespace ProtoBuf.Serializers
             return source.ReadDouble(ref state);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteDouble((double)value, dest);
+            ProtoWriter.WriteDouble((double)value, dest, ref state);
         }
 
 #if FEAT_COMPILER

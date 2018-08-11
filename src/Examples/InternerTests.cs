@@ -24,9 +24,10 @@ namespace Examples
 
             var ms = new MemoryStream();
             var obj = new Foo { Bar = "abc", Blap = "abc" };
-            using (var writer = ProtoWriter.Create(ms, model, null))
+            using (var writer = ProtoWriter.Create(out var s, ms, model, null))
             {
-                writer.Model.Serialize(writer, obj);
+                writer.Model.Serialize(writer, ref s, obj);
+                writer.Close(ref s);
             }
             ms.Position = 0;
 
@@ -42,7 +43,7 @@ namespace Examples
             }
             Assert.Equal("abc", foo.Bar); //, "Bar");
             Assert.Equal("abc", foo.Blap); //, "Blap");
-            
+
             Assert.False(ReferenceEquals(foo.Bar, foo.Blap));
         }
         [Fact]

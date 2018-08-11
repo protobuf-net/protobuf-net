@@ -57,11 +57,11 @@ namespace ProtoBuf.Serializers
             return method;
         }
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             Helpers.DebugAssert(value != null);
             value = property.GetValue(value, null);
-            if (value != null) Tail.Write(value, dest);
+            if (value != null) Tail.Write(dest, ref state, value);
         }
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)

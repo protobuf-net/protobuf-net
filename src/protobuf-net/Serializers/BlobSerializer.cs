@@ -27,9 +27,9 @@ namespace ProtoBuf.Serializers
             return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, source, ref state);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteBytes((byte[])value, dest);
+            ProtoWriter.WriteBytes((byte[])value, dest, ref state);
         }
 
         bool IProtoSerializer.RequiresOldValue { get { return !overwriteList; } }

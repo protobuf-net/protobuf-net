@@ -34,14 +34,14 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (wellKnown)
-                BclHelpers.WriteTimestamp((DateTime)value, dest);
+                BclHelpers.WriteTimestamp((DateTime)value, dest, ref state);
             else if (includeKind)
-                BclHelpers.WriteDateTimeWithKind((DateTime)value, dest);
+                BclHelpers.WriteDateTimeWithKind((DateTime)value, dest, ref state);
             else
-                BclHelpers.WriteDateTime((DateTime)value, dest);
+                BclHelpers.WriteDateTime((DateTime)value, dest, ref state);
         }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)

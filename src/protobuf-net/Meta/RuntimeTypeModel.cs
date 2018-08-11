@@ -787,10 +787,11 @@ namespace ProtoBuf.Meta
         /// <param name="key">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
-        protected internal override void Serialize(int key, object value, ProtoWriter dest)
+        /// <param name="state">Writer state</param>
+        protected internal override void Serialize(int key, object value, ProtoWriter dest, ref ProtoWriter.State state)
         {
             //Helpers.DebugWriteLine("Serialize", value);
-            ((MetaType)types[key]).Serializer.Write(value, dest);
+            ((MetaType)types[key]).Serializer.Write(dest, ref state, value);
         }
 
         /// <summary>

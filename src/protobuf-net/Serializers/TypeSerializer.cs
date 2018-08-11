@@ -161,12 +161,12 @@ namespace ProtoBuf.Serializers
             return null;
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (isRootType) Callback(value, TypeModel.CallbackType.BeforeSerialize, dest.Context);
             // write inheritance first
             IProtoSerializer next = GetMoreSpecificSerializer(value);
-            if (next != null) next.Write(value, dest);
+            if (next != null) next.Write(dest, ref state, value);
 
             // write all actual fields
             //Helpers.DebugWriteLine(">> Writing fields for " + forType.FullName);
@@ -176,11 +176,11 @@ namespace ProtoBuf.Serializers
                 if (ser.ExpectedType == ExpectedType)
                 {
                     //Helpers.DebugWriteLine(": " + ser.ToString());
-                    ser.Write(value, dest);
+                    ser.Write(dest, ref state, value);
                 }
             }
             //Helpers.DebugWriteLine("<< Writing fields for " + forType.FullName);
-            if (isExtensible) ProtoWriter.AppendExtensionData((IExtensible)value, dest);
+            if (isExtensible) ProtoWriter.AppendExtensionData((IExtensible)value, dest, ref state);
             if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize, dest.Context);
         }
 

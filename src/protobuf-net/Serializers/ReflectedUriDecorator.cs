@@ -49,7 +49,7 @@ namespace ProtoBuf.Serializers
         public override bool RequiresOldValue { get { return false; } }
         public override bool ReturnsValue { get { return true; } }
         
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             Tail.Write(absoluteUriProperty.GetValue(value, null), dest);
         }

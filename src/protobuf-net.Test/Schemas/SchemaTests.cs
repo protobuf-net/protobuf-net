@@ -32,27 +32,29 @@ namespace ProtoBuf.Schemas
         {
             using (var ms = new MemoryStream())
             {
-                using (var writer = ProtoWriter.Create(ms, null, null))
+                using (var writer = ProtoWriter.Create(out var state, ms, null, null))
                 {
-                    ProtoWriter.WriteFieldHeader(5, WireType.String, writer);
-                    var tok = ProtoWriter.StartSubItem(null, writer);
+                    ProtoWriter.WriteFieldHeader(5, WireType.String, writer, ref state);
+                    var tok = ProtoWriter.StartSubItem(null, writer, ref state);
 
-                    ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer);
-                    var tok2 = ProtoWriter.StartSubItem(null, writer);
+                    ProtoWriter.WriteFieldHeader(1, WireType.StartGroup, writer, ref state);
+                    var tok2 = ProtoWriter.StartSubItem(null, writer, ref state);
 
-                    ProtoWriter.WriteFieldHeader(2, WireType.Variant, writer);
-                    ProtoWriter.WriteInt32(15447542, writer);
+                    ProtoWriter.WriteFieldHeader(2, WireType.Variant, writer, ref state);
+                    ProtoWriter.WriteInt32(15447542, writer, ref state);
 
-                    ProtoWriter.WriteFieldHeader(3, WireType.String, writer);
-                    var tok3 = ProtoWriter.StartSubItem(null, writer);
+                    ProtoWriter.WriteFieldHeader(3, WireType.String, writer, ref state);
+                    var tok3 = ProtoWriter.StartSubItem(null, writer, ref state);
 
-                    ProtoWriter.WriteFieldHeader(1, WireType.String, writer);
-                    ProtoWriter.WriteString("EmbeddedMessageSetElement", writer);
+                    ProtoWriter.WriteFieldHeader(1, WireType.String, writer, ref state);
+                    ProtoWriter.WriteString("EmbeddedMessageSetElement", writer, ref state);
 
-                    ProtoWriter.EndSubItem(tok3, writer);
-                    ProtoWriter.EndSubItem(tok2, writer);
+                    ProtoWriter.EndSubItem(tok3, writer, ref state);
+                    ProtoWriter.EndSubItem(tok2, writer, ref state);
 
-                    ProtoWriter.EndSubItem(tok, writer);
+                    ProtoWriter.EndSubItem(tok, writer, ref state);
+
+                    writer.Close(ref state);
                 }
 
                 var hex = BitConverter.ToString(ms.ToArray(), 0, (int)ms.Length);

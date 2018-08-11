@@ -77,12 +77,22 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
         /// </summary>
+        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
-            WriteTimeSpanImpl(timeSpan, dest, DateTimeKind.Unspecified);
+            ProtoWriter.State state = default;
+            WriteTimeSpanImpl(timeSpan, dest, DateTimeKind.Unspecified, ref state);
         }
 
-        private static void WriteTimeSpanImpl(TimeSpan timeSpan, ProtoWriter dest, DateTimeKind kind)
+        /// <summary>
+        /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
+        /// </summary>
+        public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest, ref ProtoWriter.State state)
+        {
+            WriteTimeSpanImpl(timeSpan, dest, DateTimeKind.Unspecified, ref state);
+        }
+
+        private static void WriteTimeSpanImpl(TimeSpan timeSpan, ProtoWriter dest, DateTimeKind kind, ref ProtoWriter.State state)
         {
             if (dest == null) throw new ArgumentNullException(nameof(dest));
             long value;
@@ -132,27 +142,27 @@ namespace ProtoBuf
                         scale = TimeSpanScale.Ticks;
                     }
 
-                    SubItemToken token = ProtoWriter.StartSubItem(null, dest);
+                    SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
 
                     if (value != 0)
                     {
-                        ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant, dest);
-                        ProtoWriter.WriteInt64(value, dest);
+                        ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant, dest, ref state);
+                        ProtoWriter.WriteInt64(value, dest, ref state);
                     }
                     if (scale != TimeSpanScale.Days)
                     {
-                        ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant, dest);
-                        ProtoWriter.WriteInt32((int)scale, dest);
+                        ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant, dest, ref state);
+                        ProtoWriter.WriteInt32((int)scale, dest, ref state);
                     }
                     if (kind != DateTimeKind.Unspecified)
                     {
-                        ProtoWriter.WriteFieldHeader(FieldTimeSpanKind, WireType.Variant, dest);
-                        ProtoWriter.WriteInt32((int)kind, dest);
+                        ProtoWriter.WriteFieldHeader(FieldTimeSpanKind, WireType.Variant, dest, ref state);
+                        ProtoWriter.WriteInt32((int)kind, dest, ref state);
                     }
-                    ProtoWriter.EndSubItem(token, dest);
+                    ProtoWriter.EndSubItem(token, dest, ref state);
                     break;
                 case WireType.Fixed64:
-                    ProtoWriter.WriteInt64(timeSpan.Ticks, dest);
+                    ProtoWriter.WriteInt64(timeSpan.Ticks, dest, ref state);
                     break;
                 default:
                     throw new ProtoException("Unexpected wire-type: " + dest.WireType.ToString());
@@ -258,26 +268,36 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
+        [Obsolete(ProtoWriter.UseStateAPI)]
         public static void WriteDuration(TimeSpan value, ProtoWriter dest)
         {
-            var seconds = ToDurationSeconds(value, out int nanos);
-            WriteSecondsNanos(seconds, nanos, dest);
+            ProtoWriter.State state = default;
+            WriteDuration(value, dest, ref state);
         }
 
-        private static void WriteSecondsNanos(long seconds, int nanos, ProtoWriter dest)
+        /// <summary>
+        /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
+        /// </summary>
+        public static void WriteDuration(TimeSpan value, ProtoWriter dest, ref ProtoWriter.State state)
         {
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
+            var seconds = ToDurationSeconds(value, out int nanos);
+            WriteSecondsNanos(seconds, nanos, dest, ref state);
+        }
+
+        private static void WriteSecondsNanos(long seconds, int nanos, ProtoWriter dest, ref ProtoWriter.State state)
+        {
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
             if (seconds != 0)
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.Variant, dest);
-                ProtoWriter.WriteInt64(seconds, dest);
+                ProtoWriter.WriteFieldHeader(1, WireType.Variant, dest, ref state);
+                ProtoWriter.WriteInt64(seconds, dest, ref state);
             }
             if (nanos != 0)
             {
-                ProtoWriter.WriteFieldHeader(2, WireType.Variant, dest);
-                ProtoWriter.WriteInt32(nanos, dest);
+                ProtoWriter.WriteFieldHeader(2, WireType.Variant, dest, ref state);
+                ProtoWriter.WriteInt32(nanos, dest, ref state);
             }
-            ProtoWriter.EndSubItem(token, dest);
+            ProtoWriter.EndSubItem(token, dest, ref state);
         }
 
         /// <summary>
@@ -304,7 +324,17 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
+        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteTimestamp(DateTime value, ProtoWriter dest)
+        {
+            ProtoWriter.State state = default;
+            WriteTimestamp(value, dest, ref state);
+        }
+
+        /// <summary>
+        /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
+        /// </summary>
+        public static void WriteTimestamp(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
         {
             var seconds = ToDurationSeconds(value - TimestampEpoch, out int nanos);
 
@@ -315,7 +345,7 @@ namespace ProtoBuf
                 seconds--;
                 nanos += 1000000000;
             }
-            WriteSecondsNanos(seconds, nanos, dest);
+            WriteSecondsNanos(seconds, nanos, dest, ref state);
         }
 
         private static TimeSpan FromDurationSeconds(long seconds, int nanos)
@@ -356,20 +386,40 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a DateTime to a protobuf stream, excluding the <c>Kind</c>
         /// </summary>
+        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteDateTime(DateTime value, ProtoWriter dest)
         {
-            WriteDateTimeImpl(value, dest, false);
+            ProtoWriter.State state = default;
+            WriteDateTimeImpl(value, dest, false, ref state);
+        }
+
+        /// <summary>
+        /// Writes a DateTime to a protobuf stream, excluding the <c>Kind</c>
+        /// </summary>
+        public static void WriteDateTime(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
+        {
+            WriteDateTimeImpl(value, dest, false, ref state);
         }
 
         /// <summary>
         /// Writes a DateTime to a protobuf stream, including the <c>Kind</c>
         /// </summary>
+        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteDateTimeWithKind(DateTime value, ProtoWriter dest)
         {
-            WriteDateTimeImpl(value, dest, true);
+            ProtoWriter.State state = default;
+            WriteDateTimeImpl(value, dest, true, ref state);
         }
 
-        private static void WriteDateTimeImpl(DateTime value, ProtoWriter dest, bool includeKind)
+        /// <summary>
+        /// Writes a DateTime to a protobuf stream, including the <c>Kind</c>
+        /// </summary>
+        public static void WriteDateTimeWithKind(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
+        {
+            WriteDateTimeImpl(value, dest, true, ref state);
+        }
+
+        private static void WriteDateTimeImpl(DateTime value, ProtoWriter dest, bool includeKind, ref ProtoWriter.State state)
         {
             if (dest == null) throw new ArgumentNullException(nameof(dest));
             TimeSpan delta;
@@ -396,7 +446,7 @@ namespace ProtoBuf
                     delta = value - EpochOrigin[0];
                     break;
             }
-            WriteTimeSpanImpl(delta, dest, includeKind ? value.Kind : DateTimeKind.Unspecified);
+            WriteTimeSpanImpl(delta, dest, includeKind ? value.Kind : DateTimeKind.Unspecified, ref state);
         }
 
         private static long ReadTimeSpanTicks(ProtoReader source, ref ProtoReader.State state, out DateTimeKind kind)
@@ -515,7 +565,16 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a decimal to a protobuf stream
         /// </summary>
+        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteDecimal(decimal value, ProtoWriter writer)
+        {
+            ProtoWriter.State state = default;
+            WriteDecimal(value, writer, ref state);
+        }
+        /// <summary>
+        /// Writes a decimal to a protobuf stream
+        /// </summary>
+        public static void WriteDecimal(decimal value, ProtoWriter writer, ref ProtoWriter.State state)
         {
             int[] bits = decimal.GetBits(value);
             ulong a = ((ulong)bits[1]) << 32, b = ((ulong)bits[0]) & 0xFFFFFFFFL;
@@ -523,42 +582,52 @@ namespace ProtoBuf
             uint high = (uint)bits[2];
             uint signScale = (uint)(((bits[3] >> 15) & 0x01FE) | ((bits[3] >> 31) & 0x0001));
 
-            SubItemToken token = ProtoWriter.StartSubItem(null, writer);
+            SubItemToken token = ProtoWriter.StartSubItem(null, writer, ref state);
             if (low != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldDecimalLow, WireType.Variant, writer);
-                ProtoWriter.WriteUInt64(low, writer);
+                ProtoWriter.WriteFieldHeader(FieldDecimalLow, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteUInt64(low, writer, ref state);
             }
             if (high != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldDecimalHigh, WireType.Variant, writer);
-                ProtoWriter.WriteUInt32(high, writer);
+                ProtoWriter.WriteFieldHeader(FieldDecimalHigh, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteUInt32(high, writer, ref state);
             }
             if (signScale != 0)
             {
-                ProtoWriter.WriteFieldHeader(FieldDecimalSignScale, WireType.Variant, writer);
-                ProtoWriter.WriteUInt32(signScale, writer);
+                ProtoWriter.WriteFieldHeader(FieldDecimalSignScale, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteUInt32(signScale, writer, ref state);
             }
-            ProtoWriter.EndSubItem(token, writer);
+            ProtoWriter.EndSubItem(token, writer, ref state);
         }
 
         private const int FieldGuidLow = 1, FieldGuidHigh = 2;
         /// <summary>
         /// Writes a Guid to a protobuf stream
-        /// </summary>        
+        /// </summary>
+        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteGuid(Guid value, ProtoWriter dest)
+        {
+            ProtoWriter.State state = default;
+            WriteGuid(value, dest, ref state);
+        }
+
+        /// <summary>
+        /// Writes a Guid to a protobuf stream
+        /// </summary>        
+        public static void WriteGuid(Guid value, ProtoWriter dest, ref ProtoWriter.State state)
         {
             byte[] blob = value.ToByteArray();
 
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
             if (value != Guid.Empty)
             {
-                ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, dest);
-                ProtoWriter.WriteBytes(blob, 0, 8, dest);
-                ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, dest);
-                ProtoWriter.WriteBytes(blob, 8, 8, dest);
+                ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, dest, ref state);
+                ProtoWriter.WriteBytes(blob, 0, 8, dest, ref state);
+                ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, dest, ref state);
+                ProtoWriter.WriteBytes(blob, 8, 8, dest, ref state);
             }
-            ProtoWriter.EndSubItem(token, dest);
+            ProtoWriter.EndSubItem(token, dest, ref state);
         }
 
         /// <summary>
@@ -754,19 +823,29 @@ namespace ProtoBuf
         /// <summary>
         /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
         /// </summary>
+        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteNetObject(object value, ProtoWriter dest, int key, NetObjectOptions options)
+        {
+            ProtoWriter.State state = default;
+            WriteNetObject(value, dest, ref state, key, options);
+        }
+
+        /// <summary>
+        /// Writes an *implementation specific* bundled .NET object, including (as options) type-metadata, identity/re-use, etc.
+        /// </summary>
+        public static void WriteNetObject(object value, ProtoWriter dest, ref ProtoWriter.State state, int key, NetObjectOptions options)
         {
             if (dest == null) throw new ArgumentNullException(nameof(dest));
             bool dynamicType = (options & NetObjectOptions.DynamicType) != 0,
                  asReference = (options & NetObjectOptions.AsReference) != 0;
             WireType wireType = dest.WireType;
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
             bool writeObject = true;
             if (asReference)
             {
                 int objectKey = dest.NetCache.AddObjectKey(value, out bool existing);
-                ProtoWriter.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Variant, dest);
-                ProtoWriter.WriteInt32(objectKey, dest);
+                ProtoWriter.WriteFieldHeader(existing ? FieldExistingObjectKey : FieldNewObjectKey, WireType.Variant, dest, ref state);
+                ProtoWriter.WriteInt32(objectKey, dest, ref state);
                 if (existing)
                 {
                     writeObject = false;
@@ -785,25 +864,25 @@ namespace ProtoBuf
                         if (key < 0) throw new InvalidOperationException("Dynamic type is not a contract-type: " + type.Name);
                     }
                     int typeKey = dest.NetCache.AddObjectKey(type, out bool existing);
-                    ProtoWriter.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Variant, dest);
-                    ProtoWriter.WriteInt32(typeKey, dest);
+                    ProtoWriter.WriteFieldHeader(existing ? FieldExistingTypeKey : FieldNewTypeKey, WireType.Variant, dest, ref state);
+                    ProtoWriter.WriteInt32(typeKey, dest, ref state);
                     if (!existing)
                     {
-                        ProtoWriter.WriteFieldHeader(FieldTypeName, WireType.String, dest);
-                        ProtoWriter.WriteString(dest.SerializeType(type), dest);
+                        ProtoWriter.WriteFieldHeader(FieldTypeName, WireType.String, dest, ref state);
+                        ProtoWriter.WriteString(dest.SerializeType(type), dest, ref state);
                     }
                 }
-                ProtoWriter.WriteFieldHeader(FieldObject, wireType, dest);
+                ProtoWriter.WriteFieldHeader(FieldObject, wireType, dest, ref state);
                 if (value is string s)
                 {
-                    ProtoWriter.WriteString(s, dest);
+                    ProtoWriter.WriteString(s, dest, ref state);
                 }
                 else
                 {
-                    ProtoWriter.WriteObject(value, key, dest);
+                    ProtoWriter.WriteObject(value, key, dest, ref state);
                 }
             }
-            ProtoWriter.EndSubItem(token, dest);
+            ProtoWriter.EndSubItem(token, dest, ref state);
         }
     }
 }

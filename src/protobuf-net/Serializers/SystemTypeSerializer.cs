@@ -10,9 +10,9 @@ namespace ProtoBuf.Serializers
 
         public Type ExpectedType => expectedType;
 
-        void IProtoSerializer.Write(object value, ProtoWriter dest)
+        void IProtoSerializer.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteType((Type)value, dest);
+            ProtoWriter.WriteType((Type)value, dest, ref state);
         }
 
         object IProtoSerializer.Read(ProtoReader source, ref ProtoReader.State state, object value)

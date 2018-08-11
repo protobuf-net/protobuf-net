@@ -20,9 +20,9 @@ namespace ProtoBuf.Serializers
             return source.ReadSingle(ref state);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteSingle((float)value, dest);
+            ProtoWriter.WriteSingle((float)value, dest, ref state);
         }
 
 

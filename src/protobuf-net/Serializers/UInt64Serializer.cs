@@ -3,7 +3,7 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class UInt64Serializer : IProtoSerializer
+    internal sealed class UInt64Serializer : IProtoSerializer
     {
         static readonly Type expectedType = typeof(ulong);
 
@@ -19,9 +19,9 @@ namespace ProtoBuf.Serializers
             return source.ReadUInt64(ref state);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteUInt64((ulong)value, dest);
+            ProtoWriter.WriteUInt64((ulong)value, dest, ref state);
         }
 
 #if FEAT_COMPILER
@@ -29,7 +29,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteUInt64", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadUInt64", ExpectedType);
         }

@@ -123,9 +123,10 @@ namespace ProtoBuf.ServiceModel
                     }
                     else
                     {
-                        using (ProtoWriter protoWriter = ProtoWriter.Create(ms, model, null))
+                        using (ProtoWriter protoWriter = ProtoWriter.Create(out var state, ms, model, null))
                         {
-                            model.Serialize(key, graph, protoWriter);
+                            model.Serialize(key, graph, protoWriter, ref state);
+                            protoWriter.Close(ref state);
                         }
                     }
                     byte[] buffer = ms.GetBuffer();

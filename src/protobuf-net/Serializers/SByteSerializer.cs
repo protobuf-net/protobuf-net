@@ -19,9 +19,9 @@ namespace ProtoBuf.Serializers
             return source.ReadSByte(ref state);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteSByte((sbyte)value, dest);
+            ProtoWriter.WriteSByte((sbyte)value, dest, ref state);
         }
 
 #if FEAT_COMPILER

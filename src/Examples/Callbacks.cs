@@ -458,14 +458,14 @@ namespace Examples
             public string Bar { get; set; }
         }
 
-        private void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ProtoWriter writer)
+        private void ManuallyWrittenSerializeCallbackStructSimple(CallbackStructSimple obj, ProtoWriter writer, ref ProtoWriter.State state)
         {
             obj.OnSerializing();
             string bar = obj.Bar;
             if(bar != null)
             {
-                ProtoWriter.WriteFieldHeader(1, WireType.String, writer);
-                ProtoWriter.WriteString(bar, writer);
+                ProtoWriter.WriteFieldHeader(1, WireType.String, writer, ref state);
+                ProtoWriter.WriteString(bar, writer, ref state);
             }
             obj.OnSerialized();
         }

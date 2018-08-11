@@ -154,14 +154,14 @@ namespace ProtoBuf.Serializers
             return value;
         }
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest);
+            SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
             if (value != null)
             {
-                Tail.Write(value, dest);
+                Tail.Write(dest, ref state, value);
             }
-            ProtoWriter.EndSubItem(token, dest);
+            ProtoWriter.EndSubItem(token, dest, ref state);
         }
     }
 }

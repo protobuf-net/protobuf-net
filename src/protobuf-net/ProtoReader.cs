@@ -1191,17 +1191,17 @@ namespace ProtoBuf
         /// <summary>
         /// Copies the current field into the instance as extension data
         /// </summary>
-        [Obsolete(ProtoReader.UseStateAPI, false)]
+        [Obsolete(UseStateAPI, false)]
         public void AppendExtensionData(IExtensible instance)
         {
-            ProtoReader.State state = default;
+            State state = default;
             AppendExtensionData(ref state, instance);
         }
 
         /// <summary>
         /// Copies the current field into the instance as extension data
         /// </summary>
-        public void AppendExtensionData(ref ProtoReader.State state, IExtensible instance)
+        public void AppendExtensionData(ref State state, IExtensible instance)
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
             IExtension extn = instance.GetExtensionObject(true);
@@ -1212,44 +1212,44 @@ namespace ProtoBuf
             try
             {
                 //TODO: replace this with stream-based, buffered raw copying
-                using (ProtoWriter writer = ProtoWriter.Create(dest, _model, null))
+                using (ProtoWriter writer = ProtoWriter.Create(out var writeState, dest, _model, null))
                 {
-                    AppendExtensionField(ref state, writer);
-                    writer.Close();
+                    AppendExtensionField(ref state, writer, ref writeState);
+                    writer.Close(ref writeState);
                 }
                 commit = true;
             }
             finally { extn.EndAppend(dest, commit); }
         }
 
-        private void AppendExtensionField(ref ProtoReader.State state, ProtoWriter writer)
+        private void AppendExtensionField(ref ProtoReader.State readState, ProtoWriter writer, ref ProtoWriter.State writeState)
         {
             //TODO: replace this with stream-based, buffered raw copying
-            ProtoWriter.WriteFieldHeader(_fieldNumber, WireType, writer);
+            ProtoWriter.WriteFieldHeader(_fieldNumber, WireType, writer, ref writeState);
             switch (WireType)
             {
                 case WireType.Fixed32:
-                    ProtoWriter.WriteInt32(ReadInt32(ref state), writer);
+                    ProtoWriter.WriteInt32(ReadInt32(ref readState), writer, ref writeState);
                     return;
                 case WireType.Variant:
                 case WireType.SignedVariant:
                 case WireType.Fixed64:
-                    ProtoWriter.WriteInt64(ReadInt64(ref state), writer);
+                    ProtoWriter.WriteInt64(ReadInt64(ref readState), writer, ref writeState);
                     return;
                 case WireType.String:
-                    ProtoWriter.WriteBytes(AppendBytes(null, this, ref state), writer);
+                    ProtoWriter.WriteBytes(AppendBytes(null, this, ref readState), writer, ref writeState);
                     return;
                 case WireType.StartGroup:
-                    SubItemToken readerToken = StartSubItem(this, ref state),
-                        writerToken = ProtoWriter.StartSubItem(null, writer);
-                    while (ReadFieldHeader(ref state) > 0) { AppendExtensionField(ref state, writer); }
-                    EndSubItem(readerToken, this, ref state);
-                    ProtoWriter.EndSubItem(writerToken, writer);
+                    SubItemToken readerToken = StartSubItem(this, ref readState),
+                        writerToken = ProtoWriter.StartSubItem(null, writer, ref writeState);
+                    while (ReadFieldHeader(ref readState) > 0) { AppendExtensionField(ref readState, writer, ref writeState); }
+                    EndSubItem(readerToken, this, ref readState);
+                    ProtoWriter.EndSubItem(writerToken, writer, ref writeState);
                     return;
                 case WireType.None: // treat as explicit errorr
                 case WireType.EndGroup: // treat as explicit error
                 default: // treat as implicit error
-                    throw CreateWireTypeException(ref state);
+                    throw CreateWireTypeException(ref readState);
             }
         }
 

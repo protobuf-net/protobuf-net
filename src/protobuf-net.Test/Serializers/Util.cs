@@ -40,10 +40,11 @@ namespace ProtoBuf.unittest.Serializers
             using (MemoryStream ms = new MemoryStream())
             {
                 long reported;
-                using (ProtoWriter writer = ProtoWriter.Create(ms, RuntimeTypeModel.Default, null))
+                using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
                 {
-                    serializer(obj, writer);
-                    reported = ProtoWriter.GetLongPosition(writer);
+                    serializer(writer, ref state, obj);
+                    writer.Close(ref state);
+                    reported = ProtoWriter.GetLongPosition(writer, ref state);
                 }
                 data = ms.ToArray();
                 Assert.Equal(reported, data.Length); //, message + ":reported/actual");
@@ -100,13 +101,17 @@ namespace ProtoBuf.unittest.Serializers
             }
             return sb.ToString();
         }
-        public static void Test(Action<ProtoWriter> action, string expectedHex)
+
+        public delegate void WriterRunner(ProtoWriter writer, ref ProtoWriter.State state);
+
+        public static void Test(WriterRunner action, string expectedHex)
         {
             using (var ms = new MemoryStream())
             {
-                using (var pw = ProtoWriter.Create(ms, RuntimeTypeModel.Default, null))
+                using (var pw = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
                 {
-                    action(pw);
+                    action(pw, ref state);
+                    pw.Close(ref state);
                 }
                 string s = GetHex(ms.ToArray());
                 Assert.Equal(expectedHex, s);

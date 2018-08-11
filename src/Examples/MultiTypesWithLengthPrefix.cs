@@ -61,10 +61,9 @@ namespace Examples
             int field = typeLookup.Single(pair => pair.Value == type).Key;
             Serializer.NonGeneric.SerializeWithLengthPrefix(stream, obj, PrefixStyle.Base128, field);
         }
-        static object ReadNext(Stream stream)
+        private static object ReadNext(Stream stream)
         {
-            object obj;
-            if (Serializer.NonGeneric.TryDeserializeWithLengthPrefix(stream, PrefixStyle.Base128, field => typeLookup[field], out obj))
+            if (Serializer.NonGeneric.TryDeserializeWithLengthPrefix(stream, PrefixStyle.Base128, field => typeLookup[field], out object obj))
             {
                 return obj;
             }

@@ -5,13 +5,13 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class StringSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(string);
+        private static readonly Type expectedType = typeof(string);
 
         public Type ExpectedType => expectedType;
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteString((string)value, dest);
+            ProtoWriter.WriteString((string)value, dest, ref state);
         }
         bool IProtoSerializer.RequiresOldValue => false;
 

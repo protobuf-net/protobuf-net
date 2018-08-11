@@ -7,15 +7,15 @@ namespace ProtoBuf.Serializers
     {
         public Type ExpectedType { get { return expectedType; } }
 
-        static readonly Type expectedType = typeof(byte);
+        private static readonly Type expectedType = typeof(byte);
 
         bool IProtoSerializer.RequiresOldValue => false;
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteByte((byte)value, dest);
+            ProtoWriter.WriteByte((byte)value, dest, ref state);
         }
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)

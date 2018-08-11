@@ -9,9 +9,9 @@ namespace ProtoBuf.Serializers
     internal sealed class ParseableSerializer : IProtoSerializer
     {
         private readonly MethodInfo parse;
-        public static ParseableSerializer TryCreate(Type type, TypeModel model)
+        public static ParseableSerializer TryCreate(Type type)
         {
-            if (type == null) throw new ArgumentNullException("type");
+            if (type == null) throw new ArgumentNullException(nameof(type));
 #if PORTABLE || COREFX || PROFILE259
 			MethodInfo method = null;
 
@@ -73,9 +73,9 @@ namespace ProtoBuf.Serializers
             return parse.Invoke(null, new object[] { source.ReadString(ref state) });
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteString(value.ToString(), dest);
+            ProtoWriter.WriteString(value.ToString(), dest, ref state);
         }
 
 #if FEAT_COMPILER

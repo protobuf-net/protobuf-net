@@ -13,9 +13,9 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            BclHelpers.WriteGuid((Guid)value, dest);
+            BclHelpers.WriteGuid((Guid)value, dest, ref state);
         }
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)

@@ -21,11 +21,11 @@ namespace ProtoBuf.Serializers
             this.setSpecified = setSpecified;
         }
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (getSpecified == null || (bool)getSpecified.Invoke(value, null))
             {
-                Tail.Write(value, dest);
+                Tail.Write(dest, ref state, value);
             }
         }
 

@@ -112,11 +112,11 @@ namespace ProtoBuf.Serializers
             return null; // to make compiler happy
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (map == null)
             {
-                ProtoWriter.WriteInt32(EnumToWire(value), dest);
+                ProtoWriter.WriteInt32(EnumToWire(value), dest, ref state);
             }
             else
             {
@@ -124,7 +124,7 @@ namespace ProtoBuf.Serializers
                 {
                     if (object.Equals(map[i].TypedValue, value))
                     {
-                        ProtoWriter.WriteInt32(map[i].WireValue, dest);
+                        ProtoWriter.WriteInt32(map[i].WireValue, dest, ref state);
                         return;
                     }
                 }

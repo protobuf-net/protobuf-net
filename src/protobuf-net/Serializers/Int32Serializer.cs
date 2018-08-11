@@ -19,9 +19,9 @@ namespace ProtoBuf.Serializers
             return source.ReadInt32(ref state);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteInt32((int)value, dest);
+            ProtoWriter.WriteInt32((int)value, dest, ref state);
         }
 
 #if FEAT_COMPILER

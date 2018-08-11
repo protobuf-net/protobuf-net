@@ -10,7 +10,7 @@ namespace ProtoBuf.Serializers
         protected ProtoDecoratorBase(IProtoSerializer tail) { this.Tail = tail; }
         public abstract bool ReturnsValue { get; }
         public abstract bool RequiresOldValue { get; }
-        public abstract void Write(object value, ProtoWriter dest);
+        public abstract void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
         public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
 
 #if FEAT_COMPILER

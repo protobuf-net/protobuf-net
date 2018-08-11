@@ -60,15 +60,15 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        void IProtoSerializer.Write(object value, ProtoWriter dest)
+        void IProtoSerializer.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (recursionCheck)
             {
-                ProtoWriter.WriteObject(value, key, dest);
+                ProtoWriter.WriteObject(value, key, dest, ref state);
             }
             else
             {
-                ProtoWriter.WriteRecursionSafeObject(value, key, dest);
+                ProtoWriter.WriteRecursionSafeObject(value, key, dest, ref state);
             }
         }
 

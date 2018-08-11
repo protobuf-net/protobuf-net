@@ -54,9 +54,10 @@ namespace ProtoBuf.unittest.Meta
             CustomerStruct cs1 = new CustomerStruct { Id = 123, Name = "Fred" };
             using (MemoryStream ms = new MemoryStream())
             {
-                using (ProtoWriter writer = ProtoWriter.Create(ms, null, null))
+                using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, null, null))
                 {
-                    ser(cs1, writer);
+                    ser(writer, ref state, cs1);
+                    writer.Close(ref state);
                 }
                 byte[] blob = ms.ToArray();
                 ms.Position = 0;

@@ -92,10 +92,10 @@ namespace ProtoBuf
             Stream stream = extn.BeginAppend();
             try
             {
-                using (ProtoWriter writer = ProtoWriter.Create(stream, model, null))
+                using (ProtoWriter writer = ProtoWriter.Create(out var state, stream, model, null))
                 {
-                    model.TrySerializeAuxiliaryType(writer, null, format, tag, value, false, null);
-                    writer.Close();
+                    model.TrySerializeAuxiliaryType(writer, ref state, null, format, tag, value, false, null);
+                    writer.Close(ref state);
                 }
                 commit = true;
             }

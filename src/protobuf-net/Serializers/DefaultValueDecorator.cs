@@ -26,11 +26,11 @@ namespace ProtoBuf.Serializers
             this.defaultValue = defaultValue;
         }
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (!object.Equals(value, defaultValue))
             {
-                Tail.Write(value, dest);
+                Tail.Write(dest, ref state, value);
             }
         }
 

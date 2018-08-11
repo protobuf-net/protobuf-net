@@ -469,22 +469,22 @@ namespace ProtoBuf.Serializers
         }
 #endif
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             SubItemToken token;
             bool writePacked = WritePacked;
             bool fixedSizePacked = (writePacked & CanUsePackedPrefix()) && value is ICollection;
             if (writePacked)
             {
-                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
+                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest, ref state);
                 if (fixedSizePacked)
                 {
-                    ProtoWriter.WritePackedPrefix(((ICollection)value).Count, packedWireType, dest);
+                    ProtoWriter.WritePackedPrefix(((ICollection)value).Count, packedWireType, dest, ref state);
                     token = default;
                 }
                 else
                 {
-                    token = ProtoWriter.StartSubItem(value, dest);
+                    token = ProtoWriter.StartSubItem(value, dest, ref state);
                 }
                 ProtoWriter.SetPackedField(fieldNumber, dest);
             }
@@ -496,7 +496,7 @@ namespace ProtoBuf.Serializers
             foreach (object subItem in (IEnumerable)value)
             {
                 if (checkForNull && subItem == null) { throw new NullReferenceException(); }
-                Tail.Write(subItem, dest);
+                Tail.Write(dest, ref state, subItem);
             }
             if (writePacked)
             {
@@ -506,7 +506,7 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
-                    ProtoWriter.EndSubItem(token, dest);
+                    ProtoWriter.EndSubItem(token, dest, ref state);
                 }
             }
         }

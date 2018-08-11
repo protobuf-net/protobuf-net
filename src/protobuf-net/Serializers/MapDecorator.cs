@@ -106,15 +106,15 @@ namespace ProtoBuf.Serializers
             return typed;
         }
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             foreach (var pair in (TDictionary)value)
             {
-                ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest);
-                var token = ProtoWriter.StartSubItem(null, dest);
-                if (pair.Key != null) keyTail.Write(pair.Key, dest);
-                if (pair.Value != null) Tail.Write(pair.Value, dest);
-                ProtoWriter.EndSubItem(token, dest);
+                ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
+                var token = ProtoWriter.StartSubItem(null, dest, ref state);
+                if (pair.Key != null) keyTail.Write(dest, ref state, pair.Key);
+                if (pair.Value != null) Tail.Write(dest, ref state, pair.Value);
+                ProtoWriter.EndSubItem(token, dest, ref state);
             }
         }
 

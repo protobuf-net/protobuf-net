@@ -8,7 +8,6 @@ using NHibernate.Engine;
 
 namespace ProtoBuf.unittest.ThirdParty
 {
-
     public class NHibernateProxies
     {
         public class FooWrapper

@@ -110,9 +110,9 @@ namespace ProtoBuf.Serializers
                 ExpectedType.FullName + " / " + declaredType.FullName);
         }
 
-        public void Write(object value, ProtoWriter writer)
+        public void Write(ProtoWriter writer, ref ProtoWriter.State state, object value)
         {
-            rootTail.Write(toTail.Invoke(null, new object[] { value }), writer);
+            rootTail.Write(writer, ref state, toTail.Invoke(null, new object[] { value }));
         }
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)

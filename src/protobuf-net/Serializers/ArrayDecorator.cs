@@ -163,7 +163,7 @@ namespace ProtoBuf.Serializers
 
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             IList arr = (IList)value;
             int len = arr.Count;
@@ -173,16 +173,16 @@ namespace ProtoBuf.Serializers
 
             if (writePacked)
             {
-                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest);
+                ProtoWriter.WriteFieldHeader(fieldNumber, WireType.String, dest, ref state);
 
                 if (fixedLengthPacked)
                 {
-                    ProtoWriter.WritePackedPrefix(arr.Count, packedWireType, dest);
+                    ProtoWriter.WritePackedPrefix(arr.Count, packedWireType, dest, ref state);
                     token = new SubItemToken(); // default
                 }
                 else
                 {
-                    token = ProtoWriter.StartSubItem(value, dest);
+                    token = ProtoWriter.StartSubItem(value, dest, ref state);
                 }
                 ProtoWriter.SetPackedField(fieldNumber, dest);
             }
@@ -195,7 +195,7 @@ namespace ProtoBuf.Serializers
             {
                 object obj = arr[i];
                 if (checkForNull && obj == null) { throw new NullReferenceException(); }
-                Tail.Write(obj, dest);
+                Tail.Write(dest, ref state, obj);
             }
             if (writePacked)
             {
@@ -205,7 +205,7 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
-                    ProtoWriter.EndSubItem(token, dest);
+                    ProtoWriter.EndSubItem(token, dest, ref state);
                 }
             }
         }

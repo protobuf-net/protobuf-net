@@ -699,7 +699,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.String;
                     return PrimitiveSerializer<SystemTypeSerializer>.Singleton;
             }
-            IProtoSerializer parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type, model) : null;
+            IProtoSerializer parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
             if (parseable != null)
             {
                 defaultWireType = WireType.String;

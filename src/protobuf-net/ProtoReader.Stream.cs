@@ -67,9 +67,9 @@ namespace ProtoBuf
         }
 
 #if PLAT_MEMORY_STREAM_BUFFER
-        static readonly FieldInfo s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance),
+        private static readonly FieldInfo s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance),
             s_buffer = typeof(MemoryStream).GetField("_buffer", BindingFlags.NonPublic | BindingFlags.Instance);
-        static bool ReflectionTryGetBuffer(MemoryStream ms, out ArraySegment<byte> buffer)
+        private static bool ReflectionTryGetBuffer(MemoryStream ms, out ArraySegment<byte> buffer)
         {
             if (s_origin != null && s_buffer != null)
             {
@@ -90,7 +90,6 @@ namespace ProtoBuf
         internal static bool TryConsumeSegmentRespectingPosition(Stream source, out ArraySegment<byte> data, long length)
 #pragma warning restore RCS1163
         {
-
 #if PLAT_MEMORY_STREAM_BUFFER
             if (source is MemoryStream ms && ms.CanSeek
                 && (ms.TryGetBuffer(out var segment) || ReflectionTryGetBuffer(ms, out segment)))

@@ -30,15 +30,15 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (wellKnown)
             {
-                BclHelpers.WriteDuration((TimeSpan)value, dest);
+                BclHelpers.WriteDuration((TimeSpan)value, dest, ref state);
             }
             else
             {
-                BclHelpers.WriteTimeSpan((TimeSpan)value, dest);
+                BclHelpers.WriteTimeSpan((TimeSpan)value, dest, ref state);
             }
         }
 

@@ -53,9 +53,9 @@ namespace ProtoBuf.Serializers
 
         Type IProtoSerializer.ExpectedType => head.ExpectedType;
 
-        void IProtoSerializer.Write(object value, ProtoWriter dest)
+        void IProtoSerializer.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            serializer(value, dest);
+            serializer(dest, ref state, value);
         }
 
         object IProtoSerializer.Read(ProtoReader source, ref ProtoReader.State state, object value)

@@ -83,7 +83,7 @@ namespace ProtoBuf.Meta
         ///  - IEnumerable sequences of any type handled by TrySerializeAuxiliaryType
         ///  
         /// </summary>
-        internal bool TrySerializeAuxiliaryType(ProtoWriter writer, Type type, DataFormat format, int tag, object value, bool isInsideList, object parentList)
+        internal bool TrySerializeAuxiliaryType(ProtoWriter writer, ref ProtoWriter.State state, Type type, DataFormat format, int tag, object value, bool isInsideList, object parentList)
         {
             if (type == null) { type = value.GetType(); }
 
@@ -95,12 +95,12 @@ namespace ProtoBuf.Meta
             {   // write the header, but defer to the model
                 if (Helpers.IsEnum(type))
                 { // no header
-                    Serialize(modelKey, value, writer);
+                    Serialize(modelKey, value, writer, ref state);
                     return true;
                 }
                 else
                 {
-                    ProtoWriter.WriteFieldHeader(tag, wireType, writer);
+                    ProtoWriter.WriteFieldHeader(tag, wireType, writer, ref state);
                     switch (wireType)
                     {
                         case WireType.None:
@@ -108,12 +108,12 @@ namespace ProtoBuf.Meta
                         case WireType.StartGroup:
                         case WireType.String:
                             // needs a wrapping length etc
-                            SubItemToken token = ProtoWriter.StartSubItem(value, writer);
-                            Serialize(modelKey, value, writer);
-                            ProtoWriter.EndSubItem(token, writer);
+                            SubItemToken token = ProtoWriter.StartSubItem(value, writer, ref state);
+                            Serialize(modelKey, value, writer, ref state);
+                            ProtoWriter.EndSubItem(token, writer, ref state);
                             return true;
                         default:
-                            Serialize(modelKey, value, writer);
+                            Serialize(modelKey, value, writer, ref state);
                             return true;
                     }
                 }
@@ -121,34 +121,34 @@ namespace ProtoBuf.Meta
 
             if (wireType != WireType.None)
             {
-                ProtoWriter.WriteFieldHeader(tag, wireType, writer);
+                ProtoWriter.WriteFieldHeader(tag, wireType, writer, ref state);
             }
             switch (typecode)
             {
-                case ProtoTypeCode.Int16: ProtoWriter.WriteInt16((short)value, writer); return true;
-                case ProtoTypeCode.Int32: ProtoWriter.WriteInt32((int)value, writer); return true;
-                case ProtoTypeCode.Int64: ProtoWriter.WriteInt64((long)value, writer); return true;
-                case ProtoTypeCode.UInt16: ProtoWriter.WriteUInt16((ushort)value, writer); return true;
-                case ProtoTypeCode.UInt32: ProtoWriter.WriteUInt32((uint)value, writer); return true;
-                case ProtoTypeCode.UInt64: ProtoWriter.WriteUInt64((ulong)value, writer); return true;
-                case ProtoTypeCode.Boolean: ProtoWriter.WriteBoolean((bool)value, writer); return true;
-                case ProtoTypeCode.SByte: ProtoWriter.WriteSByte((sbyte)value, writer); return true;
-                case ProtoTypeCode.Byte: ProtoWriter.WriteByte((byte)value, writer); return true;
-                case ProtoTypeCode.Char: ProtoWriter.WriteUInt16((ushort)(char)value, writer); return true;
-                case ProtoTypeCode.Double: ProtoWriter.WriteDouble((double)value, writer); return true;
-                case ProtoTypeCode.Single: ProtoWriter.WriteSingle((float)value, writer); return true;
+                case ProtoTypeCode.Int16: ProtoWriter.WriteInt16((short)value, writer, ref state); return true;
+                case ProtoTypeCode.Int32: ProtoWriter.WriteInt32((int)value, writer, ref state); return true;
+                case ProtoTypeCode.Int64: ProtoWriter.WriteInt64((long)value, writer, ref state); return true;
+                case ProtoTypeCode.UInt16: ProtoWriter.WriteUInt16((ushort)value, writer, ref state); return true;
+                case ProtoTypeCode.UInt32: ProtoWriter.WriteUInt32((uint)value, writer, ref state); return true;
+                case ProtoTypeCode.UInt64: ProtoWriter.WriteUInt64((ulong)value, writer, ref state); return true;
+                case ProtoTypeCode.Boolean: ProtoWriter.WriteBoolean((bool)value, writer, ref state); return true;
+                case ProtoTypeCode.SByte: ProtoWriter.WriteSByte((sbyte)value, writer, ref state); return true;
+                case ProtoTypeCode.Byte: ProtoWriter.WriteByte((byte)value, writer, ref state); return true;
+                case ProtoTypeCode.Char: ProtoWriter.WriteUInt16((ushort)(char)value, writer, ref state); return true;
+                case ProtoTypeCode.Double: ProtoWriter.WriteDouble((double)value, writer, ref state); return true;
+                case ProtoTypeCode.Single: ProtoWriter.WriteSingle((float)value, writer, ref state); return true;
                 case ProtoTypeCode.DateTime:
                     if (SerializeDateTimeKind())
-                        BclHelpers.WriteDateTimeWithKind((DateTime)value, writer);
+                        BclHelpers.WriteDateTimeWithKind((DateTime)value, writer, ref state);
                     else
-                        BclHelpers.WriteDateTime((DateTime)value, writer);
+                        BclHelpers.WriteDateTime((DateTime)value, writer, ref state);
                     return true;
-                case ProtoTypeCode.Decimal: BclHelpers.WriteDecimal((decimal)value, writer); return true;
-                case ProtoTypeCode.String: ProtoWriter.WriteString((string)value, writer); return true;
-                case ProtoTypeCode.ByteArray: ProtoWriter.WriteBytes((byte[])value, writer); return true;
-                case ProtoTypeCode.TimeSpan: BclHelpers.WriteTimeSpan((TimeSpan)value, writer); return true;
-                case ProtoTypeCode.Guid: BclHelpers.WriteGuid((Guid)value, writer); return true;
-                case ProtoTypeCode.Uri: ProtoWriter.WriteString(((Uri)value).OriginalString, writer); return true;
+                case ProtoTypeCode.Decimal: BclHelpers.WriteDecimal((decimal)value, writer, ref state); return true;
+                case ProtoTypeCode.String: ProtoWriter.WriteString((string)value, writer, ref state); return true;
+                case ProtoTypeCode.ByteArray: ProtoWriter.WriteBytes((byte[])value, writer, ref state); return true;
+                case ProtoTypeCode.TimeSpan: BclHelpers.WriteTimeSpan((TimeSpan)value, writer, ref state); return true;
+                case ProtoTypeCode.Guid: BclHelpers.WriteGuid((Guid)value, writer, ref state); return true;
+                case ProtoTypeCode.Uri: ProtoWriter.WriteString(((Uri)value).OriginalString, writer, ref state); return true;
             }
 
             // by now, we should have covered all the simple cases; if we wrote a field-header, we have
@@ -162,7 +162,7 @@ namespace ProtoBuf.Meta
                 foreach (object item in sequence)
                 {
                     if (item == null) { throw new NullReferenceException(); }
-                    if (!TrySerializeAuxiliaryType(writer, null, format, tag, item, true, sequence))
+                    if (!TrySerializeAuxiliaryType(writer, ref state, null, format, tag, item, true, sequence))
                     {
                         ThrowUnexpectedType(item.GetType());
                     }
@@ -172,16 +172,16 @@ namespace ProtoBuf.Meta
             return false;
         }
 
-        private void SerializeCore(ProtoWriter writer, object value)
+        private void SerializeCore(ProtoWriter writer, ref ProtoWriter.State state, object value)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
             Type type = value.GetType();
             int key = GetKey(ref type);
             if (key >= 0)
             {
-                Serialize(key, value, writer);
+                Serialize(key, value, writer, ref state);
             }
-            else if (!TrySerializeAuxiliaryType(writer, type, DataFormat.Default, Serializer.ListItemTag, value, false, null))
+            else if (!TrySerializeAuxiliaryType(writer, ref state, type, DataFormat.Default, Serializer.ListItemTag, value, false, null))
             {
                 ThrowUnexpectedType(type);
             }
@@ -205,11 +205,11 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
-            using (ProtoWriter writer = ProtoWriter.Create(dest, this, context))
+            using (ProtoWriter writer = ProtoWriter.Create(out var state, dest, this, context))
             {
                 writer.SetRootObject(value);
-                SerializeCore(writer, value);
-                writer.Close();
+                SerializeCore(writer, ref state, value);
+                writer.Close(ref state);
             }
         }
 
@@ -218,14 +218,27 @@ namespace ProtoBuf.Meta
         /// </summary>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination writer to write to.</param>
+        [Obsolete(ProtoWriter.UseStateAPI, false)]
         public void Serialize(ProtoWriter dest, object value)
         {
+            ProtoWriter.State state = default;
+            Serialize(dest, ref state, value);
+        }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
+        /// </summary>
+        /// <param name="value">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="dest">The destination writer to write to.</param>
+        /// <param name="state">Writer state</param>
+        public void Serialize(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        {
             if (dest == null) throw new ArgumentNullException(nameof(dest));
-            dest.CheckDepthFlushlock();
+            dest.CheckDepthFlushlock(ref state);
             dest.SetRootObject(value);
-            SerializeCore(dest, value);
-            dest.CheckDepthFlushlock();
-            ProtoWriter.Flush(dest);
+            SerializeCore(dest, ref state, value);
+            dest.CheckDepthFlushlock(ref state);
+            dest.Flush(ref state);
         }
 
         /// <summary>
@@ -527,22 +540,22 @@ namespace ProtoBuf.Meta
                 type = value.GetType();
             }
             int key = GetKey(ref type);
-            using (ProtoWriter writer = ProtoWriter.Create(dest, this, context))
+            using (ProtoWriter writer = ProtoWriter.Create(out var state, dest, this, context))
             {
                 switch (style)
                 {
                     case PrefixStyle.None:
-                        Serialize(key, value, writer);
+                        Serialize(key, value, writer, ref state);
                         break;
                     case PrefixStyle.Base128:
                     case PrefixStyle.Fixed32:
                     case PrefixStyle.Fixed32BigEndian:
-                        ProtoWriter.WriteObject(value, key, writer, style, fieldNumber);
+                        ProtoWriter.WriteObject(writer, ref state, value, key, style, fieldNumber);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(nameof(style));
                 }
-                writer.Close();
+                writer.Close(ref state);
             }
         }
         /// <summary>
@@ -1411,7 +1424,8 @@ namespace ProtoBuf.Meta
         /// <param name="key">Represents the type (including inheritance) to consider.</param>
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
-        protected internal abstract void Serialize(int key, object value, ProtoWriter dest);
+        /// <param name="state">Write state</param>
+        protected internal abstract void Serialize(int key, object value, ProtoWriter dest, ref ProtoWriter.State state);
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
@@ -1467,11 +1481,11 @@ namespace ProtoBuf.Meta
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    using (ProtoWriter writer = ProtoWriter.Create(ms, this, null))
+                    using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, this, null))
                     {
                         writer.SetRootObject(value);
-                        Serialize(key, value, writer);
-                        writer.Close();
+                        Serialize(key, value, writer, ref state);
+                        writer.Close(ref state);
                     }
                     ms.Position = 0;
                     ProtoReader reader = null;
@@ -1498,10 +1512,10 @@ namespace ProtoBuf.Meta
             }
             using (MemoryStream ms = new MemoryStream())
             {
-                using (ProtoWriter writer = ProtoWriter.Create(ms, this, null))
+                using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, this, null))
                 {
-                    if (!TrySerializeAuxiliaryType(writer, type, DataFormat.Default, Serializer.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
-                    writer.Close();
+                    if (!TrySerializeAuxiliaryType(writer, ref state, type, DataFormat.Default, Serializer.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
+                    writer.Close(ref state);
                 }
                 ms.Position = 0;
                 ProtoReader reader = null;
