@@ -596,7 +596,7 @@ namespace ProtoBuf.Compiler
             MemberInfo member = method ?? throw new ArgumentNullException(nameof(method));
             CheckAccessibility(ref member);
             OpCode opcode;
-            Debug.Assert(!method.IsDefined(typeof(ObsoleteAttribute), true), "calling an obsolete method");
+            Debug.Assert(method is MethodBuilder || !method.IsDefined(typeof(ObsoleteAttribute), true), "calling an obsolete method");
             if (method.IsStatic || Helpers.IsValueType(method.DeclaringType))
             {
                 opcode = OpCodes.Call;

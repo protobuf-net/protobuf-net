@@ -1483,7 +1483,15 @@ namespace ProtoBuf.Meta
                     using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, this, null))
                     {
                         writer.SetRootObject(value);
-                        Serialize(writer, ref state, key, value);
+                        try
+                        {
+                            Serialize(writer, ref state, key, value);
+                        }
+                        catch
+                        {
+                            writer.Abandon();
+                            throw;
+                        }
                         writer.Close(ref state);
                     }
                     ms.Position = 0;
@@ -1513,8 +1521,17 @@ namespace ProtoBuf.Meta
             {
                 using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, this, null))
                 {
-                    if (!TrySerializeAuxiliaryType(writer, ref state, type, DataFormat.Default, Serializer.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
+                    try
+                    {
+                        if (!TrySerializeAuxiliaryType(writer, ref state, type, DataFormat.Default, Serializer.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
+                    }
+                    catch
+                    {
+                        writer.Abandon();
+                        throw;
+                    }
                     writer.Close(ref state);
+
                 }
                 ms.Position = 0;
                 ProtoReader reader = null;

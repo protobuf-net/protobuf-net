@@ -33,7 +33,7 @@ namespace ProtoBuf
             private Stream dest;
             private int flushLock;
 
-            private protected override bool DemandFlushOnDispose => false;
+            private protected override bool DemandFlushOnDispose => true;
 
             internal StreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
                 : base(model, context)
@@ -265,7 +265,7 @@ namespace ProtoBuf
                         return new SubItemToken((long)(-fieldNumber));
                     case WireType.String:
 #if DEBUG
-                    if (writer.model != null && writer.model.ForwardsOnly)
+                    if (model != null && model.ForwardsOnly)
                     {
                         throw new ProtoException("Should not be buffering data: " + instance ?? "(null)");
                     }

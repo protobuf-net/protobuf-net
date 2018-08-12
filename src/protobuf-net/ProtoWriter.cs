@@ -359,10 +359,15 @@ namespace ProtoBuf
         {
             if(depth == 0 && _needFlush && DemandFlushOnDispose)
             {
-                throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost");
+                throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
             }
             model = null;
         }
+
+        /// <summary>
+        /// Abandon any pending unflushed data
+        /// </summary>
+        public void Abandon() { _needFlush = false; }
 
         protected private abstract bool DemandFlushOnDispose { get; }
 
@@ -396,8 +401,9 @@ namespace ProtoBuf
         internal void CheckClear(ref State state)
         {
             if (depth != 0 || !TryFlush(ref state)) throw new InvalidOperationException("The writer is in an incomplete state");
+            _needFlush = false; // because we ^^^ *JUST DID*
         }
-        
+
         /// <summary>
         /// Get the TypeModel associated with this writer
         /// </summary>
