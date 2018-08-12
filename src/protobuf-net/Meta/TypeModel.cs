@@ -234,11 +234,10 @@ namespace ProtoBuf.Meta
         public void Serialize(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (dest == null) throw new ArgumentNullException(nameof(dest));
-            dest.CheckDepthFlushlock(ref state);
+            dest.CheckClear(ref state);
             dest.SetRootObject(value);
             SerializeCore(dest, ref state, value);
-            dest.CheckDepthFlushlock(ref state);
-            dest.Flush(ref state);
+            dest.CheckClear(ref state);
         }
 
         /// <summary>

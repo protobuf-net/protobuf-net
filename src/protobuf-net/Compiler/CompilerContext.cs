@@ -135,7 +135,6 @@ namespace ProtoBuf.Compiler
                     ctx.LoadAddress(typedVal, type);
                     ctx.EmitCtor(type);
                     ctx.Branch(endNull, true);
-
                     ctx.MarkLabel(notNull);
                     ctx.LoadValue(ctx.InputValue);
                     ctx.CastFromObject(type);
@@ -264,20 +263,13 @@ namespace ProtoBuf.Compiler
         private readonly OpCode _readerWriter;
         private readonly byte _inputArg;
 
+#pragma warning disable RCS1163 // Unused parameter.
         private static void GetOpCodes(bool isWriter, bool isStatic, out OpCode? state, out OpCode readerWriter, out byte inputArg)
+#pragma warning restore RCS1163 // Unused parameter.
         {
-            if (isWriter)
-            {
-                state = null;
-                readerWriter = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
-                inputArg = (byte)(isStatic ? 0 : 1);
-            }
-            else
-            {
-                readerWriter = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
-                state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
-                inputArg = (byte)(isStatic ? 2 : 3);
-            }
+            readerWriter = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
+            state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
+            inputArg = (byte)(isStatic ? 2 : 3);
         }
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
         {
@@ -292,7 +284,7 @@ namespace ProtoBuf.Compiler
             if (isWriter)
             {
                 returnType = typeof(void);
-                paramTypes = new Type[] { typeof(object), typeof(ProtoWriter) };
+                paramTypes = new Type[] { typeof(ProtoWriter), ProtoWriter.ByRefStateType, typeof(object) };
             }
             else
             {

@@ -28,6 +28,13 @@ namespace ProtoBuf
                     if (method.IsDefined(typeof(ObsoleteAttribute), true)) continue;
                     var args = method.GetParameters();
                     if (args == null || args.Length == 0) continue;
+
+                    if (method.Name == nameof(ProtoWriter.WriteBytes) && typeof(T) == typeof(ProtoWriter)
+                        && args.Length == 5)
+                    {   // special omissions
+                        continue;
+                    }
+
                     bool haveState = false;
                     for (int i = 0; i < args.Length; i++)
                     {
@@ -38,6 +45,8 @@ namespace ProtoBuf
                         }
                     }
                     if (!haveState) continue;
+                    if (_staticWriteMethods.ContainsKey(method.Name))
+                        throw new InvalidOperationException($"Ambiguous method: '{method.DeclaringType.Name}.{method.Name}'");
                     _staticWriteMethods.Add(method.Name, method);
                 }
             }
@@ -46,6 +55,6 @@ namespace ProtoBuf
         /// <summary>
         /// Writer state
         /// </summary>
-        public ref struct State {}
+        public ref struct State { }
     }
 }

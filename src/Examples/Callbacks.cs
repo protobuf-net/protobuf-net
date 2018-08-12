@@ -218,8 +218,10 @@ namespace Examples
             where T : ICallbackTest
         {
             mode = ":" + mode;
-            TCreate cs = new TCreate();
-            cs.Bar = "abc";
+            TCreate cs = new TCreate
+            {
+                Bar = "abc"
+            };
             string ctorExpected = typeof (TCreate)._IsValueType() ? null : "ctor";
             Assert.NotNull(cs); //, "orig" + mode);
             Assert.Equal(ctorExpected, cs.History); //, "orig before" + mode);

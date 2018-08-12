@@ -190,6 +190,7 @@ namespace ProtoBuf
                     throw new ArgumentException("Invalid wire-type: " + wireType.ToString(), nameof(wireType));
             }
 #endif
+            writer._needFlush = true;
             if (writer.packedFieldNumber == 0)
             {
                 writer.fieldNumber = fieldNumber;
@@ -356,10 +357,14 @@ namespace ProtoBuf
 
         protected private virtual void Dispose()
         {
-            State state = default;
-            Flush(ref state);
+            if(depth == 0 && _needFlush)
+            {
+                throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost");
+            }
             model = null;
         }
+
+        private bool _needFlush;
 
         // note that this is used by some of the unit tests and should not be removed
         internal static long GetLongPosition(ProtoWriter writer, ref State state) { return writer._position64; }
@@ -382,18 +387,15 @@ namespace ProtoBuf
         /// </summary>
         public void Close(ref State state)
         {
-            CheckDepthFlushlock(ref state);
-            Flush(ref state);
+            CheckClear(ref state);
             Dispose();
         }
 
-        internal void CheckDepthFlushlock(ref State state)
+        internal void CheckClear(ref State state)
         {
-            if (CheckDepthFlushlockImpl(ref state)) throw new InvalidOperationException("The writer is in an incomplete state");
+            if (depth != 0 || !TryFlush(ref state)) throw new InvalidOperationException("The writer is in an incomplete state");
         }
-        private protected virtual bool CheckDepthFlushlockImpl(ref State state)
-            => depth != 0;
-
+        
         /// <summary>
         /// Get the TypeModel associated with this writer
         /// </summary>
@@ -439,7 +441,24 @@ namespace ProtoBuf
 
         protected private abstract void WriteString(ref State state, string value);
 
-        internal abstract void Flush(ref State state);
+        /// <summary>
+        /// Writes any uncommitted data to the output
+        /// </summary>
+        public void Flush(ref State state)
+        {
+            if(TryFlush(ref state))
+            {
+                _needFlush = false;
+            }
+        }
+
+        /// <summary>
+        /// Writes any buffered data (if possible) to the underlying stream.
+        /// </summary>
+        /// <param name="state">Wwriter state</param>
+        /// <remarks>It is not always possible to fully flush, since some sequences
+        /// may require values to be back-filled into the byte-stream.</remarks>
+        private protected abstract bool TryFlush(ref State state);
 
         /// <summary>
         /// Writes an unsigned 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64

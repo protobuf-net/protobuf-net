@@ -1453,7 +1453,7 @@ namespace ProtoBuf.Meta
 #endif
 ,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
-                    typeof(void), new Type[] { metaType.Type, typeof(ProtoWriter) });
+                    typeof(void), new Type[] { typeof(ProtoWriter), ProtoWriter.ByRefStateType, metaType.Type });
 
                 MethodBuilder readMethod = type.DefineMethod("Read"
 #if DEBUG
@@ -1516,8 +1516,7 @@ namespace ProtoBuf.Meta
                 typeAttributes &= ~TypeAttributes.Public;
             }
 
-            TypeBuilder type = module.DefineType(typeName, typeAttributes, baseType);
-            return type;
+            return module.DefineType(typeName, typeAttributes, baseType);
         }
 
         private void WriteAssemblyAttributes(CompilerOptions options, string assemblyName, AssemblyBuilder asm)

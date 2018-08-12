@@ -115,6 +115,8 @@ namespace Benchmark
             }
         }
 
+        public TypeModel Auto => _auto;
+
         private static void Merge(ProtoReader reader, ref ProtoReader.State state, ref protogen.Database obj)
         {
             SubItemToken tok;

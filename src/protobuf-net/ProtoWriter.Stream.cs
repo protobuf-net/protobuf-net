@@ -58,19 +58,15 @@ namespace ProtoBuf
                 writer.WireType = WireType.None;
             }
 
-            /// <summary>
-            /// Writes any buffered data (if possible) to the underlying stream.
-            /// </summary>
-            /// <param name="state">Wwriter state</param>
-            /// <remarks>It is not always possible to fully flush, since some sequences
-            /// may require values to be back-filled into the byte-stream.</remarks>
-            internal override void Flush(ref State state)
+            private protected override bool TryFlush(ref State state)
             {
-                if (flushLock == 0 && ioIndex != 0 && dest != null)
+                if (flushLock != 0) return false;
+                if (ioIndex != 0 && dest != null)
                 {
                     dest.Write(ioBuffer, 0, ioIndex);
                     ioIndex = 0;
                 }
+                return true;
             }
 
             private static void DemandSpace(int required, StreamProtoWriter writer, ref State state)
@@ -446,9 +442,6 @@ namespace ProtoBuf
                 ioBuffer[ioIndex - 1] &= 0x7F;
                 Advance(count);
             }
-
-            private protected override bool CheckDepthFlushlockImpl(ref State state)
-                => base.CheckDepthFlushlockImpl(ref state) || flushLock != 0;
         }
     }
 }
