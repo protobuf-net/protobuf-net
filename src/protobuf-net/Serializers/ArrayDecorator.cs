@@ -89,8 +89,8 @@ namespace ProtoBuf.Serializers
                             // write directly - no need for buffering
                             ctx.LoadLength(arr, false);
                             ctx.LoadValue((int)packedWireType);
-                            ctx.LoadWriter(false);
-                            ctx.EmitCall(mappedWriter.GetMethod("WritePackedPrefix"));
+                            ctx.LoadWriter(true);
+                            ctx.EmitCall(ProtoWriter.GetStaticMethod("WritePackedPrefix"));
                         }
                         else
                         {
