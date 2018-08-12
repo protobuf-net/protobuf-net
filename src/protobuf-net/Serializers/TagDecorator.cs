@@ -83,8 +83,8 @@ namespace ProtoBuf.Serializers
         {
             ctx.LoadValue((int)fieldNumber);
             ctx.LoadValue((int)wireType);
-            ctx.LoadWriter();
-            ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
+            ctx.LoadWriter(true);
+            ctx.EmitCall(ProtoWriter.GetStaticMethod("WriteFieldHeader"));
             Tail.EmitWrite(ctx, valueFrom);
         }
 

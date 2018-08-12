@@ -415,13 +415,17 @@ namespace ProtoBuf.Compiler
             }
             locals.Add(value); // create a new slot
         }
-        public void LoadWriter()
+        public void LoadWriter(bool withState)
         {
             if (!isWriter)
             {
                 throw new InvalidOperationException("Tried to load writer, but was a reader");
             }
             Emit(_readerWriter);
+            if (withState && _state.HasValue)
+            {
+                Emit(_state.GetValueOrDefault());
+            }
         }
         public void LoadReader(bool withState)
         {
@@ -565,31 +569,31 @@ namespace ProtoBuf.Compiler
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             LoadValue(fromValue);
-            LoadWriter();
+            LoadWriter(true);
             EmitCall(GetWriterMethod(methodName));
         }
 
         private MethodInfo GetWriterMethod(string methodName)
         {
-            Type writerType = typeof(ProtoWriter);
-            MethodInfo[] methods = writerType.GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            foreach (MethodInfo method in methods)
+            var method = ProtoWriter.GetStaticMethod(methodName);
+
+            ParameterInfo[] pis = method.GetParameters();
+            if (pis.Length == 3 && pis[1].ParameterType == typeof(ProtoWriter)
+                && pis[2].ParameterType == ProtoWriter.ByRefStateType)
             {
-                if (method.Name != methodName) continue;
-                ParameterInfo[] pis = method.GetParameters();
-                if (pis.Length == 2 && pis[1].ParameterType == writerType) return method;
+                return method;
             }
+
             throw new ArgumentException("No suitable method found for: " + methodName, nameof(methodName));
         }
 
-        internal void EmitWrite(Type helperType, string methodName, Compiler.Local valueFrom)
+        internal void EmitWrite<T>(string methodName, Compiler.Local valueFrom)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
-            MethodInfo method = helperType.GetMethod(
-                methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+            MethodInfo method = ProtoWriter.GetStaticMethod<T>(methodName);
             if (method == null || method.ReturnType != typeof(void)) throw new ArgumentException(nameof(methodName));
             LoadValue(valueFrom);
-            LoadWriter();
+            LoadWriter(true);
             EmitCall(method);
         }
 
@@ -600,6 +604,7 @@ namespace ProtoBuf.Compiler
             MemberInfo member = method ?? throw new ArgumentNullException(nameof(method));
             CheckAccessibility(ref member);
             OpCode opcode;
+            Debug.Assert(!method.IsDefined(typeof(ObsoleteAttribute), true), "calling an obsolete method");
             if (method.IsStatic || Helpers.IsValueType(method.DeclaringType))
             {
                 opcode = OpCodes.Call;
@@ -1475,7 +1480,7 @@ namespace ProtoBuf.Compiler
 
         internal void LoadSerializationContext()
         {
-            if (isWriter) LoadWriter();
+            if (isWriter) LoadWriter(false);
             else LoadReader(false);
             LoadValue((isWriter ? typeof(ProtoWriter) : typeof(ProtoReader)).GetProperty("Context"));
         }

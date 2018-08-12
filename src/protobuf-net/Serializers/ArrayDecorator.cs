@@ -81,26 +81,26 @@ namespace ProtoBuf.Serializers
                     {
                         ctx.LoadValue(fieldNumber);
                         ctx.LoadValue((int)WireType.String);
-                        ctx.LoadWriter();
-                        ctx.EmitCall(mappedWriter.GetMethod("WriteFieldHeader"));
+                        ctx.LoadWriter(true);
+                        ctx.EmitCall(ProtoWriter.GetStaticMethod("WriteFieldHeader"));
 
                         if (fixedLengthPacked)
                         {
                             // write directly - no need for buffering
                             ctx.LoadLength(arr, false);
                             ctx.LoadValue((int)packedWireType);
-                            ctx.LoadWriter();
+                            ctx.LoadWriter(false);
                             ctx.EmitCall(mappedWriter.GetMethod("WritePackedPrefix"));
                         }
                         else
                         {
                             ctx.LoadValue(arr);
-                            ctx.LoadWriter();
-                            ctx.EmitCall(mappedWriter.GetMethod("StartSubItem"));
+                            ctx.LoadWriter(true);
+                            ctx.EmitCall(ProtoWriter.GetStaticMethod("StartSubItem"));
                             ctx.StoreValue(token);
                         }
                         ctx.LoadValue(fieldNumber);
-                        ctx.LoadWriter();
+                        ctx.LoadWriter(false);
                         ctx.EmitCall(mappedWriter.GetMethod("SetPackedField"));
                     }
                     EmitWriteArrayLoop(ctx, i, arr);
@@ -110,14 +110,14 @@ namespace ProtoBuf.Serializers
                         if (fixedLengthPacked)
                         {
                             ctx.LoadValue(fieldNumber);
-                            ctx.LoadWriter();
+                            ctx.LoadWriter(false);
                             ctx.EmitCall(mappedWriter.GetMethod("ClearPackedField"));
                         }
                         else
                         {
                             ctx.LoadValue(token);
-                            ctx.LoadWriter();
-                            ctx.EmitCall(mappedWriter.GetMethod("EndSubItem"));
+                            ctx.LoadWriter(true);
+                            ctx.EmitCall(ProtoWriter.GetStaticMethod("EndSubItem"));
                         }
                     }
                 }

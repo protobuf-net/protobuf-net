@@ -420,16 +420,16 @@ namespace ProtoBuf.Serializers
                     {
                         ctx.LoadValue(fieldNumber);
                         ctx.LoadValue((int)WireType.String);
-                        ctx.LoadWriter();
-                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("WriteFieldHeader"));
+                        ctx.LoadWriter(true);
+                        ctx.EmitCall(ProtoWriter.GetStaticMethod("WriteFieldHeader"));
 
                         ctx.LoadValue(list);
-                        ctx.LoadWriter();
-                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("StartSubItem"));
+                        ctx.LoadWriter(true);
+                        ctx.EmitCall(ProtoWriter.GetStaticMethod("StartSubItem"));
                         ctx.StoreValue(token);
 
                         ctx.LoadValue(fieldNumber);
-                        ctx.LoadWriter();
+                        ctx.LoadWriter(false);
                         ctx.EmitCall(typeof(ProtoWriter).GetMethod("SetPackedField"));
                     }
 
@@ -461,8 +461,8 @@ namespace ProtoBuf.Serializers
                     if (writePacked)
                     {
                         ctx.LoadValue(token);
-                        ctx.LoadWriter();
-                        ctx.EmitCall(typeof(ProtoWriter).GetMethod("EndSubItem"));
+                        ctx.LoadWriter(true);
+                        ctx.EmitCall(ProtoWriter.GetStaticMethod("EndSubItem"));
                     }
                 }
             }

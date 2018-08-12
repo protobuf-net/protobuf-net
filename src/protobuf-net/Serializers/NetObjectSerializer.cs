@@ -58,10 +58,10 @@ namespace ProtoBuf.Serializers
         {
             ctx.LoadValue(valueFrom);
             ctx.CastToObject(ExpectedType);
-            ctx.LoadWriter();
+            ctx.LoadWriter(true);
             ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
             ctx.LoadValue((int)options);
-            ctx.EmitCall(typeof(BclHelpers).GetMethod("WriteNetObject"));
+            ctx.EmitCall(ProtoWriter.GetStaticMethod<BclHelpers>("WriteNetObject"));
         }
 #endif
     }

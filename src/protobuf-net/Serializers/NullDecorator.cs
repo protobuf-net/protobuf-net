@@ -100,8 +100,8 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken)))
             {
                 ctx.LoadNullRef();
-                ctx.LoadWriter();
-                ctx.EmitCall(typeof(ProtoWriter).GetMethod("StartSubItem"));
+                ctx.LoadWriter(true);
+                ctx.EmitCall(ProtoWriter.GetStaticMethod("StartSubItem"));
                 ctx.StoreValue(token);
 
                 if (Helpers.IsValueType(ExpectedType))
@@ -129,8 +129,8 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(@end);
 
                 ctx.LoadValue(token);
-                ctx.LoadWriter();
-                ctx.EmitCall(typeof(ProtoWriter).GetMethod("EndSubItem"));
+                ctx.LoadWriter(true);
+                ctx.EmitCall(ProtoWriter.GetStaticMethod("EndSubItem"));
             }
         }
 #endif

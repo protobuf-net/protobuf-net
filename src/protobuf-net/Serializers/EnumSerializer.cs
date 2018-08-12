@@ -160,7 +160,7 @@ namespace ProtoBuf.Serializers
                         ctx.Branch(@continue, false);
                         ctx.MarkLabel(tryNextValue);
                     }
-                    ctx.LoadWriter();
+                    ctx.LoadWriter(false);
                     ctx.LoadValue(loc);
                     ctx.CastToObject(ExpectedType);
                     ctx.EmitCall(typeof(ProtoWriter).GetMethod("ThrowEnumException"));

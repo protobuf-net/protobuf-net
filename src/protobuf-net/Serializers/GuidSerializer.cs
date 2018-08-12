@@ -27,7 +27,7 @@ namespace ProtoBuf.Serializers
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite(typeof(BclHelpers), nameof(BclHelpers.WriteGuid), valueFrom);
+            ctx.EmitWrite<BclHelpers>(nameof(BclHelpers.WriteGuid), valueFrom);
         }
 
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
