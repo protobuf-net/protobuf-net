@@ -95,7 +95,7 @@ namespace ProtoBuf.Meta
             {   // write the header, but defer to the model
                 if (Helpers.IsEnum(type))
                 { // no header
-                    Serialize(modelKey, value, writer, ref state);
+                    Serialize(writer, ref state, modelKey, value);
                     return true;
                 }
                 else
@@ -109,11 +109,11 @@ namespace ProtoBuf.Meta
                         case WireType.String:
                             // needs a wrapping length etc
                             SubItemToken token = ProtoWriter.StartSubItem(value, writer, ref state);
-                            Serialize(modelKey, value, writer, ref state);
+                            Serialize(writer, ref state, modelKey, value);
                             ProtoWriter.EndSubItem(token, writer, ref state);
                             return true;
                         default:
-                            Serialize(modelKey, value, writer, ref state);
+                            Serialize(writer, ref state, modelKey, value);
                             return true;
                     }
                 }
@@ -179,7 +179,7 @@ namespace ProtoBuf.Meta
             int key = GetKey(ref type);
             if (key >= 0)
             {
-                Serialize(key, value, writer, ref state);
+                Serialize(writer, ref state, key, value);
             }
             else if (!TrySerializeAuxiliaryType(writer, ref state, type, DataFormat.Default, Serializer.ListItemTag, value, false, null))
             {
@@ -544,7 +544,7 @@ namespace ProtoBuf.Meta
                 switch (style)
                 {
                     case PrefixStyle.None:
-                        Serialize(key, value, writer, ref state);
+                        Serialize(writer, ref state, key, value);
                         break;
                     case PrefixStyle.Base128:
                     case PrefixStyle.Fixed32:
@@ -1424,7 +1424,7 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="state">Write state</param>
-        protected internal abstract void Serialize(int key, object value, ProtoWriter dest, ref ProtoWriter.State state);
+        protected internal abstract void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value);
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
@@ -1483,7 +1483,7 @@ namespace ProtoBuf.Meta
                     using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, this, null))
                     {
                         writer.SetRootObject(value);
-                        Serialize(key, value, writer, ref state);
+                        Serialize(writer, ref state, key, value);
                         writer.Close(ref state);
                     }
                     ms.Position = 0;

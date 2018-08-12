@@ -125,7 +125,7 @@ namespace ProtoBuf.ServiceModel
                     {
                         using (ProtoWriter protoWriter = ProtoWriter.Create(out var state, ms, model, null))
                         {
-                            model.Serialize(key, graph, protoWriter, ref state);
+                            model.Serialize(protoWriter, ref state, key, graph);
                             protoWriter.Close(ref state);
                         }
                     }

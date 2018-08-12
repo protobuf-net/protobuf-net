@@ -111,8 +111,8 @@ namespace ProtoBuf.Serializers
                 }
                 else
                 {
-                    ctx.LoadValue(val);
                     ctx.LoadWriter(true);
+                    ctx.LoadValue(val);
                 }
                 ctx.EmitCall(method);
                 // handle inheritance (we will be calling the *base* version of things,

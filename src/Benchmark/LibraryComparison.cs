@@ -27,6 +27,19 @@ namespace Benchmark
                 return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
             }
         }
+
+        internal void Verify(byte[] data, int length)
+        {
+            if(_data.Length != length)
+                throw new InvalidOperationException($"Length mismatch; {_data.Length} vs {length}");
+            for (int i = 0; i < _data.Length;i++)
+            {
+                if (_data[i] != data[i])
+                    throw new InvalidOperationException($"Data mismatch at offset {i}; {Convert.ToString(_data[i], 16)} vs {Convert.ToString(data[i], 16)}");
+            }
+            Console.WriteLine($"verified: {length} bytes");
+        }
+
         [Benchmark(Description = "ROM*")]
         public protogen.Database ROM_Manual()
         {

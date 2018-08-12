@@ -55,7 +55,7 @@ namespace ProtoBuf
             SubItemToken token = StartSubItem(value, writer, ref state);
             if (key >= 0)
             {
-                writer.model.Serialize(key, value, writer, ref state);
+                writer.model.Serialize(writer, ref state, key, value);
             }
             else if (writer.model != null && writer.model.TrySerializeAuxiliaryType(writer, ref state, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value, false, null))
             {
@@ -99,7 +99,7 @@ namespace ProtoBuf
                 throw new InvalidOperationException("Cannot serialize sub-objects unless a model is provided");
             }
             SubItemToken token = StartSubItem(null, writer, ref state);
-            writer.model.Serialize(key, value, writer, ref state);
+            writer.model.Serialize(writer, ref state, key, value);
             EndSubItem(token, writer, ref state);
         }
 
@@ -136,7 +136,7 @@ namespace ProtoBuf
             }
             else
             {
-                writer.model.Serialize(key, value, writer, ref state);
+                writer.model.Serialize(writer, ref state, key, value);
             }
             writer.EndSubItem(ref state, token, style);
         }

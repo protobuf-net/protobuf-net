@@ -20,6 +20,7 @@ namespace Benchmark
                     obj.Auto.Serialize(writer, ref state, dal);
                     writer.Flush(ref state);
                 }
+                obj.Verify(ms.GetBuffer(), (int)ms.Length);
             }
             //for (int i = 0; i < 10000; i++)
             //{

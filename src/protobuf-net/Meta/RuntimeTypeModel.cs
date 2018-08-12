@@ -788,7 +788,7 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="state">Writer state</param>
-        protected internal override void Serialize(int key, object value, ProtoWriter dest, ref ProtoWriter.State state)
+        protected internal override void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value)
         {
             //Helpers.DebugWriteLine("Serialize", value);
             ((MetaType)types[key]).Serializer.Write(dest, ref state, value);
@@ -1246,32 +1246,32 @@ namespace ProtoBuf.Meta
 
         private Compiler.CompilerContext WriteSerializeDeserialize(string assemblyName, TypeBuilder type, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, ref ILGenerator il)
         {
-            il = Override(type, "Serialize");
+            il = Override(type, nameof(TypeModel.Serialize));
             Compiler.CompilerContext ctx = new Compiler.CompilerContext(il, false, true, methodPairs, this, ilVersion, assemblyName, typeof(object), "Serialize " + type.Name);
-            // arg0 = this, arg1 = key, arg2=obj, arg3=dest
+            // arg0 = this, arg1 = dest, arg2 = state, arg3 = key, arg4 = obj
             Compiler.CodeLabel[] jumpTable = new Compiler.CodeLabel[types.Count];
             for (int i = 0; i < jumpTable.Length; i++)
             {
                 jumpTable[i] = ctx.DefineLabel();
             }
-            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_3);
             ctx.Switch(jumpTable);
             ctx.Return();
             for (int i = 0; i < jumpTable.Length; i++)
             {
                 SerializerPair pair = methodPairs[i];
                 ctx.MarkLabel(jumpTable[i]);
+                il.Emit(OpCodes.Ldarg_1);
                 il.Emit(OpCodes.Ldarg_2);
+                il.Emit(OpCodes.Ldarg_S, (byte)4);
                 ctx.CastFromObject(pair.Type.Type);
-                il.Emit(OpCodes.Ldarg_3);
                 il.EmitCall(OpCodes.Call, pair.Serialize, null);
                 ctx.Return();
             }
 
             il = Override(type, nameof(TypeModel.DeserializeCore));
             ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(object), "Deserialize " + type.Name);
-            // arg0 = this, arg1 = state, arg2 = key, arg3 = obj, arg4 = source
-
+            
             // arg0 = this, arg1 = source, arg2 = state, arg3 = key, arg4 = obj
 
             for (int i = 0; i < jumpTable.Length; i++)
@@ -1447,19 +1447,11 @@ namespace ProtoBuf.Meta
             methodPairs = new SerializerPair[types.Count];
             foreach (MetaType metaType in types)
             {
-                MethodBuilder writeMethod = type.DefineMethod("Write"
-#if DEBUG
- + metaType.Type.Name
-#endif
-,
+                MethodBuilder writeMethod = type.DefineMethod("Write" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     typeof(void), new Type[] { typeof(ProtoWriter), ProtoWriter.ByRefStateType, metaType.Type });
 
-                MethodBuilder readMethod = type.DefineMethod("Read"
-#if DEBUG
- + metaType.Type.Name
-#endif
-,
+                MethodBuilder readMethod = type.DefineMethod("Read" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     metaType.Type, new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, metaType.Type });
 
