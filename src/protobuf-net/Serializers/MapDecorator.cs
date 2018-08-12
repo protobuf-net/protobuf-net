@@ -160,8 +160,8 @@ namespace ProtoBuf.Serializers
                     ctx.LoadWriter(true);
                     ctx.EmitCall(ProtoWriter.GetStaticMethod("WriteFieldHeader"));
 
-                    ctx.LoadWriter(true);
                     ctx.LoadNullRef();
+                    ctx.LoadWriter(true);
                     ctx.EmitCall(ProtoWriter.GetStaticMethod("StartSubItem"));
                     ctx.StoreValue(token);
 
@@ -173,8 +173,8 @@ namespace ProtoBuf.Serializers
                     ctx.EmitCall(value, itemType);
                     ctx.WriteNullCheckedTail(typeof(TValue), Tail, null);
 
-                    ctx.LoadWriter(true);
                     ctx.LoadValue(token);
+                    ctx.LoadWriter(true);
                     ctx.EmitCall(ProtoWriter.GetStaticMethod("EndSubItem"));
 
                     ctx.MarkLabel(@next);
