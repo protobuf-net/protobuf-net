@@ -357,12 +357,14 @@ namespace ProtoBuf
 
         protected private virtual void Dispose()
         {
-            if(depth == 0 && _needFlush)
+            if(depth == 0 && _needFlush && DemandFlushOnDispose)
             {
                 throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost");
             }
             model = null;
         }
+
+        protected private abstract bool DemandFlushOnDispose { get; }
 
         private bool _needFlush;
 

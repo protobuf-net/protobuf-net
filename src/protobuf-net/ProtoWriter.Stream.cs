@@ -33,6 +33,8 @@ namespace ProtoBuf
             private Stream dest;
             private int flushLock;
 
+            private protected override bool DemandFlushOnDispose => false;
+
             internal StreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
                 : base(model, context)
             {
