@@ -126,7 +126,7 @@ namespace ProtoBuf
                 default:
                     throw new ArgumentOutOfRangeException(nameof(style));
             }
-            SubItemToken token = writer.StartSubItem(ref state, value, true);
+            SubItemToken token = writer.ImplStartSubItem(ref state, value, true);
             if (key < 0)
             {
                 if (!writer.model.TrySerializeAuxiliaryType(writer, ref state, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value, false, null))
@@ -138,7 +138,7 @@ namespace ProtoBuf
             {
                 writer.model.Serialize(writer, ref state, key, value);
             }
-            writer.EndSubItem(ref state, token, style);
+            writer.ImplEndSubItem(ref state, token, style);
         }
 
         internal int GetTypeKey(ref Type type)
@@ -221,7 +221,8 @@ namespace ProtoBuf
         {
             uint header = (((uint)fieldNumber) << 3)
                 | (((uint)wireType) & 7);
-            writer.WriteUInt32Varint(ref state, header);
+            int bytes = writer.ImplWriteVarint32(ref state, header);
+            writer.Advance(bytes);
         }
 
         /// <summary>
@@ -240,7 +241,7 @@ namespace ProtoBuf
         public static void WriteBytes(byte[] data, ProtoWriter writer, ref State state)
         {
             if (data == null) throw new ArgumentNullException(nameof(data));
-            ProtoWriter.WriteBytes(data, 0, data.Length, writer, ref state);
+            WriteBytes(data, 0, data.Length, writer, ref state);
         }
 
         /// <summary>
@@ -250,17 +251,35 @@ namespace ProtoBuf
         public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer)
         {
             State state = default;
-            writer.WriteBytes(ref state, data, offset, length);
+            WriteBytes(data, offset, length, writer, ref state);
         }
         /// <summary>
         /// Writes a byte-array to the stream; supported wire-types: String
         /// </summary>
         public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer, ref State state)
-            => writer.WriteBytes(ref state, data, offset, length);
-
-        protected private abstract void WriteBytes(ref State state, byte[] data, int offset, int length);
-
-        protected private abstract void CopyRawFromStream(ref State state, Stream source);
+        {
+            switch (writer.WireType)
+            {
+                case WireType.Fixed32:
+                    if (length != 4) throw new ArgumentException(nameof(length));
+                    writer.ImplWriteBytes(ref state, data, offset, 4);
+                    writer.AdvanceAndReset(4);
+                    return;
+                case WireType.Fixed64:
+                    if (length != 8) throw new ArgumentException(nameof(length));
+                    writer.ImplWriteBytes(ref state, data, offset, 8);
+                    writer.AdvanceAndReset(8);
+                    return;
+                case WireType.String:
+                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)length) + length);
+                    if (length == 0) return;
+                    writer.ImplWriteBytes(ref state, data, offset, length);
+                    break;
+                default:
+                    ThrowException(writer);
+                    break;
+            }
+        }
 
         private int depth = 0;
         private const int RecursionCheckDepth = 25;
@@ -275,7 +294,7 @@ namespace ProtoBuf
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
         {
             State state = default;
-            return writer.StartSubItem(ref state, instance, false);
+            return StartSubItem(instance, writer, ref state);
         }
 
         /// <summary>
@@ -286,7 +305,7 @@ namespace ProtoBuf
         /// <param name="state">Writer state</param>
         /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer, ref State state)
-            => writer.StartSubItem(ref state, instance, false);
+            => writer.ImplStartSubItem(ref state, instance, false);
 
         private MutableList recursionStack;
         private void CheckRecursionStackAndPush(object instance)
@@ -311,8 +330,6 @@ namespace ProtoBuf
         }
         private void PopRecursionStack() { recursionStack.RemoveLast(); }
 
-        private protected abstract SubItemToken StartSubItem(ref State state, object instance, bool allowFixed);
-
         /// <summary>
         /// Indicates the end of a nested record.
         /// </summary>
@@ -322,7 +339,7 @@ namespace ProtoBuf
         public static void EndSubItem(SubItemToken token, ProtoWriter writer)
         {
             State state = default;
-            writer.EndSubItem(ref state, token, PrefixStyle.Base128);
+            EndSubItem(token, writer, ref state);
         }
 
         /// <summary>
@@ -332,9 +349,7 @@ namespace ProtoBuf
         /// <param name="writer">The destination.</param>
         /// <param name="state">Writer state</param>
         public static void EndSubItem(SubItemToken token, ProtoWriter writer, ref State state)
-            => writer.EndSubItem(ref state, token, PrefixStyle.Base128);
-
-        protected private abstract void EndSubItem(ref State state, SubItemToken token, PrefixStyle style);
+            => writer.ImplEndSubItem(ref state, token, PrefixStyle.Base128);
 
         /// <summary>
         /// Creates a new writer against a stream
@@ -357,7 +372,7 @@ namespace ProtoBuf
 
         protected private virtual void Dispose()
         {
-            if(depth == 0 && _needFlush && DemandFlushOnDispose)
+            if (depth == 0 && _needFlush && ImplDemandFlushOnDispose)
             {
                 throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
             }
@@ -369,14 +384,22 @@ namespace ProtoBuf
         /// </summary>
         public void Abandon() { _needFlush = false; }
 
-        protected private abstract bool DemandFlushOnDispose { get; }
-
         private bool _needFlush;
 
         // note that this is used by some of the unit tests and should not be removed
         internal static long GetLongPosition(ProtoWriter writer, ref State state) { return writer._position64; }
         private long _position64;
         protected private void Advance(long count) => _position64 += count;
+        protected private void AdvanceAndReset(int count)
+        {
+            _position64 += count;
+            WireType = WireType.None;
+        }
+        protected private void AdvanceAndReset(long count)
+        {
+            _position64 += count;
+            WireType = WireType.None;
+        }
 
         /// <summary>
         /// Flushes data to the underlying stream, and releases any resources. The underlying stream is *not* disposed
@@ -409,28 +432,21 @@ namespace ProtoBuf
         /// </summary>
         public TypeModel Model => model;
 
-        /// <summary>
-        /// Writes an unsigned 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
-        /// </summary>
-        protected private abstract void WriteUInt32Varint(ref State state, uint value);
-
 #if COREFX
-        private static readonly Encoding encoding = Encoding.UTF8;
+        private protected static readonly Encoding UTF8 = Encoding.UTF8;
 #else
-        private static readonly UTF8Encoding encoding = new UTF8Encoding();
+        private protected static readonly UTF8Encoding UTF8 = new UTF8Encoding();
 #endif
 
-        internal static uint Zig(int value)
+        private static uint Zig(int value)
         {
             return (uint)((value << 1) ^ (value >> 31));
         }
 
-        internal static ulong Zig(long value)
+        private static ulong Zig(long value)
         {
             return (ulong)((value << 1) ^ (value >> 63));
         }
-
-        private protected abstract void WriteUInt64Varint(ref State state, ulong value);
 
         /// <summary>
         /// Writes a string to the stream; supported wire-types: String
@@ -439,22 +455,50 @@ namespace ProtoBuf
         public static void WriteString(string value, ProtoWriter writer)
         {
             State state = default;
-            writer.WriteString(ref state, value);
+            WriteString(value, writer, ref state);
         }
         /// <summary>
         /// Writes a string to the stream; supported wire-types: String
         /// </summary>
         public static void WriteString(string value, ProtoWriter writer, ref State state)
-            => writer.WriteString(ref state, value);
+        {
+            switch (writer.WireType)
+            {
+                case WireType.String:
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, 0));
+                    }
+                    else
+                    {
+                        var len = UTF8.GetByteCount(value);
+                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)len) + len);
+                        writer.ImplWriteString(ref state, value, len);
+                    }
+                    break;
+                default:
+                    ThrowException(writer);
+                    break;
+            }
+        }
 
-        protected private abstract void WriteString(ref State state, string value);
+        protected private abstract void ImplWriteString(ref State state, string value, int expectedBytes);
+        protected private abstract int ImplWriteVarint32(ref State state, uint value);
+        protected private abstract int ImplWriteVarint64(ref State state, ulong value);
+        protected private abstract void ImplWriteFixed32(ref State state, uint value);
+        protected private abstract void ImplWriteFixed64(ref State state, ulong value);
+        protected private abstract void ImplWriteBytes(ref State state, byte[] data, int offset, int length);
+        protected private abstract void ImplCopyRawFromStream(ref State state, Stream source);
+        private protected abstract SubItemToken ImplStartSubItem(ref State state, object instance, bool allowFixed);
+        protected private abstract void ImplEndSubItem(ref State state, SubItemToken token, PrefixStyle style);
+        protected private abstract bool ImplDemandFlushOnDispose { get; }
 
         /// <summary>
         /// Writes any uncommitted data to the output
         /// </summary>
         public void Flush(ref State state)
         {
-            if(TryFlush(ref state))
+            if (TryFlush(ref state))
             {
                 _needFlush = false;
             }
@@ -486,17 +530,20 @@ namespace ProtoBuf
             switch (writer.WireType)
             {
                 case WireType.Fixed64:
-                    ProtoWriter.WriteInt64((long)value, writer, ref state);
+                    writer.ImplWriteFixed64(ref state, value);
+                    writer.AdvanceAndReset(8);
                     return;
                 case WireType.Variant:
-                    writer.WriteUInt64Varint(ref state, value);
-                    writer.WireType = WireType.None;
+                    int bytes = writer.ImplWriteVarint64(ref state, value);
+                    writer.AdvanceAndReset(bytes);
                     return;
                 case WireType.Fixed32:
-                    checked { ProtoWriter.WriteUInt32((uint)value, writer, ref state); }
+                    writer.ImplWriteFixed32(ref state, checked((uint)value));
+                    writer.AdvanceAndReset(4);
                     return;
                 default:
-                    throw CreateException(writer);
+                    ThrowException(writer);
+                    break;
             }
         }
 
@@ -507,15 +554,35 @@ namespace ProtoBuf
         public static void WriteInt64(long value, ProtoWriter writer)
         {
             State state = default;
-            writer.WriteInt64(ref state, value);
+            WriteInt64(value, writer, ref state);
         }
         /// <summary>
         /// Writes a signed 64-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         public static void WriteInt64(long value, ProtoWriter writer, ref State state)
-            => writer.WriteInt64(ref state, value);
-
-        private protected abstract void WriteInt64(ref State state, long value);
+        {
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            switch (writer.WireType)
+            {
+                case WireType.Fixed64:
+                    writer.ImplWriteFixed64(ref state, (ulong)value);
+                    writer.AdvanceAndReset(8);
+                    return;
+                case WireType.Variant:
+                    writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, (ulong)value));
+                    return;
+                case WireType.SignedVariant:
+                    writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, Zig(value)));
+                    return;
+                case WireType.Fixed32:
+                    writer.ImplWriteFixed32(ref state, checked((uint)(int)value));
+                    writer.AdvanceAndReset(4);
+                    return;
+                default:
+                    ThrowException(writer);
+                    break;
+            }
+        }
 
         /// <summary>
         /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -536,17 +603,20 @@ namespace ProtoBuf
             switch (writer.WireType)
             {
                 case WireType.Fixed32:
-                    ProtoWriter.WriteInt32((int)value, writer, ref state);
+                    writer.ImplWriteFixed32(ref state, value);
+                    writer.AdvanceAndReset(4);
                     return;
                 case WireType.Fixed64:
-                    ProtoWriter.WriteInt64((int)value, writer, ref state);
+                    writer.ImplWriteFixed64(ref state, value);
+                    writer.AdvanceAndReset(8);
                     return;
                 case WireType.Variant:
-                    writer.WriteUInt32Varint(ref state, value);
-                    writer.WireType = WireType.None;
+                    int bytes = writer.ImplWriteVarint32(ref state, value);
+                    writer.AdvanceAndReset(bytes);
                     return;
                 default:
-                    throw CreateException(writer);
+                    ThrowException(writer);
+                    break;
             }
         }
 
@@ -557,14 +627,14 @@ namespace ProtoBuf
         public static void WriteInt16(short value, ProtoWriter writer)
         {
             State state = default;
-            ProtoWriter.WriteInt32(value, writer, ref state);
+            WriteInt32(value, writer, ref state);
         }
 
         /// <summary>
         /// Writes a signed 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         public static void WriteInt16(short value, ProtoWriter writer, ref State state)
-            => ProtoWriter.WriteInt32(value, writer, ref state);
+            => WriteInt32(value, writer, ref state);
 
         /// <summary>
         /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -573,14 +643,14 @@ namespace ProtoBuf
         public static void WriteUInt16(ushort value, ProtoWriter writer)
         {
             State state = default;
-            ProtoWriter.WriteUInt32(value, writer, ref state);
+            WriteUInt32(value, writer, ref state);
         }
 
         /// <summary>
         /// Writes an unsigned 16-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
         public static void WriteUInt16(ushort value, ProtoWriter writer, ref State state)
-            => ProtoWriter.WriteUInt32(value, writer, ref state);
+            => WriteUInt32(value, writer, ref state);
 
         /// <summary>
         /// Writes an unsigned 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -589,14 +659,14 @@ namespace ProtoBuf
         public static void WriteByte(byte value, ProtoWriter writer)
         {
             State state = default;
-            ProtoWriter.WriteUInt32(value, writer, ref state);
+            WriteUInt32(value, writer, ref state);
         }
 
         /// <summary>
         /// Writes an unsigned 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
         public static void WriteByte(byte value, ProtoWriter writer, ref State state)
-            => ProtoWriter.WriteUInt32(value, writer, ref state);
+            => WriteUInt32(value, writer, ref state);
 
         /// <summary>
         /// Writes a signed 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
@@ -605,25 +675,15 @@ namespace ProtoBuf
         public static void WriteSByte(sbyte value, ProtoWriter writer)
         {
             State state = default;
-            ProtoWriter.WriteInt32(value, writer, ref state);
+            WriteInt32(value, writer, ref state);
         }
         /// <summary>
         /// Writes a signed 8-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         public static void WriteSByte(sbyte value, ProtoWriter writer, ref State state)
-            => ProtoWriter.WriteInt32(value, writer, ref state);
+            => WriteInt32(value, writer, ref state);
 
-        private static void WriteInt32ToBuffer(int value, byte[] buffer, int index)
-        {
-#if PLAT_SPANS
-            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(buffer.AsSpan(index, 4), value);
-#else
-            buffer[index] = (byte)value;
-            buffer[index + 1] = (byte)(value >> 8);
-            buffer[index + 2] = (byte)(value >> 16);
-            buffer[index + 3] = (byte)(value >> 24);
-#endif
-        }
+
 
         /// <summary>
         /// Writes a signed 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
@@ -632,15 +692,35 @@ namespace ProtoBuf
         public static void WriteInt32(int value, ProtoWriter writer)
         {
             State state = default;
-            writer.WriteInt32(ref state, value);
+            WriteInt32(value, writer, ref state);
         }
         /// <summary>
         /// Writes a signed 32-bit integer to the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         public static void WriteInt32(int value, ProtoWriter writer, ref State state)
-            => writer.WriteInt32(ref state, value);
-
-        private protected abstract void WriteInt32(ref State state, int value);
+        {
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            switch (writer.WireType)
+            {
+                case WireType.Fixed32:
+                    writer.ImplWriteFixed32(ref state, (uint)value);
+                    writer.AdvanceAndReset(4);
+                    return;
+                case WireType.Fixed64:
+                    writer.ImplWriteFixed64(ref state, (ulong)(long)value);
+                    writer.AdvanceAndReset(8);
+                    return;
+                case WireType.Variant:
+                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)value));
+                    return;
+                case WireType.SignedVariant:
+                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, Zig(value)));
+                    return;
+                default:
+                    ThrowException(writer);
+                    break;
+            }
+        }
 
         /// <summary>
         /// Writes a double-precision number to the stream; supported wire-types: Fixed32, Fixed64
@@ -666,17 +746,19 @@ namespace ProtoBuf
                     {
                         throw new OverflowException();
                     }
-                    ProtoWriter.WriteSingle(f, writer, ref state);
+                    WriteSingle(f, writer, ref state);
                     return;
                 case WireType.Fixed64:
 #if FEAT_SAFE
-                    ProtoWriter.WriteInt64(BitConverter.DoubleToInt64Bits(value), writer, ref state);
+                    writer.ImplWriteFixed64(ref state, (ulong)BitConverter.DoubleToInt64Bits(value));
 #else
-                    unsafe { ProtoWriter.WriteInt64(*(long*)&value, writer, ref state); }
+                    unsafe { writer.ImplWriteFixed64(ref state, *(ulong*)&value); }
 #endif
+                    writer.AdvanceAndReset(8);
                     return;
                 default:
-                    throw CreateException(writer);
+                    ThrowException(writer);
+                    return;
             }
         }
         /// <summary>
@@ -699,16 +781,18 @@ namespace ProtoBuf
             {
                 case WireType.Fixed32:
 #if FEAT_SAFE
-                    ProtoWriter.WriteInt32(BitConverter.ToInt32(BitConverter.GetBytes(value), 0), writer, ref state);
+                    writer.ImplWriteFixed32(ref state, BitConverter.ToUInt32(BitConverter.GetBytes(value), 0));
 #else
-                    unsafe { ProtoWriter.WriteInt32(*(int*)&value, writer, ref state); }
-#endif
+                    unsafe { writer.ImplWriteFixed32(ref state, *(uint*)&value); }
+#endif                    
+                    writer.AdvanceAndReset(4);
                     return;
                 case WireType.Fixed64:
-                    ProtoWriter.WriteDouble((double)value, writer, ref state);
+                    WriteDouble(value, writer, ref state);
                     return;
                 default:
-                    throw CreateException(writer);
+                    ThrowException(writer);
+                    break;
             }
         }
 
@@ -730,6 +814,8 @@ namespace ProtoBuf
             if (writer == null) throw new ArgumentNullException(nameof(writer));
             return new ProtoException("Invalid serialization operation with wire-type " + writer.WireType.ToString() + " at position " + writer._position64.ToString());
         }
+        internal static void ThrowException(ProtoWriter writer)
+            => throw CreateException(writer);
 
         /// <summary>
         /// Writes a boolean to the stream; supported wire-types: Variant, Fixed32, Fixed64
@@ -778,7 +864,7 @@ namespace ProtoBuf
                 Stream source = extn.BeginQuery();
                 try
                 {
-                    writer.CopyRawFromStream(ref state, source);
+                    writer.ImplCopyRawFromStream(ref state, source);
                 }
                 finally { extn.EndQuery(source); }
             }
@@ -835,8 +921,8 @@ namespace ProtoBuf
                 default:
                     throw new ArgumentOutOfRangeException(nameof(wireType), "Invalid wire-type: " + wireType);
             }
-            writer.WriteUInt64Varint(ref state, bytes);
-            writer.WireType = WireType.None;
+            int prefixLength = writer.ImplWriteVarint64(ref state, bytes);
+            writer.AdvanceAndReset(prefixLength);
         }
 
         internal string SerializeType(Type type)

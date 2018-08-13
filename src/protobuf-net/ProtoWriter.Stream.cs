@@ -33,7 +33,7 @@ namespace ProtoBuf
             private Stream dest;
             private int flushLock;
 
-            private protected override bool DemandFlushOnDispose => true;
+            private protected override bool ImplDemandFlushOnDispose => true;
 
             internal StreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
                 : base(model, context)
@@ -82,10 +82,10 @@ namespace ProtoBuf
 
             private static void TryFlushOrResize(int required, StreamProtoWriter writer, ref State state)
             {
-                if (writer.flushLock == 0)
+                if (writer.TryFlush(ref state) // try emptying the buffer
+                    && (writer.ioBuffer.Length - writer.ioIndex) >= required)
                 {
-                    writer.Flush(ref state); // try emptying the buffer
-                    if ((writer.ioBuffer.Length - writer.ioIndex) >= required) return;
+                    return;
                 }
 
                 // either can't empty the buffer, or that didn't help; need more space
@@ -95,119 +95,99 @@ namespace ProtoBuf
             private byte[] ioBuffer;
             private int ioIndex;
 
-            protected private override void WriteBytes(ref State state, byte[] data, int offset, int length)
+            protected private override void ImplWriteBytes(ref State state, byte[] data, int offset, int length)
             {
-                if (data == null) throw new ArgumentNullException(nameof(data));
-                switch (WireType)
+                if (flushLock != 0 || length <= ioBuffer.Length) // write to the buffer
                 {
-                    case WireType.Fixed32:
-                        if (length != 4) throw new ArgumentException(nameof(length));
-                        goto CopyFixedLength;  // ugly but effective
-                    case WireType.Fixed64:
-                        if (length != 8) throw new ArgumentException(nameof(length));
-                        goto CopyFixedLength;  // ugly but effective
-                    case WireType.String:
-                        WriteUInt32Varint(ref state, (uint)length);
-                        WireType = WireType.None;
-                        if (length == 0) return;
-                        if (flushLock != 0 || length <= ioBuffer.Length) // write to the buffer
-                        {
-                            goto CopyFixedLength; // ugly but effective
-                        }
-                        // writing data that is bigger than the buffer (and the buffer
-                        // isn't currently locked due to a sub-object needing the size backfilled)
-                        Flush(ref state); // commit any existing data from the buffer
-                                     // now just write directly to the underlying stream
-                        dest.Write(data, offset, length);
-                        Advance(length); // since we've flushed offset etc is 0, and remains
-                                         // zero since we're writing directly to the stream
-                        return;
+                    DemandSpace(length, this, ref state);
+                    Buffer.BlockCopy(data, offset, ioBuffer, ioIndex, length);
+                    ioIndex += length;
                 }
-                throw CreateException(this);
-                CopyFixedLength: // no point duplicating this lots of times, and don't really want another stackframe
-                DemandSpace(length, this, ref state);
-                Buffer.BlockCopy(data, offset, ioBuffer, ioIndex, length);
-                IncrementedAndReset(length, this);
-            }
-            private protected override void WriteString(ref State state, string value)
-            {
-                if (WireType != WireType.String) throw CreateException(this);
-                if (value == null) throw new ArgumentNullException(nameof(value)); // written header; now what?
-                int len = value.Length;
-                if (len == 0)
+                else
                 {
-                    WriteUInt32Varint(ref state, 0);
-                    WireType = WireType.None;
-                    return; // just a header
+                    // writing data that is bigger than the buffer (and the buffer
+                    // isn't currently locked due to a sub-object needing the size backfilled)
+                    Flush(ref state); // commit any existing data from the buffer
+                                      // now just write directly to the underlying stream
+                    dest.Write(data, offset, length);
+                    // since we've flushed offset etc is 0, and remains
+                    // zero since we're writing directly to the stream
                 }
-                int predicted = encoding.GetByteCount(value);
-                WriteUInt32Varint(ref state, (uint)predicted);
-                DemandSpace(predicted, this, ref state);
-                int actual = encoding.GetBytes(value, 0, value.Length, ioBuffer, ioIndex);
-                Helpers.DebugAssert(predicted == actual);
-                IncrementedAndReset(actual, this);
             }
-            private protected override void WriteInt64(ref State state, long value)
+            private protected override void ImplWriteString(ref State state, string value, int expectedBytes)
             {
-                byte[] buffer;
-                int index;
-                switch (WireType)
-                {
-                    case WireType.Fixed64:
-                        DemandSpace(8, this, ref state);
-                        buffer = ioBuffer;
-                        index = ioIndex;
+                DemandSpace(expectedBytes, this, ref state);
+                int actualBytes = UTF8.GetBytes(value, 0, value.Length, ioBuffer, ioIndex);
+                ioIndex += actualBytes;
+                Helpers.DebugAssert(expectedBytes == actualBytes);
+            }
+
+            private static void WriteUInt32ToBuffer(uint value, byte[] buffer, int index)
+            {
+#if PLAT_SPANS
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(index, 4), value);
+#else
+                buffer[index] = (byte)value;
+                buffer[index + 1] = (byte)(value >> 8);
+                buffer[index + 2] = (byte)(value >> 16);
+                buffer[index + 3] = (byte)(value >> 24);
+#endif
+            }
+
+            private protected override void ImplWriteFixed32(ref State state, uint value)
+            {
+                DemandSpace(4, this, ref state);
+                WriteUInt32ToBuffer(value, ioBuffer, ioIndex);
+                ioIndex += 4;
+            }
+            private protected override void ImplWriteFixed64(ref State state, ulong value)
+            {
+                DemandSpace(8, this, ref state);
+                var buffer = ioBuffer;
+                var index = ioIndex;
 
 #if PLAT_SPANS
-                        System.Buffers.Binary.BinaryPrimitives.WriteInt64LittleEndian(buffer.AsSpan(index, 8), value);
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(buffer.AsSpan(index, 8), value);
 #else
-                        buffer[index] = (byte)value;
-                        buffer[index + 1] = (byte)(value >> 8);
-                        buffer[index + 2] = (byte)(value >> 16);
-                        buffer[index + 3] = (byte)(value >> 24);
-                        buffer[index + 4] = (byte)(value >> 32);
-                        buffer[index + 5] = (byte)(value >> 40);
-                        buffer[index + 6] = (byte)(value >> 48);
-                        buffer[index + 7] = (byte)(value >> 56);
+                buffer[index] = (byte)value;
+                buffer[index + 1] = (byte)(value >> 8);
+                buffer[index + 2] = (byte)(value >> 16);
+                buffer[index + 3] = (byte)(value >> 24);
+                buffer[index + 4] = (byte)(value >> 32);
+                buffer[index + 5] = (byte)(value >> 40);
+                buffer[index + 6] = (byte)(value >> 48);
+                buffer[index + 7] = (byte)(value >> 56);
 #endif
-                        IncrementedAndReset(8, this);
-                        return;
-                    case WireType.SignedVariant:
-                        WriteUInt64Varint(ref state, Zig(value));
-                        WireType = WireType.None;
-                        return;
-                    case WireType.Variant:
-                        if (value >= 0)
-                        {
-                            WriteUInt64Varint(ref state, (ulong)value);
-                            WireType = WireType.None;
-                        }
-                        else
-                        {
-                            DemandSpace(10, this, ref state);
-                            buffer = ioBuffer;
-                            index = ioIndex;
-                            buffer[index] = (byte)(value | 0x80);
-                            buffer[index + 1] = (byte)((int)(value >> 7) | 0x80);
-                            buffer[index + 2] = (byte)((int)(value >> 14) | 0x80);
-                            buffer[index + 3] = (byte)((int)(value >> 21) | 0x80);
-                            buffer[index + 4] = (byte)((int)(value >> 28) | 0x80);
-                            buffer[index + 5] = (byte)((int)(value >> 35) | 0x80);
-                            buffer[index + 6] = (byte)((int)(value >> 42) | 0x80);
-                            buffer[index + 7] = (byte)((int)(value >> 49) | 0x80);
-                            buffer[index + 8] = (byte)((int)(value >> 56) | 0x80);
-                            buffer[index + 9] = 0x01; // sign bit
-                            IncrementedAndReset(10, this);
-                        }
-                        return;
-                    case WireType.Fixed32:
-                        checked { WriteInt32((int)value, this, ref state); }
-                        return;
-                    default:
-                        throw CreateException(this);
-                }
+                ioIndex += 8;
             }
-            private protected override void CopyRawFromStream(ref State state, Stream source)
+
+            private protected override int ImplWriteVarint64(ref State state, ulong value)
+            {
+                DemandSpace(10, this, ref state);
+                int count = 0;
+                do
+                {
+                    ioBuffer[ioIndex++] = (byte)((value & 0x7F) | 0x80);
+                    count++;
+                } while ((value >>= 7) != 0);
+                ioBuffer[ioIndex - 1] &= 0x7F;
+                return count;
+            }
+
+            private protected override int ImplWriteVarint32(ref State state, uint value)
+            {
+                DemandSpace(5, this, ref state);
+                int count = 0;
+                do
+                {
+                    ioBuffer[ioIndex++] = (byte)((value & 0x7F) | 0x80);
+                    count++;
+                } while ((value >>= 7) != 0);
+                ioBuffer[ioIndex - 1] &= 0x7F;
+                return count;
+            }
+
+            private protected override void ImplCopyRawFromStream(ref State state, Stream source)
             {
                 byte[] buffer = ioBuffer;
                 int space = buffer.Length - ioIndex, bytesRead = 1; // 1 here to spoof case where already full
@@ -251,7 +231,7 @@ namespace ProtoBuf
                     }
                 }
             }
-            private protected override SubItemToken StartSubItem(ref State state, object instance, bool allowFixed)
+            private protected override SubItemToken ImplStartSubItem(ref State state, object instance, bool allowFixed)
             {
                 if (++depth > RecursionCheckDepth)
                 {
@@ -265,10 +245,10 @@ namespace ProtoBuf
                         return new SubItemToken((long)(-fieldNumber));
                     case WireType.String:
 #if DEBUG
-                    if (model != null && model.ForwardsOnly)
-                    {
-                        throw new ProtoException("Should not be buffering data: " + instance ?? "(null)");
-                    }
+                        if (model != null && model.ForwardsOnly)
+                        {
+                            throw new ProtoException("Should not be buffering data: " + instance ?? "(null)");
+                        }
 #endif
                         WireType = WireType.None;
                         DemandSpace(32, this, ref state); // make some space in anticipation...
@@ -289,7 +269,7 @@ namespace ProtoBuf
                 }
             }
 
-            private protected override void EndSubItem(ref State state, SubItemToken token, PrefixStyle style)
+            private protected override void ImplEndSubItem(ref State state, SubItemToken token, PrefixStyle style)
             {
                 if (WireType != WireType.None) { throw CreateException(this); }
                 int value = (int)token.value64;
@@ -312,12 +292,12 @@ namespace ProtoBuf
                 {
                     case PrefixStyle.Fixed32:
                         len = (int)(ioIndex - value - 4);
-                        ProtoWriter.WriteInt32ToBuffer(len, ioBuffer, value);
+                        WriteUInt32ToBuffer((uint)len, ioBuffer, value);
                         break;
                     case PrefixStyle.Fixed32BigEndian:
                         len = (int)(ioIndex - value - 4);
                         byte[] buffer = ioBuffer;
-                        ProtoWriter.WriteInt32ToBuffer(len, buffer, value);
+                        WriteUInt32ToBuffer((uint)len, buffer, value);
                         // and swap the byte order
                         byte b = buffer[value];
                         buffer[value] = buffer[value + 3];
@@ -362,87 +342,6 @@ namespace ProtoBuf
                 {
                     Flush(ref state);
                 }
-            }
-
-            private protected override void WriteInt32(ref State state, int value)
-            {
-                byte[] buffer;
-                int index;
-
-                switch (WireType)
-                {
-                    case WireType.Fixed32:
-                        DemandSpace(4, this, ref state);
-                        WriteInt32ToBuffer(value, ioBuffer, ioIndex);
-                        IncrementedAndReset(4, this);
-                        return;
-                    case WireType.Fixed64:
-                        DemandSpace(8, this, ref state);
-                        buffer = ioBuffer;
-                        index = ioIndex;
-                        buffer[index] = (byte)value;
-                        buffer[index + 1] = (byte)(value >> 8);
-                        buffer[index + 2] = (byte)(value >> 16);
-                        buffer[index + 3] = (byte)(value >> 24);
-                        buffer[index + 4] = buffer[index + 5] =
-                            buffer[index + 6] = buffer[index + 7] = 0;
-                        IncrementedAndReset(8, this);
-                        return;
-                    case WireType.SignedVariant:
-                        WriteUInt32Varint(ref state, Zig(value));
-                        WireType = WireType.None;
-                        return;
-                    case WireType.Variant:
-                        if (value >= 0)
-                        {
-                            WriteUInt32Varint(ref state, (uint)value);
-                            WireType = WireType.None;
-                        }
-                        else
-                        {
-                            DemandSpace(10, this, ref state);
-                            buffer = ioBuffer;
-                            index = ioIndex;
-                            buffer[index] = (byte)(value | 0x80);
-                            buffer[index + 1] = (byte)((value >> 7) | 0x80);
-                            buffer[index + 2] = (byte)((value >> 14) | 0x80);
-                            buffer[index + 3] = (byte)((value >> 21) | 0x80);
-                            buffer[index + 4] = (byte)((value >> 28) | 0x80);
-                            buffer[index + 5] = buffer[index + 6] =
-                                buffer[index + 7] = buffer[index + 8] = (byte)0xFF;
-                            buffer[index + 9] = (byte)0x01;
-                            IncrementedAndReset(10, this);
-                        }
-                        return;
-                    default:
-                        throw CreateException(this);
-                }
-            }
-
-            private protected override void WriteUInt32Varint(ref State state, uint value)
-            {
-                DemandSpace(5, this, ref state);
-                int count = 0;
-                do
-                {
-                    ioBuffer[ioIndex++] = (byte)((value & 0x7F) | 0x80);
-                    count++;
-                } while ((value >>= 7) != 0);
-                ioBuffer[ioIndex - 1] &= 0x7F;
-                Advance(count);
-            }
-
-            private protected override void WriteUInt64Varint(ref State state, ulong value)
-            {
-                DemandSpace(10, this, ref state);
-                int count = 0;
-                do
-                {
-                    ioBuffer[ioIndex++] = (byte)((value & 0x7F) | 0x80);
-                    count++;
-                } while ((value >>= 7) != 0);
-                ioBuffer[ioIndex - 1] &= 0x7F;
-                Advance(count);
             }
         }
     }
