@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -55,6 +57,108 @@ namespace ProtoBuf
         /// <summary>
         /// Writer state
         /// </summary>
-        public ref struct State { }
+        public ref struct State
+        {
+
+#if PLAT_SPANS
+            internal bool IsActive => !_span.IsEmpty;
+
+            private Span<byte> _span;
+
+            private Span<byte> Remaining => _span.Slice(OffsetInCurrent);
+
+            internal int RemainingInCurrent { get; private set; }
+            internal int OffsetInCurrent { get; private set; }
+
+            internal void Init(Span<byte> span)
+            {
+                _span = span;
+                RemainingInCurrent = span.Length;
+            }
+            internal int Flush()
+            {
+                int val = OffsetInCurrent;
+                this = default;
+                return val;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal void WriteFixed32(uint value)
+            {
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(Remaining, value);
+                OffsetInCurrent += 4;
+                RemainingInCurrent -= 4;
+            }
+
+            internal void WriteBytes(ReadOnlySpan<byte> span)
+            {
+                span.CopyTo(Remaining);
+                OffsetInCurrent += span.Length;
+                RemainingInCurrent -= span.Length;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal void WriteFixed64(ulong value)
+            {
+                System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(Remaining, value);
+                OffsetInCurrent += 8;
+                RemainingInCurrent -= 8;
+            }
+
+            internal void WriteString(string value)
+            {
+                int bytes;
+#if PLAT_SPAN_OVERLOADS
+                bytes = UTF8.GetBytes(value.AsSpan(), Remaining);
+#else
+                unsafe
+                {
+                    fixed(char* cPtr = value)
+                    fixed(byte* bPtr = &MemoryMarshal.GetReference(_span))
+                    {
+                        bytes = UTF8.GetBytes(cPtr, value.Length,
+                            bPtr + OffsetInCurrent, RemainingInCurrent);
+                    }
+                }
+#endif
+                OffsetInCurrent += bytes;
+                RemainingInCurrent -= bytes;
+            }
+
+            internal int WriteVarint64(ulong value)
+            {
+                int count = 0;
+                var span = _span;
+                var index = OffsetInCurrent;
+                do
+                {
+                    span[index++] = (byte)((value & 0x7F) | 0x80);
+                    count++;
+                } while ((value >>= 7) != 0);
+                span[index - 1] &= 0x7F;
+
+                OffsetInCurrent += count;
+                RemainingInCurrent -= count;
+                return count;
+            }
+
+            internal int WriteVarint32(uint value)
+            {
+                int count = 0;
+                var span = _span;
+                var index = OffsetInCurrent;
+                do
+                {
+                    span[index++] = (byte)((value & 0x7F) | 0x80);
+                    count++;
+                } while ((value >>= 7) != 0);
+                span[index - 1] &= 0x7F;
+
+                OffsetInCurrent += count;
+                RemainingInCurrent -= count;
+                return count;
+            }
+#endif
+        }
     }
 }
