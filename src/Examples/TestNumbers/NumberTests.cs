@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using Xunit;
 using ProtoBuf;
+using Xunit.Abstractions;
 
 namespace Examples.TestNumbers
 {
@@ -79,6 +80,12 @@ namespace Examples.TestNumbers
     
     public class SignTests
     {
+        public ITestOutputHelper Output { get; }
+
+        public SignTests(ITestOutputHelper output)
+            => Output = output;
+
+
         [Fact]
         public void RoundTripBigPosativeZigZagInt64()
         {
@@ -127,7 +134,7 @@ namespace Examples.TestNumbers
         [Fact]
         public void TestSignTwosComplementInt32_m1()
         {
-            Assert.True(Program.CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-1");
+            Assert.True(Program.CheckBytes(Output, new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-1");
         }
         [Fact]
         public void TestSignTwosComplementInt32_m2()

@@ -9,6 +9,7 @@ using ProtoBuf.Meta;
 using System.Reflection;
 using Xunit;
 using System.Text.RegularExpressions;
+using Xunit.Abstractions;
 
 namespace Examples
 {
@@ -79,6 +80,9 @@ namespace Examples
             }
         }
         public static bool CheckBytes<T>(T item, TypeModel model, params byte[] expected)
+            => CheckBytes<T>(null, item, model, expected);
+
+        public static bool CheckBytes<T>(ITestOutputHelper output, T item, TypeModel model, params byte[] expected)
         {
             if (model == null) model = RuntimeTypeModel.Default;
             using (MemoryStream ms = new MemoryStream())
@@ -89,17 +93,18 @@ namespace Examples
                 if (!equal)
                 {
                     string exp = GetByteString(expected), act = GetByteString(actual);
-                    Console.WriteLine("Expected: {0}", exp);
-                    Console.WriteLine("Actual: {0}", act);
+                    output?.WriteLine("Expected: {0}", exp);
+                    output?.WriteLine("Actual: {0}", act);
                 }
                 return equal;
             }
         }
+        public static bool CheckBytes<T>(ITestOutputHelper output, T item, params byte[] expected)
+            => CheckBytes<T>(output, item, null, expected);
 
         public static bool CheckBytes<T>(T item, params byte[] expected)
-        {
-            return CheckBytes<T>(item, null, expected);
-        }
+            => CheckBytes<T>(null, item, null, expected);
+
         public static T Build<T>(params byte[] raw) where T : class, new()
         {
             using (MemoryStream ms = new MemoryStream(raw))

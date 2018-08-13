@@ -711,7 +711,14 @@ namespace ProtoBuf
                     writer.AdvanceAndReset(8);
                     return;
                 case WireType.Variant:
-                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)value));
+                    if (value >= 0)
+                    {
+                        writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)value));
+                    }
+                    else
+                    {
+                        writer.AdvanceAndReset(writer.ImplWriteVarint64(ref state, (ulong)(long)value));
+                    }
                     return;
                 case WireType.SignedVariant:
                     writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, Zig(value)));
