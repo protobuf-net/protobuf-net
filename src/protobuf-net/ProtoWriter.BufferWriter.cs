@@ -7,9 +7,8 @@ using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
-    partial class ProtoWriter
+    public partial class ProtoWriter
     {
-
         /// <summary>
         /// Create a new ProtoWriter that tagets a buffer writer
         /// </summary>
@@ -22,7 +21,7 @@ namespace ProtoBuf
 
         private sealed class BufferWriterProtoWriter : ProtoWriter
         {
-            private IBufferWriter<byte> _writer;
+            private readonly IBufferWriter<byte> _writer;
             internal BufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, SerializationContext context)
                 : base(model, context)
                 => _writer = writer;
@@ -31,7 +30,7 @@ namespace ProtoBuf
 
             private protected override bool TryFlush(ref State state)
             {
-                if(state.IsActive)
+                if (state.IsActive)
                 {
                     _writer.Advance(state.Flush());
                 }
@@ -73,7 +72,7 @@ namespace ProtoBuf
             private void GetBuffer(ref State state)
             {
                 TryFlush(ref state);
-                state.Init(_writer.GetSpan(128));
+                state.Init(_writer.GetMemory(128));
             }
 
             private protected override void ImplWriteBytes(ref State state, byte[] data, int offset, int length)
@@ -85,10 +84,10 @@ namespace ProtoBuf
 
             private void FallbackWriteBytes(ref State state, ReadOnlySpan<byte> span)
             {
-                while(true)
+                while (true)
                 {
                     GetBuffer(ref state);
-                    if(span.Length <= state.RemainingInCurrent)
+                    if (span.Length <= state.RemainingInCurrent)
                     {
                         state.WriteBytes(span);
                         return;
@@ -125,7 +124,14 @@ namespace ProtoBuf
 
             private protected override void ImplCopyRawFromStream(ref State state, Stream source)
             {
-                throw new NotImplementedException();
+                while (true)
+                {
+                    if (state.RemainingInCurrent == 0) GetBuffer(ref state);
+
+                    int bytes = state.ReadFrom(source);
+                    if (bytes <= 0) break;
+                    Advance(bytes);
+                }
             }
         }
     }

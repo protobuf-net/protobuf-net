@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -59,21 +60,22 @@ namespace ProtoBuf
         /// </summary>
         public ref struct State
         {
-
 #if PLAT_SPANS
             internal bool IsActive => !_span.IsEmpty;
 
             private Span<byte> _span;
+            private Memory<byte> _memory;
 
             private Span<byte> Remaining => _span.Slice(OffsetInCurrent);
 
             internal int RemainingInCurrent { get; private set; }
             internal int OffsetInCurrent { get; private set; }
 
-            internal void Init(Span<byte> span)
+            internal void Init(Memory<byte> memory)
             {
-                _span = span;
-                RemainingInCurrent = span.Length;
+                _memory = memory;
+                _span = memory.Span;
+                RemainingInCurrent = _span.Length;
             }
             internal int Flush()
             {
@@ -113,11 +115,13 @@ namespace ProtoBuf
 #else
                 unsafe
                 {
-                    fixed(char* cPtr = value)
-                    fixed(byte* bPtr = &MemoryMarshal.GetReference(_span))
+                    fixed (char* cPtr = value)
                     {
-                        bytes = UTF8.GetBytes(cPtr, value.Length,
-                            bPtr + OffsetInCurrent, RemainingInCurrent);
+                        fixed (byte* bPtr = &MemoryMarshal.GetReference(_span))
+                        {
+                            bytes = UTF8.GetBytes(cPtr, value.Length,
+                                bPtr + OffsetInCurrent, RemainingInCurrent);
+                        }
                     }
                 }
 #endif
@@ -140,6 +144,32 @@ namespace ProtoBuf
                 OffsetInCurrent += count;
                 RemainingInCurrent -= count;
                 return count;
+            }
+
+            internal int ReadFrom(Stream source)
+            {
+                int bytes;
+                if (MemoryMarshal.TryGetArray<byte>(_memory, out var segment))
+                {
+                    bytes = source.Read(segment.Array, segment.Offset + OffsetInCurrent, RemainingInCurrent);
+                }
+                else
+                {
+#if PLAT_SPAN_OVERLOADS
+                    bytes = source.Read(Remaining);
+#else
+                    var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(RemainingInCurrent);
+                    bytes = source.Read(arr, 0, RemainingInCurrent);
+                    if (bytes > 0) new Span<byte>(arr, 0, bytes).CopyTo(Remaining);
+                    System.Buffers.ArrayPool<byte>.Shared.Return(arr);
+#endif
+                }
+                if (bytes > 0)
+                {
+                    OffsetInCurrent += bytes;
+                    RemainingInCurrent -= bytes;
+                }
+                return bytes;
             }
 
             internal int WriteVarint32(uint value)

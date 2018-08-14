@@ -1531,7 +1531,6 @@ namespace ProtoBuf.Meta
                         throw;
                     }
                     writer.Close(ref state);
-
                 }
                 ms.Position = 0;
                 ProtoReader reader = null;
