@@ -55,7 +55,7 @@ namespace Examples
 
         //    DatabaseCompatRem compatRem = DAL.NWindTests.LoadDatabaseFromFile<DatabaseCompatRem>(RuntimeTypeModel.Default);
         //    SimpleStreamDemo.LoadTestItem(compatRem, NWIND_COUNT, NWIND_COUNT, true, false, true, false, false, false, null);
-            
+
         //}
 
         public static string GetByteString(byte[] buffer)
@@ -67,7 +67,7 @@ namespace Examples
             {
                 sb.Append(buffer[i].ToString("X2")).Append(' ');
             }
-            sb.Length -= 1;
+            sb.Length--;
             return sb.ToString();
         }
         public static string GetByteString<T>(T item) where T : class,new()
@@ -137,7 +137,7 @@ namespace Examples
                 if (message != null) Assert.Equal(DeVersion(message), DeVersion(ex.Message));
             }
         }
-        static string DeVersion(string input) => Regex.Replace(input, "Version=([0-9.]+)", "Version=*");
+        private static string DeVersion(string input) => Regex.Replace(input, "Version=([0-9.]+)", "Version=*");
         public static void ExpectFailure<TException>(Action action, Func<TException, bool> check)
             where TException : Exception
         {
@@ -149,7 +149,7 @@ namespace Examples
             catch(TException ex)
             {
                 if (check != null) Assert.True(check(ex));
-            }            
+            }
         }
     }
 }

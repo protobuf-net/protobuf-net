@@ -66,7 +66,7 @@ namespace ProtoBuf
             private Span<byte> _span;
             private Memory<byte> _memory;
 
-            private Span<byte> Remaining => _span.Slice(OffsetInCurrent);
+            internal Span<byte> Remaining => _span.Slice(OffsetInCurrent);
 
             internal int RemainingInCurrent { get; private set; }
             internal int OffsetInCurrent { get; private set; }
@@ -90,6 +90,13 @@ namespace ProtoBuf
                 System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(Remaining, value);
                 OffsetInCurrent += 4;
                 RemainingInCurrent -= 4;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal void Advance(int bytes)
+            {
+                OffsetInCurrent += bytes;
+                RemainingInCurrent -= bytes;
             }
 
             internal void WriteBytes(ReadOnlySpan<byte> span)

@@ -4,6 +4,8 @@ using System;
 using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ProtoBuf
 {
@@ -64,7 +66,10 @@ namespace ProtoBuf
                 }
                 else
                 {
-                    throw new NotImplementedException(); // need encoder
+                    // could use encoder, but... this is pragmatic
+                    var arr = ArrayPool<byte>.Shared.Rent(expectedBytes);
+                    UTF8.GetBytes(value, 0, value.Length, arr, 0);
+                    ImplWriteBytes(ref state, arr, 0, expectedBytes);
                 }
             }
 

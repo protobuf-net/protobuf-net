@@ -9,7 +9,6 @@ using Xunit.Abstractions;
 
 namespace Examples
 {
-    
     public class MultiTypesWithLengthPrefix
     {
         public ITestOutputHelper Output { get; }
@@ -50,12 +49,12 @@ namespace Examples
                 Assert.Null(ReadNext(ms));
             }
         }
-        static readonly IDictionary<int, Type> typeLookup = new Dictionary<int, Type>
+        private static readonly IDictionary<int, Type> typeLookup = new Dictionary<int, Type>
         {
             {1, typeof(int)}, {2, typeof(Person)}, {3, typeof(string)}, {4, typeof(Address)}
         };
 
-        static void WriteNext(Stream stream, object obj)
+        private static void WriteNext(Stream stream, object obj)
         {
             Type type = obj.GetType();
             int field = typeLookup.Single(pair => pair.Value == type).Key;
@@ -71,14 +70,14 @@ namespace Examples
         }
     }
     [ProtoContract]
-    class Person
+    internal class Person
     {
         [ProtoMember(1)]
         public string Name { get; set; }
         public override string ToString() { return "Person: " + Name; }
     }
     [ProtoContract]
-    class Address
+    internal class Address
     {
         [ProtoMember(1)]
         public string Line1 { get; set; }
