@@ -306,7 +306,6 @@ namespace ProtoBuf
         /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer, ref State state)
             => writer.StartSubItem(ref state, instance, PrefixStyle.Base128);
-        
 
         private SubItemToken StartSubItem(ref State state, object instance, PrefixStyle style)
         {
@@ -321,7 +320,7 @@ namespace ProtoBuf
                     WireType = WireType.None;
                     return new SubItemToken((long)(-fieldNumber));
                 case WireType.Fixed32:
-                    switch(style)
+                    switch (style)
                     {
                         case PrefixStyle.Fixed32:
                         case PrefixStyle.Fixed32BigEndian:
@@ -928,7 +927,15 @@ namespace ProtoBuf
                 Stream source = extn.BeginQuery();
                 try
                 {
-                    writer.ImplCopyRawFromStream(ref state, source);
+                    if (ProtoReader.TryConsumeSegmentRespectingPosition(source, out var data, ProtoReader.TO_EOF))
+                    {
+                        writer.ImplWriteBytes(ref state, data.Array, data.Offset, data.Count);
+                        writer.Advance(data.Count);
+                    }
+                    else
+                    {
+                        writer.ImplCopyRawFromStream(ref state, source);
+                    }
                 }
                 finally { extn.EndQuery(source); }
             }

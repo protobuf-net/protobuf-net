@@ -1,12 +1,11 @@
 ﻿using Xunit;
 using ProtoBuf;
 using System.IO;
+#pragma warning disable xUnit1004
 
 namespace Examples.Issues
 {
-    
     public class Issue70 {
-
         [ProtoContract]
         public class Strange // test entity
         {
@@ -26,7 +25,7 @@ namespace Examples.Issues
                 Serializer.SerializeWithLengthPrefix(ms, original, PrefixStyle.Base128, 1);
                 ms.Position = 0;
                 Serializer.NonGeneric.TryDeserializeWithLengthPrefix(ms,
-                    PrefixStyle.Base128, i => typeof(Strange), out object obj);
+                    PrefixStyle.Base128, _ => typeof(Strange), out object obj);
                 var clone = (Strange)obj;
                 Assert.NotSame(original, clone);
                 Assert.NotNull(clone);
@@ -45,7 +44,7 @@ namespace Examples.Issues
                 ms.Position = 0;
                 // BOOM here; oh how embarrassing
                 Serializer.NonGeneric.TryDeserializeWithLengthPrefix(ms,
-                    PrefixStyle.Fixed32, i => typeof(Strange), out object obj);
+                    PrefixStyle.Fixed32, _ => typeof(Strange), out object obj);
                 var clone = (Strange)obj;
                 Assert.NotSame(original, clone);
                 Assert.NotNull(clone);
@@ -53,6 +52,5 @@ namespace Examples.Issues
                 Assert.Equal(original.Bar, clone.Bar); //, "Bar");
             }
         }
-    
     }
 }

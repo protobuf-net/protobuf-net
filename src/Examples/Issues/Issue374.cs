@@ -31,7 +31,7 @@ namespace Examples.Issues
         public void ReadLengthPrefixProducesCorrectLengthComparedToStreamPosition()
         {
             byte[] bytes = null;
-            int arraySize = 7000 * 100;
+            const int arraySize = 7000 * 100;
 
             using(MemoryStream stream = new MemoryStream(arraySize))
             {
@@ -41,10 +41,7 @@ namespace Examples.Issues
 
             using(MemoryStream stream = new MemoryStream(bytes))
             {
-                int fieldNumber = 0;
-                int bytesRead = 0;
-
-                ProtoReader.ReadLengthPrefix(stream, false, PrefixStyle.Base128, out fieldNumber, out bytesRead);
+                ProtoReader.ReadLengthPrefix(stream, false, PrefixStyle.Base128, out int fieldNumber, out int bytesRead);
 
                 //These should be the same. They don't appear to be with the fault raised in issue 374
                 Assert.Equal(stream.Position, bytesRead);

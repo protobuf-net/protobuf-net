@@ -41,7 +41,6 @@ namespace ProtoBuf
                             continue;
                         }
                     }
-                    
 
                     bool haveState = false;
                     for (int i = 0; i < args.Length; i++)

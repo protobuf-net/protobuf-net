@@ -31,7 +31,7 @@ namespace ProtoBuf
         /// </summary>
         public override bool Equals(object obj) => obj is SubItemToken tok && tok.value64 == value64;
         internal readonly long value64;
-        internal SubItemToken(int value) => value64 = value;
+
         internal SubItemToken(long value) => value64 = value;
     }
 }
