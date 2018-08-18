@@ -126,7 +126,7 @@ namespace ProtoBuf
                 default:
                     throw new ArgumentOutOfRangeException(nameof(style));
             }
-            SubItemToken token = writer.ImplStartSubItem(ref state, value, true);
+            SubItemToken token = writer.StartSubItem(ref state, value, style);
             if (key < 0)
             {
                 if (!writer.model.TrySerializeAuxiliaryType(writer, ref state, value.GetType(), DataFormat.Default, Serializer.ListItemTag, value, false, null))
@@ -138,7 +138,7 @@ namespace ProtoBuf
             {
                 writer.model.Serialize(writer, ref state, key, value);
             }
-            writer.ImplEndSubItem(ref state, token, style);
+            writer.ImplEndLengthPrefixedSubItem(ref state, token, style);
         }
 
         internal int GetTypeKey(ref Type type)
@@ -294,7 +294,7 @@ namespace ProtoBuf
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
         {
             State state = default;
-            return StartSubItem(instance, writer, ref state);
+            return writer.StartSubItem(ref state, instance, PrefixStyle.Base128);
         }
 
         /// <summary>
@@ -305,7 +305,43 @@ namespace ProtoBuf
         /// <param name="state">Writer state</param>
         /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer, ref State state)
-            => writer.ImplStartSubItem(ref state, instance, false);
+            => writer.StartSubItem(ref state, instance, PrefixStyle.Base128);
+        
+
+        private SubItemToken StartSubItem(ref State state, object instance, PrefixStyle style)
+        {
+            if (++depth > RecursionCheckDepth)
+            {
+                CheckRecursionStackAndPush(instance);
+            }
+            if (packedFieldNumber != 0) throw new InvalidOperationException("Cannot begin a sub-item while performing packed encoding");
+            switch (WireType)
+            {
+                case WireType.StartGroup:
+                    WireType = WireType.None;
+                    return new SubItemToken((long)(-fieldNumber));
+                case WireType.Fixed32:
+                    switch(style)
+                    {
+                        case PrefixStyle.Fixed32:
+                        case PrefixStyle.Fixed32BigEndian:
+                            break; // OK
+                        default:
+                            throw CreateException(this);
+                    }
+                    goto case WireType.String;
+                case WireType.String:
+#if DEBUG
+                    if (model != null && model.ForwardsOnly)
+                    {
+                        throw new ProtoException("Should not be buffering data: " + instance ?? "(null)");
+                    }
+#endif
+                    return ImplStartLengthPrefixedSubItem(ref state, instance, style);
+                default:
+                    throw CreateException(this);
+            }
+        }
 
         private MutableList recursionStack;
         private void CheckRecursionStackAndPush(object instance)
@@ -339,7 +375,7 @@ namespace ProtoBuf
         public static void EndSubItem(SubItemToken token, ProtoWriter writer)
         {
             State state = default;
-            EndSubItem(token, writer, ref state);
+            writer.EndSubItem(ref state, token, PrefixStyle.Base128);
         }
 
         /// <summary>
@@ -349,7 +385,27 @@ namespace ProtoBuf
         /// <param name="writer">The destination.</param>
         /// <param name="state">Writer state</param>
         public static void EndSubItem(SubItemToken token, ProtoWriter writer, ref State state)
-            => writer.ImplEndSubItem(ref state, token, PrefixStyle.Base128);
+            => writer.EndSubItem(ref state, token, PrefixStyle.Base128);
+
+        private void EndSubItem(ref State state, SubItemToken token, PrefixStyle style)
+        {
+            if (WireType != WireType.None) { throw CreateException(this); }
+            int value = (int)token.value64;
+            if (depth <= 0) throw CreateException(this);
+            if (depth-- > RecursionCheckDepth)
+            {
+                PopRecursionStack();
+            }
+            packedFieldNumber = 0; // ending the sub-item always wipes packed encoding
+            if (value < 0)
+            {   // group - very simple append
+                WriteHeaderCore(-value, WireType.EndGroup, this, ref state);
+                WireType = WireType.None;
+                return;
+            }
+
+            ImplEndLengthPrefixedSubItem(ref state, token, style);
+        }
 
         /// <summary>
         /// Creates a new writer against a stream
@@ -492,8 +548,8 @@ namespace ProtoBuf
         protected private abstract void ImplWriteFixed64(ref State state, ulong value);
         protected private abstract void ImplWriteBytes(ref State state, byte[] data, int offset, int length);
         protected private abstract void ImplCopyRawFromStream(ref State state, Stream source);
-        private protected abstract SubItemToken ImplStartSubItem(ref State state, object instance, bool allowFixed);
-        protected private abstract void ImplEndSubItem(ref State state, SubItemToken token, PrefixStyle style);
+        private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style);
+        protected private abstract void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style);
         protected private abstract bool ImplDemandFlushOnDispose { get; }
 
         /// <summary>

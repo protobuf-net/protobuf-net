@@ -117,12 +117,12 @@ namespace ProtoBuf
                 return state.WriteVarint64(value);
             }
 
-            private protected override void ImplEndSubItem(ref State state, SubItemToken token, PrefixStyle style)
+            private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
             {
                 throw new NotImplementedException();
             }
 
-            private protected override SubItemToken ImplStartSubItem(ref State state, object instance, bool allowFixed)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
             {
                 throw new NotImplementedException();
             }

@@ -32,11 +32,16 @@ namespace ProtoBuf
                     var args = method.GetParameters();
                     if (args == null || args.Length == 0) continue;
 
-                    if (method.Name == nameof(ProtoWriter.WriteBytes) && typeof(T) == typeof(ProtoWriter)
+                    if(typeof(T) == typeof(ProtoWriter))
+                    {
+                        if (method.Name == nameof(ProtoWriter.Create)) continue; // ignore all of these
+                        if (method.Name == nameof(ProtoWriter.WriteBytes)
                         && args.Length == 5)
-                    {   // special omissions
-                        continue;
+                        {   // special omissions
+                            continue;
+                        }
                     }
+                    
 
                     bool haveState = false;
                     for (int i = 0; i < args.Length; i++)

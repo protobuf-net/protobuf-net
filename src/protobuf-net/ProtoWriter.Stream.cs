@@ -231,63 +231,32 @@ namespace ProtoBuf
                     }
                 }
             }
-            private protected override SubItemToken ImplStartSubItem(ref State state, object instance, bool allowFixed)
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
             {
-                if (++depth > RecursionCheckDepth)
-                {
-                    CheckRecursionStackAndPush(instance);
-                }
-                if (packedFieldNumber != 0) throw new InvalidOperationException("Cannot begin a sub-item while performing packed encoding");
                 switch (WireType)
                 {
-                    case WireType.StartGroup:
-                        WireType = WireType.None;
-                        return new SubItemToken((long)(-fieldNumber));
                     case WireType.String:
-#if DEBUG
-                        if (model != null && model.ForwardsOnly)
-                        {
-                            throw new ProtoException("Should not be buffering data: " + instance ?? "(null)");
-                        }
-#endif
                         WireType = WireType.None;
                         DemandSpace(32, this, ref state); // make some space in anticipation...
                         flushLock++;
                         Advance(1);
                         return new SubItemToken((long)(ioIndex++)); // leave 1 space (optimistic) for length
                     case WireType.Fixed32:
-                        {
-                            if (!allowFixed) throw CreateException(this);
-                            DemandSpace(32, this, ref state); // make some space in anticipation...
-                            flushLock++;
-                            SubItemToken token = new SubItemToken((long)ioIndex);
-                            IncrementedAndReset(4, this); // leave 4 space (rigid) for length
-                            return token;
-                        }
+                        DemandSpace(32, this, ref state); // make some space in anticipation...
+                        flushLock++;
+                        SubItemToken token = new SubItemToken((long)ioIndex);
+                        IncrementedAndReset(4, this); // leave 4 space (rigid) for length
+                        return token;
                     default:
                         throw CreateException(this);
                 }
             }
 
-            private protected override void ImplEndSubItem(ref State state, SubItemToken token, PrefixStyle style)
+            private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
             {
-                if (WireType != WireType.None) { throw CreateException(this); }
-                int value = (int)token.value64;
-                if (depth <= 0) throw CreateException(this);
-                if (depth-- > RecursionCheckDepth)
-                {
-                    PopRecursionStack();
-                }
-                packedFieldNumber = 0; // ending the sub-item always wipes packed encoding
-                if (value < 0)
-                {   // group - very simple append
-                    WriteHeaderCore(-value, WireType.EndGroup, this, ref state);
-                    WireType = WireType.None;
-                    return;
-                }
-
                 // so we're backfilling the length into an existing sequence
                 int len;
+                int value = (int)token.value64;
                 switch (style)
                 {
                     case PrefixStyle.Fixed32:
