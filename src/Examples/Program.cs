@@ -127,15 +127,8 @@ namespace Examples
         public static void ExpectFailure<TException>(Action action, string message = null)
             where TException : Exception
         {
-            try
-            {
-                action();
-                Assert.Equal("throw", "ok");
-            }
-            catch (TException ex)
-            {
-                if (message != null) Assert.Equal(DeVersion(message), DeVersion(ex.Message));
-            }
+            var ex = Assert.Throws<TException>(action);
+            if (message != null) Assert.Equal(DeVersion(message), DeVersion(ex.Message));
         }
         private static string DeVersion(string input) => Regex.Replace(input, "Version=([0-9.]+)", "Version=*");
         public static void ExpectFailure<TException>(Action action, Func<TException, bool> check)

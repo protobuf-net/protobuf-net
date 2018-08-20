@@ -138,7 +138,7 @@ namespace ProtoBuf
             {
                 writer.model.Serialize(writer, ref state, key, value);
             }
-            writer.ImplEndLengthPrefixedSubItem(ref state, token, style);
+            writer.EndSubItem(ref state, token, style);
         }
 
         internal int GetTypeKey(ref Type type)

@@ -1271,7 +1271,7 @@ namespace ProtoBuf.Meta
 
             il = Override(type, nameof(TypeModel.DeserializeCore));
             ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(object), "Deserialize " + type.Name);
-            
+
             // arg0 = this, arg1 = source, arg2 = state, arg3 = key, arg4 = obj
 
             for (int i = 0; i < jumpTable.Length; i++)

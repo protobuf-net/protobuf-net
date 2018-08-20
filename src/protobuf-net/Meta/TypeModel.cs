@@ -554,6 +554,7 @@ namespace ProtoBuf.Meta
                     default:
                         throw new ArgumentOutOfRangeException(nameof(style));
                 }
+                writer.Flush(ref state);
                 writer.Close(ref state);
             }
         }
@@ -1357,6 +1358,9 @@ namespace ProtoBuf.Meta
 
             public Type Type { get; }
         }
+
+        protected internal virtual IProtoSerializer<T> GetSerializer<T>()
+            => this as IProtoSerializer<T>;
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.

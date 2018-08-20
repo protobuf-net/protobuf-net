@@ -15,7 +15,7 @@ namespace ProtoBuf.Meta
     /// <summary>
     /// Represents a type at runtime for use with protobuf, allowing the field mappings (etc) to be defined
     /// </summary>
-    public class MetaType : ISerializerProxy
+    public sealed class MetaType : ISerializerProxy
     {
         internal sealed class Comparer : IComparer, IComparer<MetaType>
         {
@@ -332,7 +332,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Throws an exception if the type has been made immutable
         /// </summary>
-        protected internal void ThrowIfFrozen()
+        internal void ThrowIfFrozen()
         {
             if ((flags & OPTIONS_Frozen) != 0) throw new InvalidOperationException("The type cannot be changed once a serializer has been generated for " + Type.FullName);
         }
@@ -1650,7 +1650,10 @@ namespace ProtoBuf.Meta
         /// <remarks>An in-place compile can access non-public types / members</remarks>
         public void CompileInPlace()
         {
-            serializer = CompiledSerializer.Wrap(Serializer, model);
+            if (!(serializer is CompiledSerializer))
+            {
+                serializer = CompiledSerializer.Wrap(Serializer, model);
+            }
         }
 #endif
 
