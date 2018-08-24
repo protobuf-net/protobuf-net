@@ -368,6 +368,8 @@ namespace ProtoBuf.Meta
         internal bool ResolveMapTypes(out Type dictionaryType, out Type keyType, out Type valueType)
         {
             dictionaryType = keyType = valueType = null;
+
+
             try
             {
 #if COREFX || PROFILE259
@@ -392,44 +394,55 @@ namespace ProtoBuf.Meta
                         valueType = typeArgs[1];
                         dictionaryType = memberType;
                     }
-                    return false;
                 }
-#if PROFILE259
-				foreach (var iType in memberType.GetTypeInfo().ImplementedInterfaces)
-#else
-                foreach (var iType in memberType.GetInterfaces())
-#endif
+
+                // If we haven't found a dictionary type yet...
+                if (dictionaryType == null)
                 {
-#if COREFX || PROFILE259
-					info = iType.GetTypeInfo();
-#else
-                    info = iType;
-#endif
-                    if (info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
-                    {
-                        if (dictionaryType != null) throw new InvalidOperationException("Multiple dictionary interfaces implemented by type: " + memberType.FullName);
 #if PROFILE259
-						var typeArgs = iType.GetGenericTypeDefinition().GenericTypeArguments;
+				    foreach (var iType in memberType.GetTypeInfo().ImplementedInterfaces)
 #else
-                        var typeArgs = iType.GetGenericArguments();
+                    foreach (var iType in memberType.GetInterfaces())
 #endif
-                        if (IsValidMapKeyType(typeArgs[0]))
+                    {
+#if COREFX || PROFILE259
+				        info = iType.GetTypeInfo();
+#else
+                        info = iType;
+#endif
+                        if (info.IsGenericType && info.GetGenericTypeDefinition() == typeof(IDictionary<,>))
                         {
-                            keyType = typeArgs[0];
-                            valueType = typeArgs[1];
-                            dictionaryType = memberType;
+                            if (dictionaryType != null)
+                                throw new InvalidOperationException(
+                                    "Multiple dictionary interfaces implemented by type: " + memberType.FullName);
+#if PROFILE259
+						    var typeArgs = iType.GetGenericTypeDefinition().GenericTypeArguments;
+#else
+                            var typeArgs = iType.GetGenericArguments();
+#endif
+                            if (IsValidMapKeyType(typeArgs[0]))
+                            {
+                                keyType = typeArgs[0];
+                                valueType = typeArgs[1];
+                                dictionaryType = memberType;
+                            }
+
+                            // Found interface we're interested in - Don't need to look any further
+                            break;
                         }
                     }
                 }
+
+                // Exhausted all options - if still no dictionary type, not a map.
                 if (dictionaryType == null) return false;
 
                 // (note we checked the key type already)
-                // not a map if value is repeated
-                Type itemType = null, defaultType = null;
+                Type itemType = null;
+                Type defaultType = null;
                 model.ResolveListTypes(valueType, ref itemType, ref defaultType);
-                if (itemType != null) return false;
-
-                return dictionaryType != null;
+                
+                // not a map if value is repeated
+                return itemType == null;
             }
             catch
             {
@@ -574,7 +587,7 @@ namespace ProtoBuf.Meta
                     {
                         throw new InvalidOperationException();
                     }
-                    
+
                     if (getSpecified != null || setSpecified != null)
                     {
                         ser = new MemberSpecifiedDecorator(getSpecified, setSpecified, ser);
