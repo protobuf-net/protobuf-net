@@ -15,11 +15,10 @@ namespace ProtoBuf.Serializers
         private readonly int fieldNumber;
         private readonly WireType wireType;
 
+
         internal MapDecorator(TypeModel model, Type concreteType, IProtoSerializer keyTail, IProtoSerializer valueTail,
             int fieldNumber, WireType wireType, WireType keyWireType, WireType valueWireType, bool overwriteList)
-            : base(DefaultValue == null
-                  ? (IProtoSerializer)new TagDecorator(2, valueWireType, false, valueTail)
-                  : (IProtoSerializer)new DefaultValueDecorator(model, DefaultValue, new TagDecorator(2, valueWireType, false, valueTail)))
+            : base(GetValueTail(model, valueTail, valueWireType))
         {
             this.wireType = wireType;
             this.keyTail = new DefaultValueDecorator(model, DefaultKey, new TagDecorator(1, keyWireType, false, keyTail));
@@ -32,6 +31,20 @@ namespace ProtoBuf.Serializers
 
             AppendToCollection = !overwriteList;
         }
+
+        private static readonly TKey DefaultKey = (typeof(TKey) == typeof(string)) ? (TKey)(object)"" : default(TKey);
+        private static readonly TValue DefaultValue = (typeof(TValue) == typeof(string)) ? (TValue)(object)"" : default(TValue);
+
+        private static IProtoSerializer GetValueTail(TypeModel typeModel, IProtoSerializer valueTail, WireType valueWireType)
+        {
+            var tagSerializer = new TagDecorator(2, valueWireType, false, valueTail);
+
+            if (Helpers.GetTypeCode(typeof(TValue)) == ProtoTypeCode.Unknown)
+                return tagSerializer;
+
+            return new DefaultValueDecorator(typeModel, DefaultValue, tagSerializer);
+        }
+
 
         private static readonly MethodInfo indexerSet = GetIndexerSetter();
 
@@ -63,8 +76,6 @@ namespace ProtoBuf.Serializers
             throw new InvalidOperationException("Unable to resolve indexer for map");
         }
 
-        private static readonly TKey DefaultKey = (typeof(TKey) == typeof(string)) ? (TKey)(object)"" : default(TKey);
-        private static readonly TValue DefaultValue = (typeof(TValue) == typeof(string)) ? (TValue)(object)"" : default(TValue);
         public override Type ExpectedType => typeof(TDictionary);
 
         public override bool ReturnsValue => true;
