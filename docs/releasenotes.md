@@ -24,9 +24,9 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 - new `CreateForAssembly(...)` API (various overloads) for working with precompiled (at runtime) type models (faster than `RuntimeTypeModel`, but less flexible)
 - significant amounts of code tidying; many yaks were shawn
 
-## v2.3.18
+## v2.4.0
 
-- fix #442 - broken assembly version
+- fix #442 - switched to 2.4.0 due to new versioning implementation breaking the assembly version; oops
 
 ## v2.3.17
 
