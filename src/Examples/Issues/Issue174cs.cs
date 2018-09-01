@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Xunit;
-using ProtoBuf;
+﻿using ProtoBuf;
+using System;
 using System.IO;
+using Xunit;
 
 namespace Examples.Issues
 {
-    
     public class Issue174cs
     {
         [Fact]
