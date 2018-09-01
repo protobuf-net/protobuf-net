@@ -1359,6 +1359,9 @@ namespace ProtoBuf.Meta
             public Type Type { get; }
         }
 
+        /// <summary>
+        /// Get a typed serializer for <typeparamref name="T"/>
+        /// </summary>
         protected internal virtual IProtoSerializer<T> GetSerializer<T>()
             => this as IProtoSerializer<T>;
 

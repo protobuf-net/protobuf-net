@@ -4,36 +4,34 @@ using ProtoBuf;
 
 namespace Examples
 {
-    
     public class DataMemberOffset
     {
         [Fact]
         public void TestOffset()
-        { 
+        {
             DMO_First first = new DMO_First {Foo = 12};
             DMO_Second second = Serializer.ChangeType<DMO_First, DMO_Second>(first);
 
             Assert.Equal(first.Foo, second.Bar);
         }
-
     }
 
     [DataContract]
-    class DMO_First
+    internal class DMO_First
     {
         [DataMember(Order = 5)]
         public int Foo { get; set; }
     }
     [DataContract]
     [ProtoContract(DataMemberOffset = 2)]
-    class DMO_Second
+    internal class DMO_Second
     {
         [DataMember(Order = 3)]
         public int Bar { get; set; }
     }
 
     [DataContract, ProtoContract]
-    class TypeWithProtosAndDataContract_UseAny
+    internal class TypeWithProtosAndDataContract_UseAny
     {
         [ProtoMember(1)]
         public int Foo { get; set; }
@@ -41,14 +39,14 @@ namespace Examples
         public int Bar { get; set; }
     }
     [DataContract, ProtoContract(UseProtoMembersOnly=true)]
-    class TypeWithProtosAndDataContract_UseProtoOnly
+    internal class TypeWithProtosAndDataContract_UseProtoOnly
     {
         [ProtoMember(1)]
         public int Foo { get; set; }
         [DataMember(Order = 2)]
         public int Bar { get; set; }
     }
-    
+
     public class TestWeCanTurnOffNonProtoMarkers
     {
         [Fact]

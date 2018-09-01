@@ -14,17 +14,21 @@ namespace ProtoBuf
         /// <summary>
         /// Create a new ProtoWriter that tagets a buffer writer
         /// </summary>
-        public static ProtoWriter Create(out ProtoWriter.State state, IBufferWriter<byte> writer, TypeModel model, SerializationContext context = null)
+        public static ProtoWriter CreateForBufferWriter<T>(out State state, T writer, TypeModel model, SerializationContext context = null)
+            where T : IBufferWriter<byte>
         {
+#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
             if (writer == null) throw new ArgumentNullException(nameof(writer));
+#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
             state = default;
-            return new BufferWriterProtoWriter(writer, model, context);
+            return new BufferWriterProtoWriter<T>(writer, model, context);
         }
 
-        private sealed class BufferWriterProtoWriter : ProtoWriter
+        private sealed class BufferWriterProtoWriter<T> : ProtoWriter
+            where T : IBufferWriter<byte>
         {
-            private readonly IBufferWriter<byte> _writer;
-            internal BufferWriterProtoWriter(IBufferWriter<byte> writer, TypeModel model, SerializationContext context)
+            private T _writer; // not readonly, because T could be a struct - might need in-place state changes
+            internal BufferWriterProtoWriter(T writer, TypeModel model, SerializationContext context)
                 : base(model, context)
                 => _writer = writer;
 
