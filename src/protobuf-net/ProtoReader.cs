@@ -463,28 +463,6 @@ namespace ProtoBuf
             throw EoF(this);
         }
 
-        private Dictionary<string, string> stringInterner;
-        private string Intern(string value)
-        {
-            if (value == null) return null;
-            if (value.Length == 0) return "";
-            if (stringInterner == null)
-            {
-                stringInterner = new Dictionary<string, string>
-                {
-                    { value, value }
-                };
-            }
-            else if (stringInterner.TryGetValue(value, out string found))
-            {
-                value = found;
-            }
-            else
-            {
-                stringInterner.Add(value, value);
-            }
-            return value;
-        }
 
 #if COREFX
         static readonly Encoding encoding = Encoding.UTF8;
@@ -501,10 +479,8 @@ namespace ProtoBuf
                 int bytes = (int)ReadUInt32Variant(false);
                 if (bytes == 0) return "";
                 if (available < bytes) Ensure(bytes, true);
+                string s = StringSerializer.Instance.ReadString(ioBuffer, ioIndex, bytes);
 
-                string s = encoding.GetString(ioBuffer, ioIndex, bytes);
-
-                if (internStrings) { s = Intern(s); }
                 available -= bytes;
                 position64 += bytes;
                 ioIndex += bytes;

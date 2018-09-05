@@ -587,7 +587,8 @@ namespace ProtoBuf
             writer.ioBuffer[writer.ioIndex - 1] &= 0x7F;
             writer.position64 += count;
         }
-
+        //Provide it someho
+        IStringSerializer stringSerializer;
         /// <summary>
         /// Writes a string to the stream; supported wire-types: String
         /// </summary>
@@ -603,10 +604,12 @@ namespace ProtoBuf
                 writer.wireType = WireType.None;
                 return; // just a header
             }
-            int predicted = encoding.GetByteCount(value);
+            int predicted = StringSerializer.Instance.GetLength(value);
             WriteUInt32Variant((uint)predicted, writer);
             DemandSpace(predicted, writer);
-            int actual = encoding.GetBytes(value, 0, value.Length, writer.ioBuffer, writer.ioIndex);
+            int actual = StringSerializer.Instance.WriteString(value, 0, value.Length, writer.ioBuffer, writer.ioIndex);
+
+
             Helpers.DebugAssert(predicted == actual);
             IncrementedAndReset(actual, writer);
         }
