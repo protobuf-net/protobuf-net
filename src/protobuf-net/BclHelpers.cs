@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Runtime.InteropServices;
+
 namespace ProtoBuf
 {
     internal enum TimeSpanScale
@@ -432,12 +434,12 @@ namespace ProtoBuf
         /// </summary>
         public static void WriteDecimal(decimal value, ProtoWriter writer)
         {
-            int[] bits = decimal.GetBits(value);
-            ulong a = ((ulong)bits[1]) << 32, b = ((ulong)bits[0]) & 0xFFFFFFFFL;
+            var dec = new DecimalAccessor(value);
+            ulong a = ((ulong)dec.Mid) << 32, b = ((ulong)dec.Lo) & 0xFFFFFFFFL;
             ulong low = a | b;
-            uint high = (uint)bits[2];
-            uint signScale = (uint)(((bits[3] >> 15) & 0x01FE) | ((bits[3] >> 31) & 0x0001));
-
+            uint high = (uint)dec.Hi;
+            uint signScale = (uint)(((dec.Flags >> 15) & 0x01FE) | ((dec.Flags >> 31) & 0x0001));
+            
             SubItemToken token = ProtoWriter.StartSubItem(null, writer);
             if (low != 0)
             {
@@ -455,6 +457,35 @@ namespace ProtoBuf
                 ProtoWriter.WriteUInt32(signScale, writer);
             }
             ProtoWriter.EndSubItem(token, writer);
+        }
+
+        /// <summary>
+        /// Provides access to the inner fields of a decimal.
+        /// Similar to decimal.GetBits(), but faster and avoids the int[] allocation
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private struct DecimalAccessor
+        {
+            [FieldOffset(0)]
+            public int Flags;
+            [FieldOffset(4)]
+            public int Hi;
+            [FieldOffset(8)]
+            public int Lo;
+            [FieldOffset(12)]
+            public int Mid;
+
+            [FieldOffset(0)]
+            public decimal Decimal;
+
+            public DecimalAccessor(decimal value)
+            {
+                Flags = 0;
+                Hi = 0;
+                Lo = 0;
+                Mid = 0;
+                Decimal = value;
+            }
         }
 
         const int FieldGuidLow = 1, FieldGuidHigh = 2;
