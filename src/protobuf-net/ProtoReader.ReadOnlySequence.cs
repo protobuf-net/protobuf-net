@@ -252,7 +252,7 @@ namespace ProtoBuf
                 // but this works for today
                 using (var mem = MemoryPool<byte>.Shared.Rent(bytes))
                 {
-                    var span = mem.Memory.Span;
+                    var span = mem.Memory.Span.Slice(0, bytes);
                     ImplReadBytes(ref state, span);
                     return ToString(span, 0, bytes);
                 }
