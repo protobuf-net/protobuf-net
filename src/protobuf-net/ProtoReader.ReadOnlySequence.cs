@@ -253,29 +253,31 @@ namespace ProtoBuf
                 using (var mem = MemoryPool<byte>.Shared.Rent(bytes))
                 {
                     var span = mem.Memory.Span.Slice(0, bytes);
-                    ImplReadBytes(ref state, span);
+                    ImplReadBytes(ref state, span, bytes);
                     return ToString(span, 0, bytes);
                 }
             }
 
-            private void ImplReadBytes(ref State state, Span<byte> target)
+            private void ImplReadBytes(ref State state, Span<byte> target, int bytesToRead)
             {
-                if (state.RemainingInCurrent >= target.Length) Consume(ref state, target.Length).CopyTo(target);
+                if (state.RemainingInCurrent >= bytesToRead) Consume(ref state, bytesToRead).CopyTo(target);
                 else Looped(ref state, target);
 
                 void Looped(ref State st, Span<byte> ttarget)
                 {
-                    while (!ttarget.IsEmpty)
+                    var bytesRead = 0;
+                    while (bytesRead < bytesToRead)
                     {
-                        var take = Math.Min(GetSomeData(ref st), ttarget.Length);
+                        var take = Math.Min(GetSomeData(ref st), bytesToRead - bytesRead);
                         Consume(ref st, take).CopyTo(ttarget);
                         ttarget = ttarget.Slice(take);
+                        bytesRead += take;
                     }
                 }
             }
 
             private protected override void ImplReadBytes(ref State state, ArraySegment<byte> target)
-                => ImplReadBytes(ref state, new Span<byte>(target.Array, target.Offset, target.Count));
+                => ImplReadBytes(ref state, new Span<byte>(target.Array, target.Offset, target.Count), target.Count);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private ReadOnlySpan<byte> Consume(ref State state, int bytes)
