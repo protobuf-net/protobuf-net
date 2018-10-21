@@ -864,12 +864,7 @@ namespace ProtoBuf
         /// <returns></returns>
         public bool ReadBoolean()
         {
-            switch (ReadUInt32())
-            {
-                case 0: return false;
-                case 1: return true;
-                default: throw CreateException("Unexpected boolean value");
-            }
+            return ReadUInt32() != 0;
         }
 
         private static readonly byte[] EmptyBlob = new byte[0];
