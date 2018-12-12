@@ -167,7 +167,7 @@ namespace ProtoBuf.Reflection
         {
             var name = definition?.Options?.GetOptions()?.Name;
             if (!string.IsNullOrWhiteSpace(name)) return name;
-            return AutoCapitalize(definition.Name);
+            return GetName(definition.Name);
         }
         /// <summary>
         /// Suggest a normalized identifier
