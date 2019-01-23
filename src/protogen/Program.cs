@@ -213,6 +213,8 @@ namespace protogen
                         {
                             Serializer.Serialize(fds, set);
                         }
+                        
+                        return 0;
                     }
                     
                     
