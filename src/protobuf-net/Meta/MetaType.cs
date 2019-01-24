@@ -140,7 +140,7 @@ namespace ProtoBuf.Meta
         private CallbackSet callbacks;
 
         /// <summary>
-        /// Indicates whether the current type has defined callbacks 
+        /// Indicates whether the current type has defined callbacks
         /// </summary>
         public bool HasCallbacks => callbacks != null && callbacks.NonTrivial;
 
@@ -996,7 +996,7 @@ namespace ProtoBuf.Meta
                 done = true;
             }
 
-            if (!ignore && !done) // always consider ProtoMember 
+            if (!ignore && !done) // always consider ProtoMember
             {
                 attrib = GetAttribute(attribs, "ProtoBuf.ProtoMemberAttribute");
                 GetIgnore(ref ignore, attrib, attribs, "ProtoBuf.ProtoIgnoreAttribute");
@@ -1254,7 +1254,7 @@ namespace ProtoBuf.Meta
 
         /// <summary>
         /// Adds a member (by name) to the MetaType
-        /// </summary>        
+        /// </summary>
         public MetaType Add(int fieldNumber, string memberName)
         {
             AddField(fieldNumber, memberName, null, null, null);
@@ -1298,7 +1298,7 @@ namespace ProtoBuf.Meta
         private Type constructType;
         /// <summary>
         /// Adds a member (by name) to the MetaType
-        /// </summary>     
+        /// </summary>
         public MetaType Add(string memberName)
         {
             Add(GetNextFieldNumber(), memberName);
@@ -1373,7 +1373,7 @@ namespace ProtoBuf.Meta
 
         /// <summary>
         /// Adds a set of members (by name) to the MetaType
-        /// </summary>     
+        /// </summary>
         public MetaType Add(params string[] memberNames)
         {
             if (memberNames == null) throw new ArgumentNullException("memberNames");
@@ -1387,7 +1387,7 @@ namespace ProtoBuf.Meta
 
         /// <summary>
         /// Adds a member (by name) to the MetaType
-        /// </summary>        
+        /// </summary>
         public MetaType Add(int fieldNumber, string memberName, object defaultValue)
         {
             AddField(fieldNumber, memberName, null, null, defaultValue);
@@ -1459,6 +1459,16 @@ namespace ProtoBuf.Meta
             }
 #endif
             ResolveListTypes(model, miType, ref itemType, ref defaultType);
+
+            if (itemType != null)
+            {
+                var idx = model.FindOrAddAuto(miType, false, true, false);
+                if (idx >= 0 && model[miType].IgnoreListHandling)
+                {
+                    itemType = null;
+                    defaultType = null;
+                }
+            }
 
             MemberInfo backingField = null;
             if (pi?.CanWrite == false)
