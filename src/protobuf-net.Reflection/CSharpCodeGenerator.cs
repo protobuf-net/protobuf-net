@@ -718,7 +718,7 @@ namespace ProtoBuf.Reflection
             ctx.WriteLine($"{GetAccess(GetAccess(service))} interface I{Escape(name)}").WriteLine("{").Indent();
         }
         /// <summary>
-        /// Ends an service block
+        /// Ends a service block
         /// </summary>
         protected override void WriteServiceFooter(GeneratorContext ctx, ServiceDescriptorProto service, ref object state)
         {
@@ -729,12 +729,38 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteServiceMethod(GeneratorContext ctx, MethodDescriptorProto method, ref object state)
         {
-            var outputType = method.OutputType;
-            var inputType = method.InputType;
+            var outputType = Escape(method.OutputType);
+            var inputType = Escape(method.InputType);
 
-            // TODO: What does this signify?
-            if (outputType[0] == '.') outputType = outputType.Substring(1);
-            if (inputType[0] == '.') inputType = inputType.Substring(1);
+            var target = ctx.TryFind<DescriptorProto>(method.OutputType);
+            if (target != null)
+            {
+                var declaringType = target.Parent;
+
+                if (declaringType is IType type)
+                {
+                    var name = FindNameFromCommonAncestor(type, target, ctx.NameNormalizer);
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        outputType = name;
+                    }
+                }
+            }
+
+            target = ctx.TryFind<DescriptorProto>(method.InputType);
+            if (target != null)
+            {
+                var declaringType = target.Parent;
+
+                if (declaringType is IType type)
+                {
+                    var name = FindNameFromCommonAncestor(type, target, ctx.NameNormalizer);
+                    if (!string.IsNullOrWhiteSpace(name))
+                    {
+                        inputType = name;
+                    }
+                }
+            }
 
             ctx.WriteLine($"{Escape(outputType)} {Escape(method.Name)}({Escape(inputType)} request);");
         }
