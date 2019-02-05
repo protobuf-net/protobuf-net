@@ -1,0 +1,9 @@
+﻿syntax = "proto3";
+
+package org.example.package2;
+
+option csharp_namespace = "Sample.Package2";
+
+message OtherProtoMessage {
+    string my_id = 1;
+}

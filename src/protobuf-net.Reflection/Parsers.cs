@@ -864,38 +864,70 @@ namespace Google.Protobuf.Reflection
             field = null;
             return false;
         }
+
+        bool TryResolveFromFile(FileDescriptorProto file, string tn, out IType tp, bool taap)
+        {
+            tp = null;
+            if (file == null || string.IsNullOrEmpty(tn)) return false;
+
+            if (tn[0] == '.')
+            {
+                // fully qualified
+                return file.TryResolveType(tn, file, out tp, checkOwnPackage: false, allowImports: false, treatAllAsPublic: taap);
+            }
+            foreach (var prefixPart in file.GetDescendingPackagePrefixes())
+            {
+                if (file.TryResolveType(prefixPart + tn, file, out tp, checkOwnPackage: false, allowImports: false, treatAllAsPublic: taap))
+                    return true;
+            }
+            tp = null;
+            return false;
+        }
+
+        private string[] GetDescendingPackagePrefixes()
+        // if the package is Foo.Bar.Blap, then this gives ".Foo.Bar.Blap.", ".Foo.Bar.", ".Foo.", "."
+            => _packagePrefixes ?? (_packagePrefixes = CalculateDescendingPackagePrefixes(Package));
+
+        private string[] _packagePrefixes;
+        private static readonly string[] s_defaultPackagePrefixes = new[] { "." };
+        private static readonly char[] s_packageDelimiters = new[] { '.' };
+
+        static string[] CalculateDescendingPackagePrefixes(string package)
+        {
+            if (string.IsNullOrWhiteSpace(package)) return s_defaultPackagePrefixes;
+
+            var pieces = package.Split(s_packageDelimiters);
+            var result = new string[pieces.Length + 1];
+            int target = pieces.Length;
+            string s = result[target--] = ".";
+            for (int i = 0; i < pieces.Length;i++)
+            {
+                s = result[target--] = s + pieces[i] + ".";
+            }
+            return result;
+        }
+
         internal bool TryResolveType(string typeName, IType parent, out IType type, bool allowImports, bool checkOwnPackage = true, bool treatAllAsPublic = false)
         {
-            bool TryResolveFromFile(FileDescriptorProto file, string tn, bool ai, out IType tp, bool withPackageName, bool taap)
+            var originalTypeName = typeName;
+            bool checkLocal = true;
+            if (typeName.StartsWith("."))
             {
-                tp = null;
-                if (file == null) return false;
-
-                if (withPackageName)
-                {
-                    var pkg = file.Package;
-
-                    if(string.IsNullOrWhiteSpace(pkg))
-                    {
-                        // no package; anything could be fine
-                    }
-                    else
-                    {
-                        if (!tn.StartsWith(pkg + ".")) return false; // wrong file
-
-                        tn = tn.Substring(pkg.Length + 1); // and fully qualified (non-qualified is a second pass)
-                    }
+                if (string.IsNullOrWhiteSpace(Package))
+                { // could be anything...
+                    typeName = typeName.Substring(1); // remove the root
                 }
-
-                return file.TryResolveType(tn, file, out tp, ai, false, taap);
-            }
-
-            bool isRooted = typeName.StartsWith(".");
-            if (isRooted)
-            {
+                else if(typeName.StartsWith("." + Package + "."))
+                { // looks like a match
+                    typeName = typeName.Substring(Package.Length + 2);
+                }
+                else
+                {
+                    checkLocal = false; // not us
+                }
                 // rooted
-                typeName = typeName.Substring(1); // remove the root
             }
+            if (!checkLocal) { } // not this package
             else if (TrySplit(typeName, out var left, out var right))
             {
                 while (parent != null)
@@ -920,31 +952,15 @@ namespace Google.Protobuf.Reflection
                 }
             }
 
-            if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type, true, treatAllAsPublic)) return true;
-            if (checkOwnPackage && TryResolveFromFile(this, typeName, false, out type, false, treatAllAsPublic)) return true;
+            if (checkOwnPackage && TryResolveFromFile(this, originalTypeName, out type, treatAllAsPublic)) return true;
 
             // look at imports
-            // check for the name including the package prefix
             foreach (var import in _imports)
             {
                 if (allowImports || import.IsPublic || treatAllAsPublic)
                 {
                     var file = Parent?.GetFile(this, import.Path);
-                    if (TryResolveFromFile(file, typeName, false, out type, true, treatAllAsPublic))
-                    {
-                        import.Used = true;
-                        return true;
-                    }
-                }
-            }
-
-            // now look without package prefix
-            foreach (var import in _imports)
-            {
-                if (allowImports || import.IsPublic || treatAllAsPublic)
-                {
-                    var file = Parent?.GetFile(this, import.Path);
-                    if (TryResolveFromFile(file, typeName, false, out type, false, treatAllAsPublic))
+                    if (TryResolveFromFile(file, originalTypeName, out type, treatAllAsPublic))
                     {
                         import.Used = true;
                         return true;
