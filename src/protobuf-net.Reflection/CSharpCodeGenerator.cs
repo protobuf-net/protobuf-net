@@ -710,6 +710,36 @@ namespace ProtoBuf.Reflection
         }
 
         /// <summary>
+        /// Starts a service block
+        /// </summary>
+        protected override void WriteServiceHeader(GeneratorContext ctx, ServiceDescriptorProto service, ref object state)
+        {
+            var name = service.Name;
+            ctx.WriteLine($"{GetAccess(GetAccess(service))} interface I{Escape(name)}").WriteLine("{").Indent();
+        }
+        /// <summary>
+        /// Ends an service block
+        /// </summary>
+        protected override void WriteServiceFooter(GeneratorContext ctx, ServiceDescriptorProto service, ref object state)
+        {
+            ctx.Outdent().WriteLine("}").WriteLine();
+        }
+        /// <summary>
+        /// Write a service method
+        /// </summary>
+        protected override void WriteServiceMethod(GeneratorContext ctx, MethodDescriptorProto method, ref object state)
+        {
+            var outputType = method.OutputType;
+            var inputType = method.InputType;
+
+            // TODO: What does this signify?
+            if (outputType[0] == '.') outputType = outputType.Substring(1);
+            if (inputType[0] == '.') inputType = inputType.Substring(1);
+
+            ctx.WriteLine($"{Escape(outputType)} {Escape(method.Name)}({Escape(inputType)} request);");
+        }
+
+        /// <summary>
         /// Emit the start of an enum declaration for 'oneof' groups, including the 0/None element
         /// </summary>
         protected override void WriteOneOfEnumHeader(GeneratorContext ctx, OneofDescriptorProto oneof, ref object state)
