@@ -729,38 +729,27 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected override void WriteServiceMethod(GeneratorContext ctx, MethodDescriptorProto method, ref object state)
         {
-            var outputType = Escape(method.OutputType);
-            var inputType = Escape(method.InputType);
-
-            var target = ctx.TryFind<DescriptorProto>(method.OutputType);
-            if (target != null)
+            string MakeRelativeName(string typeName)
             {
-                var declaringType = target.Parent;
-
-                if (declaringType is IType type)
+                var target = ctx.TryFind<DescriptorProto>(typeName);
+                if (target != null)
                 {
-                    var name = FindNameFromCommonAncestor(type, target, ctx.NameNormalizer);
-                    if (!string.IsNullOrWhiteSpace(name))
+                    var declaringType = target.Parent;
+
+                    if (declaringType is IType type)
                     {
-                        outputType = name;
+                        var name = FindNameFromCommonAncestor(type, target, ctx.NameNormalizer);
+                        if (!string.IsNullOrWhiteSpace(name))
+                        {
+                            return name;
+                        }
                     }
                 }
+                return Escape(typeName);
             }
 
-            target = ctx.TryFind<DescriptorProto>(method.InputType);
-            if (target != null)
-            {
-                var declaringType = target.Parent;
-
-                if (declaringType is IType type)
-                {
-                    var name = FindNameFromCommonAncestor(type, target, ctx.NameNormalizer);
-                    if (!string.IsNullOrWhiteSpace(name))
-                    {
-                        inputType = name;
-                    }
-                }
-            }
+            var outputType = MakeRelativeName(method.OutputType);
+            var inputType = MakeRelativeName(method.InputType);
 
             ctx.WriteLine($"{Escape(outputType)} {Escape(method.Name)}({Escape(inputType)} request);");
         }
