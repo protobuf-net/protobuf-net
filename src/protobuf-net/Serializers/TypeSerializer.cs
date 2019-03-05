@@ -680,10 +680,10 @@ namespace ProtoBuf.Serializers
                     ctx.BranchIfTrue(allDone, false); // not null, but of the correct type
 
                     // otherwise, need to convert it
-                    ctx.LoadReaderWriter();
-                    ctx.LoadValue(loc);
+                    //ctx.LoadReaderWriter();
+                    //ctx.LoadValue(loc);
                     ((IProtoTypeSerializer)serializer).EmitCreateInstance(ctx);
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("Merge"));
+                    //ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("Merge"));
                     ctx.Cast(expected);
                     ctx.StoreValue(loc); // Merge always returns a value
 
