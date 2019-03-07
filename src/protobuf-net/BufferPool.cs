@@ -14,7 +14,7 @@ namespace ProtoBuf
         }
 
         private BufferPool() { }
-        private const int POOL_SIZE = 20;
+        internal const int POOL_SIZE = 20;
         internal const int BUFFER_LENGTH = 1024;
         private static readonly CachedBuffer[] Pool = new CachedBuffer[POOL_SIZE];
 
@@ -114,7 +114,7 @@ namespace ProtoBuf
                     var tmp = Pool[i];
                     if (tmp == null || !tmp.IsAlive)
                     {
-                        minIndex = 0;
+                        minIndex = i;
                         break;
                     }
                     if (tmp.Size < minSize)
