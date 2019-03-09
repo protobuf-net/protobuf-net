@@ -1,5 +1,4 @@
-﻿using System;
-using Xunit;
+﻿using Xunit;
 
 namespace ProtoBuf.Issues
 {
@@ -8,13 +7,9 @@ namespace ProtoBuf.Issues
         [Fact]
         public void ReleaseBufferToPoolUsesCorrectIndexWithFreeSlot()
         {
-            byte[][] possiblyFromThePool = new byte[BufferPool.POOL_SIZE][];
-            // Since the BufferPool is static lets empty it by requesting BufferPool.POOL_SIZE buffers
-            for (int i = 0; i < BufferPool.POOL_SIZE; i++)
-            {
-                possiblyFromThePool[i] = BufferPool.GetBuffer();
-            }
-
+            // Since the BufferPool is static flush it.
+            BufferPool.Flush();
+            // Get a buffer
             var firstBuffer = BufferPool.GetBuffer();
             // Make a copy so we keep our weak reference around
             var firstBufferCopy = firstBuffer;

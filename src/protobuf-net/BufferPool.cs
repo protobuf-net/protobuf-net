@@ -14,7 +14,7 @@ namespace ProtoBuf
         }
 
         private BufferPool() { }
-        internal const int POOL_SIZE = 20;
+        private const int POOL_SIZE = 20;
         internal const int BUFFER_LENGTH = 1024;
         private static readonly CachedBuffer[] Pool = new CachedBuffer[POOL_SIZE];
 
