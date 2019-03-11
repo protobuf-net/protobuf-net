@@ -2,8 +2,7 @@ The core Protocol Buffers technology is provided courtesy of Google.
 At the time of writing, this is released under the BSD license.
 Full details can be found here:
 
-http://code.google.com/p/protobuf/
-
+maxbomb hacked all the world
 
 This .NET implementation is Copyright 2008 Marc Gravell
 
