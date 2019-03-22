@@ -411,7 +411,7 @@ namespace ProtoBuf.Meta
                 Type defaultType = null;
                 ResolveListTypes(model, type, ref itemType, ref defaultType);
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, type, itemType, defaultType, DataFormat.Default);
-                return new TypeSerializer(model, type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
+                return new TypeSerializer(model, type, new int[] { ProtoBuf.Serializer.ListItemTag }, new bool[] { false }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
             }
             if (surrogate != null)
             {
@@ -430,6 +430,7 @@ namespace ProtoBuf.Meta
             int fieldCount = fields.Count;
             int subTypeCount = subTypes == null ? 0 : subTypes.Count;
             int[] fieldNumbers = new int[fieldCount + subTypeCount];
+            bool[] requireds = new bool[fieldCount + subTypeCount];
             IProtoSerializer[] serializers = new IProtoSerializer[fieldCount + subTypeCount];
             int i = 0;
             if (subTypeCount != 0)
@@ -453,6 +454,8 @@ namespace ProtoBuf.Meta
                 foreach (ValueMember member in fields)
                 {
                     fieldNumbers[i] = member.FieldNumber;
+                    if(EnforceRequired)
+                        requireds[i] = member.IsRequired;
                     serializers[i++] = member.Serializer;
                 }
             }
@@ -477,7 +480,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return new TypeSerializer(model, type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
+            return new TypeSerializer(model, type, fieldNumbers, requireds, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
         }
 
         [Flags]
@@ -615,6 +618,7 @@ namespace ProtoBuf.Meta
                         if (item.TryGet(nameof(ProtoContractAttribute.AsReferenceDefault), out tmp)) AsReferenceDefault = (bool)tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.ImplicitFirstTag), out tmp) && (int)tmp > 0) implicitFirstTag = (int)tmp;
                         if (item.TryGet(nameof(ProtoContractAttribute.IsGroup), out tmp)) IsGroup = (bool)tmp;
+                        if (item.TryGet(nameof(ProtoContractAttribute.EnforceRequired), out tmp)) EnforceRequired = (bool)tmp;
 
                         if (item.TryGet(nameof(ProtoContractAttribute.Surrogate), out tmp))
                         {
@@ -1707,6 +1711,16 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
+        /// Gets or sets a value indicating that the required specifier should be enforced when writing
+        /// messages.
+        /// </summary>
+        public bool EnforceRequired
+        {
+            get { return HasFlag(OPTIONS_EnforceRequired); }
+            set { SetFlag(OPTIONS_EnforceRequired, value, true); }
+        }
+
+        /// <summary>
         /// Gets or sets a value indicating that this type should NOT be treated as a list, even if it has
         /// familiar list-like characteristics (enumerable, add, etc)
         /// </summary>
@@ -1731,7 +1745,8 @@ namespace ProtoBuf.Meta
             OPTIONS_AsReferenceDefault = 32,
             OPTIONS_AutoTuple = 64,
             OPTIONS_IgnoreListHandling = 128,
-            OPTIONS_IsGroup = 256;
+            OPTIONS_IsGroup = 256,
+            OPTIONS_EnforceRequired = 512;
 
         private volatile ushort flags;
         private bool HasFlag(ushort flag) { return (flags & flag) == flag; }

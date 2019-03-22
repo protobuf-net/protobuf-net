@@ -27,18 +27,24 @@ namespace ProtoBuf.Serializers
         public Type ExpectedType { get { return forType; } }
         private readonly IProtoSerializer[] serializers;
         private readonly int[] fieldNumbers;
+        private readonly bool[] requireds;
+        private readonly ulong[] requiredBits;
         private readonly bool isRootType, useConstructor, isExtensible, hasConstructor;
         private readonly CallbackSet callbacks;
         private readonly MethodInfo[] baseCtorCallbacks;
         private readonly MethodInfo factory;
-        public TypeSerializer(TypeModel model, Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
+        public TypeSerializer(TypeModel model, Type forType, int[] fieldNumbers, bool[] requireds, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(fieldNumbers != null);
             Helpers.DebugAssert(serializers != null);
             Helpers.DebugAssert(fieldNumbers.Length == serializers.Length);
+            Helpers.DebugAssert(fieldNumbers.Length == requireds.Length);
 
+            var keys = new int[fieldNumbers.Length];
+            Array.Copy(fieldNumbers, keys, fieldNumbers.Length);
             Helpers.Sort(fieldNumbers, serializers);
+            Helpers.Sort(keys, requireds);
             bool hasSubTypes = false;
             for (int i = 0; i < fieldNumbers.Length; i++)
             {
@@ -72,6 +78,11 @@ namespace ProtoBuf.Serializers
             this.constructType = constructType;
             this.serializers = serializers;
             this.fieldNumbers = fieldNumbers;
+            this.requireds = requireds;
+            this.requiredBits = new ulong[(this.requireds.Length >> 6) + 1];
+            for(int i = 0; i < this.requireds.Length; ++i)
+                if(this.requireds[i])
+                    this.requiredBits[i >> 6] |= (1UL << (i & 63));
             this.callbacks = callbacks;
             this.isRootType = isRootType;
             this.useConstructor = useConstructor;
@@ -165,17 +176,40 @@ namespace ProtoBuf.Serializers
             IProtoSerializer next = GetMoreSpecificSerializer(value);
             if (next != null) next.Write(value, dest);
 
+            System.Collections.Generic.List<int> allMissing = null;
+
             // write all actual fields
             //Helpers.DebugWriteLine(">> Writing fields for " + forType.FullName);
             for (int i = 0; i < serializers.Length; i++)
             {
                 IProtoSerializer ser = serializers[i];
+                bool isRequired = requireds[i];
                 if (ser.ExpectedType == forType)
                 {
                     //Helpers.DebugWriteLine(": " + ser.ToString());
+                    int before = 0;
+                    if(isRequired)
+                        before = ProtoWriter.GetPosition(dest);
                     ser.Write(value, dest);
+                    if(isRequired)
+                    {
+                        int after = ProtoWriter.GetPosition(dest);
+                        if(before == after)
+                        {
+                            allMissing = allMissing ?? new System.Collections.Generic.List<int>();
+                            allMissing.Add(fieldNumbers[i]);
+                        }
+                    }
+                }
+                else if(isRequired)
+                {
+                    allMissing = allMissing ?? new System.Collections.Generic.List<int>();
+                    allMissing.Add(fieldNumbers[i]);
                 }
             }
+
+            ThrowOnMissingFields(allMissing);
+
             //Helpers.DebugWriteLine("<< Writing fields for " + forType.FullName);
             if (isExtensible) ProtoWriter.AppendExtensionData((IExtensible)value, dest);
             if (isRootType) Callback(value, TypeModel.CallbackType.AfterSerialize, dest.Context);
@@ -186,6 +220,18 @@ namespace ProtoBuf.Serializers
             if (isRootType && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize, source.Context); }
             int fieldNumber, lastFieldNumber = 0, lastFieldIndex = 0;
             bool fieldHandled;
+            System.Collections.Generic.List<int> allMissing = null;
+
+#if false // NETCOREAPP2_2
+            // TODO
+            Span<ulong> found = stackalloc ulong[requiredBits.Length];
+#elif FEAT_SAFE
+            ulong[] found = new ulong[requiredBits.Length];
+#else
+            unsafe
+            {
+            ulong* found = stackalloc ulong[requiredBits.Length];
+#endif
 
             //Helpers.DebugWriteLine(">> Reading fields for " + forType.FullName);
             while ((fieldNumber = source.ReadFieldHeader()) > 0)
@@ -200,6 +246,7 @@ namespace ProtoBuf.Serializers
                     if (fieldNumbers[i] == fieldNumber)
                     {
                         IProtoSerializer ser = serializers[i];
+                        found[i >> 6] |= 1UL << (i & 63);
                         //Helpers.DebugWriteLine(": " + ser.ToString());
                         Type serType = ser.ExpectedType;
                         if (value == null)
@@ -248,10 +295,50 @@ namespace ProtoBuf.Serializers
                     }
                 }
             }
+
+            for (int i = 0; i < requiredBits.Length; ++i)
+            {
+                ulong missing = requiredBits[i] & ~found[i];
+                if (missing != 0)
+                {
+                    allMissing = allMissing ?? new System.Collections.Generic.List<int>();
+
+                    // field missing
+                    for (int b = 0; b < 64; ++b)
+                    {
+                        if ((missing & (1UL << b)) != 0)
+                        {
+                            int index = (i << 6) | b;
+                            allMissing.Add(this.fieldNumbers[index]);
+                        }
+                    }
+                }
+            }
+#if !(false && NETCOREAPP2_2) && !FEAT_SAFE
+            } // unsafe
+#endif
+
+            ThrowOnMissingFields(allMissing);
+
             //Helpers.DebugWriteLine("<< Reading fields for " + forType.FullName);
             if (value == null) value = CreateInstance(source, true);
             if (isRootType) { Callback(value, TypeModel.CallbackType.AfterDeserialize, source.Context); }
             return value;
+        }
+
+        private static void ThrowOnMissingFields(System.Collections.Generic.List<int> allMissing)
+        {
+            if(allMissing != null)
+            {
+#if NET20 || NET35
+                string[] missingStr = new string[allMissing.Count];
+                for(int i = 0; i < missingStr.Length; ++i)
+                    missingStr[i] = allMissing[i].ToString();
+                throw new ProtoException($"missing fields [{string.Join(", ", missingStr)}]");
+#else
+                throw new ProtoException($"missing fields [{string.Join(", ", allMissing)}]");
+#endif
+            }
         }
 
         private object InvokeCallback(MethodInfo method, object obj, SerializationContext context)

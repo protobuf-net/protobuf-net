@@ -177,7 +177,18 @@ namespace ProtoBuf.Reflection
         {
             var name = ctx.NameNormalizer.GetName(@enum);
             var tw = ctx.Write("[global::ProtoBuf.ProtoContract(");
-            if (name != @enum.Name) tw.Write($@"Name = @""{@enum.Name}""");
+            bool comma = false;
+            if(name != @enum.Name)
+            {
+                tw.Write($@"Name = @""{@enum.Name}""");
+                comma = true;
+            }
+            if(ctx.EnforceRequired)
+            {
+                if(comma)
+                    ctx.Write(", ");
+                ctx.Write("EnforceRequired = true");
+            }
             tw.WriteLine(")]");
             WriteOptions(ctx, @enum.Options);
             ctx.WriteLine($"{GetAccess(GetAccess(@enum))} enum {Escape(name)}").WriteLine("{").Indent();

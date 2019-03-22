@@ -125,6 +125,19 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Gets or sets a value indicating that the required specifier should be enforced when writing
+        /// messages.
+        /// </summary>
+        public bool EnforceRequired
+        {
+            get { return HasFlag(OPTIONS_EnforceRequired); }
+            set
+            {
+                SetFlag(OPTIONS_EnforceRequired, value);
+            }
+        }
+
         private bool HasFlag(ushort flag) { return (flags & flag) == flag; }
         private void SetFlag(ushort flag, bool value)
         {
@@ -143,7 +156,8 @@ namespace ProtoBuf
             OPTIONS_AsReferenceDefault = 32,
             OPTIONS_EnumPassthru = 64,
             OPTIONS_EnumPassthruHasValue = 128,
-            OPTIONS_IsGroup = 256;
+            OPTIONS_IsGroup = 256,
+            OPTIONS_EnforceRequired = 512;
 
         /// <summary>
         /// Applies only to enums (not to DTO classes themselves); gets or sets a value indicating that an enum should be treated directly as an int/short/etc, rather

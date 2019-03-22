@@ -93,7 +93,7 @@ namespace ProtoBuf
 #endif
         }
 #if !NO_RUNTIME
-        public static void Sort(int[] keys, object[] values)
+        public static void Sort<TElement>(int[] keys, TElement[] values)
         {
             // bubble-sort; it'll work on MF, has small code,
             // and works well-enough for our sizes. This approach
@@ -110,7 +110,7 @@ namespace ProtoBuf
                         int tmpKey = keys[i];
                         keys[i] = keys[i - 1];
                         keys[i - 1] = tmpKey;
-                        object tmpValue = values[i];
+                        TElement tmpValue = values[i];
                         values[i] = values[i - 1];
                         values[i - 1] = tmpValue;
                         swapped = true;
