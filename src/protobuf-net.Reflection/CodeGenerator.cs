@@ -473,6 +473,7 @@ namespace ProtoBuf.Reflection
                     if (nn != null) nn = nn.Trim();
                     if (string.Equals(nn, "auto", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Default;
                     else if (string.Equals(nn, "original", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.Null;
+                    else if (string.Equals(nn, "noplural", StringComparison.OrdinalIgnoreCase)) nameNormalizer = NameNormalizer.NoPlural;
                 }
 
                 string langver = null;

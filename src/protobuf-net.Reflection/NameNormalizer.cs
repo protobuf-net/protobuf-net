@@ -49,6 +49,14 @@ namespace ProtoBuf.Reflection
             /// </summary>
             public override string Pluralize(string identifier) => AutoPluralize(identifier);
         }
+        private class NoPluralNormalizer : NameNormalizer
+        {
+            protected override string GetName(string identifier) => AutoCapitalize(identifier);
+            /// <summary>
+            /// Suggest a name with idiomatic pluralization
+            /// </summary>
+            public override string Pluralize(string identifier) => identifier;
+        }
         /// <summary>
         /// Suggest a name with idiomatic name capitalization
         /// </summary>
@@ -108,6 +116,10 @@ namespace ProtoBuf.Reflection
         /// Name normalizer that passes through all identifiers without any changes
         /// </summary>
         public static NameNormalizer Null => new NullNormalizer(); // intentionally not reused
+        /// <summary>
+        /// Name normalizer with default protobuf-net behaviour, using .NET idioms, without pluralization
+        /// </summary>
+        public static NameNormalizer NoPlural => new NoPluralNormalizer(); // intentionally not reused
         /// <summary>
         /// Suggest a normalized identifier
         /// </summary>
