@@ -433,14 +433,17 @@ namespace ProtoBuf.Reflection
             }
 
             bool isOptional = field.label == FieldDescriptorProto.Label.LabelOptional;
+            bool isRequired = field.label == FieldDescriptorProto.Label.LabelRequired;
             bool isRepeated = field.label == FieldDescriptorProto.Label.LabelRepeated;
+
+            bool enforceRequired = isRequired && ctx.EnforceRequired;
 
             OneOfStub oneOf = field.ShouldSerializeOneofIndex() ? oneOfs?[field.OneofIndex] : null;
             if (oneOf != null && !ctx.OneOfEnums && oneOf.CountTotal == 1)
             {
                 oneOf = null; // not really a one-of, then!
             }
-            bool explicitValues = isOptional && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
+            bool explicitValues = (isOptional || enforceRequired) && oneOf == null && ctx.Syntax == FileDescriptorProto.SyntaxProto2
                 && field.type != FieldDescriptorProto.Type.TypeMessage
                 && field.type != FieldDescriptorProto.Type.TypeGroup;
 
@@ -456,9 +459,9 @@ namespace ProtoBuf.Reflection
             {
                 tw.Write($", IsPacked = true");
             }
-            if (field.label == FieldDescriptorProto.Label.LabelRequired)
+            if (isRequired)
             {
-                tw.Write($", IsRequired = true");
+                tw.Write($", IsRequired = true, OverwriteList = true");
             }
             tw.WriteLine(")]");
             if (!isRepeated && !string.IsNullOrWhiteSpace(defaultValue) && !suppressDefaultAttribute)
@@ -571,17 +574,30 @@ namespace ProtoBuf.Reflection
                         break;
                 }
                 ctx.WriteLine($"{GetAccess(GetAccess(field))} {typeName} {Escape(name)}").WriteLine("{").Indent();
-                tw = ctx.Write($"get {{ return {fieldName}");
-                if (!string.IsNullOrWhiteSpace(defaultValue))
+                if (enforceRequired)
                 {
-                    tw.Write(" ?? ");
-                    tw.Write(defaultValue);
+                    ctx.WriteLine("get").WriteLine("{").Indent();
+                    ctx.WriteLine($"if ({fieldName} == null) throw new global::System.InvalidOperationException(\"Field '{(field.Parent as DescriptorProto)?.Name}.{name}' not specified.\");");
+                    if(!isRef)
+                        ctx.WriteLine($"return {fieldName}.Value;");
+                    else
+                        ctx.WriteLine($"return {fieldName};");
+                    ctx.Outdent().WriteLine("}");
                 }
-                else if (!isRef)
+                else
                 {
-                    tw.Write(".GetValueOrDefault()");
+                    tw = ctx.Write($"get {{ return {fieldName}");
+                    if (!string.IsNullOrWhiteSpace(defaultValue))
+                    {
+                        tw.Write(" ?? ");
+                        tw.Write(defaultValue);
+                    }
+                    else if (!isRef)
+                    {
+                        tw.Write(".GetValueOrDefault()");
+                    }
+                    tw.WriteLine("; }");
                 }
-                tw.WriteLine("; }");
                 ctx.WriteLine($"set {{ {fieldName} = value; }}")
                     .Outdent().WriteLine("}");
                 if (ctx.Supports(CSharp6))

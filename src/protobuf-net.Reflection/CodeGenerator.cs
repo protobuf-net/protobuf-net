@@ -497,9 +497,11 @@ namespace ProtoBuf.Reflection
                 OneOfEnums = (File.Options?.GetOptions()?.EmitOneOfEnum ?? false) || (_options != null && _options.TryGetValue("oneof", out var oneof) && string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase));
 
                 EmitListSetters = IsEnabled("listset");
+                EnforceRequired = IsEnabled("required");
             }
 
             internal bool EmitListSetters { get; }
+            internal bool EnforceRequired { get; }
             internal bool IsEnabled(string key)
             {
                 var option = GetCustomOption(key);
