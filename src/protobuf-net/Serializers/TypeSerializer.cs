@@ -76,7 +76,17 @@ namespace ProtoBuf.Serializers
             this.isRootType = isRootType;
             this.useConstructor = useConstructor;
 
-            if (baseCtorCallbacks != null && baseCtorCallbacks.Length == 0) baseCtorCallbacks = null;
+            if(baseCtorCallbacks != null)
+            {
+                foreach(var cb in baseCtorCallbacks)
+                {
+                    if(!cb.ReflectedType.IsAssignableFrom(forType))
+                        throw new InvalidOperationException("Trying to assign incompatible callback to " + forType.FullName);
+                }
+                if(baseCtorCallbacks.Length == 0)
+                    baseCtorCallbacks = null;
+            }
+
             this.baseCtorCallbacks = baseCtorCallbacks;
 
             if (Helpers.GetUnderlyingType(forType) != null)
