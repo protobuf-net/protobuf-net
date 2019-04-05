@@ -5,7 +5,7 @@ namespace ProtoBuf
 {
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
-    public readonly struct DiscriminatedUnionObject
+    public readonly partial struct DiscriminatedUnionObject
     {
         private readonly int _discriminator;
 
@@ -35,7 +35,7 @@ namespace ProtoBuf
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct DiscriminatedUnion64
+    public readonly partial struct DiscriminatedUnion64
     {
 #if !FEAT_SAFE
 		unsafe static DiscriminatedUnion64()
@@ -104,7 +104,7 @@ namespace ProtoBuf
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct DiscriminatedUnion128Object
+    public readonly partial struct DiscriminatedUnion128Object
     {
 #if !FEAT_SAFE
 		unsafe static DiscriminatedUnion128Object()
@@ -183,7 +183,7 @@ namespace ProtoBuf
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct DiscriminatedUnion128
+    public readonly partial struct DiscriminatedUnion128
     {
 #if !FEAT_SAFE
         unsafe static DiscriminatedUnion128()
@@ -257,7 +257,7 @@ namespace ProtoBuf
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct DiscriminatedUnion64Object
+    public readonly partial struct DiscriminatedUnion64Object
     {
 #if !FEAT_SAFE
         unsafe static DiscriminatedUnion64Object()
@@ -330,7 +330,7 @@ namespace ProtoBuf
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct DiscriminatedUnion32
+    public readonly partial struct DiscriminatedUnion32
     {
         [FieldOffset(0)] private readonly int _discriminator;
 
@@ -372,7 +372,7 @@ namespace ProtoBuf
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
     [StructLayout(LayoutKind.Explicit)]
-    public readonly struct DiscriminatedUnion32Object
+    public readonly partial struct DiscriminatedUnion32Object
     {
         [FieldOffset(0)] private readonly int _discriminator;
 
