@@ -573,6 +573,10 @@ namespace ProtoBuf
                         {
                             throw new ProtoException("Unable to resolve type: " + typeName + " (you can use the TypeModel.DynamicTypeFormatting event to provide a custom mapping)");
                         }
+
+                        if (value != null && value.GetType() != type)
+                            value = null;
+
                         if (type == typeof(string))
                         {
                             key = -1;
