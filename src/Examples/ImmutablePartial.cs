@@ -22,7 +22,7 @@ namespace Examples
         // - how to avoid Proto-attributes on domain models 
    
         /// <summary>
-        /// Kind is the leaf node - when serializing, a Kind we only wish to store
+        /// Kind is the leaf node - when serializing a Kind we only wish to store
         /// the Id in the stream
         /// </summary>
         public class Kind
@@ -91,7 +91,7 @@ namespace Examples
             public string Name { get; set; }
 
             /// <summary>
-            /// 
+            /// Kind is serialized as a nullable integer Id
             /// </summary>
             [ProtoMember(2)]
             public int? KindId { get; set; }
@@ -125,6 +125,7 @@ namespace Examples
 
         /// <summary>
         /// This is our serializer for Items. In a real-world scenario, this would implement an IItemSerializer interface
+        /// and not need the compile or surrogate constructor arguments.
         /// </summary>
         public class ItemSerializer
         {
