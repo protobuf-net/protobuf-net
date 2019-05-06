@@ -890,6 +890,17 @@ namespace ProtoBuf.Reflection
 
         private string FindNameFromCommonAncestor(IType declaring, IType target, NameNormalizer normalizer)
         {
+            // check if the same message type name is in the hierarchy under the same namespace, and if so, use a fully qualified name
+            var declaringParts = declaring.FullyQualifiedName.Split('.').Where(x => !string.IsNullOrEmpty(x)).ToList();
+            var targetParts = target.FullyQualifiedName.Split('.').Where(x => !string.IsNullOrEmpty(x)).ToList();
+            if (declaringParts.FirstOrDefault() == targetParts.FirstOrDefault())
+            {
+                if (declaringParts.Intersect(targetParts).Count() > 1)
+                {
+                    return $"global::{target.FullyQualifiedName.Substring(1)}";
+                }
+            }
+
             // trivial case; asking for self, or asking for immediate child
             if (ReferenceEquals(declaring, target) || ReferenceEquals(declaring, target.Parent))
             {
