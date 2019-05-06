@@ -743,7 +743,7 @@ namespace ProtoBuf.Meta
                             throw new InvalidOperationException(message);
                         }
 
-                        if (asReference && meta.IsAutoTuple) options |= BclHelpers.NetObjectOptions.LateSet;
+                        if (asReference && (meta.IsAutoTuple || meta.HasSurrogate)) options |= BclHelpers.NetObjectOptions.LateSet;
                         if (meta.UseConstructor) options |= BclHelpers.NetObjectOptions.UseConstructor;
                     }
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
