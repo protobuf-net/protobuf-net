@@ -26,6 +26,15 @@ namespace ProtoBuf.Serializers
 
         private readonly Type forType, declaredType;
         private readonly MethodInfo toTail, fromTail;
+        /// <summary>
+        /// True if the <see cref="SerializationContext"/> should be passed as a 2nd argument when invoking <see cref="toTail"/>
+        /// </summary>
+        private bool useContextTo = false;
+        /// <summary>
+        /// True if the <see cref="SerializationContext"/> should be passed as a 2nd argument when invoking <see cref="fromTail"/>
+        /// </summary>
+        private bool useContextFrom = false;
+
         IProtoTypeSerializer rootTail;
 
         public SurrogateSerializer(TypeModel model, Type forType, Type declaredType, IProtoTypeSerializer rootTail)
@@ -39,10 +48,11 @@ namespace ProtoBuf.Serializers
             this.forType = forType;
             this.declaredType = declaredType;
             this.rootTail = rootTail;
-            toTail = GetConversion(model, true);
-            fromTail = GetConversion(model, false);
+            toTail = GetConversion(model, true, out this.useContextTo);
+            fromTail = GetConversion(model, false, out this.useContextFrom);
+            
         }
-        private static bool HasCast(TypeModel model, Type type, Type from, Type to, out MethodInfo op)
+        private static bool HasCastOrConvert(TypeModel model, Type type, Type from, Type to, out MethodInfo op, out bool useContext)
         {
 #if PROFILE259
 			System.Collections.Generic.List<MethodInfo> list = new System.Collections.Generic.List<MethodInfo>();
@@ -57,12 +67,13 @@ namespace ProtoBuf.Serializers
 #endif
             ParameterInfo[] paramTypes;
             Type convertAttributeType = null;
+            useContext = false;
             for (int i = 0; i < found.Length; i++)
             {
                 MethodInfo m = found[i];
                 if (m.ReturnType != to) continue;
                 paramTypes = m.GetParameters();
-                if (paramTypes.Length == 1 && paramTypes[0].ParameterType == from)
+                if ((paramTypes.Length == 1 && paramTypes[0].ParameterType == from))
                 {
                     if (convertAttributeType == null)
                     {
@@ -72,9 +83,26 @@ namespace ProtoBuf.Serializers
                             break;
                         }
                     }
-                    if (m.IsDefined(convertAttributeType, true))
+                    if (m.IsDefined(convertAttributeType, true) || m.Name == "Convert")
                     {
                         op = m;
+                        return true;
+                    }
+                }
+                else if ((paramTypes.Length == 2 && paramTypes[0].ParameterType == from && paramTypes[1].ParameterType == typeof(SerializationContext)))
+                {
+                    if (convertAttributeType == null)
+                    {
+                        convertAttributeType = model.MapType(typeof(ProtoConverterAttribute), false);
+                        if (convertAttributeType == null)
+                        { // attribute isn't defined in the source assembly: stop looking
+                            break;
+                        }
+                    }
+                    if (m.Name == "Convert")
+                    {
+                        op = m;
+                        useContext = true;
                         return true;
                     }
                 }
@@ -98,32 +126,67 @@ namespace ProtoBuf.Serializers
             return false;
         }
 
-        public MethodInfo GetConversion(TypeModel model, bool toTail)
+
+        public MethodInfo GetConversion(TypeModel model, bool toTail, out bool useContext)
         {
             Type to = toTail ? declaredType : forType;
             Type from = toTail ? forType : declaredType;
             MethodInfo op;
-            if (HasCast(model, declaredType, from, to, out op) || HasCast(model, forType, from, to, out op))
+            if (HasCastOrConvert(model, declaredType, from, to, out op, out useContext) || 
+                HasCastOrConvert(model, forType, from, to, out op, out useContext))
             {
                 return op;
             }
-            throw new InvalidOperationException("No suitable conversion operator found for surrogate: " +
+            throw new InvalidOperationException("No suitable conversion operator or Convert method found for surrogate: " +
                 forType.FullName + " / " + declaredType.FullName);
         }
 
         public void Write(object value, ProtoWriter writer)
         {
-            rootTail.Write(toTail.Invoke(null, new object[] { value }), writer);
+            if (useContextTo)
+            {
+                rootTail.Write(toTail.Invoke(null, new object[] { value, writer.Context }), writer);
+            }
+            else
+            {
+                rootTail.Write(toTail.Invoke(null, new object[] { value }), writer);
+            }
         }
 
         public object Read(object value, ProtoReader source)
         {
             // convert the incoming value
-            object[] args = { value };
-            value = toTail.Invoke(null, args);
+            object[] args;
+            if (useContextTo)
+            {
+                args = new object[] { value, source.Context };
+            }
+            else
+            {
+                args = new object[] { value };
+            }
 
             // invoke the tail and convert the outgoing value
-            args[0] = rootTail.Read(value, source);
+            value = rootTail.Read(toTail.Invoke(null, args), source);
+
+            //If context is used on one coversion and not on the other we need to
+            //reallocate args to a different sized array, otherwise it can be
+            //reused for both method calls
+            if (useContextTo != useContextFrom)
+            {
+                if (useContextFrom)
+                {
+                    args = new object[] { value, source.Context };
+                }
+                else
+                {
+                    args = new object[] { value };
+                }
+            }
+            else
+            {
+                args[0] = value;
+            }
             return fromTail.Invoke(null, args);
         }
 
@@ -134,12 +197,20 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local converted = new Compiler.Local(ctx, declaredType)) // declare/re-use local
             {
                 ctx.LoadValue(valueFrom); // load primary onto stack
+                if (useContextTo)
+                {
+                    ctx.LoadSerializationContext();
+                }
                 ctx.EmitCall(toTail); // static convert op, primary-to-surrogate
                 ctx.StoreValue(converted); // store into surrogate local
 
                 rootTail.EmitRead(ctx, converted); // downstream processing against surrogate local
 
                 ctx.LoadValue(converted); // load from surrogate local
+                if (useContextFrom)
+                {
+                    ctx.LoadSerializationContext();
+                }
                 ctx.EmitCall(fromTail);  // static convert op, surrogate-to-primary
                 ctx.StoreValue(valueFrom); // store back into primary
             }
@@ -148,6 +219,10 @@ namespace ProtoBuf.Serializers
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue(valueFrom);
+            if (useContextTo)
+            {
+                ctx.LoadSerializationContext();
+            }
             ctx.EmitCall(toTail);
             rootTail.EmitWrite(ctx, null);
         }
