@@ -1327,6 +1327,14 @@ namespace ProtoBuf.Meta
             // no point in offering chaining; no options are respected
         }
 
+        internal bool HasSurrogate
+        {
+            get
+            {
+                return surrogate != null;
+            }
+        }
+
         internal MetaType GetSurrogateOrSelf()
         {
             if (surrogate != null) return model[surrogate];
