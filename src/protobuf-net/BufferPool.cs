@@ -114,7 +114,7 @@ namespace ProtoBuf
                     var tmp = Pool[i];
                     if (tmp == null || !tmp.IsAlive)
                     {
-                        minIndex = 0;
+                        minIndex = i;
                         break;
                     }
                     if (tmp.Size < minSize)
