@@ -81,12 +81,14 @@ namespace ProtoBuf.Serializers
 
             if(baseCtorCallbacks != null)
             {
-                foreach(var cb in baseCtorCallbacks)
+#if !(NETSTANDARD1_0 || NETSTANDARD1_3) // can't check this here, sorry
+                foreach (var cb in baseCtorCallbacks)
                 {
-                    if(!cb.ReflectedType.IsAssignableFrom(forType))
+                    if (!cb.ReflectedType.IsAssignableFrom(forType))
                         throw new InvalidOperationException("Trying to assign incompatible callback to " + forType.FullName);
                 }
-                if(baseCtorCallbacks.Length == 0)
+#endif
+                if (baseCtorCallbacks.Length == 0)
                     baseCtorCallbacks = null;
             }
 

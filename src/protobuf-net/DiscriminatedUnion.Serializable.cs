@@ -1,14 +1,16 @@
 ﻿#if PLAT_BINARYFORMATTER
+using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
 namespace ProtoBuf
 {
+    [Serializable]
     public readonly partial struct DiscriminatedUnionObject : ISerializable
     {
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            if (_discriminator != default) info.AddValue("d", _discriminator);
+            if (Discriminator != default) info.AddValue("d", Discriminator);
             if (Object != default) info.AddValue("o", Object);
         }
         private DiscriminatedUnionObject(SerializationInfo info, StreamingContext context)
@@ -18,13 +20,14 @@ namespace ProtoBuf
             {
                 switch (field.Name)
                 {
-                    case "d": _discriminator = (int)field.Value; break;
+                    case "d": Discriminator = (int)field.Value; break;
                     case "o": Object = field.Value; break;
                 }
             }
         }
     }
 
+    [Serializable]
     public readonly partial struct DiscriminatedUnion128Object : ISerializable
     {
         [FieldOffset(8)] private readonly long _lo;
@@ -52,6 +55,7 @@ namespace ProtoBuf
         }
     }
 
+    [Serializable]
     public readonly partial struct DiscriminatedUnion128 : ISerializable
     {
         [FieldOffset(8)] private readonly long _lo;
@@ -77,6 +81,7 @@ namespace ProtoBuf
         }
     }
 
+    [Serializable]
     public readonly partial struct DiscriminatedUnion64 : ISerializable
     {
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
@@ -98,6 +103,7 @@ namespace ProtoBuf
         }
     }
 
+    [Serializable]
     public readonly partial struct DiscriminatedUnion64Object : ISerializable
     {
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
@@ -121,6 +127,7 @@ namespace ProtoBuf
         }
     }
 
+    [Serializable]
     public readonly partial struct DiscriminatedUnion32 : ISerializable
     {
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
@@ -142,6 +149,7 @@ namespace ProtoBuf
         }
     }
 
+    [Serializable]
     public readonly partial struct DiscriminatedUnion32Object : ISerializable
     {
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
