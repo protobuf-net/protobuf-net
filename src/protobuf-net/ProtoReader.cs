@@ -138,7 +138,11 @@ namespace ProtoBuf
         /// in the underlying stream, if multiple readers are used on the same stream)
         /// </summary>
         [Obsolete(UseStateAPI, false)]
-        public long LongPosition => _longPosition;        private long _longPosition;        internal void Advance(long count) => _longPosition += count;
+        public long LongPosition => _longPosition;
+
+        private long _longPosition;
+
+        internal void Advance(long count) => _longPosition += count;
 
         /// <summary>
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
@@ -828,7 +832,6 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a boolean value from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        /// <returns></returns>
         [Obsolete(UseStateAPI, false)]
         public bool ReadBoolean()
         {
@@ -839,15 +842,9 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a boolean value from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
-        /// <returns></returns>
         public bool ReadBoolean(ref State state)
         {
-            switch (ReadUInt32(ref state))
-            {
-                case 0: return false;
-                case 1: return true;
-                default: throw CreateException(ref state, "Unexpected boolean value");
-            }
+            return ReadUInt32() != 0;
         }
 
         private protected static readonly byte[] EmptyBlob = new byte[0];

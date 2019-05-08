@@ -211,6 +211,8 @@ namespace protogen
                         {
                             Serializer.Serialize(fds, set);
                         }
+                        
+                        return 0;
                     }
 
                     var files = codegen.Generate(set, options: options);

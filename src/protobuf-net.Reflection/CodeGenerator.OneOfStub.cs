@@ -82,20 +82,20 @@ namespace ProtoBuf.Reflection
                     case FieldDescriptorProto.Type.TypeInt32:
                     case FieldDescriptorProto.Type.TypeSfixed32:
                     case FieldDescriptorProto.Type.TypeSint32:
-                    case FieldDescriptorProto.Type.TypeFixed32:
                     case FieldDescriptorProto.Type.TypeEnum:
                         return "Int32";
                     case FieldDescriptorProto.Type.TypeFloat:
                         return "Single";
+                    case FieldDescriptorProto.Type.TypeFixed32:
                     case FieldDescriptorProto.Type.TypeUint32:
                         return "UInt32";
                     case FieldDescriptorProto.Type.TypeDouble:
                         return "Double";
-                    case FieldDescriptorProto.Type.TypeFixed64:
                     case FieldDescriptorProto.Type.TypeInt64:
                     case FieldDescriptorProto.Type.TypeSfixed64:
                     case FieldDescriptorProto.Type.TypeSint64:
                         return "Int64";
+                    case FieldDescriptorProto.Type.TypeFixed64:
                     case FieldDescriptorProto.Type.TypeUint64:
                         return "UInt64";
                     case FieldDescriptorProto.Type.TypeMessage:
