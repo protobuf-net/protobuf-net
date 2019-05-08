@@ -3,13 +3,9 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    class UInt16Serializer : IProtoSerializer
+    internal class UInt16Serializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(ushort);
-
-        public UInt16Serializer(ProtoBuf.Meta.TypeModel model)
-        {
-        }
+        private static readonly Type expectedType = typeof(ushort);
 
         public virtual Type ExpectedType => expectedType;
 
@@ -17,15 +13,15 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public virtual object Read(object value, ProtoReader source)
+        public virtual object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadUInt16();
+            return source.ReadUInt16(ref state);
         }
 
-        public virtual void Write(object value, ProtoWriter dest)
+        public virtual void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteUInt16((ushort)value, dest);
+            ProtoWriter.WriteUInt16((ushort)value, dest, ref state);
         }
 
 #if FEAT_COMPILER
@@ -33,9 +29,9 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteUInt16", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadUInt16", ctx.MapType(typeof(ushort)));
+            ctx.EmitBasicRead("ReadUInt16", typeof(ushort));
         }
 #endif
     }

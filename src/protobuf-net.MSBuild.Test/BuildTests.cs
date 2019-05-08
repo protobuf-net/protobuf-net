@@ -11,8 +11,7 @@ using Xunit.Abstractions;
 
 namespace ProtoBuf.Build
 {
-
-    class MSBuildFixture : IDisposable
+    internal class MSBuildFixture : IDisposable
     {
         public MSBuildFixture()
         {
@@ -26,10 +25,10 @@ namespace ProtoBuf.Build
 
     public class BuildTests : IClassFixture<MSBuildFixture>
     {
-        readonly ILogger logger;
-        ITestOutputHelper o;
+        private readonly ILogger logger;
+        private readonly ITestOutputHelper o;
 
-        static readonly Dictionary<string, string> gp =
+        private static readonly Dictionary<string, string> gp =
             new Dictionary<string, string>
             {
                 ["Configuration"] = "Debug",
@@ -42,26 +41,25 @@ namespace ProtoBuf.Build
             this.logger = new XUnitTestLogger(o);
         }
 
-        string GetOutput(string exePath, string args)
-        {
-            var psi = new ProcessStartInfo(exePath, args)
-            {
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                CreateNoWindow = true,
-            };
-            var proc = Process.Start(psi);
-            var text = proc.StandardOutput.ReadToEnd();
-            proc.WaitForExit();
-            return text;
-        }
+        //private string GetOutput(string exePath, string args)
+        //{
+        //    var psi = new ProcessStartInfo(exePath, args)
+        //    {
+        //        UseShellExecute = false,
+        //        RedirectStandardOutput = true,
+        //        CreateNoWindow = true,
+        //    };
+        //    var proc = Process.Start(psi);
+        //    var text = proc.StandardOutput.ReadToEnd();
+        //    proc.WaitForExit();
+        //    return text;
+        //}
 
-        void LogProps(Project proj)
+        private void LogProps(Project proj)
         {
             foreach (var kvp in Environment.GetEnvironmentVariables().Cast<DictionaryEntry>().OrderBy(e => e.Key))
             {
                 o.WriteLine(kvp.Key + ": " + kvp.Value);
-
             }
 
             foreach (var prop in proj.AllEvaluatedProperties.OrderBy(p => p.Name))
@@ -69,8 +67,8 @@ namespace ProtoBuf.Build
                 o.WriteLine(prop.Name + ": " + prop.EvaluatedValue + " (" + prop.UnevaluatedValue + ")");
             }
         }
-                
-        string BuildProject(string projFile)
+
+        private string BuildProject(string projFile)
         {
             var pc = new ProjectCollection(gp);
             var proj = pc.LoadProject(projFile);
@@ -102,7 +100,7 @@ namespace ProtoBuf.Build
         public void CodeGenErrors()
         {
             var testLogger = new TestLogger();
-            var projFile = "Data/Proj3/Proj.csproj";
+            const string projFile = "Data/Proj3/Proj.csproj";
 
             var pc = new ProjectCollection(gp);
             var proj = pc.LoadProject(projFile);

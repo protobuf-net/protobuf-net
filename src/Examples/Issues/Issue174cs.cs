@@ -1,20 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using Xunit;
-using ProtoBuf;
+﻿using ProtoBuf;
+using System;
 using System.IO;
+using Xunit;
 
 namespace Examples.Issues
 {
-    
     public class Issue174cs
     {
         [Fact]
         public void TestDynamic()
         {
-            Program.ExpectFailure<Exception>(() =>
+            Program.ExpectFailure<InvalidOperationException>(() =>
             {
                 var myVal = new TestProto { Value = true };
                 byte[] serialized;

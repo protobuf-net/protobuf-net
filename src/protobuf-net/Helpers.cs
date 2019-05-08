@@ -14,6 +14,7 @@ using System.Linq;
 using System.Reflection;
 #endif
 
+#pragma warning disable RCS1163
 namespace ProtoBuf
 {
     /// <summary>
@@ -73,7 +74,9 @@ namespace ProtoBuf
 #if DEBUG
             if (!condition)
             {
+#pragma warning disable RCS1178 // Call Debug.Fail instead of Debug.Assert.
                 System.Diagnostics.Debug.Assert(false, message);
+#pragma warning restore RCS1178 // Call Debug.Fail instead of Debug.Assert.
             }
 #endif
         }
@@ -141,7 +144,7 @@ namespace ProtoBuf
         }
         internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name)
         {
-            return GetInstanceMethod(declaringType.AsType(), name); ;
+            return GetInstanceMethod(declaringType.AsType(), name);
         }
         internal static MethodInfo GetStaticMethod(Type declaringType, string name)
         {
@@ -191,7 +194,7 @@ namespace ProtoBuf
             switch (found.Count)
             {
                 case 0: return null;
-                case 1: return found.First();
+                case 1: return found[0];
                 default: throw new AmbiguousMatchException(name);
             }
         }
@@ -209,7 +212,7 @@ namespace ProtoBuf
         }
         internal static MethodInfo GetInstanceMethod(TypeInfo declaringType, string name)
         {
-            return GetInstanceMethod(declaringType.AsType(), name); ;
+            return GetInstanceMethod(declaringType.AsType(), name);
         }
         internal static MethodInfo GetStaticMethod(Type declaringType, string name)
         {
@@ -233,8 +236,7 @@ namespace ProtoBuf
             var methods = declaringType.GetRuntimeMethods();
             foreach (MethodInfo method in methods)
             {
-                if (method.Name == name &&
-                    IsMatch(method.GetParameters(), parameterTypes))
+                if (method.Name == name && IsMatch(method.GetParameters(), parameterTypes))
                 {
                     return method;
                 }
@@ -246,8 +248,7 @@ namespace ProtoBuf
             var methods = declaringType.GetRuntimeMethods();
             foreach (MethodInfo method in methods)
             {
-                if (method.Name == name &&
-                    IsMatch(method.GetParameters(), parameterTypes))
+                if (method.Name == name && IsMatch(method.GetParameters(), parameterTypes))
                 {
                     return method;
                 }
@@ -433,6 +434,7 @@ namespace ProtoBuf
             return method;
 #endif
         }
+
         internal static MethodInfo GetSetMethod(PropertyInfo property, bool nonPublic, bool allowInternal)
         {
             if (property == null) return null;
@@ -517,12 +519,10 @@ namespace ProtoBuf
         }
 #endif
 
-
         internal static object ParseEnum(Type type, string value)
         {
             return Enum.Parse(type, value, true);
         }
-
 
         internal static MemberInfo[] GetInstanceFieldsAndProperties(Type type, bool publicOnly)
         {
@@ -636,3 +636,4 @@ namespace ProtoBuf
         Type = 104
     }
 }
+#pragma warning restore RCS1163

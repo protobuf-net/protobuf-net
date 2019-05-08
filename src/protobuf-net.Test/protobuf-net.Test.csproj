@@ -3,20 +3,16 @@
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!--<TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks>-->
-    <TargetFrameworks>net452</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net452</TargetFrameworks>
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='netcoreapp1.1'">
-    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
-    <LibImport>core</LibImport>
-  </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='netstandard1.3'">
-    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+  <PropertyGroup Condition="$(TargetFramework)=='netcoreapp2.1'">
+    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net452'">
-    <DefineConstants>FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;FX30</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="basic.proto" />
@@ -28,8 +24,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
-    <PackageReference Include="xunit" Version="2.3.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
@@ -48,6 +44,7 @@
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
+    <PackageReference Include="System.CodeDom" Version="4.5.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />

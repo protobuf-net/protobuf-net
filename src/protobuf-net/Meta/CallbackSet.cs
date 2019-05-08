@@ -25,34 +25,34 @@ namespace ProtoBuf.Meta
                     case TypeModel.CallbackType.AfterSerialize: return afterSerialize;
                     case TypeModel.CallbackType.BeforeDeserialize: return beforeDeserialize;
                     case TypeModel.CallbackType.AfterDeserialize: return afterDeserialize;
-                    default: throw new ArgumentException("Callback type not supported: " + callbackType.ToString(), "callbackType");
+                    default: throw new ArgumentException("Callback type not supported: " + callbackType.ToString(), nameof(callbackType));
                 }
             }
         }
 
-        internal static bool CheckCallbackParameters(TypeModel model, MethodInfo method)
+        internal static bool CheckCallbackParameters(MethodInfo method)
         {
             ParameterInfo[] args = method.GetParameters();
             for (int i = 0; i < args.Length; i++)
             {
                 Type paramType = args[i].ParameterType;
-                if (paramType == model.MapType(typeof(SerializationContext))) { }
-                else if (paramType == model.MapType(typeof(System.Type))) { }
+                if (paramType == typeof(SerializationContext)) { }
+                else if (paramType == typeof(System.Type)) { }
 #if PLAT_BINARYFORMATTER
-                else if (paramType == model.MapType(typeof(System.Runtime.Serialization.StreamingContext))) { }
+                else if (paramType == typeof(System.Runtime.Serialization.StreamingContext)) { }
 #endif
-                else return false;
+                else { return false; }
             }
             return true;
         }
 
-        private MethodInfo SanityCheckCallback(TypeModel model, MethodInfo callback)
+        private MethodInfo SanityCheckCallback(MethodInfo callback)
         {
             metaType.ThrowIfFrozen();
             if (callback == null) return callback; // fine
             if (callback.IsStatic) throw new ArgumentException("Callbacks cannot be static", nameof(callback));
-            if (callback.ReturnType != model.MapType(typeof(void))
-                || !CheckCallbackParameters(model, callback))
+            if (callback.ReturnType != typeof(void)
+                || !CheckCallbackParameters(callback))
             {
                 throw CreateInvalidCallbackSignature(callback);
             }
@@ -70,28 +70,28 @@ namespace ProtoBuf.Meta
         public MethodInfo BeforeSerialize
         {
             get { return beforeSerialize; }
-            set { beforeSerialize = SanityCheckCallback(metaType.Model, value); }
+            set { beforeSerialize = SanityCheckCallback(value); }
         }
 
         /// <summary>Called before deserializing an instance</summary>
         public MethodInfo BeforeDeserialize
         {
             get { return beforeDeserialize; }
-            set { beforeDeserialize = SanityCheckCallback(metaType.Model, value); }
+            set { beforeDeserialize = SanityCheckCallback(value); }
         }
 
         /// <summary>Called after serializing an instance</summary>
         public MethodInfo AfterSerialize
         {
             get { return afterSerialize; }
-            set { afterSerialize = SanityCheckCallback(metaType.Model, value); }
+            set { afterSerialize = SanityCheckCallback(value); }
         }
 
         /// <summary>Called after deserializing an instance</summary>
         public MethodInfo AfterDeserialize
         {
             get { return afterDeserialize; }
-            set { afterDeserialize = SanityCheckCallback(metaType.Model, value); }
+            set { afterDeserialize = SanityCheckCallback(value); }
         }
 
         /// <summary>

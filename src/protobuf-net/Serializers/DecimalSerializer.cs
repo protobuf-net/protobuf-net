@@ -3,11 +3,9 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class DecimalSerializer : IProtoSerializer
+    internal sealed class DecimalSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(decimal);
-
-        public DecimalSerializer(ProtoBuf.Meta.TypeModel model) { }
+        private static readonly Type expectedType = typeof(decimal);
 
         public Type ExpectedType => expectedType;
 
@@ -15,25 +13,25 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return BclHelpers.ReadDecimal(source);
+            return BclHelpers.ReadDecimal(source, ref state);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            BclHelpers.WriteDecimal((decimal)value, dest);
+            BclHelpers.WriteDecimal((decimal)value, dest, ref state);
         }
 
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)), "WriteDecimal", valueFrom);
+            ctx.EmitWrite<BclHelpers>(nameof(BclHelpers.WriteDecimal), valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)), "ReadDecimal", ExpectedType);
+            ctx.EmitBasicRead<BclHelpers>(nameof(BclHelpers.ReadDecimal), ExpectedType);
         }
 #endif
 

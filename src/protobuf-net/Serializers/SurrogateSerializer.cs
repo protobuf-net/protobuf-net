@@ -5,7 +5,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class SurrogateSerializer : IProtoTypeSerializer
+    internal sealed class SurrogateSerializer : IProtoTypeSerializer
     {
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
 #if FEAT_COMPILER
@@ -22,13 +22,13 @@ namespace ProtoBuf.Serializers
 
         public bool RequiresOldValue => true;
 
-        public Type ExpectedType => forType;
+        public Type ExpectedType { get; }
 
-        private readonly Type forType, declaredType;
+        private readonly Type declaredType;
         private readonly MethodInfo toTail, fromTail;
-        IProtoTypeSerializer rootTail;
+        private readonly IProtoTypeSerializer rootTail;
 
-        public SurrogateSerializer(TypeModel model, Type forType, Type declaredType, IProtoTypeSerializer rootTail)
+        public SurrogateSerializer(Type forType, Type declaredType, IProtoTypeSerializer rootTail)
         {
             Helpers.DebugAssert(forType != null, "forType");
             Helpers.DebugAssert(declaredType != null, "declaredType");
@@ -36,13 +36,13 @@ namespace ProtoBuf.Serializers
             Helpers.DebugAssert(rootTail.RequiresOldValue, "RequiresOldValue");
             Helpers.DebugAssert(!rootTail.ReturnsValue, "ReturnsValue");
             Helpers.DebugAssert(declaredType == rootTail.ExpectedType || Helpers.IsSubclassOf(declaredType, rootTail.ExpectedType));
-            this.forType = forType;
+            ExpectedType = forType;
             this.declaredType = declaredType;
             this.rootTail = rootTail;
-            toTail = GetConversion(model, true);
-            fromTail = GetConversion(model, false);
+            toTail = GetConversion(true);
+            fromTail = GetConversion(false);
         }
-        private static bool HasCast(TypeModel model, Type type, Type from, Type to, out MethodInfo op)
+        private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
         {
 #if PROFILE259
 			System.Collections.Generic.List<MethodInfo> list = new System.Collections.Generic.List<MethodInfo>();
@@ -66,7 +66,7 @@ namespace ProtoBuf.Serializers
                 {
                     if (convertAttributeType == null)
                     {
-                        convertAttributeType = model.MapType(typeof(ProtoConverterAttribute), false);
+                        convertAttributeType = typeof(ProtoConverterAttribute);
                         if (convertAttributeType == null)
                         { // attribute isn't defined in the source assembly: stop looking
                             break;
@@ -98,32 +98,31 @@ namespace ProtoBuf.Serializers
             return false;
         }
 
-        public MethodInfo GetConversion(TypeModel model, bool toTail)
+        public MethodInfo GetConversion(bool toTail)
         {
-            Type to = toTail ? declaredType : forType;
-            Type from = toTail ? forType : declaredType;
-            MethodInfo op;
-            if (HasCast(model, declaredType, from, to, out op) || HasCast(model, forType, from, to, out op))
+            Type to = toTail ? declaredType : ExpectedType;
+            Type from = toTail ? ExpectedType : declaredType;
+            if (HasCast(declaredType, from, to, out MethodInfo op) || HasCast(ExpectedType, from, to, out op))
             {
                 return op;
             }
             throw new InvalidOperationException("No suitable conversion operator found for surrogate: " +
-                forType.FullName + " / " + declaredType.FullName);
+                ExpectedType.FullName + " / " + declaredType.FullName);
         }
 
-        public void Write(object value, ProtoWriter writer)
+        public void Write(ProtoWriter writer, ref ProtoWriter.State state, object value)
         {
-            rootTail.Write(toTail.Invoke(null, new object[] { value }), writer);
+            rootTail.Write(writer, ref state, toTail.Invoke(null, new object[] { value }));
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             // convert the incoming value
             object[] args = { value };
             value = toTail.Invoke(null, args);
 
             // invoke the tail and convert the outgoing value
-            args[0] = rootTail.Read(value, source);
+            args[0] = rootTail.Read(source, ref state, value);
             return fromTail.Invoke(null, args);
         }
 

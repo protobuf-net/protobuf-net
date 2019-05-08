@@ -7,18 +7,16 @@ namespace ProtoBuf
     /// note that it is the caller's responsbility to only read/write the value as the same type</summary>
     public readonly partial struct DiscriminatedUnionObject
     {
-        private readonly int _discriminator;
-
         /// <summary>The value typed as Object</summary>
         public readonly object Object;
 
         /// <summary>Indicates whether the specified discriminator is assigned</summary>
-        public bool Is(int discriminator) => _discriminator == discriminator;
+        public bool Is(int discriminator) => Discriminator == discriminator;
 
         /// <summary>Create a new discriminated union value</summary>
         public DiscriminatedUnionObject(int discriminator, object value)
         {
-            _discriminator = discriminator;
+            Discriminator = discriminator;
             Object = value;
         }
 
@@ -29,7 +27,7 @@ namespace ProtoBuf
         }
 
         /// <summary>The discriminator value</summary>
-        public int Discriminator => _discriminator;
+        public int Discriminator { get; }
     }
 
     /// <summary>Represent multiple types as a union; this is used as part of OneOf -

@@ -20,7 +20,7 @@ namespace ProtoBuf.Serializers
 
         private readonly ConstructorInfo typeConstructor;
 
-        public ReflectedUriDecorator(Type type, ProtoBuf.Meta.TypeModel model, IProtoSerializer tail) : base(tail)
+        public ReflectedUriDecorator(Type type, IProtoSerializer tail) : base(tail)
         {
             expectedType = type;
 
@@ -49,7 +49,7 @@ namespace ProtoBuf.Serializers
         public override bool RequiresOldValue { get { return false; } }
         public override bool ReturnsValue { get { return true; } }
         
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             Tail.Write(absoluteUriProperty.GetValue(value, null), dest);
         }
@@ -79,7 +79,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadNullRef();
             ctx.Branch(@end, true);
             ctx.MarkLabel(@nonEmpty);
-            ctx.EmitCtor(expectedType, ctx.MapType(typeof(string)));
+            ctx.EmitCtor(expectedType, typeof(string));
             ctx.MarkLabel(@end);
             
         }

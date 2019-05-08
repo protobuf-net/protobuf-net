@@ -8,13 +8,10 @@ using ProtoBuf.Compiler;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class UriDecorator : ProtoDecoratorBase
+    internal sealed class UriDecorator : ProtoDecoratorBase
     {
-        static readonly Type expectedType = typeof(Uri);
-        public UriDecorator(ProtoBuf.Meta.TypeModel model, IProtoSerializer tail) : base(tail)
-        {
-
-        }
+        private static readonly Type expectedType = typeof(Uri);
+        public UriDecorator(IProtoSerializer tail) : base(tail) { }
 
         public override Type ExpectedType => expectedType;
 
@@ -22,15 +19,15 @@ namespace ProtoBuf.Serializers
 
         public override bool ReturnsValue => true;
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            Tail.Write(((Uri)value).OriginalString, dest);
+            Tail.Write(dest, ref state, ((Uri)value).OriginalString);
         }
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // not expecting incoming
-            string s = (string)Tail.Read(null, source);
+            string s = (string)Tail.Read(source, ref state, null);
             return s.Length == 0 ? null : new Uri(s, UriKind.RelativeOrAbsolute);
         }
 
@@ -53,7 +50,7 @@ namespace ProtoBuf.Serializers
             ctx.Branch(@end, true);
             ctx.MarkLabel(@nonEmpty);
             ctx.LoadValue((int)UriKind.RelativeOrAbsolute);
-            ctx.EmitCtor(ctx.MapType(typeof(Uri)), ctx.MapType(typeof(string)), ctx.MapType(typeof(UriKind)));
+            ctx.EmitCtor(typeof(Uri), typeof(string), typeof(UriKind));
             ctx.MarkLabel(@end);
         }
 #endif

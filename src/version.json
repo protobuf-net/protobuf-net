@@ -1,10 +1,13 @@
 {
   "$schema": "https://raw.githubusercontent.com/AArnott/Nerdbank.GitVersioning/master/src/NerdBank.GitVersioning/version.schema.json",
-  "version": "2.4",
+  "version": "3.0.0-alpha.{height}",
+  "assemblyVersion": "3.0",
   "nugetPackageVersion": {
     "semVer": 2
   },
   "publicReleaseRefSpec": [
-    "^refs/heads/master$"
+    "^refs/heads/master$",
+    "^refs/tags/v\\d+\\.\\d+",
+    "^refs/heads/split-reader"
   ]
 }

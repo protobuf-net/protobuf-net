@@ -4,7 +4,34 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class CompiledSerializer : IProtoTypeSerializer
+    internal sealed class CompiledSerializer<T> : CompiledSerializer, IProtoSerializer<T>
+    {
+        private readonly Compiler.ProtoSerializer serializer;
+        private readonly Compiler.ProtoDeserializer deserializer;
+        public CompiledSerializer(IProtoTypeSerializer head, TypeModel model)
+            : base(head)
+        {
+            serializer = Compiler.CompilerContext.BuildSerializer(head, model);
+            deserializer = Compiler.CompilerContext.BuildDeserializer(head, model);
+        }
+
+        public void Deserialize(ProtoReader reader, ref ProtoReader.State state, ref T obj)
+        {
+            object o = obj;
+            o = deserializer(reader, ref state, o);
+            obj = (T)o;
+        }
+
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
+            => deserializer(source, ref state, value);
+
+        public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, ref T obj)
+            => serializer(writer, ref state, obj);
+
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+            => serializer(dest, ref state, value);
+    }
+    internal abstract class CompiledSerializer : IProtoTypeSerializer
     {
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
         {
@@ -28,41 +55,40 @@ namespace ProtoBuf.Serializers
 
         public static CompiledSerializer Wrap(IProtoTypeSerializer head, TypeModel model)
         {
-            CompiledSerializer result = head as CompiledSerializer;
-            if (result == null)
+            if (!(head is CompiledSerializer result))
             {
-                result = new CompiledSerializer(head, model);
-                Helpers.DebugAssert(((IProtoTypeSerializer)result).ExpectedType == head.ExpectedType);
+                var ctor = Helpers.GetConstructor(typeof(CompiledSerializer<>).MakeGenericType(head.ExpectedType),
+                    new Type[] { typeof(IProtoTypeSerializer), typeof(TypeModel) }, true);
+
+                try
+                {
+                    result = (CompiledSerializer)ctor.Invoke(new object[] { head, model });
+                }
+                catch (System.Reflection.TargetInvocationException tie)
+                {
+                    throw tie.InnerException;
+                }
+                Helpers.DebugAssert(result.ExpectedType == head.ExpectedType);
             }
             return result;
         }
 
         private readonly IProtoTypeSerializer head;
-        private readonly Compiler.ProtoSerializer serializer;
-        private readonly Compiler.ProtoDeserializer deserializer;
 
-        private CompiledSerializer(IProtoTypeSerializer head, TypeModel model)
+        protected CompiledSerializer(IProtoTypeSerializer head)
         {
             this.head = head;
-            serializer = Compiler.CompilerContext.BuildSerializer(head, model);
-            deserializer = Compiler.CompilerContext.BuildDeserializer(head, model);
         }
 
         bool IProtoSerializer.RequiresOldValue => head.RequiresOldValue;
 
         bool IProtoSerializer.ReturnsValue => head.ReturnsValue;
 
-        Type IProtoSerializer.ExpectedType => head.ExpectedType;
+        public Type ExpectedType => head.ExpectedType;
 
-        void IProtoSerializer.Write(object value, ProtoWriter dest)
-        {
-            serializer(value, dest);
-        }
+        public abstract void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
 
-        object IProtoSerializer.Read(object value, ProtoReader source)
-        {
-            return deserializer(value, source);
-        }
+        public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
 
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {

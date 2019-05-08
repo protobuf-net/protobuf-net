@@ -16,13 +16,12 @@ using System.Text;
 
 namespace protogen.site.Controllers
 {
-
 #if RELEASE
     [RequireHttps]
 #endif
     public class HomeController : Controller
     {
-        readonly IHostingEnvironment _host;
+        private readonly IHostingEnvironment _host;
         public HomeController(IHostingEnvironment host)
         {
             _host = host;
@@ -66,7 +65,6 @@ namespace protogen.site.Controllers
             }
         }
 
-
         public class IndexModel
         {
             public string ProtocVersion { get; set; }
@@ -77,7 +75,7 @@ namespace protogen.site.Controllers
 
             public string LibVersion => _libVersion;
 
-            static readonly string _libVersion;
+            private static readonly string _libVersion;
 
             static IndexModel()
             {
@@ -85,7 +83,7 @@ namespace protogen.site.Controllers
                 var cgVer = GetVersion(typeof(CodeGenerator));
                 _libVersion = tmVer == cgVer ? tmVer : (tmVer + "/" + cgVer);
             }
-            static string GetVersion(Type type)
+            private static string GetVersion(Type type)
             {
                 var assembly = type.GetTypeInfo().Assembly;
                 return assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version
@@ -99,7 +97,6 @@ namespace protogen.site.Controllers
             byte[] data = null;
             try
             {
-
                 if (hex != null) hex = hex.Trim();
                 if (base64 != null) base64 = base64.Trim();
 
@@ -162,10 +159,10 @@ namespace protogen.site.Controllers
                 catch { return null; }
             }
             public int Count => data.Count;
-            public ProtoReader GetReader()
+            public ProtoReader GetReader(out ProtoReader.State state)
             {
                 var ms = new MemoryStream(data.Array, data.Offset, data.Count, false);
-                return ProtoReader.Create(ms, null, null);
+                return ProtoReader.Create(out state, ms, null, null);
             }
             public bool ContainsValue => data.Array != null;
             public bool CouldBeProto()
@@ -173,14 +170,14 @@ namespace protogen.site.Controllers
                 if (!ContainsValue) return false;
                 try
                 {
-                    using (var reader = GetReader())
+                    using (var reader = GetReader(out var state))
                     {
                         int field;
-                        while ((field = reader.ReadFieldHeader()) > 0)
+                        while ((field = reader.ReadFieldHeader(ref state)) > 0)
                         {
-                            reader.SkipField();
+                            reader.SkipField(ref state);
                         }
-                        return reader.Position == Count; // MemoryStream will let you seek out of bounds!
+                        return reader.GetPosition(ref state) == Count; // MemoryStream will let you seek out of bounds!
                     }
                 }
                 catch
@@ -263,7 +260,6 @@ namespace protogen.site.Controllers
                             default:
                                 codegen = CSharpCodeGenerator.Default;
                                 break;
-
                         }
                         result.Files = codegen.Generate(set, nameNormalizer, options).ToArray();
                     }
@@ -292,8 +288,8 @@ namespace protogen.site.Controllers
             return result;
         }
 
-        Dictionary<string, string> legalImports = null;
-        readonly static char[] DirSeparators = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        private Dictionary<string, string> legalImports = null;
+        private readonly static char[] DirSeparators = { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 
         private bool ValidateImport(string path) => ResolveImport(path) != null;
         private string ResolveImport(string path)
@@ -319,13 +315,12 @@ namespace protogen.site.Controllers
                 out string actual) ? actual : null;
         }
 
-        static string protocVersion = null;
-        static bool protocUsable;
+        private static string protocVersion = null;
+        private static bool protocUsable;
         public static string GetProtocVersion(IHostingEnvironment host, out bool canUse)
         {
             if (protocVersion == null)
             {
-
                 try
                 {
                     int code = RunProtoc(host, "--version", Path.GetTempPath(), out var stdout, out var stderr);
@@ -347,7 +342,7 @@ namespace protogen.site.Controllers
             canUse = protocUsable;
             return protocVersion;
         }
-        static int RunProtoc(IHostingEnvironment host, string arguments, string workingDir, out string stdout, out string stderr)
+        private static int RunProtoc(IHostingEnvironment host, string arguments, string workingDir, out string stdout, out string stderr)
         {
             var exePath = Path.Combine(host.WebRootPath, "protoc\\protoc.exe");
             if (!System.IO.File.Exists(exePath))

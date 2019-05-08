@@ -10,7 +10,7 @@ using ProtoBuf.Compiler;
 
 namespace ProtoBuf.unittest.Serializers
 {
-    static partial class Util
+    internal static partial class Util
     {
 #if !NO_INTERNAL_CONTEXT
         public static void Test(object value, Type innerType, Func<IProtoSerializer, IProtoSerializer> ctor,
@@ -32,16 +32,19 @@ namespace ProtoBuf.unittest.Serializers
             Test(value, compiled, "compiled", expected);
         }
 
+#pragma warning disable RCS1163 // Unused parameter.
         public static void Test(object obj, ProtoSerializer serializer, string message, byte[] expected)
+#pragma warning restore RCS1163 // Unused parameter.
         {
             byte[] data;
             using (MemoryStream ms = new MemoryStream())
             {
-                int reported;
-                using (ProtoWriter writer = new ProtoWriter(ms, RuntimeTypeModel.Default, null))
+                long reported;
+                using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
                 {
-                    serializer(obj, writer);
-                    reported = ProtoWriter.GetPosition(writer);
+                    serializer(writer, ref state, obj);
+                    writer.Close(ref state);
+                    reported = ProtoWriter.GetLongPosition(writer, ref state);
                 }
                 data = ms.ToArray();
                 Assert.Equal(reported, data.Length); //, message + ":reported/actual");
@@ -98,15 +101,19 @@ namespace ProtoBuf.unittest.Serializers
             }
             return sb.ToString();
         }
-        public static void Test(Action<ProtoWriter> action, string expectedHex)
+
+        public delegate void WriterRunner(ProtoWriter writer, ref ProtoWriter.State state);
+
+        public static void Test(WriterRunner action, string expectedHex)
         {
             using (var ms = new MemoryStream())
             {
-                using (var pw = ProtoWriter.Create(ms, RuntimeTypeModel.Default, null))
+                using (var pw = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
                 {
-                    action(pw);
+                    action(pw, ref state);
+                    pw.Close(ref state);
                 }
-                string s = GetHex(ms.ToArray());               
+                string s = GetHex(ms.ToArray());
                 Assert.Equal(expectedHex, s);
             }
         }

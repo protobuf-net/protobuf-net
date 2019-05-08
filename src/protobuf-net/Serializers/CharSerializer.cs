@@ -3,26 +3,21 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class CharSerializer : UInt16Serializer
+    internal sealed class CharSerializer : UInt16Serializer
     {
-        static readonly Type expectedType = typeof(char);
-
-        public CharSerializer(ProtoBuf.Meta.TypeModel model) : base(model)
-        {
-
-        }
+        private static readonly Type expectedType = typeof(char);
 
         public override Type ExpectedType => expectedType;
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteUInt16((ushort)(char)value, dest);
+            ProtoWriter.WriteUInt16((ushort)(char)value, dest, ref state);
         }
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return (char)source.ReadUInt16();
+            return (char)source.ReadUInt16(ref state);
         }
 
         // no need for any special IL here; ushort and char are

@@ -45,6 +45,8 @@
         /// denotes a variant integer that should be interpreted using
         /// zig-zag semantics (so -ve numbers aren't a significant overhead)
         /// </summary>
-        SignedVariant = WireType.Variant | (1 << 3),
+#pragma warning disable RCS1130 // Bitwise operation on enum without Flags attribute.
+        SignedVariant = Variant | (1 << 3),
+#pragma warning restore RCS1130 // Bitwise operation on enum without Flags attribute.
     }
 }

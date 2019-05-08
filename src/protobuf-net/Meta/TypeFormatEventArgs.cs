@@ -45,7 +45,7 @@ namespace ProtoBuf.Meta
 
         internal TypeFormatEventArgs(string formattedName)
         {
-            if (string.IsNullOrEmpty(formattedName)) throw new ArgumentNullException("formattedName");
+            if (string.IsNullOrEmpty(formattedName)) throw new ArgumentNullException(nameof(formattedName));
             this.formattedName = formattedName;
             // typeFixed = false; <== implicit
         }

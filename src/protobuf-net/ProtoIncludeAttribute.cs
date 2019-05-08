@@ -48,7 +48,7 @@ namespace ProtoBuf
         /// <summary>
         /// Gets the additional type to serialize/deserialize.
         /// </summary>
-        public Type KnownType => TypeModel.ResolveKnownType(KnownTypeName, null, null);
+        public Type KnownType => TypeModel.ResolveKnownType(KnownTypeName, null);
 
         /// <summary>
         /// Specifies whether the inherited sype's sub-message should be

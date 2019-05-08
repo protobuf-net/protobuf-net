@@ -40,9 +40,9 @@ namespace Examples.Dictionary
         {
             return Value.GetHashCode();
         }
-        public override bool Equals(object other)
+        public override bool Equals(object obj)
         {
-            return Equals(other as SimpleData);
+            return Equals(obj as SimpleData);
         }
     }
 
@@ -280,18 +280,18 @@ namespace Examples.Dictionary
             Console.WriteLine("Ser (kv-grouped)\t" + s3);
             Console.WriteLine("Deser (kv-grouped)\t" + d3);
 
-            var pw = ProtoWriter.Create(Stream.Null, null, null);
+            var pw = ProtoWriter.Create(out var state, Stream.Null, null, null);
             Stopwatch watch = Stopwatch.StartNew();
             for (int i = 0; i < LOOP; i++ ) {
-                ProtoWriter.WriteFieldHeader(1, WireType.String, pw);
-                ProtoWriter.WriteString("Field1", pw);
-                ProtoWriter.WriteFieldHeader(1, WireType.String, pw);
-                ProtoWriter.WriteString("Field2", pw);
-                ProtoWriter.WriteFieldHeader(1, WireType.String, pw);
-                ProtoWriter.WriteString("Field3", pw);
+                ProtoWriter.WriteFieldHeader(1, WireType.String, pw, ref state);
+                ProtoWriter.WriteString("Field1", pw, ref state);
+                ProtoWriter.WriteFieldHeader(1, WireType.String, pw, ref state);
+                ProtoWriter.WriteString("Field2", pw, ref state);
+                ProtoWriter.WriteFieldHeader(1, WireType.String, pw, ref state);
+                ProtoWriter.WriteString("Field3", pw, ref state);
             }
             watch.Stop();
-            pw.Close();
+            pw.Close(ref state);
             Console.WriteLine("Encoding: " + watch.ElapsedMilliseconds);
             
         }

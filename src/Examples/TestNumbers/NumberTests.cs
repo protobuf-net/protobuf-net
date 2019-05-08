@@ -4,11 +4,12 @@ using System.Diagnostics;
 using System.IO;
 using Xunit;
 using ProtoBuf;
+using Xunit.Abstractions;
 
 namespace Examples.TestNumbers
 {
     [ProtoContract]
-    class NumRig
+    internal class NumRig
     {
         [ProtoMember(1, DataFormat=DataFormat.Default)]
         public int Int32Default { get; set; }
@@ -41,20 +42,20 @@ namespace Examples.TestNumbers
         public ulong UInt64TwosComplement { get; set; }
         [ProtoMember(16, DataFormat = DataFormat.FixedSize)]
         public ulong UInt64FixedSize { get; set; }
-        
+
         [ProtoMember(17)]
         public string Foo { get; set; }
     }
 
     [ProtoContract]
-    class ZigZagInt32
+    internal class ZigZagInt32
     {
         [ProtoMember(1, DataFormat = DataFormat.ZigZag)]
         [DefaultValue(123456)]
         public int Foo { get; set; }
     }
     [ProtoContract]
-    class TwosComplementInt32
+    internal class TwosComplementInt32
     {
         [ProtoMember(1, DataFormat = DataFormat.TwosComplement)]
         [DefaultValue(123456)]
@@ -62,23 +63,26 @@ namespace Examples.TestNumbers
     }
 
     [ProtoContract]
-    class TwosComplementUInt32
+    internal class TwosComplementUInt32
     {
         [ProtoMember(1, DataFormat = DataFormat.TwosComplement)]
         public uint Foo { get; set; }
     }
-    
+
     [ProtoContract]
-    class ZigZagInt64
+    internal class ZigZagInt64
     {
         [ProtoMember(1, DataFormat = DataFormat.ZigZag)]
         public long Foo { get; set; }
     }
 
-
-    
     public class SignTests
     {
+        public ITestOutputHelper Output { get; }
+
+        public SignTests(ITestOutputHelper output)
+            => Output = output;
+
         [Fact]
         public void RoundTripBigPosativeZigZagInt64()
         {
@@ -95,7 +99,7 @@ namespace Examples.TestNumbers
                 clone = Serializer.DeepClone(obj);
             Assert.Equal(obj.Foo, clone.Foo);
         }
-        
+
         [Fact]
         public void RoundTripBigNegativeZigZagInt64() {
             ZigZagInt64 obj = new ZigZagInt64 { Foo = -123456789 },
@@ -127,7 +131,7 @@ namespace Examples.TestNumbers
         [Fact]
         public void TestSignTwosComplementInt32_m1()
         {
-            Assert.True(Program.CheckBytes(new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-1");
+            Assert.True(Program.CheckBytes(Output, new TwosComplementInt32 { Foo = -1 }, 0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01), "-1");
         }
         [Fact]
         public void TestSignTwosComplementInt32_m2()
@@ -163,7 +167,7 @@ namespace Examples.TestNumbers
         public void TestSignZigZagInt32_m2()
         {
             Assert.True(Program.CheckBytes(new ZigZagInt32 { Foo = -2 }, 0x08, 0x03), "-2");
-        }        
+        }
         [Fact]
         public void TestSignZigZagInt32_2147483647()
         {
@@ -195,10 +199,8 @@ namespace Examples.TestNumbers
         [Fact]
         public void TestOverflow()
         {
-            Program.ExpectFailure<OverflowException>(() =>
-            {
-                Program.Build<ZigZagInt32>(0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
-            });
+            Program.ExpectFailure<OverflowException>(()
+                => Program.Build<ZigZagInt32>(0x08, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF));
         }
 
         [Fact]
@@ -233,11 +235,10 @@ namespace Examples.TestNumbers
         [Fact]
         public void SweepBitsInt64KnownTricky()
         {
-            
-            int i = 31, j = 31;
-            long bigBit = i == 0 ? 0 : (1 << i - 1);
-            long smallBit = 1 << j;
-            long val = bigBit | smallBit;
+            const int i = 31, j = 31;
+            const long bigBit = i == 0 ? 0 : (1 << i - 1);
+            const long smallBit = 1 << j;
+            const long val = bigBit | smallBit;
             NumRig rig = new NumRig();
             rig.Int64Default // 9 => 72
                 = rig.Int64FixedSize // 12 => 97?
@@ -258,7 +259,6 @@ namespace Examples.TestNumbers
             Assert.Equal(val, clone.Int64ZigZag); //, "ZigZag");
             Assert.Equal(val, clone.Int64TwosComplement); //, "TwosComplement");
             Assert.Equal(SUCCESS, clone.Foo); //, "EOF check");
-            
         }
 
         [Fact]

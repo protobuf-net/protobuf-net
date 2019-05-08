@@ -5,58 +5,63 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class NetObjectSerializer : IProtoSerializer
+    internal sealed class NetObjectSerializer : IProtoSerializer
     {
         private readonly int key;
-        private readonly Type type;
 
         private readonly BclHelpers.NetObjectOptions options;
 
-        public NetObjectSerializer(TypeModel model, Type type, int key, BclHelpers.NetObjectOptions options)
+        public NetObjectSerializer(Type type, int key, BclHelpers.NetObjectOptions options)
         {
             bool dynamicType = (options & BclHelpers.NetObjectOptions.DynamicType) != 0;
             this.key = dynamicType ? -1 : key;
-            this.type = dynamicType ? model.MapType(typeof(object)) : type;
+            ExpectedType = dynamicType ? typeof(object) : type;
             this.options = options;
         }
 
-        public Type ExpectedType => type;
+        public Type ExpectedType { get; }
 
         public bool ReturnsValue => true;
 
         public bool RequiresOldValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            return BclHelpers.ReadNetObject(value, source, key, type == typeof(object) ? null : type, options);
+            return BclHelpers.ReadNetObject(source, ref state, value, key, ExpectedType == typeof(object) ? null : ExpectedType, options);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            BclHelpers.WriteNetObject(value, dest, key, options);
+            BclHelpers.WriteNetObject(value, dest, ref state, key, options);
         }
 
 #if FEAT_COMPILER
-        public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.LoadValue(valueFrom);
-            ctx.CastToObject(type);
-            ctx.LoadReaderWriter();
-            ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
-            if (type == ctx.MapType(typeof(object))) ctx.LoadNullRef();
-            else ctx.LoadValue(type);
-            ctx.LoadValue((int)options);
-            ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("ReadNetObject"));
-            ctx.CastFromObject(type);
+            using (var val = ctx.GetLocalWithValue(ExpectedType, entity))
+            {
+                ctx.LoadReader(true);
+                ctx.LoadValue(val);
+                ctx.CastToObject(ExpectedType);
+                ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
+                if (ExpectedType == typeof(object)) ctx.LoadNullRef();
+                else ctx.LoadValue(ExpectedType);
+                ctx.LoadValue((int)options);
+
+                ctx.EmitCall(typeof(BclHelpers).GetMethod("ReadNetObject",
+                    new[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object),
+                    typeof(int), typeof(Type), typeof(BclHelpers.NetObjectOptions)}));
+                ctx.CastFromObject(ExpectedType);
+            }
         }
         public void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue(valueFrom);
-            ctx.CastToObject(type);
-            ctx.LoadReaderWriter();
+            ctx.CastToObject(ExpectedType);
+            ctx.LoadWriter(true);
             ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
             ctx.LoadValue((int)options);
-            ctx.EmitCall(ctx.MapType(typeof(BclHelpers)).GetMethod("WriteNetObject"));
+            ctx.EmitCall(ProtoWriter.GetStaticMethod<BclHelpers>("WriteNetObject"));
         }
 #endif
     }

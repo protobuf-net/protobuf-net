@@ -1,10 +1,13 @@
 ﻿#if !NO_RUNTIME
 using System;
 
-
 namespace ProtoBuf.Serializers
 {
-    interface IProtoSerializer
+    internal static class PrimitiveSerializer<T> where T : class, IProtoSerializer, new()
+    {
+        public static readonly T Singleton = new T();
+    }
+    internal interface IProtoSerializer
     {
         /// <summary>
         /// The type that this serializer is intended to work for.
@@ -15,16 +18,18 @@ namespace ProtoBuf.Serializers
         /// Perform the steps necessary to serialize this data.
         /// </summary>
         /// <param name="value">The value to be serialized.</param>
+        /// <param name="state">Writer state</param>
         /// <param name="dest">The writer entity that is accumulating the output data.</param>
-        void Write(object value, ProtoWriter dest);
+        void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
 
         /// <summary>
         /// Perform the steps necessary to deserialize this data.
         /// </summary>
         /// <param name="value">The current value, if appropriate.</param>
         /// <param name="source">The reader providing the input data.</param>
+        /// <param name="state">Reader state</param>
         /// <returns>The updated / replacement value.</returns>
-        object Read(object value, ProtoReader source);
+        object Read(ProtoReader source, ref ProtoReader.State state, object value);
 
         /// <summary>
         /// Indicates whether a Read operation <em>replaces</em> the existing value, or

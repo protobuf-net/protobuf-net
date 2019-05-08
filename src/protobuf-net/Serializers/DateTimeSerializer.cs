@@ -21,32 +21,32 @@ namespace ProtoBuf.Serializers
             includeKind = model?.SerializeDateTimeKind() == true;
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             if (wellKnown)
             {
-                return BclHelpers.ReadTimestamp(source);
+                return BclHelpers.ReadTimestamp(source, ref state);
             }
             else
             {
                 Helpers.DebugAssert(value == null); // since replaces
-                return BclHelpers.ReadDateTime(source);
+                return BclHelpers.ReadDateTime(source, ref state);
             }
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (wellKnown)
-                BclHelpers.WriteTimestamp((DateTime)value, dest);
+                BclHelpers.WriteTimestamp((DateTime)value, dest, ref state);
             else if (includeKind)
-                BclHelpers.WriteDateTimeWithKind((DateTime)value, dest);
+                BclHelpers.WriteDateTimeWithKind((DateTime)value, dest, ref state);
             else
-                BclHelpers.WriteDateTime((DateTime)value, dest);
+                BclHelpers.WriteDateTime((DateTime)value, dest, ref state);
         }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite(ctx.MapType(typeof(BclHelpers)),
+            ctx.EmitWrite<BclHelpers>(
                 wellKnown ? nameof(BclHelpers.WriteTimestamp)
                 : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom);
         }
@@ -54,7 +54,7 @@ namespace ProtoBuf.Serializers
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (wellKnown) ctx.LoadValue(entity);
-            ctx.EmitBasicRead(ctx.MapType(typeof(BclHelpers)),
+            ctx.EmitBasicRead<BclHelpers>(
                 wellKnown ? nameof(BclHelpers.ReadTimestamp) : nameof(BclHelpers.ReadDateTime),
                 ExpectedType);
         }

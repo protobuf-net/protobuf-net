@@ -61,54 +61,52 @@ namespace ProtoBuf.unittest.Meta
         public void GetBackTheRightType_SomeBase()
         {
             var model = CreateModel();
-            Assert.IsType(typeof(SomeBase), model.DeepClone(new SomeBase())); //, "Runtime");
+            Assert.IsType<SomeBase>(model.DeepClone(new SomeBase())); //, "Runtime");
 
             model.CompileInPlace();
-            Assert.IsType(typeof(SomeBase), model.DeepClone(new SomeBase())); //, "In-Place");
+            Assert.IsType<SomeBase>(model.DeepClone(new SomeBase())); //, "In-Place");
 
             var compiled = model.Compile();
-            Assert.IsType(typeof(SomeBase), compiled.DeepClone(new SomeBase())); //, "Compiled");
+            Assert.IsType<SomeBase>(compiled.DeepClone(new SomeBase())); //, "Compiled");
         }
         [Fact]
         public void GetBackTheRightType_SomeDerived()
         {
             var model = CreateModel();
-            Assert.IsType(typeof(SomeDerived), model.DeepClone(new SomeDerived())); //, "Runtime");
+            Assert.IsType<SomeDerived>(model.DeepClone(new SomeDerived())); //, "Runtime");
 
             model.CompileInPlace();
-            Assert.IsType(typeof(SomeDerived), model.DeepClone(new SomeDerived())); //, "In-Place");
+            Assert.IsType<SomeDerived>(model.DeepClone(new SomeDerived())); //, "In-Place");
 
             var compiled = model.Compile();
-            Assert.IsType(typeof(SomeDerived), compiled.DeepClone(new SomeDerived())); //, "Compiled");
+            Assert.IsType<SomeDerived>(compiled.DeepClone(new SomeDerived())); //, "Compiled");
         }
 
         [Fact]
         public void GetBackTheRightType_AnotherDerived()
         {
             var model = CreateModel();
-            Assert.IsType(typeof(AnotherDerived), model.DeepClone(new AnotherDerived())); //, "Runtime");
+            Assert.IsType<AnotherDerived>(model.DeepClone(new AnotherDerived())); //, "Runtime");
 
             model.CompileInPlace();
-            Assert.IsType(typeof(AnotherDerived), model.DeepClone(new AnotherDerived())); //, "In-Place");
+            Assert.IsType<AnotherDerived>(model.DeepClone(new AnotherDerived())); //, "In-Place");
 
             var compiled = model.Compile();
-            Assert.IsType(typeof(AnotherDerived), compiled.DeepClone(new AnotherDerived())); //, "Compiled");
+            Assert.IsType<AnotherDerived>(compiled.DeepClone(new AnotherDerived())); //, "Compiled");
         }
 
         [Fact]
         public void GetBackTheRightType_NotInvolved()
         {
             var model = CreateModel();
-            Assert.IsType(typeof(NotInvolved), model.DeepClone(new NotInvolved())); //, "Runtime");
+            Assert.IsType<NotInvolved>(model.DeepClone(new NotInvolved())); //, "Runtime");
 
             model.CompileInPlace();
-            Assert.IsType(typeof(NotInvolved), model.DeepClone(new NotInvolved())); //, "In-Place");
+            Assert.IsType<NotInvolved>(model.DeepClone(new NotInvolved())); //, "In-Place");
 
             var compiled = model.Compile();
-            Assert.IsType(typeof(NotInvolved), compiled.DeepClone(new NotInvolved())); //, "Compiled");
+            Assert.IsType<NotInvolved>(compiled.DeepClone(new NotInvolved())); //, "Compiled");
         }
-
     }
-
 }
 #endif

@@ -6,12 +6,12 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class ParseableSerializer : IProtoSerializer
+    internal sealed class ParseableSerializer : IProtoSerializer
     {
         private readonly MethodInfo parse;
-        public static ParseableSerializer TryCreate(Type type, TypeModel model)
+        public static ParseableSerializer TryCreate(Type type)
         {
-            if (type == null) throw new ArgumentNullException("type");
+            if (type == null) throw new ArgumentNullException(nameof(type));
 #if PORTABLE || COREFX || PROFILE259
 			MethodInfo method = null;
 
@@ -31,14 +31,14 @@ namespace ProtoBuf.Serializers
 #else
             MethodInfo method = type.GetMethod("Parse",
                 BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
-                null, new Type[] { model.MapType(typeof(string)) }, null);
+                null, new Type[] { typeof(string) }, null);
 #endif
             if (method != null && method.ReturnType == type)
             {
                 if (Helpers.IsValueType(type))
                 {
                     MethodInfo toString = GetCustomToString(type);
-                    if (toString == null || toString.ReturnType != model.MapType(typeof(string))) return null; // need custom ToString, fools
+                    if (toString == null || toString.ReturnType != typeof(string)) return null; // need custom ToString, fools
                 }
                 return new ParseableSerializer(method);
             }
@@ -67,15 +67,15 @@ namespace ProtoBuf.Serializers
         bool IProtoSerializer.RequiresOldValue { get { return false; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return parse.Invoke(null, new object[] { source.ReadString() });
+            return parse.Invoke(null, new object[] { source.ReadString(ref state) });
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteString(value.ToString(), dest);
+            ProtoWriter.WriteString(value.ToString(), dest, ref state);
         }
 
 #if FEAT_COMPILER
@@ -95,13 +95,13 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                ctx.EmitCall(ctx.MapType(typeof(object)).GetMethod("ToString"));
+                ctx.EmitCall(typeof(object).GetMethod("ToString"));
             }
             ctx.EmitBasicWrite("WriteString", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
-            ctx.EmitBasicRead("ReadString", ctx.MapType(typeof(string)));
+            ctx.EmitBasicRead("ReadString", typeof(string));
             ctx.EmitCall(parse);
         }
 #endif

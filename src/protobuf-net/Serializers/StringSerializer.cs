@@ -3,35 +3,31 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class StringSerializer : IProtoSerializer
+    internal sealed class StringSerializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(string);
-
-        public StringSerializer(ProtoBuf.Meta.TypeModel model)
-        {
-        }
+        private static readonly Type expectedType = typeof(string);
 
         public Type ExpectedType => expectedType;
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteString((string)value, dest);
+            ProtoWriter.WriteString((string)value, dest, ref state);
         }
         bool IProtoSerializer.RequiresOldValue => false;
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadString();
+            return source.ReadString(ref state);
         }
 #if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteString", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadString", ExpectedType);
         }

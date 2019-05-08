@@ -7,7 +7,6 @@ using System.Linq;
 
 namespace Examples.Issues
 {
-    
     public class Issue184
     {
         [Fact]
@@ -69,11 +68,9 @@ namespace Examples.Issues
             }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");
         }
 
-
         public interface IMobileObject { }
         public class InnocentType // nothing that looks like a list
         {
-            
         }
         public class MobileList<T> : List<T>, IMobileObject
         {
@@ -104,7 +101,5 @@ namespace Examples.Issues
             [ProtoMember(1)]
             public List<IMobileObject> Objects { get; set; }
         }
-
-
     }
 }

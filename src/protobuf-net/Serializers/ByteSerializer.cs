@@ -3,27 +3,25 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class ByteSerializer : IProtoSerializer
+    internal sealed class ByteSerializer : IProtoSerializer
     {
         public Type ExpectedType { get { return expectedType; } }
 
-        static readonly Type expectedType = typeof(byte);
-
-        public ByteSerializer(ProtoBuf.Meta.TypeModel model) { }
+        private static readonly Type expectedType = typeof(byte);
 
         bool IProtoSerializer.RequiresOldValue => false;
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteByte((byte)value, dest);
+            ProtoWriter.WriteByte((byte)value, dest, ref state);
         }
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadByte();
+            return source.ReadByte(ref state);
         }
 
 #if FEAT_COMPILER
@@ -32,7 +30,7 @@ namespace ProtoBuf.Serializers
             ctx.EmitBasicWrite("WriteByte", valueFrom);
         }
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadByte", ExpectedType);
         }

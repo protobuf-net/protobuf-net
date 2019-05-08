@@ -106,7 +106,7 @@ namespace ProtoBuf.unittest.Meta
                                 }
                                 ThreadRace.A a =
                                     (ThreadRace.A)model.Deserialize(ms, null, typeof(ThreadRace.A));
-                                Assert.IsType(typeof(ThreadRace.Y9), a);
+                                Assert.IsType<ThreadRace.Y9>(a);
                             }
 
                         }

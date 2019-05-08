@@ -3,11 +3,9 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class Int32Serializer : IProtoSerializer
+    internal sealed class Int32Serializer : IProtoSerializer
     {
-        static readonly Type expectedType = typeof(int);
-
-        public Int32Serializer(ProtoBuf.Meta.TypeModel model) { }
+        private static readonly Type expectedType = typeof(int);
 
         public Type ExpectedType => expectedType;
 
@@ -15,15 +13,15 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value == null); // since replaces
-            return source.ReadInt32();
+            return source.ReadInt32(ref state);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteInt32((int)value, dest);
+            ProtoWriter.WriteInt32((int)value, dest, ref state);
         }
 
 #if FEAT_COMPILER
@@ -31,7 +29,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteInt32", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadInt32", ExpectedType);
         }

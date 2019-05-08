@@ -41,6 +41,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.MSBuild", "pro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "protobuf-net.MSBuild.Test", "protobuf-net.MSBuild.Test\protobuf-net.MSBuild.Test.csproj", "{1DEA1CF1-FDDC-4A44-BEEE-5E2C8CDB305F}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Benchmark", "Benchmark\Benchmark.csproj", "{562011E6-7C25-485E-8ECA-B3300F0CE5D2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchmarkBaseline", "BenchmarkBaseline\BenchmarkBaseline.csproj", "{DF69A70B-7F64-47BE-AD3D-C278861133D5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +99,14 @@ Global
 		{1DEA1CF1-FDDC-4A44-BEEE-5E2C8CDB305F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1DEA1CF1-FDDC-4A44-BEEE-5E2C8CDB305F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1DEA1CF1-FDDC-4A44-BEEE-5E2C8CDB305F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{562011E6-7C25-485E-8ECA-B3300F0CE5D2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{562011E6-7C25-485E-8ECA-B3300F0CE5D2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{562011E6-7C25-485E-8ECA-B3300F0CE5D2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{562011E6-7C25-485E-8ECA-B3300F0CE5D2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF69A70B-7F64-47BE-AD3D-C278861133D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF69A70B-7F64-47BE-AD3D-C278861133D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF69A70B-7F64-47BE-AD3D-C278861133D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF69A70B-7F64-47BE-AD3D-C278861133D5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

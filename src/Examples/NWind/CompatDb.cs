@@ -1,4 +1,5 @@
 ﻿#if !COREFX
+#pragma warning disable IDE1006, RCS1015, RCS1020, RCS1032, RCS1037, RCS1085, RCS1163
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -12,15 +13,15 @@ using Serializer = ProtoBuf.Serializer;
 namespace ProtoSharp.Core
 {
     // throwaway [Tag] replacement from ProtoSharp
-    class TagAttribute : Attribute
+    [AttributeUsage(AttributeTargets.Property| AttributeTargets.Field)]
+    internal class TagAttribute : Attribute
     {
-        public TagAttribute(int tag) { }
+        public int Tag { get; }
+        public TagAttribute(int tag) => Tag = tag;
     }
 }
 namespace DAL
 {
-    
-
     [ProtoContract, DataContract, Serializable]
     public class DatabaseCompat
     {
@@ -94,8 +95,6 @@ namespace DAL
     [DataContract(), Serializable]
     public partial class OrderCompat
     {
-
-
         private int _OrderID;
 
         private string _CustomerID;
@@ -482,7 +481,6 @@ namespace DAL
         private void attach_Lines(OrderLineCompat entity)
         {
             this.SendPropertyChanging();
-
         }
 
         private void detach_Lines(OrderLineCompat entity)
@@ -519,7 +517,6 @@ namespace DAL
     [DataContract(), Serializable]
     public partial class OrderLineCompat
     {
-
         private int _OrderID;
 
         private int _ProductID;

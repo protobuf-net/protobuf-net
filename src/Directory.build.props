@@ -5,6 +5,7 @@
     <OutputType>Library</OutputType>
     <SignAssembly>true</SignAssembly>
     <DelaySign>False</DelaySign>
+    <NoWarn>NU5105;CS1701;BC42016</NoWarn>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)ProtoBuf.snk</AssemblyOriginatorKeyFile>
     <Copyright>See https://github.com/mgravell/protobuf-net</Copyright>
     <PackageLicenseUrl>https://github.com/mgravell/protobuf-net/blob/master/Licence.txt</PackageLicenseUrl>

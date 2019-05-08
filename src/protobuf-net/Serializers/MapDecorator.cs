@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+﻿#pragma warning disable RCS1165
+using ProtoBuf.Meta;
 using System;
 #if FEAT_COMPILER
 using ProtoBuf.Compiler;
@@ -8,21 +9,21 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    class MapDecorator<TDictionary, TKey, TValue> : ProtoDecoratorBase where TDictionary : class, IDictionary<TKey, TValue>
+    internal class MapDecorator<TDictionary, TKey, TValue> : ProtoDecoratorBase where TDictionary : class, IDictionary<TKey, TValue>
     {
         private readonly Type concreteType;
         private readonly IProtoSerializer keyTail;
         private readonly int fieldNumber;
         private readonly WireType wireType;
 
-        internal MapDecorator(TypeModel model, Type concreteType, IProtoSerializer keyTail, IProtoSerializer valueTail,
+        internal MapDecorator(Type concreteType, IProtoSerializer keyTail, IProtoSerializer valueTail,
             int fieldNumber, WireType wireType, WireType keyWireType, WireType valueWireType, bool overwriteList)
             : base(DefaultValue == null
                   ? (IProtoSerializer)new TagDecorator(2, valueWireType, false, valueTail)
-                  : (IProtoSerializer)new DefaultValueDecorator(model, DefaultValue, new TagDecorator(2, valueWireType, false, valueTail)))
+                  : (IProtoSerializer)new DefaultValueDecorator(DefaultValue, new TagDecorator(2, valueWireType, false, valueTail)))
         {
             this.wireType = wireType;
-            this.keyTail = new DefaultValueDecorator(model, DefaultKey, new TagDecorator(1, keyWireType, false, keyTail));
+            this.keyTail = new DefaultValueDecorator(DefaultKey, new TagDecorator(1, keyWireType, false, keyTail));
             this.fieldNumber = fieldNumber;
             this.concreteType = concreteType ?? typeof(TDictionary);
 
@@ -32,8 +33,6 @@ namespace ProtoBuf.Serializers
 
             AppendToCollection = !overwriteList;
         }
-
-        private static readonly MethodInfo indexerSet = GetIndexerSetter();
 
         private static MethodInfo GetIndexerSetter()
         {
@@ -63,8 +62,8 @@ namespace ProtoBuf.Serializers
             throw new InvalidOperationException("Unable to resolve indexer for map");
         }
 
-        private static readonly TKey DefaultKey = (typeof(TKey) == typeof(string)) ? (TKey)(object)"" : default(TKey);
-        private static readonly TValue DefaultValue = (typeof(TValue) == typeof(string)) ? (TValue)(object)"" : default(TValue);
+        private static readonly TKey DefaultKey = (typeof(TKey) == typeof(string)) ? (TKey)(object)"" : default;
+        private static readonly TValue DefaultValue = (typeof(TValue) == typeof(string)) ? (TValue)(object)"" : default;
         public override Type ExpectedType => typeof(TDictionary);
 
         public override bool ReturnsValue => true;
@@ -73,57 +72,59 @@ namespace ProtoBuf.Serializers
 
         private bool AppendToCollection { get; }
 
-        public override object Read(object untyped, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            TDictionary typed = AppendToCollection ? ((TDictionary)untyped) : null;
-            if (typed == null) typed = (TDictionary)Activator.CreateInstance(concreteType);
+            TDictionary typed = (AppendToCollection ? ((TDictionary)value) : null)
+                ?? (TDictionary)Activator.CreateInstance(concreteType);
 
             do
             {
                 var key = DefaultKey;
-                var value = DefaultValue;
-                SubItemToken token = ProtoReader.StartSubItem(source);
+                var typedValue = DefaultValue;
+                SubItemToken token = ProtoReader.StartSubItem(source, ref state);
                 int field;
-                while ((field = source.ReadFieldHeader()) > 0)
+                while ((field = source.ReadFieldHeader(ref state)) > 0)
                 {
                     switch (field)
                     {
                         case 1:
-                            key = (TKey)keyTail.Read(null, source);
+                            key = (TKey)keyTail.Read(source, ref state, null);
                             break;
                         case 2:
-                            value = (TValue)Tail.Read(Tail.RequiresOldValue ? (object)value : null, source);
+                            typedValue = (TValue)Tail.Read(source, ref state, Tail.RequiresOldValue ? (object)typedValue : null);
                             break;
                         default:
-                            source.SkipField();
+                            source.SkipField(ref state);
                             break;
                     }
                 }
 
-                ProtoReader.EndSubItem(token, source);
-                typed[key] = value;
-            } while (source.TryReadFieldHeader(fieldNumber));
+                ProtoReader.EndSubItem(token, source, ref state);
+                typed[key] = typedValue;
+            } while (source.TryReadFieldHeader(ref state, fieldNumber));
 
             return typed;
         }
 
-        public override void Write(object untyped, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            foreach (var pair in (TDictionary)untyped)
+            foreach (var pair in (TDictionary)value)
             {
-                ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest);
-                var token = ProtoWriter.StartSubItem(null, dest);
-                if (pair.Key != null) keyTail.Write(pair.Key, dest);
-                if (pair.Value != null) Tail.Write(pair.Value, dest);
-                ProtoWriter.EndSubItem(token, dest);
+                ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
+                var token = ProtoWriter.StartSubItem(null, dest, ref state);
+                if (pair.Key != null) keyTail.Write(dest, ref state, pair.Key);
+                if (pair.Value != null) Tail.Write(dest, ref state, pair.Value);
+                ProtoWriter.EndSubItem(token, dest, ref state);
             }
         }
 
 #if FEAT_COMPILER
+        private static readonly MethodInfo indexerSet = GetIndexerSetter();
+
         protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
             Type itemType = typeof(KeyValuePair<TKey, TValue>);
-            MethodInfo moveNext, current, getEnumerator = ListDecorator.GetEnumeratorInfo(ctx.Model,
+            MethodInfo moveNext, current, getEnumerator = ListDecorator.GetEnumeratorInfo(
                 ExpectedType, itemType, out moveNext, out current);
             Type enumeratorType = getEnumerator.ReturnType;
 
@@ -148,7 +149,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadAddress(iter, enumeratorType);
                     ctx.EmitCall(current, enumeratorType);
 
-                    if (itemType != ctx.MapType(typeof(object)) && current.ReturnType == ctx.MapType(typeof(object)))
+                    if (itemType != typeof(object) && current.ReturnType == typeof(object))
                     {
                         ctx.CastFromObject(itemType);
                     }
@@ -156,12 +157,12 @@ namespace ProtoBuf.Serializers
 
                     ctx.LoadValue(fieldNumber);
                     ctx.LoadValue((int)wireType);
-                    ctx.LoadReaderWriter();
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("WriteFieldHeader"));
+                    ctx.LoadWriter(true);
+                    ctx.EmitCall(ProtoWriter.GetStaticMethod("WriteFieldHeader"));
 
                     ctx.LoadNullRef();
-                    ctx.LoadReaderWriter();
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("StartSubItem"));
+                    ctx.LoadWriter(true);
+                    ctx.EmitCall(ProtoWriter.GetStaticMethod("StartSubItem"));
                     ctx.StoreValue(token);
 
                     ctx.LoadAddress(kvp, itemType);
@@ -173,8 +174,8 @@ namespace ProtoBuf.Serializers
                     ctx.WriteNullCheckedTail(typeof(TValue), Tail, null);
 
                     ctx.LoadValue(token);
-                    ctx.LoadReaderWriter();
-                    ctx.EmitCall(ctx.MapType(typeof(ProtoWriter)).GetMethod("EndSubItem"));
+                    ctx.LoadWriter(true);
+                    ctx.EmitCall(ProtoWriter.GetStaticMethod("EndSubItem"));
 
                     ctx.MarkLabel(@next);
                     ctx.LoadAddress(iter, enumeratorType);
@@ -190,7 +191,7 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken)))
             using (Compiler.Local key = new Compiler.Local(ctx, typeof(TKey)))
             using (Compiler.Local @value = new Compiler.Local(ctx, typeof(TValue)))
-            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, ctx.MapType(typeof(int))))
+            using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
                 if (!AppendToCollection)
                 { // always new
@@ -231,8 +232,8 @@ namespace ProtoBuf.Serializers
                 }
 
                 // token = ProtoReader.StartSubItem(reader);
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("StartSubItem"));
+                ctx.LoadReader(true);
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem", ProtoReader.State.ReaderStateTypeArray));
                 ctx.StoreValue(token);
 
                 Compiler.CodeLabel @continue = ctx.DefineLabel(), processField = ctx.DefineLabel();
@@ -247,8 +248,8 @@ namespace ProtoBuf.Serializers
 
                 // case 0: default: reader.SkipField();
                 ctx.MarkLabel(@default);
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("SkipField"));
+                ctx.LoadReader(true);
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
                 ctx.Branch(@continue, false);
 
                 // case 1: key = ...
@@ -264,7 +265,7 @@ namespace ProtoBuf.Serializers
 
                 // (fieldNumber = reader.ReadFieldHeader()) > 0
                 ctx.MarkLabel(@continue);
-                ctx.EmitBasicRead("ReadFieldHeader", ctx.MapType(typeof(int)));
+                ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
                 ctx.CopyValue();
                 ctx.StoreValue(fieldNumber);
                 ctx.LoadValue(0);
@@ -272,8 +273,9 @@ namespace ProtoBuf.Serializers
 
                 // ProtoReader.EndSubItem(token, reader);
                 ctx.LoadValue(token);
-                ctx.LoadReaderWriter();
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("EndSubItem"));
+                ctx.LoadReader(true);
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
+                    new[] { typeof(SubItemToken), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
 
                 // list[key] = value;
                 ctx.LoadAddress(list, ExpectedType);
@@ -282,9 +284,10 @@ namespace ProtoBuf.Serializers
                 ctx.EmitCall(indexerSet);
 
                 // while reader.TryReadFieldReader(fieldNumber)
-                ctx.LoadReaderWriter();
+                ctx.LoadReader(true);
                 ctx.LoadValue(this.fieldNumber);
-                ctx.EmitCall(ctx.MapType(typeof(ProtoReader)).GetMethod("TryReadFieldHeader"));
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader",
+                    new[] { ProtoReader.State.ByRefStateType, typeof(int) }));
                 ctx.BranchIfTrue(redoFromStart, false);
 
                 if (ReturnsValue)
@@ -296,3 +299,4 @@ namespace ProtoBuf.Serializers
 #endif
     }
 }
+#pragma warning restore RCS1165

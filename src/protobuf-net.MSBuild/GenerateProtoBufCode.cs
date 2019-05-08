@@ -24,7 +24,7 @@ namespace ProtoBuf.MSBuild
         [Output]
         public ITaskItem[] ProtoCodeFile { get; set; }
 
-        static CommonCodeGenerator GetCodeGenForLanguage(string lang)
+        private static CommonCodeGenerator GetCodeGenForLanguage(string lang)
         {
             if(lang == null)
                 return CSharpCodeGenerator.Default;

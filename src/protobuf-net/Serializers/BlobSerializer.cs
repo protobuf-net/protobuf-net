@@ -9,27 +9,27 @@ using System.Reflection.Emit;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class BlobSerializer : IProtoSerializer
+    internal sealed class BlobSerializer : IProtoSerializer
     {
         public Type ExpectedType { get { return expectedType; } }
 
-        static readonly Type expectedType = typeof(byte[]);
+        private static readonly Type expectedType = typeof(byte[]);
 
-        public BlobSerializer(ProtoBuf.Meta.TypeModel model, bool overwriteList)
+        public BlobSerializer(bool overwriteList)
         {
             this.overwriteList = overwriteList;
         }
 
         private readonly bool overwriteList;
 
-        public object Read(object value, ProtoReader source)
+        public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, source);
+            return ProtoReader.AppendBytes(overwriteList ? null : (byte[])value, source, ref state);
         }
 
-        public void Write(object value, ProtoWriter dest)
+        public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
-            ProtoWriter.WriteBytes((byte[])value, dest);
+            ProtoWriter.WriteBytes((byte[])value, dest, ref state);
         }
 
         bool IProtoSerializer.RequiresOldValue { get { return !overwriteList; } }
@@ -39,7 +39,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicWrite("WriteBytes", valueFrom);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (overwriteList)
             {
@@ -47,11 +47,12 @@ namespace ProtoBuf.Serializers
             }
             else
             {
-                ctx.LoadValue(valueFrom);
+                ctx.LoadValue(entity);
             }
-            ctx.LoadReaderWriter();
-            ctx.EmitCall(ctx.MapType(typeof(ProtoReader))
-               .GetMethod("AppendBytes"));
+            ctx.LoadReader(true);
+            ctx.EmitCall(typeof(ProtoReader)
+               .GetMethod(nameof(ProtoReader.AppendBytes),
+               new[] { typeof(byte[]), typeof(ProtoReader), ProtoReader.State.ByRefStateType}));
         }
 #endif
     }

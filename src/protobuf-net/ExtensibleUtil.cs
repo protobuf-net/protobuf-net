@@ -14,7 +14,6 @@ namespace ProtoBuf
     /// </summary>
     internal static class ExtensibleUtil
     {
-
 #if !NO_RUNTIME
         /// <summary>
         /// All this does is call GetExtendedValuesTyped with the correct type for "instance";
@@ -29,16 +28,21 @@ namespace ProtoBuf
             }
         }
 #endif
+#pragma warning disable RCS1163
+        // Unused parameter.
         /// <summary>
         /// All this does is call GetExtendedValuesTyped with the correct type for "instance";
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
         /// the caller must respect the fields defined for the type they pass in.
         /// </summary>
         internal static IEnumerable GetExtendedValues(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
+#pragma warning restore RCS1163 // Unused parameter.
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
             if (tag <= 0) throw new ArgumentOutOfRangeException(nameof(tag));
+#pragma warning disable RCS1227 // Validate arguments correctly.
             IExtension extn = instance.GetExtensionObject(false);
+#pragma warning restore RCS1227 // Validate arguments correctly.
 
             if (extn == null)
             {
@@ -51,8 +55,8 @@ namespace ProtoBuf
             try
             {
                 SerializationContext ctx = new SerializationContext();
-                reader = ProtoReader.Create(stream, model, ctx, ProtoReader.TO_EOF);
-                while (model.TryDeserializeAuxiliaryType(reader, format, tag, type, ref value, true, true, false, false, null) && value != null)
+                reader = ProtoReader.CreateSolid(out var state, stream, model, ctx, ProtoReader.TO_EOF);
+                while (model.TryDeserializeAuxiliaryType(reader, ref state, format, tag, type, ref value, true, true, false, false, null) && value != null)
                 {
                     if (!singleton)
                     {
@@ -68,7 +72,7 @@ namespace ProtoBuf
             }
             finally
             {
-                ProtoReader.Recycle(reader);
+                reader?.Recycle();
                 extn.EndQuery(stream);
             }
         }
@@ -88,10 +92,10 @@ namespace ProtoBuf
             Stream stream = extn.BeginAppend();
             try
             {
-                using (ProtoWriter writer = ProtoWriter.Create(stream, model, null))
+                using (ProtoWriter writer = ProtoWriter.Create(out var state, stream, model, null))
                 {
-                    model.TrySerializeAuxiliaryType(writer, null, format, tag, value, false, null);
-                    writer.Close();
+                    model.TrySerializeAuxiliaryType(writer, ref state, null, format, tag, value, false, null);
+                    writer.Close(ref state);
                 }
                 commit = true;
             }
@@ -114,5 +118,4 @@ namespace ProtoBuf
         //        }
 
     }
-
 }

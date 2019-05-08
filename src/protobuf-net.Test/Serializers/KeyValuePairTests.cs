@@ -157,6 +157,10 @@ namespace ProtoBuf.unittest.Serializers
             var model = TypeModel.Create();
             model.AutoAddMissingTypes = false;
             model.Add(typeof(TypeWithDictionary), true);
+
+            var compiled = model.Compile("MapSerializer", "ShouldWorkWithAutoLoadDisabledCompile.dll");
+            PEVerify.Verify("ShouldWorkWithAutoLoadDisabledCompile.dll");
+
             var clone = (TypeWithDictionary)model.Compile().DeepClone(orig);
             Assert.Single(clone.Data);
             Assert.Equal(123.45M, clone.Data["abc"]);

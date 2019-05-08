@@ -6,31 +6,30 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class PropertyDecorator : ProtoDecoratorBase
+    internal sealed class PropertyDecorator : ProtoDecoratorBase
     {
-        public override Type ExpectedType => forType;
+        public override Type ExpectedType { get; }
         private readonly PropertyInfo property;
-        private readonly Type forType;
         public override bool RequiresOldValue => true;
         public override bool ReturnsValue => false;
         private readonly bool readOptionsWriteValue;
         private readonly MethodInfo shadowSetter;
 
-        public PropertyDecorator(TypeModel model, Type forType, PropertyInfo property, IProtoSerializer tail) : base(tail)
+        public PropertyDecorator(Type forType, PropertyInfo property, IProtoSerializer tail) : base(tail)
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(property != null);
-            this.forType = forType;
+            ExpectedType = forType;
             this.property = property;
-            SanityCheck(model, property, tail, out readOptionsWriteValue, true, true);
-            shadowSetter = GetShadowSetter(model, property);
+            SanityCheck(property, tail, out readOptionsWriteValue, true, true);
+            shadowSetter = GetShadowSetter(property);
         }
 
-        private static void SanityCheck(TypeModel model, PropertyInfo property, IProtoSerializer tail, out bool writeValue, bool nonPublic, bool allowInternal)
+        private static void SanityCheck(PropertyInfo property, IProtoSerializer tail, out bool writeValue, bool nonPublic, bool allowInternal)
         {
-            if (property == null) throw new ArgumentNullException("property");
+            if (property == null) throw new ArgumentNullException(nameof(property));
 
-            writeValue = tail.ReturnsValue && (GetShadowSetter(model, property) != null || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic, allowInternal) != null));
+            writeValue = tail.ReturnsValue && (GetShadowSetter(property) != null || (property.CanWrite && Helpers.GetSetMethod(property, nonPublic, allowInternal) != null));
             if (!property.CanRead || Helpers.GetGetMethod(property, nonPublic, allowInternal) == null)
             {
                 throw new InvalidOperationException("Cannot serialize property without a get accessor");
@@ -41,7 +40,7 @@ namespace ProtoBuf.Serializers
                 throw new InvalidOperationException("Cannot apply changes to property " + property.DeclaringType.FullName + "." + property.Name);
             }
         }
-        static MethodInfo GetShadowSetter(TypeModel model, PropertyInfo property)
+        private static MethodInfo GetShadowSetter(PropertyInfo property)
         {
 #if COREFX
             MethodInfo method = Helpers.GetInstanceMethod(property.DeclaringType.GetTypeInfo(), "Set" + property.Name, new Type[] { property.PropertyType });
@@ -54,23 +53,23 @@ namespace ProtoBuf.Serializers
 #endif
             MethodInfo method = Helpers.GetInstanceMethod(reflectedType, "Set" + property.Name, new Type[] { property.PropertyType });
 #endif
-            if (method == null || !method.IsPublic || method.ReturnType != model.MapType(typeof(void))) return null;
+            if (method == null || !method.IsPublic || method.ReturnType != typeof(void)) return null;
             return method;
         }
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             Helpers.DebugAssert(value != null);
             value = property.GetValue(value, null);
-            if (value != null) Tail.Write(value, dest);
+            if (value != null) Tail.Write(dest, ref state, value);
         }
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             Helpers.DebugAssert(value != null);
 
             object oldVal = Tail.RequiresOldValue ? property.GetValue(value, null) : null;
-            object newVal = Tail.Read(oldVal, source);
+            object newVal = Tail.Read(source, ref state, oldVal);
             if (readOptionsWriteValue && newVal != null) // if the tail returns a null, intepret that as *no assign*
             {
                 if (shadowSetter == null)
@@ -95,7 +94,7 @@ namespace ProtoBuf.Serializers
 
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            SanityCheck(ctx.Model, property, Tail, out bool writeValue, ctx.NonPublic, ctx.AllowInternal(property));
+            SanityCheck(property, Tail, out bool writeValue, ctx.NonPublic, ctx.AllowInternal(property));
             if (Helpers.IsValueType(ExpectedType) && valueFrom == null)
             {
                 throw new InvalidOperationException("Attempt to mutate struct on the head of the stack; changes would be lost");
@@ -140,7 +139,6 @@ namespace ProtoBuf.Serializers
                             ctx.MarkLabel(allDone);
                         }
                     }
-
                 }
                 else
                 { // don't want return value; drop it if anything there
@@ -151,13 +149,13 @@ namespace ProtoBuf.Serializers
         }
 #endif
 
-        internal static bool CanWrite(TypeModel model, MemberInfo member)
+        internal static bool CanWrite(MemberInfo member)
         {
             if (member == null) throw new ArgumentNullException(nameof(member));
 
             if (member is PropertyInfo prop)
             {
-                return prop.CanWrite || GetShadowSetter(model, prop) != null;
+                return prop.CanWrite || GetShadowSetter(prop) != null;
             }
 
             return member is FieldInfo; // fields are always writeable; anything else: JUST SAY NO!

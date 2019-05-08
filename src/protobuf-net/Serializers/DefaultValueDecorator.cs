@@ -5,7 +5,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    sealed class DefaultValueDecorator : ProtoDecoratorBase
+    internal sealed class DefaultValueDecorator : ProtoDecoratorBase
     {
         public override Type ExpectedType => Tail.ExpectedType;
 
@@ -14,28 +14,29 @@ namespace ProtoBuf.Serializers
         public override bool ReturnsValue => Tail.ReturnsValue;
 
         private readonly object defaultValue;
-        public DefaultValueDecorator(TypeModel model, object defaultValue, IProtoSerializer tail) : base(tail)
+
+        public DefaultValueDecorator(object defaultValue, IProtoSerializer tail) : base(tail)
         {
             if (defaultValue == null) throw new ArgumentNullException(nameof(defaultValue));
-            Type type = model.MapType(defaultValue.GetType());
+            Type type = defaultValue.GetType();
             if (type != tail.ExpectedType)
             {
-                throw new ArgumentException("Default value is of incorrect type", "defaultValue");
+                throw new ArgumentException("Default value is of incorrect type", nameof(defaultValue));
             }
             this.defaultValue = defaultValue;
         }
 
-        public override void Write(object value, ProtoWriter dest)
+        public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (!object.Equals(value, defaultValue))
             {
-                Tail.Write(value, dest);
+                Tail.Write(dest, ref state, value);
             }
         }
 
-        public override object Read(object value, ProtoReader source)
+        public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
-            return Tail.Read(value, source);
+            return Tail.Read(source, ref state, value);
         }
 
 #if FEAT_COMPILER
@@ -86,14 +87,13 @@ namespace ProtoBuf.Serializers
                     MethodInfo method = type.GetMethod("op_Equality", BindingFlags.Public | BindingFlags.Static,
                         null, new Type[] { type, type }, null);
 #endif
-                    if (method == null || method.ReturnType != ctx.MapType(typeof(bool)))
+                    if (method == null || method.ReturnType != typeof(bool))
                     {
                         throw new InvalidOperationException("No suitable equality operator found for default-values of type: " + type.FullName);
                     }
                     ctx.EmitCall(method);
                     ctx.BranchIfTrue(label, false);
                     break;
-
             }
         }
         private void EmitBranchIfDefaultValue(Compiler.CompilerContext ctx, Compiler.CodeLabel label)
@@ -225,7 +225,7 @@ namespace ProtoBuf.Serializers
                         else
                         {
                             ctx.LoadValue(ts.Ticks);
-                            ctx.EmitCall(ctx.MapType(typeof(TimeSpan)).GetMethod("FromTicks"));
+                            ctx.EmitCall(typeof(TimeSpan).GetMethod("FromTicks"));
                         }
                         EmitBeq(ctx, label, expected);
                         break;
@@ -239,7 +239,7 @@ namespace ProtoBuf.Serializers
                 case ProtoTypeCode.DateTime:
                     {
                         ctx.LoadValue(((DateTime)defaultValue).ToBinary());
-                        ctx.EmitCall(ctx.MapType(typeof(DateTime)).GetMethod("FromBinary"));
+                        ctx.EmitCall(typeof(DateTime).GetMethod("FromBinary"));
 
                         EmitBeq(ctx, label, expected);
                         break;
