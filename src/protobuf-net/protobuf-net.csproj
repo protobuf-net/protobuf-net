@@ -9,7 +9,7 @@ and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net40;net462;netstandard1.0;netstandard1.3;netstandard2.0;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net40;net462;netstandard1.0;netstandard1.3;netstandard2.0;netcoreapp2.1;netcoreapp3.0</TargetFrameworks>
     <!--net20;net35;uap10.0-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
@@ -25,6 +25,7 @@ and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
     <PlatformBinaryFormatter>true</PlatformBinaryFormatter>
     <Configurations>Debug;Release;VS</Configurations>
     <PlatformMemoryStreamBuffer>true</PlatformMemoryStreamBuffer>
+    <PlatformGetUninitialized>true</PlatformGetUninitialized>
     <PlatformSpans>true</PlatformSpans>
     <PlatformSpanOverloads>false</PlatformSpanOverloads>
   </PropertyGroup>
@@ -59,6 +60,7 @@ and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
     <PlatformXmlSerializer>false</PlatformXmlSerializer>
     <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
     <PlatformSpans>false</PlatformSpans>
+    <PlatformGetUninitialized>false</PlatformGetUninitialized>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
@@ -66,6 +68,7 @@ and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
     <FeatureServiceModel>false</FeatureServiceModel>
     <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
     <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
+    <PlatformGetUninitialized>false</PlatformGetUninitialized>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
@@ -74,6 +77,13 @@ and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
     <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp2.1'">
+    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
+    <ImportLibs>none</ImportLibs>
+    <FeatureServiceModel>true</FeatureServiceModel>
+    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
+    <PlatformSpanOverloads>true</PlatformSpanOverloads>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp3.0'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>none</ImportLibs>
     <FeatureServiceModel>true</FeatureServiceModel>
@@ -104,6 +114,9 @@ and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformBinaryFormatter)' == 'true'">
     <DefineConstants>$(DefineConstants);PLAT_BINARYFORMATTER</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(PlatformGetUninitialized)' == 'true'">
+    <DefineConstants>$(DefineConstants);PLAT_GET_UNINITIALIZED</DefineConstants>
   </PropertyGroup>
   <ItemGroup Condition="'$(ImportLibs)|$(FeatureServiceModel)' == 'net|true'">
     <Reference Include="System.ServiceModel" />

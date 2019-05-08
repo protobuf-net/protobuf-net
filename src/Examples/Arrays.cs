@@ -121,6 +121,20 @@ namespace Examples
         }
 
         [Fact]
+        public void TestDirectSkipConstructor()
+        {
+            var obj = new SkipCtorType();
+            Assert.Equal(42, obj.Value);
+
+            obj = (SkipCtorType)BclHelpers.GetUninitializedObject(typeof(SkipCtorType));
+            Assert.Equal(0, obj.Value);
+        }
+        public class SkipCtorType
+        {
+            public int Value { get; set; } = 42;
+        }
+
+        [Fact]
         public void TestSkipConstructor()
         {
             var orig = new WithSkipConstructor { Values = new[] { 4, 5 } };

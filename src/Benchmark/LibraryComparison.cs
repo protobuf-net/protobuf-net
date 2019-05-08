@@ -265,7 +265,7 @@ namespace Benchmark
             model.CompileInPlace();
             _cip = model;
             _c = model.Compile();
-#if !NETCOREAPP2_1
+#if !(NETCOREAPP2_1 || NETCOREAPP3_0)
             _dll = model.Compile("MySerializer", "DalSerializer.dll");
 #endif
             _auto = TypeModel.CreateForAssembly<protogen.Database>();

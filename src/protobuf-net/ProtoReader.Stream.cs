@@ -7,7 +7,7 @@ namespace ProtoBuf
 {
     public partial class ProtoReader
     {
-        internal static bool PreferSpans { get; set; }
+        internal const bool PreferSpans
 #if PLAT_SPAN_OVERLOADS
             = true;
 #else

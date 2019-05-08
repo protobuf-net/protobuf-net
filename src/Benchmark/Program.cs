@@ -27,7 +27,7 @@ namespace Benchmark
             //    var db = obj.ROM_Manual();
             //    GC.KeepAlive(db);
             //}
-            //Console.WriteLine(BenchmarkRunner.Run<LibraryComparison>());
+            Console.WriteLine(BenchmarkRunner.Run<LibraryComparison>());
         }
     }
 }
