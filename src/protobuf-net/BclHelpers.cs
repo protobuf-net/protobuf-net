@@ -578,7 +578,7 @@ namespace ProtoBuf
         private static readonly bool s_optimized = VerifyLayout();
         internal static bool DecimalOptimized => s_optimized;
 
-        static bool VerifyLayout()
+        private static bool VerifyLayout()
         {
             try
             {
