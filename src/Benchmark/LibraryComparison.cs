@@ -98,14 +98,19 @@ namespace Benchmark
             }
         }
 
+
         [Benchmark(Description = "ROM_DLL")]
         public protogen.Database ROM_DLL()
         {
+#if (NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP3_0)
+            throw new NotSupportedException();
+#else
             var model = _dll;
             using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
             {
                 return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
             }
+#endif
         }
 
         [Benchmark(Description = "ROM_AUTO")]
@@ -265,14 +270,17 @@ namespace Benchmark
             model.CompileInPlace();
             _cip = model;
             _c = model.Compile();
-#if !(NETCOREAPP2_1 || NETCOREAPP3_0)
+#if !(NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP3_0)
             _dll = model.Compile("MySerializer", "DalSerializer.dll");
 #endif
             _auto = TypeModel.CreateForAssembly<protogen.Database>();
         }
 
 #pragma warning disable CS0649
-        TypeModel _cip, _c, _dll, _auto;
+        TypeModel _cip, _c, _auto;
+#if !(NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP3_0)
+        TypeModel _dll;
+#endif
 #pragma warning restore CS0649
     }
 }

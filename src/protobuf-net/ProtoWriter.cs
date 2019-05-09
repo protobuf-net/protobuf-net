@@ -253,6 +253,7 @@ namespace ProtoBuf
             State state = default;
             WriteBytes(data, offset, length, writer, ref state);
         }
+
         /// <summary>
         /// Writes a byte-array to the stream; supported wire-types: String
         /// </summary>
