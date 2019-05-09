@@ -630,7 +630,6 @@ namespace ProtoBuf
             {
                 if (!Guid.TryParse("12345678-2345-3456-4567-56789a6789ab", out var guid))
                     return false;
-                var expected = guid.ToByteArray();
                 var obj = new GuidAccessor(guid);
                 var low = obj.Low();
                 var high = obj.High();
@@ -639,6 +638,7 @@ namespace ProtoBuf
                 if (low != 0x3456234512345678 | high != 0xAB89679A78566745) return false;
 
                 // and do it "for real"
+                var expected = guid.ToByteArray();
                 for (int i = 0; i < 8; i++)
                 {
                     if (expected[i] != (byte)(low >> (8 * i))) return false;
