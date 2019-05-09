@@ -632,8 +632,8 @@ namespace ProtoBuf
                     return false;
 
                 var obj = new GuidAccessor(guid);
-                var low = obj.Low();
-                var high = obj.High();
+                var low = obj.Low;
+                var high = obj.High;
 
                 // check it the fast way against our known sentinels
                 if (low != 0x3456234512345678 | high != 0xAB89679A78566745) return false;
@@ -733,22 +733,25 @@ namespace ProtoBuf
         private readonly struct GuidAccessor
         {
             [FieldOffset(0)]
-            private readonly Guid Guid;
+            public readonly Guid Guid;
 
             [FieldOffset(0)]
-            private readonly ulong _low;
+            public readonly ulong Low;
 
             [FieldOffset(8)]
-            private readonly ulong _high;
-
-            public ulong Low() => _low;
-
-            public ulong High() => _high;
+            public readonly ulong High;
 
             public GuidAccessor(Guid value)
             {
-                this = default;
+                Low = High = default;
                 Guid = value;
+            }
+
+            public GuidAccessor(ulong low, ulong high)
+            {
+                Guid = default;
+                Low = low;
+                High = high;
             }
         }
 
@@ -774,9 +777,9 @@ namespace ProtoBuf
                 {
                     var obj = new GuidAccessor(value);
                     ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, dest, ref state);
-                    ProtoWriter.WriteUInt64(obj.Low(), dest, ref state);
+                    ProtoWriter.WriteUInt64(obj.Low, dest, ref state);
                     ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, dest, ref state);
-                    ProtoWriter.WriteUInt64(obj.High(), dest, ref state);
+                    ProtoWriter.WriteUInt64(obj.High, dest, ref state);
                 }
                 else
                 {
@@ -819,10 +822,18 @@ namespace ProtoBuf
             }
             ProtoReader.EndSubItem(token, source, ref state);
             if (low == 0 && high == 0) return Guid.Empty;
-            uint a = (uint)(low >> 32), b = (uint)low, c = (uint)(high >> 32), d = (uint)high;
-            return new Guid((int)b, (short)a, (short)(a >> 16),
-                (byte)d, (byte)(d >> 8), (byte)(d >> 16), (byte)(d >> 24),
-                (byte)c, (byte)(c >> 8), (byte)(c >> 16), (byte)(c >> 24));
+            if (s_guidOptimized)
+            {
+                var obj = new GuidAccessor(low, high);
+                return obj.Guid;
+            }
+            else
+            {
+                uint a = (uint)(low >> 32), b = (uint)low, c = (uint)(high >> 32), d = (uint)high;
+                return new Guid((int)b, (short)a, (short)(a >> 16),
+                    (byte)d, (byte)(d >> 8), (byte)(d >> 16), (byte)(d >> 24),
+                    (byte)c, (byte)(c >> 8), (byte)(c >> 16), (byte)(c >> 24));
+            }
         }
 
         private const int
