@@ -575,10 +575,28 @@ namespace ProtoBuf
             WriteDecimal(value, writer, ref state);
         }
 
-        private static readonly bool s_optimized = VerifyLayout();
-        internal static bool DecimalOptimized => s_optimized;
+        private static
+#if !DEBUG
+        readonly
+#endif
+        bool s_decimalOptimized = VerifyDecimalLayout(),
+            s_guidOptimized = VerifyGuidLayout();
+        internal static bool DecimalOptimized
+        {
+            get => s_decimalOptimized;
+#if DEBUG
+            set => s_decimalOptimized = value && VerifyDecimalLayout();
+#endif
+        }
+        internal static bool GuidOptimized
+        {
+            get => s_guidOptimized;
+#if DEBUG
+            set => s_guidOptimized = value && VerifyGuidLayout();
+#endif
+        }
 
-        private static bool VerifyLayout()
+        private static bool VerifyDecimalLayout()
         {
             try
             {
@@ -606,6 +624,35 @@ namespace ProtoBuf
             return false;
         }
 
+        private static bool VerifyGuidLayout()
+        {
+            try
+            {
+                if (!Guid.TryParse("12345678-2345-3456-4567-56789a6789ab", out var guid))
+                    return false;
+                var expected = guid.ToByteArray();
+                var obj = new GuidAccessor(guid);
+                var low = obj.Low();
+                var high = obj.High();
+
+                // check it the fast way against our known sentinels
+                if (low != 0x3456234512345678 | high != 0xAB89679A78566745) return false;
+
+                // and do it "for real"
+                for (int i = 0; i < 8; i++)
+                {
+                    if (expected[i] != (byte)(low >> (8 * i))) return false;
+                }
+                for (int i = 0; i < 8; i++)
+                {
+                    if (expected[i + 8] != (byte)(high >> (8 * i))) return false;
+                }
+                return true;
+            }
+            catch { }
+            return false;
+        }
+
         /// <summary>
         /// Writes a decimal to a protobuf stream
         /// </summary>
@@ -613,7 +660,7 @@ namespace ProtoBuf
         {
             ulong low;
             uint high, signScale;
-            if (s_optimized) // the JIT should remove the non-preferred implementation, at least on modern runtimes
+            if (s_decimalOptimized) // the JIT should remove the non-preferred implementation, at least on modern runtimes
             {
                 var dec = new DecimalAccessor(value);
                 ulong a = ((ulong)dec.Mid) << 32, b = ((ulong)dec.Lo) & 0xFFFFFFFFL;
@@ -678,6 +725,82 @@ namespace ProtoBuf
         }
 
         /// <summary>
+        /// Provides access to the inner fields of a Guid.
+        /// Similar to Guid.ToByteArray(), but faster and avoids the byte[] allocation
+        /// </summary>
+        [StructLayout(LayoutKind.Explicit)]
+        private readonly struct GuidAccessor
+        {
+            // based on the expected internal layout of Guid
+            [FieldOffset(0)]
+            private readonly int _a;
+            [FieldOffset(4)]
+            private readonly short _b;
+            [FieldOffset(6)]
+            private readonly short _c;
+            [FieldOffset(8)]
+            private readonly byte _d;
+            [FieldOffset(9)]
+            private readonly byte _e;
+            [FieldOffset(10)]
+            private readonly byte _f;
+            [FieldOffset(11)]
+            private readonly byte _g;
+            [FieldOffset(12)]
+            private readonly byte _h;
+            [FieldOffset(13)]
+            private readonly byte _i;
+            [FieldOffset(14)]
+            private readonly byte _j;
+            [FieldOffset(15)]
+            private readonly byte _k;
+            [FieldOffset(0)]
+            private readonly Guid Guid;
+
+            public ulong Low()
+            {
+                var a = (ulong)_a;
+                var b = (ulong)_b;
+                var c = (ulong)_c;
+
+                return a | (b << 32) | (c << 48);
+            }
+            public ulong High()
+            {   // write as little-endian
+                var a = (ulong)(_d | (_e << 8) | (_f << 16) | (_g << 24));
+                var b = (ulong)(_h | (_i << 8) | (_j << 16) | (_k << 24));
+
+                return a | (b << 32);
+            }
+            private void Fill(byte[] buffer)
+            {
+                // see Guid.ToByteArray()
+                buffer[0] = (byte)_a;
+                buffer[1] = (byte)(_a >> 8);
+                buffer[2] = (byte)(_a >> 16);
+                buffer[3] = (byte)(_a >> 24);
+                buffer[4] = (byte)(_b);
+                buffer[5] = (byte)(_b >> 8);
+                buffer[6] = (byte)(_c);
+                buffer[7] = (byte)(_c >> 8);
+                buffer[8] = _d;
+                buffer[9] = _e;
+                buffer[10] = _f;
+                buffer[11] = _g;
+                buffer[12] = _h;
+                buffer[13] = _i;
+                buffer[14] = _j;
+                buffer[15] = _k;
+            }
+
+            public GuidAccessor(Guid value)
+            {
+                this = default;
+                Guid = value;
+            }
+        }
+
+        /// <summary>
         /// Writes a Guid to a protobuf stream
         /// </summary>
         [Obsolete(ProtoWriter.UseStateAPI, false)]
@@ -692,15 +815,25 @@ namespace ProtoBuf
         /// </summary>        
         public static void WriteGuid(Guid value, ProtoWriter dest, ref ProtoWriter.State state)
         {
-            byte[] blob = value.ToByteArray();
-
             SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
             if (value != Guid.Empty)
             {
-                ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, dest, ref state);
-                ProtoWriter.WriteBytes(blob, 0, 8, dest, ref state);
-                ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, dest, ref state);
-                ProtoWriter.WriteBytes(blob, 8, 8, dest, ref state);
+                if (s_guidOptimized)
+                {
+                    var obj = new GuidAccessor(value);
+                    ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, dest, ref state);
+                    ProtoWriter.WriteUInt64(obj.Low(), dest, ref state);
+                    ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, dest, ref state);
+                    ProtoWriter.WriteUInt64(obj.High(), dest, ref state);
+                }
+                else
+                {
+                    byte[] blob = value.ToByteArray();
+                    ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, dest, ref state);
+                    ProtoWriter.WriteBytes(blob, 0, 8, dest, ref state);
+                    ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, dest, ref state);
+                    ProtoWriter.WriteBytes(blob, 8, 8, dest, ref state);
+                }
             }
             ProtoWriter.EndSubItem(token, dest, ref state);
         }
