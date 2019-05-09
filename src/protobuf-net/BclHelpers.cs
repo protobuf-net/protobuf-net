@@ -732,67 +732,18 @@ namespace ProtoBuf
         [StructLayout(LayoutKind.Explicit)]
         private readonly struct GuidAccessor
         {
-            // based on the expected internal layout of Guid
-            [FieldOffset(0)]
-            private readonly int _a;
-            [FieldOffset(4)]
-            private readonly short _b;
-            [FieldOffset(6)]
-            private readonly short _c;
-            [FieldOffset(8)]
-            private readonly byte _d;
-            [FieldOffset(9)]
-            private readonly byte _e;
-            [FieldOffset(10)]
-            private readonly byte _f;
-            [FieldOffset(11)]
-            private readonly byte _g;
-            [FieldOffset(12)]
-            private readonly byte _h;
-            [FieldOffset(13)]
-            private readonly byte _i;
-            [FieldOffset(14)]
-            private readonly byte _j;
-            [FieldOffset(15)]
-            private readonly byte _k;
             [FieldOffset(0)]
             private readonly Guid Guid;
 
-            public ulong Low()
-            {
-                var a = (ulong)_a;
-                var b = (ulong)_b;
-                var c = (ulong)_c;
+            [FieldOffset(0)]
+            private readonly ulong _low;
 
-                return a | (b << 32) | (c << 48);
-            }
-            public ulong High()
-            {   // write as little-endian
-                var a = (ulong)(_d | (_e << 8) | (_f << 16) | (_g << 24));
-                var b = (ulong)(_h | (_i << 8) | (_j << 16) | (_k << 24));
+            [FieldOffset(8)]
+            private readonly ulong _high;
 
-                return a | (b << 32);
-            }
-            private void Fill(byte[] buffer)
-            {
-                // see Guid.ToByteArray()
-                buffer[0] = (byte)_a;
-                buffer[1] = (byte)(_a >> 8);
-                buffer[2] = (byte)(_a >> 16);
-                buffer[3] = (byte)(_a >> 24);
-                buffer[4] = (byte)(_b);
-                buffer[5] = (byte)(_b >> 8);
-                buffer[6] = (byte)(_c);
-                buffer[7] = (byte)(_c >> 8);
-                buffer[8] = _d;
-                buffer[9] = _e;
-                buffer[10] = _f;
-                buffer[11] = _g;
-                buffer[12] = _h;
-                buffer[13] = _i;
-                buffer[14] = _j;
-                buffer[15] = _k;
-            }
+            public ulong Low() => _low;
+
+            public ulong High() => _high;
 
             public GuidAccessor(Guid value)
             {
