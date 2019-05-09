@@ -14,10 +14,10 @@ namespace ProtoBuf.Issues
             byte[] buffer = { 8, boolvalue };
             using (var ms = new MemoryStream(buffer))
             {
-                using (var protoReader = ProtoReader.Create(ms, null))
+                using (var protoReader = ProtoReader.Create(out var state, ms, null))
                 {
-                    var fieldNumber = protoReader.ReadFieldHeader();
-                    var value = protoReader.ReadBoolean();
+                    var fieldNumber = protoReader.ReadFieldHeader(ref state);
+                    var value = protoReader.ReadBoolean(ref state);
 
                     Assert.Equal(expected, value);
                 }

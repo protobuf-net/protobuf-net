@@ -11,10 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Framework" Version="15.7.179">
+    <PackageReference Include="Microsoft.Build.Framework" Version="16.0.461">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.7.179">
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.0.461">
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>

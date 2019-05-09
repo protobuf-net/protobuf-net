@@ -844,7 +844,7 @@ namespace ProtoBuf
         /// </summary>
         public bool ReadBoolean(ref State state)
         {
-            return ReadUInt32() != 0;
+            return ReadUInt32(ref state) != 0;
         }
 
         private protected static readonly byte[] EmptyBlob = new byte[0];
