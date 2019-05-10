@@ -1265,9 +1265,9 @@ namespace ProtoBuf.Meta
         /// Adds a member (by name) to the MetaType, returning the ValueMember rather than the fluent API.
         /// This is otherwise identical to Add.
         /// </summary>
-        public ValueMember AddField(int fieldNumber, string memberName)
+        public ValueMember AddField(int fieldNumber, string memberName, bool checkIgnoreListHandling = false)
         {
-            return AddField(fieldNumber, memberName, null, null, null);
+            return AddField(fieldNumber, memberName, null, null, null, checkIgnoreListHandling);
         }
 
         /// <summary>
@@ -1397,7 +1397,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Adds a member (by name) to the MetaType, including an itemType and defaultType for representing lists
         /// </summary>
-        public MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType)
+        public MetaType Add(int fieldNumber, string memberName, Type itemType, Type defaultType, bool checkIgnoreListHandling = false)
         {
             AddField(fieldNumber, memberName, itemType, defaultType, null);
             return this;
@@ -1407,12 +1407,12 @@ namespace ProtoBuf.Meta
         /// Adds a member (by name) to the MetaType, including an itemType and defaultType for representing lists, returning the ValueMember rather than the fluent API.
         /// This is otherwise identical to Add.
         /// </summary>
-        public ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType)
+        public ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType, bool checkIgnoreListHandling = false)
         {
-            return AddField(fieldNumber, memberName, itemType, defaultType, null);
+            return AddField(fieldNumber, memberName, itemType, defaultType, null, checkIgnoreListHandling);
         }
 
-        private ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
+        private ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue, bool checkIgnoreListHandling = false)
         {
             MemberInfo mi = null;
 #if PROFILE259
@@ -1458,7 +1458,7 @@ namespace ProtoBuf.Meta
                     throw new NotSupportedException(mi.MemberType.ToString());
             }
 #endif
-            ResolveListTypes(model, miType, ref itemType, ref defaultType);
+            ResolveListTypes(model, miType, ref itemType, ref defaultType, checkIgnoreListHandling);
 
             MemberInfo backingField = null;
             if (pi?.CanWrite == false)
@@ -1488,7 +1488,7 @@ namespace ProtoBuf.Meta
             return newField;
         }
 
-        internal static void ResolveListTypes(TypeModel model, Type type, ref Type itemType, ref Type defaultType)
+        internal static void ResolveListTypes(TypeModel model, Type type, ref Type itemType, ref Type defaultType, bool checkIgnoreListHandling = false)
         {
             if (type == null) return;
             // handle arrays
@@ -1508,6 +1508,20 @@ namespace ProtoBuf.Meta
                     defaultType = type;
                 }
             }
+            else
+            {
+                if (checkIgnoreListHandling)
+                {
+                    var runtimeTypeModel = model as RuntimeTypeModel;
+                    if (runtimeTypeModel != null)
+                    {
+                        var metaType = runtimeTypeModel.FindWithoutAdd(type);
+                        if (metaType != null && metaType.IgnoreListHandling)
+                            return;
+                    }
+                }
+            }
+
             // handle lists
             if (itemType == null) { itemType = TypeModel.GetListItemType(model, type); }
 
