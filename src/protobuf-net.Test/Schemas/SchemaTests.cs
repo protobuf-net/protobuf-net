@@ -240,7 +240,10 @@ namespace ProtoBuf.Schemas
             var assembly = results.CompiledAssembly;
             var messageType = assembly.GetType("TestMessage");
 
-            foreach (var property in messageType.GetProperties())
+            var properties = messageType.GetProperties();
+            Assert.Equal(2, properties.Length);
+
+            foreach (var property in properties)
             {
                 var defaultValueAttribute = (DefaultValueAttribute)Attribute.GetCustomAttribute(property, typeof(DefaultValueAttribute));
                 Assert.NotNull(defaultValueAttribute);
