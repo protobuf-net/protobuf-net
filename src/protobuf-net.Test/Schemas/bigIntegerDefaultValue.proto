@@ -1,0 +1,11 @@
+syntax = "proto2";
+
+import "protobuf-net/protogen.proto";
+import "protobuf-net/bcl.proto";
+
+option (.protobuf_net.fileopt).csharp_langver = "3";
+
+message TestMessage {
+	optional fixed64 unsigned_fixed = 1 [default = 18446744073709551615];
+	optional uint64 unsigned_dynamic = 2 [default = 18446744073709551615];
+}

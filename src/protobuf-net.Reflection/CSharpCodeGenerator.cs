@@ -466,7 +466,17 @@ namespace ProtoBuf.Reflection
             tw.WriteLine(")]");
             if (!isRepeated && !string.IsNullOrWhiteSpace(defaultValue) && !suppressDefaultAttribute)
             {
-                ctx.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue})]");
+                switch (field.type)
+                {
+                    case FieldDescriptorProto.Type.TypeFixed64:
+                    case FieldDescriptorProto.Type.TypeUint64:
+                        ctx.WriteLine($"[global::System.ComponentModel.DefaultValue(typeof(ulong), \"{defaultValue}\")]");
+                        break;
+
+                    default:
+                        ctx.WriteLine($"[global::System.ComponentModel.DefaultValue({defaultValue})]");
+                        break;
+                }
             }
             WriteOptions(ctx, field.Options);
             if (isRepeated)
