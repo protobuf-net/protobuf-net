@@ -787,6 +787,21 @@ namespace ProtoBuf.Reflection
             }
         }
 
+        protected string MakeRelativeName(GeneratorContext ctx, string typeName)
+        {
+            var target = ctx.TryFind<DescriptorProto>(typeName);
+            if (target != null && target.Parent is IType type)
+            {
+                var name = FindNameFromCommonAncestor(type, target, ctx.NameNormalizer);
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    return name;
+                }
+            }
+
+            return Escape(typeName);
+        }
+
         private string GetTypeName(GeneratorContext ctx, FieldDescriptorProto field, out string dataFormat, out bool isMap,
             bool nonNullable = false)
         {
