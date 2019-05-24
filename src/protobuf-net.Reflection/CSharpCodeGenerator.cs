@@ -764,7 +764,7 @@ namespace ProtoBuf.Reflection
             }
         }
 
-        private static bool UseArray(FieldDescriptorProto field)
+        protected virtual bool UseArray(FieldDescriptorProto field)
         {
             switch (field.type)
             {
