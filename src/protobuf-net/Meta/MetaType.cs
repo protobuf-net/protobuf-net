@@ -232,8 +232,16 @@ namespace ProtoBuf.Meta
                     {
                         sb.Append(mt.GetSchemaTypeName());
                     }
-                    else
+                    else if (tmp.IsArray)
                     {
+                        // Cannot use Name of array, since that's not a valid protobuf
+                        // name.
+                        sb.Append("Array_");
+                        // No need to check for nesting/array rank here. If that's invalid
+                        // other parts of the schema generator will throw.
+                        sb.Append(tmp.GetElementType().Name);
+                    } else
+                    { 
                         sb.Append(tmp.Name);
                     }
                 }
