@@ -1,0 +1,15 @@
+﻿syntax = "proto3";
+
+package org.example.package1;
+
+option csharp_namespace = "Sample.Package1";
+
+import "cross-import/other_proto_message.proto";
+
+message SampleProtoMessage {
+    string my_id = 1;
+    package2.OtherProtoMessage other_proto_message = 2;
+	example.package2.OtherProtoMessage other_proto_message_parent = 3;
+	org.example.package2.OtherProtoMessage other_proto_message_root = 4;
+	.org.example.package2.OtherProtoMessage other_proto_message_dot = 5;
+}

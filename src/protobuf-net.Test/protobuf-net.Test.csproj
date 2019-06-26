@@ -66,7 +66,10 @@
     <None Update="Schemas\google\**\*.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-        <None Update="Schemas\protobuf-net\**\*.proto">
+    <None Update="Schemas\protobuf-net\**\*.proto">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Schemas\cross-import\**\*.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Schemas\*.proto">
