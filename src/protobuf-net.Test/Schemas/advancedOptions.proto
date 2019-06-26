@@ -17,5 +17,12 @@ extend google.protobuf.FieldOptions {
 }
 
 message ItemData {
-	int32 ItemField = 1 [(MyPackage.Options.IntFieldRange) = { UseMin : true, Min : 1 }];
+	// simple layout (separate options)
+	int32 a = 1 [(MyPackage.Options.IntFieldRange).UseMin = true, (MyPackage.Options.IntFieldRange).Min = 1];
+	// alternative aggregate syntax (with commas)
+	int32 b = 2 [(MyPackage.Options.IntFieldRange) = { UseMin : true, Min : 1 }];
+	// alternative aggregate syntax (no commas)
+	int32 c = 3 [(MyPackage.Options.IntFieldRange) = { UseMin : true Min : 1 }];
+	// alternative aggregate syntax (trailing comma)
+	int32 d = 4 [(MyPackage.Options.IntFieldRange) = { UseMin : true Min : 1, }];
 }
