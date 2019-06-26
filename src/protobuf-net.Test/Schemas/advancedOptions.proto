@@ -1,0 +1,28 @@
+﻿syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+package MyPackage.Options;
+
+message IntFieldRangeOptions {
+	bool UseMin = 1;
+	int32 Min = 2;
+
+	bool UseMax = 3;
+	int32 Max = 4;;
+}
+
+extend google.protobuf.FieldOptions {
+ IntFieldRangeOptions IntFieldRange = 50007;
+}
+
+message ItemData {
+	// simple layout (separate options)
+	int32 a = 1 [(MyPackage.Options.IntFieldRange).UseMin = true, (MyPackage.Options.IntFieldRange).Min = 1];
+	// alternative aggregate syntax (with commas)
+	int32 b = 2 [(MyPackage.Options.IntFieldRange) = { UseMin : true, Min : 1 }];
+	// alternative aggregate syntax (no commas)
+	int32 c = 3 [(MyPackage.Options.IntFieldRange) = { UseMin : true Min : 1 }];
+	// alternative aggregate syntax (trailing comma)
+	int32 d = 4 [(MyPackage.Options.IntFieldRange) = { UseMin : true Min : 1, }];
+}

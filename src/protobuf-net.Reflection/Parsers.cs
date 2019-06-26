@@ -2560,6 +2560,8 @@ namespace ProtoBuf.Reflection
                 {
                     ReadOption(ref obj, parent, nameParts);
                     any = true;
+
+                    tokens.ConsumeIf(TokenType.Symbol, ","); // comma between elements is optional
                 }
                 if (!any)
                 {
