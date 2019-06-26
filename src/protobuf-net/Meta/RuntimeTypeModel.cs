@@ -337,7 +337,19 @@ namespace ProtoBuf.Meta
                 }
                 foreach (var genericArgument in metaType.GetAllGenericArguments())
                 {
-                    TryGetCoreSerializer(list, genericArgument);
+                    if (genericArgument.IsArray)
+                    {
+                        RetrieveArrayListTypes(genericArgument, out var itemType, out var _);
+                        VerifyNotNested(genericArgument, itemType);
+                        if (itemType != null)
+                        {
+                            TryGetCoreSerializer(list, itemType);
+                        }
+                    }
+                    else
+                    {
+                        TryGetCoreSerializer(list, genericArgument);
+                    }
                 }
                 if (metaType.HasSubtypes)
                 {
@@ -564,6 +576,7 @@ namespace ProtoBuf.Meta
                             if (demand) ThrowUnexpectedType(type);
                             return key;
                         }
+
                         metaType = Create(type);
                     }
 
@@ -1766,19 +1779,7 @@ namespace ProtoBuf.Meta
             // handle arrays
             if (type.IsArray)
             {
-                if (type.GetArrayRank() != 1)
-                {
-                    throw new NotSupportedException("Multi-dimension arrays are supported");
-                }
-                itemType = type.GetElementType();
-                if (itemType == typeof(byte))
-                {
-                    defaultType = itemType = null;
-                }
-                else
-                {
-                    defaultType = type;
-                }
+                RetrieveArrayListTypes(type, out itemType, out defaultType);
             }
             else
             {
@@ -1790,15 +1791,7 @@ namespace ProtoBuf.Meta
             if (itemType == null) { itemType = TypeModel.GetListItemType(type); }
 
             // check for nested data (not allowed)
-            if (itemType != null)
-            {
-                Type nestedItemType = null, nestedDefaultType = null;
-                ResolveListTypes(itemType, ref nestedItemType, ref nestedDefaultType);
-                if (nestedItemType != null)
-                {
-                    throw TypeModel.CreateNestedListsNotSupported(type);
-                }
-            }
+            VerifyNotNested(type, itemType);
 
             if (itemType != null && defaultType == null)
             {
@@ -1838,6 +1831,36 @@ namespace ProtoBuf.Meta
                 }
                 // verify that the default type is appropriate
                 if (defaultType != null && !Helpers.IsAssignableFrom(type, defaultType)) { defaultType = null; }
+            }
+        }
+
+        private void VerifyNotNested(Type type, Type itemType)
+        {
+            if (itemType != null)
+            {
+                Type nestedItemType = null, nestedDefaultType = null;
+                ResolveListTypes(itemType, ref nestedItemType, ref nestedDefaultType);
+                if (nestedItemType != null)
+                {
+                    throw TypeModel.CreateNestedListsNotSupported(type);
+                }
+            }
+        }
+
+        private static void RetrieveArrayListTypes(Type type, out Type itemType, out Type defaultType)
+        {
+            if (type.GetArrayRank() != 1)
+            {
+                throw new NotSupportedException("Multi-dimension arrays are supported");
+            }
+            itemType = type.GetElementType();
+            if (itemType == typeof(byte))
+            {
+                defaultType = itemType = null;
+            }
+            else
+            {
+                defaultType = type;
             }
         }
 
