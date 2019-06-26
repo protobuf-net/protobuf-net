@@ -421,7 +421,8 @@ namespace ProtoBuf.Schemas
                 switch(path)
                 {
                     case "google/protobuf/unittest_custom_options.proto":
-                        // this is a special case; the two encoders choose slightly different
+                    case "advancedOptions.proto":
+                        // these are special cases; the two encoders choose slightly different
                         // layouts for the same data; both are valid; I'm happy that this is OK
                         // - this was why the "decode" tool (on the website) was written!
                         break;
