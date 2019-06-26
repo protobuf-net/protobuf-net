@@ -1,0 +1,21 @@
+﻿syntax = "proto3";
+
+import "google/protobuf/descriptor.proto";
+
+package MyPackage.Options;
+
+message IntFieldRangeOptions {
+	bool UseMin = 1;
+	int32 Min = 2;
+
+	bool UseMax = 3;
+	int32 Max = 4;;
+}
+
+extend google.protobuf.FieldOptions {
+ IntFieldRangeOptions IntFieldRange = 50007;
+}
+
+message ItemData {
+	int32 ItemField = 1 [(MyPackage.Options.IntFieldRange) = { UseMin : true, Min : 1 }];
+}
