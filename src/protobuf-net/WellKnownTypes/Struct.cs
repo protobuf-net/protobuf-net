@@ -20,6 +20,8 @@ namespace ProtoBuf.WellKnownTypes
     [ProtoContract(Name = ".google.protobuf.Value")]
     public readonly struct Value
     {
+        internal int Discriminator => _value.Discriminator;
+
         public static IProtoSerializer<Value> Serializer => WellKnownSerializer.Instance;
 
         private readonly DiscriminatedUnion64Object _value;
@@ -32,7 +34,7 @@ namespace ProtoBuf.WellKnownTypes
             get { return _value.Is(1) ? ((NullValue)_value.Int32) : default; }
         }
 
-        private Value(NullValue value) : this(new DiscriminatedUnion64Object(1, (int)value)) { }
+        internal Value(NullValue value) : this(new DiscriminatedUnion64Object(1, (int)value)) { }
         public bool ShouldSerializeNullValue() => _value.Is(1);
 
         [ProtoMember(2, Name = @"number_value")]

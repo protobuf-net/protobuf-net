@@ -1,6 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
 
+#if PLAT_SPANS
+using System.Runtime.InteropServices;
+using System.Buffers;
+#endif
+
 namespace ProtoBuf.WellKnownTypes
 {
 
@@ -14,8 +19,8 @@ namespace ProtoBuf.WellKnownTypes
 
         public DoubleValue(double value) => Value = value;
 
-        public static implicit operator DoubleValue (double value) => new DoubleValue(value);
-        public static implicit operator double (DoubleValue value) => value.Value;
+        public static implicit operator DoubleValue(double value) => new DoubleValue(value);
+        public static implicit operator double(DoubleValue value) => value.Value;
     }
 
     [ProtoContract(Name = ".google.protobuf.FloatValue")]
@@ -121,16 +126,69 @@ namespace ProtoBuf.WellKnownTypes
     [ProtoContract(Name = ".google.protobuf.BytesValue")]
     public readonly struct BytesValue
     {
+
         public static IProtoSerializer<BytesValue> Serializer => WellKnownSerializer.Instance;
 
-        [ProtoMember(1, Name = @"value")]
-        public ArraySegment<byte> Value { get; }
+#if PLAT_SPANS
+        private readonly ReadOnlySequence<byte> _bytes;
+        public int Length => checked((int)_bytes.Length);
+        public bool IsEmpty => _bytes.IsEmpty;
+        public bool TryGetArray(out ArraySegment<byte> segment)
+        {
+            if (IsEmpty)
+            {
+                segment = new ArraySegment<byte>(ProtoReader.EmptyBlob, 0, 0);
+                return true;
+            }
+            if (_bytes.IsSingleSegment && MemoryMarshal.TryGetArray(_bytes.First, out segment))
+            {
+                return true;
+            }
+            segment = default;
+            return false;
+        }
+        public void CopyTo(byte[] array, int offset = 0)
+        {
+            if (!_bytes.IsEmpty) _bytes.CopyTo(new Span<byte>(array, offset, array.Length - offset));
+        }
+        public BytesValue(byte[] bytes) => _bytes = bytes == null ? default : new ReadOnlySequence<byte>(bytes);
+        public BytesValue(ArraySegment<byte> bytes) => _bytes = bytes.Count == 0 ? default : new ReadOnlySequence<byte>(bytes.Array, bytes.Offset, bytes.Count);
+        public BytesValue(ReadOnlyMemory<byte> bytes) => _bytes = bytes.IsEmpty ? default : new ReadOnlySequence<byte>(bytes);
+        public BytesValue(ReadOnlySequence<byte> bytes) => _bytes = bytes.IsEmpty ? default : bytes;
+        public ReadOnlySequence<byte> Payload => _bytes;
+#else
+        private readonly ArraySegment<byte> _bytes;
+        public int Length => _bytes.Count;
+        public bool IsEmpty => _bytes.Count == 0;
+        public bool TryGetArray(out ArraySegment<byte> segment)
+        {
+            segment = _bytes;
+            if (segment.Count == 0) segment = new ArraySegment<byte>(ProtoReader.EmptyBlob, 0, 0);
+            return true;
+        }
+        public void CopyTo(byte[] array, int offset = 0)
+        {
+            if (_bytes.Count != 0) Buffer.BlockCopy(_bytes.Array, _bytes.Offset, array, offset, _bytes.Count);
+        }
+        public BytesValue(byte[] bytes) => _bytes = bytes == null ? default : new ArraySegment<byte>(bytes);
+        public BytesValue(ArraySegment<byte> bytes) => _bytes = bytes.Count == 0 ? default : bytes;
+#endif
 
-        public BytesValue(ArraySegment<byte> value) => Value = value;
-        public BytesValue(byte[] value) => Value = new ArraySegment<byte>(value);
+        internal BytesValue Append(byte[] bytes)
+        {
+            if (bytes == null || bytes.Length == 0) return this;
+            if (IsEmpty) return new BytesValue(bytes);
 
-        public static implicit operator BytesValue(ArraySegment<byte> value) => new BytesValue(value);
-        public static implicit operator BytesValue(byte[] value) => new BytesValue(value);
+            // the interesting (but rare) case is when we have existing and new data
+            return SlowAppend(bytes);
+        }
+        private BytesValue SlowAppend(byte[] bytes)
+        {
+            byte[] result = new byte[Length + bytes.Length];
+            CopyTo(result);
+            Buffer.BlockCopy(bytes, 0, result, Length, bytes.Length);
+            return new BytesValue(result);
+
+        }
     }
-
 }
