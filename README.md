@@ -3,9 +3,9 @@ protobuf-net is a contract based serializer for .NET code, that happens to write
 
 ## Release Notes
 
-[Change history and pending changes are here](https://mgravell.github.io/protobuf-net/releasenotes).
+[Change history and pending changes are here](https://protobuf-net.github.io/protobuf-net/releasenotes).
 
-To understand how protobuf-net relates to protobuf [see here](https://mgravell.github.io/protobuf-net/version).
+To understand how protobuf-net relates to protobuf [see here](https://protobuf-net.github.io/protobuf-net/version).
 
 ---
 
@@ -123,4 +123,4 @@ In v2, everything that can be done with attributes can also be configured at run
 
 ## Support
 
-I try to be responsive to [Stack Overflow questions in the `protobuf-net` tag](https://stackoverflow.com/questions/tagged/protobuf-net), [issues logged on github](https://github.com/mgravell/protobuf-net), [email](mailto:marc.gravell@gmail.com), etc. I don't currently offer a paid support channel. If I've helped you, feel free to [buy me a coffee](https://buymeacoff.ee/marcgravell).
+I try to be responsive to [Stack Overflow questions in the `protobuf-net` tag](https://stackoverflow.com/questions/tagged/protobuf-net), [issues logged on github](https://github.com/protobuf-net/protobuf-net), [email](mailto:marc.gravell@gmail.com), etc. I don't currently offer a paid support channel. If I've helped you, feel free to [buy me a coffee](https://buymeacoff.ee/marcgravell).

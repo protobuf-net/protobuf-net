@@ -143,14 +143,14 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 
 ## v2.3.5
 
-- add codegen support for C# 3.0; C# 6.0 is still the default, but can be overridden via CLI or .proto options; see [#343](https://github.com/mgravell/protobuf-net/issues/343)
+- add codegen support for C# 3.0; C# 6.0 is still the default, but can be overridden via CLI or .proto options; see [#343](https://github.com/protobuf-net/protobuf-net/issues/343)
 - updated Google "protoc" tooling on the web-site
-- better exception messages when inheritance problems are detected; [#186](https://github.com/mgravell/protobuf-net/pull/186) via TrexinanF14
-- add switch to allow the string cache code to be disabled; [#333](https://github.com/mgravell/protobuf-net/pull/333) via solyutor
+- better exception messages when inheritance problems are detected; [#186](https://github.com/protobuf-net/protobuf-net/pull/186) via TrexinanF14
+- add switch to allow the string cache code to be disabled; [#333](https://github.com/protobuf-net/protobuf-net/pull/333) via solyutor
 
 ## v2.3.4
 
-- fix [#341](https://github.com/mgravell/protobuf-net/issues/341) - dictionaries with nullable types
+- fix [#341](https://github.com/protobuf-net/protobuf-net/issues/341) - dictionaries with nullable types
 
 ## v2.3.3
 
@@ -201,7 +201,7 @@ The easiest way to do this is via Visual Studio 2017 ([community edition is free
 
 ## v2.2.1
 
-- critical bug fix [#256](https://github.com/mgravell/protobuf-net/issues/256) - length-based readers are failing; if you are using 2.2.0, please update as soon as possible (this bug was introduced in 2.2.0)
+- critical bug fix [#256](https://github.com/protobuf-net/protobuf-net/issues/256) - length-based readers are failing; if you are using 2.2.0, please update as soon as possible (this bug was introduced in 2.2.0)
 - fix #241 - check all callback parameters (signature validation)
 - removed `[Obsolete]` markers left in place during 64-bit updates
 - release string interner earlier (keeps a possibly-large array reachable)

@@ -7,13 +7,13 @@
     <DelaySign>False</DelaySign>
     <NoWarn>NU5105;CS1701;BC42016</NoWarn>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)ProtoBuf.snk</AssemblyOriginatorKeyFile>
-    <Copyright>See https://github.com/mgravell/protobuf-net</Copyright>
-    <PackageLicenseUrl>https://github.com/mgravell/protobuf-net/blob/master/Licence.txt</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/mgravell/protobuf-net</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/mgravell/protobuf-net</RepositoryUrl>
+    <Copyright>See https://github.com/protobuf-net/protobuf-net</Copyright>
+    <PackageLicenseUrl>https://github.com/protobuf-net/protobuf-net/blob/master/Licence.txt</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/protobuf-net/protobuf-net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/protobuf-net/protobuf-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <Product>protobuf-net ($(TargetFramework))</Product>
-    <PackageReleaseNotes>https://mgravell.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
+    <PackageReleaseNotes>https://protobuf-net.github.io/protobuf-net/releasenotes#$(VersionPrefix)</PackageReleaseNotes>
     
     <PackageTags>binary;serialization;protobuf</PackageTags>
     
