@@ -8,7 +8,7 @@ but which makes it really easy to work with idiomatic .NET types, including pre-
 
 ## Release Notes
 
-[Change history and pending changes are here](http://mgravell.github.io/protobuf-net/releasenotes)
+[Change history and pending changes are here](http://protobuf-net.github.io/protobuf-net/releasenotes)
 
 ## Donate
 
