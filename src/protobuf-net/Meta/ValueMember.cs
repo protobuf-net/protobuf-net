@@ -509,6 +509,16 @@ namespace ProtoBuf.Meta
                         throw new InvalidOperationException("No serializer defined for type: " + finalType.FullName);
                     }
 
+                    var scalarValuePassthruParts = ser as ScalarValuePassthruFakeDecorator;
+                    if (scalarValuePassthruParts != null)
+                    {
+                        // Scalar value passthru needs to affect two layers:
+                        // 1. Early/high in the stack, so that DefaultValueDecorator can operate on the primitive type.
+                        // 2. Late/low in the stack, where a primitive serializer is used.
+                        // For lists, a list serializers these two are directly connected as the list serializer tail.
+                        ser = scalarValuePassthruParts.PrimitiveTypeSerializer;
+                    }
+
                     // apply tags
                     if (ItemType != null && SupportNull)
                     {
@@ -524,21 +534,25 @@ namespace ProtoBuf.Meta
                     {
                         ser = new TagDecorator(FieldNumber, wireType, IsStrict, ser);
                     }
+
+                    var hasAppliedStronglyTypedDecorator = false;
                     // apply lists if appropriate
                     if (ItemType != null)
                     {
                         Type underlyingItemType = SupportNull ? ItemType : Helpers.GetUnderlyingType(ItemType) ?? ItemType;
 
-                        Helpers.DebugAssert(underlyingItemType == ser.ExpectedType
-                            || (ser.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType))
-                            , "Wrong type in the tail; expected {0}, received {1}", ser.ExpectedType, underlyingItemType);
+                        var tail = scalarValuePassthruParts?.GetStronglyTypedDecorator(ser) ?? ser;
+                        hasAppliedStronglyTypedDecorator = true;
+                        Helpers.DebugAssert(underlyingItemType == tail.ExpectedType
+                            || (tail.ExpectedType == typeof(object) && !Helpers.IsValueType(underlyingItemType))
+                            , "Wrong type in the tail; expected {0}, received {1}", tail.ExpectedType, underlyingItemType);
                         if (MemberType.IsArray)
                         {
-                            ser = new ArrayDecorator(ser, FieldNumber, IsPacked, wireType, MemberType, OverwriteList, SupportNull);
+                            ser = new ArrayDecorator(tail, FieldNumber, IsPacked, wireType, MemberType, OverwriteList, SupportNull);
                         }
                         else
                         {
-                            ser = ListDecorator.Create(MemberType, DefaultType, ser, FieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(member), OverwriteList, SupportNull);
+                            ser = ListDecorator.Create(MemberType, DefaultType, tail, FieldNumber, IsPacked, wireType, member != null && PropertyDecorator.CanWrite(member), OverwriteList, SupportNull);
                         }
                     }
                     else if (_defaultValue != null && !IsRequired && getSpecified == null)
@@ -549,6 +563,11 @@ namespace ProtoBuf.Meta
                     if (MemberType == typeof(Uri))
                     {
                         ser = new UriDecorator(ser);
+                    }
+
+                    if (scalarValuePassthruParts != null && !hasAppliedStronglyTypedDecorator)
+                    {
+                        ser = scalarValuePassthruParts.GetStronglyTypedDecorator(ser);
                     }
 #if PORTABLE
                     else if(memberType.FullName == typeof(Uri).FullName)
@@ -746,8 +765,36 @@ namespace ProtoBuf.Meta
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return new NetObjectSerializer(type, key, options);
                 }
+
                 if (key >= 0)
                 {
+                    if (meta != null)
+                    {
+
+                        // surrogat: 
+                        var sos = meta.GetSurrogateOrSelf();
+                        if (sos != meta && sos.ScalarValuePassthru)
+                        {
+                            var toSurrogate = SurrogateSerializer.GetConversion(meta.Type, sos.Type, true);
+                            var fromSurrogate = SurrogateSerializer.GetConversion(meta.Type, sos.Type, false);
+
+                            var singleField = sos.GetScalarPassthruSingleField();
+                            var primitiveTail = TryGetCoreSerializer(model, dataFormat,
+                                Helpers.GetMemberType(singleField), out defaultWireType, false, false, false, false);
+
+                            return new ScalarValuePassthruFakeDecorator(toSurrogate, fromSurrogate, type, singleField, primitiveTail);
+                        }
+
+                        if (meta.ScalarValuePassthru)
+                        {
+                            var singleField = meta.GetScalarPassthruSingleField();
+                            var primitiveTail = TryGetCoreSerializer(model, dataFormat,
+                                Helpers.GetMemberType(singleField), out defaultWireType, false, false, false, false);
+
+                            return new ScalarValuePassthruFakeDecorator(null, null, type, singleField, primitiveTail);
+                        }
+                    }
+
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
                     return new SubItemSerializer(type, key, meta, true);
                 }

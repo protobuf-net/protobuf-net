@@ -98,16 +98,21 @@ namespace ProtoBuf.Serializers
             return false;
         }
 
-        public MethodInfo GetConversion(bool toTail)
+        public static MethodInfo GetConversion(Type expectedType, Type declaredType, bool toTail)
         {
-            Type to = toTail ? declaredType : ExpectedType;
-            Type from = toTail ? ExpectedType : declaredType;
-            if (HasCast(declaredType, from, to, out MethodInfo op) || HasCast(ExpectedType, from, to, out op))
+            Type to = toTail ? declaredType : expectedType;
+            Type from = toTail ? expectedType : declaredType;
+            if (HasCast(declaredType, from, to, out MethodInfo op) || HasCast(expectedType, from, to, out op))
             {
                 return op;
             }
             throw new InvalidOperationException("No suitable conversion operator found for surrogate: " +
-                ExpectedType.FullName + " / " + declaredType.FullName);
+                expectedType.FullName + " / " + declaredType.FullName);
+        }
+
+        public MethodInfo GetConversion(bool toTail)
+        {
+            return GetConversion(ExpectedType, declaredType, toTail);
         }
 
         public void Write(ProtoWriter writer, ref ProtoWriter.State state, object value)

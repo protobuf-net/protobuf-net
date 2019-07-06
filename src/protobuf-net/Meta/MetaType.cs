@@ -480,7 +480,7 @@ namespace ProtoBuf.Meta
         [Flags]
         internal enum AttributeFamily
         {
-            None = 0, ProtoBuf = 1, DataContractSerialier = 2, XmlSerializer = 4, AutoTuple = 8
+            None = 0, ProtoBuf = 1, DataContractSerialier = 2, XmlSerializer = 4, AutoTuple = 8, ScalarValuePassthrough = 16
         }
         private static Type GetBaseType(MetaType type)
         {
@@ -519,6 +519,10 @@ namespace ProtoBuf.Meta
             if (family == AttributeFamily.AutoTuple)
             {
                 SetFlag(OPTIONS_AutoTuple, true, true);
+            }
+            else if (family == AttributeFamily.ScalarValuePassthrough)
+            {
+                SetFlag(OPTIONS_ScalarValuePassThru, true, true);
             }
             bool isEnum = !EnumPassthru && Helpers.IsEnum(Type);
             if (family == AttributeFamily.None && !isEnum) return; // and you'd like me to do what, exactly?
@@ -638,6 +642,7 @@ namespace ProtoBuf.Meta
             {
                 family &= AttributeFamily.ProtoBuf; // with implicit fields, **only** proto attributes are important
             }
+
             MethodInfo[] callbacks = null;
 
             BasicList members = new BasicList();
@@ -820,6 +825,14 @@ namespace ProtoBuf.Meta
                         }
                         break;
                 }
+            }
+            if (family == AttributeFamily.None && model.InferScalarValuePassthru &&
+                TryGetScalarPassthruSingleFieldIfApplicable(model, type, out _) != null)
+            {
+                // We've got to give the caller something else than None to keep them interested
+                // in the type. If we do not keep them interested, they will not create a Metatype for it,
+                // and therefore having model.InferScalarValuePassthru = true will not matter.
+                family = AttributeFamily.ScalarValuePassthrough;
             }
             if (family == AttributeFamily.None)
             { // check for obvious tuples
@@ -1712,6 +1725,19 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
+        /// The purpose of this property is to allow the use of strong types for representing primitive types:
+        /// You might have an int64 field representing an entity id, for example that of a student.
+        /// By enabling this setting you can create a strong type "StudentID" (as a struct) to hold the value/field,
+        /// with the field still being handled as an in64 in the serialization format and in the generated
+        /// proto schema files.
+        /// </summary>
+        public bool ScalarValuePassthru
+        {
+            get { return HasFlag(OPTIONS_ScalarValuePassThru); }
+            set { SetFlag(OPTIONS_ScalarValuePassThru, value, true); }
+        }
+
+        /// <summary>
         /// Gets or sets a value indicating that this type should NOT be treated as a list, even if it has
         /// familiar list-like characteristics (enumerable, add, etc)
         /// </summary>
@@ -1736,7 +1762,8 @@ namespace ProtoBuf.Meta
             OPTIONS_AsReferenceDefault = 32,
             OPTIONS_AutoTuple = 64,
             OPTIONS_IgnoreListHandling = 128,
-            OPTIONS_IsGroup = 256;
+            OPTIONS_IsGroup = 256,
+            OPTIONS_ScalarValuePassThru = 512;
 
         private volatile ushort flags;
         private bool HasFlag(ushort flag) { return (flags & flag) == flag; }
@@ -2101,6 +2128,76 @@ namespace ProtoBuf.Meta
                     return true;
             }
             return false;
+        }
+
+        internal FieldInfo GetScalarPassthruSingleField()
+        {
+            if (HasCallbacks)
+                throw new InvalidOperationException(
+                    $"Callbacks cannot be used with {nameof(MetaType.ScalarValuePassthru)}: {Type.FullName}");
+            return GetScalarPassthruSingleField(model, Type);
+        }
+
+        private static FieldInfo GetScalarPassthruSingleField(RuntimeTypeModel model, Type type)
+        {
+            if (!Helpers.IsValueType(type))
+                throw new InvalidOperationException(
+                    $"Only value types can be used with {nameof(MetaType.ScalarValuePassthru)}: {type.FullName}");
+            var singleField = TryGetScalarPassthruSingleFieldIfApplicable(model, type, out var error);
+            if (singleField == null)
+                throw new InvalidOperationException(error + ": " + type.FullName);
+
+            return singleField;
+        }
+
+        private static FieldInfo TryGetScalarPassthruSingleFieldIfApplicable(RuntimeTypeModel model, Type type, out string error)
+        {
+            // This shape detection could in some sense be replaced with the pre-existing detection
+            // in ResolveTupleConstructor, and simply checking that we get exactly one MemberInfo back.
+            // But our preference here is a bit different:
+            //  1. We're not really interested in whether or or the name of the type contains "Tuple".
+            //  2. We're not really interested in the number of properties, but rather in the types that
+            //     seem to be storing one value. Having one field is a decent approximation.
+            //  3. We're somewhat interested in the type being a value type, because you will want to
+            //     use value types for this kind of stuff.
+            if (!Helpers.IsValueType(type))
+            {
+                error = "Only value types can be used with " + nameof(MetaType.ScalarValuePassthru);
+                return null;
+            }
+
+            var fieldsAndProperties = Helpers.GetInstanceFieldsAndProperties(type, false);
+            FieldInfo singleField = null;
+            foreach (var fop in fieldsAndProperties)
+            {
+                if (fop is FieldInfo fi)
+                {
+                    if (singleField != null)
+                    {
+                        error = nameof(MetaType.ScalarValuePassthru) + " can only be used on types with exactly one field";
+                        return null;
+                    }
+                    singleField = fi;
+                }
+            }
+
+            var fieldType = Helpers.GetMemberType(singleField);
+            if (Helpers.GetConstructor(type, new[] { fieldType }, false) == null)
+            {
+                error = "No constructor taking a single argument of the single field type was found.";
+                return null;
+            }
+
+            if (model.TryGetBasicTypeSerializer(fieldType) == null)
+            {
+                // This limitation os probably not necessary. It is mainly here to limit scope that
+                // we are committing ourselves to.
+                error = nameof(MetaType.ScalarValuePassthru) + " only works for types that wrap simple types.";
+                return null;
+            }
+
+            error = null;
+            return singleField;
         }
     }
 }
