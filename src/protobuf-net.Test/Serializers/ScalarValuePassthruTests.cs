@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.Serialization;
 using ProtoBuf.Meta;
 using Xunit;
 using Xunit.Abstractions;
@@ -586,7 +585,7 @@ message I64_List_Message {
 
         public struct I32_ID
         {
-            public int Value { get; private set; }
+            public int Value { get; }
 
             public I32_ID(int value) => Value = value;
         }
@@ -875,10 +874,140 @@ message I64_List_Message {
             Assert.Equal(bytesForRawI32, bytesWithExplicitPassthru);
         }
 
+        [ProtoScalar]
+        public struct ProtoScalar_ID
+        {
+            public int Value { get; private set; }
+
+            public ProtoScalar_ID(int value) => Value = value;
+        }
+
+        [ProtoContract]
+        public sealed class ProtoScalar_Message
+        {
+            [ProtoMember(1)] public long ID;
+            [ProtoMember(2)] public ProtoScalar_ID OtherID;
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ProtoScalar(bool autoCompile)
+        {
+            // We want to check that applying ProtoScalarAttribute to a struct
+            // triggers scalar value passthru.
+
+            byte[] bytesWithProtoScalar;
+            byte[] bytesForRawI32;
+
+            {
+                // with ProtoScalar.
+                var model = CreatePristineModel();
+                model.AutoCompile = autoCompile;
+
+                bytesWithProtoScalar = SerializeToArray(new ProtoScalar_Message
+                {
+                    ID = 10,
+                    OtherID = new ProtoScalar_ID(444),
+                }, model);
+                Assert.True(model[typeof(ProtoScalar_ID)].ScalarValuePassthru);
+            }
+            {
+                // raw i32.
+                var model = CreatePristineModel();
+                model.AutoCompile = autoCompile;
+
+                bytesForRawI32 = SerializeToArray(new I32Raw_Message
+                {
+                    ID = 10,
+                    OtherID = 444,
+                }, model);
+            }
+
+            var clone = DeepClone(new I32_Message
+            {
+                ID = 10,
+                OtherID = new I32_ID(444),
+            }, CreateModelWithScalarValuePassthruInference());
+            Assert.Equal(444, clone.OtherID.Value);
+
+            Assert.Equal(bytesForRawI32, bytesWithProtoScalar);
+        }
+
+        [ProtoScalar]
+        public struct ProtoScalar_BadlyApplied_Nullable_Target
+        {
+            public int? Value { get; }
+
+            public ProtoScalar_BadlyApplied_Nullable_Target(int? value) => Value = value;
+        }
+
+        [ProtoContract]
+        public sealed class ProtoScalar_BadlyApplied_Nullable_Message
+        {
+            [ProtoMember(1)] public long ID;
+            [ProtoMember(2)] public ProtoScalar_BadlyApplied_Nullable_Target OtherID;
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ProtoScalar_BadlyApplied_Nullable(bool autoCompile)
+        {
+            // with ProtoScalar.
+            var model = CreatePristineModel();
+            model.AutoCompile = autoCompile;
+
+            var ex = Assert.Throws<InvalidOperationException>(() => SerializeToArray(new ProtoScalar_BadlyApplied_Nullable_Message
+            {
+                ID = 10,
+                OtherID = new ProtoScalar_BadlyApplied_Nullable_Target(444),
+            }, model));
+            Assert.Contains("ScalarValuePassthru only works for types that wrap simple types", ex.Message);
+        }
+
+
+        [ProtoScalar]
+        public struct ProtoScalar_BadlyApplied_MultiField_Target
+        {
+            public int Value { get; }
+            public int Value2 { get; }
+
+            public ProtoScalar_BadlyApplied_MultiField_Target(int value, int value2)
+            {
+                Value = value;
+                Value2 = value2;
+            }
+        }
+
+        [ProtoContract]
+        public sealed class ProtoScalar_BadlyApplied_MultiField_Message
+        {
+            [ProtoMember(1)] public long ID;
+            [ProtoMember(2)] public ProtoScalar_BadlyApplied_MultiField_Target OtherID;
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ProtoScalar_BadlyApplied_MultiField(bool autoCompile)
+        {
+            // with ProtoScalar.
+            var model = CreatePristineModel();
+            model.AutoCompile = autoCompile;
+
+            var ex = Assert.Throws<InvalidOperationException>(() => SerializeToArray(new ProtoScalar_BadlyApplied_MultiField_Message
+            {
+                ID = 10,
+                OtherID = new ProtoScalar_BadlyApplied_MultiField_Target(444, 555),
+            }, model));
+            Assert.Contains("ScalarValuePassthru can only be used on types with exactly one field", ex.Message);
+        }
+
         [ProtoContract]
         public struct DataContract_ID
         {
-            [DataMember]
+            [ProtoMember(1)]
             public int Value { get; private set; }
 
             public DataContract_ID(int value) => Value = value;

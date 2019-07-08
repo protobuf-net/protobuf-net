@@ -5,6 +5,7 @@ using System.Text;
 using ProtoBuf.Serializers;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 #if PROFILE259
 using System.Linq;
@@ -628,6 +629,10 @@ namespace ProtoBuf.Meta
                     }
                 }
 
+                if (fullAttributeTypeName == "ProtoBuf.ProtoScalarAttribute")
+                {
+                    ScalarValuePassthru = true;
+                }
                 if (fullAttributeTypeName == "System.Runtime.Serialization.DataContractAttribute")
                 {
                     if (name == null && item.TryGet("Name", out tmp)) name = (string)tmp;
@@ -2189,6 +2194,13 @@ namespace ProtoBuf.Meta
             }
 
             if (model.TryGetBasicTypeSerializer(fieldType) == null)
+            {
+                // This limitation os probably not necessary. It is mainly here to limit scope that
+                // we are committing ourselves to.
+                error = nameof(MetaType.ScalarValuePassthru) + " only works for types that wrap simple types.";
+                return null;
+            }
+            if (Helpers.IsValueType(fieldType) && Helpers.GetUnderlyingType(fieldType) != null)
             {
                 // This limitation os probably not necessary. It is mainly here to limit scope that
                 // we are committing ourselves to.
