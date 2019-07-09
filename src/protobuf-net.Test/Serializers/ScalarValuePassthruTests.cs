@@ -862,13 +862,6 @@ message I64_List_Message {
                 }, model);
             }
 
-            var clone = DeepClone(new I32_Message
-            {
-                ID = 10,
-                OtherID = new I32_ID(444),
-            }, CreateModelWithScalarValuePassthruInference());
-            Assert.Equal(444, clone.OtherID.Value);
-
             Assert.NotEqual(bytesForRawI32, bytesWithPassthruInference);
             Assert.Equal(bytesWithPassthruInference, bytesWithoutPassthruInference);
             Assert.Equal(bytesForRawI32, bytesWithExplicitPassthru);
@@ -932,6 +925,54 @@ message I64_List_Message {
             Assert.Equal(444, clone.OtherID.Value);
 
             Assert.Equal(bytesForRawI32, bytesWithProtoScalar);
+        }
+
+        [ProtoContract]
+        public sealed class DataFormat_FromProtoMember_Message
+        {
+            [ProtoMember(1)] public long ID;
+            [ProtoMember(2, DataFormat = DataFormat.ZigZag)] public ProtoScalar_ID OtherID;
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DataFormat_FromProtoMember(bool autoCompile)
+        {
+            byte[] bytesWithMemberZigZag;
+            byte[] bytesForRawI32;
+
+            {
+                // with ProtoScalar.
+                var model = CreatePristineModel();
+                model.AutoCompile = autoCompile;
+
+                bytesWithMemberZigZag = SerializeToArray(new DataFormat_FromProtoMember_Message
+                {
+                    ID = 10,
+                    OtherID = new ProtoScalar_ID(444),
+                }, model);
+            }
+            {
+                // raw i32.
+                var model = CreatePristineModel();
+                model.AutoCompile = autoCompile;
+
+                bytesForRawI32 = SerializeToArray(new I32Raw_Message
+                {
+                    ID = 10,
+                    OtherID = 444,
+                }, model);
+            }
+
+            var clone = DeepClone(new DataFormat_FromProtoMember_Message
+            {
+                ID = 10,
+                OtherID = new ProtoScalar_ID(444),
+            }, CreateModelWithScalarValuePassthruInference());
+            Assert.Equal(444, clone.OtherID.Value);
+
+            Assert.NotEqual(bytesForRawI32, bytesWithMemberZigZag);
         }
 
         [ProtoScalar]
