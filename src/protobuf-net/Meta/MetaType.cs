@@ -631,7 +631,11 @@ namespace ProtoBuf.Meta
 
                 if (fullAttributeTypeName == "ProtoBuf.ProtoScalarAttribute")
                 {
+                    var dataFormat = DataFormat.Default;
+                    GetDataFormat(ref dataFormat, item, nameof(ProtoScalarAttribute.DataFormat));
+
                     ScalarValuePassthru = true;
+                    ScalarValuePassthruDataFormat = dataFormat;
                 }
                 if (fullAttributeTypeName == "System.Runtime.Serialization.DataContractAttribute")
                 {
@@ -1740,6 +1744,20 @@ namespace ProtoBuf.Meta
         {
             get { return HasFlag(OPTIONS_ScalarValuePassThru); }
             set { SetFlag(OPTIONS_ScalarValuePassThru, value, true); }
+        }
+
+        DataFormat _scalarValuePassthruDataFormat = DataFormat.Default;
+
+        /// <summary>
+        /// </summary>
+        public DataFormat ScalarValuePassthruDataFormat
+        {
+            get { return _scalarValuePassthruDataFormat; }
+            set
+            {
+                ThrowIfFrozen();
+                _scalarValuePassthruDataFormat = value;
+            }
         }
 
         /// <summary>

@@ -14,6 +14,7 @@ namespace ProtoBuf
         AllowMultiple = false, Inherited = true)]
     public sealed class ProtoScalarAttribute : Attribute
     {
+        public DataFormat DataFormat { get; set; }
     }
 }
 

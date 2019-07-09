@@ -779,7 +779,8 @@ namespace ProtoBuf.Meta
                             var fromSurrogate = SurrogateSerializer.GetConversion(meta.Type, sos.Type, false);
 
                             var singleField = sos.GetScalarPassthruSingleField();
-                            var primitiveTail = TryGetCoreSerializer(model, dataFormat,
+                            var primitiveTail = TryGetCoreSerializer(model,
+                                dataFormat != DataFormat.Default ? dataFormat : sos.ScalarValuePassthruDataFormat,
                                 Helpers.GetMemberType(singleField), out defaultWireType, false, false, false, false);
 
                             return new ScalarValuePassthruFakeDecorator(toSurrogate, fromSurrogate, type, singleField, primitiveTail);
@@ -788,7 +789,8 @@ namespace ProtoBuf.Meta
                         if (meta.ScalarValuePassthru)
                         {
                             var singleField = meta.GetScalarPassthruSingleField();
-                            var primitiveTail = TryGetCoreSerializer(model, dataFormat,
+                            var primitiveTail = TryGetCoreSerializer(model,
+                                dataFormat != DataFormat.Default ? dataFormat : meta.ScalarValuePassthruDataFormat,
                                 Helpers.GetMemberType(singleField), out defaultWireType, false, false, false, false);
 
                             return new ScalarValuePassthruFakeDecorator(null, null, type, singleField, primitiveTail);

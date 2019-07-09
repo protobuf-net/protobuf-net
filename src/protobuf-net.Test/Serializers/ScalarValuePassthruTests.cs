@@ -975,6 +975,65 @@ message I64_List_Message {
             Assert.NotEqual(bytesForRawI32, bytesWithMemberZigZag);
         }
 
+        [ProtoScalar(DataFormat = DataFormat.ZigZag)]
+        public struct DataFormat_FromProtoScalar_ID
+        {
+            public int Value { get; private set; }
+
+            public DataFormat_FromProtoScalar_ID(int value) => Value = value;
+        }
+
+        [ProtoContract]
+        public sealed class DataFormat_FromProtoScalar_Message
+        {
+            [ProtoMember(1)] public long ID;
+            [ProtoMember(2)] public DataFormat_FromProtoScalar_ID OtherID;
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void DataFormat_FromProtoScalar(bool autoCompile)
+        {
+            // We want to check that DataMember from ProtoScalarAttribute is honored.
+
+            byte[] bytesWithMemberZigZag;
+            byte[] bytesForRawI32;
+
+            {
+                // with ProtoScalar.
+                var model = CreatePristineModel();
+                model.AutoCompile = autoCompile;
+
+                bytesWithMemberZigZag = SerializeToArray(new DataFormat_FromProtoScalar_Message
+                {
+                    ID = 10,
+                    OtherID = new DataFormat_FromProtoScalar_ID(444),
+                }, model);
+                Assert.Equal(DataFormat.ZigZag, model[typeof(DataFormat_FromProtoScalar_ID)].ScalarValuePassthruDataFormat);
+            }
+            {
+                // raw i32.
+                var model = CreatePristineModel();
+                model.AutoCompile = autoCompile;
+
+                bytesForRawI32 = SerializeToArray(new I32Raw_Message
+                {
+                    ID = 10,
+                    OtherID = 444,
+                }, model);
+            }
+
+            var clone = DeepClone(new DataFormat_FromProtoScalar_Message
+            {
+                ID = 10,
+                OtherID = new DataFormat_FromProtoScalar_ID(444),
+            }, CreateModelWithScalarValuePassthruInference());
+            Assert.Equal(444, clone.OtherID.Value);
+
+            Assert.NotEqual(bytesForRawI32, bytesWithMemberZigZag);
+        }
+
         [ProtoScalar]
         public struct ProtoScalar_BadlyApplied_Nullable_Target
         {
