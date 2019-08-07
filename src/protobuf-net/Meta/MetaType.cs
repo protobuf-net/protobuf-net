@@ -240,8 +240,9 @@ namespace ProtoBuf.Meta
                         // No need to check for nesting/array rank here. If that's invalid
                         // other parts of the schema generator will throw.
                         sb.Append(tmp.GetElementType().Name);
-                    } else
-                    { 
+                    }
+                    else
+                    {
                         sb.Append(tmp.Name);
                     }
                 }
@@ -268,6 +269,8 @@ namespace ProtoBuf.Meta
                 name = value;
             }
         }
+
+        public string Description { set; get; }
 
         private MethodInfo factory;
         /// <summary>
@@ -623,7 +626,13 @@ namespace ProtoBuf.Meta
                         }
                     }
                 }
-
+                if (fullAttributeTypeName == "ProtoBuf.ProtoDescriptionAttribute")
+                {
+                    if (string.IsNullOrEmpty(Description) && item.TryGet("Description", out var desc))
+                    {
+                        Description = (string)desc;
+                    }
+                }
                 if (fullAttributeTypeName == "System.Runtime.Serialization.DataContractAttribute")
                 {
                     if (name == null && item.TryGet("Name", out tmp)) name = (string)tmp;
@@ -1191,6 +1200,14 @@ namespace ProtoBuf.Meta
                             if (attrib.TryGet(nameof(ProtoMapAttribute.KeyFormat), out tmp)) vm.MapKeyFormat = (DataFormat)tmp;
                             if (attrib.TryGet(nameof(ProtoMapAttribute.ValueFormat), out tmp)) vm.MapValueFormat = (DataFormat)tmp;
                         }
+                    }
+                }
+
+                if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoDescriptionAttribute")) != null)//Sets the description for ValueMember
+                {
+                    if (attrib.TryGet("Description", out object tmp))
+                    {
+                        vm.Description = (string)tmp;
                     }
                 }
             }
@@ -1812,10 +1829,12 @@ namespace ProtoBuf.Meta
             ValueMember[] fieldsArr = new ValueMember[fields.Count];
             fields.CopyTo(fieldsArr, 0);
             Array.Sort(fieldsArr, ValueMember.Comparer.Default);
-
+            var description = string.IsNullOrEmpty(Description) ? null : "//" + Description;
+            AttributeMap attrib;
             if (IsList)
             {
                 string itemTypeName = model.GetSchemaTypeName(TypeModel.GetListItemType(Type), DataFormat.Default, false, false, ref imports);
+                if (!string.IsNullOrEmpty(description)) NewLine(builder, indent).Append(description);
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
                 NewLine(builder, indent + 1).Append("repeated ").Append(itemTypeName).Append(" items = 1;");
                 NewLine(builder, indent).Append('}');
@@ -1824,10 +1843,13 @@ namespace ProtoBuf.Meta
             { // key-value-pair etc
                 if (ResolveTupleConstructor(Type, out MemberInfo[] mapping) != null)
                 {
+                    if (!string.IsNullOrEmpty(description)) NewLine(builder, indent).Append(description);
                     NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
+
                     for (int i = 0; i < mapping.Length; i++)
                     {
                         Type effectiveType;
+                        AttributeMap[] attribs = AttributeMap.Create(model, mapping[i], true);
                         if (mapping[i] is PropertyInfo property)
                         {
                             effectiveType = property.PropertyType;
@@ -1840,14 +1862,23 @@ namespace ProtoBuf.Meta
                         {
                             throw new NotSupportedException("Unknown member type: " + mapping[i].GetType().Name);
                         }
+                        var m_description = string.Empty;
+                        if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoDescriptionAttribute")) != null)
+                        {
+                            if (attrib.TryGet("Description", out object tmp))
+                            {
+                                m_description = tmp != null ? "//" + (string)tmp : "";
+                            }
+                        }
                         NewLine(builder, indent + 1).Append(syntax == ProtoSyntax.Proto2 ? "optional " : "").Append(model.GetSchemaTypeName(effectiveType, DataFormat.Default, false, false, ref imports).Replace('.', '_'))
-                            .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';');
+                        .Append(' ').Append(mapping[i].Name).Append(" = ").Append(i + 1).Append(';').Append(m_description);
                     }
                     NewLine(builder, indent).Append('}');
                 }
             }
             else if (Helpers.IsEnum(Type))
             {
+                if (!string.IsNullOrEmpty(description)) NewLine(builder, indent).Append(description);
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName()).Append(" {");
                 if (fieldsArr.Length == 0 && EnumPassthru)
                 {
@@ -1869,9 +1900,10 @@ namespace ProtoBuf.Meta
 #else
                         Type.GetFields()
 #endif
-
-                        )
+                    )
                     {
+                        var attribs = AttributeMap.Create(model, field, true);
+
                         if (field.IsStatic && field.IsLiteral)
                         {
                             object enumVal;
@@ -1880,7 +1912,15 @@ namespace ProtoBuf.Meta
 #else
                             enumVal = field.GetRawConstantValue();
 #endif
-                            NewLine(builder, indent + 1).Append(field.Name).Append(" = ").Append(enumVal).Append(";");
+                            var m_description = string.Empty;
+                            if ((attrib = GetAttribute(attribs, "ProtoBuf.ProtoDescriptionAttribute")) != null)
+                            {
+                                if (attrib.TryGet("Description", out object tmp))
+                                {
+                                    m_description = tmp != null ? "//" + (string)tmp : "";
+                                }
+                            }
+                            NewLine(builder, indent + 1).Append(field.Name).Append(" = ").Append(enumVal).Append(";").Append(m_description);
                         }
                     }
                 }
@@ -1908,7 +1948,8 @@ namespace ProtoBuf.Meta
                     {
                         if (member.FieldNumber == 0)
                         {
-                            NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
+                            var m_description = string.IsNullOrEmpty(member.Description) ? "" : "//" + member.Description;
+                            NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';').Append(m_description);
                             haveWrittenZero = true;
                         }
                     }
@@ -1919,27 +1960,29 @@ namespace ProtoBuf.Meta
                     // note array is already sorted, so zero would already be first
                     foreach (ValueMember member in fieldsArr)
                     {
+                        var m_description = string.IsNullOrEmpty(member.Description) ? "" : "//" + member.Description;
                         if (member.FieldNumber == 0) continue;
-                        NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';');
+                        NewLine(builder, indent + 1).Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(';').Append(m_description);
                     }
                 }
                 NewLine(builder, indent).Append('}');
             }
             else
             {
+                if (!string.IsNullOrEmpty(description)) NewLine(builder, indent).Append(description);
                 NewLine(builder, indent).Append("message ").Append(GetSchemaTypeName()).Append(" {");
                 foreach (ValueMember member in fieldsArr)
                 {
                     string schemaTypeName;
                     bool hasOption = false;
+                    var m_description = string.IsNullOrEmpty(member.Description) ? "" : "//" + member.Description;
                     if (member.IsMap)
                     {
                         member.ResolveMapTypes(out var _, out var keyType, out var valueType);
-
                         var keyTypeName = model.GetSchemaTypeName(keyType, member.MapKeyFormat, false, false, ref imports);
                         schemaTypeName = model.GetSchemaTypeName(valueType, member.MapKeyFormat, member.AsReference, member.DynamicType, ref imports);
                         NewLine(builder, indent + 1).Append("map<").Append(keyTypeName).Append(",").Append(schemaTypeName).Append("> ")
-                            .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(";");
+                            .Append(member.Name).Append(" = ").Append(member.FieldNumber).Append(";").Append(m_description);
                     }
                     else
                     {
@@ -1990,7 +2033,8 @@ namespace ProtoBuf.Meta
                             imports |= RuntimeTypeModel.CommonImports.Protogen;
                             AddOption(builder, ref hasOption).Append("(.protobuf_net.fieldopt).dynamicType = true");
                         }
-                        CloseOption(builder, ref hasOption).Append(';');
+
+                        CloseOption(builder, ref hasOption).Append(';').Append(m_description);
                         if (syntax != ProtoSyntax.Proto2 && member.DefaultValue != null && !member.IsRequired)
                         {
                             if (IsImplicitDefault(member.DefaultValue))
@@ -2008,13 +2052,13 @@ namespace ProtoBuf.Meta
                         builder.Append(" // reference-tracked ").Append(member.GetSchemaTypeName(false, ref imports));
                     }
                 }
-                if (subTypes != null && subTypes.Count != 0)
+                if (subTypes != null && subTypes.Count != 0)//Annotation generation for SubType is not currently supported
                 {
                     SubType[] subTypeArr = new SubType[subTypes.Count];
                     subTypes.CopyTo(subTypeArr, 0);
                     Array.Sort(subTypeArr, SubType.Comparer.Default);
                     string[] fieldNames = new string[subTypeArr.Length];
-                    for(int i = 0; i < subTypeArr.Length;i++)
+                    for (int i = 0; i < subTypeArr.Length; i++)
                         fieldNames[i] = subTypeArr[i].DerivedType.GetSchemaTypeName();
 
                     string fieldName = "subtype";
@@ -2022,7 +2066,7 @@ namespace ProtoBuf.Meta
                         fieldName = "_" + fieldName;
 
                     NewLine(builder, indent + 1).Append("oneof ").Append(fieldName).Append(" {");
-                    for(int i = 0; i < subTypeArr.Length; i++)
+                    for (int i = 0; i < subTypeArr.Length; i++)
                     {
                         var subTypeName = fieldNames[i];
                         NewLine(builder, indent + 2).Append(subTypeName)

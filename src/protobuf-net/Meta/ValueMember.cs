@@ -775,6 +775,11 @@ namespace ProtoBuf.Meta
             set { SetName(value); }
         }
 
+        /// <summary>
+        /// Gets or sets the field description
+        /// </summary>
+        public string Description { set; get; }
+
         private const byte
            OPTIONS_IsStrict = 1,
            OPTIONS_IsPacked = 2,

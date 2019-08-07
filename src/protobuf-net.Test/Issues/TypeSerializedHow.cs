@@ -31,7 +31,7 @@ namespace ProtoBuf.Issues
                 SomeType = typeof(Uri) // arbitrary
             };
 
-            var clone = Serializer.ChangeType<ModelWithTypeMember,EquivModel>(obj);
+            var clone = Serializer.ChangeType<ModelWithTypeMember, EquivModel>(obj);
             Assert.Equal(123, clone.Id);
             Assert.Equal(typeof(Uri).AssemblyQualifiedName, clone.SomeType);
         }
@@ -49,6 +49,24 @@ message ModelWithTypeMember {
 }
 ", proto);
         }
+
+        [Fact]
+        public void GeneratesProto()
+        {
+            var proto = Serializer.GetProto<ProtoDataEntity>();
+            var expected = @"syntax = ""proto2"";
+package ProtoBuf.Issues;
+
+            //a demo proto data entity
+            message ProtoDataEntity {
+                optional int32 Id = 1[default = 0];//a primary key
+                optional string Name = 2;//the name property
+            }
+            ";
+
+            Assert.Equal(expected, proto);
+        }
+
         [ProtoContract]
         public class ModelWithTypeMember
         {
@@ -66,5 +84,17 @@ message ModelWithTypeMember {
             public string SomeType { get; set; }
         }
 
+        [ProtoDescription("a demo proto data entity")]
+        [ProtoContract]
+        public class ProtoDataEntity
+        {
+            [ProtoDescription("a primary key")]
+            [ProtoMember(1)]
+            public int Id { set; get; }
+
+            [ProtoDescription("the name property")]
+            [ProtoMember(2)]
+            public string Name { set; get; }
+        }
     }
 }
