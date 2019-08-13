@@ -8,18 +8,20 @@
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT;PLAT_SPANS</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.0'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
+    <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT;PLAT_SPANS</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net452'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\Tools\nwind.proto.bin" />
+    <None Include="..\Tools\nwind.proto.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="xunit" Version="2.4.1" />
@@ -62,9 +64,7 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
 
-    <None Update="../Tools/nwind.proto.bin">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+
   </ItemGroup>
   <ItemGroup Condition="'$(LibImport)'=='core'">
     <PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
@@ -78,6 +78,7 @@
     <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.31-pre.31.gf8c8025252" />
   </ItemGroup>
   <ItemGroup>
 
@@ -85,8 +86,5 @@
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="..\Tools\nwind.proto.bin" Link="nwind.proto.bin" />
   </ItemGroup>
 </Project>

@@ -75,7 +75,11 @@ namespace ProtoBuf
             private Span<byte> _span;
             private Memory<byte> _memory;
 
-            internal Span<byte> Remaining => _span.Slice(OffsetInCurrent);
+            internal Span<byte> Remaining
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _span.Slice(OffsetInCurrent);
+            }
 
             internal int RemainingInCurrent { get; private set; }
             internal int OffsetInCurrent { get; private set; }
@@ -100,6 +104,9 @@ namespace ProtoBuf
                 OffsetInCurrent += 4;
                 RemainingInCurrent -= 4;
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal void ReverseLast32() => _span.Slice(OffsetInCurrent - 4, 4).Reverse();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal void Advance(int bytes)

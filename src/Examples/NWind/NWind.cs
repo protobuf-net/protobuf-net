@@ -2,11 +2,12 @@
 using System;
 using ProtoBuf;
 using System.Runtime.Serialization;
+using System.IO;
+
 #if !COREFX
 
 using System.Collections.Generic;
 using System.Data.Linq;
-using System.IO;
 using System.Linq;
 
 using Xunit;
@@ -49,7 +50,7 @@ namespace DAL
         }
 #endif
     }
-#if !COREFX
+
 
     public class NWindTests
     {
@@ -62,6 +63,7 @@ namespace DAL
             }
             throw new FileNotFoundException("Unable to locate nwind.proto.bin under " + Directory.GetCurrentDirectory());
         }
+#if !COREFX
         public static T LoadDatabaseFromFile<T>(TypeModel model)
             where T : class,new()
         {
@@ -176,7 +178,8 @@ namespace DAL
 
             return db;
         }
-    }
 #endif
+    }
+
 }
 

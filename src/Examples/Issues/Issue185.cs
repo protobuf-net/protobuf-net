@@ -65,8 +65,7 @@ namespace Examples.Issues
                 m.CompileInPlace();
                 Test(m, c, "CompileInPlace");
                 Test(m.Compile(), c, "Compile");
-            }, @"The supplied default implementation cannot be created: Examples.Issues.O
-Parameter name: constructType");
+            }, @"The supplied default implementation cannot be created: Examples.Issues.O (Parameter 'constructType')");
         }
         static void Test(TypeModel model, C c, string caption)
         {

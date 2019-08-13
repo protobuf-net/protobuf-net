@@ -258,8 +258,7 @@ message KeyValuePair_String_Cat {
                 var model = TypeModel.Create();
                 model.AutoAddMissingTypes = false;
                 model.GetSchema(typeof(ProtoGenerationTypes.BrokenProto.Type2));
-            }, @"The type specified is not a contract-type
-Parameter name: type");
+            }, @"The type specified is not a contract-type (Parameter 'type')");
         }
 
         [Fact]
