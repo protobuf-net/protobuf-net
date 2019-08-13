@@ -33,7 +33,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteObject(object value, int key, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteObject(value, key, writer, ref state);
         }
 
@@ -79,7 +79,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteRecursionSafeObject(object value, int key, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteRecursionSafeObject(value, key, writer, ref state);
         }
         /// <summary>
@@ -158,7 +158,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteFieldHeader(int fieldNumber, WireType wireType, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteFieldHeader(fieldNumber, wireType, writer, ref state);
         }
 
@@ -231,7 +231,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteBytes(byte[] data, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteBytes(data, writer, ref state);
         }
 
@@ -250,7 +250,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteBytes(byte[] data, int offset, int length, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteBytes(data, offset, length, writer, ref state);
         }
 
@@ -294,7 +294,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             return writer.StartSubItem(ref state, instance, PrefixStyle.Base128);
         }
 
@@ -374,7 +374,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void EndSubItem(SubItemToken token, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             writer.EndSubItem(ref state, token, PrefixStyle.Base128);
         }
 
@@ -467,7 +467,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public void Close()
         {
-            State state = default;
+            State state = DefaultState();
             Close(ref state);
         }
         /// <summary>
@@ -513,7 +513,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteString(string value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteString(value, writer, ref state);
         }
         /// <summary>
@@ -577,7 +577,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteUInt64(ulong value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteUInt64(value, writer, ref state);
         }
         /// <summary>
@@ -612,7 +612,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteInt64(long value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteInt64(value, writer, ref state);
         }
         /// <summary>
@@ -649,7 +649,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteUInt32(uint value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteUInt32(value, writer, ref state);
         }
 
@@ -685,7 +685,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteInt16(short value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteInt32(value, writer, ref state);
         }
 
@@ -701,7 +701,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteUInt16(ushort value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteUInt32(value, writer, ref state);
         }
 
@@ -717,7 +717,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteByte(byte value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteUInt32(value, writer, ref state);
         }
 
@@ -733,7 +733,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteSByte(sbyte value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteInt32(value, writer, ref state);
         }
         /// <summary>
@@ -748,7 +748,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteInt32(int value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteInt32(value, writer, ref state);
         }
         /// <summary>
@@ -792,7 +792,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteDouble(double value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteDouble(value, writer, ref state);
         }
 
@@ -831,7 +831,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteSingle(float value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteSingle(value, writer, ref state);
         }
 
@@ -887,7 +887,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteBoolean(bool value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteBoolean(value, writer, ref state);
         }
 
@@ -905,7 +905,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void AppendExtensionData(IExtensible instance, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             AppendExtensionData(instance, writer, ref state);
         }
 
@@ -973,7 +973,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WritePackedPrefix(int elementCount, WireType wireType, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WritePackedPrefix(elementCount, wireType, writer, ref state);
         }
         /// <summary>
@@ -1016,7 +1016,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void WriteType(Type value, ProtoWriter writer)
         {
-            State state = default;
+            State state = writer.DefaultState();
             WriteType(value, writer, ref state);
         }
         /// <summary>

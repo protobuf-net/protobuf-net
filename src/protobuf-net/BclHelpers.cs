@@ -83,7 +83,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteTimeSpan(TimeSpan timeSpan, ProtoWriter dest)
         {
-            ProtoWriter.State state = default;
+            ProtoWriter.State state = dest.DefaultState();
             WriteTimeSpanImpl(timeSpan, dest, DateTimeKind.Unspecified, ref state);
         }
 
@@ -178,7 +178,7 @@ namespace ProtoBuf
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public static TimeSpan ReadTimeSpan(ProtoReader source)
         {
-            ProtoReader.State state = default;
+            ProtoReader.State state = source.DefaultState();
             return ReadTimeSpan(source, ref state);
         }
 
@@ -199,7 +199,7 @@ namespace ProtoBuf
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public static TimeSpan ReadDuration(ProtoReader source)
         {
-            ProtoReader.State state = default;
+            ProtoReader.State state = source.DefaultState();
             return ReadDuration(source, ref state);
         }
 
@@ -274,7 +274,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI)]
         public static void WriteDuration(TimeSpan value, ProtoWriter dest)
         {
-            ProtoWriter.State state = default;
+            ProtoWriter.State state = dest.DefaultState();
             WriteDuration(value, dest, ref state);
         }
 
@@ -309,7 +309,7 @@ namespace ProtoBuf
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public static DateTime ReadTimestamp(ProtoReader source)
         {
-            ProtoReader.State state = default;
+            ProtoReader.State state = source.DefaultState();
             return ReadTimestamp(source, ref state);
         }
 
@@ -330,7 +330,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteTimestamp(DateTime value, ProtoWriter dest)
         {
-            ProtoWriter.State state = default;
+            ProtoWriter.State state = dest.DefaultState();
             WriteTimestamp(value, dest, ref state);
         }
 
@@ -371,7 +371,7 @@ namespace ProtoBuf
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public static DateTime ReadDateTime(ProtoReader source)
         {
-            ProtoReader.State state = default;
+            ProtoReader.State state = source.DefaultState();
             return ReadDateTime(source, ref state);
         }
 
@@ -392,7 +392,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteDateTime(DateTime value, ProtoWriter dest)
         {
-            ProtoWriter.State state = default;
+            ProtoWriter.State state = dest.DefaultState();
             WriteDateTimeImpl(value, dest, false, ref state);
         }
 
@@ -410,7 +410,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteDateTimeWithKind(DateTime value, ProtoWriter dest)
         {
-            ProtoWriter.State state = default;
+            ProtoWriter.State state = dest.DefaultState();
             WriteDateTimeImpl(value, dest, true, ref state);
         }
 
@@ -531,7 +531,7 @@ namespace ProtoBuf
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public static decimal ReadDecimal(ProtoReader reader)
         {
-            ProtoReader.State state = default;
+            ProtoReader.State state = reader.DefaultState();
             return ReadDecimal(reader, ref state);
         }
         /// <summary>
@@ -571,7 +571,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteDecimal(decimal value, ProtoWriter writer)
         {
-            ProtoWriter.State state = default;
+            ProtoWriter.State state = writer.DefaultState();
             WriteDecimal(value, writer, ref state);
         }
 
@@ -761,7 +761,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteGuid(Guid value, ProtoWriter dest)
         {
-            ProtoWriter.State state = default;
+            ProtoWriter.State state = dest.DefaultState();
             WriteGuid(value, dest, ref state);
         }
 
@@ -799,7 +799,7 @@ namespace ProtoBuf
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public static Guid ReadGuid(ProtoReader source)
         {
-            ProtoReader.State state = default;
+            ProtoReader.State state = source.DefaultState();
             return ReadGuid(source, ref state);
         }
 
@@ -879,7 +879,7 @@ namespace ProtoBuf
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public static object ReadNetObject(object value, ProtoReader source, int key, Type type, NetObjectOptions options)
         {
-            ProtoReader.State state = default;
+            ProtoReader.State state = source.DefaultState();
             return ReadNetObject(source, ref state, value, key, type, options);
         }
 
@@ -997,7 +997,7 @@ namespace ProtoBuf
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public static void WriteNetObject(object value, ProtoWriter dest, int key, NetObjectOptions options)
         {
-            ProtoWriter.State state = default;
+            ProtoWriter.State state = dest.DefaultState();
             WriteNetObject(value, dest, ref state, key, options);
         }
 

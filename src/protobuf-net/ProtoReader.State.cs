@@ -7,6 +7,11 @@ namespace ProtoBuf
     public partial class ProtoReader
     {
         /// <summary>
+        /// Get the default state associated with this reader
+        /// </summary>
+        protected internal abstract State DefaultState();
+
+        /// <summary>
         /// Holds state used by the deserializer
         /// </summary>
         public ref struct State

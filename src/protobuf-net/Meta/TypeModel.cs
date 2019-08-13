@@ -221,7 +221,7 @@ namespace ProtoBuf.Meta
         [Obsolete(ProtoWriter.UseStateAPI, false)]
         public void Serialize(ProtoWriter dest, object value)
         {
-            ProtoWriter.State state = default;
+            ProtoWriter.State state = dest.DefaultState();
             Serialize(dest, ref state, value);
         }
 
@@ -705,7 +705,7 @@ namespace ProtoBuf.Meta
         [Obsolete(ProtoReader.UseStateAPI, false)]
         public object Deserialize(ProtoReader source, object value, Type type)
         {
-            ProtoReader.State state = default;
+            ProtoReader.State state = source.DefaultState();
             return Deserialize(source, ref state, value, type);
         }
 

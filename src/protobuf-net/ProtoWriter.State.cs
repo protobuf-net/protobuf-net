@@ -9,6 +9,11 @@ namespace ProtoBuf
 {
     public partial class ProtoWriter
     {
+        /// <summary>
+        /// Gets the default state associated with this writer
+        /// </summary>
+        protected internal abstract State DefaultState();
+
 #if FEAT_COMPILER
         internal static readonly Type ByRefStateType = typeof(State).MakeByRefType();
 

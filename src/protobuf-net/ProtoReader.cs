@@ -158,7 +158,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public short ReadInt16()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadInt16(ref state);
         }
 
@@ -176,7 +176,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public ushort ReadUInt16()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadUInt16(ref state);
         }
 
@@ -194,7 +194,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public byte ReadByte()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadByte(ref state);
         }
 
@@ -212,7 +212,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public sbyte ReadSByte()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadSByte(ref state);
         }
 
@@ -230,7 +230,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public uint ReadUInt32()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadUInt32(ref state);
         }
 
@@ -259,7 +259,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public int ReadInt32()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadInt32(ref state);
         }
 
@@ -307,7 +307,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public long ReadInt64()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadInt64(ref state);
         }
 
@@ -365,7 +365,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public string ReadString()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadString(ref state);
         }
 
@@ -393,7 +393,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public void ThrowEnumException(Type type, int value)
         {
-            State state = default;
+            State state = DefaultState();
             ThrowEnumException(ref state, type, value);
         }
         /// <summary>
@@ -421,7 +421,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public double ReadDouble()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadDouble(ref state);
         }
 
@@ -454,7 +454,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static object ReadObject(object value, int key, ProtoReader reader)
         {
-            State state = default;
+            State state = reader.DefaultState();
             return ReadTypedObject(reader, ref state, value, key, null);
         }
 
@@ -496,7 +496,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static void EndSubItem(SubItemToken token, ProtoReader reader)
         {
-            State state = default;
+            State state = reader.DefaultState();
             EndSubItem(token, reader, ref state);
         }
         /// <summary>
@@ -539,7 +539,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static SubItemToken StartSubItem(ProtoReader reader)
         {
-            State state = default;
+            State state = reader.DefaultState();
             return StartSubItem(reader, ref state);
         }
         /// <summary>
@@ -574,7 +574,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public int ReadFieldHeader()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadFieldHeader(ref state);
         }
 
@@ -633,7 +633,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public bool TryReadFieldHeader(int field)
         {
-            State state = default;
+            State state = DefaultState();
             return TryReadFieldHeader(ref state, field);
         }
 
@@ -689,7 +689,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public void Assert(WireType wireType)
         {
-            State state = default;
+            State state = DefaultState();
             Assert(ref state, wireType);
         }
         /// <summary>
@@ -717,7 +717,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public void SkipField()
         {
-            State state = default;
+            State state = DefaultState();
             SkipField(ref state);
         }
 
@@ -766,7 +766,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public ulong ReadUInt64()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadUInt64(ref state);
         }
 
@@ -794,7 +794,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public float ReadSingle()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadSingle(ref state);
         }
 
@@ -835,7 +835,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public bool ReadBoolean()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadBoolean(ref state);
         }
 
@@ -854,7 +854,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static byte[] AppendBytes(byte[] value, ProtoReader reader)
         {
-            State state = default;
+            State state = reader.DefaultState();
             return reader.AppendBytes(ref state, value);
         }
 
@@ -1191,7 +1191,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public void AppendExtensionData(IExtensible instance)
         {
-            State state = default;
+            State state = DefaultState();
             AppendExtensionData(ref state, instance);
         }
 
@@ -1301,7 +1301,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public Type ReadType()
         {
-            State state = default;
+            State state = DefaultState();
             return ReadType(ref state);
         }
 

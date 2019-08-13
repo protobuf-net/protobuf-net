@@ -9,7 +9,7 @@ and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net40;net461;netstandard1.0;netstandard1.3;netstandard2.0;netcoreapp2.1;netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>net40;net461;netstandard1.0;netstandard1.3;netstandard2.0;netcoreapp2.1;netstandard2.1</TargetFrameworks>
     <!--net20;net35;uap10.0-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
@@ -83,7 +83,7 @@ and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
     <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
     <PlatformSpanOverloads>true</PlatformSpanOverloads>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netcoreapp3.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.1'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>none</ImportLibs>
     <FeatureServiceModel>true</FeatureServiceModel>

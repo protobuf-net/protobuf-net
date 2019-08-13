@@ -30,6 +30,8 @@ namespace ProtoBuf
         }
         private class StreamProtoWriter : ProtoWriter
         {
+            protected internal override State DefaultState() => default;
+
             private Stream dest;
             private int flushLock;
 

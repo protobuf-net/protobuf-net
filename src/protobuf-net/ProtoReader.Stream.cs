@@ -114,6 +114,8 @@ namespace ProtoBuf
 
         private sealed class StreamProtoReader : ProtoReader
         {
+            protected internal override State DefaultState() => default;
+
             private Stream _source;
             private byte[] _ioBuffer;
             private bool _isFixedLength;
