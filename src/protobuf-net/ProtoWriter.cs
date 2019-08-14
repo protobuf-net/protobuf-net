@@ -448,9 +448,9 @@ namespace ProtoBuf
         private bool _needFlush;
 
         // note that this is used by some of the unit tests and should not be removed
-#pragma warning disable RCS1163 // Unused parameter.
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
         internal static long GetLongPosition(ProtoWriter writer, ref State state) { return writer._position64; }
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
 
         private long _position64;
         protected private void Advance(long count) => _position64 += count;

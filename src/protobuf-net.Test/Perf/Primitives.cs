@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.WellKnownTypes;
 using System;
 using System.IO;
 using Xunit;
@@ -10,7 +11,7 @@ namespace ProtoBuf.Perf
         [Fact]
         public void DecimalIsOptimized()
         {
-            Assert.True(BclHelpers.DecimalOptimized);
+            Assert.True(WellKnownSerializer.DecimalOptimized);
         }
 
         [Theory]
@@ -20,12 +21,12 @@ namespace ProtoBuf.Perf
         public void CheckDecimalLayout(bool optimized)
 #pragma warning restore xUnit1026
         {
-            bool oldVal = BclHelpers.GuidOptimized;
+            bool oldVal = WellKnownSerializer.GuidOptimized;
             decimal value = 1.0000000000045000000003000000M;
             try
             {
 #if DEBUG
-                BclHelpers.DecimalOptimized = optimized;
+                WellKnownSerializer.DecimalOptimized = optimized;
 #endif
                 using (var ms = new MemoryStream())
                 {
@@ -53,7 +54,7 @@ namespace ProtoBuf.Perf
             finally
             {
 #if DEBUG
-                BclHelpers.DecimalOptimized = oldVal;
+                WellKnownSerializer.DecimalOptimized = oldVal;
 #endif
             }
         }
@@ -61,7 +62,7 @@ namespace ProtoBuf.Perf
         [Fact]
         public void GuidIsOptimized()
         {
-            Assert.True(BclHelpers.GuidOptimized);
+            Assert.True(WellKnownSerializer.GuidOptimized);
         }
 
         [Theory]
@@ -73,11 +74,11 @@ namespace ProtoBuf.Perf
         {
             Assert.True(Guid.TryParse("12345678-2345-3456-4567-56789a6789ab", out var value));
 
-            bool oldVal = BclHelpers.GuidOptimized;
+            bool oldVal = WellKnownSerializer.GuidOptimized;
             try
             {
 #if DEBUG
-                BclHelpers.GuidOptimized = optimized;
+                WellKnownSerializer.GuidOptimized = optimized;
 #endif
                 using (var ms = new MemoryStream())
                 {
@@ -93,7 +94,7 @@ namespace ProtoBuf.Perf
             finally
             {
 #if DEBUG
-                BclHelpers.GuidOptimized = oldVal;
+                WellKnownSerializer.GuidOptimized = oldVal;
 #endif
             }
 

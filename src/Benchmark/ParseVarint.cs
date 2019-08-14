@@ -126,7 +126,7 @@ namespace Benchmark
                     return 5;
             }
         }
-        private static void ThrowOverflow(object obj) => throw new OverflowException();
+        private static void ThrowOverflow(object _) => throw new OverflowException();
 
         private static int TryParseUInt32VarintSlow2(ReadOnlySpan<byte> span, out uint value)
         {

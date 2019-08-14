@@ -11,7 +11,7 @@ namespace ProtoBuf.WellKnownTypes
     /// from a Timestamp. 
     /// </summary>
     [ProtoContract(Name = ".google.protobuf.Duration")]
-    internal struct Duration
+    internal readonly struct Duration
     {
         /// <summary>
         /// Signed seconds of the span of time.

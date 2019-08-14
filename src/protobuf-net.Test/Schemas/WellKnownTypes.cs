@@ -87,7 +87,13 @@ namespace ProtoBuf.Schemas
 
             // convert forwards and compare
             var hazDt = new HasDateTime { Value = when };
-            var hazTs = Serializer.ChangeType<HasDateTime, HasTimestamp>(hazDt);
+            HasTimestamp hazTs;
+            using (var ms = new MemoryStream())
+            {
+                model.Serialize(ms, hazDt, null);
+                ms.Position = 0;
+                hazTs = (HasTimestamp)model.Deserialize(ms, null, typeof(HasTimestamp));
+            }
             Assert.Equal(seconds, hazTs.Value?.Seconds ?? 0);
             Assert.Equal(nanos, hazTs.Value?.Nanos ?? 0);
 
@@ -96,7 +102,7 @@ namespace ProtoBuf.Schemas
             Assert.Equal(when, hazDt.Value);
         }
 
-        private TypeModel runtime, dynamicMethod, fullyCompiled;
+        private readonly TypeModel runtime, dynamicMethod, fullyCompiled;
         public WellKnownTypes()
         {
             RuntimeTypeModel Create(bool autoCompile)

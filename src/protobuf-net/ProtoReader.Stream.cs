@@ -163,7 +163,9 @@ namespace ProtoBuf
                 if (TryConsumeSegmentRespectingPosition(source, out var segment, length))
                 {
                     _ioBuffer = segment.Array;
+#pragma warning disable IDE0059 // Unnecessary assignment of a value - kept here for clarity
                     length = _available = segment.Count;
+#pragma warning restore IDE0059 // Unnecessary assignment of a value
                     _ioIndex = segment.Offset;
 
                     // don't set _isFixedLength/_dataRemaining64; despite it

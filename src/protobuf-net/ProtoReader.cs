@@ -150,9 +150,9 @@ namespace ProtoBuf
         /// Returns the position of the current reader (note that this is not necessarily the same as the position
         /// in the underlying stream, if multiple readers are used on the same stream)
         /// </summary>
-#pragma warning disable RCS1163 // Unused parameter.
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
         public long GetPosition(ref State state) => _longPosition;
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
 
         /// <summary>
         /// Reads a signed 16-bit integer from the stream: Variant, Fixed32, Fixed64, SignedVariant
@@ -927,7 +927,7 @@ namespace ProtoBuf
         /// reader to be created.
         /// </summary>
         public static int ReadLengthPrefix(Stream source, bool expectHeader, PrefixStyle style, out int fieldNumber)
-            => ReadLengthPrefix(source, expectHeader, style, out fieldNumber, out int bytesRead);
+            => ReadLengthPrefix(source, expectHeader, style, out fieldNumber, out int _);
 
         /// <summary>
         /// Reads a little-endian encoded integer. An exception is thrown if the data is not all available.

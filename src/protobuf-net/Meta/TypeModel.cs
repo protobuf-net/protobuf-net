@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using ProtoBuf.WellKnownTypes;
 
 namespace ProtoBuf.Meta
 {
@@ -254,7 +255,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int fieldNumber)
-            => DeserializeWithLengthPrefix(source, value, type, style, fieldNumber, null, out long bytesRead);
+            => DeserializeWithLengthPrefix(source, value, type, style, fieldNumber, null, out long _);
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
@@ -270,7 +271,7 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver)
-            => DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out long bytesRead);
+            => DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out long _);
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (or null), using length-prefixed
@@ -288,7 +289,7 @@ namespace ProtoBuf.Meta
         /// original instance.</returns>
         public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out int bytesRead)
         {
-            object result = DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out long bytesRead64, out bool haveObject, null);
+            object result = DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out long bytesRead64, out bool _, null);
             bytesRead = checked((int)bytesRead64);
             return result;
         }
@@ -307,7 +308,7 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out long bytesRead) => DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out bytesRead, out bool haveObject, null);
+        public object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out long bytesRead) => DeserializeWithLengthPrefix(source, value, type, style, expectedField, resolver, out bytesRead, out bool _, null);
 
         private object DeserializeWithLengthPrefix(Stream source, object value, Type type, PrefixStyle style, int expectedField, Serializer.TypeResolver resolver, out long bytesRead, out bool haveObject, SerializationContext context)
         {
@@ -353,7 +354,9 @@ namespace ProtoBuf.Meta
             ProtoReader reader = null;
             try
             {
+#pragma warning disable IDE0068 // Use recommended dispose pattern
                 reader = ProtoReader.Create(out var state, source, this, context, len);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
                 int key = GetKey(ref type);
                 if (key >= 0 && !Helpers.IsEnum(type))
                 {
@@ -478,7 +481,7 @@ namespace ProtoBuf.Meta
             {
                 if (haveObject)
                 {
-                    current = model.DeserializeWithLengthPrefix(source, null, type, style, expectedField, resolver, out long bytesRead, out haveObject, context);
+                    current = model.DeserializeWithLengthPrefix(source, null, type, style, expectedField, resolver, out long _, out haveObject, context);
                 }
                 return haveObject;
             }
@@ -589,7 +592,9 @@ namespace ProtoBuf.Meta
             ProtoReader reader = null;
             try
             {
+#pragma warning disable IDE0068 // Use recommended dispose pattern
                 reader = ProtoReader.Create(out var state, source, this, context, ProtoReader.TO_EOF);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
                 reader.CheckFullyConsumed(ref state);
@@ -682,7 +687,9 @@ namespace ProtoBuf.Meta
             ProtoReader reader = null;
             try
             {
+#pragma warning disable IDE0068 // Use recommended dispose pattern
                 reader = ProtoReader.Create(out var state, source, this, context, length);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
                 reader.CheckFullyConsumed(ref state);
@@ -1102,7 +1109,7 @@ namespace ProtoBuf.Meta
         internal bool TryDeserializeAuxiliaryType(ProtoReader reader, ref ProtoReader.State state, DataFormat format, int tag, Type type, ref object value, bool skipOtherFields, bool asListItem, bool autoCreate, bool insideList, object parentListOrType)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-            Type itemType = null;
+            Type itemType;
             ProtoTypeCode typecode = Helpers.GetTypeCode(type);
             WireType wiretype = GetWireType(typecode, format, ref type, out int modelKey);
 
@@ -1208,7 +1215,7 @@ namespace ProtoBuf.Meta
             => throw new InvalidOperationException($"No sub-item serializer available for type '{typeof(T).Name}'");
 
         internal static IProtoSerializer<T> GetSerializer<T>(TypeModel model)
-           => model?.GetSerializer<T>() ?? NoSerializer<T>();
+           => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<T>();
 
 #if !NO_RUNTIME
         /// <summary>
@@ -1551,7 +1558,9 @@ namespace ProtoBuf.Meta
                 ProtoReader reader = null;
                 try
                 {
+#pragma warning disable IDE0068 // Use recommended dispose pattern
                     reader = ProtoReader.Create(out var state, ms, this, null, ProtoReader.TO_EOF);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
                     value = null; // start from scratch!
                     TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null);
                     return value;

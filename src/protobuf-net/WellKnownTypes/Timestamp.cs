@@ -10,7 +10,7 @@ namespace ProtoBuf.WellKnownTypes
     /// Gregorian calendar backwards to year one.
     /// </summary>
     [ProtoContract(Name = ".google.protobuf.Timestamp ")]
-    internal struct Timestamp
+    internal readonly struct Timestamp
     {
         /// <summary>
         /// Represents seconds of UTC time since Unix epoch

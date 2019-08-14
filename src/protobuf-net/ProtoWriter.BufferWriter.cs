@@ -37,7 +37,9 @@ namespace ProtoBuf
         {
             protected internal override State DefaultState() => throw new InvalidOperationException("You must retain and pass the state from ProtoWriter.CreateForBufferWriter");
 
+#pragma warning disable IDE0044 // Add readonly modifier
             private T _writer; // not readonly, because T could be a struct - might need in-place state changes
+#pragma warning restore IDE0044 // Add readonly modifier
             internal BufferWriterProtoWriter(T writer, TypeModel model, SerializationContext context)
                 : base(model, context)
                 => _writer = writer;

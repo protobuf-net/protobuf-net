@@ -133,24 +133,26 @@ namespace ProtoBuf.Schemas
             var sourceFiles = CSharpCodeGenerator.Default.Generate(set).Select(x => x.Text).ToArray();
             Assert.Single(sourceFiles);
             _output.WriteLine(sourceFiles[0]);
-            var csharp = new CSharpCodeProvider(new Dictionary<string, string>
+            using (var csharp = new CSharpCodeProvider(new Dictionary<string, string>
             {
                 { "CompilerVersion", "v3.5"}
-            });
+            }))
+            {
 
-            var p = new CompilerParameters
-            {
-                GenerateInMemory = true
-            };
-            p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
-            p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
-            p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
-            try
-            {
-                var results = csharp.CompileAssemblyFromSource(p, sourceFiles);
-                Assert.Empty(results.Errors);
+                var p = new CompilerParameters
+                {
+                    GenerateInMemory = true
+                };
+                p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
+                p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
+                p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
+                try
+                {
+                    var results = csharp.CompileAssemblyFromSource(p, sourceFiles);
+                    Assert.Empty(results.Errors);
+                }
+                catch (PlatformNotSupportedException) { }
             }
-            catch (PlatformNotSupportedException) { }
         }
 
         [Fact]
@@ -174,25 +176,27 @@ namespace ProtoBuf.Schemas
 #pragma warning restore CS0618
             Assert.Single(sourceFiles);
             _output.WriteLine(sourceFiles[0]);
-            var vb = new VBCodeProvider(new Dictionary<string, string>
+            using (var vb = new VBCodeProvider(new Dictionary<string, string>
             {
                 { "CompilerVersion", "v3.5"}
-            });
-
-            var p = new CompilerParameters
+            }))
             {
-                GenerateInMemory = true
-            };
-            p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
-            p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
-            p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
 
-            try
-            {
-                var results = vb.CompileAssemblyFromSource(p, sourceFiles);
-                Assert.Empty(results.Errors);
+                var p = new CompilerParameters
+                {
+                    GenerateInMemory = true
+                };
+                p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
+                p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
+                p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
+
+                try
+                {
+                    var results = vb.CompileAssemblyFromSource(p, sourceFiles);
+                    Assert.Empty(results.Errors);
+                }
+                catch (PlatformNotSupportedException) { }
             }
-            catch (PlatformNotSupportedException) { }
         }
 
         [Fact]
@@ -212,42 +216,43 @@ namespace ProtoBuf.Schemas
             Assert.Single(sourceFiles);
             _output.WriteLine(sourceFiles[0]);
 
-            var csharp = new CSharpCodeProvider(new Dictionary<string, string>
+            using (var csharp = new CSharpCodeProvider(new Dictionary<string, string>
             {
                 { "CompilerVersion", "v3.5"}
-            });
-
-            var p = new CompilerParameters
+            }))
             {
-                GenerateInMemory = true
-            };
+                var p = new CompilerParameters
+                {
+                    GenerateInMemory = true
+                };
 
-            p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
-            p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
-            p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
+                p.ReferencedAssemblies.Add(typeof(ProtoContractAttribute).Assembly.Location); // add protobuf-net reference
+                p.ReferencedAssemblies.Add("System.dll"); // for [DefaultValue]
+                p.ReferencedAssemblies.Add("System.Core.dll"); // for extension methods
 
-            CompilerResults results;
-            try
-            {
-                results = csharp.CompileAssemblyFromSource(p, sourceFiles);
-                Assert.Empty(results.Errors);
-            }
-            catch (PlatformNotSupportedException)
-            {
-                return;
-            }
+                CompilerResults results;
+                try
+                {
+                    results = csharp.CompileAssemblyFromSource(p, sourceFiles);
+                    Assert.Empty(results.Errors);
+                }
+                catch (PlatformNotSupportedException)
+                {
+                    return;
+                }
 
-            var assembly = results.CompiledAssembly;
-            var messageType = assembly.GetType("TestMessage");
+                var assembly = results.CompiledAssembly;
+                var messageType = assembly.GetType("TestMessage");
 
-            var properties = messageType.GetProperties();
-            Assert.Equal(2, properties.Length);
+                var properties = messageType.GetProperties();
+                Assert.Equal(2, properties.Length);
 
-            foreach (var property in properties)
-            {
-                var defaultValueAttribute = (DefaultValueAttribute)Attribute.GetCustomAttribute(property, typeof(DefaultValueAttribute));
-                Assert.NotNull(defaultValueAttribute);
-                Assert.Equal(18446744073709551615UL, defaultValueAttribute.Value);
+                foreach (var property in properties)
+                {
+                    var defaultValueAttribute = (DefaultValueAttribute)Attribute.GetCustomAttribute(property, typeof(DefaultValueAttribute));
+                    Assert.NotNull(defaultValueAttribute);
+                    Assert.Equal(18446744073709551615UL, defaultValueAttribute.Value);
+                }
             }
         }
 

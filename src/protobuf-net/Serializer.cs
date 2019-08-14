@@ -117,6 +117,8 @@ namespace ProtoBuf
             }
         }
 #if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
+        private const string ProtoBinaryField = "proto";
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.
         /// </summary>
@@ -203,7 +205,6 @@ namespace ProtoBuf
         }
 #endif
 
-        private const string ProtoBinaryField = "proto";
 #if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
@@ -364,7 +365,7 @@ namespace ProtoBuf
         /// <returns>True if a length could be obtained, false otherwise.</returns>
         public static bool TryReadLengthPrefix(Stream source, PrefixStyle style, out int length)
         {
-            length = ProtoReader.ReadLengthPrefix(source, false, style, out int fieldNumber, out int bytesRead);
+            length = ProtoReader.ReadLengthPrefix(source, false, style, out int _, out int bytesRead);
             return bytesRead > 0;
         }
 

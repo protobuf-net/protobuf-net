@@ -1,7 +1,6 @@
 ﻿using ProtoBuf.WellKnownTypes;
 using System;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace ProtoBuf
 {
@@ -183,7 +182,7 @@ namespace ProtoBuf
         /// </summary>
         public static TimeSpan ReadTimeSpan(ProtoReader source, ref ProtoReader.State state)
         {
-            long ticks = ReadTimeSpanTicks(source, ref state, out DateTimeKind kind);
+            long ticks = ReadTimeSpanTicks(source, ref state, out DateTimeKind _);
             if (ticks == long.MinValue) return TimeSpan.MinValue;
             if (ticks == long.MaxValue) return TimeSpan.MaxValue;
             return TimeSpan.FromTicks(ticks);
@@ -416,8 +415,6 @@ namespace ProtoBuf
             }
         }
 
-        private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
-
         /// <summary>
         /// Parses a decimal from a protobuf stream
         /// </summary>
@@ -431,32 +428,7 @@ namespace ProtoBuf
         /// Parses a decimal from a protobuf stream
         /// </summary>
         public static decimal ReadDecimal(ProtoReader reader, ref ProtoReader.State state)
-        {
-            ulong low = 0;
-            uint high = 0;
-            uint signScale = 0;
-
-            int fieldNumber;
-            SubItemToken token = ProtoReader.StartSubItem(reader, ref state);
-            while ((fieldNumber = reader.ReadFieldHeader(ref state)) > 0)
-            {
-                switch (fieldNumber)
-                {
-                    case FieldDecimalLow: low = reader.ReadUInt64(ref state); break;
-                    case FieldDecimalHigh: high = reader.ReadUInt32(ref state); break;
-                    case FieldDecimalSignScale: signScale = reader.ReadUInt32(ref state); break;
-                    default: reader.SkipField(ref state); break;
-                }
-            }
-            ProtoReader.EndSubItem(token, reader, ref state);
-
-            int lo = (int)(low & 0xFFFFFFFFL),
-                mid = (int)((low >> 32) & 0xFFFFFFFFL),
-                hi = (int)high;
-            bool isNeg = (signScale & 0x0001) == 0x0001;
-            byte scale = (byte)((signScale & 0x01FE) >> 1);
-            return new decimal(lo, mid, hi, isNeg, scale);
-        }
+            => reader.ReadSubItem<decimal>(ref state, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a decimal to a protobuf stream
@@ -468,185 +440,11 @@ namespace ProtoBuf
             WriteDecimal(value, writer, ref state);
         }
 
-        private static
-#if !DEBUG
-        readonly
-#endif
-        bool s_decimalOptimized = VerifyDecimalLayout(),
-            s_guidOptimized = VerifyGuidLayout();
-        internal static bool DecimalOptimized
-        {
-            get => s_decimalOptimized;
-#if DEBUG
-            set => s_decimalOptimized = value && VerifyDecimalLayout();
-#endif
-        }
-        internal static bool GuidOptimized
-        {
-            get => s_guidOptimized;
-#if DEBUG
-            set => s_guidOptimized = value && VerifyGuidLayout();
-#endif
-        }
-
-        private static bool VerifyDecimalLayout()
-        {
-            try
-            {
-                // test against example taken from https://docs.microsoft.com/en-us/dotnet/api/system.decimal.getbits?view=netframework-4.8
-                //     1.0000000000000000000000000000    001C0000  204FCE5E  3E250261  10000000
-                var value = 1.0000000000000000000000000000M;
-                var layout = new DecimalAccessor(value);
-                if (layout.Lo == 0x10000000
-                    & layout.Mid == 0x3E250261
-                    & layout.Hi == 0x204FCE5E
-                    & layout.Flags == 0x001C0000)
-                {
-                    // and double-check against GetBits itself
-                    var bits = decimal.GetBits(value);
-                    if (bits.Length == 4)
-                    {
-                        return layout.Lo == bits[0]
-                            & layout.Mid == bits[1]
-                            & layout.Hi == bits[2]
-                            & layout.Flags == bits[3];
-                    }
-                }
-            }
-            catch { }
-            return false;
-        }
-
-        private static bool VerifyGuidLayout()
-        {
-            try
-            {
-                if (!Guid.TryParse("12345678-2345-3456-4567-56789a6789ab", out var guid))
-                    return false;
-
-                var obj = new GuidAccessor(guid);
-                var low = obj.Low;
-                var high = obj.High;
-
-                // check it the fast way against our known sentinels
-                if (low != 0x3456234512345678 | high != 0xAB89679A78566745) return false;
-
-                // and do it "for real"
-                var expected = guid.ToByteArray();
-                for (int i = 0; i < 8; i++)
-                {
-                    if (expected[i] != (byte)(low >> (8 * i))) return false;
-                }
-                for (int i = 0; i < 8; i++)
-                {
-                    if (expected[i + 8] != (byte)(high >> (8 * i))) return false;
-                }
-                return true;
-            }
-            catch { }
-            return false;
-        }
-
         /// <summary>
         /// Writes a decimal to a protobuf stream
         /// </summary>
         public static void WriteDecimal(decimal value, ProtoWriter writer, ref ProtoWriter.State state)
-        {
-            ulong low;
-            uint high, signScale;
-            if (s_decimalOptimized) // the JIT should remove the non-preferred implementation, at least on modern runtimes
-            {
-                var dec = new DecimalAccessor(value);
-                ulong a = ((ulong)dec.Mid) << 32, b = ((ulong)dec.Lo) & 0xFFFFFFFFL;
-                low = a | b;
-                high = (uint)dec.Hi;
-                signScale = (uint)(((dec.Flags >> 15) & 0x01FE) | ((dec.Flags >> 31) & 0x0001));
-            }
-            else
-            {
-                int[] bits = decimal.GetBits(value);
-                ulong a = ((ulong)bits[1]) << 32, b = ((ulong)bits[0]) & 0xFFFFFFFFL;
-                low = a | b;
-                high = (uint)bits[2];
-                signScale = (uint)(((bits[3] >> 15) & 0x01FE) | ((bits[3] >> 31) & 0x0001));
-            }
-            SubItemToken token = ProtoWriter.StartSubItem(null, writer, ref state);
-
-            if (low != 0)
-            {
-                ProtoWriter.WriteFieldHeader(FieldDecimalLow, WireType.Variant, writer, ref state);
-                ProtoWriter.WriteUInt64(low, writer, ref state);
-            }
-            if (high != 0)
-            {
-                ProtoWriter.WriteFieldHeader(FieldDecimalHigh, WireType.Variant, writer, ref state);
-                ProtoWriter.WriteUInt32(high, writer, ref state);
-            }
-            if (signScale != 0)
-            {
-                ProtoWriter.WriteFieldHeader(FieldDecimalSignScale, WireType.Variant, writer, ref state);
-                ProtoWriter.WriteUInt32(signScale, writer, ref state);
-            }
-            ProtoWriter.EndSubItem(token, writer, ref state);
-        }
-
-        private const int FieldGuidLow = 1, FieldGuidHigh = 2;
-
-        /// <summary>
-        /// Provides access to the inner fields of a decimal.
-        /// Similar to decimal.GetBits(), but faster and avoids the int[] allocation
-        /// </summary>
-        [StructLayout(LayoutKind.Explicit)]
-        private readonly struct DecimalAccessor
-        {
-            [FieldOffset(0)]
-            public readonly int Flags;
-            [FieldOffset(4)]
-            public readonly int Hi;
-            [FieldOffset(8)]
-            public readonly int Lo;
-            [FieldOffset(12)]
-            public readonly int Mid;
-
-            [FieldOffset(0)]
-            public readonly decimal Decimal;
-
-            public DecimalAccessor(decimal value)
-            {
-                this = default;
-                Decimal = value;
-            }
-        }
-
-        /// <summary>
-        /// Provides access to the inner fields of a Guid.
-        /// Similar to Guid.ToByteArray(), but faster and avoids the byte[] allocation
-        /// </summary>
-        [StructLayout(LayoutKind.Explicit)]
-        private readonly struct GuidAccessor
-        {
-            [FieldOffset(0)]
-            public readonly Guid Guid;
-
-            [FieldOffset(0)]
-            public readonly ulong Low;
-
-            [FieldOffset(8)]
-            public readonly ulong High;
-
-            public GuidAccessor(Guid value)
-            {
-                Low = High = default;
-                Guid = value;
-            }
-
-            public GuidAccessor(ulong low, ulong high)
-            {
-                Guid = default;
-                Low = low;
-                High = high;
-            }
-        }
+            => ProtoWriter.WriteSubItem<decimal>(value, writer, ref state, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a Guid to a protobuf stream
@@ -662,29 +460,7 @@ namespace ProtoBuf
         /// Writes a Guid to a protobuf stream
         /// </summary>        
         public static void WriteGuid(Guid value, ProtoWriter dest, ref ProtoWriter.State state)
-        {
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
-            if (value != Guid.Empty)
-            {
-                if (s_guidOptimized)
-                {
-                    var obj = new GuidAccessor(value);
-                    ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, dest, ref state);
-                    ProtoWriter.WriteUInt64(obj.Low, dest, ref state);
-                    ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, dest, ref state);
-                    ProtoWriter.WriteUInt64(obj.High, dest, ref state);
-                }
-                else
-                {
-                    byte[] blob = value.ToByteArray();
-                    ProtoWriter.WriteFieldHeader(FieldGuidLow, WireType.Fixed64, dest, ref state);
-                    ProtoWriter.WriteBytes(blob, 0, 8, dest, ref state);
-                    ProtoWriter.WriteFieldHeader(FieldGuidHigh, WireType.Fixed64, dest, ref state);
-                    ProtoWriter.WriteBytes(blob, 8, 8, dest, ref state);
-                }
-            }
-            ProtoWriter.EndSubItem(token, dest, ref state);
-        }
+            => ProtoWriter.WriteSubItem<Guid>(value, dest, ref state, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a Guid from a protobuf stream
@@ -700,34 +476,7 @@ namespace ProtoBuf
         /// Parses a Guid from a protobuf stream
         /// </summary>
         public static Guid ReadGuid(ProtoReader source, ref ProtoReader.State state)
-        {
-            ulong low = 0, high = 0;
-            int fieldNumber;
-            SubItemToken token = ProtoReader.StartSubItem(source, ref state);
-            while ((fieldNumber = source.ReadFieldHeader(ref state)) > 0)
-            {
-                switch (fieldNumber)
-                {
-                    case FieldGuidLow: low = source.ReadUInt64(ref state); break;
-                    case FieldGuidHigh: high = source.ReadUInt64(ref state); break;
-                    default: source.SkipField(ref state); break;
-                }
-            }
-            ProtoReader.EndSubItem(token, source, ref state);
-            if (low == 0 && high == 0) return Guid.Empty;
-            if (s_guidOptimized)
-            {
-                var obj = new GuidAccessor(low, high);
-                return obj.Guid;
-            }
-            else
-            {
-                uint a = (uint)(low >> 32), b = (uint)low, c = (uint)(high >> 32), d = (uint)high;
-                return new Guid((int)b, (short)a, (short)(a >> 16),
-                    (byte)d, (byte)(d >> 8), (byte)(d >> 16), (byte)(d >> 24),
-                    (byte)c, (byte)(c >> 8), (byte)(c >> 16), (byte)(c >> 24));
-            }
-        }
+            => source.ReadSubItem<Guid>(ref state, WellKnownSerializer.Instance);
 
         private const int
             FieldExistingObjectKey = 1,
