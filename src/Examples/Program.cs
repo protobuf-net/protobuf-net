@@ -128,9 +128,16 @@ namespace Examples
             where TException : Exception
         {
             var ex = Assert.Throws<TException>(action);
-            if (message != null) Assert.Equal(DeVersion(message), DeVersion(ex.Message));
+            if (message != null) Assert.Equal(
+                NormalizeParameterName(DeVersion(message)),
+                NormalizeParameterName(DeVersion(ex.Message)));
         }
         private static string DeVersion(string input) => Regex.Replace(input, "Version=([0-9.]+)", "Version=*");
+        private static string NormalizeParameterName(string input)
+        {   // ArgumentException changes format between runtimes
+            return Regex.Replace(input, @" \(Parameter '(.*)'\)", @"
+Parameter name: $1");
+        }
         public static void ExpectFailure<TException>(Action action, Func<TException, bool> check)
             where TException : Exception
         {
