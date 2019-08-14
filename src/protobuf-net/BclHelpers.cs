@@ -64,7 +64,6 @@ namespace ProtoBuf
         }
 #endif
 
-        private const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02, FieldTimeSpanKind = 0x03;
 
         internal static readonly DateTime[] EpochOrigin = {
             new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
@@ -93,71 +92,12 @@ namespace ProtoBuf
         private static void WriteTimeSpanImpl(TimeSpan timeSpan, ProtoWriter dest, DateTimeKind kind, ref ProtoWriter.State state)
         {
             if (dest == null) throw new ArgumentNullException(nameof(dest));
-            long value;
             switch (dest.WireType)
             {
                 case WireType.String:
                 case WireType.StartGroup:
-                    TimeSpanScale scale;
-                    value = timeSpan.Ticks;
-                    if (timeSpan == TimeSpan.MaxValue)
-                    {
-                        value = 1;
-                        scale = TimeSpanScale.MinMax;
-                    }
-                    else if (timeSpan == TimeSpan.MinValue)
-                    {
-                        value = -1;
-                        scale = TimeSpanScale.MinMax;
-                    }
-                    else if (value % TimeSpan.TicksPerDay == 0)
-                    {
-                        scale = TimeSpanScale.Days;
-                        value /= TimeSpan.TicksPerDay;
-                    }
-                    else if (value % TimeSpan.TicksPerHour == 0)
-                    {
-                        scale = TimeSpanScale.Hours;
-                        value /= TimeSpan.TicksPerHour;
-                    }
-                    else if (value % TimeSpan.TicksPerMinute == 0)
-                    {
-                        scale = TimeSpanScale.Minutes;
-                        value /= TimeSpan.TicksPerMinute;
-                    }
-                    else if (value % TimeSpan.TicksPerSecond == 0)
-                    {
-                        scale = TimeSpanScale.Seconds;
-                        value /= TimeSpan.TicksPerSecond;
-                    }
-                    else if (value % TimeSpan.TicksPerMillisecond == 0)
-                    {
-                        scale = TimeSpanScale.Milliseconds;
-                        value /= TimeSpan.TicksPerMillisecond;
-                    }
-                    else
-                    {
-                        scale = TimeSpanScale.Ticks;
-                    }
-
-                    SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
-
-                    if (value != 0)
-                    {
-                        ProtoWriter.WriteFieldHeader(FieldTimeSpanValue, WireType.SignedVariant, dest, ref state);
-                        ProtoWriter.WriteInt64(value, dest, ref state);
-                    }
-                    if (scale != TimeSpanScale.Days)
-                    {
-                        ProtoWriter.WriteFieldHeader(FieldTimeSpanScale, WireType.Variant, dest, ref state);
-                        ProtoWriter.WriteInt32((int)scale, dest, ref state);
-                    }
-                    if (kind != DateTimeKind.Unspecified)
-                    {
-                        ProtoWriter.WriteFieldHeader(FieldTimeSpanKind, WireType.Variant, dest, ref state);
-                        ProtoWriter.WriteInt32((int)kind, dest, ref state);
-                    }
-                    ProtoWriter.EndSubItem(token, dest, ref state);
+                    var scaled = new ScaledTicks(timeSpan, kind);
+                    ProtoWriter.WriteSubItem<ScaledTicks>(scaled, dest, ref state, WellKnownSerializer.Instance);
                     break;
                 case WireType.Fixed64:
                     ProtoWriter.WriteInt64(timeSpan.Ticks, dest, ref state);
@@ -346,69 +286,15 @@ namespace ProtoBuf
 
         private static long ReadTimeSpanTicks(ProtoReader source, ref ProtoReader.State state, out DateTimeKind kind)
         {
-            kind = DateTimeKind.Unspecified;
             switch (source.WireType)
             {
                 case WireType.String:
                 case WireType.StartGroup:
-                    SubItemToken token = ProtoReader.StartSubItem(source, ref state);
-                    int fieldNumber;
-                    TimeSpanScale scale = TimeSpanScale.Days;
-                    long value = 0;
-                    while ((fieldNumber = source.ReadFieldHeader(ref state)) > 0)
-                    {
-                        switch (fieldNumber)
-                        {
-                            case FieldTimeSpanScale:
-                                scale = (TimeSpanScale)source.ReadInt32(ref state);
-                                break;
-                            case FieldTimeSpanValue:
-                                source.Assert(ref state, WireType.SignedVariant);
-                                value = source.ReadInt64(ref state);
-                                break;
-                            case FieldTimeSpanKind:
-                                kind = (DateTimeKind)source.ReadInt32(ref state);
-                                switch (kind)
-                                {
-                                    case DateTimeKind.Unspecified:
-                                    case DateTimeKind.Utc:
-                                    case DateTimeKind.Local:
-                                        break; // fine
-                                    default:
-                                        throw new ProtoException("Invalid date/time kind: " + kind.ToString());
-                                }
-                                break;
-                            default:
-                                source.SkipField(ref state);
-                                break;
-                        }
-                    }
-                    ProtoReader.EndSubItem(token, source, ref state);
-                    switch (scale)
-                    {
-                        case TimeSpanScale.Days:
-                            return value * TimeSpan.TicksPerDay;
-                        case TimeSpanScale.Hours:
-                            return value * TimeSpan.TicksPerHour;
-                        case TimeSpanScale.Minutes:
-                            return value * TimeSpan.TicksPerMinute;
-                        case TimeSpanScale.Seconds:
-                            return value * TimeSpan.TicksPerSecond;
-                        case TimeSpanScale.Milliseconds:
-                            return value * TimeSpan.TicksPerMillisecond;
-                        case TimeSpanScale.Ticks:
-                            return value;
-                        case TimeSpanScale.MinMax:
-                            switch (value)
-                            {
-                                case 1: return long.MaxValue;
-                                case -1: return long.MinValue;
-                                default: throw new ProtoException("Unknown min/max value: " + value.ToString());
-                            }
-                        default:
-                            throw new ProtoException("Unknown timescale: " + scale.ToString());
-                    }
+                    var scaled = source.ReadSubItem<ScaledTicks>(ref state, WellKnownSerializer.Instance);
+                    kind = scaled.Kind;
+                    return scaled.ToTicks();
                 case WireType.Fixed64:
+                    kind = DateTimeKind.Unspecified;
                     return source.ReadInt64(ref state);
                 default:
                     throw new ProtoException("Unexpected wire-type: " + source.WireType.ToString());

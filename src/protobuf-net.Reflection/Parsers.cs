@@ -2503,7 +2503,7 @@ namespace ProtoBuf.Reflection
         public void Fill<T>(T obj) where T : class, ISchemaObject
         {
             var tokens = Tokens;
-            while (tokens.Peek(out var token))
+            while (tokens.Peek(out var _))
             {
                 if (!tokens.ConsumeIf(TokenType.Symbol, ";"))
                 {
@@ -2810,7 +2810,7 @@ namespace ProtoBuf.Reflection
                 Errors.Error(ex);
                 tokens.SkipToEndObject();
             }
-            obj = null;
+            // obj = null;
             return false;
         }
         public ParserContext(FileDescriptorProto file, Peekable<Token> tokens, List<Error> errors)
