@@ -23,27 +23,49 @@ namespace ProtoBuf
             MethodWrapper<T>.GetStaticMethod(name);
         private static class MethodWrapper<T>
         {
-            private static readonly Dictionary<string, MethodInfo> _staticWriteMethods;
+            private static readonly Dictionary<string, MethodInfo> s_staticWriteMethods
+                = BuildMethods();
 
-            public static MethodInfo GetStaticMethod(string name) => _staticWriteMethods[name];
+            public static MethodInfo GetStaticMethod(string name) => s_staticWriteMethods[name];
 
-            static MethodWrapper()
+            static Dictionary<string, MethodInfo> BuildMethods()
             {
-                _staticWriteMethods = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
+                var methods = new Dictionary<string, MethodInfo>(StringComparer.OrdinalIgnoreCase);
                 foreach (var method in typeof(T)
                     .GetMethods(BindingFlags.Public | BindingFlags.Static))
                 {
-                    if (method.IsDefined(typeof(ObsoleteAttribute), true)) continue;
+                    if (method.IsDefined(typeof(ObsoleteAttribute), true))
+                    {
+                        bool ignoreMethod = true;
+                        if (typeof(T) == typeof(ProtoWriter))
+                        {
+                            switch (method.Name)
+                            {   // ignore the [Obsolete] in some cases
+                                case nameof(ProtoWriter.StartSubItem):
+                                case nameof(ProtoWriter.EndSubItem):
+                                    ignoreMethod = false;
+                                    break;
+                            }
+                        }
+                        if (ignoreMethod) continue;
+                    }
+
                     var args = method.GetParameters();
                     if (args == null || args.Length == 0) continue;
 
                     if(typeof(T) == typeof(ProtoWriter))
                     {
-                        if (method.Name == nameof(ProtoWriter.Create)) continue; // ignore all of these
-                        if (method.Name == nameof(ProtoWriter.WriteBytes)
-                        && args.Length == 5)
+                        switch(method.Name)
                         {   // special omissions
-                            continue;
+                            case nameof(ProtoWriter.Create):
+                                continue; // ignore all of these
+                            case nameof(ProtoWriter.WriteBytes):
+                                if (args.Length == 5) continue;
+                                break;
+                            case nameof(ProtoWriter.StartSubItem):
+                            case nameof(ProtoWriter.EndSubItem):
+                                if (args.Length != 3) continue;
+                                break;
                         }
                     }
 
@@ -57,10 +79,11 @@ namespace ProtoBuf
                         }
                     }
                     if (!haveState) continue;
-                    if (_staticWriteMethods.ContainsKey(method.Name))
+                    if (methods.ContainsKey(method.Name))
                         throw new InvalidOperationException($"Ambiguous method: '{method.DeclaringType.Name}.{method.Name}'");
-                    _staticWriteMethods.Add(method.Name, method);
+                    methods.Add(method.Name, method);
                 }
+                return methods;
             }
         }
 #endif
