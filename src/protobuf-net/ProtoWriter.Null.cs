@@ -11,7 +11,10 @@ namespace ProtoBuf
         {
             protected internal override State DefaultState() => default;
 
-            public NullProtoWriter(TypeModel model, SerializationContext context) : base(model, context) { }
+            public NullProtoWriter(TypeModel model, SerializationContext context, out State state) : base(model, context)
+            {
+                state = default;
+            }
 
             private protected override bool ImplDemandFlushOnDispose => false;
 

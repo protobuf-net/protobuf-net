@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.WellKnownTypes;
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -71,11 +72,6 @@ namespace ProtoBuf
             new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
             new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Local)
         };
-
-        /// <summary>
-        /// The default value for dates that are following google.protobuf.Timestamp semantics
-        /// </summary>
-        private static readonly DateTime TimestampEpoch = EpochOrigin[(int)DateTimeKind.Utc];
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
@@ -184,7 +180,7 @@ namespace ProtoBuf
 
         /// <summary>
         /// Parses a TimeSpan from a protobuf stream using protobuf-net's own representation, bcl.TimeSpan
-        /// </summary>        
+        /// </summary>
         public static TimeSpan ReadTimeSpan(ProtoReader source, ref ProtoReader.State state)
         {
             long ticks = ReadTimeSpanTicks(source, ref state, out DateTimeKind kind);
@@ -207,66 +203,7 @@ namespace ProtoBuf
         /// Parses a TimeSpan from a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
         public static TimeSpan ReadDuration(ProtoReader source, ref ProtoReader.State state)
-        {
-#if PLAT_SPANS
-            if (source.WireType == WireType.String && state.RemainingInCurrent >= 20)
-            {
-                var ts = TryReadDurationFast(source, ref state);
-                if (ts.HasValue) return ts.GetValueOrDefault();
-            }
-#endif
-            return ReadDurationFallback(source, ref state);
-        }
-
-#if PLAT_SPANS
-        private static TimeSpan? TryReadDurationFast(ProtoReader source, ref ProtoReader.State state)
-        {
-            int offset = state.OffsetInCurrent;
-            var span = state.Span;
-            int prefixLength = ProtoReader.State.ParseVarintUInt32(span, offset, out var len);
-            offset += prefixLength;
-            if (len == 0) return TimeSpan.Zero;
-
-            if ((prefixLength + len) > state.RemainingInCurrent) return null; // don't have entire submessage
-
-            if (span[offset] != (1 << 3)) return null; // expected field 1
-            var msgOffset = 1 + ProtoReader.State.TryParseUInt64Varint(span, 1 + offset, out var seconds);
-            ulong nanos = 0;
-            if (msgOffset < len)
-            {
-                if (span[msgOffset++ + offset] != (2 << 3)) return null; // expected field 2
-                msgOffset += ProtoReader.State.TryParseUInt64Varint(span, msgOffset + offset, out nanos);
-            }
-            if (msgOffset != len) return null; // expected no more fields
-            state.Skip(prefixLength + (int)len);
-            source.Advance(prefixLength + len);
-            return FromDurationSeconds((long)seconds, (int)(long)nanos);
-        }
-#endif
-        private static TimeSpan ReadDurationFallback(ProtoReader source, ref ProtoReader.State state)
-        {
-            long seconds = 0;
-            int nanos = 0;
-            SubItemToken token = ProtoReader.StartSubItem(source, ref state);
-            int fieldNumber;
-            while ((fieldNumber = source.ReadFieldHeader(ref state)) > 0)
-            {
-                switch (fieldNumber)
-                {
-                    case 1:
-                        seconds = source.ReadInt64(ref state);
-                        break;
-                    case 2:
-                        nanos = source.ReadInt32(ref state);
-                        break;
-                    default:
-                        source.SkipField(ref state);
-                        break;
-                }
-            }
-            ProtoReader.EndSubItem(token, source, ref state);
-            return FromDurationSeconds(seconds, nanos);
-        }
+            => source.ReadSubItem<Duration>(ref state, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
@@ -282,26 +219,7 @@ namespace ProtoBuf
         /// Writes a TimeSpan to a protobuf stream using the standardized format, google.protobuf.Duration
         /// </summary>
         public static void WriteDuration(TimeSpan value, ProtoWriter dest, ref ProtoWriter.State state)
-        {
-            var seconds = ToDurationSeconds(value, out int nanos);
-            WriteSecondsNanos(seconds, nanos, dest, ref state);
-        }
-
-        private static void WriteSecondsNanos(long seconds, int nanos, ProtoWriter dest, ref ProtoWriter.State state)
-        {
-            SubItemToken token = ProtoWriter.StartSubItem(null, dest, ref state);
-            if (seconds != 0)
-            {
-                ProtoWriter.WriteFieldHeader(1, WireType.Variant, dest, ref state);
-                ProtoWriter.WriteInt64(seconds, dest, ref state);
-            }
-            if (nanos != 0)
-            {
-                ProtoWriter.WriteFieldHeader(2, WireType.Variant, dest, ref state);
-                ProtoWriter.WriteInt32(nanos, dest, ref state);
-            }
-            ProtoWriter.EndSubItem(token, dest, ref state);
-        }
+            =>  ProtoWriter.WriteSubItem<Duration>(value, dest, ref state, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream using the standardized format, google.protobuf.Timestamp
@@ -321,7 +239,7 @@ namespace ProtoBuf
             // note: DateTime is only defined for just over 0000 to just below 10000;
             // TimeSpan has a range of +/- 10,675,199 days === 29k years;
             // so we can just use epoch time delta
-            return TimestampEpoch + ReadDuration(source, ref state);
+            return source.ReadSubItem<Timestamp>(ref state, WellKnownSerializer.Instance);
         }
 
         /// <summary>
@@ -338,32 +256,7 @@ namespace ProtoBuf
         /// Writes a DateTime to a protobuf stream using the standardized format, google.protobuf.Timestamp
         /// </summary>
         public static void WriteTimestamp(DateTime value, ProtoWriter dest, ref ProtoWriter.State state)
-        {
-            var seconds = ToDurationSeconds(value - TimestampEpoch, out int nanos);
-
-            if (nanos < 0)
-            {   // from Timestamp.proto:
-                // "Negative second values with fractions must still have
-                // non -negative nanos values that count forward in time."
-                seconds--;
-                nanos += 1000000000;
-            }
-            WriteSecondsNanos(seconds, nanos, dest, ref state);
-        }
-
-        private static TimeSpan FromDurationSeconds(long seconds, int nanos)
-        {
-            long ticks = checked((seconds * TimeSpan.TicksPerSecond)
-                + (nanos * TimeSpan.TicksPerMillisecond / 1000000));
-            return TimeSpan.FromTicks(ticks);
-        }
-
-        private static long ToDurationSeconds(TimeSpan value, out int nanos)
-        {
-            nanos = (int)(((value.Ticks % TimeSpan.TicksPerSecond) * 1000000)
-                / TimeSpan.TicksPerMillisecond);
-            return value.Ticks / TimeSpan.TicksPerSecond;
-        }
+            => ProtoWriter.WriteSubItem<Timestamp>(value, dest, ref state, WellKnownSerializer.Instance);
 
         /// <summary>
         /// Parses a DateTime from a protobuf stream

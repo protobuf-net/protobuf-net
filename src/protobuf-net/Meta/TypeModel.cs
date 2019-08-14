@@ -4,6 +4,7 @@ using System.IO;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace ProtoBuf.Meta
 {
@@ -1201,6 +1202,13 @@ namespace ProtoBuf.Meta
             }
             return found;
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static IProtoSerializer<T> NoSerializer<T>()
+            => throw new InvalidOperationException($"No sub-item serializer available for type '{typeof(T).Name}'");
+
+        internal static IProtoSerializer<T> GetSerializer<T>(TypeModel model)
+           => model?.GetSerializer<T>() ?? NoSerializer<T>();
 
 #if !NO_RUNTIME
         /// <summary>

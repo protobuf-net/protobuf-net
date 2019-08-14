@@ -14,7 +14,9 @@ namespace ProtoBuf
     /// </summary>
     public abstract partial class ProtoReader : IDisposable
     {
-        internal const string UseStateAPI = "If possible, please use the State API; a transitionary implementation is provided, but this API may be removed in a future version";
+        internal const string UseStateAPI = "If possible, please use the State API; a transitionary implementation is provided, but this API may be removed in a future version",
+            PreferReadSubItem = "If possible, please use the ReadSubItem API; this API may not work correctly with all readers";
+
         private TypeModel _model;
         private int _fieldNumber, _depth;
         private long blockEnd64;
@@ -504,6 +506,7 @@ namespace ProtoBuf
         /// marker, or all fields of the sub-message must have been consumed (in either case, this means ReadFieldHeader
         /// should return zero)
         /// </summary>
+        // [Obsolete(PreferReadSubItem, false)]
         public static void EndSubItem(SubItemToken token, ProtoReader reader, ref State state)
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
@@ -546,6 +549,7 @@ namespace ProtoBuf
         /// Begins consuming a nested message in the stream; supported wire-types: StartGroup, String
         /// </summary>
         /// <remarks>The token returned must be help and used when callining EndSubItem</remarks>
+        // [Obsolete(PreferReadSubItem, false)]
         public static SubItemToken StartSubItem(ProtoReader reader, ref State state)
         {
             if (reader == null) throw new ArgumentNullException(nameof(reader));
@@ -1373,6 +1377,23 @@ namespace ProtoBuf
         {
             State state = default;
             ThrowOverflow(null, ref state);
+        }
+
+        /// <summary>
+        /// Reads a sub-item from the input reader
+        /// </summary>
+        public T ReadSubItem<T>(ref State state, IProtoSerializer<T> serializer)
+            => ReadSubItem<T>(ref state, default, serializer);
+
+        /// <summary>
+        /// Reads a sub-item from the input reader
+        /// </summary>
+        public T ReadSubItem<T>(ref State state, T value = default, IProtoSerializer<T> serializer = null)
+        {
+            var tok = StartSubItem(this, ref state);
+            value = (serializer ?? TypeModel.GetSerializer<T>(_model)).Deserialize(this, ref state, value);
+            EndSubItem(tok, this, ref state);
+            return value;
         }
     }
 }

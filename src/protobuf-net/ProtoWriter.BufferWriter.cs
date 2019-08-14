@@ -131,30 +131,39 @@ namespace ProtoBuf
                 return state.WriteVarint64(value);
             }
 
-            private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
+            protected internal override void WriteSubItem<TValue>(ref State state, TValue value, IProtoSerializer<TValue> serializer, PrefixStyle style)
             {
-                if (_position64 != token.value64) throw new InvalidOperationException($"Position mismatch; expected {token.value64}, was {_position64}");
+                switch (WireType)
+                {
+                    case WireType.String:
+                    case WireType.Fixed32:
+                        WriteWithLengthPrefix<TValue>(ref state, value, serializer, style);
+                        return;
+                    case WireType.StartGroup:
+                    default:
+                        base.WriteSubItem<TValue>(ref state, value, serializer, style);
+                        return;
+                }
             }
 
-            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+            private void WriteWithLengthPrefix<TValue>(ref State state, TValue value, IProtoSerializer<TValue> serializer, PrefixStyle style)
             {
-                long len;
-                using (var nul = new NullProtoWriter(Model, Context))
+                long calculatedLength;
+                using (var nul = new NullProtoWriter(Model, Context, out var nulState))
                 {
-                    var innerState = nul.DefaultState();
-                    model.Serialize(nul, ref innerState, instance);
-                    len = nul._position64;
+                    serializer.Serialize(nul, ref nulState, value);
+                    calculatedLength = nul._position64;
                 }
-                switch(style)
+                switch (style)
                 {
                     case PrefixStyle.None:
                         break;
                     case PrefixStyle.Base128:
-                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)len));
+                        AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
                         break;
                     case PrefixStyle.Fixed32:
                     case PrefixStyle.Fixed32BigEndian:
-                        ImplWriteFixed32(ref state, checked((uint)len));
+                        ImplWriteFixed32(ref state, checked((uint)calculatedLength));
                         if (style == PrefixStyle.Fixed32BigEndian)
                             state.ReverseLast32();
                         AdvanceAndReset(4);
@@ -162,8 +171,18 @@ namespace ProtoBuf
                     default:
                         throw new NotImplementedException($"Sub-object prefix style not implemented: {style}");
                 }
-                return new SubItemToken(_position64 + len);
+                var oldPos = _position64;
+                serializer.Serialize(this, ref state, value);
+                var actualLength = (_position64 - oldPos);
+                if (actualLength != calculatedLength)
+                    throw new InvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
             }
+
+            private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
+                => throw new NotSupportedException("You must use the WriteSubItem API with this writer type");
+
+            private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
+                => throw new NotSupportedException("You must use the WriteSubItem API with this writer type");
 
             private protected override void ImplCopyRawFromStream(ref State state, Stream source)
             {

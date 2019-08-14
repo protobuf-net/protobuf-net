@@ -14,7 +14,8 @@ namespace ProtoBuf
     /// </summary>
     public abstract partial class ProtoWriter : IDisposable
     {
-        internal const string UseStateAPI = ProtoReader.UseStateAPI;
+        internal const string UseStateAPI = ProtoReader.UseStateAPI,
+            PreferWriteSubItem = "If possible, please use the WriteSubItem API; this API may not work correctly with all writers";
 
         private TypeModel model;
         private int packedFieldNumber;
@@ -305,9 +306,11 @@ namespace ProtoBuf
         /// <param name="writer">The destination.</param>
         /// <param name="state">Writer state</param>
         /// <returns>A token representing the state of the stream; this token is given to EndSubItem.</returns>
+        [Obsolete(PreferWriteSubItem, false)]
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer, ref State state)
             => writer.StartSubItem(ref state, instance, PrefixStyle.Base128);
 
+        [Obsolete(PreferWriteSubItem, false)]
         private SubItemToken StartSubItem(ref State state, object instance, PrefixStyle style)
         {
             if (++depth > RecursionCheckDepth)
@@ -384,9 +387,11 @@ namespace ProtoBuf
         /// <param name="token">The token obtained from StartubItem.</param>
         /// <param name="writer">The destination.</param>
         /// <param name="state">Writer state</param>
+        [Obsolete(PreferWriteSubItem, false)]
         public static void EndSubItem(SubItemToken token, ProtoWriter writer, ref State state)
             => writer.EndSubItem(ref state, token, PrefixStyle.Base128);
 
+        [Obsolete(PreferWriteSubItem, false)]
         private void EndSubItem(ref State state, SubItemToken token, PrefixStyle style)
         {
             if (WireType != WireType.None) { throw CreateException(this); }
@@ -1026,6 +1031,29 @@ namespace ProtoBuf
         {
             if (writer == null) throw new ArgumentNullException(nameof(writer));
             WriteString(writer.SerializeType(value), writer, ref state);
+        }
+
+        /// <summary>
+        /// Writes a sub-item to the input writer
+        /// </summary>
+        public static void WriteSubItem<T>(T value, ProtoWriter writer, ref State state, IProtoSerializer<T> serializer = null)
+            => writer.WriteSubItem<T>(ref state, value, serializer ?? TypeModel.GetSerializer<T>(writer.model), PrefixStyle.Base128);
+
+        /// <summary>
+        /// Writes a sub-item to the input writer
+        /// </summary>
+        protected internal virtual void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
+        {
+#pragma warning disable CS0618 // StartSubItem/EndSubItem
+            var tok = StartSubItem(ref state, TypeHelper<T>.IsValueType ? null : (object)value, style);
+            serializer.Serialize(this, ref state, value);
+            EndSubItem(ref state, tok, style);
+#pragma warning restore CS0618
+        }
+
+        private static class TypeHelper<T>
+        {
+            public static readonly bool IsValueType = Helpers.IsValueType(typeof(T));
         }
     }
 }
