@@ -770,9 +770,12 @@ namespace ProtoBuf.Meta
         protected internal override IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>()
         {
             int typeIndex = GetKey(typeof(TActual), false, false);
-            if (typeIndex < 0) return null;
-            var mt = (MetaType)types[typeIndex];
-            return mt.Serializer as IProtoSerializer<TBase, TActual>;
+            if (typeIndex >= 0)
+            {
+                var mt = (MetaType)types[typeIndex];
+                if (mt.Serializer is IProtoSerializer<TBase, TActual> typed) return typed;
+            }
+            return base.GetSerializer<TBase, TActual>();
         }
 
         internal int GetKey(Type type, bool demand, bool getBaseKey)

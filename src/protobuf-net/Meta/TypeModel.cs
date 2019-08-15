@@ -1388,7 +1388,12 @@ namespace ProtoBuf.Meta
         /// </summary>
         protected internal virtual IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>()
             where TActual : TBase
-            => this as IProtoSerializer<TBase, TActual>;
+            => DefaultSerializer as IProtoSerializer<TBase, TActual>;
+
+        /// <summary>
+        /// Provides an object that can be tested for support of typed serializers
+        /// </summary>
+        protected virtual object DefaultSerializer => this;
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.

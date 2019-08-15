@@ -409,7 +409,7 @@ namespace ProtoBuf.Meta
                 Type defaultType = null;
                 ResolveListTypes(model, Type, ref itemType, ref defaultType);
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
-                return new TypeSerializer(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
+                return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
             }
             if (surrogate != null)
             {
@@ -474,7 +474,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return new TypeSerializer(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
+            return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
         }
 
         [Flags]
@@ -823,7 +823,7 @@ namespace ProtoBuf.Meta
             }
             if (family == AttributeFamily.None)
             { // check for obvious tuples
-                if (ResolveTupleConstructor(type, out MemberInfo[] mapping) != null)
+                if (ResolveTupleConstructor(type, out MemberInfo[] _) != null)
                 {
                     family |= AttributeFamily.AutoTuple;
                 }
