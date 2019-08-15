@@ -115,7 +115,7 @@ namespace ProtoBuf.Reflection
         internal static T ConsumeEnum<T>(this Peekable<Token> tokens) where T : struct
         {
             var token = tokens.Read();
-            var value = tokens.ConsumeString();
+            _ = tokens.ConsumeString();
 
             if (!EnumCache<T>.TryGet(token.Value, out T val))
                 token.Throw(ErrorCode.InvalidEnum, "Unable to parse " + typeof(T).Name);
@@ -526,7 +526,7 @@ namespace ProtoBuf.Reflection
 
             int lineNumber = 0, offset = 0;
             string line;
-            string lastLine = null;
+            string lastLine;
             while ((line = reader.ReadLine()) != null)
             {
                 lastLine = line;

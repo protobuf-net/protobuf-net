@@ -53,24 +53,28 @@ namespace ProtoBuf
 
             public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
             {
-                Log?.WriteLine($"Writing field 1, value: {value.Level}");
+#pragma warning disable CS0618
+                Log?.WriteLine($"Writing to {writer.GetType().Name}");
+                Log?.WriteLine($"Writing field 1, value: {value.Level}; pos: {writer.GetPosition(ref state)}");
                 ProtoWriter.WriteFieldHeader(1, WireType.Variant, writer, ref state);
                 ProtoWriter.WriteInt32(value.Level, writer, ref state);
-                Log?.WriteLine($"Wrote field 1...");
+                Log?.WriteLine($"Wrote field 1... pos: {writer.GetPosition(ref state)}");
 
                 var obj = value.Inner;
                 if (obj != null)
                 {
-                    Log?.WriteLine($"Writing field 2...");
+                    Log?.WriteLine($"Writing field 2...; pos: {writer.GetPosition(ref state)}");
                     ProtoWriter.WriteFieldHeader(2, WireType.String, writer, ref state);
                     ProtoWriter.WriteSubItem<A>(obj, writer, ref state, this);
-                    Log?.WriteLine($"Wrote field 2...");
+                    Log?.WriteLine($"Wrote field 2...; pos: {writer.GetPosition(ref state)}");
                 }
+#pragma warning restore CS0618
             }
         }
 
-        private static A CreateModel(int depth)
+        private A CreateModel(int depth)
         {
+            Log?.WriteLine($"Creating model with depth {depth}");
             int level = 0;
             A obj = null;
             while (level < depth)
@@ -158,12 +162,7 @@ namespace ProtoBuf
         [InlineData(5)]
         public void RoundTripBasicModel_Stream(int depth)
         {
-            int level = 0;
-            A obj = null;
-            while (level < depth)
-            {
-                obj = new A { Inner = obj, Level = ++level };
-            }
+            var obj = CreateModel(depth);
 
             using (var ms = new MemoryStream())
             {
@@ -175,7 +174,7 @@ namespace ProtoBuf
                 obj = clone;
             }
 
-            level = 0;
+            var level = 0;
             while (obj != null)
             {
                 Assert.Equal(depth - level, obj.Level);

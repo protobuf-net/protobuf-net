@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Text;
 using ProtoBuf.Meta;
@@ -479,10 +480,16 @@ namespace ProtoBuf
 
         private bool _needFlush;
 
-        // note that this is used by some of the unit tests and should not be removed
-#pragma warning disable RCS1163, IDE0060 // Unused parameter.
-        internal static long GetLongPosition(ProtoWriter writer, ref State state) { return writer._position64; }
-#pragma warning restore RCS1163, IDE0060 // Unused parameter.
+#if !(NETSTANDARD1_0 || NETSTANDARD1_3)
+        [Browsable(false)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+#endif
+        [Obsolete("This API is for internal usage only")]
+        public long GetPosition(ref State state)
+        {
+            TryFlush(ref state);
+            return _position64;
+        }
 
         private long _position64;
         protected private void Advance(long count) => _position64 += count;

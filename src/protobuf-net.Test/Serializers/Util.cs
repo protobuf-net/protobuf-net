@@ -32,9 +32,9 @@ namespace ProtoBuf.unittest.Serializers
             Test(value, compiled, "compiled", expected);
         }
 
-#pragma warning disable RCS1163 // Unused parameter.
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
         public static void Test(object obj, ProtoSerializer serializer, string message, byte[] expected)
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
             byte[] data;
             using (MemoryStream ms = new MemoryStream())
@@ -44,7 +44,9 @@ namespace ProtoBuf.unittest.Serializers
                 {
                     serializer(writer, ref state, obj);
                     writer.Close(ref state);
-                    reported = ProtoWriter.GetLongPosition(writer, ref state);
+#pragma warning disable CS0618
+                    reported = writer.GetPosition(ref state);
+#pragma warning restore CS0618
                 }
                 data = ms.ToArray();
                 Assert.Equal(reported, data.Length); //, message + ":reported/actual");

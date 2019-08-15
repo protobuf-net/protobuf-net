@@ -192,11 +192,11 @@ namespace ProtoBuf
                 where TActual : TBase
             {
                 long calculatedLength;
-                using (var nul = NullProtoWriter.CreateNull(Model, Context, out var nulState))
+                using (var nullWriter = NullProtoWriter.CreateNull(Model, Context, out var nulState))
                 {
-                    serializer.Serialize(nul, ref nulState, value);
-                    nul.Close(ref nulState);
-                    calculatedLength = nul._position64;
+                    serializer.Serialize(nullWriter, ref nulState, value);
+                    nullWriter.Close(ref nulState);
+                    calculatedLength = nullWriter._position64;
                 }
 
                 switch (style)
@@ -216,6 +216,7 @@ namespace ProtoBuf
                     default:
                         throw new NotImplementedException($"Sub-object prefix style not implemented: {style}");
                 }
+                TryFlush(ref state);
                 var oldPos = _position64;
                 serializer.Serialize(this, ref state, value);
                 TryFlush(ref state);
