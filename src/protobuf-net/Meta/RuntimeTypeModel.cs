@@ -183,7 +183,7 @@ namespace ProtoBuf.Meta
                 Type tmp = Helpers.GetUnderlyingType(type);
                 if (tmp != null) type = tmp;
 
-                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out var defaultWireType, false, false, false, false) != null);
+                isInbuiltType = (ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out var _, false, false, false, false) != null);
                 if (!isInbuiltType)
                 {
                     //Agenerate just relative to the supplied type
@@ -1169,9 +1169,9 @@ namespace ProtoBuf.Meta
             return (TypeModel)Activator.CreateInstance(finalType);
         }
 
-#pragma warning disable RCS1163 // Unused parameter.
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
         private void WriteConstructors(TypeBuilder type, ref int index, SerializerPair[] methodPairs, int knownTypesCategory, FieldBuilder knownTypes, Type knownTypesLookupType, Compiler.CompilerContext ctx)
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
             var il = Override(type, nameof(TypeModel.GetInternStrings));
             il.Emit(InternStrings ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
@@ -1880,7 +1880,7 @@ namespace ProtoBuf.Meta
 
             if (effectiveType == typeof(byte[])) return "bytes";
 
-            IProtoSerializer ser = ValueMember.TryGetCoreSerializer(this, dataFormat, effectiveType, out var wireType, false, false, false, false);
+            IProtoSerializer ser = ValueMember.TryGetCoreSerializer(this, dataFormat, effectiveType, out var _, false, false, false, false);
             if (ser == null)
             {   // model type
                 if (asReference || dynamicType)

@@ -167,10 +167,11 @@ namespace ProtoBuf.ServiceModel
                 {
                     return model.Deserialize(Stream.Null, null, type, null);
                 }
-                ProtoReader protoReader = null;
+#pragma warning disable IDE0068 // Use recommended dispose pattern
+                var protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
                 try
                 {
-                    protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
                     return model.DeserializeCore(protoReader, ref state, key, null);
                 }
                 finally
@@ -189,10 +190,11 @@ namespace ProtoBuf.ServiceModel
                 }
                 else
                 {
-                    ProtoReader protoReader = null;
+#pragma warning disable IDE0068 // Use recommended dispose pattern
+                    var protoReader = ProtoReader.Create(out var state, ms, model, null, ProtoReader.TO_EOF);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
                     try
                     {
-                        protoReader = ProtoReader.Create(out var state, ms, model, null, ProtoReader.TO_EOF);
                         result = model.DeserializeCore(protoReader, ref state, key, null);
                     }
                     finally

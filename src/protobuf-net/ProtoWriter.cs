@@ -423,12 +423,11 @@ namespace ProtoBuf
             }
         }
 
-        /// <summary>
-        /// Creates a new writer against a stream
-        /// </summary>
+        protected private ProtoWriter() { }
+
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
-        protected private ProtoWriter(TypeModel model, SerializationContext context)
+        internal void Init(TypeModel model, SerializationContext context)
         {
             this.model = model;
             WireType = WireType.None;
@@ -440,7 +439,7 @@ namespace ProtoBuf
         /// <summary>
         /// Addition information about this serialization operation.
         /// </summary>
-        public SerializationContext Context { get; }
+        public SerializationContext Context { get; private set; }
 
         protected private virtual void Dispose()
         {

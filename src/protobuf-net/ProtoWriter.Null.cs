@@ -1,4 +1,5 @@
 ﻿#if PLAT_SPANS
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System.Buffers;
 using System.IO;
@@ -11,9 +12,20 @@ namespace ProtoBuf
         {
             protected internal override State DefaultState() => default;
 
-            public NullProtoWriter(TypeModel model, SerializationContext context, out State state) : base(model, context)
+            private NullProtoWriter() { }
+
+            public static NullProtoWriter CreateNull(TypeModel model, SerializationContext context, out State state)
             {
+                var obj = Pool<NullProtoWriter>.TryGet() ?? new NullProtoWriter();
+                obj.Init(model, context);
                 state = default;
+                return obj;
+            }
+
+            public void Recycle()
+            {
+                Dispose();
+                Pool<NullProtoWriter>.Put(this);
             }
 
             private protected override bool ImplDemandFlushOnDispose => false;

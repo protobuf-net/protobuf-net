@@ -351,12 +351,11 @@ namespace ProtoBuf.Meta
                 }
             } while (skip);
 
-            ProtoReader reader = null;
+#pragma warning disable IDE0068 // Use recommended dispose pattern
+            var reader = ProtoReader.Create(out var state, source, this, context, len);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
             try
             {
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-                reader = ProtoReader.Create(out var state, source, this, context, len);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
                 int key = GetKey(ref type);
                 if (key >= 0 && !Helpers.IsEnum(type))
                 {
@@ -589,12 +588,12 @@ namespace ProtoBuf.Meta
         public object Deserialize(Stream source, object value, Type type, SerializationContext context)
         {
             bool autoCreate = PrepareDeserialize(value, ref type);
-            ProtoReader reader = null;
+#pragma warning disable IDE0068 // Use recommended dispose pattern
+            var reader = ProtoReader.Create(out var state, source, this, context, ProtoReader.TO_EOF);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
             try
             {
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-                reader = ProtoReader.Create(out var state, source, this, context, ProtoReader.TO_EOF);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
+
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
                 reader.CheckFullyConsumed(ref state);
@@ -684,12 +683,11 @@ namespace ProtoBuf.Meta
         public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
         {
             bool autoCreate = PrepareDeserialize(value, ref type);
-            ProtoReader reader = null;
+#pragma warning disable IDE0068 // Use recommended dispose pattern
+            var reader = ProtoReader.Create(out var state, source, this, context, length);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
             try
             {
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-                reader = ProtoReader.Create(out var state, source, this, context, length);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
                 reader.CheckFullyConsumed(ref state);
@@ -1514,26 +1512,27 @@ namespace ProtoBuf.Meta
             {
                 using (MemoryStream ms = new MemoryStream())
                 {
-                    using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, this, null))
+                    using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, this, null))
                     {
                         writer.SetRootObject(value);
                         try
                         {
-                            Serialize(writer, ref state, key, value);
+                            Serialize(writer, ref writeState, key, value);
                         }
                         catch
                         {
                             writer.Abandon();
                             throw;
                         }
-                        writer.Close(ref state);
+                        writer.Close(ref writeState);
                     }
                     ms.Position = 0;
-                    ProtoReader reader = null;
+#pragma warning disable IDE0068 // Use recommended dispose pattern
+                    ProtoReader reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
                     try
                     {
-                        reader = ProtoReader.Create(out var state, ms, this, null, ProtoReader.TO_EOF);
-                        return DeserializeCore(reader, ref state, key, null);
+                        return DeserializeCore(reader, ref readState, key, null);
                     }
                     finally
                     {
@@ -1553,28 +1552,27 @@ namespace ProtoBuf.Meta
             }
             using (MemoryStream ms = new MemoryStream())
             {
-                using (ProtoWriter writer = ProtoWriter.Create(out var state, ms, this, null))
+                using (ProtoWriter writer = ProtoWriter.Create(out var writeState, ms, this, null))
                 {
                     try
                     {
-                        if (!TrySerializeAuxiliaryType(writer, ref state, type, DataFormat.Default, Serializer.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
+                        if (!TrySerializeAuxiliaryType(writer, ref writeState, type, DataFormat.Default, Serializer.ListItemTag, value, false, null)) ThrowUnexpectedType(type);
                     }
                     catch
                     {
                         writer.Abandon();
                         throw;
                     }
-                    writer.Close(ref state);
+                    writer.Close(ref writeState);
                 }
                 ms.Position = 0;
-                ProtoReader reader = null;
+#pragma warning disable IDE0068 // Use recommended dispose pattern
+                var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
                 try
                 {
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-                    reader = ProtoReader.Create(out var state, ms, this, null, ProtoReader.TO_EOF);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
                     value = null; // start from scratch!
-                    TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null);
+                    TryDeserializeAuxiliaryType(reader, ref readState, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null);
                     return value;
                 }
                 finally

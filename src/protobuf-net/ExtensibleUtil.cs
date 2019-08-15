@@ -51,11 +51,12 @@ namespace ProtoBuf
 
             Stream stream = extn.BeginQuery();
             object value = null;
-            ProtoReader reader = null;
+            SerializationContext ctx = new SerializationContext();
+#pragma warning disable IDE0068 // Use recommended dispose pattern
+            var reader = ProtoReader.CreateSolid(out var state, stream, model, ctx, ProtoReader.TO_EOF);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
             try
             {
-                SerializationContext ctx = new SerializationContext();
-                reader = ProtoReader.CreateSolid(out var state, stream, model, ctx, ProtoReader.TO_EOF);
                 while (model.TryDeserializeAuxiliaryType(reader, ref state, format, tag, type, ref value, true, true, false, false, null) && value != null)
                 {
                     if (!singleton)

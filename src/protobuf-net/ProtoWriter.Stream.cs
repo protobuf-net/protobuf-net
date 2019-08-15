@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.Meta;
 using System;
 using System.IO;
 
@@ -26,7 +27,7 @@ namespace ProtoBuf
         public static ProtoWriter Create(out State state, Stream dest, TypeModel model, SerializationContext context = null)
         {
             state = default;
-            return new StreamProtoWriter(dest, model, context);
+            return StreamProtoWriter.CreateStreamProtoWriter(dest, model, context);
         }
         private class StreamProtoWriter : ProtoWriter
         {
@@ -37,14 +38,17 @@ namespace ProtoBuf
 
             private protected override bool ImplDemandFlushOnDispose => true;
 
-            internal StreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
-                : base(model, context)
+            private StreamProtoWriter() { }
+            internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
             {
+                var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
+                obj.Init(model, context);
                 if (dest == null) throw new ArgumentNullException(nameof(dest));
                 if (!dest.CanWrite) throw new ArgumentException("Cannot write to stream", nameof(dest));
                 //if (model == null) throw new ArgumentNullException("model");
-                this.dest = dest;
-                ioBuffer = BufferPool.GetBuffer();
+                obj.dest = dest;
+                obj.ioBuffer = BufferPool.GetBuffer();
+                return obj;
             }
             protected private override void Dispose()
             {

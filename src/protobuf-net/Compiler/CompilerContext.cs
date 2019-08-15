@@ -210,7 +210,7 @@ namespace ProtoBuf.Compiler
                 TraceCompile(OpCodes.Castclass + ": " + type);
             }
         }
-        private readonly bool isStatic;
+
         private readonly RuntimeTypeModel.SerializerPair[] methodPairs;
 
         internal MethodBuilder GetDedicatedMethod(int metaKey, bool read)
@@ -246,7 +246,6 @@ namespace ProtoBuf.Compiler
         {
             if (string.IsNullOrEmpty(assemblyName)) throw new ArgumentNullException(nameof(assemblyName));
             this.assemblyName = assemblyName;
-            this.isStatic = isStatic;
             this.methodPairs = methodPairs ?? throw new ArgumentNullException(nameof(methodPairs));
             this.il = il ?? throw new ArgumentNullException(nameof(il));
             // NonPublic = false; <== implicit
@@ -273,7 +272,6 @@ namespace ProtoBuf.Compiler
         private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
         {
             MetadataVersion = ILVersion.Net2;
-            this.isStatic = isStatic;
             this.isWriter = isWriter;
             Model = model ?? throw new ArgumentNullException(nameof(model));
             NonPublic = true;

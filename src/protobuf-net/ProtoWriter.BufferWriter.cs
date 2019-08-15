@@ -41,8 +41,10 @@ namespace ProtoBuf
             private T _writer; // not readonly, because T could be a struct - might need in-place state changes
 #pragma warning restore IDE0044 // Add readonly modifier
             internal BufferWriterProtoWriter(T writer, TypeModel model, SerializationContext context)
-                : base(model, context)
-                => _writer = writer;
+            {
+                Init(model, context);
+                _writer = writer;
+            }
 
             private protected override bool ImplDemandFlushOnDispose => true;
 
@@ -155,11 +157,19 @@ namespace ProtoBuf
                 where TActual : TBase
             {
                 long calculatedLength;
-                using (var nul = new NullProtoWriter(Model, Context, out var nulState))
+#pragma warning disable IDE0068 // Use recommended dispose pattern
+                var nul = NullProtoWriter.CreateNull(Model, Context, out var nulState);
+#pragma warning restore IDE0068 // Use recommended dispose pattern
+                try
                 {
                     serializer.Serialize(nul, ref nulState, value);
                     calculatedLength = nul._position64;
                 }
+                finally
+                {
+                    nul?.Recycle();
+                }
+
                 switch (style)
                 {
                     case PrefixStyle.None:

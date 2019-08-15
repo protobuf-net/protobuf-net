@@ -1,4 +1,5 @@
 ﻿#if PLAT_SPANS
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
@@ -21,8 +22,7 @@ namespace ProtoBuf
         /// <param name="context">Additional context about this serialization operation</param>
         public static ProtoReader Create(out State state, ReadOnlySequence<byte> source, TypeModel model, SerializationContext context = null)
         {
-            var reader = ReadOnlySequenceProtoReader.GetRecycled()
-                ?? new ReadOnlySequenceProtoReader();
+            var reader = Pool<ReadOnlySequenceProtoReader>.TryGet() ?? new ReadOnlySequenceProtoReader();
             reader.Init(out state, source, model, context);
             return reader;
         }
@@ -111,22 +111,13 @@ namespace ProtoBuf
                 return 0;
             }
 
-            [ThreadStatic]
-            private static ReadOnlySequenceProtoReader s_lastReader;
-            private ReadOnlySequence<byte>.Enumerator _source;
-
-            internal static ReadOnlySequenceProtoReader GetRecycled()
-            {
-                var tmp = s_lastReader;
-                s_lastReader = null;
-                return tmp;
-            }
-
             internal override void Recycle()
             {
                 Dispose();
-                s_lastReader = this;
+                Pool<ReadOnlySequenceProtoReader>.Put(this);
             }
+
+            private ReadOnlySequence<byte>.Enumerator _source;
 
             public override void Dispose()
             {

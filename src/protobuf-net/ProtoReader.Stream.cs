@@ -1,4 +1,5 @@
-﻿using ProtoBuf.Meta;
+﻿using ProtoBuf.Internal;
+using ProtoBuf.Meta;
 using System;
 using System.IO;
 using System.Reflection;
@@ -24,13 +25,7 @@ namespace ProtoBuf
         [Obsolete(UseStateAPI, false)]
         public static ProtoReader Create(Stream source, TypeModel model, SerializationContext context = null, long length = TO_EOF)
         {
-            var reader = StreamProtoReader.GetRecycled();
-            if (reader == null)
-            {
-#pragma warning disable CS0618
-                return new StreamProtoReader(source, model, context, length);
-#pragma warning restore CS0618
-            }
+            var reader = Pool<StreamProtoReader>.TryGet() ?? new StreamProtoReader();
             reader.Init(source, model, context, length);
             return reader;
         }
@@ -143,6 +138,8 @@ namespace ProtoBuf
             [Obsolete("Please use ProtoReader.Create; this API may be removed in a future version", error: false)]
             public StreamProtoReader(Stream source, TypeModel model, SerializationContext context, long length)
                 => Init(source, model, context, length);
+
+            internal StreamProtoReader() { }
 
             /// <summary>
             /// Creates a new reader against a stream
@@ -428,23 +425,6 @@ namespace ProtoBuf
                 }
             }
 
-#if !PLAT_NO_THREADSTATIC
-            [ThreadStatic]
-            private static StreamProtoReader lastReader;
-
-            internal static StreamProtoReader GetRecycled()
-            {
-                var tmp = lastReader;
-                lastReader = null;
-                return tmp;
-            }
-
-            internal override void Recycle()
-            {
-                Dispose();
-                lastReader = this;
-            }
-
             private protected override void ImplSkipBytes(ref State state, long count)
             {
                 if (_available < count && count < 128)
@@ -473,41 +453,12 @@ namespace ProtoBuf
 
                 ProtoReader.Seek(_source, count, _ioBuffer);
             }
-#elif !PLAT_NO_INTERLOCKED
-        private static object lastReader;
-        internal static StreamProtoReader GetRecycled()
-        {
-            return (StreamProtoReader)System.Threading.Interlocked.Exchange(ref lastReader, null);
-        }
-        internal override void Recycle(StreamProtoReader reader)
-        {
-            Dispose();
-            System.Threading.Interlocked.Exchange(ref lastReader, this);
-        }
-#else
-        private static readonly object recycleLock = new object();
-        internal static StreamProtoReader lastReader;
-        private static StreamProtoReader GetRecycled()
-        {
-            lock(recycleLock)
+
+            internal override void Recycle()
             {
-                ProtoReader tmp = lastReader;
-                lastReader = null;
-                return tmp;
-            }            
-        }
-        internal static void Recycle(StreamProtoReader reader)
-        {
-            if(reader != null)
-            {
-                reader.Dispose();
-                lock(recycleLock)
-                {
-                    lastReader = reader;
-                }
+                Dispose();
+                Pool<StreamProtoReader>.Put(this);
             }
-        }
-#endif
         }
     }
 }
