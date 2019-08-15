@@ -5,6 +5,7 @@ using Examples;
 using Pipelines.Sockets.Unofficial.Buffers;
 using ProtoBuf.Meta;
 using System;
+using System.Buffers;
 using System.IO;
 using Xunit;
 using Xunit.Abstractions;
@@ -26,21 +27,45 @@ namespace ProtoBuf.NWind
             Log?.WriteLine(Path.Combine(Environment.CurrentDirectory, "CompatDbBuffers.dll"));
             PEVerify.AssertValid("CompatDbBuffers.dll");
         }
+
+        private DatabaseCompat LoadFromDisk(out ReadOnlySpan<byte> contents)
+        {
+            var path = NWindTests.GetNWindBinPath();
+            byte[] arr = File.ReadAllBytes(path);
+            Log?.WriteLine($"{arr.Length} bytes loaded from {path}");
+            contents = arr;
+            using (var reader = ProtoReader.Create(out var readState, arr, RuntimeTypeModel.Default))
+            {
+                return (DatabaseCompat)reader.Model.Deserialize(reader, ref readState, null, typeof(DatabaseCompat));
+            }
+        }
+
+        [Fact]
+        public void RoundTripViaStream()
+        {
+            var db = LoadFromDisk(out var contents);
+            Assert.Equal(830, db.Orders.Count);
+
+            using (var ms = new MemoryStream())
+            {
+                using (var writer = ProtoWriter.Create(out var writeState, ms, RuntimeTypeModel.Default))
+                {
+                    writer.Model.Serialize(writer, ref writeState, db);
+                }
+                Assert.Equal(contents.Length, ms.Length);
+
+                Assert.True(ms.TryGetBuffer(out var buffer));
+                var span = new ReadOnlySpan<byte>(buffer.Array, buffer.Offset, buffer.Count);
+                Assert.True(contents.SequenceEqual(span));
+                Log?.WriteLine($"{span.Length} bytes verified");
+            }
+        }
+
         [Fact]
         public void RoundTripViaBuffers()
         {
-            var path = NWindTests.GetNWindBinPath();
-            var contents = File.ReadAllBytes(path);
-
-            DatabaseCompat db;
-            using (var reader = ProtoReader.Create(out var readState, contents, RuntimeTypeModel.Default))
-            {
-                db = (DatabaseCompat)reader.Model.Deserialize(reader, ref readState, null, typeof(DatabaseCompat));
-            }
-
-            int count = db.Orders.Count;
-
-            Assert.Equal(830, count);
+            var db = LoadFromDisk(out var contents);
+            Assert.Equal(830, db.Orders.Count);
 
             using (var bw = BufferWriter<byte>.Create())
             {
@@ -48,7 +73,24 @@ namespace ProtoBuf.NWind
                 {
                     writer.Model.Serialize(writer, ref writeState, db);
                 }
-                Assert.Equal(contents.Length, bw.Length);
+
+                using (var buffer = bw.Flush())
+                {
+                    var b = buffer.Value;
+                    int len = checked((int)b.Length);
+                    var arr = ArrayPool<byte>.Shared.Rent(len);
+                    try
+                    {
+                        var span = new Span<byte>(arr, 0, len);
+                        b.CopyTo(span);
+                        Assert.True(contents.SequenceEqual(span));
+                        Log?.WriteLine($"{span.Length} bytes verified");
+                    }
+                    finally
+                    {
+                        ArrayPool<byte>.Shared.Return(arr);
+                    }
+                }
             }
         }
     }

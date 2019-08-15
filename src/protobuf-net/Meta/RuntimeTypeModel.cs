@@ -766,6 +766,15 @@ namespace ProtoBuf.Meta
             return GetKey(type, false, true);
         }
 
+        /// <inheritdoc/>
+        protected internal override IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>()
+        {
+            int typeIndex = GetKey(typeof(TActual), false, false);
+            if (typeIndex < 0) return null;
+            var mt = (MetaType)types[typeIndex];
+            return mt.Serializer as IProtoSerializer<TBase, TActual>;
+        }
+
         internal int GetKey(Type type, bool demand, bool getBaseKey)
         {
             Helpers.DebugAssert(type != null);
