@@ -310,14 +310,19 @@ namespace ProtoBuf
         public static SubItemToken StartSubItem(object instance, ProtoWriter writer, ref State state)
             => writer.StartSubItem(ref state, instance, PrefixStyle.Base128);
 
-        [Obsolete(PreferWriteSubItem, false)]
-        private SubItemToken StartSubItem(ref State state, object instance, PrefixStyle style)
+        private void PreSubItem(object instance)
         {
             if (++depth > RecursionCheckDepth)
             {
                 CheckRecursionStackAndPush(instance);
             }
             if (packedFieldNumber != 0) throw new InvalidOperationException("Cannot begin a sub-item while performing packed encoding");
+        }
+
+        [Obsolete(PreferWriteSubItem, false)]
+        private SubItemToken StartSubItem(ref State state, object instance, PrefixStyle style)
+        {
+            PreSubItem(instance);
             switch (WireType)
             {
                 case WireType.StartGroup:
@@ -391,25 +396,31 @@ namespace ProtoBuf
         public static void EndSubItem(SubItemToken token, ProtoWriter writer, ref State state)
             => writer.EndSubItem(ref state, token, PrefixStyle.Base128);
 
-        [Obsolete(PreferWriteSubItem, false)]
-        private void EndSubItem(ref State state, SubItemToken token, PrefixStyle style)
+        private void PostSubItem()
         {
             if (WireType != WireType.None) { throw CreateException(this); }
-            int value = (int)token.value64;
             if (depth <= 0) throw CreateException(this);
             if (depth-- > RecursionCheckDepth)
             {
                 PopRecursionStack();
             }
             packedFieldNumber = 0; // ending the sub-item always wipes packed encoding
+        }
+
+        [Obsolete(PreferWriteSubItem, false)]
+        private void EndSubItem(ref State state, SubItemToken token, PrefixStyle style)
+        {
+            PostSubItem();
+            int value = (int)token.value64;
             if (value < 0)
             {   // group - very simple append
                 WriteHeaderCore(-value, WireType.EndGroup, this, ref state);
                 WireType = WireType.None;
-                return;
             }
-
-            ImplEndLengthPrefixedSubItem(ref state, token, style);
+            else
+            {
+                ImplEndLengthPrefixedSubItem(ref state, token, style);
+            }
         }
 
         /// <summary>
@@ -1036,16 +1047,16 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        public static void WriteSubItem<T>(T value, ProtoWriter writer, ref State state, IProtoSerializer<T> serializer = null)
-            => writer.WriteSubItem<T>(ref state, value, serializer ?? TypeModel.GetSerializer<T>(writer.model), PrefixStyle.Base128);
+        public static void WriteSubItem<T>(T value, ProtoWriter writer, ref State state, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
+            => writer.WriteSubItem<T>(ref state, value, serializer ?? TypeModel.GetSerializer<T>(writer.model), PrefixStyle.Base128, recursionCheck);
 
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        protected internal virtual void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
+        protected internal virtual void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
-            var tok = StartSubItem(ref state, TypeHelper<T>.IsValueType ? null : (object)value, style);
+            var tok = StartSubItem(ref state, TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null , style);
             serializer.Serialize(this, ref state, value);
             EndSubItem(ref state, tok, style);
 #pragma warning restore CS0618
@@ -1053,7 +1064,7 @@ namespace ProtoBuf
 
         private static class TypeHelper<T>
         {
-            public static readonly bool IsValueType = Helpers.IsValueType(typeof(T));
+            public static readonly bool IsObjectType = !Helpers.IsValueType(typeof(T));
         }
     }
 }

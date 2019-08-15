@@ -34,34 +34,6 @@ namespace ProtoBuf.Serializers
             AppendToCollection = !overwriteList;
         }
 
-        private static MethodInfo GetIndexerSetter()
-        {
-#if PROFILE259
-			foreach(var prop in typeof(TDictionary).GetRuntimeProperties())
-#else
-            foreach (var prop in typeof(TDictionary).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-#endif
-            {
-                if (prop.Name != "Item") continue;
-                if (prop.PropertyType != typeof(TValue)) continue;
-
-                var args = prop.GetIndexParameters();
-                if (args == null || args.Length != 1) continue;
-
-                if (args[0].ParameterType != typeof(TKey)) continue;
-#if PROFILE259
-				var method = prop.SetMethod;
-#else
-                var method = prop.GetSetMethod(true);
-#endif
-                if (method != null)
-                {
-                    return method;
-                }
-            }
-            throw new InvalidOperationException("Unable to resolve indexer for map");
-        }
-
         private static readonly TKey DefaultKey = (typeof(TKey) == typeof(string)) ? (TKey)(object)"" : default;
         private static readonly TValue DefaultValue = (typeof(TValue) == typeof(string)) ? (TValue)(object)"" : default;
         public override Type ExpectedType => typeof(TDictionary);
@@ -120,6 +92,26 @@ namespace ProtoBuf.Serializers
 
 #if FEAT_COMPILER
         private static readonly MethodInfo indexerSet = GetIndexerSetter();
+
+        private static MethodInfo GetIndexerSetter()
+        {
+            foreach (var prop in typeof(TDictionary).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+            {
+                if (prop.Name != "Item") continue;
+                if (prop.PropertyType != typeof(TValue)) continue;
+
+                var args = prop.GetIndexParameters();
+                if (args == null || args.Length != 1) continue;
+
+                if (args[0].ParameterType != typeof(TKey)) continue;
+                var method = prop.GetSetMethod(true);
+                if (method != null)
+                {
+                    return method;
+                }
+            }
+            throw new InvalidOperationException("Unable to resolve indexer for map");
+        }
 
         protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {

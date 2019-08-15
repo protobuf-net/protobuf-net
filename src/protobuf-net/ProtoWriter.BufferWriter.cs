@@ -133,17 +133,20 @@ namespace ProtoBuf
                 return state.WriteVarint64(value);
             }
 
-            protected internal override void WriteSubItem<TValue>(ref State state, TValue value, IProtoSerializer<TValue> serializer, PrefixStyle style)
+            protected internal override void WriteSubItem<TValue>(ref State state, TValue value, IProtoSerializer<TValue> serializer,
+                PrefixStyle style, bool recursionCheck)
             {
                 switch (WireType)
                 {
                     case WireType.String:
                     case WireType.Fixed32:
+                        PreSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null);
                         WriteWithLengthPrefix<TValue>(ref state, value, serializer, style);
+                        PostSubItem();
                         return;
                     case WireType.StartGroup:
                     default:
-                        base.WriteSubItem<TValue>(ref state, value, serializer, style);
+                        base.WriteSubItem<TValue>(ref state, value, serializer, style, recursionCheck);
                         return;
                 }
             }
