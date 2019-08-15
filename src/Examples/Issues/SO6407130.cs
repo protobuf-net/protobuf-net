@@ -90,7 +90,9 @@ namespace Examples.Issues
             m.Compile("SO6407130", "SO6407130.dll");
             PEVerify.AssertValid("SO6407130.dll");
         }
+#pragma warning disable IDE0060
         static void TestModel(TypeModel model, string caption)
+#pragma warning restore IDE0060
         {
             var b = new B { A = new A(117) };
             ASurrogate.HackyFlags = 0;

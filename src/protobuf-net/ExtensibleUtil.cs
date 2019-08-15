@@ -28,15 +28,14 @@ namespace ProtoBuf
             }
         }
 #endif
-#pragma warning disable RCS1163
-        // Unused parameter.
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
         /// <summary>
         /// All this does is call GetExtendedValuesTyped with the correct type for "instance";
         /// this ensures that we don't get issues with subclasses declaring conflicting types -
         /// the caller must respect the fields defined for the type they pass in.
         /// </summary>
         internal static IEnumerable GetExtendedValues(TypeModel model, Type type, IExtensible instance, int tag, DataFormat format, bool singleton, bool allowDefinedTag)
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
             if (instance == null) throw new ArgumentNullException(nameof(instance));
             if (tag <= 0) throw new ArgumentOutOfRangeException(nameof(tag));

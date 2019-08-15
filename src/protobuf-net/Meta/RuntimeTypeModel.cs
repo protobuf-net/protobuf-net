@@ -612,9 +612,9 @@ namespace ProtoBuf.Meta
             return key;
         }
 
-#pragma warning disable RCS1163 // Unused parameter.
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
         private MetaType RecogniseCommonTypes(Type type)
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
             //            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>))
             //            {
