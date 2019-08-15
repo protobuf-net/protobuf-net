@@ -22,9 +22,9 @@ namespace ProtoBuf
                 return obj;
             }
 
-            public void Recycle()
+            private protected override void Dispose()
             {
-                Dispose();
+                base.Dispose();
                 Pool<NullProtoWriter>.Put(this);
             }
 

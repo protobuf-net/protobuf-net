@@ -53,11 +53,28 @@ namespace ProtoBuf
 
         private protected ProtoReader() { }
 
+#if DEBUG
+        int _usageCount;
+        partial void OnDispose()
+        {
+            int count = System.Threading.Interlocked.Decrement(ref _usageCount);
+            if (count != 0) throw new InvalidOperationException($"Usage count - expected 0, was {count}");
+        }
+        partial void OnInit()
+        {
+            int count = System.Threading.Interlocked.Increment(ref _usageCount);
+            if (count != 1) throw new InvalidOperationException($"Usage count - expected 1, was {count}");
+        }
+#endif
+        partial void OnDispose();
+        partial void OnInit();
+
         /// <summary>
         /// Initialize the reader
         /// </summary>
         internal void Init(TypeModel model, SerializationContext context)
         {
+            OnInit();
             _model = model;
 
             if (context == null) { context = SerializationContext.Default; }
@@ -87,6 +104,7 @@ namespace ProtoBuf
         /// </summary>
         public virtual void Dispose()
         {
+            OnDispose();
             _model = null;
             if (stringInterner != null)
             {
@@ -1340,8 +1358,6 @@ namespace ProtoBuf
                 return model.Deserialize(ms, to, null);
             }
         }
-
-        internal abstract void Recycle();
 
         /// <summary>
         /// Create an EOF

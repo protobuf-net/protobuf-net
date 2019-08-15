@@ -8,6 +8,29 @@ using System.Runtime.CompilerServices;
 
 namespace ProtoBuf
 {
+    static partial class Serializer
+    {
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
+        /// </summary>
+        /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="destination">The destination stream to write to.</param>
+        public static void Serialize<T>(IBufferWriter<byte> destination, T instance, SerializationContext context = null)
+        {
+#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
+            if (instance != null)
+#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
+            {
+                var model = RuntimeTypeModel.Default;
+                using (var writer = ProtoWriter.Create(out var state, destination, model, context))
+                {
+                    model.Serialize(writer, ref state, instance);
+                    writer.Close(ref state);
+                }
+            }
+        }
+    }
+
     public partial class ProtoWriter
     {
         //        /// <summary>
@@ -39,10 +62,16 @@ namespace ProtoBuf
         {
             internal static BufferWriterProtoWriter<T> CreateBufferWriter(T writer, TypeModel model, SerializationContext context)
             {
-                var obj = /* Pool<BufferWriterProtoWriter<T>>.TryGet() ?? */ new BufferWriterProtoWriter<T>();
+                var obj = Pool<BufferWriterProtoWriter<T>>.TryGet() ?? new BufferWriterProtoWriter<T>();
                 obj.Init(model, context);
                 obj._writer = writer;
                 return obj;
+            }
+
+            private protected override void Dispose()
+            {
+                base.Dispose();
+                Pool<BufferWriterProtoWriter<T>>.Put(this);
             }
 
             protected internal override State DefaultState() => throw new InvalidOperationException("You must retain and pass the state from ProtoWriter.CreateForBufferWriter");
@@ -163,17 +192,11 @@ namespace ProtoBuf
                 where TActual : TBase
             {
                 long calculatedLength;
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-                var nul = NullProtoWriter.CreateNull(Model, Context, out var nulState);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
-                try
+                using (var nul = NullProtoWriter.CreateNull(Model, Context, out var nulState))
                 {
                     serializer.Serialize(nul, ref nulState, value);
+                    nul.Close(ref nulState);
                     calculatedLength = nul._position64;
-                }
-                finally
-                {
-                    nul?.Recycle();
                 }
 
                 switch (style)

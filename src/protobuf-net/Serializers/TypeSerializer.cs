@@ -1,10 +1,6 @@
 ﻿#if !NO_RUNTIME
 using System;
 using ProtoBuf.Meta;
-#if FEAT_COMPILER
-
-#endif
-
 using System.Reflection;
 
 namespace ProtoBuf.Serializers

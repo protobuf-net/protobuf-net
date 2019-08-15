@@ -11,6 +11,26 @@ using System.Text;
 
 namespace ProtoBuf
 {
+    partial class Serializer
+    {
+        public static T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
+        {
+            var model = RuntimeTypeModel.Default;
+            using (var reader = ProtoReader.Create(out var state, source, model, context))
+            {
+                return (T)model.Deserialize(reader, ref state, value, typeof(T));
+            }
+        }
+
+        public static T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
+        {
+            var model = RuntimeTypeModel.Default;
+            using (var reader = ProtoReader.Create(out var state, source, model, context))
+            {
+                return (T)model.Deserialize(reader, ref state, value, typeof(T));
+            }
+        }
+    }
     public partial class ProtoReader
     {
         /// <summary>
@@ -111,18 +131,13 @@ namespace ProtoBuf
                 return 0;
             }
 
-            internal override void Recycle()
-            {
-                Dispose();
-                Pool<ReadOnlySequenceProtoReader>.Put(this);
-            }
-
             private ReadOnlySequence<byte>.Enumerator _source;
 
             public override void Dispose()
             {
                 base.Dispose();
                 _source = default;
+                Pool<ReadOnlySequenceProtoReader>.Put(this);
             }
 
             internal void Init(out State state, ReadOnlySequence<byte> source, TypeModel model, SerializationContext context)

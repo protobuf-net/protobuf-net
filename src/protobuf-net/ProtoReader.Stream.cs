@@ -190,6 +190,7 @@ namespace ProtoBuf
                     // make sure we don't pool this if it came from a MemoryStream
                     BufferPool.ReleaseBufferToPool(ref _ioBuffer);
                 }
+                Pool<StreamProtoReader>.Put(this);
             }
 
             private protected override int ImplTryReadUInt32VarintWithoutMoving(ref State state, Read32VarintMode mode, out uint value)
@@ -452,12 +453,6 @@ namespace ProtoBuf
                 }
 
                 ProtoReader.Seek(_source, count, _ioBuffer);
-            }
-
-            internal override void Recycle()
-            {
-                Dispose();
-                Pool<StreamProtoReader>.Put(this);
             }
         }
     }

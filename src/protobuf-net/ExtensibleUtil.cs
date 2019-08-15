@@ -49,30 +49,29 @@ namespace ProtoBuf
             }
 
             Stream stream = extn.BeginQuery();
-            object value = null;
-            SerializationContext ctx = new SerializationContext();
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-            var reader = ProtoReader.CreateSolid(out var state, stream, model, ctx, ProtoReader.TO_EOF);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
             try
             {
-                while (model.TryDeserializeAuxiliaryType(reader, ref state, format, tag, type, ref value, true, true, false, false, null) && value != null)
+                object value = null;
+                SerializationContext ctx = new SerializationContext();
+                using (var reader = ProtoReader.CreateSolid(out var state, stream, model, ctx, ProtoReader.TO_EOF))
                 {
-                    if (!singleton)
+                    while (model.TryDeserializeAuxiliaryType(reader, ref state, format, tag, type, ref value, true, true, false, false, null) && value != null)
+                    {
+                        if (!singleton)
+                        {
+                            yield return value;
+
+                            value = null; // fresh item each time
+                        }
+                    }
+                    if (singleton && value != null)
                     {
                         yield return value;
-
-                        value = null; // fresh item each time
                     }
-                }
-                if (singleton && value != null)
-                {
-                    yield return value;
                 }
             }
             finally
             {
-                reader?.Recycle();
                 extn.EndQuery(stream);
             }
         }

@@ -16,7 +16,7 @@ namespace ProtoBuf
     /// extensible, allowing a type to be deserialized / merged even if some data is
     /// not recognised.
     /// </remarks>
-    public static class Serializer
+    public static partial class Serializer
     {
 #if !NO_RUNTIME
         /// <summary>

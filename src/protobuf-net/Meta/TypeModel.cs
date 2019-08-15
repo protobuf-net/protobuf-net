@@ -207,7 +207,7 @@ namespace ProtoBuf.Meta
         /// <param name="context">Additional information about this serialization operation.</param>
         public void Serialize(Stream dest, object value, SerializationContext context)
         {
-            using (ProtoWriter writer = ProtoWriter.Create(out var state, dest, this, context))
+            using (var writer = ProtoWriter.Create(out var state, dest, this, context))
             {
                 writer.SetRootObject(value);
                 SerializeCore(writer, ref state, value);
@@ -351,10 +351,7 @@ namespace ProtoBuf.Meta
                 }
             } while (skip);
 
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-            var reader = ProtoReader.Create(out var state, source, this, context, len);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
-            try
+            using(var reader = ProtoReader.Create(out var state, source, this, context, len))
             {
                 int key = GetKey(ref type);
                 if (key >= 0 && !Helpers.IsEnum(type))
@@ -371,10 +368,6 @@ namespace ProtoBuf.Meta
                 bytesRead += reader.GetPosition(ref state);
                 haveObject = true;
                 return value;
-            }
-            finally
-            {
-                reader?.Recycle();
             }
         }
 
@@ -588,20 +581,13 @@ namespace ProtoBuf.Meta
         public object Deserialize(Stream source, object value, Type type, SerializationContext context)
         {
             bool autoCreate = PrepareDeserialize(value, ref type);
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-            var reader = ProtoReader.Create(out var state, source, this, context, ProtoReader.TO_EOF);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
-            try
+            using (var reader = ProtoReader.Create(out var state, source, this, context, ProtoReader.TO_EOF))
             {
 
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
                 reader.CheckFullyConsumed(ref state);
                 return obj;
-            }
-            finally
-            {
-                reader?.Recycle();
             }
         }
 
@@ -683,19 +669,12 @@ namespace ProtoBuf.Meta
         public object Deserialize(Stream source, object value, System.Type type, long length, SerializationContext context)
         {
             bool autoCreate = PrepareDeserialize(value, ref type);
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-            var reader = ProtoReader.Create(out var state, source, this, context, length);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
-            try
+            using (var reader = ProtoReader.Create(out var state, source, this, context, length))
             {
                 if (value != null) reader.SetRootObject(value);
                 object obj = DeserializeAny(reader, ref state, type, value, autoCreate);
                 reader.CheckFullyConsumed(ref state);
                 return obj;
-            }
-            finally
-            {
-                reader?.Recycle();
             }
         }
 
@@ -1532,16 +1511,9 @@ namespace ProtoBuf.Meta
                         writer.Close(ref writeState);
                     }
                     ms.Position = 0;
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-                    ProtoReader reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
-                    try
+                    using(var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF))
                     {
                         return DeserializeCore(reader, ref readState, key, null);
-                    }
-                    finally
-                    {
-                        reader?.Recycle();
                     }
                 }
             }
@@ -1571,18 +1543,11 @@ namespace ProtoBuf.Meta
                     writer.Close(ref writeState);
                 }
                 ms.Position = 0;
-#pragma warning disable IDE0068 // Use recommended dispose pattern
-                var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF);
-#pragma warning restore IDE0068 // Use recommended dispose pattern
-                try
+                using (var reader = ProtoReader.Create(out var readState, ms, this, null, ProtoReader.TO_EOF))
                 {
                     value = null; // start from scratch!
                     TryDeserializeAuxiliaryType(reader, ref readState, DataFormat.Default, Serializer.ListItemTag, type, ref value, true, false, true, false, null);
                     return value;
-                }
-                finally
-                {
-                    reader?.Recycle();
                 }
             }
         }

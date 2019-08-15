@@ -429,6 +429,9 @@ namespace ProtoBuf
         /// <param name="context">Additional context about this serialization operation</param>
         internal void Init(TypeModel model, SerializationContext context)
         {
+            OnInit();
+            depth = 0;
+            fieldNumber = 0;
             this.model = model;
             WireType = WireType.None;
             if (context == null) { context = SerializationContext.Default; }
@@ -441,13 +444,32 @@ namespace ProtoBuf
         /// </summary>
         public SerializationContext Context { get; private set; }
 
+#if DEBUG
+        int _usageCount;
+        partial void OnDispose()
+        {
+            int count = System.Threading.Interlocked.Decrement(ref _usageCount);
+            if (count != 0) throw new InvalidOperationException($"Usage count - expected 0, was {count}");
+        }
+        partial void OnInit()
+        {
+            int count = System.Threading.Interlocked.Increment(ref _usageCount);
+            if (count != 1) throw new InvalidOperationException($"Usage count - expected 1, was {count}");
+        }
+#endif
+        partial void OnDispose();
+        partial void OnInit();
+
         protected private virtual void Dispose()
         {
+            OnDispose();
             if (depth == 0 && _needFlush && ImplDemandFlushOnDispose)
             {
                 throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
             }
+            NetCache.Clear();
             model = null;
+            Context = null;
         }
 
         /// <summary>
@@ -492,12 +514,11 @@ namespace ProtoBuf
         public void Close(ref State state)
         {
             CheckClear(ref state);
-            Dispose();
         }
 
         internal void CheckClear(ref State state)
         {
-            if (depth != 0 || !TryFlush(ref state)) throw new InvalidOperationException("The writer is in an incomplete state");
+            if (depth != 0 || !TryFlush(ref state)) throw new InvalidOperationException($"The writer is in an incomplete state (depth: {depth})");
             _needFlush = false; // because we ^^^ *JUST DID*
         }
 
