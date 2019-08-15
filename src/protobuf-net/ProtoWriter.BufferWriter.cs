@@ -218,9 +218,12 @@ namespace ProtoBuf
                 }
                 var oldPos = _position64;
                 serializer.Serialize(this, ref state, value);
+                TryFlush(ref state);
                 var actualLength = (_position64 - oldPos);
                 if (actualLength != calculatedLength)
+                {
                     throw new InvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                }
             }
 
             private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
