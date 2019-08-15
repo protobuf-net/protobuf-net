@@ -1,4 +1,5 @@
 ﻿#if PLAT_SPANS
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
@@ -29,22 +30,27 @@ namespace ProtoBuf
         {
             if (writer == null) throw new ArgumentNullException(nameof(writer));
             state = default;
-            return new BufferWriterProtoWriter<IBufferWriter<byte>>(writer, model, context);
+
+            return BufferWriterProtoWriter<IBufferWriter<byte>>.CreateBufferWriter(writer, model, context);
         }
 
         private sealed class BufferWriterProtoWriter<T> : ProtoWriter
             where T : IBufferWriter<byte>
         {
+            internal static BufferWriterProtoWriter<T> CreateBufferWriter(T writer, TypeModel model, SerializationContext context)
+            {
+                var obj = /* Pool<BufferWriterProtoWriter<T>>.TryGet() ?? */ new BufferWriterProtoWriter<T>();
+                obj.Init(model, context);
+                obj._writer = writer;
+                return obj;
+            }
+
             protected internal override State DefaultState() => throw new InvalidOperationException("You must retain and pass the state from ProtoWriter.CreateForBufferWriter");
 
 #pragma warning disable IDE0044 // Add readonly modifier
             private T _writer; // not readonly, because T could be a struct - might need in-place state changes
 #pragma warning restore IDE0044 // Add readonly modifier
-            internal BufferWriterProtoWriter(T writer, TypeModel model, SerializationContext context)
-            {
-                Init(model, context);
-                _writer = writer;
-            }
+            private BufferWriterProtoWriter() { }
 
             private protected override bool ImplDemandFlushOnDispose => true;
 

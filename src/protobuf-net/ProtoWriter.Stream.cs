@@ -41,7 +41,7 @@ namespace ProtoBuf
             private StreamProtoWriter() { }
             internal static StreamProtoWriter CreateStreamProtoWriter(Stream dest, TypeModel model, SerializationContext context)
             {
-                var obj = Pool<StreamProtoWriter>.TryGet() ?? new StreamProtoWriter();
+                var obj = /* Pool<StreamProtoWriter>.TryGet() ?? */ new StreamProtoWriter();
                 obj.Init(model, context);
                 if (dest == null) throw new ArgumentNullException(nameof(dest));
                 if (!dest.CanWrite) throw new ArgumentException("Cannot write to stream", nameof(dest));
