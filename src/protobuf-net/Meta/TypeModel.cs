@@ -1211,11 +1211,22 @@ namespace ProtoBuf.Meta
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IProtoSerializer<T> NoSerializer<T>()
-            => throw new InvalidOperationException($"No sub-item serializer available for type '{typeof(T).Name}'");
+        private static IProtoSerializer<TBase, TActual> NoSerializer<TBase, TActual>()
+            where TActual : TBase
+        {
+            if (typeof(TBase) == typeof(TActual))
+            {
+                throw new InvalidOperationException($"No sub-item serializer available for type '{typeof(TBase).Name}'");
+            }
+            else
+            {
+                throw new InvalidOperationException($"No sub-item serializer available for type '{typeof(TActual).Name}' : '{typeof(TBase).Name}'");
+            }
+        }
 
-        internal static IProtoSerializer<T> GetSerializer<T>(TypeModel model)
-           => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<T>();
+        internal static IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>(TypeModel model)
+            where TActual : TBase
+           => model?.GetSerializer<TBase, TActual>() ?? WellKnownSerializer.Instance as IProtoSerializer<TBase, TActual> ?? NoSerializer<TBase, TActual>();
 
 #if !NO_RUNTIME
         /// <summary>
@@ -1377,8 +1388,9 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
-        protected internal virtual IProtoSerializer<T> GetSerializer<T>()
-            => this as IProtoSerializer<T>;
+        protected internal virtual IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>()
+            where TActual : TBase
+            => this as IProtoSerializer<TBase, TActual>;
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.

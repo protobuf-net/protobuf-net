@@ -133,7 +133,7 @@ namespace ProtoBuf
                 return state.WriteVarint64(value);
             }
 
-            protected internal override void WriteSubItem<TValue>(ref State state, TValue value, IProtoSerializer<TValue> serializer,
+            protected internal override void WriteSubItem<TBase, TActual>(ref State state, TActual value, IProtoSerializer<TBase, TActual> serializer,
                 PrefixStyle style, bool recursionCheck)
             {
                 switch (WireType)
@@ -141,17 +141,18 @@ namespace ProtoBuf
                     case WireType.String:
                     case WireType.Fixed32:
                         PreSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null);
-                        WriteWithLengthPrefix<TValue>(ref state, value, serializer, style);
+                        WriteWithLengthPrefix<TBase, TActual>(ref state, value, serializer, style);
                         PostSubItem();
                         return;
                     case WireType.StartGroup:
                     default:
-                        base.WriteSubItem<TValue>(ref state, value, serializer, style, recursionCheck);
+                        base.WriteSubItem<TBase, TActual>(ref state, value, serializer, style, recursionCheck);
                         return;
                 }
             }
 
-            private void WriteWithLengthPrefix<TValue>(ref State state, TValue value, IProtoSerializer<TValue> serializer, PrefixStyle style)
+            private void WriteWithLengthPrefix<TBase, TActual>(ref State state, TActual value, IProtoSerializer<TBase, TActual> serializer, PrefixStyle style)
+                where TActual : TBase
             {
                 long calculatedLength;
                 using (var nul = new NullProtoWriter(Model, Context, out var nulState))

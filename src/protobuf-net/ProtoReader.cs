@@ -1382,18 +1382,32 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a sub-item from the input reader
         /// </summary>
-        public T ReadSubItem<T>(ref State state, IProtoSerializer<T> serializer)
-            => ReadSubItem<T>(ref state, default, serializer);
+        public T ReadSubItem<T>(ref State state, IProtoSerializer<T, T> serializer)
+            => ReadSubItem<T, T>(ref state, default, serializer);
 
         /// <summary>
         /// Reads a sub-item from the input reader
         /// </summary>
-        public T ReadSubItem<T>(ref State state, T value = default, IProtoSerializer<T> serializer = null)
+        public TActual ReadSubItem<TBase, TActual>(ref State state, IProtoSerializer<TBase, TActual> serializer)
+            where TActual : TBase
+            => ReadSubItem<TBase, TActual>(ref state, default, serializer);
+
+        /// <summary>
+        /// Reads a sub-item from the input reader
+        /// </summary>
+        public T ReadSubItem<T>(ref State state, T value = default, IProtoSerializer<T, T> serializer = null)
+            => ReadSubItem<T, T>(ref state, value, serializer);
+
+        /// <summary>
+        /// Reads a sub-item from the input reader
+        /// </summary>
+        public TActual ReadSubItem<TBase, TActual>(ref State state, TBase value = default, IProtoSerializer<TBase, TActual> serializer = null)
+            where TActual : TBase
         {
             var tok = StartSubItem(this, ref state);
-            value = (serializer ?? TypeModel.GetSerializer<T>(_model)).Deserialize(this, ref state, value);
+            var result = (serializer ?? TypeModel.GetSerializer<TBase, TActual>(_model)).Deserialize(this, ref state, value);
             EndSubItem(tok, this, ref state);
-            return value;
+            return result;
         }
     }
 }

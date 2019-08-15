@@ -52,10 +52,9 @@ namespace ProtoBuf.Meta
         /// <param name="format">Specific encoding style to use; in particular, Grouped can be used to avoid buffering, but is not the default.</param>
         public SubType(int fieldNumber, MetaType derivedType, DataFormat format)
         {
-            if (derivedType == null) throw new ArgumentNullException(nameof(derivedType));
             if (fieldNumber <= 0) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
             this.fieldNumber = fieldNumber;
-            this.derivedType = derivedType;
+            this.derivedType = derivedType ?? throw new ArgumentNullException(nameof(derivedType));
             this.dataFormat = format;
         }
 
@@ -71,7 +70,7 @@ namespace ProtoBuf.Meta
             WireType wireType = WireType.String;
             if(dataFormat == DataFormat.Group) wireType = WireType.StartGroup; // only one exception
             
-            IProtoSerializer ser = new SubItemSerializer(derivedType.Type, derivedType.GetKey(false, false), derivedType, false);
+            IProtoSerializer ser = SubItemSerializer.Create(typeof(object), derivedType.Type, derivedType);
             return new TagDecorator(fieldNumber, wireType, false, ser);
         }
     }

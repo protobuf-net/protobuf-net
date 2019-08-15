@@ -8,7 +8,7 @@
 
     partial class WellKnownSerializer : IProtoSerializer<Empty>
     {
-        Empty IProtoSerializer<Empty>.Deserialize(ProtoReader reader, ref ProtoReader.State state, Empty value)
+        Empty IProtoSerializer<Empty, Empty>.Deserialize(ProtoReader reader, ref ProtoReader.State state, Empty value)
         {
             while(reader.ReadFieldHeader(ref state) > 0)
             {
@@ -17,6 +17,6 @@
             return value;
         }
 
-        void IProtoSerializer<Empty>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, Empty value) { }
+        void IProtoSerializer<Empty, Empty>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, Empty value) { }
     }
 }

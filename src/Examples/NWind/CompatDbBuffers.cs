@@ -1,16 +1,31 @@
 ﻿#if PLAT_SPANS
 
 using DAL;
+using Examples;
 using Pipelines.Sockets.Unofficial.Buffers;
 using ProtoBuf.Meta;
 using System;
 using System.IO;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace ProtoBuf.NWind
 {
     public class CompatDbBuffers
     {
+        private readonly ITestOutputHelper Log;
+        public CompatDbBuffers(ITestOutputHelper log)
+            => Log = log;
+
+        [Fact]
+        public void GenerateModel()
+        {
+            var model = TypeModel.Create();
+            model.Add(typeof(DatabaseCompat), true);
+            model.Compile("CompatDbBuffers", "CompatDbBuffers.dll");
+            Log?.WriteLine(Path.Combine(Environment.CurrentDirectory, "CompatDbBuffers.dll"));
+            PEVerify.AssertValid("CompatDbBuffers.dll");
+        }
         [Fact]
         public void RoundTripViaBuffers()
         {

@@ -259,13 +259,12 @@ namespace ProtoBuf.Compiler
             GetOpCodes(isWriter, isStatic, out _state, out _readerWriter, out _inputArg);
         }
 
-        private readonly OpCode? _state;
-        private readonly OpCode _readerWriter;
+        private readonly OpCode _readerWriter, _state;
         private readonly byte _inputArg;
 
-#pragma warning disable RCS1163 // Unused parameter.
-        private static void GetOpCodes(bool isWriter, bool isStatic, out OpCode? state, out OpCode readerWriter, out byte inputArg)
-#pragma warning restore RCS1163 // Unused parameter.
+#pragma warning disable RCS1163, IDE0060 // Unused parameter.
+        private static void GetOpCodes(bool isWriter, bool isStatic, out OpCode state, out OpCode readerWriter, out byte inputArg)
+#pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
             readerWriter = isStatic ? OpCodes.Ldarg_0 : OpCodes.Ldarg_1;
             state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
@@ -346,6 +345,11 @@ namespace ProtoBuf.Compiler
             TraceCompile(OpCodes.Ldc_I8 + ": " + value);
         }
 
+        public void LoadValue(bool value)
+        {
+            Emit(value ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+        }
+
         public void LoadValue(int value)
         {
             switch (value)
@@ -414,10 +418,7 @@ namespace ProtoBuf.Compiler
                 throw new InvalidOperationException("Tried to load writer, but was a reader");
             }
             Emit(_readerWriter);
-            if (withState && _state.HasValue)
-            {
-                Emit(_state.GetValueOrDefault());
-            }
+            if (withState) Emit(_state);
         }
         public void LoadReader(bool withState)
         {
@@ -426,10 +427,7 @@ namespace ProtoBuf.Compiler
                 throw new InvalidOperationException("Tried to load reader, but was a writer");
             }
             Emit(_readerWriter);
-            if (withState && _state.HasValue)
-            {
-                Emit(_state.GetValueOrDefault());
-            }
+            if (withState) Emit(_state);
         }
 
         public void StoreValue(Local local)

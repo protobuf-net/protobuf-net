@@ -57,6 +57,7 @@ namespace ProtoBuf
                     {
                         switch(method.Name)
                         {   // special omissions
+                            case nameof(ProtoWriter.WriteSubItem):
                             case nameof(ProtoWriter.Create):
                                 continue; // ignore all of these
                             case nameof(ProtoWriter.WriteBytes):
