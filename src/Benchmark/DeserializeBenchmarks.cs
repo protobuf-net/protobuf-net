@@ -6,8 +6,8 @@ using System.IO;
 
 namespace Benchmark
 {
-    [ClrJob, CoreJob]
-    public class LibraryComparison
+    [ClrJob, CoreJob, MemoryDiagnoser]
+    public class DeserializeBenchmarks
     {
         //[Benchmark(Baseline = true)]
         //[Benchmark]

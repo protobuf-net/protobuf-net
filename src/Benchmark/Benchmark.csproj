@@ -25,6 +25,8 @@
     <None Update="test.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.31-pre.31.gf8c8025252" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0-preview8.19405.3" />
   </ItemGroup>
 
 </Project>
