@@ -464,10 +464,10 @@ namespace ProtoBuf
         protected private virtual void Dispose()
         {
             OnDispose();
-            if (depth == 0 && _needFlush && ImplDemandFlushOnDispose)
-            {
-                throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
-            }
+            //if (depth == 0 && _needFlush && ImplDemandFlushOnDispose)
+            //{
+            //    throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
+            //}
             NetCache.Clear();
             model = null;
             Context = null;
@@ -480,22 +480,10 @@ namespace ProtoBuf
 
         private bool _needFlush;
 
-#if !(NETSTANDARD1_0 || NETSTANDARD1_3)
-        [Browsable(false)]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-#endif
-        [Obsolete("This API is for internal usage only")]
-        public long GetPosition(ref State state)
-            => GetPositionImpl(ref state);
-
-        internal long GetPositionImpl(ref State state)
-#if PLAT_SPANS
-            => _position64 + state.OffsetInCurrent;
-#else
+#pragma warning disable IDE0060 // Remove unused parameter
+        internal long GetPosition(ref State state)
+#pragma warning restore IDE0060 // Remove unused parameter
             => _position64;
-#endif
-
-
 
         private long _position64;
         protected private void Advance(long count) => _position64 += count;

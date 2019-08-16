@@ -7,13 +7,83 @@ using System.IO;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace ProtoBuf
+namespace ProtoBuf.Tests
 {
     public class BufferWriterTests
     {
         private readonly ITestOutputHelper Log;
         public BufferWriterTests(ITestOutputHelper log)
             => Log = log;
+
+        [Fact]
+        public void ManualWriter_Stream()
+        {
+            using (var ms = new MemoryStream())
+            {
+                using (var w = ProtoWriter.Create(out var state, ms, RuntimeTypeModel.Default, null))
+                {
+                    ManualWriter(w, ref state);
+                }
+            }
+        }
+
+        [Fact]
+        public void ManualWriter_Null()
+        {
+            using (var w = ProtoWriter.CreateNull(out var state, RuntimeTypeModel.Default, null))
+            {
+                ManualWriter(w, ref state);
+            }
+        }
+
+        [Fact]
+        public void ManualWriter_Buffer()
+        {
+            using (var bw = BufferWriter<byte>.Create())
+            {
+                using (var w = ProtoWriter.Create(out var state, bw, RuntimeTypeModel.Default, null))
+                {
+                    ManualWriter(w, ref state);
+                }
+            }
+        }
+
+        class Foo
+        {
+            private Foo() { }
+            public static IProtoSerializer<Foo> Serializer { get; } = new FooSerializer();
+            sealed class FooSerializer : IProtoSerializer<Foo>
+            {
+                public Foo Deserialize(ProtoReader reader, ref ProtoReader.State state, Foo value) => value;
+
+                public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, Foo value) { }
+            }
+        }
+
+        private void ManualWriter(ProtoWriter w, ref ProtoWriter.State state)
+        {
+            ProtoWriter.WriteFieldHeader(1, WireType.Variant, w, ref state);
+            Assert.Equal(1, w.GetPosition(ref state));
+            ProtoWriter.WriteInt32(42, w, ref state);
+            Assert.Equal(2, w.GetPosition(ref state));
+
+            ProtoWriter.WriteFieldHeader(2, WireType.String, w, ref state);
+            Assert.Equal(3, w.GetPosition(ref state));
+            ProtoWriter.WriteString("abcdefghijklmnop", w, ref state);
+            Assert.Equal(20, w.GetPosition(ref state));
+
+            ProtoWriter.WriteFieldHeader(3, WireType.StartGroup, w, ref state);
+            Assert.Equal(21, w.GetPosition(ref state));
+            ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
+            Assert.Equal(22, w.GetPosition(ref state));
+
+            ProtoWriter.WriteFieldHeader(4, WireType.String, w, ref state);
+            Assert.Equal(23, w.GetPosition(ref state));
+            ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
+            Assert.Equal(24, w.GetPosition(ref state));
+
+            w.Close(ref state);
+        }
 
         [ProtoContract]
         public class A
@@ -33,9 +103,9 @@ namespace ProtoBuf
             {
                 int fieldHeader;
                 if (value == null) value = new A();
-                while((fieldHeader = reader.ReadFieldHeader(ref state)) > 0)
+                while ((fieldHeader = reader.ReadFieldHeader(ref state)) > 0)
                 {
-                    switch(fieldHeader)
+                    switch (fieldHeader)
                     {
                         case 1:
                             value.Level = reader.ReadInt32(ref state);

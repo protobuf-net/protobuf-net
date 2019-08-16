@@ -3,16 +3,22 @@
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <!--<TargetFrameworks>netcoreapp1.1;net452</TargetFrameworks>-->
-    <TargetFrameworks>netcoreapp2.1;net452</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net452;net461</TargetFrameworks>
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
+    <WithSpans>false</WithSpans>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp2.1'">
-    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_SPANS</DefineConstants>
+    <WithSpans>true</WithSpans>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net452'">
     <DefineConstants>FEAT_COMPILER;FX30</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$(TargetFramework)=='net462'">
+    <DefineConstants>FEAT_COMPILER;FX30;PLAT_SPANS</DefineConstants>
+    <WithSpans>true</WithSpans>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="basic.proto" />
@@ -30,6 +36,10 @@
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
   <ItemGroup Condition="$(TargetFramework)=='net452'">
+    <PackageReference Include="NHibernate" Version="4.1.1.4000" />
+    <PackageReference Include="Iesi.Collections" Version="4.0.3" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework)=='net462'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
     <PackageReference Include="Iesi.Collections" Version="4.0.3" />
   </ItemGroup>
@@ -75,5 +85,9 @@
     <None Update="Schemas\*.proto">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup Condition="'$(WithSpans)'=='true'">
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.31-pre.31.gf8c8025252" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0-preview8.19405.3" />
   </ItemGroup>
 </Project>
