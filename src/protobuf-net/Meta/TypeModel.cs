@@ -209,9 +209,17 @@ namespace ProtoBuf.Meta
         {
             using (var writer = ProtoWriter.Create(out var state, dest, this, context))
             {
-                writer.SetRootObject(value);
-                SerializeCore(writer, ref state, value);
-                writer.Close(ref state);
+                try
+                {
+                    writer.SetRootObject(value);
+                    SerializeCore(writer, ref state, value);
+                    writer.Close(ref state);
+                }
+                catch
+                {
+                    writer.Abandon();
+                    throw;
+                }
             }
         }
 
@@ -537,21 +545,29 @@ namespace ProtoBuf.Meta
             int key = GetKey(ref type);
             using (ProtoWriter writer = ProtoWriter.Create(out var state, dest, this, context))
             {
-                switch (style)
+                try
                 {
-                    case PrefixStyle.None:
-                        Serialize(writer, ref state, key, value);
-                        break;
-                    case PrefixStyle.Base128:
-                    case PrefixStyle.Fixed32:
-                    case PrefixStyle.Fixed32BigEndian:
-                        ProtoWriter.WriteObject(writer, ref state, value, key, style, fieldNumber);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(style));
+                    switch (style)
+                    {
+                        case PrefixStyle.None:
+                            Serialize(writer, ref state, key, value);
+                            break;
+                        case PrefixStyle.Base128:
+                        case PrefixStyle.Fixed32:
+                        case PrefixStyle.Fixed32BigEndian:
+                            ProtoWriter.WriteObject(writer, ref state, value, key, style, fieldNumber);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(style));
+                    }
+                    writer.Flush(ref state);
+                    writer.Close(ref state);
                 }
-                writer.Flush(ref state);
-                writer.Close(ref state);
+                catch
+                {
+                    writer.Abandon();
+                    throw;
+                }
             }
         }
         /// <summary>

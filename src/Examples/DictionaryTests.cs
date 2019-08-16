@@ -1,12 +1,10 @@
-﻿using System.Linq;
-using Xunit;
-using System.Collections.Generic;
-using ProtoBuf;
-using System;
+﻿using ProtoBuf;
 using ProtoBuf.Meta;
-using System.IO;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
+using System.IO;
+using Xunit;
 
 namespace Examples.Dictionary
 {

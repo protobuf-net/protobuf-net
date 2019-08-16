@@ -111,7 +111,7 @@ namespace ProtoBuf
                 stringInterner.Clear();
                 stringInterner = null;
             }
-            if (netCache != null) netCache.Clear();
+            netCache?.Clear();
         }
 
         private protected enum Read32VarintMode
@@ -1233,8 +1233,16 @@ namespace ProtoBuf
                 //TODO: replace this with stream-based, buffered raw copying
                 using (ProtoWriter writer = ProtoWriter.Create(out var writeState, dest, _model, null))
                 {
-                    AppendExtensionField(ref state, writer, ref writeState);
-                    writer.Close(ref writeState);
+                    try
+                    {
+                        AppendExtensionField(ref state, writer, ref writeState);
+                        writer.Close(ref writeState);
+                    }
+                    catch
+                    {
+                        writer.Abandon();
+                        throw;
+                    }
                 }
                 commit = true;
             }

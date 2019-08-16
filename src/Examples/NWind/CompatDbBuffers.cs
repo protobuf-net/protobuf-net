@@ -6,6 +6,7 @@ using Pipelines.Sockets.Unofficial.Buffers;
 using ProtoBuf.Meta;
 using System;
 using System.Buffers;
+using System.Diagnostics;
 using System.IO;
 using Xunit;
 using Xunit.Abstractions;
@@ -16,7 +17,10 @@ namespace ProtoBuf.NWind
     {
         private readonly ITestOutputHelper Log;
         public CompatDbBuffers(ITestOutputHelper log)
-            => Log = log;
+        {
+            Log = log;
+            Serializer.PrepareSerializer<DatabaseCompat>();
+        }
 
         [Fact]
         public void GenerateModel()
@@ -36,7 +40,27 @@ namespace ProtoBuf.NWind
             contents = arr;
             using (var reader = ProtoReader.Create(out var readState, arr, RuntimeTypeModel.Default))
             {
-                return (DatabaseCompat)reader.Model.Deserialize(reader, ref readState, null, typeof(DatabaseCompat));
+                var watch = Stopwatch.StartNew();
+                var obj = (DatabaseCompat)reader.Model.Deserialize(reader, ref readState, null, typeof(DatabaseCompat));
+                watch.Stop();
+                Log?.WriteLine($"Deserialized: {watch.ElapsedMilliseconds}ms");
+                return obj;
+            }
+        }
+
+        void Write(DatabaseCompat db, ProtoWriter writer, ref ProtoWriter.State state)
+        {
+            try
+            {
+                var watch = Stopwatch.StartNew();
+                writer.Model.Serialize(writer, ref state, db);
+                watch.Stop();
+                Log?.WriteLine($"Serialized: {watch.ElapsedMilliseconds}ms");
+            }
+            catch
+            {
+                writer.Abandon();
+                throw;
             }
         }
 
@@ -50,7 +74,7 @@ namespace ProtoBuf.NWind
             {
                 using (var writer = ProtoWriter.Create(out var writeState, ms, RuntimeTypeModel.Default))
                 {
-                    writer.Model.Serialize(writer, ref writeState, db);
+                    Write(db, writer, ref writeState);
                 }
                 Assert.Equal(contents.Length, ms.Length);
 
@@ -71,7 +95,7 @@ namespace ProtoBuf.NWind
             {
                 using (var writer = ProtoWriter.Create(out var writeState, bw.Writer, RuntimeTypeModel.Default))
                 {
-                    writer.Model.Serialize(writer, ref writeState, db);
+                    Write(db, writer, ref writeState);
                 }
 
                 using (var buffer = bw.Flush())

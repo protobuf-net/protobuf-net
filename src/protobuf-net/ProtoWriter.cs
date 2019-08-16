@@ -465,10 +465,10 @@ namespace ProtoBuf
         protected private virtual void Dispose()
         {
             OnDispose();
-            //if (depth == 0 && _needFlush && ImplDemandFlushOnDispose)
-            //{
-            //    throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
-            //}
+            if (depth == 0 && _needFlush && ImplDemandFlushOnDispose)
+            {
+                throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
+            }
             NetCache.Clear();
             model = null;
             Context = null;

@@ -62,27 +62,35 @@ namespace ProtoBuf.Tests
 
         private void ManualWriter(ProtoWriter w, ref ProtoWriter.State state)
         {
-            ProtoWriter.WriteFieldHeader(1, WireType.Variant, w, ref state);
-            Assert.Equal(1, w.GetPosition(ref state));
-            ProtoWriter.WriteInt32(42, w, ref state);
-            Assert.Equal(2, w.GetPosition(ref state));
+            try
+            {
+                ProtoWriter.WriteFieldHeader(1, WireType.Variant, w, ref state);
+                Assert.Equal(1, w.GetPosition(ref state));
+                ProtoWriter.WriteInt32(42, w, ref state);
+                Assert.Equal(2, w.GetPosition(ref state));
 
-            ProtoWriter.WriteFieldHeader(2, WireType.String, w, ref state);
-            Assert.Equal(3, w.GetPosition(ref state));
-            ProtoWriter.WriteString("abcdefghijklmnop", w, ref state);
-            Assert.Equal(20, w.GetPosition(ref state));
+                ProtoWriter.WriteFieldHeader(2, WireType.String, w, ref state);
+                Assert.Equal(3, w.GetPosition(ref state));
+                ProtoWriter.WriteString("abcdefghijklmnop", w, ref state);
+                Assert.Equal(20, w.GetPosition(ref state));
 
-            ProtoWriter.WriteFieldHeader(3, WireType.StartGroup, w, ref state);
-            Assert.Equal(21, w.GetPosition(ref state));
-            ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
-            Assert.Equal(22, w.GetPosition(ref state));
+                ProtoWriter.WriteFieldHeader(3, WireType.StartGroup, w, ref state);
+                Assert.Equal(21, w.GetPosition(ref state));
+                ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
+                Assert.Equal(22, w.GetPosition(ref state));
 
-            ProtoWriter.WriteFieldHeader(4, WireType.String, w, ref state);
-            Assert.Equal(23, w.GetPosition(ref state));
-            ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
-            Assert.Equal(24, w.GetPosition(ref state));
+                ProtoWriter.WriteFieldHeader(4, WireType.String, w, ref state);
+                Assert.Equal(23, w.GetPosition(ref state));
+                ProtoWriter.WriteSubItem<Foo>(null, w, ref state, Foo.Serializer);
+                Assert.Equal(24, w.GetPosition(ref state));
 
-            w.Close(ref state);
+                w.Close(ref state);
+            }
+            catch
+            {
+                w.Abandon();
+                throw;
+            }
         }
 
         [ProtoContract]

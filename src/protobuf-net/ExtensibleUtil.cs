@@ -93,8 +93,16 @@ namespace ProtoBuf
             {
                 using (ProtoWriter writer = ProtoWriter.Create(out var state, stream, model, null))
                 {
-                    model.TrySerializeAuxiliaryType(writer, ref state, null, format, tag, value, false, null);
-                    writer.Close(ref state);
+                    try
+                    {
+                        model.TrySerializeAuxiliaryType(writer, ref state, null, format, tag, value, false, null);
+                        writer.Close(ref state);
+                    }
+                    catch
+                    {
+                        writer.Abandon();
+                        throw;
+                    }
                 }
                 commit = true;
             }

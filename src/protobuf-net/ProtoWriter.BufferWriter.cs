@@ -24,8 +24,16 @@ namespace ProtoBuf
                 var model = RuntimeTypeModel.Default;
                 using (var writer = ProtoWriter.Create(out var state, destination, model, context))
                 {
-                    model.Serialize(writer, ref state, instance);
-                    writer.Close(ref state);
+                    try
+                    {
+                        model.Serialize(writer, ref state, instance);
+                        writer.Close(ref state);
+                    }
+                    catch
+                    {
+                        writer.Abandon();
+                        throw;
+                    }
                 }
             }
         }
@@ -194,9 +202,17 @@ namespace ProtoBuf
                 long calculatedLength;
                 using (var nullWriter = NullProtoWriter.CreateNullImpl(Model, Context, out var nulState))
                 {
-                    serializer.Serialize(nullWriter, ref nulState, value);
-                    nullWriter.Close(ref nulState);
-                    calculatedLength = nullWriter.GetPosition(ref state);
+                    try
+                    {
+                        serializer.Serialize(nullWriter, ref nulState, value);
+                        nullWriter.Close(ref nulState);
+                        calculatedLength = nullWriter.GetPosition(ref state);
+                    }
+                    catch
+                    {
+                        nullWriter.Abandon();
+                        throw;
+                    }
                 }
 
                 switch (style)
