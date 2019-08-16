@@ -979,6 +979,10 @@ namespace ProtoBuf.Meta
             MethodBuilder newMethod = type.DefineMethod(baseMethod.Name,
                 (baseMethod.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final, baseMethod.CallingConvention, baseMethod.ReturnType, paramTypes);
             ILGenerator il = newMethod.GetILGenerator();
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                newMethod.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
+            }
             type.DefineMethodOverride(newMethod, baseMethod);
             return il;
         }
@@ -1475,10 +1479,16 @@ namespace ProtoBuf.Meta
                 MethodBuilder writeMethod = type.DefineMethod("Write" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     typeof(void), new Type[] { typeof(ProtoWriter), ProtoWriter.ByRefStateType, metaType.Type });
+                writeMethod.DefineParameter(0, ParameterAttributes.None, "writer");
+                writeMethod.DefineParameter(1, ParameterAttributes.None, "state");
+                writeMethod.DefineParameter(2, ParameterAttributes.None, "value");
 
                 MethodBuilder readMethod = type.DefineMethod("Read" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     metaType.Type, new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, metaType.Type });
+                readMethod.DefineParameter(0, ParameterAttributes.None, "reader");
+                readMethod.DefineParameter(1, ParameterAttributes.None, "state");
+                readMethod.DefineParameter(2, ParameterAttributes.None, "value");
 
                 SerializerPair pair = new SerializerPair(
                     GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
@@ -1500,7 +1510,8 @@ namespace ProtoBuf.Meta
             for (index = 0; index < methodPairs.Length; index++)
             {
                 SerializerPair pair = methodPairs[index];
-                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, pair.Type.Type, "SerializeImpl " + pair.Type.Type.Name);
+                var runtimeType = pair.Type.Type;
+                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, runtimeType, "SerializeImpl " + runtimeType.Name);
                 MemberInfo returnType = pair.Deserialize.ReturnType
 #if COREFX
                     .GetTypeInfo()
@@ -1510,14 +1521,45 @@ namespace ProtoBuf.Meta
                 pair.Type.Serializer.EmitWrite(ctx, ctx.InputValue);
                 ctx.Return();
 
-                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs, this, ilVersion, assemblyName, pair.Type.Type, "DeserializeImpl " + pair.Type.Type.Name);
+                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs, this, ilVersion, assemblyName, runtimeType, "DeserializeImpl " + runtimeType.Name);
                 pair.Type.Serializer.EmitRead(ctx, ctx.InputValue);
                 if (!pair.Type.Serializer.ReturnsValue)
                 {
                     ctx.LoadValue(ctx.InputValue);
                 }
                 ctx.Return();
+
+                var serType = typeof(IProtoSerializer<,>).MakeGenericType(runtimeType, runtimeType);
+                type.AddInterfaceImplementation(serType);
+                var namePrefix = $"IProtoSerializer<{runtimeType.Name},{runtimeType.Name}>.";
+                StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoSerializer<int, int>.Serialize)), pair.Serialize, namePrefix);
+                StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoSerializer<int, int>.Deserialize)), pair.Deserialize, namePrefix);
+
+                serType = typeof(IProtoSerializer<>).MakeGenericType(runtimeType);
+                type.AddInterfaceImplementation(serType);
             }
+        }
+
+        private static void StaticCallReadWrite(TypeBuilder type, MethodInfo declaration, MethodInfo implementation, string namePrefix)
+        {
+            var name = namePrefix + declaration.Name;
+            var parameters = declaration.GetParameters();
+            Type[] pTypes = new Type[parameters.Length];
+            for (int i = 0; i < pTypes.Length; i++)
+                pTypes[i] = parameters[i].ParameterType;
+            var method = type.DefineMethod(name,
+                (declaration.Attributes | MethodAttributes.Final | MethodAttributes.Private) & ~(MethodAttributes.Abstract | MethodAttributes.Public),
+                declaration.CallingConvention, declaration.ReturnType, pTypes);
+            for (int i = 0; i < parameters.Length; i++)
+                method.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
+            type.DefineMethodOverride(method, declaration);
+            var il = method.GetILGenerator();
+            // drop "this" on the floor
+            il.Emit(OpCodes.Ldarg_1);
+            il.Emit(OpCodes.Ldarg_2);
+            il.Emit(OpCodes.Ldarg_3);
+            il.EmitCall(OpCodes.Call, implementation, null);
+            il.Emit(OpCodes.Ret);
         }
 
         private TypeBuilder WriteBasicTypeModel(CompilerOptions options, string typeName, ModuleBuilder module)

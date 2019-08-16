@@ -213,17 +213,6 @@ namespace ProtoBuf.Compiler
 
         private readonly RuntimeTypeModel.SerializerPair[] methodPairs;
 
-        internal MethodBuilder GetDedicatedMethod(int metaKey, bool read)
-        {
-            if (methodPairs == null) return null;
-            // but if we *do* have pairs, we demand that we find a match...
-            for (int i = 0; i < methodPairs.Length; i++)
-            {
-                if (methodPairs[i].MetaKey == metaKey) { return read ? methodPairs[i].Deserialize : methodPairs[i].Serialize; }
-            }
-            throw new ArgumentException("Meta-key not found", nameof(metaKey));
-        }
-
         internal int MapMetaKeyToCompiledKey(int metaKey)
         {
             if (metaKey < 0 || methodPairs == null) return metaKey; // all meta, or a dummy/wildcard key
