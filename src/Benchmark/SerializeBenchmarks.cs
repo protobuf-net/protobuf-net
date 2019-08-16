@@ -3,6 +3,7 @@ using Pipelines.Sockets.Unofficial.Buffers;
 using ProtoBuf.Meta;
 using protogen;
 using System;
+using System.Buffers;
 using System.IO;
 
 namespace ProtoBuf
@@ -10,6 +11,47 @@ namespace ProtoBuf
     [ClrJob, CoreJob, MemoryDiagnoser]
     public class SerializeBenchmarks
     {
+        class FakeBufferWriter : IBufferWriter<byte>, IDisposable
+        {
+            public long Length { get; private set; }
+            public long Reset()
+            {
+                var len = Length;
+                Length = 0;
+                return len;
+            }
+            private byte[] _arr;
+
+            public FakeBufferWriter(int initialSize = 1024)
+                => Resize(initialSize);
+
+            public void Advance(int count) => Length += count;
+
+            public Memory<byte> GetMemory(int sizeHint = 0)
+            {
+                if (_arr.Length < sizeHint) Resize(sizeHint);
+                return _arr;
+            }
+
+            public Span<byte> GetSpan(int sizeHint = 0)
+            {
+                if (_arr.Length < sizeHint) Resize(sizeHint);
+                return _arr;
+            }
+
+            private void Resize(int sizeHint)
+            {
+                var arr = _arr;
+                _arr = null;
+                if (arr != null) ArrayPool<byte>.Shared.Return(arr);
+
+                if (sizeHint > 0)
+                    _arr = ArrayPool<byte>.Shared.Rent(sizeHint);
+            }
+
+            public void Dispose() => Resize(0);
+        }
+
         private byte[] _data;
         private RuntimeTypeModel _cip;
 #pragma warning disable IDE0044, IDE0051, IDE0052
@@ -70,15 +112,24 @@ namespace ProtoBuf
         }
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
-        public void BufferWriter_CIP() => BufferWriter(_cip);
+        public void BufferWriter_CIP() => WriteBufferWriter(_cip);
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
-        public void BufferWriter_C() => BufferWriter(_c);
+        public void BufferWriter_C() => WriteBufferWriter(_c);
 
         [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
-        public void BufferWriter_Auto() => BufferWriter(_auto);
+        public void BufferWriter_Auto() => WriteBufferWriter(_auto);
 
-        private void BufferWriter(TypeModel model)
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public void FakeBufferWriter_CIP() => WriteFakeBufferWriter(_cip);
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public void FakeBufferWriter_C() => WriteFakeBufferWriter(_c);
+
+        [Benchmark(OperationsPerInvoke = OperationsPerInvoke)]
+        public void FakeBufferWriter_Auto() => WriteFakeBufferWriter(_auto);
+
+        private void WriteBufferWriter(TypeModel model)
         {
             using (var buffer = BufferWriter<byte>.Create(64 * 1024))
             {
@@ -91,6 +142,22 @@ namespace ProtoBuf
                     }
                     AssertLength(buffer.Length);
                     buffer.Flush().Dispose();
+                }
+            }
+        }
+
+        private void WriteFakeBufferWriter(TypeModel model)
+        {
+            using (var buffer = new FakeBufferWriter())
+            {
+                for (int i = 0; i < OperationsPerInvoke; i++)
+                {
+                    using (var writer = ProtoWriter.Create(out var state, buffer, model))
+                    {
+                        model.Serialize(writer, ref state, _database);
+                        writer.Close(ref state);
+                    }
+                    AssertLength(buffer.Reset());
                 }
             }
         }
