@@ -220,7 +220,9 @@ namespace ProtoBuf.unittest.ThirdParty
 
         }
 
+#pragma warning disable IDE0060 // Remove unused parameter
         private static void CompareFoo(Foo original, Foo clone, string message)
+#pragma warning restore IDE0060 // Remove unused parameter
         {
             Assert.NotNull(clone); //, message);
             Assert.NotSame(original, clone);

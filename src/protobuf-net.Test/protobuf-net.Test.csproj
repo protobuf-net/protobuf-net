@@ -16,7 +16,7 @@
   <PropertyGroup Condition="$(TargetFramework)=='net452'">
     <DefineConstants>FEAT_COMPILER;FX30</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='net462'">
+  <PropertyGroup Condition="$(TargetFramework)=='net461'">
     <DefineConstants>FEAT_COMPILER;FX30;PLAT_SPANS</DefineConstants>
     <WithSpans>true</WithSpans>
   </PropertyGroup>
@@ -39,7 +39,7 @@
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
     <PackageReference Include="Iesi.Collections" Version="4.0.3" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='net462'">
+  <ItemGroup Condition="$(TargetFramework)=='net461'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
     <PackageReference Include="Iesi.Collections" Version="4.0.3" />
   </ItemGroup>
