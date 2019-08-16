@@ -46,7 +46,10 @@ namespace ProtoBuf
             }
 
             private protected override SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style)
-                => new SubItemToken(_position64);
+            {
+                WireType = WireType.None;
+                return new SubItemToken(_position64);
+            }
 
             private protected override void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style)
             {
