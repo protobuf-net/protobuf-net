@@ -431,6 +431,7 @@ namespace ProtoBuf
         internal void Init(TypeModel model, SerializationContext context)
         {
             OnInit();
+            _position64 = 0;
             depth = 0;
             fieldNumber = 0;
             this.model = model;
