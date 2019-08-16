@@ -486,10 +486,16 @@ namespace ProtoBuf
 #endif
         [Obsolete("This API is for internal usage only")]
         public long GetPosition(ref State state)
-        {
-            TryFlush(ref state);
-            return _position64;
-        }
+            => GetPositionImpl(ref state);
+
+        internal long GetPositionImpl(ref State state)
+#if PLAT_SPANS
+            => _position64 + state.OffsetInCurrent;
+#else
+            => _position64;
+#endif
+
+
 
         private long _position64;
         protected private void Advance(long count) => _position64 += count;
@@ -891,7 +897,7 @@ namespace ProtoBuf
                     writer.ImplWriteFixed32(ref state, BitConverter.ToUInt32(BitConverter.GetBytes(value), 0));
 #else
                     unsafe { writer.ImplWriteFixed32(ref state, *(uint*)&value); }
-#endif                    
+#endif
                     writer.AdvanceAndReset(4);
                     return;
                 case WireType.Fixed64:

@@ -196,7 +196,7 @@ namespace ProtoBuf
                 {
                     serializer.Serialize(nullWriter, ref nulState, value);
                     nullWriter.Close(ref nulState);
-                    calculatedLength = nullWriter._position64;
+                    calculatedLength = nullWriter.GetPositionImpl(ref state);
                 }
 
                 switch (style)
@@ -216,11 +216,11 @@ namespace ProtoBuf
                     default:
                         throw new NotImplementedException($"Sub-object prefix style not implemented: {style}");
                 }
-                TryFlush(ref state);
-                var oldPos = _position64;
+                var oldPos = GetPositionImpl(ref state);
                 serializer.Serialize(this, ref state, value);
-                TryFlush(ref state);
-                var actualLength = (_position64 - oldPos);
+                var newPos = GetPositionImpl(ref state);
+
+                var actualLength = (newPos - oldPos);
                 if (actualLength != calculatedLength)
                 {
                     throw new InvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
