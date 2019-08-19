@@ -428,10 +428,12 @@ namespace ProtoBuf
 
         /// <param name="model">The model to use for serialization; this can be null, but this will impair the ability to serialize sub-objects</param>
         /// <param name="context">Additional context about this serialization operation</param>
-        internal void Init(TypeModel model, SerializationContext context)
+        internal virtual void Init(TypeModel model, SerializationContext context)
         {
             OnInit();
             _position64 = 0;
+            _needFlush = false;
+            this.packedFieldNumber = 0;
             depth = 0;
             fieldNumber = 0;
             this.model = model;
@@ -469,6 +471,7 @@ namespace ProtoBuf
             {
                 throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
             }
+            recursionStack?.Clear();
             NetCache.Clear();
             model = null;
             Context = null;
@@ -520,7 +523,7 @@ namespace ProtoBuf
 
         internal void CheckClear(ref State state)
         {
-            if (depth != 0 || !TryFlush(ref state)) throw new InvalidOperationException($"The writer is in an incomplete state (depth: {depth})");
+            if (depth != 0 || !TryFlush(ref state)) throw new InvalidOperationException($"The writer is in an incomplete state (depth: {depth}, type: {GetType().Name})");
             _needFlush = false; // because we ^^^ *JUST DID*
         }
 

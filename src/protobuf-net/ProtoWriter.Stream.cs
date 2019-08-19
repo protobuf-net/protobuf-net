@@ -50,6 +50,14 @@ namespace ProtoBuf
                 obj.ioBuffer = BufferPool.GetBuffer();
                 return obj;
             }
+
+            internal override void Init(TypeModel model, SerializationContext context)
+            {
+                base.Init(model, context);
+                ioIndex = 0;
+                flushLock = 0;
+            }
+
             protected private override void Dispose()
             {
                 base.Dispose();

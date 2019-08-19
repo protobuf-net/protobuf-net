@@ -79,6 +79,7 @@ namespace ProtoBuf
             private protected override void Dispose()
             {
                 base.Dispose();
+                _writer = default;
                 Pool<BufferWriterProtoWriter<T>>.Put(this);
             }
 
