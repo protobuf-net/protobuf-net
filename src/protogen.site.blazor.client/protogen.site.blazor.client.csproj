@@ -5,6 +5,8 @@
     <OutputType>Exe</OutputType>
     <LangVersion>7.3</LangVersion>
     <RazorLangVersion>3.0</RazorLangVersion>
+    <BlazorLinkOnBuild>false</BlazorLinkOnBuild>    
+
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,4 +16,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Blazor.DevServer" Version="3.0.0-preview8.19405.7" PrivateAssets="all" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
+  </ItemGroup>
 </Project>

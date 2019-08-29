@@ -1,7 +1,42 @@
-﻿@page "/"
+﻿@using System.Net.Http
+@using  Google.Protobuf.Reflection
+@using System.IO
+@using  ProtoBuf.Reflection
+@inject HttpClient Http
+
+@page "/"
 
 <h1>Hello, world!</h1>
 
 Welcome to your new app.
+@foreach(var file in  codeFiles){
+    <b>FILE = @file.Name</b><br/>
+    <b>CONTENT =</b> 
+    <pre>
+        @file.Text
+    </pre>
+}
+@if(codeFiles.Count == 0){
+    <b>NO CODE FILE</b>
+}
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+@code{
+
+    private List<CodeFile> codeFiles = new List<CodeFile>();
+    protected override async Task OnInitializedAsync()
+    {
+        var schema = await Http.GetStringAsync("https://raw.githubusercontent.com/protobuf-net/protobuf-net/4b239629f5f9dbe4770a497f2c81465ab0669504/src/protobuf-net.Test/Schemas/descriptor.proto");
+        using (var reader = new StringReader(schema))
+        {
+            var set = new FileDescriptorSet
+            {
+                ImportValidator = path => true,
+            };
+            set.Add("my.proto", true, reader);
+
+            set.Process();
+            CodeGenerator codegen = CSharpCodeGenerator.Default;
+            codeFiles = codegen.Generate(set, NameNormalizer.Default).ToList();
+        }
+    }
+}
