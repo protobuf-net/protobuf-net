@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ProtoBuf.Reflection;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -36,10 +37,48 @@ namespace ProtoBuf.Models
                 LanguageVersion = null;
             }
         }
-        public bool OneOfEnum { get; set; } = false;
-        public bool RepeatedEmitSetAccessors { get; set; } = false;
+        public bool? OneOfEnum { get; set; } = false;
+        public bool? RepeatedEmitSetAccessors { get; set; } = false;
+
+        public bool SpecifyOptInProto { get; set; } = false;
         public string LanguageVersion { get; set; }
         public NamingConventionEnum NamingConvention { get; set; } = NamingConventionEnum.Auto;
+
+        public NameNormalizer GetNameNormalizerForConvention()
+        {
+            switch (NamingConvention)
+            {
+                case NamingConventionEnum.Auto:
+                    return NameNormalizer.Default;
+                case NamingConventionEnum.Original:
+                    return NameNormalizer.Null;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(NamingConvention));
+            }
+        }
+
+        public CodeGenerator GetCodeGenerator()
+        {
+            if (!IsProtobugGen())
+            {
+                throw new InvalidOperationException("CodeGenerator are available only for language compatible with protobuf-net");
+            }
+            switch (Language)
+            {
+                case GeneratorLanguageEnum.CSharp:
+                    return CSharpCodeGenerator.Default;
+                case GeneratorLanguageEnum.VBNet:
+                    return VBCodeGenerator.Default;
+                default:
+                    throw new ArgumentOutOfRangeException($"{Language} is not supported");
+            }
+        }
+
+        public bool IsProtobugGen()
+        {
+            return Language == GeneratorLanguageEnum.CSharp ||
+                Language == GeneratorLanguageEnum.VBNet;
+        }
 
         [Required]
         public string ProtoContent { get; set; }

@@ -4,9 +4,12 @@
 @using  ProtoBuf.Reflection
 @using ProtoBuf.Models
 @inject HttpClient Http
-
+@inject IJSRuntime JsRuntime;
 @page "/"
+
 <h2>Generator</h2>
+<p><a href="/about">Wait... what is this?</a></p>
+<p>If this tool has been useful: <a href="https://www.buymeacoffee.com/marcgravell" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" /></a></p>
 <EditForm Model="@model" OnValidSubmit="@Generate">
     <DataAnnotationsValidator />
     <div class="row">
@@ -20,7 +23,7 @@
                 }
             </InputSelect>
         </div>
-        @if (model.HasLanguageVersion())
+        @if (!model.SpecifyOptInProto && model.HasLanguageVersion())
         {
             <div class="form-group  col-6">
                 <label for="language">@model.Language Version</label>
@@ -30,16 +33,32 @@
                         {
                         <option value="@version">@version</option>
                         }
+                    /**/
+                    /**/
+                    /**/
+                    /**/
+                    /**/
+                    /**/
+                    /**/
                 </InputSelect>
             </div>
         }
     </div>
     <div class="form-check">
-        <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
-        <label class="form-check-label" for="oneof">
-            <code>oneof</code> should use enum
+        <input class="form-check-input" type="checkbox" @onchange="ChangeOptionSpecification" id="opt_in_proto" />
+        <label class="form-check-label" for="opt_in_proto">
+            Specify options in .proto
         </label>
     </div>
+    @if (!model.SpecifyOptInProto)
+    {
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
+            <label class="form-check-label" for="oneof">
+                <code>oneof</code> should use enum
+            </label>
+        </div>
+    }
     <div class="form-check">
         <input class="form-check-input" type="checkbox" @bind="model.RepeatedEmitSetAccessors" id="repeated_accessors" />
         <label class="form-check-label" for="repeated_accessors">
@@ -57,51 +76,85 @@
     </div>
     <div class="form-group">
         <label for="protoContent">.proto file content</label> <button type="button" class="btn btn-secondary" @onclick="LoadSample">Load descriptor.proto</button>
-        <textarea class="form-control" @bind="model.ProtoContent" id="protoContent" rows="3"></textarea>
+        <textarea class="form-control" @bind="model.ProtoContent" id="protoContent" rows="3" @ref:suppressField @ref="protoEditor"></textarea>
     </div>
     <button type="submit" class="btn btn-primary">Generate</button>
 
     <ValidationSummary />
 </EditForm>
 
-    @foreach (var file in codeFiles)
-    {
-        <b>FILE = @file.Name</b><br />
-        <b>CONTENT =</b>
-        <pre>
+@foreach (var file in codeFiles)
+{
+    <b>FILE = @file.Name</b>
+    <br />
+    <b>CONTENT =</b>
+    <pre>
         @file.Text
     </pre>
-    }
-    @if (codeFiles.Count == 0)
+}
+@if (codeFiles.Count == 0)
+{
+    <b>NO CODE FILE</b>
+}
+
+@code{
+    ElementReference protoEditor;
+
+    Error[] errors;
+
+    private GeneratorViewModel model = new GeneratorViewModel();
+
+    private List<CodeFile> codeFiles = new List<CodeFile>();
+
+    protected override async Task OnInitializedAsync()
     {
-        <b>NO CODE FILE</b>
+        await JsRuntime.InvokeAsync<object>("createEditor", protoEditor, "proto3lang");
     }
 
-    @code{
-        private GeneratorViewModel model = new GeneratorViewModel();
-
-        private List<CodeFile> codeFiles = new List<CodeFile>();
-
-        protected async Task LoadSample()
+    protected async Task LoadSample()
+    {
+        model.ProtoContent = await Http.GetStringAsync("https://raw.githubusercontent.com/protobuf-net/protobuf-net/4b239629f5f9dbe4770a497f2c81465ab0669504/src/protobuf-net.Test/Schemas/descriptor.proto");
+    }
+    //we use this for inserting options at the end of the script without erasing user custom content
+    private const string ProtoOptionCommentDelimiter = "//endof options";
+    protected async Task ChangeOptionSpecification(UIChangeEventArgs e)
+    {
+        model.SpecifyOptInProto = (bool)e.Value;
+        if (model.ProtoContent != null)
         {
-            model.ProtoContent = await Http.GetStringAsync("https://raw.githubusercontent.com/protobuf-net/protobuf-net/4b239629f5f9dbe4770a497f2c81465ab0669504/src/protobuf-net.Test/Schemas/descriptor.proto");
+
+            model.ProtoContent = model.ProtoContent.Substring(model.ProtoContent.IndexOf(ProtoOptionCommentDelimiter) + ProtoOptionCommentDelimiter.Length);
         }
 
-        protected async Task Generate()
+        if (model.SpecifyOptInProto)
         {
-            
-            using (var reader = new StringReader(model.ProtoContent))
+            //we could have this content hard coded but it was like this before
+            var optContent = await Http.GetStringAsync("https://gist.githubusercontent.com/mgravell/c545f903467fd7fa441ad80c5433d331/raw/59e0681069463c016eb06a630991945aa783b90f/configure_protogen.proto");
+            model.ProtoContent = $"{optContent}{Environment.NewLine}{ProtoOptionCommentDelimiter}{Environment.NewLine}{model.ProtoContent}";
+        }
+    }
+
+    protected async Task Generate()
+    {
+        if (!model.IsProtobugGen())
+        {
+            throw new NotImplementedException("protoc is not implemented yet");
+        }
+        Dictionary<string, string> options = new Dictionary<string, string>();
+
+        using (var reader = new StringReader(model.ProtoContent))
+        {
+            var set = new FileDescriptorSet
             {
-                var set = new FileDescriptorSet
-                {
-                    ImportValidator = path => true,
-                };
-                set.Add("my.proto", true, reader);
+                ImportValidator = path => true,
+            };
+            set.Add("my.proto", true, reader);
 
-                set.Process();
-                CodeGenerator codegen = CSharpCodeGenerator.Default;
-                codeFiles = codegen.Generate(set, NameNormalizer.Default).ToList();
-            }
+            set.Process();
+            errors = set.GetErrors();
+            CodeGenerator codegen = model.GetCodeGenerator();
+            codeFiles = codegen.Generate(set, model.GetNameNormalizerForConvention()).ToList();
         }
-
     }
+
+}

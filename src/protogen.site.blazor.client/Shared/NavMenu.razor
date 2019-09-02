@@ -1,42 +1,31 @@
 ﻿<div class="top-row pl-4 navbar navbar-dark">
     <a class="navbar-brand" href="">protogen.marcgravell.com</a>
-    <button class="navbar-toggler" @onclick="ToggleNavMenu">
+    <button class="navbar-toggler">
         <span class="navbar-toggler-icon"></span>
     </button>
 </div>
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+<div>
     <ul class="nav flex-column">
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
+                Generator
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="about">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="/about" Match="NavLinkMatch.All">
+                About
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="decode">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+            <NavLink class="nav-link" href="/decode" Match="NavLinkMatch.All">
+                Decode
             </NavLink>
         </li>
         <li class="nav-item px-3">
-            <NavLink class="nav-link" href="decode-bytes">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
+            <NavLink class="nav-link" href="/decode-bytes" Match="NavLinkMatch.All">
+                Decode bytes
             </NavLink>
         </li>
     </ul>
 </div>
-
-@code {
-    bool collapseNavMenu = true;
-
-    string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}
