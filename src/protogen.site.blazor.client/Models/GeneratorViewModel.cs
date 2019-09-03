@@ -74,6 +74,24 @@ namespace ProtoBuf.Models
             }
         }
 
+        public Dictionary<string,string> GetOptions()
+        {
+            var res = new Dictionary<string, string>();
+            if(LanguageVersion != null)
+            {
+                res.Add("langver", LanguageVersion);
+            }
+            if (OneOfEnum.GetValueOrDefault(false))
+            {
+                res.Add("oneof", "enum");
+            }
+            if (RepeatedEmitSetAccessors.GetValueOrDefault(false))
+            {
+                res.Add("listset", "yes");
+            }
+            return res;
+        }
+
         public bool IsProtobugGen()
         {
             return Language == GeneratorLanguageEnum.CSharp ||
