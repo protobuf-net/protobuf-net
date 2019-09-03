@@ -8,6 +8,7 @@ using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,50 +20,13 @@ namespace protogen.site.Controllers
 #if RELEASE
     [RequireHttps]
 #endif
+    
     public class HomeController : Controller
     {
         private readonly IHostingEnvironment _host;
         public HomeController(IHostingEnvironment host)
         {
             _host = host;
-        }
-        public IActionResult Index(string oneof = null, string langver = null, string names = null)
-        {
-            var model = new IndexModel
-            {
-                ProtocVersion = GetProtocVersion(_host, out var canUse),
-                CanUseProtoc = canUse,
-                OneOfEnum = string.Equals(oneof, "enum", StringComparison.OrdinalIgnoreCase),
-                LangVer = langver ?? "",
-                Names = names ?? "",
-            };
-            return View("Index", model);
-        }
-
-        [Route("/about")]
-        public IActionResult About() => View();
-
-        public IActionResult Error() => View();
-
-        public class GenerateResult
-        {
-            public CodeFile[] Files
-            {
-                get;
-                set;
-            }
-
-            public Error[] ParserExceptions
-            {
-                get;
-                set;
-            }
-
-            public Exception Exception
-            {
-                get;
-                set;
-            }
         }
 
         public class IndexModel
@@ -190,102 +154,36 @@ namespace protogen.site.Controllers
 
         [Route("/generate")]
         [HttpPost]
-        public GenerateResult Generate(string schema = null, string tooling = null, string names = null)
+        public IActionResult Generate([Required] string schema,[Required] string tooling )
         {
-            if (string.IsNullOrWhiteSpace(schema))
+            using (var reader = new StringReader(schema))
             {
-                return null;
-            }
-
-            Dictionary<string, string> options = null;
-            foreach(var field in Request.Form)
-            {
-                switch(field.Key)
+                var set = new FileDescriptorSet
                 {
-                    case nameof(schema):
-                    case nameof(tooling):
-                    case nameof(names):
-                        break; // handled separately
-                    default:
-                        string s = field.Value;
-                        if (!string.IsNullOrWhiteSpace(s))
-                        {
-                            if (options == null) options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-                            options[field.Key] = s;
-                        }
-                        break;
+                    ImportValidator = path => ValidateImport(path),
+                };
+                set.AddImportPath(Path.Combine(_host.WebRootPath, "protoc"));
+                set.Add("my.proto", true, reader);
+
+                set.Process();
+                var errors = set.GetErrors();
+
+                // we're going to offer protoc! hold me...
+                if (errors.Length != 0 && schema.Contains("import"))
+                {
+                    // code output disabled because of import
+                    return BadRequest();
+                }
+                else
+                {
+                    var files = RunProtoc(_host, schema, tooling, out errors);
+                    if (errors.Length > 0)
+                    {
+                        return base.StatusCode(500, errors);
+                    }
+                    return Ok(files);
                 }
             }
-
-            NameNormalizer nameNormalizer = null;
-            switch (names)
-            {
-                case "auto":
-                    nameNormalizer = NameNormalizer.Default;
-                    break;
-                case "original":
-                    nameNormalizer = NameNormalizer.Null;
-                    break;
-            }
-            var result = new GenerateResult();
-            try
-            {
-                using (var reader = new StringReader(schema))
-                {
-                    var set = new FileDescriptorSet
-                    {
-                        ImportValidator = path => ValidateImport(path),
-                    };
-                    set.AddImportPath(Path.Combine(_host.WebRootPath, "protoc"));
-                    set.Add("my.proto", true, reader);
-
-                    set.Process();
-                    var errors = set.GetErrors();
-
-                    if (!ProtocTooling.IsDefined(tooling))
-                    {
-                        if (errors.Length > 0)
-                        {
-                            result.ParserExceptions = errors;
-                        }
-                        CodeGenerator codegen;
-                        switch (tooling)
-                        {
-                            case "protogen:VB":
-#pragma warning disable 0618
-                                codegen = VBCodeGenerator.Default;
-#pragma warning restore 0618
-                                break;
-                            case "protogen:C#":
-                            default:
-                                codegen = CSharpCodeGenerator.Default;
-                                break;
-                        }
-                        result.Files = codegen.Generate(set, nameNormalizer, options).ToArray();
-                    }
-                    else
-                    {
-                        // we're going to offer protoc! hold me...
-                        if (errors.Length != 0 && schema.Contains("import"))
-                        {
-                            // code output disabled because of import
-                        }
-                        else
-                        {
-                            result.Files = RunProtoc(_host, schema, tooling, out errors);
-                            if (errors.Length > 0)
-                            {
-                                result.ParserExceptions = errors;
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                result.Exception = ex;
-            }
-            return result;
         }
 
         private Dictionary<string, string> legalImports = null;

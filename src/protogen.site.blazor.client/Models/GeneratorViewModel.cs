@@ -14,7 +14,16 @@ namespace ProtoBuf.Models
         public enum GeneratorLanguageEnum
         {
             CSharp,
-            VBNet
+            CSharpProtoc,
+            VBNet,
+            CPlusPlus,
+            Java,
+            JavaNano,
+            JS,
+            Objc,
+            PHP,
+            Python,
+            Ruby
         }
         public enum NamingConventionEnum
         {
@@ -96,6 +105,34 @@ namespace ProtoBuf.Models
         {
             return Language == GeneratorLanguageEnum.CSharp ||
                 Language == GeneratorLanguageEnum.VBNet;
+        }
+
+        public string GetProtocTooling()
+        {
+
+            switch (Language)
+            {
+                case GeneratorLanguageEnum.CSharpProtoc:
+                    return "csharp";
+                case GeneratorLanguageEnum.CPlusPlus:
+                    return "cpp";
+                case GeneratorLanguageEnum.Java:
+                    return "java";
+                case GeneratorLanguageEnum.JavaNano:
+                    return "javanano";
+                case GeneratorLanguageEnum.JS:
+                    return "js";
+                case GeneratorLanguageEnum.Objc:
+                    return "objc";
+                case GeneratorLanguageEnum.PHP:
+                    return "php";
+                case GeneratorLanguageEnum.Python:
+                    return "python";
+                case GeneratorLanguageEnum.Ruby:
+                    return "ruby";
+                default:
+                    throw new ArgumentOutOfRangeException($"{Language} is not supported by protoc");
+            }
         }
 
         [Required]

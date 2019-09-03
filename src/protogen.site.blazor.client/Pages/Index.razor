@@ -1,8 +1,10 @@
 ﻿@using System.Net.Http
-@using  Google.Protobuf.Reflection
+@using Google.Protobuf.Reflection
 @using System.IO
-@using  ProtoBuf.Reflection
+@using ProtoBuf.Reflection
 @using ProtoBuf.Models
+@using System.Text.Json
+
 @inject HttpClient Http
 @inject IJSRuntime JsRuntime;
 @page "/"
@@ -34,42 +36,52 @@
                         <option value="@version">@version</option>
                         }
                     /**/
+                    /**/
+                    /**/
+                    /**/
+                    /**/
+                    /**/
                 </InputSelect>
             </div>
         }
     </div>
-    <div class="form-check">
-        <input class="form-check-input" type="checkbox" @onchange="ChangeOptionSpecification" id="opt_in_proto" />
-        <label class="form-check-label" for="opt_in_proto">
-            Specify options in .proto
-        </label>
-    </div>
-    @if (!model.SpecifyOptInProto)
+    @if (model.IsProtobugGen())
     {
         <div class="form-check">
-            <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
-            <label class="form-check-label" for="oneof">
-                <code>oneof</code> should use enum
+            <input class="form-check-input" type="checkbox" @onchange="ChangeOptionSpecification" id="opt_in_proto" />
+            <label class="form-check-label" for="opt_in_proto">
+                Specify options in .proto
             </label>
         </div>
+        @if (!model.SpecifyOptInProto)
+        {
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
+                <label class="form-check-label" for="oneof">
+                    <code>oneof</code> should use enum
+                </label>
+            </div>
+        }
+        <div class="form-check">
+            <input class="form-check-input" type="checkbox" @bind="model.RepeatedEmitSetAccessors" id="repeated_accessors" />
+            <label class="form-check-label" for="repeated_accessors">
+                <code>repeated</code> should emit <code>set</code> accessors
+            </label>
+        </div>
+        <div class="form-group">
+            <label for="namingConvention">Naming convention</label>
+            <InputSelect id="namingConvention" @bind-Value="model.NamingConvention" class="form-control col-4" size="4">
+                @foreach (var namingConvention in Enum.GetValues(typeof(GeneratorViewModel.NamingConventionEnum)))
+                    {
+                    <option value="@namingConvention">@namingConvention</option>
+                    }
+                /**/
+                /**/
+            </InputSelect>
+        </div>
     }
-    <div class="form-check">
-        <input class="form-check-input" type="checkbox" @bind="model.RepeatedEmitSetAccessors" id="repeated_accessors" />
-        <label class="form-check-label" for="repeated_accessors">
-            <code>repeated</code> should emit <code>set</code> accessors
-        </label>
-    </div>
     <div class="form-group">
-        <label for="namingConvention">Naming convention</label>
-        <InputSelect id="namingConvention" @bind-Value="model.NamingConvention" class="form-control col-4" size="4">
-            @foreach (var namingConvention in Enum.GetValues(typeof(GeneratorViewModel.NamingConventionEnum)))
-            {
-                <option value="@namingConvention">@namingConvention</option>
-            }
-        </InputSelect>
-    </div>
-    <div class="form-group">
-        <label for="protoContent">.proto file content</label> <button type="button" class="btn btn-secondary" @onclick="LoadSample">Load descriptor.proto</button>
+        <label for="protoContent">.proto file content</label> <button type="button" class="btn btn-sm btn-secondary" @onclick="LoadSample">Load descriptor.proto</button>
         <textarea class="form-control" @bind="model.ProtoContent" id="protoContent" rows="3" @ref:suppressField @ref="protoEditor">
 
         </textarea>
@@ -89,8 +101,12 @@
         }
     </div>
 }
-@if(codeFiles != null) 
-{ 
+@if(exceptionMessage != null)
+{
+    <pre class="alert alert-danger">@exceptionMessage</pre>
+}
+@if (codeFiles != null)
+{
     @foreach (var file in codeFiles)
     {
         <h2 class="mt-5">Generated Code</h2>
@@ -107,6 +123,8 @@
     private GeneratorViewModel model = new GeneratorViewModel();
 
     private List<CodeFile> codeFiles;
+
+    private string exceptionMessage;
 
     protected async Task LoadSample()
     {
@@ -131,14 +149,11 @@
         }
     }
 
-    protected void Generate()
+    protected async Task Generate()
     {
-        if (!model.IsProtobugGen())
-        {
-            throw new NotImplementedException("protoc is not implemented yet");
-        }
-        Dictionary<string, string> options = new Dictionary<string, string>();
-
+        codeFiles = null;
+        exceptionMessage = null;
+        errors = null;
         using (var reader = new StringReader(model.ProtoContent))
         {
             var set = new FileDescriptorSet
@@ -153,9 +168,46 @@
             {
                 return;
             }
-            CodeGenerator codegen = model.GetCodeGenerator();
-            codeFiles = codegen.Generate(set, model.GetNameNormalizerForConvention(), model.GetOptions()).ToList();
+
+            if (model.IsProtobugGen())
+            {
+                ProtobufnetGenerate(set);
+            }
+            else
+            {
+                await ProtocGenerate();
+            }
         }
+    }
+    private async Task ProtocGenerate()
+    {
+        var response = await Http.PostAsync("http://localhost:53831/generate", new FormUrlEncodedContent(
+            new Dictionary<string, string>() {
+                {"schema", model.ProtoContent },
+                {"tooling", model.GetProtocTooling() }
+            }
+          ));
+        var content = await response.Content.ReadAsStringAsync();
+        if (response.IsSuccessStatusCode)
+        {
+            codeFiles = JsonSerializer.Deserialize<List<CodeFile>>(content);
+        }
+        else
+        {
+            if (content.Contains("Exception"))//did not find a better way for handling exception or error file
+            {
+                this.exceptionMessage = content;
+            }
+            else
+            {
+                this.errors= JsonSerializer.Deserialize<Error[]>(content);
+            }
+        }
+    }
+    private void ProtobufnetGenerate(FileDescriptorSet set)
+    {
+        CodeGenerator codegen = model.GetCodeGenerator();
+        codeFiles = codegen.Generate(set, model.GetNameNormalizerForConvention(), model.GetOptions()).ToList();
     }
 
 }
