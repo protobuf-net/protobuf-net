@@ -12,8 +12,10 @@ namespace ProtoBuf.unittest.Serializers
         {
             using (var writeStream = new System.IO.MemoryStream())
             {
-                ISet<string> mySet = new HashSet<string>();
-                mySet.Add("hello world");
+                ISet<string> mySet = new HashSet<string>
+                {
+                    "hello world"
+                };
 
                 Serializer.Serialize(writeStream, mySet);
 
@@ -27,8 +29,10 @@ namespace ProtoBuf.unittest.Serializers
 
             using (var writeStream = new System.IO.MemoryStream())
             {
-                IDictionary<DayOfWeek, ISet<string>> myMap = new Dictionary<DayOfWeek, ISet<string>>();
-                myMap.Add(DayOfWeek.Monday, new HashSet<string> { "hello world" });
+                IDictionary<DayOfWeek, ISet<string>> myMap = new Dictionary<DayOfWeek, ISet<string>>
+                {
+                    { DayOfWeek.Monday, new HashSet<string> { "hello world" } }
+                };
 
                 Serializer.Serialize(writeStream, myMap);
 
@@ -46,10 +50,12 @@ namespace ProtoBuf.unittest.Serializers
         {
             using (var writeStream = new System.IO.MemoryStream())
             {
-                IDictionary<DayOfWeek, ISet<string>> myMap = new Dictionary<DayOfWeek, ISet<string>>();
-                myMap.Add(DayOfWeek.Monday, new HashSet<string> { "hello world" });
+                IDictionary<DayOfWeek, ISet<string>> myMap = new Dictionary<DayOfWeek, ISet<string>>
+                {
+                    { DayOfWeek.Monday, new HashSet<string> { "hello world" } }
+                };
 
-                ProtoBuf.Serializer.Serialize(writeStream, myMap);
+                Serializer.Serialize(writeStream, myMap);
 
                 using (var readStream = new System.IO.MemoryStream(writeStream.ToArray()))
                 {
