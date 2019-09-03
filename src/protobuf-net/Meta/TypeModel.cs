@@ -1061,6 +1061,19 @@ namespace ProtoBuf.Meta
 #endif
                 }
 
+                if (!handled &&
+#if COREFX || PROFILE259
+                    listTypeInfo.IsInterface &&
+#else
+                    listType.IsInterface &&
+#endif
+                    (fullName = listType.FullName) != null &&
+                    fullName.IndexOf("Set") >= 0)
+                {
+                    concreteListType = typeof(System.Collections.Generic.HashSet<>).MakeGenericType(itemType);
+                    handled = true;
+                }
+
                 if (!handled)
                 {
                     concreteListType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);

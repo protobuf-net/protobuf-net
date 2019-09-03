@@ -1556,6 +1556,14 @@ namespace ProtoBuf.Meta
                         {
                             defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
                         }
+#if COREFX || PROFILE259
+                        else if (typeInfo.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ISet<>))
+#else
+                        else if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.ISet<>))
+#endif
+                        {
+                            defaultType = typeof(System.Collections.Generic.HashSet<>).MakeGenericType(itemType);
+                        }
                         else
                         {
                             defaultType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
