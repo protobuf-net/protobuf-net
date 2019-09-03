@@ -33,6 +33,7 @@
                         {
                         <option value="@version">@version</option>
                         }
+                    /**/
                 </InputSelect>
             </div>
         }
@@ -69,7 +70,9 @@
     </div>
     <div class="form-group">
         <label for="protoContent">.proto file content</label> <button type="button" class="btn btn-secondary" @onclick="LoadSample">Load descriptor.proto</button>
-        <textarea class="form-control" @bind="model.ProtoContent" id="protoContent" rows="3" @ref:suppressField @ref="protoEditor"></textarea>
+        <textarea class="form-control" @bind="model.ProtoContent" id="protoContent" rows="3" @ref:suppressField @ref="protoEditor">
+
+        </textarea>
     </div>
     <button type="submit" class="btn btn-primary">Generate</button>
 
@@ -77,27 +80,25 @@
 </EditForm>
 @if (errors != null)
 {
-    @foreach (var error in errors)
+    <div class="mt-5">
+        @foreach (var error in errors)
+        {
+            <div class="alert @(error.IsWarning ? "alert-warning":"alert-danger")">
+                @error.ToString()
+            </div>
+        }
+    </div>
+}
+@if(codeFiles != null) 
+{ 
+    @foreach (var file in codeFiles)
     {
-        <div class="alert @(error.IsWarning ? "alert-warning":"alert-danger")">
-            @error.ToString()
+        <h2 class="mt-5">Generated Code</h2>
+        <div class="form-group">
+            <textarea rows="100" class="form-control">@file.Text</textarea>
         </div>
     }
 }
-@foreach (var file in codeFiles)
-{
-    <b>FILE = @file.Name</b>
-    <br />
-    <b>CONTENT =</b>
-    <pre>
-        @file.Text
-    </pre>
-}
-@if (codeFiles.Count == 0)
-{
-    <b>NO CODE FILE</b>
-}
-
 @code{
     ElementReference protoEditor;
 
@@ -105,16 +106,11 @@
 
     private GeneratorViewModel model = new GeneratorViewModel();
 
-    private List<CodeFile> codeFiles = new List<CodeFile>();
-
-    protected override async Task OnInitializedAsync()
-    {
-        await JsRuntime.InvokeAsync<object>("createEditor", protoEditor, "proto3lang");
-    }
+    private List<CodeFile> codeFiles;
 
     protected async Task LoadSample()
     {
-        model.ProtoContent = await Http.GetStringAsync("https://raw.githubusercontent.com/protobuf-net/protobuf-net/4b239629f5f9dbe4770a497f2c81465ab0669504/src/protobuf-net.Test/Schemas/descriptor.proto");
+        model.ProtoContent = await Http.GetStringAsync("https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto");
     }
     //we use this for inserting options at the end of the script without erasing user custom content
     private const string ProtoOptionCommentDelimiter = "//endof options";
@@ -135,7 +131,7 @@
         }
     }
 
-    protected async Task Generate()
+    protected void Generate()
     {
         if (!model.IsProtobugGen())
         {
