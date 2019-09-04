@@ -9,7 +9,7 @@
 @inject IJSRuntime JsRuntime;
 @page "/"
 
-<h2>Generator</h2>
+<h2>Code Generator</h2>
 <p><a href="/about">Wait... what is this?</a></p>
 <p>If this tool has been useful: <a href="https://www.buymeacoffee.com/marcgravell" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" /></a></p>
 <EditForm Model="@model" OnValidSubmit="@Generate">
@@ -86,7 +86,14 @@
 
         </textarea>
     </div>
-    <button type="submit" class="btn btn-primary">Generate</button>
+    <button type="submit" class="btn btn-primary" disabled="@loading"> 
+        @if(loading){
+           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            <text> Generating </text>
+        } else{
+           <text> Generate </text>
+        }
+    </button>
 
     <ValidationSummary />
 </EditForm>
@@ -116,6 +123,8 @@
     }
 }
 @code{
+    bool loading = false;
+
     ElementReference protoEditor;
 
     Error[] errors;
@@ -151,6 +160,7 @@
 
     protected async Task Generate()
     {
+        loading = true;
         codeFiles = null;
         exceptionMessage = null;
         errors = null;
@@ -177,6 +187,7 @@
             {
                 await ProtocGenerate();
             }
+            loading = false;
         }
     }
     private async Task ProtocGenerate()
