@@ -14,7 +14,7 @@
 @try
 {
     ProtoBuf.SubItemToken tok = default(ProtoBuf.SubItemToken);
-    using(var reader = Model.GetReader())
+    using(var reader = Model.GetReader(out var state))
     {
         int field, start = 0;
         while((field = reader.ReadFieldHeader()) > 0)
