@@ -622,7 +622,11 @@ namespace ProtoBuf.Reflection
 
         private static string GetOneOfFieldName(OneofDescriptorProto obj) => FieldPrefix + obj.Name;
 
-        private static readonly Version CSharp6 = new Version(6, 0), CSharp3 = new Version(3, 0), CSharp7_1 = new Version(7, 1);
+        private static readonly Version
+            CSharp3 = new Version(3, 0),
+            CSharp4 = new Version(4, 0),
+            CSharp6 = new Version(6, 0),
+            CSharp7_1 = new Version(7, 1);
 
         /// <summary>
         /// Starts an extgensions block
@@ -1071,7 +1075,16 @@ namespace ProtoBuf.Reflection
                 tw.Write(inputType);
                 tw.Write(method.ClientStreaming ? " values, " : " value, ");
             }
-            tw.WriteLine("global::ProtoBuf.Grpc.CallContext context);");
+            tw.Write("global::ProtoBuf.Grpc.CallContext context");
+            if (ctx.Supports(CSharp4))
+            {
+                tw.Write(" = default");
+                if (!ctx.Supports(CSharp7_1))
+                {
+                    tw.Write("(global::ProtoBuf.Grpc.CallContext)");
+                }
+            }
+            tw.WriteLine(");");
         }
     }
 }
