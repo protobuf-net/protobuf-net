@@ -1,0 +1,34 @@
+﻿@using ProtoBuf.Models;
+
+
+@if (decodeModel != null)
+{
+    <DecodeResult DecodeModel="@decodeModel"></DecodeResult>
+}
+else
+{
+
+    <button type="button" @onclick="Decode" class="btn btn-secondary btn-sm">Go deeper</button>
+}
+@code {
+    [Parameter]
+    public string Hex { get; set; }
+
+
+    DecodeModel decodeModel;
+
+    public void Decode()
+    {
+        byte[] data = null;
+        Hex = Hex.Replace(" ", "").Replace("-", "");
+        int len = Hex.Length / 2;
+        var tmp = new byte[len];
+        for (int i = 0; i < len; i++)
+        {
+            tmp[i] = Convert.ToByte(Hex.Substring(i * 2, 2), 16);
+        }
+        data = tmp;
+        decodeModel = (new DecodeModel(data, false));
+
+    }
+}

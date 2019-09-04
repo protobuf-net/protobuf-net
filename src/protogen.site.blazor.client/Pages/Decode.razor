@@ -1,7 +1,48 @@
-﻿<h3>
+﻿@using ProtoBuf.Models;
+@page "/decode"
+<h3>
     Online Protobuf Decoder.
 </h3>
 
-@code {
+<p>This tool will pull apart arbitrary protobuf data (without requiring a schema), displaying the hierarchical content.</p>
+<EditForm Model="@model" OnValidSubmit="@DoDecode">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <textarea class="form-control" @bind="model.Content" placeholder="encoded hex">
 
+        </textarea>
+    </div>
+    <div class="form-check">
+        <input class="form-check-input" type="checkbox" @bind="model.Recursive" />
+        <label class="form-check-label" for="opt_in_proto">
+            Recursive
+        </label>
+    </div>
+    <input type="submit" class="btn btn-primary" value="Decode" />
+
+    <ValidationSummary />
+</EditForm>
+@if (decodeModel != null)
+{
+    <h3>Results</h3>
+
+    <DecodeResult DecodeModel="@decodeModel"></DecodeResult>
+}
+@code {
+    DecodeViewModel model = new DecodeViewModel();
+    DecodeModel decodeModel;
+    void DoDecode()
+    {
+        byte[] data = null;
+        model.Content = model.Content.Replace(" ", "").Replace("-", "");
+        int len = model.Content.Length / 2;
+        var tmp = new byte[len];
+        for (int i = 0; i < len; i++)
+        {
+            tmp[i] = Convert.ToByte(model.Content.Substring(i * 2, 2), 16);
+        }
+        data = tmp;
+        decodeModel = (new DecodeModel(data, model.Recursive));
+
+    }
 }

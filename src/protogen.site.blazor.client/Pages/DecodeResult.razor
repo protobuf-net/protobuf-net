@@ -1,0 +1,139 @@
+﻿@using ProtoBuf.Models
+
+@try
+{
+    ProtoBuf.SubItemToken tok = default(ProtoBuf.SubItemToken);
+    using (var reader = DecodeModel.GetReader(out var state))
+    {
+        int field, start = 0;
+        while ((field = reader.ReadFieldHeader()) > 0)
+        {
+            @if (start == 0 && field == DecodeModel.SkipField && reader.WireType == ProtoBuf.WireType.StartGroup)
+            {
+                tok = ProtoBuf.ProtoReader.StartSubItem(reader);
+                start = reader.Position;
+                continue;
+            }
+            @if (start != 0)
+            {
+                <hr />
+            }
+            int headerEnd = reader.Position;
+
+            <p data-offset="@start">@DecodeModel.AsHex(start, headerEnd - start) = field <b>@(field)</b>, type <b>@(reader.WireType == ProtoBuf.WireType.Variant ? "Varint" : reader.WireType.ToString())</b></p>
+            switch (reader.WireType)
+            {
+                case ProtoBuf.WireType.Variant:
+                    var val = reader.ReadInt64();
+                    <p>@DecodeModel.AsHex(headerEnd, reader.Position - headerEnd) = <b>@(val)</b> (raw) or <b>@(Zag(val))</b> (zigzag)</p>
+                    break;
+                case ProtoBuf.WireType.StartGroup:
+                    reader.SkipField();
+                    <p>payload (inc. terminator) = @DecodeModel.AsHex(headerEnd, reader.Position - headerEnd)</p>
+
+                    <div style="padding-left: 2em">
+                        @if (DecodeModel.Deep)
+                        {
+                            <DecodeResult DecodeModel="DecodeModel.Slice(start, reader.Position - start, field)"></DecodeResult>
+
+                        }
+                        else
+                        {
+                            <DecodeResultDeeper Hex="@(DecodeModel.AsHex(headerEnd, reader.Position - headerEnd))"></DecodeResultDeeper>
+                        }
+                    </div>
+                    break;
+                case ProtoBuf.WireType.String:
+                    {
+                        var payloadBytes = ProtoBuf.ProtoReader.AppendBytes(null, reader);
+                        var lenLen = reader.Position - payloadBytes.Length - headerEnd;
+                        <p>@DecodeModel.AsHex(headerEnd, lenLen) = length <b>@(payloadBytes.Length)</b></p>
+                        var slice = new DecodeModel(payloadBytes, DecodeModel.Deep);
+                        if (slice.Count == 0)
+                        {
+                            <p>(empty payload)</p>
+                        }
+                        else if (slice.Count > 256)
+                        {
+                            <p>(@slice.Count bytes)</p>
+                        }
+                        else
+                        {
+                            <p>payload = @slice.AsHex()</p>
+                            var s = slice.AsString();
+                            if (!string.IsNullOrEmpty(s))
+                            {
+                                <p>UTF8: @s</p>
+                            }
+                        }
+                        if (slice.Count == 0)
+                        { }
+                        else if (slice.CouldBeProto())
+                        {
+                            <div style="padding-left: 2em">
+                                @if (DecodeModel.Deep)
+                                {
+                                    <DecodeResult DecodeModel="slice"></DecodeResult>
+                                }
+                                else
+                                {
+                                    <DecodeResultDeeper Hex="@slice.AsHex()"></DecodeResultDeeper>
+                                }
+                            </div>
+                        }
+                    }
+                    break;
+                case ProtoBuf.WireType.Fixed64:
+                    var val64 = reader.ReadInt64();
+                    <p>@DecodeModel.AsHex(headerEnd, reader.Position - headerEnd) = <b>@(val64)</b> (integer) or <b>@(ToDouble(val64))</b> (floating point)</p>
+                    break;
+                case ProtoBuf.WireType.Fixed32:
+                    var val32 = reader.ReadInt32();
+                    <p>@DecodeModel.AsHex(headerEnd, reader.Position - headerEnd) = <b>@(val32)</b> (integer) or <b>@(ToSingle(val32))</b> (floating point)</p>
+                    break;
+                case ProtoBuf.WireType.EndGroup:
+                    break;
+                default:
+                    <p>unexpected wire-type: @(reader.WireType)</p>
+                    break;
+            }
+            start = reader.Position;
+        }
+        @if (DecodeModel.SkipField > 0 && start != 0)
+        {
+            ProtoBuf.ProtoReader.EndSubItem(tok, reader);
+            int suffixLen = reader.Position - start;
+            if (suffixLen != 0)
+            {
+                <hr />
+                <p>@DecodeModel.AsHex(start, suffixLen) = field <b>@(DecodeModel.SkipField)</b>, type <b>@(ProtoBuf.WireType.EndGroup)</b></p>
+            }
+        }
+        @if (reader.Position < DecodeModel.Count)
+        {
+            <p>remaining data: @DecodeModel.AsHex(reader.Position, DecodeModel.Count - reader.Position)</p>
+            <DecodeResultDeeper Hex="DecodeModel.AsHex(reader.Position, DecodeModel.Count - reader.Position)"></DecodeResultDeeper>
+        }
+    }
+}
+catch (Exception ex)
+{
+    <p>error: @(ex.Message)</p>
+}
+
+
+@code {
+    [Parameter]
+    public DecodeModel DecodeModel { get; set; }
+
+    double ToDouble(long val) => BitConverter.ToDouble(BitConverter.GetBytes(val), 0);
+
+    double ToSingle(int val) => BitConverter.ToSingle(BitConverter.GetBytes(val), 0);
+
+    long Zag(long value)
+    {
+        const long Int64Msb = ((long)1) << 63;
+        return (-(value & 0x01L)) ^ ((value >> 1) & ~Int64Msb);
+    }
+
+}
