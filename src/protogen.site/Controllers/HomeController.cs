@@ -176,10 +176,10 @@ namespace protogen.site.Controllers
                 }
                 else
                 {
-                    var files = RunProtoc(_host, schema, tooling, out errors);
-                    if (errors.Length > 0)
+                    var files = RunProtoc(_host, schema, tooling, out var stdout, out var stderr, out var exitCode);
+                    if (exitCode != 0)
                     {
-                        return base.StatusCode(500, errors);
+                        return base.StatusCode(500,new { stderr, stdout, exitCode }) ;
                     }
                     return Ok(files);
                 }
@@ -215,14 +215,14 @@ namespace protogen.site.Controllers
 
         private static string protocVersion = null;
         private static bool protocUsable;
-        public static string GetProtocVersion(IWebHostEnvironment host, out bool canUse)
+        public  string GetProtocVersion(IWebHostEnvironment host, out bool canUse)
         {
             if (protocVersion == null)
             {
                 try
                 {
-                    int code = RunProtoc(host, "--version", Path.GetTempPath(), out var stdout, out var stderr);
-                    if (code == 0 && string.IsNullOrWhiteSpace(stderr) && !string.IsNullOrWhiteSpace(stdout))
+                     RunProtoc(host, "--version", Path.GetTempPath(), out var stdout, out var stderr, out var exitCode);
+                    if (exitCode == 0 && string.IsNullOrWhiteSpace(stderr) && !string.IsNullOrWhiteSpace(stdout))
                     {
                         protocVersion = stdout.Trim();
                         protocUsable = true;
@@ -239,37 +239,6 @@ namespace protogen.site.Controllers
             }
             canUse = protocUsable;
             return protocVersion;
-        }
-        private static int RunProtoc(IWebHostEnvironment host, string arguments, string workingDir, out string stdout, out string stderr)
-        {
-            var exePath = Path.Combine(host.WebRootPath, "protoc\\protoc.exe");
-            if (!System.IO.File.Exists(exePath))
-            {
-                throw new FileNotFoundException("protoc not found");
-            }
-            using (var proc = new Process())
-            {
-                var psi = proc.StartInfo;
-                psi.FileName = exePath;
-                psi.Arguments = arguments;
-                if (!string.IsNullOrEmpty(workingDir)) psi.WorkingDirectory = workingDir;
-                psi.CreateNoWindow = true;
-                psi.RedirectStandardError = psi.RedirectStandardOutput = true;
-                psi.UseShellExecute = false;
-                proc.Start();
-                var stdoutTask = proc.StandardOutput.ReadToEndAsync();
-                var stderrTask = proc.StandardError.ReadToEndAsync();
-                if (!proc.WaitForExit(5000))
-                {
-                    try { proc.Kill(); } catch { }
-                }
-                var exitCode = proc.ExitCode;
-                stderr = stdout = "";
-                if (stdoutTask.Wait(1000)) stdout = stdoutTask.Result;
-                if (stderrTask.Wait(1000)) stderr = stderrTask.Result;
-
-                return exitCode;
-            }
         }
         public class ProtocTooling
         {
@@ -295,7 +264,7 @@ namespace protogen.site.Controllers
             }.AsReadOnly();
             public static bool IsDefined(string tooling) => Options.Any(x => x.Tooling == tooling);
         }
-        private CodeFile[] RunProtoc(IWebHostEnvironment host, string schema, string tooling, out Error[] errors)
+        private CodeFile[] RunProtoc(IWebHostEnvironment host, string schema, string tooling, out string stdout, out string stderr,out int exitCode)
         {
             var tmp = Path.GetTempPath();
             var session = Path.Combine(tmp, Guid.NewGuid().ToString());
@@ -308,9 +277,33 @@ namespace protogen.site.Controllers
 
                 var includeRoot = Path.Combine(host.WebRootPath, "protoc");
                 var args = $"--{tooling}_out=\"{session}\" --proto_path=\"{session}\" --proto_path=\"{includeRoot}\" \"{fullPath}\"";
-                int exitCode = RunProtoc(host, args, session, out var stdout, out var stderr);
-                errors = ProtoBuf.Reflection.Error.Parse(stdout, stderr);
+                var exePath = Path.Combine(host.WebRootPath, "protoc\\protoc.exe");
+                if (!System.IO.File.Exists(exePath))
+                {
+                    throw new FileNotFoundException("protoc not found");
+                }
+                using (var proc = new Process())
+                {
+                    var psi = proc.StartInfo;
+                    psi.FileName = exePath;
+                    psi.Arguments = args;
+                    if (!string.IsNullOrEmpty(session)) psi.WorkingDirectory = session;
+                    psi.CreateNoWindow = true;
+                    psi.RedirectStandardError = psi.RedirectStandardOutput = true;
+                    psi.UseShellExecute = false;
+                    proc.Start();
+                    var stdoutTask = proc.StandardOutput.ReadToEndAsync();
+                    var stderrTask = proc.StandardError.ReadToEndAsync();
+                    if (!proc.WaitForExit(5000))
+                    {
+                        try { proc.Kill(); } catch { }
+                    }
+                     exitCode = proc.ExitCode;
+                    stderr = stdout = "";
+                    if (stdoutTask.Wait(1000)) stdout = stdoutTask.Result;
+                    if (stderrTask.Wait(1000)) stderr = stderrTask.Result;
 
+                }
                 List<CodeFile> files = new List<CodeFile>();
                 if (exitCode == 0)
                 {

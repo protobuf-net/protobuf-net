@@ -41,6 +41,8 @@
                     /**/
                     /**/
                     /**/
+                    /**/
+                    /**/
                 </InputSelect>
             </div>
         }
@@ -77,6 +79,8 @@
                     }
                 /**/
                 /**/
+                /**/
+                /**/
             </InputSelect>
         </div>
     }
@@ -86,12 +90,15 @@
 
         </textarea>
     </div>
-    <button type="submit" class="btn btn-primary" disabled="@loading"> 
-        @if(loading){
-           <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+    <button type="submit" class="btn btn-primary" disabled="@loading">
+        @if (loading)
+        {
+            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
             <text> Generating </text>
-        } else{
-           <text> Generate </text>
+        }
+        else
+        {
+            <text> Generate </text>
         }
     </button>
 
@@ -108,7 +115,7 @@
         }
     </div>
 }
-@if(exceptionMessage != null)
+@if (exceptionMessage != null)
 {
     <pre class="alert alert-danger">@exceptionMessage</pre>
 }
@@ -192,16 +199,23 @@
     }
     private async Task ProtocGenerate()
     {
-        var response = await Http.PostAsync("http://localhost:53831/generate", new FormUrlEncodedContent(
+        var response = await Http.PostAsync("/generate", new FormUrlEncodedContent(
             new Dictionary<string, string>() {
                 {"schema", model.ProtoContent },
                 {"tooling", model.GetProtocTooling() }
-            }
+                    }
           ));
         var content = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
         {
-            codeFiles = JsonSerializer.Deserialize<List<CodeFile>>(content);
+            using (var output = JsonDocument.Parse(content))
+            {
+                codeFiles = output.RootElement.EnumerateArray()
+                    .Select(j => new CodeFile(
+                        j.GetProperty("name").GetString(),
+                        j.GetProperty("text").GetString()))
+                    .ToList();
+            }
         }
         else
         {
@@ -211,7 +225,11 @@
             }
             else
             {
-                this.errors= JsonSerializer.Deserialize<Error[]>(content);
+                using (var output = JsonDocument.Parse(content))
+                    errors = Error.Parse(
+                        output.RootElement.GetProperty("stdout").GetString(),
+                        output.RootElement.GetProperty("stderr").GetString()
+                    );
             }
         }
     }
