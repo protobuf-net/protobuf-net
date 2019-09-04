@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Blazor.Server"  Version="3.0.0-preview8.19405.7" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.1.1" />
   </ItemGroup>
 
@@ -30,6 +31,7 @@
   <ItemGroup>
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj" />
+    <ProjectReference Include="..\protogen.site.blazor.client\protogen.site.blazor.client.csproj" />
   </ItemGroup>
 
   <ItemGroup>
