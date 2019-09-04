@@ -20,11 +20,11 @@ namespace protogen.site.Controllers
 #if RELEASE
     [RequireHttps]
 #endif
-    
+
     public class HomeController : Controller
     {
-        private readonly IHostingEnvironment _host;
-        public HomeController(IHostingEnvironment host)
+        private readonly IWebHostEnvironment _host;
+        public HomeController(IWebHostEnvironment host)
         {
             _host = host;
         }
@@ -154,7 +154,7 @@ namespace protogen.site.Controllers
 
         [Route("/generate")]
         [HttpPost]
-        public IActionResult Generate([Required] string schema,[Required] string tooling )
+        public IActionResult Generate([Required] string schema, [Required] string tooling)
         {
             using (var reader = new StringReader(schema))
             {
@@ -215,7 +215,7 @@ namespace protogen.site.Controllers
 
         private static string protocVersion = null;
         private static bool protocUsable;
-        public static string GetProtocVersion(IHostingEnvironment host, out bool canUse)
+        public static string GetProtocVersion(IWebHostEnvironment host, out bool canUse)
         {
             if (protocVersion == null)
             {
@@ -240,7 +240,7 @@ namespace protogen.site.Controllers
             canUse = protocUsable;
             return protocVersion;
         }
-        private static int RunProtoc(IHostingEnvironment host, string arguments, string workingDir, out string stdout, out string stderr)
+        private static int RunProtoc(IWebHostEnvironment host, string arguments, string workingDir, out string stdout, out string stderr)
         {
             var exePath = Path.Combine(host.WebRootPath, "protoc\\protoc.exe");
             if (!System.IO.File.Exists(exePath))
@@ -295,7 +295,7 @@ namespace protogen.site.Controllers
             }.AsReadOnly();
             public static bool IsDefined(string tooling) => Options.Any(x => x.Tooling == tooling);
         }
-        private CodeFile[] RunProtoc(IHostingEnvironment host, string schema, string tooling, out Error[] errors)
+        private CodeFile[] RunProtoc(IWebHostEnvironment host, string schema, string tooling, out Error[] errors)
         {
             var tmp = Path.GetTempPath();
             var session = Path.Combine(tmp, Guid.NewGuid().ToString());
