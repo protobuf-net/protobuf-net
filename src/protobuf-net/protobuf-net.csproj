@@ -1,15 +1,9 @@
-﻿<!--
-problems building? try using Sdk="Microsoft.NET.Sdk" instead of Sdk="MSBuild.Sdk.Extras",
-and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
--->
-
-<Project Sdk="Microsoft.NET.Sdk">
-<!--<Project Sdk="MSBuild.Sdk.Extras">-->
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyName>protobuf-net</AssemblyName>
     <Title>protobuf-net</Title>
     <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
-    <TargetFrameworks>net40;net461;netstandard1.0;netstandard1.3;netstandard2.0;netcoreapp2.1;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.0;netcoreapp2.1;netstandard2.1</TargetFrameworks>
     <!--net20;net35;uap10.0-->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>EMIT_ASSEMBLY_INFO</DefineConstants>
@@ -30,46 +24,6 @@ and remove the net20, net35, and uap10.0 build targets from <TargetFrameworks>
     <PlatformSpanOverloads>false</PlatformSpanOverloads>
   </PropertyGroup>
   <!-- define configuration per-platform -->
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net20'">
-    <FeatureServiceModel>false</FeatureServiceModel>
-    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
-    <PlatformSpans>false</PlatformSpans>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net35'">
-    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
-    <PlatformSpans>false</PlatformSpans>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
-    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
-    <PlatformSpans>false</PlatformSpans>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'uap10.0'">
-    <FeatureServiceModel>false</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
-    <FeatureCompiler>false</FeatureCompiler>
-    <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
-    <DefineConstants>$(DefineConstants);COREFX;UAP</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.0'">
-    <DefineConstants>$(DefineConstants);PROFILE259;FEAT_SAFE</DefineConstants>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <FeatureServiceModel>false</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
-    <FeatureCompiler>false</FeatureCompiler>
-    <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
-    <PlatformXmlSerializer>false</PlatformXmlSerializer>
-    <PlatformMemoryStreamBuffer>false</PlatformMemoryStreamBuffer>
-    <PlatformSpans>false</PlatformSpans>
-    <PlatformGetUninitialized>false</PlatformGetUninitialized>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.3'">
-    <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
-    <ImportLibs>standard</ImportLibs>
-    <FeatureServiceModel>false</FeatureServiceModel>
-    <FeatureServiceModelConfiguration>false</FeatureServiceModelConfiguration>
-    <PlatformBinaryFormatter>false</PlatformBinaryFormatter>
-    <PlatformGetUninitialized>false</PlatformGetUninitialized>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
     <ImportLibs>standard</ImportLibs>
