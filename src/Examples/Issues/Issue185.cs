@@ -50,7 +50,7 @@ namespace Examples.Issues
         [Fact]
         public void ExecuteWithConstructType()
         {
-            Program.ExpectFailure<ArgumentException>(() =>
+            var argEx = Program.ExpectFailure<ArgumentException>(() =>
             {
                 var m = RuntimeTypeModel.Create();
                 m.AutoCompile = false;
@@ -65,8 +65,9 @@ namespace Examples.Issues
                 m.CompileInPlace();
                 Test(m, c, "CompileInPlace");
                 Test(m.Compile(), c, "Compile");
-            }, @"The supplied default implementation cannot be created: Examples.Issues.O
-Parameter name: constructType");
+            });
+            Assert.StartsWith(@"The supplied default implementation cannot be created: Examples.Issues.O", argEx.Message);
+            Assert.Equal("constructType", argEx.ParamName);
         }
         static void Test(TypeModel model, C c, string caption)
         {

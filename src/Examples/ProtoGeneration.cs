@@ -253,13 +253,14 @@ message KeyValuePair_String_Cat {
         [Fact]
         public void ProtoForNonContractTypeShouldThrowException()
         {
-            Program.ExpectFailure<ArgumentException>(() =>
+            var aex = Program.ExpectFailure<ArgumentException>(() =>
             {
                 var model = TypeModel.Create();
                 model.AutoAddMissingTypes = false;
                 model.GetSchema(typeof(ProtoGenerationTypes.BrokenProto.Type2));
-            }, @"The type specified is not a contract-type
-Parameter name: type");
+            });
+            Assert.StartsWith(@"The type specified is not a contract-type", aex.Message);
+            Assert.Equal("type", aex.ParamName);
         }
 
         [Fact]
