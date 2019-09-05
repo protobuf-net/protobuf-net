@@ -8,11 +8,11 @@
         /// <summary>
         /// Serialize an instance to the supplied writer
         /// </summary>
-        void Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value);
+        void Serialize(ProtoWriter writer, ref ProtoWriter.State state, ref T obj);
 
         /// <summary>
         /// Deserialize an instance from the supplied writer
         /// </summary>
-        T Deserialize(ProtoReader reader, ref ProtoReader.State state, T value);
+        void Deserialize(ProtoReader reader, ref ProtoReader.State state, ref T obj);
     }
 }

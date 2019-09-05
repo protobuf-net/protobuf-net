@@ -15,14 +15,18 @@ namespace ProtoBuf.Serializers
             deserializer = Compiler.CompilerContext.BuildDeserializer(head, model);
         }
 
-        public T Deserialize(ProtoReader reader, ref ProtoReader.State state, T value)
-            => (T)deserializer(reader, ref state, value);
+        public void Deserialize(ProtoReader reader, ref ProtoReader.State state, ref T obj)
+        {
+            object o = obj;
+            o = deserializer(reader, ref state, o);
+            obj = (T)o;
+        }
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
             => deserializer(source, ref state, value);
 
-        public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
-            => serializer(writer, ref state, value);
+        public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, ref T obj)
+            => serializer(writer, ref state, obj);
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
             => serializer(dest, ref state, value);
