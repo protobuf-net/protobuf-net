@@ -768,6 +768,9 @@ namespace ProtoBuf.Reflection
             }
         }
 
+        /// <summary>
+        /// Indicate which types will commonly use arrays
+        /// </summary>
         protected virtual bool UseArray(FieldDescriptorProto field)
         {
             switch (field.type)
@@ -791,6 +794,9 @@ namespace ProtoBuf.Reflection
             }
         }
 
+        /// <summary>
+        /// Obtain a relative name from a type name
+        /// </summary>
         protected string MakeRelativeName(GeneratorContext ctx, string typeName)
         {
             var target = ctx.TryFind<DescriptorProto>(typeName);
@@ -1015,6 +1021,10 @@ namespace ProtoBuf.Reflection
             WellKnownTypeDuration = ".google.protobuf.Duration",
             WellKnownTypeEmpty = ".google.protobuf.Empty";
 
+
+        /// <summary>
+        /// Emit code preceeding a set of service methods
+        /// </summary>
         protected override void WriteServiceHeader(GeneratorContext ctx, ServiceDescriptorProto service, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(service);
@@ -1024,10 +1034,18 @@ namespace ProtoBuf.Reflection
             WriteOptions(ctx, service.Options);
             ctx.WriteLine($"{GetAccess(GetAccess(service))} interface {Escape(name)}").WriteLine("{").Indent();
         }
+
+        /// <summary>
+        /// Emit code following a set of service methods
+        /// </summary>
         protected override void WriteServiceFooter(GeneratorContext ctx, ServiceDescriptorProto service, ref object state)
         {
             ctx.Outdent().WriteLine("}").WriteLine();
         }
+
+        /// <summary>
+        /// Emit code representing a service method
+        /// </summary>
         protected override void WriteServiceMethod(GeneratorContext ctx, MethodDescriptorProto method, ref object state)
         {
             var name = ctx.NameNormalizer.GetName(method);

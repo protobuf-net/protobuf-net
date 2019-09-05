@@ -245,7 +245,7 @@ namespace ProtoBuf.Reflection
         /// </summary>
         protected virtual void WriteServiceMethod(GeneratorContext ctx, MethodDescriptorProto method, ref object state) { }
         /// <summary>
-        /// Emit code following preceeding a set of service methods
+        /// Emit code preceeding a set of service methods
         /// </summary>
         protected virtual void WriteServiceHeader(GeneratorContext ctx, ServiceDescriptorProto service, ref object state) { }
         /// <summary>
