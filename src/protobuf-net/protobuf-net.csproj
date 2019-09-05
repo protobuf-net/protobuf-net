@@ -45,7 +45,7 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net462'">
     <PackageReference Include="System.Memory" Version="4.5.1" />
     <PackageReference Include="System.Buffers" Version="4.5.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+    <Reference Include="System.Configuration" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="System.Memory" Version="4.5.1" />
