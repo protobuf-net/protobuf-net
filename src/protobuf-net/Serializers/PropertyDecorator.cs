@@ -42,17 +42,9 @@ namespace ProtoBuf.Serializers
         }
         private static MethodInfo GetShadowSetter(PropertyInfo property)
         {
-#if COREFX
-            MethodInfo method = Helpers.GetInstanceMethod(property.DeclaringType.GetTypeInfo(), "Set" + property.Name, new Type[] { property.PropertyType });
-#else
-
-#if PROFILE259
-            Type reflectedType = property.DeclaringType;
-#else
             Type reflectedType = property.ReflectedType;
-#endif
             MethodInfo method = Helpers.GetInstanceMethod(reflectedType, "Set" + property.Name, new Type[] { property.PropertyType });
-#endif
+
             if (method == null || !method.IsPublic || method.ReturnType != typeof(void)) return null;
             return method;
         }

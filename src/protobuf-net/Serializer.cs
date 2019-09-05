@@ -116,7 +116,7 @@ namespace ProtoBuf
                 return Deserialize<TTo>(ms);
             }
         }
-#if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.
         /// </summary>
@@ -146,8 +146,7 @@ namespace ProtoBuf
                 info.AddValue(ProtoBinaryField, ms.ToArray());
             }
         }
-#endif
-#if PLAT_XMLSERIALIZER
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied XmlWriter.
         /// </summary>
@@ -201,10 +200,9 @@ namespace ProtoBuf
                 Serializer.Merge(ms, instance);
             }
         }
-#endif
 
         private const string ProtoBinaryField = "proto";
-#if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
+
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
         /// </summary>
@@ -239,7 +237,6 @@ namespace ProtoBuf
                 }
             }
         }
-#endif
 
         /// <summary>
         /// Precompiles the serializer for a given type.
@@ -249,7 +246,6 @@ namespace ProtoBuf
             NonGeneric.PrepareSerializer(typeof(T));
         }
 
-#if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
         /// </summary>
@@ -259,7 +255,7 @@ namespace ProtoBuf
         {
             return RuntimeTypeModel.Default.CreateFormatter(typeof(T));
         }
-#endif
+
         /// <summary>
         /// Reads a sequence of consecutive length-prefixed items from a stream, using
         /// either base-128 or fixed-length prefixes. Base-128 prefixes with a tag

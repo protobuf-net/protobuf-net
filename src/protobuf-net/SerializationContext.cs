@@ -31,9 +31,7 @@ namespace ProtoBuf
         /// A default SerializationContext, with minimal information.
         /// </summary>
         internal static SerializationContext Default => @default;
-#if PLAT_BINARYFORMATTER
 
-#if !(COREFX || PROFILE259)
         private System.Runtime.Serialization.StreamingContextStates state = System.Runtime.Serialization.StreamingContextStates.Persistence;
         /// <summary>
         /// Gets or sets the source or destination of the transmitted data.
@@ -43,18 +41,14 @@ namespace ProtoBuf
             get { return state; }
             set { if (state != value) { ThrowIfFrozen(); state = value; } }
         }
-#endif
+
 		/// <summary>
 		/// Convert a SerializationContext to a StreamingContext
 		/// </summary>
 		public static implicit operator System.Runtime.Serialization.StreamingContext(SerializationContext ctx)
         {
-#if COREFX
-			return new System.Runtime.Serialization.StreamingContext();
-#else
             if (ctx == null) return new System.Runtime.Serialization.StreamingContext(System.Runtime.Serialization.StreamingContextStates.Persistence);
             return new System.Runtime.Serialization.StreamingContext(ctx.state, ctx.context);
-#endif
         }
         /// <summary>
         /// Convert a StreamingContext to a SerializationContext
@@ -63,14 +57,11 @@ namespace ProtoBuf
         {
             SerializationContext result = new SerializationContext();
 
-#if !(COREFX || PROFILE259)
             result.Context = ctx.Context;
             result.State = ctx.State;
-#endif
 
 			return result;
         }
-#endif
     }
 
 }

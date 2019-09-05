@@ -42,9 +42,7 @@ namespace ProtoBuf
                         if (method.Name == nameof(ProtoWriter.Create)) continue; // ignore all of these
                         if (method.Name == nameof(ProtoWriter.WriteBytes)
                             && (args.Length == 5
-#if PLAT_SPANS
                             || (args.Length != 0 && args[0].ParameterType == typeof(System.Buffers.ReadOnlySequence<byte>))
-#endif
                         ))
                         {   // special omissions
                             continue;
@@ -73,7 +71,6 @@ namespace ProtoBuf
         /// </summary>
         public ref struct State
         {
-#if PLAT_SPANS
             internal bool IsActive => !_span.IsEmpty;
 
             private Span<byte> _span;
@@ -208,7 +205,6 @@ namespace ProtoBuf
                 RemainingInCurrent -= count;
                 return count;
             }
-#endif
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿#if PLAT_BINARYFORMATTER
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
@@ -173,4 +172,3 @@ namespace ProtoBuf
         }
     }
 }
-#endif

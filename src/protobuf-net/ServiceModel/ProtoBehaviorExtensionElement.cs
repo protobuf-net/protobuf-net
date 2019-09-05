@@ -1,4 +1,4 @@
-﻿#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER && FEAT_SERVICECONFIGMODEL
+﻿#if FEAT_SERVICECONFIGMODEL
 using System;
 using System.ServiceModel.Configuration;
 

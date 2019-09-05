@@ -305,21 +305,13 @@ namespace ProtoBuf.Serializers
             }
         }
 #endif
-
-#if COREFX
-        private static readonly TypeInfo ienumeratorType = typeof(IEnumerator).GetTypeInfo(), ienumerableType = typeof (IEnumerable).GetTypeInfo();
-#else
         private static readonly System.Type ienumeratorType = typeof(IEnumerator), ienumerableType = typeof(IEnumerable);
-#endif
+
         protected MethodInfo GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current)
             => GetEnumeratorInfo(ExpectedType, Tail.ExpectedType, out moveNext, out current);
         internal static MethodInfo GetEnumeratorInfo(Type expectedType, Type itemType, out MethodInfo moveNext, out MethodInfo current)
         {
-#if COREFX
-            TypeInfo enumeratorType = null, iteratorType;
-#else
             Type enumeratorType = null, iteratorType;
-#endif
 
             // try a custom enumerator
             MethodInfo getEnumerator = Helpers.GetInstanceMethod(expectedType, "GetEnumerator", null);
@@ -329,18 +321,11 @@ namespace ProtoBuf.Serializers
             {
                 getReturnType = getEnumerator.ReturnType;
                 iteratorType = getReturnType
-#if COREFX || COREFX
-                    .GetTypeInfo()
-#endif
                     ;
                 moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext", null);
                 PropertyInfo prop = Helpers.GetProperty(iteratorType, "Current", false);
                 current = prop == null ? null : Helpers.GetGetMethod(prop, false, false);
-#if PROFILE259
-				if (moveNext == null && (ienumeratorType.GetTypeInfo().IsAssignableFrom(iteratorType.GetTypeInfo())))
-#else
                 if (moveNext == null && (ienumeratorType.IsAssignableFrom(iteratorType)))
-#endif
                 {
                     moveNext = Helpers.GetInstanceMethod(ienumeratorType, "MoveNext", null);
                 }
@@ -359,31 +344,14 @@ namespace ProtoBuf.Serializers
             {
                 tmp = tmp.MakeGenericType(itemType);
 
-#if COREFX
-                enumeratorType = tmp.GetTypeInfo();
-#else
                 enumeratorType = tmp;
-#endif
             }
 
-#if PROFILE259
-			if (enumeratorType != null && enumeratorType.GetTypeInfo().IsAssignableFrom(expectedType
-#else
-            if (enumeratorType != null && enumeratorType.IsAssignableFrom(expectedType
-#endif
-#if COREFX || PROFILE259
-                .GetTypeInfo()
-#endif
-                ))
+            if (enumeratorType != null && enumeratorType.IsAssignableFrom(expectedType))
             {
                 getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
                 getReturnType = getEnumerator.ReturnType;
-
-#if COREFX
-                iteratorType = getReturnType.GetTypeInfo();
-#else
                 iteratorType = getReturnType;
-#endif
 
                 moveNext = Helpers.GetInstanceMethod(ienumeratorType, "MoveNext");
                 current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current", false), false, false);
@@ -393,11 +361,7 @@ namespace ProtoBuf.Serializers
             enumeratorType = ienumerableType;
             getEnumerator = Helpers.GetInstanceMethod(enumeratorType, "GetEnumerator");
             getReturnType = getEnumerator.ReturnType;
-            iteratorType = getReturnType
-#if COREFX
-                .GetTypeInfo()
-#endif
-                ;
+            iteratorType = getReturnType;
             moveNext = Helpers.GetInstanceMethod(iteratorType, "MoveNext");
             current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current", false), false, false);
             return getEnumerator;
