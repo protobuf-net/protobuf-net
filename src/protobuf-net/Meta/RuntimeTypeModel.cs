@@ -667,12 +667,7 @@ namespace ProtoBuf.Meta
             if (newType != null) return newType; // return existing
             int opaqueToken = 0;
 
-#if COREFX || PROFILE259
-            TypeInfo typeInfo = type.GetTypeInfo();
-            if (typeInfo.IsInterface && MetaType.ienumerable.IsAssignableFrom(typeInfo)
-#else
             if (type.IsInterface && MetaType.ienumerable.IsAssignableFrom(type)
-#endif
                     && GetListItemType(type) == null)
             {
                 throw new ArgumentException("IEnumerable[<T>] data cannot be used as a meta-type unless an Add method can be resolved");
@@ -1009,13 +1004,13 @@ namespace ProtoBuf.Meta
             /// </summary>
             public string TypeName { get; set; }
 
-#if COREFX
+#if PLAT_NO_EMITDLL
             internal const string NoPersistence = "Assembly persistence not supported on this runtime";
 #endif
             /// <summary>
             /// The path for the new dll
             /// </summary>
-#if COREFX
+#if PLAT_NO_EMITDLL
             [Obsolete(NoPersistence)]
 #endif
             public string OutputPath { get; set; }
@@ -1049,7 +1044,7 @@ namespace ProtoBuf.Meta
             Internal
         }
 
-#if !COREFX
+#if !PLAT_NO_EMITDLL
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
         /// (the serialization dll still requires protobuf-net for support services).
@@ -1104,7 +1099,7 @@ namespace ProtoBuf.Meta
                 moduleName = assemblyName + System.IO.Path.GetExtension(path);
             }
 
-#if COREFX
+#if PLAT_NO_EMITDLL
             AssemblyName an = new AssemblyName { Name = assemblyName };
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
                 AssemblyBuilderAccess.Run);
@@ -1135,14 +1130,14 @@ namespace ProtoBuf.Meta
 
             WriteConstructors(type, ref index, methodPairs, knownTypesCategory, knownTypes, knownTypesLookupType, ctx);
 
-#if COREFX
+#if PLAT_NO_EMITDLL
             Type finalType = type.CreateTypeInfo().AsType();
 #else
             Type finalType = type.CreateType();
 #endif
             if (!string.IsNullOrEmpty(path))
             {
-#if COREFX
+#if PLAT_NO_EMITDLL
                 throw new NotSupportedException(CompilerOptions.NoPersistence);
 #else
                 try
@@ -1489,11 +1484,7 @@ namespace ProtoBuf.Meta
             {
                 SerializerPair pair = methodPairs[index];
                 ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, pair.Type.Type, "SerializeImpl " + pair.Type.Type.Name);
-                MemberInfo returnType = pair.Deserialize.ReturnType
-#if COREFX
-                    .GetTypeInfo()
-#endif
-                    ;
+                MemberInfo returnType = pair.Deserialize.ReturnType;
                 ctx.CheckAccessibility(ref returnType);
                 pair.Type.Serializer.EmitWrite(ctx, ctx.InputValue);
                 ctx.Return();
@@ -1511,11 +1502,7 @@ namespace ProtoBuf.Meta
         private TypeBuilder WriteBasicTypeModel(CompilerOptions options, string typeName, ModuleBuilder module)
         {
             Type baseType = typeof(TypeModel);
-#if COREFX
-            TypeAttributes typeAttributes = (baseType.GetTypeInfo().Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed;
-#else
             TypeAttributes typeAttributes = (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed;
-#endif
             if (options.Accessibility == Accessibility.Internal)
             {
                 typeAttributes &= ~TypeAttributes.Public;
@@ -1675,23 +1662,6 @@ namespace ProtoBuf.Meta
         {
             const string message = "Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection; please also see the LockContended event";
             opaqueToken = 0;
-#if PORTABLE
-            if(!Monitor.TryEnter(types, metadataTimeoutMilliseconds)) throw new TimeoutException(message);
-            opaqueToken = Interlocked.CompareExchange(ref contentionCounter, 0, 0); // just fetch current value (starts at 1)
-#elif CF2 || CF35
-            int remaining = metadataTimeoutMilliseconds;
-            bool lockTaken;
-            do {
-                lockTaken = Monitor.TryEnter(types);
-                if(!lockTaken)
-                {
-                    if(remaining <= 0) throw new TimeoutException(message);
-                    remaining -= 50;
-                    Thread.Sleep(50);
-                }
-            } while(!lockTaken);
-            opaqueToken = Interlocked.CompareExchange(ref contentionCounter, 0, 0); // just fetch current value (starts at 1)
-#else
             if (Monitor.TryEnter(types, metadataTimeoutMilliseconds))
             {
                 opaqueToken = GetContention(); // just fetch current value (starts at 1)
@@ -1702,7 +1672,6 @@ namespace ProtoBuf.Meta
 
                 throw new TimeoutException(message);
             }
-#endif
 
 #if DEBUG // note that here, through all code-paths: we have the lock
             lockCount++;
@@ -1710,30 +1679,14 @@ namespace ProtoBuf.Meta
         }
 
         private int contentionCounter = 1;
-#if PLAT_NO_INTERLOCKED
-        private readonly object contentionLock = new object();
-#endif
+
         private int GetContention()
         {
-#if PLAT_NO_INTERLOCKED
-            lock(contentionLock)
-            {
-                return contentionCounter;
-            }
-#else
             return Interlocked.CompareExchange(ref contentionCounter, 0, 0);
-#endif
         }
         private void AddContention()
         {
-#if PLAT_NO_INTERLOCKED
-            lock(contentionLock)
-            {
-                contentionCounter++;
-            }
-#else
             Interlocked.Increment(ref contentionCounter);
-#endif
         }
 
         internal void ReleaseLock(int opaqueToken)
@@ -1795,31 +1748,17 @@ namespace ProtoBuf.Meta
 
             if (itemType != null && defaultType == null)
             {
-#if COREFX || PROFILE259
-				TypeInfo typeInfo = type.GetTypeInfo();
-                if (typeInfo.IsClass && !typeInfo.IsAbstract && Helpers.GetConstructor(typeInfo, Helpers.EmptyTypes, true) != null)
-#else
                 if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Helpers.EmptyTypes, true) != null)
-#endif
                 {
                     defaultType = type;
                 }
                 if (defaultType == null)
                 {
-#if COREFX || PROFILE259
-					if (typeInfo.IsInterface)
-#else
                     if (type.IsInterface)
-#endif
                     {
                         Type[] genArgs;
-#if COREFX || PROFILE259
-                        if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
-                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = typeInfo.GenericTypeArguments))
-#else
                         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
                             && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
-#endif
                         {
                             defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
                         }

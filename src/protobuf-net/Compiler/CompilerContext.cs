@@ -291,17 +291,9 @@ namespace ProtoBuf.Compiler
                 returnType = typeof(object);
                 paramTypes = new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object) };
             }
-            int uniqueIdentifier;
-#if PLAT_NO_INTERLOCKED
-            uniqueIdentifier = ++next;
-#else
-            uniqueIdentifier = Interlocked.Increment(ref next);
-#endif
-            method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType, paramTypes, associatedType
-#if COREFX
-                .GetTypeInfo()
-#endif
-                .IsInterface ? typeof(object) : associatedType, true);
+            int uniqueIdentifier = Interlocked.Increment(ref next);
+            method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType, paramTypes,
+                associatedType.IsInterface ? typeof(object) : associatedType, true);
             this.il = method.GetILGenerator();
             if (inputType != null) InputValue = new Local(null, inputType);
             TraceCompile(">> " + method.Name);
@@ -730,11 +722,7 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                ConstructorInfo ctor = Helpers.GetConstructor(type
-#if COREFX
-                .GetTypeInfo()
-#endif
-                    , parameterTypes, true);
+                ConstructorInfo ctor = Helpers.GetConstructor(type, parameterTypes, true);
                 if (ctor == null) throw new InvalidOperationException("No suitable constructor found for " + type.FullName);
                 EmitCtor(ctor);
             }
@@ -762,12 +750,7 @@ namespace ProtoBuf.Compiler
             bool isTrusted = false;
             Type attributeType = typeof(System.Runtime.CompilerServices.InternalsVisibleToAttribute);
             if (attributeType == null) return false;
-
-#if COREFX
-            foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType))
-#else
             foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType, false))
-#endif
             {
                 if (attrib.AssemblyName == assemblyName || attrib.AssemblyName.StartsWith(assemblyName + ","))
                 {
@@ -793,9 +776,7 @@ namespace ProtoBuf.Compiler
             {
                 throw new ArgumentNullException(nameof(member));
             }
-#if !COREFX
             Type type;
-#endif
             if (!NonPublic)
             {
                 if (member is FieldInfo && (member.Name.StartsWith("<") & member.Name.EndsWith(">k__BackingField")))
@@ -805,45 +786,6 @@ namespace ProtoBuf.Compiler
                     if (prop != null) member = prop;
                 }
                 bool isPublic;
-#if COREFX
-                if (member is TypeInfo ti)
-                {
-                    do
-                    {
-                        isPublic = ti.IsNestedPublic || ti.IsPublic || ((ti.IsNested || ti.IsNestedAssembly || ti.IsNestedFamORAssem) && InternalsVisible(ti.Assembly));
-                    } while (isPublic && ti.IsNested && (ti = ti.DeclaringType.GetTypeInfo()) != null);
-                }
-                else if (member is FieldInfo field)
-                {
-                    isPublic = field.IsPublic || ((field.IsAssembly || field.IsFamilyOrAssembly) && InternalsVisible(Helpers.GetAssembly(field.DeclaringType)));
-                }
-                else if (member is PropertyInfo)
-                {
-                    isPublic = true; // defer to get/set
-                }
-                else if (member is ConstructorInfo ctor)
-                {
-                    isPublic = ctor.IsPublic || ((ctor.IsAssembly || ctor.IsFamilyOrAssembly) && InternalsVisible(Helpers.GetAssembly(ctor.DeclaringType)));
-                }
-                else if (member is MethodInfo method)
-                {
-                    isPublic = method.IsPublic || ((method.IsAssembly || method.IsFamilyOrAssembly) && InternalsVisible(Helpers.GetAssembly(method.DeclaringType)));
-                    if (!isPublic)
-                    {
-                        // allow calls to TypeModel protected methods, and methods we are in the process of creating
-                        if (
-                                member is MethodBuilder
-                                || member.DeclaringType == typeof(TypeModel))
-                        {
-                            isPublic = true;
-                        }
-                    }
-                }
-                else
-                {
-                    throw new NotSupportedException(member.GetType().Name);
-                }
-#else
                 MemberTypes memberType = member.MemberType;
                 switch (memberType)
                 {
@@ -887,22 +829,8 @@ namespace ProtoBuf.Compiler
                     default:
                         throw new NotSupportedException(memberType.ToString());
                 }
-#endif
                 if (!isPublic)
                 {
-#if COREFX
-                    if (member is TypeInfo tmp)
-                    {
-                        throw new InvalidOperationException("Non-public type cannot be used with full dll compilation: " +
-                                tmp.FullName);
-                    }
-                    else
-                    {
-                        throw new InvalidOperationException("Non-public member cannot be used with full dll compilation: " +
-                                member.DeclaringType.FullName + "." + member.Name);
-                    }
-
-#else
                     switch (memberType)
                     {
                         case MemberTypes.TypeInfo:
@@ -913,8 +841,6 @@ namespace ProtoBuf.Compiler
                             throw new InvalidOperationException("Non-public member cannot be used with full dll compilation: " +
                                 member.DeclaringType.FullName + "." + member.Name);
                     }
-#endif
-
                 }
             }
         }
@@ -1228,7 +1154,7 @@ namespace ProtoBuf.Compiler
 
                 Type type = local.Type;
                 // check if **never** disposable
-                if ((Helpers.IsValueType(type) || Helpers.IsSealed(type))
+                if ((type.IsValueType || type.IsSealed)
                     && !typeof(IDisposable).IsAssignableFrom(type))
                 {
                     return; // nothing to do! easiest "using" block ever

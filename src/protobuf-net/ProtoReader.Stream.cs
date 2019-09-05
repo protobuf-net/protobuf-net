@@ -66,7 +66,6 @@ namespace ProtoBuf
             return reader;
         }
 
-#if PLAT_MEMORY_STREAM_BUFFER
         private static readonly FieldInfo s_origin = typeof(MemoryStream).GetField("_origin", BindingFlags.NonPublic | BindingFlags.Instance),
             s_buffer = typeof(MemoryStream).GetField("_buffer", BindingFlags.NonPublic | BindingFlags.Instance);
         private static bool ReflectionTryGetBuffer(MemoryStream ms, out ArraySegment<byte> buffer)
@@ -85,12 +84,11 @@ namespace ProtoBuf
             buffer = default;
             return false;
         }
-#endif
+
 #pragma warning disable RCS1163
         internal static bool TryConsumeSegmentRespectingPosition(Stream source, out ArraySegment<byte> data, long length)
 #pragma warning restore RCS1163
         {
-#if PLAT_MEMORY_STREAM_BUFFER
             if (source is MemoryStream ms && ms.CanSeek
                 && (ms.TryGetBuffer(out var segment) || ReflectionTryGetBuffer(ms, out segment)))
             {
@@ -107,7 +105,6 @@ namespace ProtoBuf
                 ms.Seek(count, SeekOrigin.Current);
                 return true;
             }
-#endif
             data = default;
             return false;
         }
@@ -247,21 +244,9 @@ namespace ProtoBuf
                 Advance(8);
                 _available -= 8;
 
-#if PLAT_SPANS
                 var result = System.Buffers.Binary.BinaryPrimitives.ReadUInt64LittleEndian(_ioBuffer.AsSpan(_ioIndex, 8));
                 _ioIndex += 8;
                 return result;
-#else
-                var buffer = _ioBuffer;
-                return ((ulong)buffer[_ioIndex++])
-                    | (((ulong)buffer[_ioIndex++]) << 8)
-                    | (((ulong)buffer[_ioIndex++]) << 16)
-                    | (((ulong)buffer[_ioIndex++]) << 24)
-                    | (((ulong)buffer[_ioIndex++]) << 32)
-                    | (((ulong)buffer[_ioIndex++]) << 40)
-                    | (((ulong)buffer[_ioIndex++]) << 48)
-                    | (((ulong)buffer[_ioIndex++]) << 56);
-#endif
             }
             private protected override void ImplReadBytes(ref State state, ArraySegment<byte> target)
             {
@@ -375,17 +360,9 @@ namespace ProtoBuf
                 if (_available < 4) Ensure(ref state, 4, true);
                 Advance(4);
                 _available -= 4;
-#if PLAT_SPANS
                 var result = System.Buffers.Binary.BinaryPrimitives.ReadUInt32LittleEndian(_ioBuffer.AsSpan(_ioIndex, 4));
                 _ioIndex += 4;
                 return result;
-#else
-                var buffer = _ioBuffer;
-                return ((uint)buffer[_ioIndex++])
-                    | (((uint)buffer[_ioIndex++]) << 8)
-                    | (((uint)buffer[_ioIndex++]) << 16)
-                    | (((uint)buffer[_ioIndex++]) << 24);
-#endif
             }
 
             private void Ensure(ref State state, int count, bool strict)
@@ -426,7 +403,6 @@ namespace ProtoBuf
                 }
             }
 
-#if !PLAT_NO_THREADSTATIC
             [ThreadStatic]
             private static StreamProtoReader lastReader;
 
@@ -471,41 +447,6 @@ namespace ProtoBuf
 
                 ProtoReader.Seek(_source, count, _ioBuffer);
             }
-#elif !PLAT_NO_INTERLOCKED
-        private static object lastReader;
-        internal static StreamProtoReader GetRecycled()
-        {
-            return (StreamProtoReader)System.Threading.Interlocked.Exchange(ref lastReader, null);
-        }
-        internal override void Recycle(StreamProtoReader reader)
-        {
-            Dispose();
-            System.Threading.Interlocked.Exchange(ref lastReader, this);
-        }
-#else
-        private static readonly object recycleLock = new object();
-        internal static StreamProtoReader lastReader;
-        private static StreamProtoReader GetRecycled()
-        {
-            lock(recycleLock)
-            {
-                ProtoReader tmp = lastReader;
-                lastReader = null;
-                return tmp;
-            }            
-        }
-        internal static void Recycle(StreamProtoReader reader)
-        {
-            if(reader != null)
-            {
-                reader.Dispose();
-                lock(recycleLock)
-                {
-                    lastReader = reader;
-                }
-            }
-        }
-#endif
         }
     }
 }

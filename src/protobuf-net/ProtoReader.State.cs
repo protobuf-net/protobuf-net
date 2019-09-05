@@ -18,7 +18,6 @@ namespace ProtoBuf
         {
             internal static readonly Type ByRefStateType = typeof(State).MakeByRefType();
             internal static readonly Type[] StateTypeArray = new[] { ByRefStateType }, ReaderStateTypeArray = new [] { typeof(ProtoReader), ByRefStateType };
-#if PLAT_SPANS
             internal SolidState Solidify() => new SolidState(
                 _memory.Slice(OffsetInCurrent, RemainingInCurrent));
 
@@ -160,23 +159,13 @@ namespace ProtoBuf
                 if ((chunk & ~(ulong)0x01) != 0) ThrowOverflow();
                 return 10;
             }
-
-#else
-            internal SolidState Solidify() => default;
-            internal int ReadVarintUInt32(out uint tag) => throw new NotSupportedException();
-            internal int RemainingInCurrent => 0;
-#endif
         }
 
         internal readonly struct SolidState
         {
-#if PLAT_SPANS
             private readonly ReadOnlyMemory<byte> _memory;
             internal SolidState(ReadOnlyMemory<byte> memory) => _memory = memory;
             internal State Liquify() => new State(_memory);
-#else
-            internal State Liquify() => default;
-#endif
         }
     }
 }

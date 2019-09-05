@@ -1,8 +1,6 @@
 ﻿#if !NO_RUNTIME
 using System;
-#if COREFX
 using System.Reflection;
-#endif
 #if FEAT_COMPILER
 using System.Reflection.Emit;
 #endif

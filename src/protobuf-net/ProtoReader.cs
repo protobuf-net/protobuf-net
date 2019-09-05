@@ -354,11 +354,8 @@ namespace ProtoBuf
             return value;
         }
 
-#if COREFX
-        private protected static readonly Encoding UTF8 = Encoding.UTF8;
-#else
         private protected static readonly UTF8Encoding UTF8 = new UTF8Encoding();
-#endif
+
         /// <summary>
         /// Reads a string from the stream (using UTF8); supported wire-types: String
         /// </summary>
@@ -608,9 +605,8 @@ namespace ProtoBuf
             ImplSkipBytes(ref state, read);
             return SetTag(tag);
         }
-#if !(NET20 || NET35 || NET40)
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-#endif
         private int SetTag(uint tag)
         {
             if((_fieldNumber = (int)(tag >> 3)) < 1) ThrowInvalidField(_fieldNumber);
@@ -1175,13 +1171,11 @@ namespace ProtoBuf
         internal static Exception AddErrorData(Exception exception, ProtoReader source, ref State state)
 #pragma warning restore RCS1163
         {
-#if !CF && !PORTABLE
             if (exception != null && source != null && !exception.Data.Contains("protoSource"))
             {
                 exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
                     source._fieldNumber, source.WireType, source._longPosition, source._depth));
             }
-#endif
             return exception;
         }
 

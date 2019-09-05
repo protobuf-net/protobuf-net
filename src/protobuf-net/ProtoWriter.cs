@@ -282,7 +282,6 @@ namespace ProtoBuf
             }
         }
 
-#if PLAT_SPANS
         /// <summary>
         /// Writes a byte-array to the stream; supported wire-types: String
         /// </summary>
@@ -311,7 +310,6 @@ namespace ProtoBuf
                     break;
             }
         }
-#endif
 
         private int depth = 0;
         private const int RecursionCheckDepth = 25;
@@ -522,11 +520,7 @@ namespace ProtoBuf
         /// </summary>
         public TypeModel Model => model;
 
-#if COREFX
-        private protected static readonly Encoding UTF8 = Encoding.UTF8;
-#else
         private protected static readonly UTF8Encoding UTF8 = new UTF8Encoding();
-#endif
 
         private static uint Zig(int value)
         {
@@ -578,9 +572,7 @@ namespace ProtoBuf
         protected private abstract void ImplWriteFixed32(ref State state, uint value);
         protected private abstract void ImplWriteFixed64(ref State state, ulong value);
         protected private abstract void ImplWriteBytes(ref State state, byte[] data, int offset, int length);
-#if PLAT_SPANS
         protected private abstract void ImplWriteBytes(ref State state, System.Buffers.ReadOnlySequence<byte> data);
-#endif
         protected private abstract void ImplCopyRawFromStream(ref State state, Stream source);
         private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style);
         protected private abstract void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style);

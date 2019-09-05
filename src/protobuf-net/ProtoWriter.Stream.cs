@@ -117,7 +117,6 @@ namespace ProtoBuf
                 }
             }
 
-#if PLAT_SPANS
             private protected override void ImplWriteBytes(ref State state, System.Buffers.ReadOnlySequence<byte> data)
             {
                 int length = checked((int)data.Length);
@@ -163,7 +162,6 @@ namespace ProtoBuf
                     // zero since we're writing directly to the stream
                 }
             }
-#endif
 
             private protected override void ImplWriteString(ref State state, string value, int expectedBytes)
             {
@@ -175,14 +173,7 @@ namespace ProtoBuf
 
             private static void WriteUInt32ToBuffer(uint value, byte[] buffer, int index)
             {
-#if PLAT_SPANS
                 System.Buffers.Binary.BinaryPrimitives.WriteUInt32LittleEndian(buffer.AsSpan(index, 4), value);
-#else
-                buffer[index] = (byte)value;
-                buffer[index + 1] = (byte)(value >> 8);
-                buffer[index + 2] = (byte)(value >> 16);
-                buffer[index + 3] = (byte)(value >> 24);
-#endif
             }
 
             private protected override void ImplWriteFixed32(ref State state, uint value)
@@ -197,18 +188,7 @@ namespace ProtoBuf
                 var buffer = ioBuffer;
                 var index = ioIndex;
 
-#if PLAT_SPANS
                 System.Buffers.Binary.BinaryPrimitives.WriteUInt64LittleEndian(buffer.AsSpan(index, 8), value);
-#else
-                buffer[index] = (byte)value;
-                buffer[index + 1] = (byte)(value >> 8);
-                buffer[index + 2] = (byte)(value >> 16);
-                buffer[index + 3] = (byte)(value >> 24);
-                buffer[index + 4] = (byte)(value >> 32);
-                buffer[index + 5] = (byte)(value >> 40);
-                buffer[index + 6] = (byte)(value >> 48);
-                buffer[index + 7] = (byte)(value >> 56);
-#endif
                 ioIndex += 8;
             }
 

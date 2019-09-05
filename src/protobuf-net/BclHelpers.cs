@@ -28,41 +28,10 @@ namespace ProtoBuf
         /// </summary>
         /// <param name="type">The type to create</param>
         /// <returns>The new instance</returns>
-        /// <exception cref="NotSupportedException">If the platform does not support constructor-skipping</exception>
         public static object GetUninitializedObject(Type type)
         {
-#if PLAT_GET_UNINITIALIZED
             return System.Runtime.Serialization.FormatterServices.GetUninitializedObject(type);
-#else
-
-#if !PROFILE259 // just don't try
-            object obj = TryGetUninitializedObjectWithFormatterServices(type);
-            if (obj != null) return obj;
-#endif
-            throw new NotSupportedException("Constructor-skipping is not supported on this platform");
-#endif
         }
-
-#if !PLAT_GET_UNINITIALIZED && !PROFILE259 // this is inspired by DCS: https://github.com/dotnet/corefx/blob/c02d33b18398199f6acc17d375dab154e9a1df66/src/System.Private.DataContractSerialization/src/System/Runtime/Serialization/XmlFormatReaderGenerator.cs#L854-L894
-        private static Func<Type, object> getUninitializedObject;
-        static internal object TryGetUninitializedObjectWithFormatterServices(Type type)
-        {
-            if (getUninitializedObject == null)
-            {
-                try {
-                    var formatterServiceType = typeof(string).GetTypeInfo().Assembly.GetType("System.Runtime.Serialization.FormatterServices");
-                    MethodInfo method = formatterServiceType?.GetMethod("GetUninitializedObject", BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Static);
-                    if (method != null)
-                    {
-                        getUninitializedObject = (Func<Type, object>)method.CreateDelegate(typeof(Func<Type, object>));
-                    }
-                }
-                catch  { /* best efforts only */ }
-                if(getUninitializedObject == null) getUninitializedObject = _ => null;
-            }
-            return getUninitializedObject(type);
-        }
-#endif
 
         private const int FieldTimeSpanValue = 0x01, FieldTimeSpanScale = 0x02, FieldTimeSpanKind = 0x03;
 
@@ -208,17 +177,14 @@ namespace ProtoBuf
         /// </summary>
         public static TimeSpan ReadDuration(ProtoReader source, ref ProtoReader.State state)
         {
-#if PLAT_SPANS
             if (source.WireType == WireType.String && state.RemainingInCurrent >= 20)
             {
                 var ts = TryReadDurationFast(source, ref state);
                 if (ts.HasValue) return ts.GetValueOrDefault();
             }
-#endif
             return ReadDurationFallback(source, ref state);
         }
 
-#if PLAT_SPANS
         private static TimeSpan? TryReadDurationFast(ProtoReader source, ref ProtoReader.State state)
         {
             int offset = state.OffsetInCurrent;
@@ -242,7 +208,7 @@ namespace ProtoBuf
             source.Advance(prefixLength + len);
             return FromDurationSeconds((long)seconds, (int)(long)nanos);
         }
-#endif
+
         private static TimeSpan ReadDurationFallback(ProtoReader source, ref ProtoReader.State state)
         {
             long seconds = 0;

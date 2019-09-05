@@ -20,11 +20,7 @@ namespace ProtoBuf.Meta
         public static AttributeMap[] Create(TypeModel model, Type type, bool inherit)
         {
 
-#if COREFX || PROFILE259
-			Attribute[] all = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OfType<Attribute>(type.GetTypeInfo().GetCustomAttributes(inherit)));
-#else
             object[] all = type.GetCustomAttributes(inherit);
-#endif
             AttributeMap[] result = new AttributeMap[all.Length];
             for(int i = 0 ; i < all.Length ; i++)
             {
@@ -35,12 +31,7 @@ namespace ProtoBuf.Meta
 
         public static AttributeMap[] Create(TypeModel model, MemberInfo member, bool inherit)
         {
-
-#if COREFX || PROFILE259
-			Attribute[] all = System.Linq.Enumerable.ToArray(System.Linq.Enumerable.OfType<Attribute>(member.GetCustomAttributes(inherit)));
-#else
             object[] all = member.GetCustomAttributes(inherit);
-#endif
             AttributeMap[] result = new AttributeMap[all.Length];
             for(int i = 0 ; i < all.Length ; i++)
             {
@@ -50,12 +41,8 @@ namespace ProtoBuf.Meta
         }
         public static AttributeMap[] Create(TypeModel model, Assembly assembly)
         {
-#if COREFX || PROFILE259
-			Attribute[] all = System.Linq.Enumerable.ToArray(assembly.GetCustomAttributes());
-#else
-            const bool inherit = false;
-            object[] all = assembly.GetCustomAttributes(inherit);
-#endif
+            object[] all = assembly.GetCustomAttributes(inherit: false);
+
             AttributeMap[] result = new AttributeMap[all.Length];
             for(int i = 0 ; i < all.Length ; i++)
             {

@@ -1,5 +1,4 @@
-﻿#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
-using System.ServiceModel.Description;
+﻿using System.ServiceModel.Description;
 
 namespace ProtoBuf.ServiceModel
 {
@@ -79,4 +78,3 @@ namespace ProtoBuf.ServiceModel
         #endregion
     }
 }
-#endif

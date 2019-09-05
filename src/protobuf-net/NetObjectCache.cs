@@ -81,9 +81,6 @@ namespace ProtoBuf
 
             if (s == null)
             {
-#if CF || PORTABLE // CF has very limited proper object ref-tracking; so instead, we'll search it the hard way
-                index = list.IndexOfReference(value);
-#else
                 if (objectKeys == null)
                 {
                     objectKeys = new Dictionary<object, int>(ReferenceComparer.Default);
@@ -93,7 +90,6 @@ namespace ProtoBuf
                 {
                     if (!objectKeys.TryGetValue(value, out index)) index = -1;
                 }
-#endif
             }
             else
             {
@@ -114,9 +110,7 @@ namespace ProtoBuf
 
                 if (s == null)
                 {
-#if !CF && !PORTABLE // CF can't handle the object keys very well
                     objectKeys.Add(value, index);
-#endif
                 }
                 else
                 {
@@ -157,7 +151,6 @@ namespace ProtoBuf
 
         private Dictionary<string, int> stringKeys;
 
-#if !CF && !PORTABLE // CF lacks the ability to get a robust reference-based hash-code, so we'll do it the harder way instead
         private System.Collections.Generic.Dictionary<object, int> objectKeys;
         private sealed class ReferenceComparer : IEqualityComparer<object>
         {
@@ -174,7 +167,6 @@ namespace ProtoBuf
                 return System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
             }
         }
-#endif
 
         internal void Clear()
         {
@@ -182,9 +174,7 @@ namespace ProtoBuf
             rootObject = null;
             if (underlyingList != null) underlyingList.Clear();
             if (stringKeys != null) stringKeys.Clear();
-#if !CF && !PORTABLE
             if (objectKeys != null) objectKeys.Clear();
-#endif
         }
     }
 }

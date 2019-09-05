@@ -1,5 +1,4 @@
-﻿#if PLAT_SPANS
-using ProtoBuf.Meta;
+﻿using ProtoBuf.Meta;
 using System.Buffers;
 using System.IO;
 
@@ -87,4 +86,3 @@ namespace ProtoBuf
         }
     }
 }
-#endif

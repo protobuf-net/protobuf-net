@@ -36,11 +36,7 @@ namespace ProtoBuf.Serializers
 
         private static MethodInfo GetIndexerSetter()
         {
-#if PROFILE259
-			foreach(var prop in typeof(TDictionary).GetRuntimeProperties())
-#else
             foreach (var prop in typeof(TDictionary).GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-#endif
             {
                 if (prop.Name != "Item") continue;
                 if (prop.PropertyType != typeof(TValue)) continue;
@@ -49,11 +45,7 @@ namespace ProtoBuf.Serializers
                 if (args == null || args.Length != 1) continue;
 
                 if (args[0].ParameterType != typeof(TKey)) continue;
-#if PROFILE259
-				var method = prop.SetMethod;
-#else
                 var method = prop.GetSetMethod(true);
-#endif
                 if (method != null)
                 {
                     return method;

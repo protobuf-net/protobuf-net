@@ -741,41 +741,21 @@ namespace ProtoBuf.Meta
             return value;
         }
 
-#if COREFX
-        private static readonly System.Reflection.TypeInfo ilist = typeof(IList).GetTypeInfo();
-#else
         private static readonly System.Type ilist = typeof(IList);
-#endif
         internal static MethodInfo ResolveListAdd(Type listType, Type itemType, out bool isList)
         {
-#if COREFX || PROFILE259
-            TypeInfo listTypeInfo = listType.GetTypeInfo();
-#else
             Type listTypeInfo = listType;
-#endif
-#if PROFILE259
-			isList = ilist.GetTypeInfo().IsAssignableFrom(listTypeInfo);
-#else
             isList = ilist.IsAssignableFrom(listTypeInfo);
-#endif
             Type[] types = { itemType };
             MethodInfo add = Helpers.GetInstanceMethod(listTypeInfo, nameof(IList.Add), types);
 
-#if !NO_GENERICS
             if (add == null)
             {   // fallback: look for ICollection<T>'s Add(typedObject) method
                 bool forceList = listTypeInfo.IsInterface
                     && typeof(System.Collections.Generic.IEnumerable<>).MakeGenericType(types)
-#if COREFX || PROFILE259
-                    .GetTypeInfo()
-#endif
                     .IsAssignableFrom(listTypeInfo);
 
-#if COREFX || PROFILE259
-                TypeInfo constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types).GetTypeInfo();
-#else
                 Type constuctedListType = typeof(System.Collections.Generic.ICollection<>).MakeGenericType(types);
-#endif
                 if (forceList || constuctedListType.IsAssignableFrom(listTypeInfo))
                 {
                     add = Helpers.GetInstanceMethod(constuctedListType, "Add", types);
@@ -784,15 +764,8 @@ namespace ProtoBuf.Meta
 
             if (add == null)
             {
-#if COREFX || PROFILE259
-                foreach (Type tmpType in listTypeInfo.ImplementedInterfaces)
-#else
                 foreach (Type interfaceType in listTypeInfo.GetInterfaces())
-#endif
                 {
-#if COREFX || PROFILE259
-                    TypeInfo interfaceType = tmpType.GetTypeInfo();
-#endif
                     if (interfaceType.Name == "IProducerConsumerCollection`1" && interfaceType.IsGenericType && interfaceType.GetGenericTypeDefinition().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
                     {
                         add = Helpers.GetInstanceMethod(interfaceType, "TryAdd", types);
@@ -800,7 +773,6 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-#endif
 
             if (add == null)
             {   // fallback: look for a public list.Add(object) method
@@ -817,21 +789,11 @@ namespace ProtoBuf.Meta
         {
             Helpers.DebugAssert(listType != null);
 
-#if PROFILE259
-			TypeInfo listTypeInfo = listType.GetTypeInfo();
-            if (listType == typeof(string) || listType.IsArray
-                || !typeof(IEnumerable).GetTypeInfo().IsAssignableFrom(listTypeInfo)) { return null; }
-#else
             if (listType == typeof(string) || listType.IsArray
                 || !typeof(IEnumerable).IsAssignableFrom(listType)) { return null; }
-#endif
 
             BasicList candidates = new BasicList();
-#if PROFILE259
-			foreach (MethodInfo method in listType.GetRuntimeMethods())
-#else
             foreach (MethodInfo method in listType.GetMethods())
-#endif
             {
                 if (method.IsStatic || method.Name != "Add") continue;
                 ParameterInfo[] parameters = method.GetParameters();
@@ -848,31 +810,12 @@ namespace ProtoBuf.Meta
             if (!isQueueStack)
             {
                 TestEnumerableListPatterns(candidates, listType);
-#if PROFILE259
-				foreach (Type iType in listTypeInfo.ImplementedInterfaces)
-                {
-                    TestEnumerableListPatterns(candidates, iType);
-                }
-#else
                 foreach (Type iType in listType.GetInterfaces())
                 {
                     TestEnumerableListPatterns(candidates, iType);
                 }
-#endif
             }
 
-#if PROFILE259
-			// more convenient GetProperty overload not supported on all platforms
-			foreach (PropertyInfo indexer in listType.GetRuntimeProperties())
-            {
-                if (indexer.Name != "Item" || candidates.Contains(indexer.PropertyType)) continue;
-                ParameterInfo[] args = indexer.GetIndexParameters();
-                if (args.Length != 1 || args[0].ParameterType != typeof(int)) continue;
-                MethodInfo getter = indexer.GetMethod;
-                if (getter == null || getter.IsStatic) continue;
-                candidates.Add(indexer.PropertyType);
-            }
-#else
             // more convenient GetProperty overload not supported on all platforms
             foreach (PropertyInfo indexer in listType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
             {
@@ -881,7 +824,6 @@ namespace ProtoBuf.Meta
                 if (args.Length != 1 || args[0].ParameterType != typeof(int)) continue;
                 candidates.Add(indexer.PropertyType);
             }
-#endif
 
             switch (candidates.Count)
             {
@@ -901,24 +843,6 @@ namespace ProtoBuf.Meta
 
         private static void TestEnumerableListPatterns(BasicList candidates, Type iType)
         {
-#if COREFX || PROFILE259
-            TypeInfo iTypeInfo = iType.GetTypeInfo();
-            if (iTypeInfo.IsGenericType)
-            {
-                Type typeDef = iTypeInfo.GetGenericTypeDefinition();
-                if (
-                   typeDef == typeof(System.Collections.Generic.IEnumerable<>)
-                || typeDef == typeof(System.Collections.Generic.ICollection<>)
-                || typeDef.GetTypeInfo().FullName == "System.Collections.Concurrent.IProducerConsumerCollection`1")
-                {
-                    Type[] iTypeArgs = iTypeInfo.GenericTypeArguments;
-                    if (!candidates.Contains(iTypeArgs[0]))
-                    {
-                        candidates.Add(iTypeArgs[0]);
-                    }
-                }
-            }
-#else
             if (iType.IsGenericType)
             {
                 Type typeDef = iType.GetGenericTypeDefinition();
@@ -933,19 +857,12 @@ namespace ProtoBuf.Meta
                     }
                 }
             }
-#endif
         }
 
         private static bool CheckDictionaryAccessors(Type pair, Type value)
         {
-#if COREFX || PROFILE259
-            TypeInfo finalType = pair.GetTypeInfo();
-            return finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
-                && finalType.GenericTypeArguments[1] == value;
-#else
             return pair.IsGenericType && pair.GetGenericTypeDefinition() == typeof(System.Collections.Generic.KeyValuePair<,>)
                 && pair.GetGenericArguments()[1] == value;
-#endif
         }
 
         private bool TryDeserializeList(ref ProtoReader.State state, ProtoReader reader, DataFormat format, int tag, Type listType, Type itemType, ref object value)
@@ -1017,48 +934,27 @@ namespace ProtoBuf.Meta
                 return Array.CreateInstance(itemType, 0);
             }
 
-#if COREFX || PROFILE259
-            TypeInfo listTypeInfo = listType.GetTypeInfo();
-            if (!listTypeInfo.IsClass || listTypeInfo.IsAbstract
-                || Helpers.GetConstructor(listTypeInfo, Helpers.EmptyTypes, true) == null)
-#else
             if (!listType.IsClass || listType.IsAbstract
                 || Helpers.GetConstructor(listType, Helpers.EmptyTypes, true) == null)
-#endif
             {
                 string fullName;
                 bool handled = false;
-#if COREFX || PROFILE259
-                if (listTypeInfo.IsInterface &&
-#else
                 if (listType.IsInterface &&
-#endif
                     (fullName = listType.FullName) != null && fullName.IndexOf("Dictionary") >= 0) // have to try to be frugal here...
                 {
-#if COREFX || PROFILE259
-                    TypeInfo finalType = listType.GetTypeInfo();
-                    if (finalType.IsGenericType && finalType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
-                    {
-                        Type[] genericTypes = listType.GenericTypeArguments;
-                        concreteListType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genericTypes);
-                        handled = true;
-                    }
-#else
+
                     if (listType.IsGenericType && listType.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>))
                     {
                         Type[] genericTypes = listType.GetGenericArguments();
                         concreteListType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genericTypes);
                         handled = true;
                     }
-#endif
 
-#if !PORTABLE && !COREFX && !PROFILE259
                     if (!handled && listType == typeof(IDictionary))
                     {
                         concreteListType = typeof(Hashtable);
                         handled = true;
                     }
-#endif
                 }
 
                 if (!handled)
@@ -1067,13 +963,11 @@ namespace ProtoBuf.Meta
                     handled = true;
                 }
 
-#if !PORTABLE && !COREFX && !PROFILE259
                 if (!handled)
                 {
                     concreteListType = typeof(ArrayList);
                     handled = true;
                 }
-#endif
             }
             return Activator.CreateInstance(concreteListType);
         }
@@ -1219,11 +1113,7 @@ namespace ProtoBuf.Meta
         /// assembly specified by type
         /// </summary>
         public static TypeModel CreateForAssembly<T>()
-#if COREFX
-            => CreateForAssembly(typeof(T).GetTypeInfo().Assembly);
-#else
             => CreateForAssembly(typeof(T).Assembly);
-#endif
         /// <summary>
         /// Create a model that serializes all types from an
         /// assembly specified by type
@@ -1231,50 +1121,30 @@ namespace ProtoBuf.Meta
         public static TypeModel CreateForAssembly(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-#if COREFX
-            return CreateForAssembly(type.GetTypeInfo().Assembly);
-#else
             return CreateForAssembly(type.Assembly);
-#endif
         }
 
         /// <summary>
         /// Create a model that serializes all types from an assembly
         /// </summary>
         public static TypeModel CreateForAssembly(Assembly assembly)
-#if NETSTANDARD1_3
-            => CreateForAssemblyImpl(assembly);
-#else
             => (TypeModel)s_assemblyModels[assembly ?? throw new ArgumentNullException(nameof(assembly))]
             ?? CreateForAssemblyImpl(assembly);
-#endif
 
-#if NETSTANDARD1_3
-        private readonly static Dictionary<Assembly, TypeModel> s_assemblyModels = new Dictionary<Assembly, TypeModel>();
-#else
         private readonly static Hashtable s_assemblyModels = new Hashtable();
-#endif
 
         private static TypeModel CreateForAssemblyImpl(Assembly assembly)
         {
             if (assembly == null) throw new ArgumentNullException(nameof(assembly));
             lock (assembly)
             {
-#if NETSTANDARD1_3
-                if (s_assemblyModels.TryGetValue(assembly, out var found)) return found;
-#else
                 var found = (TypeModel)s_assemblyModels[assembly];
                 if (found != null) return found;
-#endif
 
                 RuntimeTypeModel model = null;
                 foreach (var type in assembly.GetTypes())
                 {
-#if NETSTANDARD1_3
-                    if (type.GetTypeInfo().IsDefined(typeof(ProtoContractAttribute), true))
-#else
                     if (type.IsDefined(typeof(ProtoContractAttribute), true))
-#endif
                     {
                         (model ?? (model = Create())).Add(type, true);
                     }
@@ -1295,31 +1165,20 @@ namespace ProtoBuf.Meta
         protected internal static Type ResolveProxies(Type type)
         {
             if (type == null) return null;
-#if !NO_GENERICS
             if (type.IsGenericParameter) return null;
             // Nullable<T>
             Type tmp = Helpers.GetUnderlyingType(type);
             if (tmp != null) return tmp;
-#endif
 
-#if !CF
             // EF POCO
             string fullName = type.FullName;
             if (fullName != null && fullName.StartsWith("System.Data.Entity.DynamicProxies."))
             {
-#if COREFX || PROFILE259
-                return type.GetTypeInfo().BaseType;
-#else
                 return type.BaseType;
-#endif
             }
 
             // NHibernate
-#if PROFILE259
-			IEnumerable<Type> interfaces = type.GetTypeInfo().ImplementedInterfaces;
-#else
             Type[] interfaces = type.GetInterfaces();
-#endif
             foreach (Type t in interfaces)
             {
                 switch (t.FullName)
@@ -1327,14 +1186,9 @@ namespace ProtoBuf.Meta
                     case "NHibernate.Proxy.INHibernateProxy":
                     case "NHibernate.Proxy.DynamicProxy.IProxy":
                     case "NHibernate.Intercept.IFieldInterceptorAccessor":
-#if COREFX || PROFILE259
-                        return type.GetTypeInfo().BaseType;
-#else
                         return type.BaseType;
-#endif
                 }
             }
-#endif
             return null;
         }
 
@@ -1576,15 +1430,8 @@ namespace ProtoBuf.Meta
 
             if (type != null)
             {
-                Type baseType = type
-#if COREFX || PROFILE259
-                    .GetTypeInfo()
-#endif
-                    .BaseType;
+                Type baseType = type.BaseType;
                 if (baseType != null && baseType
-#if COREFX || PROFILE259
-                    .GetTypeInfo()
-#endif
                     .IsGenericType && baseType.GetGenericTypeDefinition().Name == "GeneratedMessage`2")
                 {
                     throw new InvalidOperationException(
@@ -1732,7 +1579,6 @@ namespace ProtoBuf.Meta
         public event TypeFormatEventHandler DynamicTypeFormatting;
 #pragma warning restore RCS1159 // Use EventHandler<T>.
 
-#if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
         /// </summary>
@@ -1765,7 +1611,6 @@ namespace ProtoBuf.Meta
 
             public System.Runtime.Serialization.ISurrogateSelector SurrogateSelector { get; set; }
         }
-#endif
 
 #if DEBUG // this is used by some unit tests only, to ensure no buffering when buffering is disabled
         /// <summary>
@@ -1789,9 +1634,9 @@ namespace ProtoBuf.Meta
             {
                 int i = name.IndexOf(',');
                 string fullName = (i > 0 ? name.Substring(0, i) : name).Trim();
-#if !(COREFX || PROFILE259)
+
                 if (assembly == null) assembly = Assembly.GetCallingAssembly();
-#endif
+
                 Type type = assembly?.GetType(fullName);
                 if (type != null) return type;
             }
