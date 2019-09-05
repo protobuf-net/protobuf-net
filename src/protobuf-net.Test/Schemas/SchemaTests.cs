@@ -367,7 +367,11 @@ namespace ProtoBuf.Schemas
 
             try
             {
-                foreach (var file in CSharpCodeGenerator.Default.Generate(set))
+                var options = new Dictionary<string, string>
+                {
+                    { "services", "true" },
+                };
+                foreach (var file in CSharpCodeGenerator.Default.Generate(set, options: options))
                 {
                     var newExtension = "parser" + Path.GetExtension(file.Name);
                     var newFileName = Path.ChangeExtension(file.Name, newExtension);

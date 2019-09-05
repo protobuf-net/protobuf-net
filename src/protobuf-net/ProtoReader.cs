@@ -847,7 +847,7 @@ namespace ProtoBuf
             return ReadUInt32(ref state) != 0;
         }
 
-        private protected static readonly byte[] EmptyBlob = new byte[0];
+        internal static readonly byte[] EmptyBlob = new byte[0];
         /// <summary>
         /// Reads a byte-sequence from the stream, appending them to an existing byte-sequence (which can be null); supported wire-types: String
         /// </summary>

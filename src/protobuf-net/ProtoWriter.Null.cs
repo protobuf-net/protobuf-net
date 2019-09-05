@@ -55,6 +55,8 @@ namespace ProtoBuf
 
             private protected override void ImplWriteBytes(ref State state, byte[] data, int offset, int length) { }
 
+            private protected override void ImplWriteBytes(ref State state, ReadOnlySequence<byte> data) { }
+
             private protected override void ImplWriteFixed32(ref State state, uint value) { }
 
             private protected override void ImplWriteFixed64(ref State state, ulong value) { }

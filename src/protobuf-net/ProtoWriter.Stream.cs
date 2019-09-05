@@ -116,6 +116,55 @@ namespace ProtoBuf
                     // zero since we're writing directly to the stream
                 }
             }
+
+#if PLAT_SPANS
+            private protected override void ImplWriteBytes(ref State state, System.Buffers.ReadOnlySequence<byte> data)
+            {
+                int length = checked((int)data.Length);
+                if (length == 0) return;
+                if (flushLock != 0 || length <= ioBuffer.Length) // write to the buffer
+                {
+                    DemandSpace(length, this, ref state);
+                    System.Buffers.BuffersExtensions.CopyTo(data, new Span<byte>(ioBuffer, ioIndex, length));
+                    ioIndex += length;
+                }
+                else
+                {
+                    // writing data that is bigger than the buffer (and the buffer
+                    // isn't currently locked due to a sub-object needing the size backfilled)
+                    Flush(ref state); // commit any existing data from the buffer
+                                      // now just write directly to the underlying stream
+                    foreach(var chunk in data)
+                    {
+#if PLAT_SPAN_OVERLOADS
+                        dest.Write(chunk.Span);
+#else
+                        if (System.Runtime.InteropServices.MemoryMarshal.TryGetArray(chunk, out var segment))
+                        {
+                            dest.Write(segment.Array, segment.Offset, segment.Count);
+                        }
+                        else
+                        {
+                            var arr = System.Buffers.ArrayPool<byte>.Shared.Rent(chunk.Length);
+                            try
+                            {
+                                chunk.CopyTo(arr);
+                                dest.Write(arr, 0, chunk.Length);
+                            }
+                            finally
+                            {
+                                System.Buffers.ArrayPool<byte>.Shared.Return(arr);
+                            }
+                        }
+#endif
+                    }
+
+                    // since we've flushed offset etc is 0, and remains
+                    // zero since we're writing directly to the stream
+                }
+            }
+#endif
+
             private protected override void ImplWriteString(ref State state, string value, int expectedBytes)
             {
                 DemandSpace(expectedBytes, this, ref state);

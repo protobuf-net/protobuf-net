@@ -282,6 +282,37 @@ namespace ProtoBuf
             }
         }
 
+#if PLAT_SPANS
+        /// <summary>
+        /// Writes a byte-array to the stream; supported wire-types: String
+        /// </summary>
+        public static void WriteBytes(System.Buffers.ReadOnlySequence<byte> data, ProtoWriter writer, ref State state)
+        {
+            int length = checked((int)data.Length);
+            switch (writer.WireType)
+            {
+                case WireType.Fixed32:
+                    if (length != 4) throw new ArgumentException(nameof(length));
+                    writer.ImplWriteBytes(ref state, data);
+                    writer.AdvanceAndReset(4);
+                    return;
+                case WireType.Fixed64:
+                    if (length != 8) throw new ArgumentException(nameof(length));
+                    writer.ImplWriteBytes(ref state, data);
+                    writer.AdvanceAndReset(8);
+                    return;
+                case WireType.String:
+                    writer.AdvanceAndReset(writer.ImplWriteVarint32(ref state, (uint)length) + length);
+                    if (length == 0) return;
+                    writer.ImplWriteBytes(ref state, data);
+                    break;
+                default:
+                    ThrowException(writer);
+                    break;
+            }
+        }
+#endif
+
         private int depth = 0;
         private const int RecursionCheckDepth = 25;
 
@@ -547,6 +578,9 @@ namespace ProtoBuf
         protected private abstract void ImplWriteFixed32(ref State state, uint value);
         protected private abstract void ImplWriteFixed64(ref State state, ulong value);
         protected private abstract void ImplWriteBytes(ref State state, byte[] data, int offset, int length);
+#if PLAT_SPANS
+        protected private abstract void ImplWriteBytes(ref State state, System.Buffers.ReadOnlySequence<byte> data);
+#endif
         protected private abstract void ImplCopyRawFromStream(ref State state, Stream source);
         private protected abstract SubItemToken ImplStartLengthPrefixedSubItem(ref State state, object instance, PrefixStyle style);
         protected private abstract void ImplEndLengthPrefixedSubItem(ref State state, SubItemToken token, PrefixStyle style);
