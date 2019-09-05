@@ -74,7 +74,7 @@
     }
     <div class="form-group">
         <label for="protoContent">.proto file content</label> <button type="button" class="btn btn-sm btn-secondary" @onclick="LoadSample">Load descriptor.proto</button>
-        <textarea class="form-control" @bind="model.ProtoContent" id="protoContent" rows="3" @ref:suppressField @ref="protoEditor">
+        <textarea class="form-control" @bind="model.ProtoContent" id="protoContent" rows="3" @ref="protoEditor">
 
         </textarea>
     </div>
@@ -136,7 +136,7 @@
     }
     //we use this for inserting options at the end of the script without erasing user custom content
     private const string ProtoOptionCommentDelimiter = "//endof options";
-    protected async Task ChangeOptionSpecification(UIChangeEventArgs e)
+    protected async Task ChangeOptionSpecification(ChangeEventArgs e)
     {
         model.SpecifyOptInProto = (bool)e.Value;
         if (model.ProtoContent != null)
@@ -155,33 +155,41 @@
 
     protected async Task Generate()
     {
-        loading = true;
-        codeFiles = null;
-        exceptionMessage = null;
-        errors = null;
-        using (var reader = new StringReader(model.ProtoContent))
+        try{
+            loading = true;
+            codeFiles = null;
+            exceptionMessage = null;
+            errors = null;
+            using (var reader = new StringReader(model.ProtoContent))
+            {
+                var set = new FileDescriptorSet
+                {
+                    ImportValidator = path => true,
+                };
+                set.Add("my.proto", true, reader);
+
+                set.Process();
+                errors = set.GetErrors();
+                if (errors.Any())
+                {
+                    return;
+                }
+
+                if (model.IsProtobugGen())
+                {
+                    ProtobufnetGenerate(set);
+                }
+                else
+                {
+                    await ProtocGenerate();
+                }
+            }
+        }
+        catch(Exception e)
         {
-            var set = new FileDescriptorSet
-            {
-                ImportValidator = path => true,
-            };
-            set.Add("my.proto", true, reader);
-
-            set.Process();
-            errors = set.GetErrors();
-            if (errors.Any())
-            {
-                return;
-            }
-
-            if (model.IsProtobugGen())
-            {
-                ProtobufnetGenerate(set);
-            }
-            else
-            {
-                await ProtocGenerate();
-            }
+            exceptionMessage = "An unhandled exception occured : "+e.Message;
+        }
+        finally{
             loading = false;
         }
     }
