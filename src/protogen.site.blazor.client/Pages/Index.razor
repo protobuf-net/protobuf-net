@@ -9,114 +9,132 @@
 @inject IJSRuntime JsRuntime;
 @page "/"
 
-<h2>Code Generator</h2>
-<p><a href="/about">Wait... what is this?</a></p>
-<p>If this tool has been useful: <a href="https://www.buymeacoffee.com/marcgravell" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: auto !important;width: auto !important;" /></a></p>
 <EditForm Model="@model" OnValidSubmit="@Generate">
     <DataAnnotationsValidator />
-    <div class="row">
-        <div class="form-group  col-6">
-            <label for="language">Language</label>
-            <InputSelect id="language" @bind-Value="model.Language" class="form-control" size="4">
-                <option>(select)</option>
-                @foreach (var language in Enum.GetValues(typeof(GeneratorViewModel.GeneratorLanguageEnum)))
-                {
-                    <option value="@language">@language</option>
-                }
-            </InputSelect>
+    <div class="row  pt-2">
+        <div class="col-5">
+
+            <h2>Code Generator</h2>
+
+            <div class="form-group" style="height:calc(100% - 230px)">
+                <textarea style="height: calc(100% - 30px)" placeholder=".proto file content" class="form-control" @bind="model.ProtoContent" id="protoContent" @ref="protoEditor"></textarea>
+                <button type="button" class="btn btn-sm btn-secondary" @onclick="LoadSample">Load descriptor.proto</button>
+            </div>
+
+
+
         </div>
-        @if (!model.SpecifyOptInProto && model.HasLanguageVersion())
-        {
-            <div class="form-group  col-6">
-                <label for="language">@model.Language Version</label>
-                <InputSelect id="language" @bind-Value="model.LanguageVersion" class="form-control mt-2" size="4">
-                    <option>(select)</option>
-                    @foreach (var version in model.GetLanguageVersions())
-                        {
-                        <option value="@version">@version</option>
-                        }
+        <div class="col-2">
+            <button type="submit" class="btn btn-primary btn-block" disabled="@loading">
+                @if (loading)
+                {
+                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                    <text> Generating </text>
+                }
+                else
+                {
+                    <text> Generate </text>
+                }
+            </button>
+
+            <ValidationSummary />
+            <div class="form-group mb-1 ">
+                <label for="language">Language</label>
+                <InputSelect id="language" @bind-Value="model.Language" class="form-control">
+
+                    @foreach (var language in Enum.GetValues(typeof(GeneratorViewModel.GeneratorLanguageEnum)))
+                    {
+                        <option value="@language">@language</option>
+                    }
                 </InputSelect>
             </div>
-        }
-    </div>
-    @if (model.IsProtobugGen())
-    {
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" @onchange="ChangeOptionSpecification" id="opt_in_proto" />
-            <label class="form-check-label" for="opt_in_proto">
-                Specify options in .proto
-            </label>
-        </div>
-        @if (!model.SpecifyOptInProto)
-        {
-            <div class="form-check">
-                <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
-                <label class="form-check-label" for="oneof">
-                    <code>oneof</code> should use enum
-                </label>
-            </div>
-        }
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" @bind="model.RepeatedEmitSetAccessors" id="repeated_accessors" />
-            <label class="form-check-label" for="repeated_accessors">
-                <code>repeated</code> should emit <code>set</code> accessors
-            </label>
-        </div>
-        <div class="form-group">
-            <label for="namingConvention">Naming convention</label>
-            <InputSelect id="namingConvention" @bind-Value="model.NamingConvention" class="form-control col-4" size="4">
-                @foreach (var namingConvention in Enum.GetValues(typeof(GeneratorViewModel.NamingConventionEnum)))
+
+            @if (model.IsProtobugGen())
+            {
+                <div class="form-group mb-1  form-check">
+                    <input class="form-check-input" type="checkbox" @onchange="ChangeOptionSpecification" id="opt_in_proto" />
+                    <label class="form-check-label" for="opt_in_proto">
+                        Specify options in .proto
+                    </label>
+                </div>
+
+                @if (!model.SpecifyOptInProto)
+                {
+                    @if (model.HasLanguageVersion())
                     {
-                    <option value="@namingConvention">@namingConvention</option>
+                        <div class="form-group mb-1  ml-2">
+                            <label for="version">@model.Language Version</label>
+                            <InputSelect id="version" @bind-Value="model.LanguageVersion" class="form-control">
+
+                                @foreach (var version in model.GetLanguageVersions())
+                                            {
+                                    <option value="@version">@version</option>
+                                            }
+                                /**/
+                                /**/
+                                /**/
+                                /**/
+                                /**/
+                                /**/
+                                /**/
+                                /**/
+                                /**/
+                            </InputSelect>
+                        </div>
                     }
-            </InputSelect>
+                    <div class="form-group form-check ml-2 mb-1 ">
+                        <input class="form-check-input" type="checkbox" @bind="model.OneOfEnum" id="oneof" />
+                        <label class="form-check-label" for="oneof">
+                            <code>oneof</code> should use enum
+                        </label>
+                    </div>
+                }
+                <div class="form-group form-check mb-1 ">
+                    <input class="form-check-input" type="checkbox" @bind="model.RepeatedEmitSetAccessors" id="repeated_accessors" />
+                    <label class="form-check-label" for="repeated_accessors">
+                        <code>repeated</code> should emit <code>set</code> accessors
+                    </label>
+                </div>
+                <div class="form-group mb-1 ">
+                    <label for="namingConvention">Naming convention</label>
+                    <InputSelect id="namingConvention" @bind-Value="model.NamingConvention" class="form-control">
+                        @foreach (var namingConvention in Enum.GetValues(typeof(GeneratorViewModel.NamingConventionEnum)))
+                            {
+                            <option value="@namingConvention">@namingConvention</option>
+                            }
+                    </InputSelect>
+                </div>
+            }
         </div>
-    }
-    <div class="form-group">
-        <label for="protoContent">.proto file content</label> <button type="button" class="btn btn-sm btn-secondary" @onclick="LoadSample">Load descriptor.proto</button>
-        <textarea class="form-control" @bind="model.ProtoContent" id="protoContent" rows="3" @ref="protoEditor">
+        <div class="col-5">
+            @if (errors != null)
+            {
 
-        </textarea>
+                @foreach (var error in errors)
+                {
+                    <div class="alert @(error.IsWarning ? "alert-warning":"alert-danger")">
+                        @error.ToString()
+                    </div>
+                }
+            }
+            @if (exceptionMessage != null)
+            {
+                <pre class="alert alert-danger">@exceptionMessage</pre>
+            }
+            @if (codeFiles != null)
+            {
+                <h2>Generated Code</h2>
+                @foreach (var file in codeFiles)
+                {
+                    <div class="form-group" style="height:calc(100% - 230px)">
+                        <textarea style="height: 100%" class="form-control">@file.Text</textarea>
+                    </div>
+                }
+            }
+        </div>
     </div>
-    <button type="submit" class="btn btn-primary" disabled="@loading">
-        @if (loading)
-        {
-            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-            <text> Generating </text>
-        }
-        else
-        {
-            <text> Generate </text>
-        }
-    </button>
 
-    <ValidationSummary />
 </EditForm>
-@if (errors != null)
-{
-    <div class="mt-5">
-        @foreach (var error in errors)
-        {
-            <div class="alert @(error.IsWarning ? "alert-warning":"alert-danger")">
-                @error.ToString()
-            </div>
-        }
-    </div>
-}
-@if (exceptionMessage != null)
-{
-    <pre class="alert alert-danger">@exceptionMessage</pre>
-}
-@if (codeFiles != null)
-{
-    @foreach (var file in codeFiles)
-    {
-        <h2 class="mt-5">Generated Code</h2>
-        <div class="form-group">
-            <textarea rows="100" class="form-control">@file.Text</textarea>
-        </div>
-    }
-}
 @code{
     bool loading = false;
 
@@ -155,7 +173,8 @@
 
     protected async Task Generate()
     {
-        try{
+        try
+        {
             loading = true;
             codeFiles = null;
             exceptionMessage = null;
@@ -185,11 +204,12 @@
                 }
             }
         }
-        catch(Exception e)
+        catch (Exception e)
         {
-            exceptionMessage = "An unhandled exception occured : "+e.Message;
+            exceptionMessage = "An unhandled exception occured : " + e.Message;
         }
-        finally{
+        finally
+        {
             loading = false;
         }
     }
@@ -199,7 +219,7 @@
             new Dictionary<string, string>() {
                 {"schema", model.ProtoContent },
                 {"tooling", model.GetProtocTooling() }
-                    }
+                                                    }
           ));
         var content = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
