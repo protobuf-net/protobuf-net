@@ -1,45 +1,69 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace ProtoBuf.Models {
-    public class DecodeViewModel {
-        [Required]
-        public string Content { get; set; }
+namespace ProtoBuf.Models
+{
+    public class DecodeViewModel
+    {
+        private readonly IJSRuntime jSRuntime;
+
+        public DecodeViewModel(IJSRuntime jSRuntime)
+        {
+            this.jSRuntime = jSRuntime;
+        }
+        public enum DecodeContentTypeEnum
+        {
+            Hexa,
+            Base64,
+            File
+        }
+        [RegularExpression(@"\A\b[0-9a-fA-F\s]+\b\Z")]
+        public string Hexadecimal { get; set; }
+        [RegularExpression(@"^[a-zA-Z0-9\+/]*={0,3}$")]
+        public string Base64 { get; set; }
+        public ElementReference FileInput { get; set; }
         public bool Recursive { get; set; }
+        public DecodeContentTypeEnum DecodeContentType { get; set; } = DecodeContentTypeEnum.Hexa;
 
-        //taken from https://stackoverflow.com/questions/6309379/how-to-check-for-a-valid-base64-encoded-string
-        public bool IsBase64String () {
-            if (string.IsNullOrEmpty (model.Content)) {
-                return false;
+        private async Task<byte[]> GetData()
+        {
+
+            switch (DecodeContentType)
+            {
+                case DecodeContentTypeEnum.Hexa:
+                    Hexadecimal = Hexadecimal.Replace(" ", "").Replace("-", "").Trim();
+
+                    int len = Hexadecimal.Length / 2;
+                    Console.WriteLine("data.length = " + len);
+
+                    var tmp = new byte[len];
+                    for (int i = 0; i < len; i++)
+                    {
+                        tmp[i] = Convert.ToByte(Hexadecimal.Substring(i * 2, 2), 16);
+                    }
+                    return tmp;
+                case DecodeContentTypeEnum.Base64:
+                    return Convert.FromBase64String(Base64);
+                case DecodeContentTypeEnum.File:
+                    var content = await jSRuntime.InvokeAsync<string>("getFileContent", FileInput);
+                    return Convert.FromBase64String(content);
+
+                default:
+                    throw new ArgumentOutOfRangeException($"Decode content type not implemented {DecodeContentType}");
+
             }
-            var s = model.Content.Trim ();
-            return (s.Length % 4 == 0) && Regex.IsMatch (s, "^[a-zA-Z0-9\+/]*={0,3}$", RegexOptions.None);
         }
 
-        public bool IsHexa () {
-            if (string.IsNullOrEmpty (model.Content)) {
-                return false;
-            }
-            //https://stackoverflow.com/questions/223832/check-a-string-to-see-if-all-characters-are-hexadecimal-values
-            return Regex.IsMatch (model.Content, "\A\b[0-9a-fA-F]+\b\Z");
-        }
-
-        public byte[] GetData () {
-            byte[] data = null;
-            Content = Content.Replace (" ", "").Replace ("-", "");
-            if (IsBase64String ()) {
-                data = Convert.FromBase64String (Content);
-            } else if (IsHexa ()) {
-                int len = Content.Length / 2;
-                var tmp = new byte[len];
-                for (int i = 0; i < len; i++) {
-                    tmp[i] = Convert.ToByte (Content.Substring (i * 2, 2), 16);
-                }
-                data = tmp;
-            }
+        public async Task<DecodeModel> GetDecodeModel()
+        {
+            var data = await GetData();
+            return (new DecodeModel(data, Recursive));
         }
     }
 }

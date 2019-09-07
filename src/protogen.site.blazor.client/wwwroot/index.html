@@ -12,5 +12,24 @@
     <app>Loading...</app>
 
     <script src="_framework/blazor.webassembly.js"></script>
+    <script type="text/javascript">
+        //this method get the base 64content of a file input selected document, 
+        //this the only solution so far for getting document in bazor
+        window.getFileContent = function(fileUploadRef) {
+            const temporaryFileReader = new FileReader();
+            return new Promise((resolve, reject) => {
+                temporaryFileReader.onerror = () => {
+                    temporaryFileReader.abort();
+                    reject(new DOMException("Problem parsing input file."));
+                };
+                temporaryFileReader.addEventListener("load", function () {
+                    var data =  temporaryFileReader.result.split(',')[1];
+
+                    resolve(data);
+                }, false);
+                temporaryFileReader.readAsDataURL(fileUploadRef.files[0]);
+            });
+        }
+    </script>
 </body>
 </html>
