@@ -14,48 +14,13 @@
     <DataAnnotationsValidator />
     <div class="row pt-2 h-100">
         <div class="col-6  d-flex flex-column">
-            <h2 style="flex: none;" >Code Generator</h2>
-            <div class="form-row mb-2" style="flex: none;">
-                <div class="col">
-                    <InputSelect id="language" @bind-Value="model.Language" class="form-control">
-                        <option value="" disabled selected>Select the target language</option>
+            <h2 style="flex: none;">Code Generator</h2>
 
-                        @foreach (var language in Enum.GetValues(typeof(GeneratorViewModel.GeneratorLanguageEnum)))
-                        {
-                            <option value="@language">@language</option>
-                        }
-                    </InputSelect>
-                </div>
-                <div class="col">
-
-
-                    <button type="submit" class="btn btn-primary btn-block" disabled="@loading">
-                        @if (loading)
-                        {
-                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                            <text> Generating </text>
-                        }
-                        else
-                        {
-                            <text> Generate </text>
-                        }
-                    </button>
-                </div>
-                <div class="col-3">
-                    <button type="button" @onclick="e => showMoreOptions = !showMoreOptions" class="btn btn-secondary btn-block">
-                        @if (showMoreOptions)
-                        {
-                            <text>Back</text>
-                        }
-                        else
-                        {
-                            <text>Options</text>
-                        }
-                    </button>
-                </div>
-            </div>
             @if (showMoreOptions)
             {
+                <button type="button" @onclick="e => showMoreOptions = !showMoreOptions" class="btn btn-secondary btn-block">
+                    Back
+                </button>
                 <div class="alert alert-info   flex-grow-1 " style=" overflow-y: auto;min-height: 0px;">
 
                     <h3>Code generation options</h3>
@@ -81,6 +46,9 @@
                                                         {
                                             <option value="@version">@version</option>
                                                         }
+                                        /**/
+                                        /**/
+                                        /**/
                                         /**/
                                         /**/
                                     </InputSelect>
@@ -110,6 +78,9 @@
                                 /**/
                                 /**/
                                 /**/
+                                /**/
+                                /**/
+                                /**/
                             </InputSelect>
                         </div>
                     }
@@ -120,6 +91,41 @@
             }
             else
             {
+                <div class="form-row mb-2" style="flex: none;">
+                    <div class="col">
+                        <InputSelect id="language" @bind-Value="model.Language" class="form-control">
+                            <option value="" disabled selected>Select the target language</option>
+
+                            @foreach (var language in Enum.GetValues(typeof(GeneratorViewModel.GeneratorLanguageEnum)))
+                                {
+                                <option value="@language">@language</option>
+                                }
+                            /**/
+                            /**/
+                            /**/
+                        </InputSelect>
+                    </div>
+                    <div class="col">
+
+
+                        <button type="submit" class="btn btn-primary btn-block" disabled="@loading">
+                            @if (loading)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <text> Generating </text>
+                            }
+                            else
+                            {
+                                <text> Generate </text>
+                            }
+                        </button>
+                    </div>
+                    <div class="col-3">
+                        <button type="button" @onclick="e => showMoreOptions = !showMoreOptions" class="btn btn-secondary btn-block">
+                            Options
+                        </button>
+                    </div>
+                </div>
                 <div class="form-group  flex-grow-1">
                     <textarea placeholder=".proto file content" class="form-control h-100" @bind="model.ProtoContent" id="protoContent" @ref="protoEditor"></textarea>
                 </div>
@@ -173,6 +179,7 @@
     protected async Task LoadSample()
     {
         model.ProtoContent = await Http.GetStringAsync("https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto");
+        showMoreOptions = false;
     }
     //we use this for inserting options at the end of the script without erasing user custom content
     private const string ProtoOptionCommentDelimiter = "//endof options";
@@ -190,6 +197,8 @@
             //we could have this content hard coded but it was like this before
             var optContent = await Http.GetStringAsync("https://gist.githubusercontent.com/mgravell/c545f903467fd7fa441ad80c5433d331/raw/59e0681069463c016eb06a630991945aa783b90f/configure_protogen.proto");
             model.ProtoContent = $"{optContent}{Environment.NewLine}{ProtoOptionCommentDelimiter}{Environment.NewLine}{model.ProtoContent}";
+            //because the content was changed we go back to the editor
+            showMoreOptions = false;
         }
     }
 
@@ -241,7 +250,7 @@
             new Dictionary<string, string>() {
                 {"schema", model.ProtoContent },
                 {"tooling", model.GetProtocTooling() }
-                                                                                            }
+                                                                                                }
           ));
         var content = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)
