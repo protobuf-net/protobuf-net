@@ -154,7 +154,8 @@
                 @foreach (var file in codeFiles)
                 {
                     <div class="form-group   flex-grow-1">
-                        <textarea class="form-control h-100">@file.Text</textarea>
+                        @file.Name
+                        <textarea class="w-100 h-100">@file.Text</textarea>
                     </div>
                 }
             }
