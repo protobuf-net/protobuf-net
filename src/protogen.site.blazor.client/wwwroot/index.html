@@ -8,8 +8,8 @@
     <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
-    <div class="container">
-        <app>Loading...</app>
+    <div class="container h-100">
+        <app class="h-100  d-flex flex-column">Loading...</app>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
     <script type="text/javascript">
@@ -31,5 +31,8 @@
             });
         }
     </script>
+    <style type="text/css">
+        html, body {height: 100%;}
+    </style>
 </body>
 </html>
