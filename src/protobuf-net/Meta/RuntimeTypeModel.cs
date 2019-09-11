@@ -942,7 +942,7 @@ namespace ProtoBuf.Meta
             return Compile(options);
         }
 
-        private static ILGenerator Override(TypeBuilder type, string name)
+        internal static ILGenerator Override(TypeBuilder type, string name)
         {
             MethodInfo baseMethod;
             try
@@ -962,6 +962,10 @@ namespace ProtoBuf.Meta
             }
             MethodBuilder newMethod = type.DefineMethod(baseMethod.Name,
                 (baseMethod.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final, baseMethod.CallingConvention, baseMethod.ReturnType, paramTypes);
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                newMethod.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
+            }
             ILGenerator il = newMethod.GetILGenerator();
             type.DefineMethodOverride(newMethod, baseMethod);
             return il;
@@ -1119,10 +1123,10 @@ namespace ProtoBuf.Meta
 
             WriteSerializers(options, assemblyName, type, out var index, out var hasInheritance, out var methodPairs, out var ilVersion);
 
-            WriteGetKeyImpl(type, hasInheritance, methodPairs, ilVersion, assemblyName, out var il, out var knownTypesCategory, out var knownTypes, out var knownTypesLookupType);
+            WriteGetKeyImpl(type, hasInheritance, methodPairs, ilVersion, assemblyName, out var knownTypesCategory, out var knownTypes, out var knownTypesLookupType);
 
             // trivial flags
-            il = Override(type, "SerializeDateTimeKind");
+            var il = Override(type, "SerializeDateTimeKind");
             il.Emit(IncludeDateTimeKind ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Ret);
             // end: trivial flags
@@ -1318,10 +1322,10 @@ namespace ProtoBuf.Meta
         }
 
         private const int KnownTypes_Array = 1, KnownTypes_Dictionary = 2, KnownTypes_Hashtable = 3, KnownTypes_ArrayCutoff = 20;
-        private void WriteGetKeyImpl(TypeBuilder type, bool hasInheritance, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName, out ILGenerator il, out int knownTypesCategory, out FieldBuilder knownTypes, out Type knownTypesLookupType)
+        private void WriteGetKeyImpl(TypeBuilder type, bool hasInheritance, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName, out int knownTypesCategory, out FieldBuilder knownTypes, out Type knownTypesLookupType)
         {
-            il = Override(type, "GetKeyImpl");
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(System.Type), "GetKeyImpl");
+            var il = Override(type, "GetKeyImpl");
+            var ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(System.Type), "GetKeyImpl");
 
             if (types.Count <= KnownTypes_ArrayCutoff)
             {
