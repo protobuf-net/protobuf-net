@@ -47,7 +47,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var rt = TypeModel.Create();
+            var rt = RuntimeTypeModel.Create();
             rt.Add(typeof(IEnumerableClass), true);
             rt.Add(typeof(RootClass), true);
             rt.Compile();

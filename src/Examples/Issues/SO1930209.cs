@@ -17,7 +17,7 @@ namespace Examples.Issues
         [Fact]
         public void ExecuteSimpleNestedShouldNotBuffer()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
 #if DEBUG
             model.ForwardsOnly = true;
 #endif
@@ -38,7 +38,7 @@ namespace Examples.Issues
         [Fact]
         public void ExecuteDeeplyNestedShouldNotBuffer()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
 #if DEBUG
             model.ForwardsOnly = true;
 #endif

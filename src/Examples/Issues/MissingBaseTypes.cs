@@ -61,7 +61,7 @@ namespace Examples.Issues
         public void Execute()
         {
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(A), true);
             model.Add(typeof(B), true);
             model.Add(typeof(C), true);

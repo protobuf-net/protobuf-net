@@ -284,12 +284,12 @@ namespace ProtoBuf.Compiler
             if (isWriter)
             {
                 returnType = typeof(void);
-                paramTypes = new Type[] { typeof(ProtoWriter), ProtoWriter.ByRefStateType, typeof(object) };
+                paramTypes = new Type[] { typeof(ProtoWriter), Compiler.WriterUtil.ByRefStateType, typeof(object) };
             }
             else
             {
                 returnType = typeof(object);
-                paramTypes = new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object) };
+                paramTypes = new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, typeof(object) };
             }
             int uniqueIdentifier = Interlocked.Increment(ref next);
             method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType, paramTypes,
@@ -516,14 +516,14 @@ namespace ProtoBuf.Compiler
                     if (method.IsStatic)
                     {
                         if (p.Length == 2 && p[0].ParameterType == typeof(ProtoReader)
-                            && p[1].ParameterType == ProtoReader.State.ByRefStateType)
+                            && p[1].ParameterType == Compiler.ReaderUtil.ByRefStateType)
                         {
                             s_helperMethods.Add(method.Name, method);
                         }
                     }
                     else if (typeof(T) == typeof(ProtoReader))
                     {
-                        if (p.Length == 1 && p[0].ParameterType == ProtoReader.State.ByRefStateType)
+                        if (p.Length == 1 && p[0].ParameterType == Compiler.ReaderUtil.ByRefStateType)
                             s_helperMethods.Add(method.Name, method);
                     }
                 }
@@ -559,11 +559,11 @@ namespace ProtoBuf.Compiler
 
         private MethodInfo GetWriterMethod(string methodName)
         {
-            var method = ProtoWriter.GetStaticMethod(methodName);
+            var method = Compiler.WriterUtil.GetStaticMethod(methodName);
 
             ParameterInfo[] pis = method.GetParameters();
             if (pis.Length == 3 && pis[1].ParameterType == typeof(ProtoWriter)
-                && pis[2].ParameterType == ProtoWriter.ByRefStateType)
+                && pis[2].ParameterType == Compiler.WriterUtil.ByRefStateType)
             {
                 return method;
             }
@@ -574,7 +574,7 @@ namespace ProtoBuf.Compiler
         internal void EmitWrite<T>(string methodName, Compiler.Local valueFrom)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
-            MethodInfo method = ProtoWriter.GetStaticMethod<T>(methodName);
+            MethodInfo method = Compiler.WriterUtil.GetStaticMethod<T>(methodName);
             if (method == null || method.ReturnType != typeof(void)) throw new ArgumentException(nameof(methodName));
             LoadValue(valueFrom);
             LoadWriter(true);

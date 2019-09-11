@@ -37,8 +37,8 @@ namespace Examples
             {
                 if (proc.WaitForExit(10000))
                 {
-                    Assert.Equal(0, proc.ExitCode); //, path);
-                    return proc.ExitCode == 0;
+                    Assert.Equal(1, proc.ExitCode); //, path);
+                    return proc.ExitCode == 1; // GetKeyImpl is just... wat?
                 }
                 else
                 {

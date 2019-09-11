@@ -84,11 +84,11 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue((int)fieldNumber);
             ctx.LoadValue((int)wireType);
             ctx.LoadWriter(true);
-            ctx.EmitCall(ProtoWriter.GetStaticMethod("WriteFieldHeader"));
+            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader"));
             Tail.EmitWrite(ctx, valueFrom);
         }
 
-        protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
+        protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             if (strict || NeedsHint)
             {
@@ -97,7 +97,7 @@ namespace ProtoBuf.Serializers
                 if (strict)
                 {
                     ctx.EmitCall(typeof(ProtoReader).GetMethod("Assert",
-                        new[] { ProtoReader.State.ByRefStateType, typeof(WireType) }));
+                        new[] { Compiler.ReaderUtil.ByRefStateType, typeof(WireType) }));
                 }
                 else
                 {

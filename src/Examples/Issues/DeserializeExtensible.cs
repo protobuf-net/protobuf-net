@@ -15,7 +15,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             ExecuteImpl(model, "Runtime");
             model.CompileInPlace();

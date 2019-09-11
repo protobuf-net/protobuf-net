@@ -74,7 +74,7 @@ namespace Examples.Issues
 
         static RuntimeTypeModel GetModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(PartCollection), true).SetSurrogate(typeof(PartCollectionSurrogate));
             return model;

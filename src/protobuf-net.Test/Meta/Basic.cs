@@ -16,7 +16,7 @@ namespace ProtoBuf.unittest.Meta
             public string Name { get; set; }
             public static RuntimeTypeModel BuildMeta()
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.Add(typeof(Customer), false)
                     .Add(1, "Id")
                     .Add(2, "Name");

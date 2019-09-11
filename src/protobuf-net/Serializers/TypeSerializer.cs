@@ -396,7 +396,7 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.LoadValue(loc);
                     ctx.LoadWriter(true);
-                    ctx.EmitCall(ProtoWriter.GetStaticMethod("AppendExtensionData"));
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("AppendExtensionData"));
                 }
                 // post-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
@@ -587,11 +587,11 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.LoadValue(loc);
                     ctx.EmitCall(typeof(ProtoReader).GetMethod("AppendExtensionData",
-                        new[] { ProtoReader.State.ByRefStateType, typeof(IExtensible) }));
+                        new[] { Compiler.ReaderUtil.ByRefStateType, typeof(IExtensible) }));
                 }
                 else
                 {
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
                 }
                 ctx.MarkLabel(@continue);
                 ctx.EmitBasicRead("ReadFieldHeader", typeof(int));

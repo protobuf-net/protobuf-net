@@ -15,7 +15,7 @@ namespace Examples
         public void TestComplexNestedTupleWithCrazyMovingParts()
         {
             
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             Check(model);
 
@@ -61,7 +61,7 @@ namespace Examples
         public void TestInt_IntArray_Dictionary()
         {
             var data = new Dictionary<int, int[]> { { 1, new[] { 2, 3 } }, { 4, new[] { 5, 6, 7 } } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.CompileInPlace();
             var clone = (Dictionary<int, int[]>)model.DeepClone(data);
             Assert.Equal(2, clone.Count);

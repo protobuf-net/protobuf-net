@@ -12,7 +12,7 @@ namespace Examples.Issues
         public void ExecuteWithOverwrite()
         {
             var a1 = new IntArray { Arr = new int[] { 5, 6, 7 }, List = new List<int> { 8, 9, 10 } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(IntArray), true)[1].OverwriteList = true;
             model.Add(typeof(IntArray), true)[2].OverwriteList = true;
@@ -36,7 +36,7 @@ namespace Examples.Issues
         public void ExecuteWithAppend()
         {
             var a1 = new IntArray { Arr = new int[] { 5, 6, 7 }, List = new List<int> { 8, 9, 10 } };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(IntArray), true)[1].OverwriteList = false;
             model.Add(typeof(IntArray), true)[2].OverwriteList = false;

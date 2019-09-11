@@ -124,7 +124,7 @@ namespace ProtoBuf.unittest.ThirdParty
 
         static RuntimeTypeModel BuildModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(FooWrapper), false).Add("Foo");
             model.Add(typeof(Foo), false).Add("Id", "Name");
             return model;

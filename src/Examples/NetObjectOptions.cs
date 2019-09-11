@@ -35,7 +35,7 @@ namespace Examples
             var inner = new BasicReferenceTestInner();
             outer.Foo = outer.Bar = inner;
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(BasicReferenceTestOuter), true);
             model.Add(typeof(BasicReferenceTestInner), true);
 
@@ -70,7 +70,7 @@ namespace Examples
             inner.Self = inner;
             outer.Foo = inner;
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(BasicReferenceTestOuter), true);
             model.Add(typeof(BasicReferenceTestInner), true);
 
@@ -117,7 +117,7 @@ namespace Examples
         [Fact]
         public void StringNotInterned()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.InternStrings = false;
 
             var obj = new StringInternedType { Foo = GetString(), Bar = GetString() };
@@ -131,7 +131,7 @@ namespace Examples
         [Fact]
         public void StringInterned()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.InternStrings = true;
 
             var obj = new StringInternedType { Foo = GetString(), Bar = GetString() };
@@ -191,7 +191,7 @@ namespace Examples
             var inner = new BasicDynamicTestInner();
             outer.Foo = inner;
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(BasicDynamicTestOuter), true);
             model.Add(typeof(BasicDynamicTestInner), true); // assume we can at least know candidates at runtime, for now
 

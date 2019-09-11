@@ -232,7 +232,7 @@ namespace ProtoBuf.Serializers
                     ctx.LoadValue(ExpectedType);
                     ctx.LoadValue(wireValue);
                     ctx.EmitCall(typeof(ProtoReader).GetMethod("ThrowEnumException",
-                        new[] { ProtoReader.State.ByRefStateType, typeof(Type), typeof(int) }));
+                        new[] { Compiler.ReaderUtil.ByRefStateType, typeof(Type), typeof(int) }));
                     ctx.MarkLabel(@continue);
                     ctx.LoadValue(result);
                 }

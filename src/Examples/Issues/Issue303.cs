@@ -11,7 +11,7 @@ namespace Examples.Issues
     {
         static TypeModel GetModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof (Vegetable), true);
             model.Add(typeof (Animal), true);
             return model;

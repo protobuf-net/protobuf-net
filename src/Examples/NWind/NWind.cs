@@ -82,7 +82,7 @@ namespace DAL
         [Fact]
         public void LoadTestCustomModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Database db = LoadDatabaseFromFile<Database>(model);
             DbMetrics("Database", db);
 
@@ -104,7 +104,7 @@ namespace DAL
             byte[] blob = File.ReadAllBytes(NWindTests.GetNWindBinPath());
             using (MemoryStream ms = new MemoryStream(blob))
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 Type type = typeof(Database);
                 model.Deserialize(ms, null, type);
                 var compiled = model.Compile();

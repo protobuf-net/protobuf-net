@@ -67,7 +67,7 @@ namespace Examples.Issues
         }
         static RuntimeTypeModel GetModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof(Foo), true);
             return model;
