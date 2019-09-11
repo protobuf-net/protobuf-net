@@ -1,9 +1,6 @@
 ﻿#if !NO_RUNTIME
 using System;
 using ProtoBuf.Meta;
-#if FEAT_COMPILER
-
-#endif
 
 using System.Reflection;
 
@@ -21,9 +18,7 @@ namespace ProtoBuf.Serializers
             return false;
         }
         private readonly Type constructType;
-#if COREFX || PROFILE259
-		private readonly TypeInfo typeInfo;
-#endif
+		
         public Type ExpectedType { get; }
         private readonly IProtoSerializer[] serializers;
         private readonly int[] fieldNumbers;
@@ -54,20 +49,14 @@ namespace ProtoBuf.Serializers
             }
             ExpectedType = forType;
             this.factory = factory;
-#if COREFX || PROFILE259
-			this.typeInfo = forType.GetTypeInfo();
-#endif
+
             if (constructType == null)
             {
                 constructType = forType;
             }
             else
             {
-#if COREFX || PROFILE259
-				if (!typeInfo.IsAssignableFrom(constructType.GetTypeInfo()))
-#else
                 if (!forType.IsAssignableFrom(constructType))
-#endif
                 {
                     throw new InvalidOperationException(forType.FullName + " cannot be assigned from " + constructType.FullName);
                 }
@@ -81,13 +70,11 @@ namespace ProtoBuf.Serializers
 
             if(baseCtorCallbacks != null)
             {
-#if !(NETSTANDARD1_0 || NETSTANDARD1_3) // can't check this here, sorry
                 foreach (var cb in baseCtorCallbacks)
                 {
                     if (!cb.ReflectedType.IsAssignableFrom(forType))
                         throw new InvalidOperationException("Trying to assign incompatible callback to " + forType.FullName);
                 }
-#endif
                 if (baseCtorCallbacks.Length == 0)
                     baseCtorCallbacks = null;
             }
@@ -98,47 +85,27 @@ namespace ProtoBuf.Serializers
             {
                 throw new ArgumentException("Cannot create a TypeSerializer for nullable types", nameof(forType));
             }
-
-#if COREFX || PROFILE259
-			if (iextensible.IsAssignableFrom(typeInfo))
-            {
-                if (typeInfo.IsValueType || !isRootType || hasSubTypes)
-#else
             if (iextensible.IsAssignableFrom(forType))
             {
                 if (forType.IsValueType || !isRootType || hasSubTypes)
-#endif
                 {
                     throw new NotSupportedException("IExtensible is not supported in structs or classes with inheritance");
                 }
                 isExtensible = true;
             }
-#if COREFX || PROFILE259
-			TypeInfo constructTypeInfo = constructType.GetTypeInfo();
-            hasConstructor = !constructTypeInfo.IsAbstract && Helpers.GetConstructor(constructTypeInfo, Helpers.EmptyTypes, true) != null;
-#else
             hasConstructor = !constructType.IsAbstract && Helpers.GetConstructor(constructType, Helpers.EmptyTypes, true) != null;
-#endif
             if (constructType != forType && useConstructor && !hasConstructor)
             {
                 throw new ArgumentException("The supplied default implementation cannot be created: " + constructType.FullName, nameof(constructType));
             }
         }
-#if COREFX || PROFILE259
-		private static readonly TypeInfo iextensible = typeof(IExtensible).GetTypeInfo();
-#else
         private static readonly System.Type iextensible = typeof(IExtensible);
-#endif
 
         private bool CanHaveInheritance
         {
             get
             {
-#if COREFX || PROFILE259
-				return (typeInfo.IsClass || typeInfo.IsInterface) && !typeInfo.IsSealed;
-#else
                 return (ExpectedType.IsClass || ExpectedType.IsInterface) && !ExpectedType.IsSealed;
-#endif
             }
         }
 
@@ -225,9 +192,6 @@ namespace ProtoBuf.Serializers
                         {
                             if (serType != ExpectedType && ((IProtoTypeSerializer)ser).CanCreateInstance()
                                 && serType
-#if COREFX || PROFILE259
-								.GetTypeInfo()
-#endif
                                 .IsSubclassOf(value.GetType()))
                             {
                                 value = ProtoReader.Merge(source, value, ((IProtoTypeSerializer)ser).CreateInstance(source));
@@ -292,9 +256,7 @@ namespace ProtoBuf.Serializers
                             Type paramType = parameters[i].ParameterType;
                             if (paramType == typeof(SerializationContext)) { val = context; }
                             else if (paramType == typeof(System.Type)) { val = constructType; }
-#if PLAT_BINARYFORMATTER
                             else if (paramType == typeof(System.Runtime.Serialization.StreamingContext)) { val = (System.Runtime.Serialization.StreamingContext)context; }
-#endif
                             else
                             {
                                 val = null;
@@ -326,18 +288,7 @@ namespace ProtoBuf.Serializers
             else if (useConstructor)
             {
                 if (!hasConstructor) TypeModel.ThrowCannotCreateInstance(constructType);
-#if PROFILE259
-	            ConstructorInfo constructorInfo = System.Linq.Enumerable.First(
-                    constructType.GetTypeInfo().DeclaredConstructors, c => c.GetParameters().Length == 0);
-	            obj = constructorInfo.Invoke(new object[] {});
-
-#else
-                obj = Activator.CreateInstance(constructType
-#if !(CF || PORTABLE  || NETSTANDARD1_3 || NETSTANDARD1_4 || UAP)
-                    , nonPublic: true
-#endif
-                    );
-#endif
+                obj = Activator.CreateInstance(constructType, nonPublic: true);
             }
             else
             {
@@ -445,7 +396,7 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.LoadValue(loc);
                     ctx.LoadWriter(true);
-                    ctx.EmitCall(ProtoWriter.GetStaticMethod("AppendExtensionData"));
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("AppendExtensionData"));
                 }
                 // post-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
@@ -471,7 +422,6 @@ namespace ProtoBuf.Serializers
                         Type tmp = constructType ?? type;
                         ctx.LoadValue(tmp);
                     }
-#if PLAT_BINARYFORMATTER
                     else if (parameterType == typeof(System.Runtime.Serialization.StreamingContext))
                     {
                         ctx.LoadSerializationContext();
@@ -482,7 +432,6 @@ namespace ProtoBuf.Serializers
                             handled = true;
                         }
                     }
-#endif
                     else
                     {
                         handled = false;
@@ -638,11 +587,11 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.LoadValue(loc);
                     ctx.EmitCall(typeof(ProtoReader).GetMethod("AppendExtensionData",
-                        new[] { ProtoReader.State.ByRefStateType, typeof(IExtensible) }));
+                        new[] { Compiler.ReaderUtil.ByRefStateType, typeof(IExtensible) }));
                 }
                 else
                 {
-                    ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
+                    ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
                 }
                 ctx.MarkLabel(@continue);
                 ctx.EmitBasicRead("ReadFieldHeader", typeof(int));
@@ -758,7 +707,7 @@ namespace ProtoBuf.Serializers
                 ctx.EmitCall(typeof(BclHelpers).GetMethod("GetUninitializedObject"));
                 ctx.Cast(ExpectedType);
             }
-            else if (Helpers.IsClass(constructType) && hasConstructor)
+            else if (constructType.IsClass && hasConstructor)
             {   // XmlSerializer style
                 ctx.EmitCtor(constructType);
             }

@@ -15,7 +15,7 @@ namespace Examples.Issues
         [Fact]
         public void ConfigureBasicEnum()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(MyEnum), true);
 
             var obj1 = new Test<MyEnum> { Value = MyEnum.Default };
@@ -37,7 +37,7 @@ namespace Examples.Issues
         [Fact]
         public void ConfigureExplicitEnumValuesAtRuntime()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(MyEnum), false).Add(1, "Default").Add(10, "Foo");
 
             var obj1 = new Test<MyEnum> { Value = MyEnum.Default };

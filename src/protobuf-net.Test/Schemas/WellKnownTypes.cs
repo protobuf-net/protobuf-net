@@ -101,7 +101,7 @@ namespace ProtoBuf.Schemas
         {
             RuntimeTypeModel Create(bool autoCompile)
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = autoCompile;
                 model.Add(typeof(HasDuration), true);
                 model.Add(typeof(HasTimeSpan), true);

@@ -26,7 +26,7 @@ namespace Examples.Issues
         [Fact]
         public void ShouldSerializeValueTypeSubTypes()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
 
             ConfigureTypeModel(model);
             model.Compile("ShouldSerializeValueTypeSubTypes", "ShouldSerializeValueTypeSubTypes.dll");
@@ -39,7 +39,7 @@ namespace Examples.Issues
         [Fact]
         public void ShouldSerializeBoxedValueType()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
 
             ConfigureTypeModel(model);
             model.Add(typeof(Container), true);

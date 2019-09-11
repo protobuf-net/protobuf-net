@@ -420,7 +420,7 @@ enum SomeEnum {
         [Fact]
         public void TestEnumProto_Proto2_RuntimeRenamed()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model[typeof(HazEnum.SomeEnum)][1].Name = "zzz";
             var schema = model.GetSchema(typeof(HazEnum), ProtoSyntax.Proto2);
             Assert.Equal(@"syntax = ""proto2"";
@@ -659,7 +659,7 @@ message KeyValuePair_Double_String {
 
         private static void Compile<T>([CallerMemberName] string name = null, bool deleteOnSuccess = true)
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(T), true);
             var path = Path.ChangeExtension(name, "dll");
             if (File.Exists(path)) File.Delete(path);

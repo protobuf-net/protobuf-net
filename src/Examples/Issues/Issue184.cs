@@ -12,7 +12,7 @@ namespace Examples.Issues
         [Fact]
         public void CanCreateUsableEnumerableMetaType()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(IEnumerable<int>), false);
             model.CompileInPlace();
         }
@@ -21,7 +21,7 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<ArgumentException>(() =>
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.Add(typeof(decimal), false);
                 model.CompileInPlace();
             }, "Data of this type has inbuilt behaviour, and cannot be added to a model in this way: System.Decimal");
@@ -31,7 +31,7 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<ArgumentException>(() =>
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.Add(typeof(IList<int>), false).AddSubType(5, typeof(List<int>));
                 model[typeof(IList<int>)].UseConstructor = false;
                 model.CompileInPlace();
@@ -42,7 +42,7 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<ArgumentException>(() =>
             {
-                var m = TypeModel.Create();
+                var m = RuntimeTypeModel.Create();
                 m.Add(typeof(IMobileObject), false).AddSubType(1, typeof(A)).AddSubType(2, typeof(MobileList<int>));
                 m.CompileInPlace();
             }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
@@ -52,7 +52,7 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<ArgumentException>(() =>
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.Add(typeof(IList<int>), false).SetSurrogate(typeof(InnocentType));
                 model.CompileInPlace();
             }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot use a surrogate");
@@ -62,7 +62,7 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<ArgumentException>(() =>
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.Add(typeof(IMobileObject), false).SetSurrogate(typeof(MobileList<int>));
                 model.CompileInPlace();
             }, "Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a surrogate");

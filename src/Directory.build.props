@@ -8,7 +8,7 @@
     <NoWarn>NU5105;CS1701;BC42016</NoWarn>
     <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)ProtoBuf.snk</AssemblyOriginatorKeyFile>
     <Copyright>See https://github.com/protobuf-net/protobuf-net</Copyright>
-    <PackageLicenseUrl>https://github.com/protobuf-net/protobuf-net/blob/master/Licence.txt</PackageLicenseUrl>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/protobuf-net/protobuf-net</PackageProjectUrl>
     <RepositoryUrl>https://github.com/protobuf-net/protobuf-net</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

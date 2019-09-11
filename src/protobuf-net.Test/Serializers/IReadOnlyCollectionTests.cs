@@ -10,7 +10,7 @@ namespace ProtoBuf.unittest.Serializers
         public void BasicIReadOnlyCollectionTest()
         {
             var orig = new TypeWithIReadOnlyCollection { Items = new List<string>{"abc", "def"} };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var clone = (TypeWithIReadOnlyCollection)model.DeepClone(orig);
             Assert.Equal(orig.Items, clone.Items); //, "Runtime");
 

@@ -13,7 +13,7 @@ namespace Examples.Issues
         public void TestNonNullableDateTimeOffsetViaSurrogate()
         {
             var foo = new Foo {X = DateTimeOffset.Now};
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(DateTimeOffset), false).SetSurrogate(typeof(DateTimeOffsetSurrogate));
             model.AutoCompile = false;
             
@@ -31,7 +31,7 @@ namespace Examples.Issues
         public void TestNullableDateTimeOffsetViaSurrogate()
         {
             var bar = new Bar { X = DateTimeOffset.Now };
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(DateTimeOffset), false).SetSurrogate(typeof(DateTimeOffsetSurrogate));
             model.AutoCompile = false;
 

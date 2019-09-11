@@ -92,7 +92,7 @@ namespace ProtoBuf.unittest.Serializers
         [InlineData("/relative/path/to/file%20with%20spaces%20encoded.txt", UriKind.Relative)]
         public void TestUriDirect(string uriString, UriKind uriKind)
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
 
             var obj = new Uri(uriString, uriKind);
             Uri clone = (Uri)model.DeepClone(obj);
@@ -101,7 +101,7 @@ namespace ProtoBuf.unittest.Serializers
 
         static RuntimeTypeModel CreateModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithUri), false)
                 .Add(1, "Value");
             return model;

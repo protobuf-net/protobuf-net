@@ -16,7 +16,7 @@ namespace ProtoBuf.unittest.Meta
             public char SomeTailData { get; set; }
         }
         static RuntimeTypeModel BuildModel() {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Data), false)
                 .Add(1, "Value")
                 .Add(2, "SomeTailData");

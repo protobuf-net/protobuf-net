@@ -15,7 +15,7 @@ namespace Examples
 //        [Fact]
 //        public void GetProtoTest1()
 //        {
-//            var model = TypeModel.Create();
+//            var model = RuntimeTypeModel.Create();
 //            model.UseImplicitZeroDefaults = false;
 
 //            string proto = model.GetSchema(typeof(Test1));
@@ -32,7 +32,7 @@ namespace Examples
         [Fact]
         public void GetProtoTest2()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.UseImplicitZeroDefaults = false;
 
             string proto = model.GetSchema(typeof(Test2));
@@ -253,13 +253,14 @@ message KeyValuePair_String_Cat {
         [Fact]
         public void ProtoForNonContractTypeShouldThrowException()
         {
-            Program.ExpectFailure<ArgumentException>(() =>
+            var aex = Program.ExpectFailure<ArgumentException>(() =>
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.AutoAddMissingTypes = false;
                 model.GetSchema(typeof(ProtoGenerationTypes.BrokenProto.Type2));
-            }, @"The type specified is not a contract-type
-Parameter name: type");
+            });
+            Assert.StartsWith(@"The type specified is not a contract-type", aex.Message);
+            Assert.Equal("type", aex.ParamName);
         }
 
         [Fact]
@@ -279,7 +280,7 @@ message HasPrimitives {
 
         static TypeModel GetSurrogateModel() {
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoAddMissingTypes = false;
             model.Add(typeof(MySurrogate), true);
             model.Add(typeof(MyNonSurrogate), false).SetSurrogate(typeof(MySurrogate));
@@ -405,19 +406,19 @@ message UsesSurrogates {
         public void InheritanceShouldListBaseType()
         {
             // all done on separate models in case of order dependencies, etc
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Assert.Null(model[typeof(A)].BaseType);
 
-            model = TypeModel.Create();
+            model = RuntimeTypeModel.Create();
             Assert.Null(model[typeof(TestCase)].BaseType);
 
-            model = TypeModel.Create();
+            model = RuntimeTypeModel.Create();
             Assert.Equal(typeof(A), model[typeof(B)].BaseType.Type);
 
-            model = TypeModel.Create();
+            model = RuntimeTypeModel.Create();
             Assert.Equal(typeof(B), model[typeof(C)].BaseType.Type);
 
-            model = TypeModel.Create();
+            model = RuntimeTypeModel.Create();
             string s = model.GetSchema(typeof(TestCase));
             Assert.Equal(@"syntax = ""proto2"";
 package Examples;

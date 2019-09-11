@@ -40,7 +40,7 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadReader(true);
                 ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
-                    ProtoReader.State.ReaderStateTypeArray));
+                    Compiler.ReaderUtil.ReaderStateTypeArray));
                 ctx.StoreValue(token);
 
                 Compiler.CodeLabel next = ctx.DefineLabel(), processField = ctx.DefineLabel(), end = ctx.DefineLabel();
@@ -58,7 +58,7 @@ namespace ProtoBuf.Serializers
 
                 // default: skip
                 ctx.LoadReader(true);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
                 ctx.Branch(next, true);
 
                 // process
@@ -90,7 +90,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(token);
                 ctx.LoadReader(true);
                 ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
-                    new[] { typeof(SubItemToken), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
+                    new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
                 ctx.LoadValue(oldValue); // load the old value
             }
         }
@@ -101,7 +101,7 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadNullRef();
                 ctx.LoadWriter(true);
-                ctx.EmitCall(ProtoWriter.GetStaticMethod("StartSubItem"));
+                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem"));
                 ctx.StoreValue(token);
 
                 if (Helpers.IsValueType(ExpectedType))
@@ -130,7 +130,7 @@ namespace ProtoBuf.Serializers
 
                 ctx.LoadValue(token);
                 ctx.LoadWriter(true);
-                ctx.EmitCall(ProtoWriter.GetStaticMethod("EndSubItem"));
+                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem"));
             }
         }
 #endif

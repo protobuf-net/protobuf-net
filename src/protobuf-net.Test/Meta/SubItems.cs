@@ -157,7 +157,7 @@ namespace ProtoBuf.unittest.Meta
         [Fact]
         public void TestTypeWithNullableProps()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             TypeWithNulls obj = new TypeWithNulls { First = 123, Second = 456.789M };
             
             var clone1 = (TypeWithNulls)model.DeepClone(obj);

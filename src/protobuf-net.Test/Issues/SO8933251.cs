@@ -11,7 +11,7 @@ namespace Examples.Issues
         [Fact]
         public void CheckTypeSpecificCompileInPlaceCascadesToBaseAndChildTypes()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model[typeof(B)].CompileInPlace();
 
@@ -24,7 +24,7 @@ namespace Examples.Issues
         [Fact]
         public void CheckGlobalCompileInPlaceCascadesToBaseAndChildTypes()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.Add(typeof (B), true); // give the model a clue!
             model.CompileInPlace();

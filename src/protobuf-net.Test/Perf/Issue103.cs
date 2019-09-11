@@ -22,7 +22,7 @@ using ProtoBuf.Meta;
     {
         static RuntimeTypeModel CreateModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeA), true);
             model.Add(typeof(TypeB), true);
             model.Add(typeof(ContainedType), true);

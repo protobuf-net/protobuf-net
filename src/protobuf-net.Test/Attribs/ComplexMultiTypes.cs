@@ -70,7 +70,7 @@ namespace ProtoBuf.unittest.Attribs
 
         private static RuntimeTypeModel BuildModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(ComponentContainerDTO), true);
             model.Add(typeof(ComponentDTO), true);
             /*

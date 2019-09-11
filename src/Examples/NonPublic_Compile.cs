@@ -13,7 +13,7 @@ namespace Examples
     {
         private static void Compile<T>()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(T), true);
             string name = typeof(T).Name + "Serializer", path = name + ".dll";
             model.Compile(name, path);
