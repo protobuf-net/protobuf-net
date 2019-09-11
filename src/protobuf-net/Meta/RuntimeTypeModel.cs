@@ -407,6 +407,7 @@ namespace ProtoBuf.Meta
             }
             catch { } // this is all kinds of brittle on things like UWP
 #endif
+            if (isDefault) TypeModel.DefaultModel = this;
         }
 
 #if FEAT_COMPILER
@@ -667,12 +668,7 @@ namespace ProtoBuf.Meta
             if (newType != null) return newType; // return existing
             int opaqueToken = 0;
 
-#if COREFX || PROFILE259
-            TypeInfo typeInfo = type.GetTypeInfo();
-            if (typeInfo.IsInterface && MetaType.ienumerable.IsAssignableFrom(typeInfo)
-#else
             if (type.IsInterface && MetaType.ienumerable.IsAssignableFrom(type)
-#endif
                     && GetListItemType(type) == null)
             {
                 throw new ArgumentException("IEnumerable[<T>] data cannot be used as a meta-type unless an Add method can be resolved");
@@ -946,7 +942,7 @@ namespace ProtoBuf.Meta
             return Compile(options);
         }
 
-        private static ILGenerator Override(TypeBuilder type, string name)
+        internal static ILGenerator Override(TypeBuilder type, string name)
         {
             MethodInfo baseMethod;
             try
@@ -966,6 +962,10 @@ namespace ProtoBuf.Meta
             }
             MethodBuilder newMethod = type.DefineMethod(baseMethod.Name,
                 (baseMethod.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final, baseMethod.CallingConvention, baseMethod.ReturnType, paramTypes);
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                newMethod.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
+            }
             ILGenerator il = newMethod.GetILGenerator();
             type.DefineMethodOverride(newMethod, baseMethod);
             return il;
@@ -1009,13 +1009,13 @@ namespace ProtoBuf.Meta
             /// </summary>
             public string TypeName { get; set; }
 
-#if COREFX
+#if PLAT_NO_EMITDLL
             internal const string NoPersistence = "Assembly persistence not supported on this runtime";
 #endif
             /// <summary>
             /// The path for the new dll
             /// </summary>
-#if COREFX
+#if PLAT_NO_EMITDLL
             [Obsolete(NoPersistence)]
 #endif
             public string OutputPath { get; set; }
@@ -1049,7 +1049,7 @@ namespace ProtoBuf.Meta
             Internal
         }
 
-#if !COREFX
+#if !PLAT_NO_EMITDLL
         /// <summary>
         /// Fully compiles the current model into a static-compiled serialization dll
         /// (the serialization dll still requires protobuf-net for support services).
@@ -1104,7 +1104,7 @@ namespace ProtoBuf.Meta
                 moduleName = assemblyName + System.IO.Path.GetExtension(path);
             }
 
-#if COREFX
+#if PLAT_NO_EMITDLL
             AssemblyName an = new AssemblyName { Name = assemblyName };
             AssemblyBuilder asm = AssemblyBuilder.DefineDynamicAssembly(an,
                 AssemblyBuilderAccess.Run);
@@ -1123,10 +1123,10 @@ namespace ProtoBuf.Meta
 
             WriteSerializers(options, assemblyName, type, out var index, out var hasInheritance, out var methodPairs, out var ilVersion);
 
-            WriteGetKeyImpl(type, hasInheritance, methodPairs, ilVersion, assemblyName, out var il, out var knownTypesCategory, out var knownTypes, out var knownTypesLookupType);
+            WriteGetKeyImpl(type, hasInheritance, methodPairs, ilVersion, assemblyName, out var knownTypesCategory, out var knownTypes, out var knownTypesLookupType);
 
             // trivial flags
-            il = Override(type, "SerializeDateTimeKind");
+            var il = Override(type, "SerializeDateTimeKind");
             il.Emit(IncludeDateTimeKind ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Ret);
             // end: trivial flags
@@ -1135,14 +1135,14 @@ namespace ProtoBuf.Meta
 
             WriteConstructors(type, ref index, methodPairs, knownTypesCategory, knownTypes, knownTypesLookupType, ctx);
 
-#if COREFX
+#if PLAT_NO_EMITDLL
             Type finalType = type.CreateTypeInfo().AsType();
 #else
             Type finalType = type.CreateType();
 #endif
             if (!string.IsNullOrEmpty(path))
             {
-#if COREFX
+#if PLAT_NO_EMITDLL
                 throw new NotSupportedException(CompilerOptions.NoPersistence);
 #else
                 try
@@ -1322,10 +1322,10 @@ namespace ProtoBuf.Meta
         }
 
         private const int KnownTypes_Array = 1, KnownTypes_Dictionary = 2, KnownTypes_Hashtable = 3, KnownTypes_ArrayCutoff = 20;
-        private void WriteGetKeyImpl(TypeBuilder type, bool hasInheritance, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName, out ILGenerator il, out int knownTypesCategory, out FieldBuilder knownTypes, out Type knownTypesLookupType)
+        private void WriteGetKeyImpl(TypeBuilder type, bool hasInheritance, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName, out int knownTypesCategory, out FieldBuilder knownTypes, out Type knownTypesLookupType)
         {
-            il = Override(type, "GetKeyImpl");
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(System.Type), "GetKeyImpl");
+            var il = Override(type, "GetKeyImpl");
+            var ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(System.Type), "GetKeyImpl");
 
             if (types.Count <= KnownTypes_ArrayCutoff)
             {
@@ -1462,11 +1462,11 @@ namespace ProtoBuf.Meta
             {
                 MethodBuilder writeMethod = type.DefineMethod("Write" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
-                    typeof(void), new Type[] { typeof(ProtoWriter), ProtoWriter.ByRefStateType, metaType.Type });
+                    typeof(void), new Type[] { typeof(ProtoWriter), Compiler.WriterUtil.ByRefStateType, metaType.Type });
 
                 MethodBuilder readMethod = type.DefineMethod("Read" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
-                    metaType.Type, new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, metaType.Type });
+                    metaType.Type, new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, metaType.Type });
 
                 SerializerPair pair = new SerializerPair(
                     GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
@@ -1489,11 +1489,7 @@ namespace ProtoBuf.Meta
             {
                 SerializerPair pair = methodPairs[index];
                 ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, pair.Type.Type, "SerializeImpl " + pair.Type.Type.Name);
-                MemberInfo returnType = pair.Deserialize.ReturnType
-#if COREFX
-                    .GetTypeInfo()
-#endif
-                    ;
+                MemberInfo returnType = pair.Deserialize.ReturnType;
                 ctx.CheckAccessibility(ref returnType);
                 pair.Type.Serializer.EmitWrite(ctx, ctx.InputValue);
                 ctx.Return();
@@ -1511,11 +1507,7 @@ namespace ProtoBuf.Meta
         private TypeBuilder WriteBasicTypeModel(CompilerOptions options, string typeName, ModuleBuilder module)
         {
             Type baseType = typeof(TypeModel);
-#if COREFX
-            TypeAttributes typeAttributes = (baseType.GetTypeInfo().Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed;
-#else
             TypeAttributes typeAttributes = (baseType.Attributes & ~TypeAttributes.Abstract) | TypeAttributes.Sealed;
-#endif
             if (options.Accessibility == Accessibility.Internal)
             {
                 typeAttributes &= ~TypeAttributes.Public;
@@ -1602,7 +1594,7 @@ namespace ProtoBuf.Meta
             MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i.ToString(), MethodAttributes.Static, CallingConventions.Standard,
                 typeof(object),
-                new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object) });
+                new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, typeof(object) });
             Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName, typeof(object), "BoxedSerializer " + valueType.Name);
             ctx.LoadValue(ctx.InputValue);
             Compiler.CodeLabel @null = ctx.DefineLabel();
@@ -1675,23 +1667,6 @@ namespace ProtoBuf.Meta
         {
             const string message = "Timeout while inspecting metadata; this may indicate a deadlock. This can often be avoided by preparing necessary serializers during application initialization, rather than allowing multiple threads to perform the initial metadata inspection; please also see the LockContended event";
             opaqueToken = 0;
-#if PORTABLE
-            if(!Monitor.TryEnter(types, metadataTimeoutMilliseconds)) throw new TimeoutException(message);
-            opaqueToken = Interlocked.CompareExchange(ref contentionCounter, 0, 0); // just fetch current value (starts at 1)
-#elif CF2 || CF35
-            int remaining = metadataTimeoutMilliseconds;
-            bool lockTaken;
-            do {
-                lockTaken = Monitor.TryEnter(types);
-                if(!lockTaken)
-                {
-                    if(remaining <= 0) throw new TimeoutException(message);
-                    remaining -= 50;
-                    Thread.Sleep(50);
-                }
-            } while(!lockTaken);
-            opaqueToken = Interlocked.CompareExchange(ref contentionCounter, 0, 0); // just fetch current value (starts at 1)
-#else
             if (Monitor.TryEnter(types, metadataTimeoutMilliseconds))
             {
                 opaqueToken = GetContention(); // just fetch current value (starts at 1)
@@ -1702,7 +1677,6 @@ namespace ProtoBuf.Meta
 
                 throw new TimeoutException(message);
             }
-#endif
 
 #if DEBUG // note that here, through all code-paths: we have the lock
             lockCount++;
@@ -1710,30 +1684,14 @@ namespace ProtoBuf.Meta
         }
 
         private int contentionCounter = 1;
-#if PLAT_NO_INTERLOCKED
-        private readonly object contentionLock = new object();
-#endif
+
         private int GetContention()
         {
-#if PLAT_NO_INTERLOCKED
-            lock(contentionLock)
-            {
-                return contentionCounter;
-            }
-#else
             return Interlocked.CompareExchange(ref contentionCounter, 0, 0);
-#endif
         }
         private void AddContention()
         {
-#if PLAT_NO_INTERLOCKED
-            lock(contentionLock)
-            {
-                contentionCounter++;
-            }
-#else
             Interlocked.Increment(ref contentionCounter);
-#endif
         }
 
         internal void ReleaseLock(int opaqueToken)
@@ -1795,31 +1753,17 @@ namespace ProtoBuf.Meta
 
             if (itemType != null && defaultType == null)
             {
-#if COREFX || PROFILE259
-				TypeInfo typeInfo = type.GetTypeInfo();
-                if (typeInfo.IsClass && !typeInfo.IsAbstract && Helpers.GetConstructor(typeInfo, Helpers.EmptyTypes, true) != null)
-#else
                 if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Helpers.EmptyTypes, true) != null)
-#endif
                 {
                     defaultType = type;
                 }
                 if (defaultType == null)
                 {
-#if COREFX || PROFILE259
-					if (typeInfo.IsInterface)
-#else
                     if (type.IsInterface)
-#endif
                     {
                         Type[] genArgs;
-#if COREFX || PROFILE259
-                        if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
-                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = typeInfo.GenericTypeArguments))
-#else
                         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
                             && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
-#endif
                         {
                             defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
                         }
@@ -1979,6 +1923,70 @@ namespace ProtoBuf.Meta
                 if (!CallbackSet.CheckCallbackParameters(factory)) throw new ArgumentException("Invalid factory signature in " + factory.DeclaringType.FullName + "." + factory.Name, nameof(factory));
             }
         }
+
+#if !NO_RUNTIME
+        /// <summary>
+        /// Creates a new runtime model, to which the caller
+        /// can add support for a range of types. A model
+        /// can be used "as is", or can be compiled for
+        /// optimal performance.
+        /// </summary>
+        public static new RuntimeTypeModel Create()
+        {
+            return new RuntimeTypeModel(false);
+        }
+
+#if FEAT_COMPILER
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static new TypeModel CreateForAssembly<T>()
+            => CreateForAssembly(typeof(T).Assembly);
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static new TypeModel CreateForAssembly(Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            return CreateForAssembly(type.Assembly);
+        }
+
+        /// <summary>
+        /// Create a model that serializes all types from an assembly
+        /// </summary>
+        public static new TypeModel CreateForAssembly(Assembly assembly)
+            => (TypeModel)s_assemblyModels[assembly ?? throw new ArgumentNullException(nameof(assembly))]
+            ?? CreateForAssemblyImpl(assembly);
+
+        private readonly static Hashtable s_assemblyModels = new Hashtable();
+
+        private static TypeModel CreateForAssemblyImpl(Assembly assembly)
+        {
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            lock (assembly)
+            {
+                var found = (TypeModel)s_assemblyModels[assembly];
+                if (found != null) return found;
+
+                RuntimeTypeModel model = null;
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (type.IsDefined(typeof(ProtoContractAttribute), true))
+                    {
+                        (model ?? (model = Create())).Add(type, true);
+                    }
+                }
+                if (model == null)
+                    throw new InvalidOperationException($"No types marked [ProtoContract] found in assembly '{assembly.GetName().Name}'");
+                var compiled = model.Compile();
+                s_assemblyModels[assembly] = compiled;
+                return compiled;
+            }
+        }
+#endif
+#endif
     }
 
     /// <summary>

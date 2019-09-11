@@ -299,7 +299,7 @@ namespace ProtoBuf.Serializers
 
                         ctx.MarkLabel(notRecognised);
                         ctx.LoadReader(true);
-                        ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
+                        ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
 
                         ctx.MarkLabel(@continue);
                         ctx.EmitBasicRead("ReadFieldHeader", typeof(int));

@@ -18,7 +18,7 @@ namespace Examples
 
         private static ProtoReader GetReader(out ProtoReader.State state)
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Foo), true);
             model.CompileInPlace();
 

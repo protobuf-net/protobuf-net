@@ -16,7 +16,7 @@ namespace Examples.Issues
         [Fact]
         public void DateTimeKind_NotSerializedByDefault()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             Assert.False(model.IncludeDateTimeKind);
         }
@@ -34,7 +34,7 @@ namespace Examples.Issues
 
         private static void DateTimeKind_SerializedElectively(bool includeDateTimeKind, string name)
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model.IncludeDateTimeKind = includeDateTimeKind;
             var original = HazTime.Create();

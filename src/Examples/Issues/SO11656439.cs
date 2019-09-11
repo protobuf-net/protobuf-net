@@ -40,7 +40,7 @@ namespace Examples.Issues
         {
             // this test is larger because it wasn't working; neeeded
             // to make it more granular
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             CheckContractSubclass(model, "Runtime");
             model.CompileInPlace();
@@ -112,7 +112,7 @@ namespace Examples.Issues
         [Fact]
         public void SanityCheckListWrapper()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof (ListWrapper), true);
 
             var schema = model.GetSchema(null);

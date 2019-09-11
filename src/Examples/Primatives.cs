@@ -471,7 +471,7 @@ namespace Examples
         [Fact]
         public void TestNonEmptyUriAllCompilationModes()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(UriData), true);
             UriData test = new UriData { Foo = new Uri("http://test.example.com/demo") };
 
@@ -491,7 +491,7 @@ namespace Examples
         [Fact]
         public void TestNonEmptyUriWithDefaultAllCompilationModes()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(UriDataWithDefault), true);
             UriDataWithDefault test = new UriDataWithDefault { Foo = new Uri("http://test.example.com/demo") },
                 defaulted = new UriDataWithDefault { Foo = new Uri("http://abc") };

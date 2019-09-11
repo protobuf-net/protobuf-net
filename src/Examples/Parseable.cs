@@ -18,7 +18,7 @@ namespace Examples
         [Fact]
         public void TestIPAddess()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AllowParseableTypes = true;
             WithIP obj = new WithIP { Address = IPAddress.Parse("100.90.80.100") },
                 clone = (WithIP) model.DeepClone(obj);

@@ -49,7 +49,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue((int)options);
 
                 ctx.EmitCall(typeof(BclHelpers).GetMethod("ReadNetObject",
-                    new[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object),
+                    new[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, typeof(object),
                     typeof(int), typeof(Type), typeof(BclHelpers.NetObjectOptions)}));
                 ctx.CastFromObject(ExpectedType);
             }
@@ -61,7 +61,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadWriter(true);
             ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
             ctx.LoadValue((int)options);
-            ctx.EmitCall(ProtoWriter.GetStaticMethod<BclHelpers>("WriteNetObject"));
+            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod<BclHelpers>("WriteNetObject"));
         }
 #endif
     }

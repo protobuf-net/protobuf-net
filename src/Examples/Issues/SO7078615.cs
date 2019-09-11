@@ -41,7 +41,7 @@ namespace Examples.Issues
             {
                   NameOfDog = "Woofy", Times = 5
             }, copy;
-            var model = TypeModel.Create(); // could also use the default model, but
+            var model = RuntimeTypeModel.Create(); // could also use the default model, but
             using(var ms = new MemoryStream()) // separation makes life easy for my tests
             {
                 var tmp = new DontAskWrapper {Message = msg};
@@ -86,7 +86,7 @@ namespace Examples.Issues
                 NameOfDog = "Woofy",
                 Times = 5
             }, copy;
-            var model = TypeModel.Create(); // could also use the default model, but
+            var model = RuntimeTypeModel.Create(); // could also use the default model, but
             model.Add(typeof (DogBarkedEvent), false).Add("NameOfDog", "Times");
             model.Add(typeof (IMessage), false).AddSubType(1, typeof (DogBarkedEvent));
             model.Add(typeof (DontAskWrapper), false).Add("Message");

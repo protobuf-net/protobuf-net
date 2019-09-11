@@ -18,7 +18,7 @@ namespace ProtoBuf.unittest.Meta
         [Fact]
         public void RunStructDesrializerForEmptyStream()
         {
-            var model = ProtoBuf.Meta.TypeModel.Create();
+            var model = ProtoBuf.Meta.RuntimeTypeModel.Create();
             var head = new TypeSerializer(typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IProtoSerializer[] {
@@ -42,7 +42,7 @@ namespace ProtoBuf.unittest.Meta
         [Fact]
         public void GenerateTypeSerializer()
         {
-            var model = ProtoBuf.Meta.TypeModel.Create();
+            var model = ProtoBuf.Meta.RuntimeTypeModel.Create();
             var head = new TypeSerializer(typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IProtoSerializer[] {

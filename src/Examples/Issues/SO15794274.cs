@@ -26,7 +26,7 @@ namespace Examples.Issues
 
             using (var file = File.Create("model.bin"))
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 var meta = model.Add(typeof(Forest), true);
                 meta.CompileInPlace();
                 model.CompileInPlace();

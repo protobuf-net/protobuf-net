@@ -2,20 +2,16 @@
 
   <PropertyGroup>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <TargetFrameworks>netcoreapp2.1;net452;netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>net462;netcoreapp3.0</TargetFrameworks>
     <LibImport>net</LibImport>
     <Configurations>Debug;Release;VS</Configurations>
     <DefineConstants>NO_CODEGEN;NO_WCF;NO_ENYIM</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='netcoreapp2.1'">
-    <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
-    <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.0'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;NO_NHIBERNATE;COREFX;NO_INTERNAL_CONTEXT</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
-  <PropertyGroup Condition="$(TargetFramework)=='net452'">
+  <PropertyGroup Condition="$(TargetFramework)=='net462'">
     <DefineConstants>$(DefineConstants);FEAT_COMPILER;FX30;NO_INTERNAL_CONTEXT</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
@@ -27,7 +23,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.6.0" />
     <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
-  <ItemGroup Condition="$(TargetFramework)=='net452'">
+  <ItemGroup Condition="$(TargetFramework)=='net462'">
     <PackageReference Include="NHibernate" Version="4.1.1.4000" />
     <PackageReference Include="Iesi.Collections" Version="4.0.3" />
   </ItemGroup>

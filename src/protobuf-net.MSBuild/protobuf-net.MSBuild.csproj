@@ -7,7 +7,7 @@
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageId>protobuf-net.MSBuild</PackageId>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <NoWarn>CS1591;NU5105</NoWarn>
+    <NoWarn>CS1591;NU5105;NU5128</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,7 +27,7 @@
     <ProjectReference Include="..\protobuf-net.Reflection\protobuf-net.Reflection.csproj">
       <PrivateAssets>All</PrivateAssets>
     </ProjectReference>
-    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj"/>
+    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj"/>
   </ItemGroup>
 
   <Target Name="CopyBuildFiles" AfterTargets="CoreBuild" BeforeTargets="_CalculateInputsOutputsForPack">

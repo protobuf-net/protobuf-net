@@ -22,7 +22,7 @@ namespace Examples.Issues
         [Fact]
         public void Test_Vanilla()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             Execute_Vanilla(model, "Runtime");
             model.CompileInPlace();
@@ -34,7 +34,7 @@ namespace Examples.Issues
         [Fact]
         public void Test_WithLengthPrefix()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             Execute_WithLengthPrefix(model, "Runtime");
             model.CompileInPlace();

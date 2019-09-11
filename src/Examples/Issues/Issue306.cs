@@ -14,7 +14,7 @@ namespace Examples.Issues
         [Fact]
         public void TestTuple()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof (Foo), true);
 
             string schema = model.GetSchema(typeof (Foo));
