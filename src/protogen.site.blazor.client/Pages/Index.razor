@@ -138,9 +138,11 @@
                 <h2>Generated Code</h2>
                 @foreach (var file in codeFiles)
                 {
-                    <div class="form-group   flex-grow-1">
+                    <div class="form-group   flex-grow-1  d-flex flex-column">
+                        <p style="flex:none;">
                         @file.Name
-                        <textarea class="w-100 h-100">@file.Text</textarea>
+                        </p>
+                        <textarea class="w-100 flex-grow-1">@file.Text</textarea>
                     </div>
                 }
             }
