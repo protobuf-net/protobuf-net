@@ -407,6 +407,7 @@ namespace ProtoBuf.Meta
             }
             catch { } // this is all kinds of brittle on things like UWP
 #endif
+            if (isDefault) TypeModel.DefaultModel = this;
         }
 
 #if FEAT_COMPILER
@@ -1457,11 +1458,11 @@ namespace ProtoBuf.Meta
             {
                 MethodBuilder writeMethod = type.DefineMethod("Write" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
-                    typeof(void), new Type[] { typeof(ProtoWriter), ProtoWriter.ByRefStateType, metaType.Type });
+                    typeof(void), new Type[] { typeof(ProtoWriter), Compiler.WriterUtil.ByRefStateType, metaType.Type });
 
                 MethodBuilder readMethod = type.DefineMethod("Read" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
-                    metaType.Type, new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, metaType.Type });
+                    metaType.Type, new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, metaType.Type });
 
                 SerializerPair pair = new SerializerPair(
                     GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
@@ -1589,7 +1590,7 @@ namespace ProtoBuf.Meta
             MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i.ToString(), MethodAttributes.Static, CallingConventions.Standard,
                 typeof(object),
-                new Type[] { typeof(ProtoReader), ProtoReader.State.ByRefStateType, typeof(object) });
+                new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, typeof(object) });
             Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName, typeof(object), "BoxedSerializer " + valueType.Name);
             ctx.LoadValue(ctx.InputValue);
             Compiler.CodeLabel @null = ctx.DefineLabel();
@@ -1918,6 +1919,70 @@ namespace ProtoBuf.Meta
                 if (!CallbackSet.CheckCallbackParameters(factory)) throw new ArgumentException("Invalid factory signature in " + factory.DeclaringType.FullName + "." + factory.Name, nameof(factory));
             }
         }
+
+#if !NO_RUNTIME
+        /// <summary>
+        /// Creates a new runtime model, to which the caller
+        /// can add support for a range of types. A model
+        /// can be used "as is", or can be compiled for
+        /// optimal performance.
+        /// </summary>
+        public static new RuntimeTypeModel Create()
+        {
+            return new RuntimeTypeModel(false);
+        }
+
+#if FEAT_COMPILER
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static new TypeModel CreateForAssembly<T>()
+            => CreateForAssembly(typeof(T).Assembly);
+        /// <summary>
+        /// Create a model that serializes all types from an
+        /// assembly specified by type
+        /// </summary>
+        public static new TypeModel CreateForAssembly(Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+            return CreateForAssembly(type.Assembly);
+        }
+
+        /// <summary>
+        /// Create a model that serializes all types from an assembly
+        /// </summary>
+        public static new TypeModel CreateForAssembly(Assembly assembly)
+            => (TypeModel)s_assemblyModels[assembly ?? throw new ArgumentNullException(nameof(assembly))]
+            ?? CreateForAssemblyImpl(assembly);
+
+        private readonly static Hashtable s_assemblyModels = new Hashtable();
+
+        private static TypeModel CreateForAssemblyImpl(Assembly assembly)
+        {
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+            lock (assembly)
+            {
+                var found = (TypeModel)s_assemblyModels[assembly];
+                if (found != null) return found;
+
+                RuntimeTypeModel model = null;
+                foreach (var type in assembly.GetTypes())
+                {
+                    if (type.IsDefined(typeof(ProtoContractAttribute), true))
+                    {
+                        (model ?? (model = Create())).Add(type, true);
+                    }
+                }
+                if (model == null)
+                    throw new InvalidOperationException($"No types marked [ProtoContract] found in assembly '{assembly.GetName().Name}'");
+                var compiled = model.Compile();
+                s_assemblyModels[assembly] = compiled;
+                return compiled;
+            }
+        }
+#endif
+#endif
     }
 
     /// <summary>

@@ -12,7 +12,7 @@ namespace ProtoBuf.Issues
         [Fact]
         public void CanGenerateGenericArraySchema()
         {
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
 
             typeModel.Add(typeof(ClassWithGenericField<SimpleClass[]>), true);
 
@@ -32,7 +32,7 @@ namespace ProtoBuf.Issues
         {
             // Combined generic test similar to CanGenerateGenericArraySchema and 
             // HasValidGenericArrayMessageName, for different array types
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
 
             typeModel.Add(genericArrayType, true);
 
@@ -66,7 +66,7 @@ namespace ProtoBuf.Issues
         {
             // Combined generic test similar to CanGenerateGenericArraySchema and 
             // HasValidGenericArrayMessageName, for different array types
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
 
             typeModel.Add(genericArrayType, true);
 
@@ -98,7 +98,7 @@ namespace ProtoBuf.Issues
         {
             // Combined generic test similar to CanGenerateGenericArraySchema and 
             // HasValidGenericArrayMessageName, for byte arrays
-            var typeModel = TypeModel.Create();
+            var typeModel = RuntimeTypeModel.Create();
             var schema = typeModel.GetSchema(null);
             Assert.Throws<NotSupportedException>( ()=>typeModel.Add(genericArrayType, true) );
         }

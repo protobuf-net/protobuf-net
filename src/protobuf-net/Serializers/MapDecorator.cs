@@ -150,11 +150,11 @@ namespace ProtoBuf.Serializers
                     ctx.LoadValue(fieldNumber);
                     ctx.LoadValue((int)wireType);
                     ctx.LoadWriter(true);
-                    ctx.EmitCall(ProtoWriter.GetStaticMethod("WriteFieldHeader"));
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader"));
 
                     ctx.LoadNullRef();
                     ctx.LoadWriter(true);
-                    ctx.EmitCall(ProtoWriter.GetStaticMethod("StartSubItem"));
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem"));
                     ctx.StoreValue(token);
 
                     ctx.LoadAddress(kvp, itemType);
@@ -167,7 +167,7 @@ namespace ProtoBuf.Serializers
 
                     ctx.LoadValue(token);
                     ctx.LoadWriter(true);
-                    ctx.EmitCall(ProtoWriter.GetStaticMethod("EndSubItem"));
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem"));
 
                     ctx.MarkLabel(@next);
                     ctx.LoadAddress(iter, enumeratorType);
@@ -225,7 +225,7 @@ namespace ProtoBuf.Serializers
 
                 // token = ProtoReader.StartSubItem(reader);
                 ctx.LoadReader(true);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem", ProtoReader.State.ReaderStateTypeArray));
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem", Compiler.ReaderUtil.ReaderStateTypeArray));
                 ctx.StoreValue(token);
 
                 Compiler.CodeLabel @continue = ctx.DefineLabel(), processField = ctx.DefineLabel();
@@ -241,7 +241,7 @@ namespace ProtoBuf.Serializers
                 // case 0: default: reader.SkipField();
                 ctx.MarkLabel(@default);
                 ctx.LoadReader(true);
-                ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", ProtoReader.State.StateTypeArray));
+                ctx.EmitCall(typeof(ProtoReader).GetMethod("SkipField", Compiler.ReaderUtil.StateTypeArray));
                 ctx.Branch(@continue, false);
 
                 // case 1: key = ...
@@ -267,7 +267,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(token);
                 ctx.LoadReader(true);
                 ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
-                    new[] { typeof(SubItemToken), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
+                    new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
 
                 // list[key] = value;
                 ctx.LoadAddress(list, ExpectedType);
@@ -279,7 +279,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadReader(true);
                 ctx.LoadValue(this.fieldNumber);
                 ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader",
-                    new[] { ProtoReader.State.ByRefStateType, typeof(int) }));
+                    new[] { Compiler.ReaderUtil.ByRefStateType, typeof(int) }));
                 ctx.BranchIfTrue(redoFromStart, false);
 
                 if (ReturnsValue)

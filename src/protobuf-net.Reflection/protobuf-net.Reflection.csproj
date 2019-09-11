@@ -3,7 +3,7 @@
     <AssemblyName>protobuf-net.Reflection</AssemblyName>
     <Title>protobuf-net.Reflection</Title>
     <Description>ProtoBuf DSL (proto2 / proto3) and descriptor tools for protobuf-net</Description>
-    <TargetFrameworks>net462;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Configurations>Debug;Release;VS</Configurations>
@@ -15,7 +15,7 @@
     <EmbeddedResource Include="protobuf-net\**\*.proto" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <ProjectReference Include="..\protobuf-net.Core\protobuf-net.Core.csproj" />
     <None Include="CodeGenerator.OneOfStub.cs" />
   </ItemGroup>
 </Project>

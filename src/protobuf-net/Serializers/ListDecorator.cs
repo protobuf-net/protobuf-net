@@ -201,7 +201,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadReader(true);
                 ctx.LoadValue(fieldNumber);
                 ctx.EmitCall(typeof(ProtoReader).GetMethod("TryReadFieldHeader",
-                    new[] { ProtoReader.State.ByRefStateType, typeof(int) }));
+                    new[] { Compiler.ReaderUtil.ByRefStateType, typeof(int) }));
                 ctx.BranchIfTrue(@continue, false);
 
                 if (packedWireType != WireType.None)
@@ -212,7 +212,7 @@ namespace ProtoBuf.Serializers
 
                     ctx.LoadReader(true);
                     ctx.EmitCall(typeof(ProtoReader).GetMethod("StartSubItem",
-                        ProtoReader.State.ReaderStateTypeArray));
+                        Compiler.ReaderUtil.ReaderStateTypeArray));
 
                     Compiler.CodeLabel testForData = ctx.DefineLabel(), noMoreData = ctx.DefineLabel();
                     ctx.MarkLabel(testForData);
@@ -227,7 +227,7 @@ namespace ProtoBuf.Serializers
                     ctx.MarkLabel(noMoreData);
                     ctx.LoadReader(true);
                     ctx.EmitCall(typeof(ProtoReader).GetMethod("EndSubItem",
-                        new[] { typeof(SubItemToken), typeof(ProtoReader), ProtoReader.State.ByRefStateType }));
+                        new[] { typeof(SubItemToken), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType }));
                     ctx.MarkLabel(allDone);
                 }
             }
@@ -385,11 +385,11 @@ namespace ProtoBuf.Serializers
                         ctx.LoadValue(fieldNumber);
                         ctx.LoadValue((int)WireType.String);
                         ctx.LoadWriter(true);
-                        ctx.EmitCall(ProtoWriter.GetStaticMethod("WriteFieldHeader"));
+                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader"));
 
                         ctx.LoadValue(list);
                         ctx.LoadWriter(true);
-                        ctx.EmitCall(ProtoWriter.GetStaticMethod("StartSubItem"));
+                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem"));
                         ctx.StoreValue(token);
 
                         ctx.LoadValue(fieldNumber);
@@ -426,7 +426,7 @@ namespace ProtoBuf.Serializers
                     {
                         ctx.LoadValue(token);
                         ctx.LoadWriter(true);
-                        ctx.EmitCall(ProtoWriter.GetStaticMethod("EndSubItem"));
+                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem"));
                     }
                 }
             }

@@ -23,7 +23,7 @@ namespace Examples.Issues
 
             byte[] fileBytes = File.ReadAllBytes(NWindTests.GetNWindBinPath());
 
-            RuntimeTypeModel ordersModel = TypeModel.Create();
+            RuntimeTypeModel ordersModel = RuntimeTypeModel.Create();
             ordersModel.AutoCompile = false;
 
             Database database = (Database)ordersModel.Deserialize(new MemoryStream(fileBytes), null, typeof(Database));

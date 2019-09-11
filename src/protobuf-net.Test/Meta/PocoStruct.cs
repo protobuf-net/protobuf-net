@@ -23,7 +23,7 @@ namespace ProtoBuf.unittest.Meta
         [Fact]
         public void CanSerializeCompany()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Company), false).Add("Employees");
             model.Add(typeof(Employee), false).Add("EmployeeName", "Designation");
             model.CompileInPlace();
@@ -63,7 +63,7 @@ namespace ProtoBuf.unittest.Meta
         [Fact]
         public void CanSerializeCompany()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(Company), false).Add("Employees");
             model.Add(typeof(Employee), false).Add("EmployeeName", "Designation");
             model.CompileInPlace();

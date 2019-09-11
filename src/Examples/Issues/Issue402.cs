@@ -17,7 +17,7 @@ namespace ProtoBuf.Issues
         static RuntimeTypeModel Serializer;
         static Issue402()
         {
-            Serializer = TypeModel.Create();
+            Serializer = RuntimeTypeModel.Create();
             Serializer.UseImplicitZeroDefaults = false;
         }
         private void CheckZero(decimal value)

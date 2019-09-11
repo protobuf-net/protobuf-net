@@ -41,7 +41,7 @@ namespace Examples.Issues
         [Fact]
         public void AutoConfigOfModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var member = model[typeof(Foo)][1];
             Assert.Equal(typeof(Bar), member.ItemType);
             Assert.Equal(typeof(List<Bar>), member.DefaultType);
@@ -104,7 +104,7 @@ namespace Examples.Issues
         [Fact]
         public void ProtobufNet_DoesSupportNakedEnumerables()
         {
-            var ser = TypeModel.Create();
+            var ser = RuntimeTypeModel.Create();
             using (var ms = new MemoryStream())
             {
                 ser.Serialize(ms, new FooEnumerable { Bars = new[] { new Bar { } } });

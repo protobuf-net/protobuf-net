@@ -121,7 +121,7 @@ namespace TechnologyEvaluation.Protobuf.ArrayOfBaseClassTest
 
         RuntimeTypeModel CreateModel()
         {
-            RuntimeTypeModel model = TypeModel.Create();
+            RuntimeTypeModel model = RuntimeTypeModel.Create();
 
             model.Add(typeof(ObjectArrayContainerClass), true);
             model.Add(typeof(BaseClassArrayContainerClass), true);

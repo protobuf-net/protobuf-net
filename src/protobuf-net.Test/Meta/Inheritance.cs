@@ -19,7 +19,7 @@ namespace ProtoBuf.unittest.Meta
         public class AlsoNotInvolved { public int E { get; set; } }
 
         static RuntimeTypeModel CreateModel() {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model[typeof(NotInvolved)].Add(1, "D");
             model[typeof(SomeBase)]
                 .Add(1, "A")

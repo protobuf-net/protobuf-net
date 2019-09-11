@@ -21,7 +21,7 @@ namespace Examples.Issues
 #else
             const int OuterLoop = 500;
 #endif
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             // Execute(OuterLoop, model, "RT");
             model.CompileInPlace();

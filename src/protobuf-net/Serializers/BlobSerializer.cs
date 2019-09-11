@@ -50,7 +50,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadReader(true);
             ctx.EmitCall(typeof(ProtoReader)
                .GetMethod(nameof(ProtoReader.AppendBytes),
-               new[] { typeof(byte[]), typeof(ProtoReader), ProtoReader.State.ByRefStateType}));
+               new[] { typeof(byte[]), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType}));
         }
 #endif
     }

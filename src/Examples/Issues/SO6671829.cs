@@ -15,7 +15,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(hierarchy.B), false)
                 .Add("prop1", "prop2");
 

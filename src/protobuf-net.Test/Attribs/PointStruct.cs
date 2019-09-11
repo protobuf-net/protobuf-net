@@ -15,7 +15,7 @@ namespace ProtoBuf.unittest.Attribs
 
         public static RuntimeTypeModel BuildModelWithSurrogate()
         {
-            RuntimeTypeModel model = TypeModel.Create();
+            RuntimeTypeModel model = RuntimeTypeModel.Create();
             model.Add(typeof(PointSurrogate), true);
             model.Add(typeof(Point), false).SetSurrogate(typeof(PointSurrogate));
             return model;
@@ -59,7 +59,7 @@ namespace ProtoBuf.unittest.Attribs
 
         static RuntimeTypeModel BuildModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             var mt = model.Add(typeof(Point), true);
             var fields = mt.GetFields();
             Assert.Equal(2, fields.Length);

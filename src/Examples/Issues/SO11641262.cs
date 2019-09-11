@@ -11,7 +11,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof (FooData), true)
                 .AddSubType(1, typeof (FooData<string>))
                 .AddSubType(2, typeof (FooData<int>))

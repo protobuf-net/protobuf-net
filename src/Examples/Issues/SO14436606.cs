@@ -135,7 +135,7 @@ namespace Examples.Issues
 
         static RuntimeTypeModel CreateDefaultRefModel(bool aFirst)
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             if (aFirst)
             {
                 model.Add(typeof(A_WithDefaultRef), true);
@@ -152,7 +152,7 @@ namespace Examples.Issues
         }
         static RuntimeTypeModel CreateFieldsModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             var type = model.Add(typeof(KeyValuePair<int, A>), false);
             type.Add(1, "key");
@@ -163,7 +163,7 @@ namespace Examples.Issues
         }
         static RuntimeTypeModel CreateSurrogateModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             model[typeof(B)][2].AsReference = false; // or just remove AsReference on Items
 
@@ -230,7 +230,7 @@ namespace Examples.Issues
         {
             Program.ExpectFailure<InvalidOperationException>(() =>
             {
-                var model = TypeModel.Create();
+                var model = RuntimeTypeModel.Create();
                 model.AutoCompile = false;
                 ExecuteAllModes(model);
             }, "AsReference cannot be used with value-types; please see https://stackoverflow.com/q/14436606/23354");
