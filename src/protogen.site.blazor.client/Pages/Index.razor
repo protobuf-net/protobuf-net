@@ -6,7 +6,6 @@
 @using System.Text.Json
 
 @inject HttpClient Http
-@inject IJSRuntime JsRuntime;
 @page "/"
 
 
@@ -46,6 +45,9 @@
                                                         {
                                             <option value="@version">@version</option>
                                                         }
+                                        /**/
+                                        /**/
+                                        /**/
                                     </InputSelect>
                                 </div>
                             }
@@ -69,6 +71,9 @@
                                         {
                                     <option value="@namingConvention">@namingConvention</option>
                                         }
+                                /**/
+                                /**/
+                                /**/
                             </InputSelect>
                         </div>
                     }
@@ -88,6 +93,9 @@
                                 {
                                 <option value="@language">@language</option>
                                 }
+                            /**/
+                            /**/
+                            /**/
                         </InputSelect>
                     </div>
                     <div class="col">
@@ -111,10 +119,10 @@
                         </button>
                     </div>
                 </div>
-                <div class="form-group  flex-grow-1 h-100" >
-                    <textarea placeholder=".proto file content" class="form-control h-100" @bind="model.ProtoContent" id="protoContent" @ref="protoEditor"></textarea>
-                </div>
             }
+            <div class="@(showMoreOptions ? "d-none":"form-group  flex-grow-1 h-100")">
+                <MonacoEditor @ref="protoEditor" Language="protobuf"></MonacoEditor>
+            </div>
         </div>
         <div class="col-6  d-flex flex-column">
 
@@ -140,7 +148,7 @@
                 {
                     <div class="form-group   flex-grow-1  d-flex flex-column">
                         <p style="flex:none;">
-                        @file.Name
+                            @file.Name
                         </p>
                         <textarea class="w-100 flex-grow-1">@file.Text</textarea>
                     </div>
@@ -154,7 +162,7 @@
     bool showMoreOptions = false;
     bool loading = false;
 
-    ElementReference protoEditor;
+    MonacoEditor protoEditor;
 
     Error[] errors;
 
@@ -168,9 +176,11 @@
     {
         model.ProtoContent = await Http.GetStringAsync("https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto");
         showMoreOptions = false;
+        await protoEditor.SetContent(model.ProtoContent);
     }
     //we use this for inserting options at the end of the script without erasing user custom content
     private const string ProtoOptionCommentDelimiter = "//endof options";
+
     protected async Task ChangeOptionSpecification(ChangeEventArgs e)
     {
         model.SpecifyOptInProto = (bool)e.Value;
@@ -187,11 +197,14 @@
             model.ProtoContent = $"{optContent}{Environment.NewLine}{ProtoOptionCommentDelimiter}{Environment.NewLine}{model.ProtoContent}";
             //because the content was changed we go back to the editor
             showMoreOptions = false;
+            
         }
+        await protoEditor.SetContent(model.ProtoContent);
     }
-
     protected async Task Generate()
     {
+
+        model.ProtoContent = await protoEditor.GetContent();
         try
         {
             loading = true;
@@ -238,7 +251,7 @@
             new Dictionary<string, string>() {
                 {"schema", model.ProtoContent },
                 {"tooling", model.GetProtocTooling() }
-                                                                                                }
+                                                                                                        }
           ));
         var content = await response.Content.ReadAsStringAsync();
         if (response.IsSuccessStatusCode)

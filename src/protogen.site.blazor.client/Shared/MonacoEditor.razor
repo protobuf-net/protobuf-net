@@ -1,0 +1,36 @@
+﻿@inject IJSRuntime JsRuntime;
+<div class="h-100" style="border: 1px solid grey" @ref="editor"></div>
+@code {
+    ElementReference editor;
+
+    [Parameter]
+    public string Language { get; set; }
+
+    [Parameter]
+    public string FirstContent
+    {
+        get; set;
+    }
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("OnInitialized");
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        Console.WriteLine("OnAfterRenderAsync "+firstRender);
+        if (firstRender)
+        {
+            await JsRuntime.InvokeVoidAsync("initMonaco", editor, Language);
+        }
+    }
+
+    public async Task SetContent(string content)
+    {
+        await JsRuntime.InvokeVoidAsync("setMonaco", editor, content);
+    }
+
+    public async Task<string> GetContent()
+    {
+        return await JsRuntime.InvokeAsync<string>("getMonaco", editor);
+    }
+}

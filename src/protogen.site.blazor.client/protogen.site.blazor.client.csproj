@@ -5,10 +5,9 @@
     <OutputType>Exe</OutputType>
     <LangVersion>7.3</LangVersion>
     <RazorLangVersion>3.0</RazorLangVersion>
-    <BlazorLinkOnBuild>true</BlazorLinkOnBuild>    
+    <BlazorLinkOnBuild>true</BlazorLinkOnBuild>
 
   </PropertyGroup>
-
   <ItemGroup>
     <!-- extends watching group to include *.razor files -->
     <Watch Include="**\*.razor" />
