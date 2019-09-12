@@ -70,7 +70,7 @@ namespace ProtoBuf.Meta
             WireType wireType = WireType.String;
             if(dataFormat == DataFormat.Group) wireType = WireType.StartGroup; // only one exception
             
-            IProtoSerializer ser = SubItemSerializer.Create(typeof(object), derivedType.Type, derivedType);
+            IProtoSerializer ser = SubItemSerializer.Create(MetaType.GetRootType(derivedType).Type, derivedType.Type, derivedType);
             return new TagDecorator(fieldNumber, wireType, false, ser);
         }
     }

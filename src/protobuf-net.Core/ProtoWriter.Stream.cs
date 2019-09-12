@@ -61,10 +61,15 @@ namespace ProtoBuf
             protected private override void Dispose()
             {
                 base.Dispose();
+                Pool<StreamProtoWriter>.Put(this);
+            }
+
+            protected private override void Cleanup()
+            {
+                base.Cleanup();
                 // importantly, this does **not** own the stream, and does not dispose it
                 dest = null;
                 BufferPool.ReleaseBufferToPool(ref ioBuffer);
-                Pool<StreamProtoWriter>.Put(this);
             }
 
             private static void IncrementedAndReset(int length, StreamProtoWriter writer)

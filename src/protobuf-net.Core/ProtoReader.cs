@@ -1450,5 +1450,17 @@ namespace ProtoBuf
             }
             return actual;
         }
+
+        public T Deserialize<T>(ref State state, T value = default, IProtoSerializer<T, T> serializer = null)
+        {
+            if (TypeHelper<T>.IsObjectType && value is object)
+            {
+                SetRootObject(value);
+            }
+
+            var result = (serializer ?? Model.GetSerializer<T, T>()).Deserialize(this, ref state, value);
+            CheckFullyConsumed(ref state);
+            return result;
+        }
     }
 }

@@ -47,8 +47,13 @@ namespace ProtoBuf
             private protected override void Dispose()
             {
                 base.Dispose();
-                _writer = default;
                 Pool<BufferWriterProtoWriter<T>>.Put(this);
+            }
+
+            private protected override void Cleanup()
+            {
+                base.Cleanup();
+                _writer = default;
             }
 
             protected internal override State DefaultState() => throw new InvalidOperationException("You must retain and pass the state from ProtoWriter.CreateForBufferWriter");

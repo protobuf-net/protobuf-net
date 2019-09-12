@@ -499,6 +499,11 @@ namespace ProtoBuf
         protected private virtual void Dispose()
         {
             OnDispose();
+            Cleanup();
+        }
+
+        protected private virtual void Cleanup()
+        {
             if (depth == 0 && _needFlush && ImplDemandFlushOnDispose)
             {
                 throw new InvalidOperationException("Writer was diposed without being flushed; data may be lost - you should ensure that Flush (or Abandon) is called");
@@ -550,7 +555,7 @@ namespace ProtoBuf
         public void Close(ref State state)
         {
             CheckClear(ref state);
-            Dispose();
+            Cleanup();
         }
 
         internal void CheckClear(ref State state)
@@ -1138,10 +1143,10 @@ namespace ProtoBuf
             }
             writer.CheckClear(ref state);
         }
+    }
 
-        private static class TypeHelper<T>
-        {
-            public static readonly bool IsObjectType = !Helpers.IsValueType(typeof(T));
-        }
+    internal static class TypeHelper<T>
+    {
+        public static readonly bool IsObjectType = !Helpers.IsValueType(typeof(T));
     }
 }

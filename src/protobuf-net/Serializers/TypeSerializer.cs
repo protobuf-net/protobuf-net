@@ -7,15 +7,16 @@ namespace ProtoBuf.Serializers
 {
     internal abstract class TypeSerializer
     {
-        public static IProtoTypeSerializer Create(Type forType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
+        public static IProtoTypeSerializer Create(Type forType, Type rootType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
         {
-            var obj = (TypeSerializer)Activator.CreateInstance(typeof(TypeSerializer<>).MakeGenericType(forType));
+            var obj = (TypeSerializer)Activator.CreateInstance(typeof(TypeSerializer<,>).MakeGenericType(rootType, forType));
             obj.Init(fieldNumbers, serializers, baseCtorCallbacks, isRootType, useConstructor, callbacks, constructType, factory);
             return (IProtoTypeSerializer)obj;
         }
         abstract internal void Init(int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory);
     }
-    internal sealed class TypeSerializer<T> : TypeSerializer, IProtoTypeSerializer, IProtoSerializer<T>
+    internal sealed class TypeSerializer<TBase, TActual> : TypeSerializer,
+        IProtoTypeSerializer, IProtoSerializer<TBase, TActual> where TActual : TBase
     {
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {
@@ -28,7 +29,7 @@ namespace ProtoBuf.Serializers
         }
 
         private Type constructType;
-        public Type ExpectedType => typeof(T);
+        public Type ExpectedType => typeof(TActual);
         private IProtoSerializer[] serializers;
         private int[] fieldNumbers;
         private bool isRootType, useConstructor, isExtensible, hasConstructor;
@@ -150,9 +151,9 @@ namespace ProtoBuf.Serializers
         }
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
-            => Serialize(dest, ref state, (T)value);
+            => Serialize(dest, ref state, (TActual)value);
 
-        public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
+        public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, TActual value)
         {
             if (isRootType) Callback(value, TypeModel.CallbackType.BeforeSerialize, writer.Context);
             // write inheritance first
@@ -179,9 +180,9 @@ namespace ProtoBuf.Serializers
         }
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
-            => Deserialize(source, ref state, (T)value);
+            => Deserialize(source, ref state, (TBase)value);
 
-        public T Deserialize(ProtoReader source, ref ProtoReader.State state, T value)
+        public TActual Deserialize(ProtoReader source, ref ProtoReader.State state, TBase value)
         {
             if (isRootType && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize, source.Context); }
             int fieldNumber, lastFieldNumber = 0, lastFieldIndex = 0;
@@ -204,7 +205,7 @@ namespace ProtoBuf.Serializers
                         Type serType = ser.ExpectedType;
                         if (value == null)
                         {
-                            if (serType == ExpectedType) value = (T)CreateInstance(source, true);
+                            if (serType == ExpectedType) value = (TActual)CreateInstance(source, true);
                         }
                         else
                         {
@@ -212,13 +213,13 @@ namespace ProtoBuf.Serializers
                                 && serType
                                 .IsSubclassOf(value.GetType()))
                             {
-                                value = (T)ProtoReader.Merge(source, value, ((IProtoTypeSerializer)ser).CreateInstance(source));
+                                value = (TBase)ProtoReader.Merge(source, value, ((IProtoTypeSerializer)ser).CreateInstance(source));
                             }
                         }
 
                         if (ser.ReturnsValue)
                         {
-                            value = (T)ser.Read(source, ref state, value);
+                            value = (TBase)ser.Read(source, ref state, value);
                         }
                         else
                         { // pop
@@ -234,7 +235,7 @@ namespace ProtoBuf.Serializers
                 if (!fieldHandled)
                 {
                     //Helpers.DebugWriteLine(": [" + fieldNumber + "] (unknown)");
-                    if (value == null) value = (T)CreateInstance(source, true);
+                    if (value == null) value = (TBase)CreateInstance(source, true);
                     if (isExtensible)
                     {
                         source.AppendExtensionData(ref state, (IExtensible)value);
@@ -246,9 +247,9 @@ namespace ProtoBuf.Serializers
                 }
             }
             //Helpers.DebugWriteLine("<< Reading fields for " + forType.FullName);
-            if (value == null) value = (T)CreateInstance(source, true);
+            if (value == null) value = (TBase)CreateInstance(source, true);
             if (isRootType) { Callback(value, TypeModel.CallbackType.AfterDeserialize, source.Context); }
-            return value;
+            return (TActual)value;
         }
 
         private object InvokeCallback(MethodInfo method, object obj, SerializationContext context)

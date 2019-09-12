@@ -19,7 +19,7 @@ namespace ProtoBuf.unittest.Meta
         public void RunStructDesrializerForEmptyStream()
         {
             var model = ProtoBuf.Meta.RuntimeTypeModel.Create();
-            var head = TypeSerializer.Create(typeof(CustomerStruct),
+            var head = TypeSerializer.Create(typeof(CustomerStruct), typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IProtoSerializer[] {
                     new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant, false, PrimitiveSerializer<Int32Serializer>.Singleton)),
@@ -43,7 +43,7 @@ namespace ProtoBuf.unittest.Meta
         public void GenerateTypeSerializer()
         {
             var model = ProtoBuf.Meta.RuntimeTypeModel.Create();
-            var head = TypeSerializer.Create(typeof(CustomerStruct),
+            var head = TypeSerializer.Create(typeof(CustomerStruct), typeof(CustomerStruct),
                 new int[] { 1, 2 },
                 new IProtoSerializer[] {
                     new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant,false,  PrimitiveSerializer<Int32Serializer>.Singleton)),

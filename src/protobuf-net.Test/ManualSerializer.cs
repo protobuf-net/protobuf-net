@@ -17,18 +17,50 @@ namespace ProtoBuf
                 var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
                 model.Serialize(ms, obj);
                 var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
-                Assert.Equal("abc", hex);
+                Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
+                // 22 = field 4, type String
+                // 08 = length 8
+                //      2A = field 5, type String
+                //      03 = length 3
+                //          18 = field 3, type Variant
+                //          95-06 = 789 (raw) or -395 (zigzag)
+                //      10 = field 2, type Variant
+                //      C8-03 = 456(raw) or 228(zigzag)
+                // 08 = field 1, type Variant
+                // 7B = 123(raw) or - 62(zigzag)
+
+                ms.Position = 0;
+                var raw = model.Deserialize(ms, null, typeof(A));
+                var clone = Assert.IsType<C>(raw);
+                Assert.NotSame(obj, clone);
+                Assert.Equal(123, clone.AVal);
+                Assert.Equal(456, clone.BVal);
+                Assert.Equal(789, clone.CVal);
             }
         }
 
-        public void WriteManual()
+        [Fact]
+        public void ReadWriteManual()
         {
             using (var ms = new MemoryStream())
             {
                 var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
-                using (var writer = ProtoWriter.Create(out var state, ms, null, null))
+                using (var writer = ProtoWriter.Create(out var state, ms, null))
                 {
                     ProtoWriter.Serialize<A>(obj, writer, ref state, ModelSerializer.Serializer);
+                    var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                    Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
+
+                }
+                ms.Position = 0;
+                using (var reader = ProtoReader.Create(out var state, ms, null))
+                {
+                    var raw = reader.Deserialize<A>(ref state, null, ModelSerializer.Serializer);
+                    var clone = Assert.IsType<C>(raw);
+                    Assert.NotSame(obj, clone);
+                    Assert.Equal(123, clone.AVal);
+                    Assert.Equal(456, clone.BVal);
+                    Assert.Equal(789, clone.CVal);
                 }
             }
         }
