@@ -213,7 +213,7 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
-        /// Indicates whether this field should *repace* existing values (the default is false, meaning *append*).
+        /// Indicates whether this field should *replace* existing values (the default is false, meaning *append*).
         /// This option only applies to list/array data.
         /// </summary>
         public bool OverwriteList
