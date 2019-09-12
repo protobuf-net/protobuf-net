@@ -20,7 +20,7 @@
     /// Abstract API capable of serializing/deserializing complex objects with inheritance
     /// </summary>
     public interface IProtoFactory<TBase, TActual> : IProtoSerializer<TBase, TActual>
-        where TActual : class, TBase
+        where TActual : TBase
     {
         /// <summary>
         /// Populate all possible values from a pre-existing object
