@@ -58,7 +58,7 @@ namespace ProtoBuf.unittest.Serializers
 
         static RuntimeTypeModel CreateModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithDateTime), false)
                 .Add(1, "When");
             return model;

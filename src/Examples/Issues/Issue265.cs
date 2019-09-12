@@ -29,7 +29,7 @@ namespace Examples.Issues
         [Fact]
         public void ShouldSerializeEnumArrayMember()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestMember(model);
             model.Compile("ShouldSerializeEnumArrayMember", "ShouldSerializeEnumArrayMember.dll");
@@ -51,7 +51,7 @@ namespace Examples.Issues
         [Fact]
         public void VerifyThatIntsAreHandledAppropriatelyForComparison()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             var orig = new int[] {3, 4, 5};
             Assert.True(Program.CheckBytes(orig, model, 0x08, 0x03, 0x08, 0x04, 0x08, 0x05));
@@ -62,7 +62,7 @@ namespace Examples.Issues
         [Fact]
         public void ShouldSerializeIndividualEnum()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestIndividual(model);
             model.Compile("ShouldSerializeIndividualEnum", "ShouldSerializeIndividualEnum.dll");
@@ -82,7 +82,7 @@ namespace Examples.Issues
         [Fact]
         public void ShouldSerializeArrayOfEnums()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestArray(model);
             model.Compile("ShouldSerializeArrayOfEnums", "ShouldSerializeArrayOfEnums.dll");

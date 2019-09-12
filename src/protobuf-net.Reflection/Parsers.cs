@@ -1,5 +1,6 @@
 ﻿using Google.Protobuf.Reflection;
 using ProtoBuf;
+using ProtoBuf.Meta;
 using ProtoBuf.Reflection;
 using System;
 using System.Collections.Generic;
@@ -216,9 +217,14 @@ namespace Google.Protobuf.Reflection
             return result;
         }
 
-        public void Serialize(Stream destination, bool includeImports)
+        public void Serialize(TypeModel model, Stream destination, bool includeImports)
         {
-            Serialize((s,o) => { Serializer.Serialize((Stream)o, s); return true; }, includeImports, destination);
+            Tuple<TypeModel, Stream> state = Tuple.Create(model, destination);
+            Serialize((fds,o) => {
+
+                var tuple = (Tuple<TypeModel, Stream>)o;
+                tuple.Item1.Serialize(tuple.Item2, fds);
+                return true; }, includeImports, state);
         }
 
         internal FileDescriptorProto GetFile(FileDescriptorProto from, string path)

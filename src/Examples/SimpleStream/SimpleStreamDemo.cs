@@ -11,10 +11,6 @@ using ProtoBuf;
 using System.Runtime.Serialization;
 using System.ComponentModel;
 using System.ServiceModel;
-#if NET_3_0
-#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
-#endif
-#endif
 #if NET_3_5
 using System.Runtime.Serialization.Json;
 using Serializer = ProtoBuf.Serializer;

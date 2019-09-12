@@ -33,7 +33,7 @@ namespace ProtoBuf.unittest.Meta
             [ProtoMember(8)] public U64 U64 { get; set; }
         }
         static RuntimeTypeModel BuildModel(bool withPassThru) {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             if (withPassThru)
             {
                 model.Add(typeof (I8), true).EnumPassthru = true;
@@ -156,7 +156,7 @@ namespace ProtoBuf.unittest.Meta
         }
         RuntimeTypeModel CreateRemappingModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(EnumA), true);
             model.Add(typeof(EnumB), true);
             model.Add(typeof(MappedValuesA), true);

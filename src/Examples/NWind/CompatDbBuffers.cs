@@ -25,7 +25,7 @@ namespace ProtoBuf.NWind
         [Fact]
         public void GenerateModel()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(DatabaseCompat), true);
             model.Compile("CompatDbBuffers", "CompatDbBuffers.dll");
             Log?.WriteLine(Path.Combine(Environment.CurrentDirectory, "CompatDbBuffers.dll"));

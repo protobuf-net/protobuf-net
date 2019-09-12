@@ -140,7 +140,7 @@ namespace Examples
         [Fact]
         public void TestViaXmlProtoNotSet()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(DetectMissing), true);
             DetectMissing dm1 = (DetectMissing)model.DeepClone(new DetectMissing());
             Assert.False(dm1.FooSpecified, "FooSpecified:Runtime");
@@ -161,7 +161,7 @@ namespace Examples
         [Fact]
         public void TestViaXmlProtoSet()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(DetectMissing), true);
             DetectMissing dm1 = (DetectMissing)model.DeepClone(new DetectMissing { FooSpecified = true, BarSpecified = true });
             Assert.True(dm1.FooSpecified, "FooSpecified:Runtime");

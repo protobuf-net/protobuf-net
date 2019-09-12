@@ -1,5 +1,4 @@
-﻿#if FEAT_SERVICEMODEL && PLAT_XMLSERIALIZER
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.ServiceModel.Description;
@@ -49,4 +48,3 @@ namespace ProtoBuf.ServiceModel
         }
     }
 }
-#endif

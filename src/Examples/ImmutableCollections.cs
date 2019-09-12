@@ -139,7 +139,7 @@ namespace Examples
         private static void TestDictionaryImpl<T>([CallerMemberName] string name = null)
             where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
 
             TestDictionaryImpl<T>(model, "Runtime");
@@ -190,7 +190,7 @@ namespace Examples
         private static void TestListImpl<T>([CallerMemberName] string name = null)
             where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestListImpl<T>(model, "Runtime");
 
@@ -262,7 +262,7 @@ namespace Examples
         //private static void TestArrayImpl<T>([CallerMemberName] string name = null)
         //    where T : class, IImmutableCollectionWrapper, new()
         //{
-        //    var model = TypeModel.Create();
+        //    var model = RuntimeTypeModel.Create();
         //    model.AutoCompile = false;
         //    TestArrayImpl<T>(model, "Runtime");
 
@@ -315,7 +315,7 @@ namespace Examples
         private static void TestHashSetImpl<T>([CallerMemberName] string name = null)
             where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestHashSetImpl<T>(model, "Runtime");
 
@@ -361,7 +361,7 @@ namespace Examples
         private static void TestSortedSetImpl<T>([CallerMemberName] string name = null)
     where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestSortedSetImpl<T>(model, "Runtime");
 
@@ -404,7 +404,7 @@ namespace Examples
         private static void TestSortedDictionaryImpl<T>([CallerMemberName] string name = null)
     where T : class, IImmutableCollectionWrapper, new()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
             TestSortedDictionaryImpl<T>(model, "Runtime");
 

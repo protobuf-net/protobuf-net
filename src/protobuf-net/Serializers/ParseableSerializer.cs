@@ -12,27 +12,9 @@ namespace ProtoBuf.Serializers
         public static ParseableSerializer TryCreate(Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
-#if PORTABLE || COREFX || PROFILE259
-			MethodInfo method = null;
-
-#if COREFX || PROFILE259
-			foreach (MethodInfo tmp in type.GetTypeInfo().GetDeclaredMethods("Parse"))
-#else
-            foreach (MethodInfo tmp in type.GetMethods(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly))
-#endif
-            {
-                ParameterInfo[] p;
-                if (tmp.Name == "Parse" && tmp.IsPublic && tmp.IsStatic && tmp.DeclaringType == type && (p = tmp.GetParameters()) != null && p.Length == 1 && p[0].ParameterType == typeof(string))
-                {
-                    method = tmp;
-                    break;
-                }
-            }
-#else
             MethodInfo method = type.GetMethod("Parse",
                 BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly,
                 null, new Type[] { typeof(string) }, null);
-#endif
             if (method != null && method.ReturnType == type)
             {
                 if (Helpers.IsValueType(type))
@@ -46,15 +28,8 @@ namespace ProtoBuf.Serializers
         }
         private static MethodInfo GetCustomToString(Type type)
         {
-#if PORTABLE || COREFX || PROFILE259
-			MethodInfo method = Helpers.GetInstanceMethod(type, "ToString", Helpers.EmptyTypes);
-            if (method == null || !method.IsPublic || method.IsStatic || method.DeclaringType != type) return null;
-            return method;
-#else
-
             return type.GetMethod("ToString", BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly,
                         null, Helpers.EmptyTypes, null);
-#endif
         }
 
         private ParseableSerializer(MethodInfo parse)

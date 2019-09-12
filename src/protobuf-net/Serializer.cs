@@ -3,6 +3,8 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Reflection;
+using System.ComponentModel;
+using System.Buffers;
 
 namespace ProtoBuf
 {
@@ -16,7 +18,7 @@ namespace ProtoBuf
     /// extensible, allowing a type to be deserialized / merged even if some data is
     /// not recognised.
     /// </remarks>
-    public static partial class Serializer
+    public static class Serializer
     {
 #if !NO_RUNTIME
         /// <summary>
@@ -116,8 +118,6 @@ namespace ProtoBuf
                 return Deserialize<TTo>(ms);
             }
         }
-#if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
-        private const string ProtoBinaryField = "proto";
 
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied SerializationInfo.
@@ -148,8 +148,7 @@ namespace ProtoBuf
                 info.AddValue(ProtoBinaryField, ms.ToArray());
             }
         }
-#endif
-#if PLAT_XMLSERIALIZER
+
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied XmlWriter.
         /// </summary>
@@ -203,9 +202,9 @@ namespace ProtoBuf
                 Serializer.Merge(ms, instance);
             }
         }
-#endif
 
-#if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
+        private const string ProtoBinaryField = "proto";
+
         /// <summary>
         /// Applies a protocol-buffer from a SerializationInfo to an existing instance.
         /// </summary>
@@ -240,7 +239,6 @@ namespace ProtoBuf
                 }
             }
         }
-#endif
 
         /// <summary>
         /// Precompiles the serializer for a given type.
@@ -250,7 +248,6 @@ namespace ProtoBuf
             NonGeneric.PrepareSerializer(typeof(T));
         }
 
-#if PLAT_BINARYFORMATTER && !(COREFX || PROFILE259)
         /// <summary>
         /// Creates a new IFormatter that uses protocol-buffer [de]serialization.
         /// </summary>
@@ -260,7 +257,7 @@ namespace ProtoBuf
         {
             return RuntimeTypeModel.Default.CreateFormatter(typeof(T));
         }
-#endif
+
         /// <summary>
         /// Reads a sequence of consecutive length-prefixed items from a stream, using
         /// either base-128 or fixed-length prefixes. Base-128 prefixes with a tag
@@ -388,7 +385,7 @@ namespace ProtoBuf
         /// The field number that is used as a default when serializing/deserializing a list of objects.
         /// The data is treated as repeated message with field number 1.
         /// </summary>
-        public const int ListItemTag = 1;
+        public const int ListItemTag = TypeModel.ListItemTag;
 
 #if !NO_RUNTIME
         /// <summary>
@@ -506,19 +503,67 @@ namespace ProtoBuf
             }
         }
 #endif
-        /// <summary>
-        /// Maps a field-number to a type
-        /// </summary>
-        public delegate Type TypeResolver(int fieldNumber);
 
         /// <summary>
         /// Releases any internal buffers that have been reserved for efficiency; this does not affect any serialization
         /// operations; simply: it can be used (optionally) to release the buffers for garbage collection (at the expense
         /// of having to re-allocate a new buffer for the next operation, rather than re-use prior buffers).
         /// </summary>
-        public static void FlushPool()
+        [Obsolete]
+        [Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        public static void FlushPool() { }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given type from the supplied buffer.
+        /// </summary>
+        public static T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
         {
-            BufferPool.Flush();
+            var model = RuntimeTypeModel.Default;
+            using (var reader = ProtoReader.Create(out var state, source, model, context))
+            {
+                return (T)model.Deserialize(reader, ref state, value, typeof(T));
+            }
+        }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given type from the supplied buffer.
+        /// </summary>
+        public static T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
+        {
+            var model = RuntimeTypeModel.Default;
+            using (var reader = ProtoReader.Create(out var state, source, model, context))
+            {
+                return (T)model.Deserialize(reader, ref state, value, typeof(T));
+            }
+        }
+
+        /// <summary>
+        /// Writes a protocol-buffer representation of the given instance to the supplied writer.
+        /// </summary>
+        /// <param name="instance">The existing instance to be serialized (cannot be null).</param>
+        /// <param name="destination">The destination stream to write to.</param>
+        /// <param name="context">Additional serialization context</param>
+        public static void Serialize<T>(IBufferWriter<byte> destination, T instance, SerializationContext context = null)
+        {
+#pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
+            if (instance != null)
+#pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
+            {
+                var model = RuntimeTypeModel.Default;
+                using (var writer = ProtoWriter.Create(out var state, destination, model, context))
+                {
+                    try
+                    {
+                        model.Serialize(writer, ref state, instance);
+                        writer.Close(ref state);
+                    }
+                    catch
+                    {
+                        writer.Abandon();
+                        throw;
+                    }
+                }
+            }
         }
     }
 }

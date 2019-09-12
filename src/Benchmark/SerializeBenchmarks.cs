@@ -63,7 +63,7 @@ namespace ProtoBuf
         public void Setup()
         {
             _data = File.ReadAllBytes("test.bin");
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof(protogen.Database), true);
             model.Add(typeof(protogen.Order), true);
             model.Add(typeof(protogen.OrderLine), true);
@@ -73,7 +73,7 @@ namespace ProtoBuf
 #if !(NETCOREAPP2_0 || NETCOREAPP2_1 || NETCOREAPP3_0)
             _dll = model.Compile("MySerializer", "DalSerializer.dll");
 #endif
-            _auto = TypeModel.CreateForAssembly<protogen.Database>();
+            _auto = RuntimeTypeModel.CreateForAssembly<protogen.Database>();
 
             using (var reader = ProtoReader.Create(out var state, Exposable(_data), model))
             {

@@ -17,7 +17,7 @@ namespace ProtoBuf.Issues
         public void CanDeserialiseImmutableArray(bool autoCompile)
         {
             var testClass = new ImmutableArrayTestClass(ImmutableArray.Create("a", "b", "c"));
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = autoCompile;
 
             ImmutableArrayTestClass testClassClone;
@@ -37,7 +37,7 @@ namespace ProtoBuf.Issues
         public void CanDeserialiseImmutableList(bool autoCompile)
         {
             var testClass = new ImmutableListTestClass(ImmutableList.Create("a", "b", "c"));
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = autoCompile;
 
             ImmutableListTestClass testClassClone;
@@ -57,7 +57,7 @@ namespace ProtoBuf.Issues
         public void CanDeserialiseImmutableHashSet(bool autoCompile)
         {
             var testClass = new ImmutableHashSetTestClass(ImmutableHashSet.Create("a", "b", "c"));
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = autoCompile;
 
             ImmutableHashSetTestClass testClassClone;
@@ -77,7 +77,7 @@ namespace ProtoBuf.Issues
         public void CanDeserialiseImmutableSortedSet(bool autoCompile)
         {
             var testClass = new ImmutableSortedSetTestClass(ImmutableSortedSet.Create("a", "b", "c"));
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = autoCompile;
 
             ImmutableSortedSetTestClass testClassClone;
@@ -101,7 +101,7 @@ namespace ProtoBuf.Issues
             builder.Add("b", "2");
             builder.Add("c", "2");
             var testClass = new ImmutableDictionaryTestClass(builder.ToImmutable());
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = autoCompile;
 
             ImmutableDictionaryTestClass testClassClone;
@@ -125,7 +125,7 @@ namespace ProtoBuf.Issues
             builder.Add("b", "2");
             builder.Add("c", "2");
             var testClass = new ImmutableSortedDictionaryTestClass(builder.ToImmutable());
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = autoCompile;
 
             ImmutableSortedDictionaryTestClass testClassClone;

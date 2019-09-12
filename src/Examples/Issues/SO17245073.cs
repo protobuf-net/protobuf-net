@@ -11,7 +11,7 @@ namespace Examples.Issues
         [Fact]
         public void Exec()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             Assert.True(model[typeof(A)].EnumPassthru, "A");
             Assert.True(model[typeof(B)].EnumPassthru, "B");
 

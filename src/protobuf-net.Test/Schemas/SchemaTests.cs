@@ -2,6 +2,7 @@
 using Microsoft.CSharp;
 using Microsoft.VisualBasic;
 using Newtonsoft.Json;
+using ProtoBuf.Meta;
 using ProtoBuf.Reflection;
 using System;
 using System.CodeDom.Compiler;
@@ -362,7 +363,7 @@ namespace ProtoBuf.Schemas
             var parserBinPath = Path.Combine(schemaPath, Path.ChangeExtension(path, "parser.bin"));
             using (var file = File.Create(parserBinPath))
             {
-                set.Serialize(file, false);
+                set.Serialize(RuntimeTypeModel.Default, file, false);
             }
 
             var parserJson = set.Serialize((s, _) => JsonConvert.SerializeObject(s, Formatting.Indented, jsonSettings), false);
@@ -372,7 +373,11 @@ namespace ProtoBuf.Schemas
 
             try
             {
-                foreach (var file in CSharpCodeGenerator.Default.Generate(set))
+                var options = new Dictionary<string, string>
+                {
+                    { "services", "true" },
+                };
+                foreach (var file in CSharpCodeGenerator.Default.Generate(set, options: options))
                 {
                     var newExtension = "parser" + Path.GetExtension(file.Name);
                     var newFileName = Path.ChangeExtension(file.Name, newExtension);

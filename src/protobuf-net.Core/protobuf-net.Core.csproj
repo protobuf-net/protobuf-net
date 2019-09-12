@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <RootNamespace>ProtoBuf</RootNamespace>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <AssemblyName>protobuf-net.Core</AssemblyName>
+    <Title>protobuf-net.Core</Title>
+    <Description>Provides simple access to fast and efficient "Protocol Buffers" serialization from .NET applications</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.1" />
+    <PackageReference Include="System.Buffers" Version="4.5.0" />
+  </ItemGroup>
+
+</Project>

@@ -38,9 +38,7 @@ namespace ProtoBuf.Meta
                 Type paramType = args[i].ParameterType;
                 if (paramType == typeof(SerializationContext)) { }
                 else if (paramType == typeof(System.Type)) { }
-#if PLAT_BINARYFORMATTER
                 else if (paramType == typeof(System.Runtime.Serialization.StreamingContext)) { }
-#endif
                 else { return false; }
             }
             return true;

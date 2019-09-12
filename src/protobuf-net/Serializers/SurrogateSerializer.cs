@@ -44,17 +44,8 @@ namespace ProtoBuf.Serializers
         }
         private static bool HasCast(Type type, Type from, Type to, out MethodInfo op)
         {
-#if PROFILE259
-			System.Collections.Generic.List<MethodInfo> list = new System.Collections.Generic.List<MethodInfo>();
-            foreach (var item in type.GetRuntimeMethods())
-            {
-                if (item.IsStatic) list.Add(item);
-            }
-            MethodInfo[] found = list.ToArray();
-#else
             const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
             MethodInfo[] found = type.GetMethods(flags);
-#endif
             ParameterInfo[] paramTypes;
             Type convertAttributeType = null;
             for (int i = 0; i < found.Length; i++)

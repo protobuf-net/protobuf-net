@@ -239,7 +239,7 @@ namespace Examples.Dictionary
         [Fact]
         public void CheckPerformanceNotInsanelyBad()
         {
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.Add(typeof (PropsViaDictionaryDefault), true);
             model.Add(typeof (PropsViaDictionaryGrouped), true);
             model.Add(typeof (PropsViaProperties), true);

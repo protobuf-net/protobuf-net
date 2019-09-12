@@ -20,7 +20,7 @@ namespace Examples.Issues.DetectMissing
             Assert.Equal((uint)0, obj.uid); //, "uid wasn't zero");
             Assert.True(obj.uidSpecified); //, "uid wasn't specified");
 
-            var model = TypeModel.Create();
+            var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
 
             ExecuteImpl(obj, model, "Runtime");

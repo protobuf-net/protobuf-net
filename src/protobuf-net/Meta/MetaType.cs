@@ -6,10 +6,6 @@ using ProtoBuf.Serializers;
 using System.Reflection;
 using System.Collections.Generic;
 
-#if PROFILE259
-using System.Linq;
-#endif
-
 namespace ProtoBuf.Meta
 {
     /// <summary>
@@ -73,11 +69,7 @@ namespace ProtoBuf.Meta
         private BasicList subTypes;
         private bool IsValidSubType(Type subType)
         {
-#if COREFX || PROFILE259
-            return typeInfo.IsAssignableFrom(subType.GetTypeInfo());
-#else
             return Type.IsAssignableFrom(subType);
-#endif
         }
         /// <summary>
         /// Adds a known sub-type to the inheritance model
@@ -93,12 +85,8 @@ namespace ProtoBuf.Meta
         {
             if (derivedType == null) throw new ArgumentNullException(nameof(derivedType));
             if (fieldNumber < 1) throw new ArgumentOutOfRangeException(nameof(fieldNumber));
-#if COREFX || COREFX || PROFILE259
-			if (!(typeInfo.IsClass || typeInfo.IsInterface) || typeInfo.IsSealed) {
-#else
             if (!(Type.IsClass || Type.IsInterface) || Type.IsSealed)
             {
-#endif
                 throw new InvalidOperationException("Sub-types can only be added to non-sealed classes");
             }
             if (!IsValidSubType(derivedType))
@@ -116,11 +104,9 @@ namespace ProtoBuf.Meta
             model.ResetKeyCache();
             return this;
         }
-#if COREFX || PROFILE259
-		internal static readonly TypeInfo ienumerable = typeof(IEnumerable).GetTypeInfo();
-#else
+
         internal static readonly Type ienumerable = typeof(IEnumerable);
-#endif
+
         private void SetBaseType(MetaType baseType)
         {
             if (baseType == null) throw new ArgumentNullException(nameof(baseType));
@@ -157,11 +143,7 @@ namespace ProtoBuf.Meta
         {
             get
             {
-#if COREFX || PROFILE259
-				return typeInfo.IsValueType;
-#else
                 return Type.IsValueType;
-#endif
             }
         }
         /// <summary>
@@ -207,22 +189,12 @@ namespace ProtoBuf.Meta
             if (!string.IsNullOrEmpty(name)) return name;
 
             string typeName = Type.Name;
-            if (Type
-#if COREFX || PROFILE259
-                .GetTypeInfo()
-#endif
-                .IsGenericType)
+            if (Type.IsGenericType)
             {
                 var sb = new StringBuilder(typeName);
                 int split = typeName.IndexOf('`');
                 if (split >= 0) sb.Length = split;
-                foreach (Type arg in Type
-#if COREFX || PROFILE259
-					.GetTypeInfo().GenericTypeArguments
-#else
-                    .GetGenericArguments()
-#endif
-                    )
+                foreach (Type arg in Type.GetGenericArguments())
                 {
                     sb.Append('_');
                     Type tmp = arg;
@@ -292,11 +264,7 @@ namespace ProtoBuf.Meta
         private MethodInfo ResolveMethod(string name, bool instance)
         {
             if (string.IsNullOrEmpty(name)) return null;
-#if COREFX
-            return instance ? Helpers.GetInstanceMethod(typeInfo, name) : Helpers.GetStaticMethod(typeInfo, name);
-#else
             return instance ? Helpers.GetInstanceMethod(Type, name) : Helpers.GetStaticMethod(Type, name);
-#endif
         }
 
         private readonly RuntimeTypeModel model;
@@ -320,23 +288,14 @@ namespace ProtoBuf.Meta
             }
 
             Type = type;
-#if COREFX || PROFILE259
-			this.typeInfo = type.GetTypeInfo();
-#endif
             this.model = model;
 
             if (Helpers.IsEnum(type))
             {
-#if COREFX || PROFILE259
-				EnumPassthru = typeInfo.IsDefined(typeof(FlagsAttribute), false);
-#else
                 EnumPassthru = type.IsDefined(typeof(FlagsAttribute), false);
-#endif
             }
         }
-#if COREFX || PROFILE259
-		private readonly TypeInfo typeInfo;
-#endif
+
         /// <summary>
         /// Throws an exception if the type has been made immutable
         /// </summary>
@@ -434,11 +393,7 @@ namespace ProtoBuf.Meta
             {
                 foreach (SubType subType in subTypes)
                 {
-#if COREFX || PROFILE259
-					if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type.GetTypeInfo()))
-#else
                     if (!subType.DerivedType.IgnoreListHandling && ienumerable.IsAssignableFrom(subType.DerivedType.Type))
-#endif
                     {
                         throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
                     }
@@ -484,11 +439,7 @@ namespace ProtoBuf.Meta
         }
         private static Type GetBaseType(MetaType type)
         {
-#if COREFX || PROFILE259
-			return type.typeInfo.BaseType;
-#else
             return type.Type.BaseType;
-#endif
         }
         internal static bool GetAsReferenceDefault(RuntimeTypeModel model, Type type)
         {
@@ -548,11 +499,7 @@ namespace ProtoBuf.Meta
                     {
                         if (item.TryGet("knownTypeName", out tmp))
                         {
-                            knownType = TypeModel.ResolveKnownType((string)tmp, Type
-#if COREFX || PROFILE259
-                            .GetTypeInfo()
-#endif
-                            .Assembly);
+                            knownType = TypeModel.ResolveKnownType((string)tmp, Type.Assembly);
                         }
                         else if (item.TryGet("knownType", out tmp))
                         {
@@ -642,26 +589,8 @@ namespace ProtoBuf.Meta
 
             BasicList members = new BasicList();
 
-#if PROFILE259
-			IEnumerable<MemberInfo> foundList;
-            if(isEnum) {
-                foundList = Type.GetRuntimeFields();
-            }
-            else
-            {
-                List<MemberInfo> list = new List<MemberInfo>();
-                foreach(PropertyInfo prop in Type.GetRuntimeProperties()) {
-                    MethodInfo getter = Helpers.GetGetMethod(prop, false, false);
-                    if(getter != null && !getter.IsStatic) list.Add(prop);
-                }
-                foreach(FieldInfo fld in Type.GetRuntimeFields()) if(fld.IsPublic && !fld.IsStatic) list.Add(fld);
-                foreach(MethodInfo mthd in Type.GetRuntimeMethods()) if(mthd.IsPublic && !mthd.IsStatic) list.Add(mthd);
-                foundList = list;
-            }
-#else
             MemberInfo[] foundList = Type.GetMembers(isEnum ? BindingFlags.Public | BindingFlags.Static
                 : BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-#endif
             bool hasConflictingEnumValue = false;
             foreach (MemberInfo member in foundList)
             {
@@ -773,11 +702,7 @@ namespace ProtoBuf.Meta
             }
 
             // we just don't like delegate types ;p
-#if COREFX || PROFILE259
-			if (effectiveType.GetTypeInfo().IsSubclassOf(typeof(Delegate))) effectiveType = null;
-#else
             if (effectiveType.IsSubclassOf(typeof(Delegate))) effectiveType = null;
-#endif
             if (effectiveType != null)
             {
                 ProtoMemberAttribute normalizedAttribute = NormalizeProtoMember(model, member, family, forced, isEnum, partialMembers, dataMemberOffset, inferTagByName, ref hasConflictingEnumValue, backingMember);
@@ -834,14 +759,9 @@ namespace ProtoBuf.Meta
         {
             mappedMembers = null;
             if (type == null) throw new ArgumentNullException(nameof(type));
-#if COREFX || PROFILE259
-			TypeInfo typeInfo = type.GetTypeInfo();
-            if (typeInfo.IsAbstract) return null; // as if!
-            ConstructorInfo[] ctors = Helpers.GetConstructors(typeInfo, false);
-#else
             if (type.IsAbstract) return null; // as if!
             ConstructorInfo[] ctors = Helpers.GetConstructors(type, false);
-#endif
+
             // need to have an interesting constructor to bother even checking this stuff
             if (ctors.Length == 0 || (ctors.Length == 1 && ctors[0].GetParameters().Length == 0)) return null;
 
@@ -928,11 +848,7 @@ namespace ProtoBuf.Meta
                     if (callbacks == null) { callbacks = new MethodInfo[8]; }
                     else if (callbacks[index] != null)
                     {
-#if COREFX || PROFILE259
-						Type reflected = method.DeclaringType;
-#else
                         Type reflected = method.ReflectedType;
-#endif
                         throw new ProtoException("Duplicate " + callbackTypeName + " callbacks on " + reflected.FullName);
                     }
                     callbacks[index] = method;
@@ -965,19 +881,12 @@ namespace ProtoBuf.Meta
                 else
                 {
                     attrib = GetAttribute(attribs, "ProtoBuf.ProtoEnumAttribute");
-#if PORTABLE || CF || COREFX || PROFILE259
-					fieldNumber = Convert.ToInt32(((FieldInfo)member).GetValue(null));
-#else
                     fieldNumber = Convert.ToInt32(((FieldInfo)member).GetRawConstantValue());
-#endif
                     if (attrib != null)
                     {
                         GetFieldName(ref name, attrib, nameof(ProtoEnumAttribute.Name));
 
                         if ((bool)Helpers.GetInstanceMethod(attrib.AttributeType
-#if COREFX || PROFILE259
-							 .GetTypeInfo()
-#endif
                             , nameof(ProtoEnumAttribute.HasValue)).Invoke(attrib.Target, null))
                         {
                             if (attrib.TryGet(nameof(ProtoEnumAttribute.Value), out object tmp))
@@ -1147,11 +1056,7 @@ namespace ProtoBuf.Meta
             if (vm != null)
             {
                 vm.BackingMember = normalizedAttribute.BackingMember;
-#if COREFX || PROFILE259
-				TypeInfo finalType = typeInfo;
-#else
                 Type finalType = Type;
-#endif
                 PropertyInfo prop = Helpers.GetProperty(finalType, member.Name + "Specified", true);
                 MethodInfo getMethod = Helpers.GetGetMethod(prop, true, true);
                 if (getMethod == null || getMethod.IsStatic) prop = null;
@@ -1419,37 +1324,13 @@ namespace ProtoBuf.Meta
         private ValueMember AddField(int fieldNumber, string memberName, Type itemType, Type defaultType, object defaultValue)
         {
             MemberInfo mi = null;
-#if PROFILE259
-			mi = Helpers.IsEnum(Type) ? Type.GetTypeInfo().GetDeclaredField(memberName) : Helpers.GetInstanceMember(Type.GetTypeInfo(), memberName);
-
-#else
             MemberInfo[] members = Type.GetMember(memberName, Helpers.IsEnum(Type) ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
             if (members != null && members.Length == 1) mi = members[0];
-#endif
             if (mi == null) throw new ArgumentException("Unable to determine member: " + memberName, nameof(memberName));
 
             Type miType;
             PropertyInfo pi = null;
             FieldInfo fi = null;
-#if PORTABLE || COREFX || PROFILE259
-			pi = mi as PropertyInfo;
-            if (pi == null)
-            {
-                fi = mi as FieldInfo;
-                if (fi == null)
-                {
-                    throw new NotSupportedException(mi.GetType().Name);
-                }
-                else
-                {
-                    miType = fi.FieldType;
-                }
-            }
-            else
-            {
-                miType = pi.PropertyType;
-            }
-#else
             switch (mi.MemberType)
             {
                 case MemberTypes.Field:
@@ -1461,29 +1342,15 @@ namespace ProtoBuf.Meta
                 default:
                     throw new NotSupportedException(mi.MemberType.ToString());
             }
-#endif
             ResolveListTypes(model, miType, ref itemType, ref defaultType);
 
             MemberInfo backingField = null;
             if (pi?.CanWrite == false)
             {
                 string name = $"<{((PropertyInfo)mi).Name}>k__BackingField";
-#if PROFILE259
-				var backingMembers = Type.GetTypeInfo().DeclaredMembers;
-	            var memberInfos = backingMembers as MemberInfo[] ?? backingMembers.ToArray();
-	            if (memberInfos.Length == 1)
-	            {
-		            MemberInfo first = memberInfos.FirstOrDefault();
-		            if (first is FieldInfo)
-		            {
-			            backingField = first;
-		            }
-	            }
-#else
                 var backingMembers = Type.GetMember($"<{((PropertyInfo)mi).Name}>k__BackingField", Helpers.IsEnum(Type) ? BindingFlags.Static | BindingFlags.Public : BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                 if (backingMembers != null && backingMembers.Length == 1 && backingMembers[0] is FieldInfo)
                     backingField = backingMembers[0];
-#endif
             }
             ValueMember newField = new ValueMember(model, Type, fieldNumber, backingField ?? mi, miType, itemType, defaultType, DataFormat.Default, defaultValue);
             if (backingField != null)
@@ -1528,31 +1395,17 @@ namespace ProtoBuf.Meta
 
             if (itemType != null && defaultType == null)
             {
-#if COREFX || PROFILE259
-				TypeInfo typeInfo = type.GetTypeInfo();
-                if (typeInfo.IsClass && !typeInfo.IsAbstract && Helpers.GetConstructor(typeInfo, Helpers.EmptyTypes, true) != null)
-#else
                 if (type.IsClass && !type.IsAbstract && Helpers.GetConstructor(type, Helpers.EmptyTypes, true) != null)
-#endif
                 {
                     defaultType = type;
                 }
                 if (defaultType == null)
                 {
-#if COREFX || PROFILE259
-					if (typeInfo.IsInterface)
-#else
                     if (type.IsInterface)
-#endif
                     {
                         Type[] genArgs;
-#if COREFX || PROFILE259
-						if (typeInfo.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
-                            && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = typeInfo.GenericTypeArguments))
-#else
                         if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IDictionary<,>)
                             && itemType == typeof(System.Collections.Generic.KeyValuePair<,>).MakeGenericType(genArgs = type.GetGenericArguments()))
-#endif
                         {
                             defaultType = typeof(System.Collections.Generic.Dictionary<,>).MakeGenericType(genArgs);
                         }
@@ -1642,11 +1495,7 @@ namespace ProtoBuf.Meta
 
         private static IEnumerable<Type> GetAllGenericArguments(Type type)
         {
-#if PROFILE259
-	        var genericArguments = type.GetGenericTypeDefinition().GenericTypeArguments;
-#else
             var genericArguments = type.GetGenericArguments();
-#endif
             foreach (var arg in genericArguments)
             {
                 yield return arg;
@@ -1851,11 +1700,7 @@ namespace ProtoBuf.Meta
                 NewLine(builder, indent).Append("enum ").Append(GetSchemaTypeName()).Append(" {");
                 if (fieldsArr.Length == 0 && EnumPassthru)
                 {
-                    if (Type
-#if COREFX || PROFILE259
-                    .GetTypeInfo()
-#endif
-                        .IsDefined(typeof(FlagsAttribute), true))
+                    if (Type.IsDefined(typeof(FlagsAttribute), true))
                     {
                         NewLine(builder, indent + 1).Append("// this is a composite/flags enumeration");
                     }
@@ -1863,23 +1708,11 @@ namespace ProtoBuf.Meta
                     {
                         NewLine(builder, indent + 1).Append("// this enumeration will be passed as a raw value");
                     }
-                    foreach (FieldInfo field in
-#if PROFILE259
-						Type.GetRuntimeFields()
-#else
-                        Type.GetFields()
-#endif
-
-                        )
+                    foreach (FieldInfo field in Type.GetFields())
                     {
                         if (field.IsStatic && field.IsLiteral)
                         {
-                            object enumVal;
-#if PORTABLE || CF || NETSTANDARD1_3 || NETSTANDARD1_4 || PROFILE259 || UAP
-							enumVal = Convert.ChangeType(field.GetValue(null), Enum.GetUnderlyingType(field.FieldType), System.Globalization.CultureInfo.InvariantCulture);
-#else
-                            enumVal = field.GetRawConstantValue();
-#endif
+                            object enumVal = field.GetRawConstantValue();
                             NewLine(builder, indent + 1).Append(field.Name).Append(" = ").Append(enumVal).Append(";");
                         }
                     }

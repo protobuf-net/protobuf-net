@@ -75,7 +75,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
             m.AutoCompile = false;
             m.Add(typeof(ASurrogateBase), true).AddSubType(1, typeof(ASurrogate));
             m.Add(typeof(A), false).SetSurrogate(typeof(ASurrogate));

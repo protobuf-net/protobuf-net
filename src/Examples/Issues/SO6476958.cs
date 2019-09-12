@@ -63,7 +63,7 @@ namespace Examples.Issues
         [Fact]
         public void Execute()
         {
-            var m = TypeModel.Create();
+            var m = RuntimeTypeModel.Create();
             m.AutoCompile = false;
             m.Add(typeof(object), false).AddSubType(1, typeof(A)).AddSubType(2, typeof(B));
 

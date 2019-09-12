@@ -124,13 +124,12 @@ namespace Examples
             return true;
         }
 
-        public static void ExpectFailure<TException>(Action action, string message = null)
+        public static TException ExpectFailure<TException>(Action action, string message = null)
             where TException : Exception
         {
             var ex = Assert.Throws<TException>(action);
-            if (message != null) Assert.Equal(
-                NormalizeParameterName(DeVersion(message)),
-                NormalizeParameterName(DeVersion(ex.Message)));
+            if (message != null) Assert.Equal(DeVersion(message), DeVersion(ex.Message));
+            return ex;
         }
         private static string DeVersion(string input) => Regex.Replace(input, "Version=([0-9.]+)", "Version=*");
         private static string NormalizeParameterName(string input)
