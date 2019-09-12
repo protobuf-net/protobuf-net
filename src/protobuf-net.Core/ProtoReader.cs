@@ -1427,5 +1427,28 @@ namespace ProtoBuf
             EndSubItem(tok, this, ref state);
             return result;
         }
+
+        /// <summary>
+        /// Change the type of an object (or create a new object)
+        /// </summary>
+        public TActual Cast<TBase, TActual>(TBase value, IProtoFactory<TBase, TActual> serializer = null)
+            where TActual : class, TBase
+        {
+            if (!(value is TActual actual))
+            {
+                if (serializer == null)
+                {
+                    serializer = Model.GetSerializer<TBase, TActual>() as IProtoFactory<TBase, TActual>;
+                }
+                actual = serializer?.Create(Context) ?? Activator.CreateInstance<TActual>();
+                if (value is object)
+                {
+                    if (serializer == null) throw new InvalidOperationException(
+                        $"No serializer available that implements IProtoObjectSerializer<{typeof(TBase).Name}, {typeof(TActual).Name}>");
+                    serializer.Copy(Context, value, actual);
+                }
+            }
+            return actual;
+        }
     }
 }

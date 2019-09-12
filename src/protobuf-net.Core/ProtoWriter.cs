@@ -1124,6 +1124,21 @@ namespace ProtoBuf
 #pragma warning restore CS0618
         }
 
+        /// <summary>
+        /// Writes an object to the input writer
+        /// </summary>
+        public static void Serialize<T>(T value, ProtoWriter writer, ref State state, IProtoSerializer<T, T> serializer = null)
+        {
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
+            writer.CheckClear(ref state);
+            if (value != null)
+            {
+                writer.SetRootObject(value);
+                (serializer ?? TypeModel.GetSerializer<T, T>(writer.model)).Serialize(writer, ref state, value);
+            }
+            writer.CheckClear(ref state);
+        }
+
         private static class TypeHelper<T>
         {
             public static readonly bool IsObjectType = !Helpers.IsValueType(typeof(T));

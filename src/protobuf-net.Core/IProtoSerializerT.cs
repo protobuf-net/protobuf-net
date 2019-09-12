@@ -17,6 +17,23 @@
     }
 
     /// <summary>
+    /// Abstract API capable of serializing/deserializing complex objects with inheritance
+    /// </summary>
+    public interface IProtoFactory<TBase, TActual> : IProtoSerializer<TBase, TActual>
+        where TActual : class, TBase
+    {
+        /// <summary>
+        /// Populate all possible values from a pre-existing object
+        /// </summary>
+        void Copy(SerializationContext context, TBase from, TActual to);
+
+        /// <summary>
+        /// Create a new instance of the concrete type TActual
+        /// </summary>
+        TActual Create(SerializationContext context);
+    }
+
+    /// <summary>
     /// Abstract API capable of serializing/deserializing
     /// </summary>
     public interface IProtoSerializer<T> : IProtoSerializer<T, T> { }
