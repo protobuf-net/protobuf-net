@@ -231,6 +231,20 @@ namespace ProtoBuf.Compiler
         public Local InputValue { get; }
 
         private readonly string assemblyName;
+
+        internal CompilerContext(CompilerContext parent, ILGenerator il, bool isStatic, bool isWriter, Type inputType, string traceName)
+            : this(parent.Scope, il, isStatic, isWriter, parent.methodPairs, parent.Model, parent.MetadataVersion, parent.assemblyName, inputType, traceName)
+        { }
+
+        internal void ThrowException(Type exceptionType) => il.ThrowException(exceptionType);
+
+        internal bool TryGetAdditionalSerializerInstance(object key, out FieldInfo field)
+            => Scope.TryGetAdditionalSerializerInstance(key, out field);
+
+        internal FieldInfo DefineAdditionalSerializerInstance<T>(object key,
+            Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize)
+            => Scope.DefineAdditionalSerializerInstance<T>(this, key, serialize, deserialize);
+
         internal CompilerContext(CompilerContextScope scope, ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType, string traceName)
         {
             Scope = scope;

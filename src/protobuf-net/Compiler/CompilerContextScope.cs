@@ -10,16 +10,15 @@ namespace ProtoBuf.Compiler
     {
         internal static CompilerContextScope CreateInProcess()
         {
-            return new CompilerContextScope(null, true);
+            return new CompilerContextScope(null);
         }
 
         internal static CompilerContextScope CreateForModule(ModuleBuilder module)
-            => new CompilerContextScope(module, false);
+            => new CompilerContextScope(module);
 
-        private CompilerContextScope(ModuleBuilder module, bool inProcess)
+        private CompilerContextScope(ModuleBuilder module)
         {
             _module = module;
-            _inProcess = inProcess;
         }
 
         private Dictionary<object, FieldInfo> _additionalSerializers;
@@ -37,14 +36,14 @@ namespace ProtoBuf.Compiler
                     .DefineDynamicModule(nameof(SharedModule));
         }
 
-        private readonly bool _inProcess;
         internal bool TryGetAdditionalSerializerInstance(object key, out FieldInfo field)
         {
             field = null;
             return _additionalSerializers != null && _additionalSerializers.TryGetValue(key, out field);
         }
 
-        internal FieldInfo DefineAdditionalSerializerInstance<T>(object key, Action<object, ILGenerator> serialize, Action<object, ILGenerator> deserialize)
+        internal FieldInfo DefineAdditionalSerializerInstance<T>(CompilerContext parent, object key,
+            Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize)
         {
             if (_additionalSerializers == null) _additionalSerializers = new Dictionary<object, FieldInfo>();
             if (_additionalSerializers.ContainsKey(key)) throw new ArgumentException(nameof(key));
@@ -66,12 +65,14 @@ namespace ProtoBuf.Compiler
                 var iType = typeof(IProtoSerializer<T, T>);
                 type.AddInterfaceImplementation(iType);
                 il = Implement(type, iType, nameof(IProtoSerializer<T, T>.Serialize));
-                serialize(key, il);
-                il.Emit(OpCodes.Ret);
+                var ctx = new CompilerContext(parent, il, false, true, typeof(T), typeof(T).Name + ".Serialize");
+                serialize(key, ctx);
+                ctx.Return();
 
                 il = Implement(type, iType, nameof(IProtoSerializer<T, T>.Deserialize));
-                deserialize(key, il);
-                il.Emit(OpCodes.Ret);
+                ctx = new CompilerContext(parent, il, false, false, typeof(T), typeof(T).Name + ".Deserialize");
+                deserialize(key, ctx);
+                ctx.Return();
 
                 Type finalType = type.CreateTypeInfo();
                 var result = finalType.GetField(InstanceFieldName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);

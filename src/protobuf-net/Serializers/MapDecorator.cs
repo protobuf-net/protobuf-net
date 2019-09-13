@@ -131,17 +131,31 @@ namespace ProtoBuf.Serializers
 
         FieldInfo GetPairSerializer(CompilerContext ctx)
         {
-            var scope = ctx.Scope;
-            if (!scope.TryGetAdditionalSerializerInstance(this, out var result))
+            if (!ctx.TryGetAdditionalSerializerInstance(this, out var result))
             {
-                result = scope.DefineAdditionalSerializerInstance<KeyValuePair<TKey, TValue>>(this,
+                result = ctx.DefineAdditionalSerializerInstance<KeyValuePair<TKey, TValue>>(this,
                     (key, il) => ((MapDecorator<TDictionary, TKey, TValue>)key).WritePairSerialize(il),
                     (key, il) => ((MapDecorator<TDictionary, TKey, TValue>)key).WritePairDeserialize(il));
             }
             return result;
         }
-        void WritePairSerialize(ILGenerator il) { il.ThrowException(typeof(NotImplementedException)); }
-        void WritePairDeserialize(ILGenerator il) { il.ThrowException(typeof(NotImplementedException)); }
+        void WritePairSerialize(CompilerContext ctx)
+        {
+            Type itemType = typeof(KeyValuePair<TKey, TValue>);
+            MethodInfo key = itemType.GetProperty(nameof(KeyValuePair<TKey, TValue>.Key)).GetGetMethod(),
+                @value = itemType.GetProperty(nameof(KeyValuePair<TKey, TValue>.Value)).GetGetMethod();
+            using (var kvp = ctx.GetLocalWithValue(itemType, ctx.InputValue))
+            {
+                ctx.LoadAddress(kvp, itemType);
+                ctx.EmitCall(key, itemType);
+                ctx.WriteNullCheckedTail(typeof(TKey), keyTail, null);
+
+                ctx.LoadAddress(kvp, itemType);
+                ctx.EmitCall(value, itemType);
+                ctx.WriteNullCheckedTail(typeof(TValue), Tail, null);
+            }
+        }
+        void WritePairDeserialize(CompilerContext ctx) { ctx.ThrowException(typeof(NotImplementedException)); }
         protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
             var pairSerializer = GetPairSerializer(ctx);
@@ -150,9 +164,6 @@ namespace ProtoBuf.Serializers
             MethodInfo moveNext, current, getEnumerator = ListDecorator.GetEnumeratorInfo(
                 ExpectedType, itemType, out moveNext, out current);
             Type enumeratorType = getEnumerator.ReturnType;
-
-            MethodInfo key = itemType.GetProperty(nameof(KeyValuePair<TKey, TValue>.Key)).GetGetMethod(),
-                @value = itemType.GetProperty(nameof(KeyValuePair<TKey, TValue>.Value)).GetGetMethod();
 
             using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
             using (Compiler.Local iter = new Compiler.Local(ctx, enumeratorType))
