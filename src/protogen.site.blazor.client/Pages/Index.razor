@@ -217,6 +217,10 @@
                 errors = set.GetErrors();
                 if (errors.Any())
                 {
+                    await protoEditor.ClearErrors();
+                    foreach(var error in errors){
+                        await protoEditor.AddError(error.IsError, error.LineNumber, error.LineNumber , error.ColumnNumber,  error.ColumnNumber + error.LineContents.Length, error.Message);
+                    }
                     return;
                 }
 

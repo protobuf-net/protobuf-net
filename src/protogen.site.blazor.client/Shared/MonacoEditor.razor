@@ -34,4 +34,14 @@
     {
         return await JsRuntime.InvokeAsync<string>("getMonaco", editor);
     }
+
+    public async Task AddError(bool isError,int lineNumber, int lineEnd, int columnNumber,int columnEnd, string text){
+        await JsRuntime.InvokeAsync<string>("addMonacoError", editor, lineNumber,lineEnd, columnNumber, columnEnd,text, isError);
+
+    }
+
+    public async Task ClearErrors(){
+        await JsRuntime.InvokeVoidAsync("cleanMonacoError", editor);
+
+    }
 }

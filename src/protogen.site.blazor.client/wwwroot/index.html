@@ -10,7 +10,7 @@
 </head>
 
 <body>
-    <div class="container h-100">
+    <div class="container-fluid h-100">
         <app class="h-100  d-flex flex-column">Loading...</app>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
@@ -147,6 +147,7 @@
                 if (!block) {
                     return;
                 }
+                block.monacoEditorModel = monaco.editor.createModel("", language);
                 block.monacoEditor = monaco.editor.create(block, {
                     language: language,
                     minimap: {
@@ -154,9 +155,32 @@
                     },
                     readOnly: readonly,
                     automaticLayout: true,
-                    scrollBeyondLastLine: false
+                    scrollBeyondLastLine: false,
+                    model: block.monacoEditorModel
                 });
+
             };
+            window.addMonacoError = function (block, lineNumber, lineEnd, columnNumber, columnEnd, message, isError) {
+                var existingErrors = [];
+                if (block.monacoErrors) {
+                    existingErrors = block.monacoErrors;
+                }
+                existingErrors.push({
+                    startLineNumber: lineNumber,
+                    startColumn: columnNumber,
+                    endLineNumber: lineEnd,
+                    endColumn: columnEnd,
+                    message: message,
+                    severity: isError ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning
+                });
+                console.log(existingErrors);
+                monaco.editor.setModelMarkers(block.monacoEditorModel, "owner", existingErrors);
+                block.monacoErrors = existingErrors;
+            };
+            window.cleanMonacoError = function (block) {
+                block.monacoErrors = [];
+                monaco.editor.setModelMarkers(block.monacoEditorModel, "owner", []);
+            }
             window.setMonaco = function (block, value) {
                 return block.monacoEditor.setValue(value);
             };
