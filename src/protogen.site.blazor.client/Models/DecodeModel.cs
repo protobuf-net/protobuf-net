@@ -26,7 +26,8 @@ namespace ProtoBuf.Models
 
         public string AsHex() => ContainsValue ? BitConverter.ToString(data.Array, data.Offset, data.Count) : null;
 
-        public string AsHex(int offset, int count) => ContainsValue ? BitConverter.ToString(data.Array, data.Offset + offset, count) : null;
+        public string AsHex(long offset, long count) => ContainsValue ? BitConverter.ToString(data.Array,
+            checked((int)(data.Offset + offset)), checked((int)count)) : null;
         public string AsBase64() => ContainsValue ? Convert.ToBase64String(data.Array, data.Offset, data.Count) : null;
         public string AsString()
         {
@@ -63,6 +64,7 @@ namespace ProtoBuf.Models
                 return false;
             }
         }
-        public DecodeModel Slice(int offset, int count, int skipField = 0) => new DecodeModel(data.Array, Deep, data.Offset + offset, count, skipField);
+        public DecodeModel Slice(long offset, long count, int skipField = 0) => new DecodeModel(data.Array, Deep,
+            checked((int)(data.Offset + offset)), checked((int)count), skipField);
     }
 }
