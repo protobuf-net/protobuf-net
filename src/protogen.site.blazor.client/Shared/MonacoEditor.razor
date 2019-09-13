@@ -7,20 +7,21 @@
     public string Language { get; set; }
 
     [Parameter]
+    public bool ReadOnly { get; set; } = false;
+
+    [Parameter]
     public string FirstContent
     {
         get; set;
     }
-    protected override void OnInitialized()
-    {
-        Console.WriteLine("OnInitialized");
-    }
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Console.WriteLine("OnAfterRenderAsync "+firstRender);
         if (firstRender)
         {
-            await JsRuntime.InvokeVoidAsync("initMonaco", editor, Language);
+            await JsRuntime.InvokeVoidAsync("initMonaco", editor, Language, ReadOnly);
+            if(!string.IsNullOrEmpty(FirstContent)){
+                await SetContent(FirstContent);
+            }
         }
     }
 

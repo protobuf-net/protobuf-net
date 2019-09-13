@@ -150,7 +150,7 @@
                         <p style="flex:none;">
                             @file.Name
                         </p>
-                        <textarea class="w-100 flex-grow-1">@file.Text</textarea>
+                        <MonacoEditor Language="@model.GetMonacoLanguage()" FirstContent="@file.Text" ReadOnly="true"></MonacoEditor>
                     </div>
                 }
             }
