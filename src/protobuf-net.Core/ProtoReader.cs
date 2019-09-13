@@ -682,7 +682,11 @@ namespace ProtoBuf
         /// <summary>
         /// Get the TypeModel associated with this reader
         /// </summary>
-        public TypeModel Model { get { return _model; } }
+        public TypeModel Model
+        {
+            get => _model;
+            internal set => _model = value;
+        }
 
         /// <summary>
         /// Compares the streams current wire-type to the hinted wire-type, updating the reader if necessary; for example,

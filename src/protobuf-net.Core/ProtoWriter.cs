@@ -569,7 +569,11 @@ namespace ProtoBuf
         /// <summary>
         /// Get the TypeModel associated with this writer
         /// </summary>
-        public TypeModel Model => model;
+        public TypeModel Model
+        {
+            get => model;
+            internal set => model = value;
+        }
 
         private protected static readonly UTF8Encoding UTF8 = new UTF8Encoding();
 

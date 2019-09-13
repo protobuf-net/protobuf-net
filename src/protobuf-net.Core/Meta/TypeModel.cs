@@ -244,8 +244,10 @@ namespace ProtoBuf.Meta
         public void Serialize(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             if (dest == null) throw new ArgumentNullException(nameof(dest));
+            TypeModel oldModel = dest.Model;
             try
             {
+                dest.Model = this;
                 dest.CheckClear(ref state);
                 dest.SetRootObject(value);
                 SerializeCore(dest, ref state, value);
@@ -255,6 +257,10 @@ namespace ProtoBuf.Meta
             {
                 dest.Abandon();
                 throw;
+            }
+            finally
+            {
+                dest.Model = oldModel;
             }
         }
 
@@ -730,11 +736,20 @@ namespace ProtoBuf.Meta
         public object Deserialize(ProtoReader source, ref ProtoReader.State state, object value, System.Type type)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
-            bool autoCreate = PrepareDeserialize(value, ref type);
-            if (value != null) source.SetRootObject(value);
-            object obj = DeserializeAny(source, ref state, type, value, autoCreate);
-            source.CheckFullyConsumed(ref state);
-            return obj;
+            var oldModel = source.Model;
+            try
+            {
+                source.Model = this;
+                bool autoCreate = PrepareDeserialize(value, ref type);
+                if (value != null) source.SetRootObject(value);
+                object obj = DeserializeAny(source, ref state, type, value, autoCreate);
+                source.CheckFullyConsumed(ref state);
+                return obj;
+            }
+            finally
+            {
+                source.Model = oldModel;
+            }
         }
 
         private object DeserializeAny(ProtoReader reader, ref ProtoReader.State state, Type type, object value, bool noAutoCreate)
@@ -1197,22 +1212,20 @@ namespace ProtoBuf.Meta
             => this as IProtoSerializer<TBase, TActual>;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IProtoSerializer<TBase, TActual> NoSerializer<TBase, TActual>()
+        private static IProtoSerializer<TBase, TActual> NoSerializer<TBase, TActual>(TypeModel model)
             where TActual : TBase
         {
-            if (typeof(TBase) == typeof(TActual))
-            {
-                throw new InvalidOperationException($"No sub-item serializer available for type '{typeof(TBase).Name}'");
-            }
-            else
-            {
-                throw new InvalidOperationException($"No sub-item serializer available for type '{typeof(TActual).Name}' : '{typeof(TBase).Name}'");
-            }
+            string message = typeof(TBase) == typeof(TActual)
+                ? $"No sub-item serializer available for type '{typeof(TBase).Name}'"
+                : $"No sub-item serializer available for type '{typeof(TActual).Name}' : '{typeof(TBase).Name}'";
+            string suffix = model is object ? "" : "; a model instance is required";
+
+            throw new InvalidOperationException(message + suffix);
         }
 
         internal static IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>(TypeModel model)
             where TActual : TBase
-           => model?.GetSerializer<TBase, TActual>() ?? WellKnownSerializer.Instance as IProtoSerializer<TBase, TActual> ?? NoSerializer<TBase, TActual>();
+           => model?.GetSerializer<TBase, TActual>() ?? WellKnownSerializer.Instance as IProtoSerializer<TBase, TActual> ?? NoSerializer<TBase, TActual>(model);
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.
