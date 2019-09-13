@@ -96,7 +96,7 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadNullRef();
                 ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem"));
+                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
                 ctx.StoreValue(token);
 
                 if (Helpers.IsValueType(ExpectedType))
@@ -125,7 +125,7 @@ namespace ProtoBuf.Serializers
 
                 ctx.LoadValue(token);
                 ctx.LoadWriter(true);
-                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem"));
+                ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
             }
         }
 

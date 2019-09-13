@@ -57,7 +57,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadWriter(true);
             ctx.LoadValue(ctx.MapMetaKeyToCompiledKey(key));
             ctx.LoadValue((int)options);
-            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod<BclHelpers>("WriteNetObject"));
+            ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod<BclHelpers>("WriteNetObject", this));
         }
     }
 }

@@ -68,7 +68,7 @@ namespace ProtoBuf.Serializers
             {
                 ctx.EmitCall(typeof(object).GetMethod("ToString"));
             }
-            ctx.EmitBasicWrite("WriteString", valueFrom);
+            ctx.EmitBasicWrite("WriteString", valueFrom, this);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {

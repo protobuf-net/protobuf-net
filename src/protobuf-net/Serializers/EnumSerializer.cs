@@ -137,7 +137,7 @@ namespace ProtoBuf.Serializers
             {
                 ctx.LoadValue(valueFrom);
                 ctx.ConvertToInt32(typeCode, false);
-                ctx.EmitBasicWrite("WriteInt32", null);
+                ctx.EmitBasicWrite("WriteInt32", null, this);
             }
             else
             {
@@ -153,7 +153,7 @@ namespace ProtoBuf.Serializers
                         ctx.Branch(tryNextValue, true);
                         ctx.MarkLabel(processThisValue);
                         ctx.LoadValue(map[i].WireValue);
-                        ctx.EmitBasicWrite("WriteInt32", null);
+                        ctx.EmitBasicWrite("WriteInt32", null, this);
                         ctx.Branch(@continue, false);
                         ctx.MarkLabel(tryNextValue);
                     }

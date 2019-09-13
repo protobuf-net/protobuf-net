@@ -25,7 +25,7 @@ namespace ProtoBuf.Serializers
 
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitWrite<BclHelpers>(nameof(BclHelpers.WriteGuid), valueFrom);
+            ctx.EmitWrite<BclHelpers>(nameof(BclHelpers.WriteGuid), valueFrom, this);
         }
 
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)

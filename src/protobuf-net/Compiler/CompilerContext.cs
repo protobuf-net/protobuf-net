@@ -531,17 +531,17 @@ namespace ProtoBuf.Compiler
             EmitCall(method);
         }
 
-        internal void EmitBasicWrite(string methodName, Compiler.Local fromValue)
+        internal void EmitBasicWrite(string methodName, Compiler.Local fromValue, IProtoSerializer caller)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             LoadValue(fromValue);
             LoadWriter(true);
-            EmitCall(GetWriterMethod(methodName));
+            EmitCall(GetWriterMethod(methodName, caller));
         }
 
-        private MethodInfo GetWriterMethod(string methodName)
+        private MethodInfo GetWriterMethod(string methodName, IProtoSerializer caller)
         {
-            var method = Compiler.WriterUtil.GetStaticMethod(methodName);
+            var method = Compiler.WriterUtil.GetStaticMethod(methodName, caller);
 
             ParameterInfo[] pis = method.GetParameters();
             if (pis.Length == 3 && pis[1].ParameterType == typeof(ProtoWriter)
@@ -553,10 +553,10 @@ namespace ProtoBuf.Compiler
             throw new ArgumentException("No suitable method found for: " + methodName, nameof(methodName));
         }
 
-        internal void EmitWrite<T>(string methodName, Compiler.Local valueFrom)
+        internal void EmitWrite<T>(string methodName, Compiler.Local valueFrom, IProtoSerializer caller)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
-            MethodInfo method = Compiler.WriterUtil.GetStaticMethod<T>(methodName);
+            MethodInfo method = Compiler.WriterUtil.GetStaticMethod<T>(methodName, caller);
             if (method == null || method.ReturnType != typeof(void)) throw new ArgumentException(nameof(methodName));
             LoadValue(valueFrom);
             LoadWriter(true);

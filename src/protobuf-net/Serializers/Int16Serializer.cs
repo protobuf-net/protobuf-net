@@ -25,7 +25,7 @@ namespace ProtoBuf.Serializers
 
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicWrite("WriteInt16", valueFrom);
+            ctx.EmitBasicWrite("WriteInt16", valueFrom, this);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {

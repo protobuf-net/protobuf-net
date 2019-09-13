@@ -202,18 +202,15 @@ namespace ProtoBuf.Schemas
             Assert.Equal(valueToDeserialize.Nanos, other.Nanos);
         }
 
-        [Fact]
-        public void Duration_ExpectedValues() // prove implementation matches official version
-        {
-            AssertKnownValue(TimeSpan.FromSeconds(1), new Duration { Seconds = 1 });
-            AssertKnownValue(TimeSpan.FromSeconds(-1), new Duration { Seconds = -1 });
-            AssertKnownValue(TimeSpan.FromMilliseconds(1), new Duration { Nanos = 1000000 });
-            AssertKnownValue(TimeSpan.FromMilliseconds(-1), new Duration { Nanos = -1000000 });
-            AssertKnownValue(TimeSpan.FromTicks(1), new Duration { Nanos = 100 });
-            AssertKnownValue(TimeSpan.FromTicks(-1), new Duration { Nanos = -100 });
-            AssertKnownValue(TimeSpan.FromTicks(2), new Duration { Nanos = 250 }, new Duration { Nanos = 200 });
-            AssertKnownValue(TimeSpan.FromTicks(-2), new Duration { Nanos = -250 }, new Duration { Nanos = -200 });
-        }
+        // prove implementation matches official version
+        [Fact] public void Duration_ExpectedValues_1() => AssertKnownValue(TimeSpan.FromSeconds(1), new Duration { Seconds = 1 });
+        [Fact] public void Duration_ExpectedValues_2() => AssertKnownValue(TimeSpan.FromSeconds(-1), new Duration { Seconds = -1 });
+        [Fact] public void Duration_ExpectedValues_3() => AssertKnownValue(TimeSpan.FromMilliseconds(1), new Duration { Nanos = 1000000 });
+        [Fact] public void Duration_ExpectedValues_4() => AssertKnownValue(TimeSpan.FromMilliseconds(-1), new Duration { Nanos = -1000000 });
+        [Fact] public void Duration_ExpectedValues_5() => AssertKnownValue(TimeSpan.FromTicks(1), new Duration { Nanos = 100 });
+        [Fact] public void Duration_ExpectedValues_6() => AssertKnownValue(TimeSpan.FromTicks(-1), new Duration { Nanos = -100 });
+        [Fact] public void Duration_ExpectedValues_7() => AssertKnownValue(TimeSpan.FromTicks(2), new Duration { Nanos = 250 }, new Duration { Nanos = 200 });
+        [Fact] public void Duration_ExpectedValues_8() => AssertKnownValue(TimeSpan.FromTicks(-2), new Duration { Nanos = -250 }, new Duration { Nanos = -200 });
 
         private void TimeSpan_WellKnownEquiv(TypeModel model, TimeSpan time)
         {

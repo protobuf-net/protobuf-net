@@ -30,7 +30,7 @@ namespace ProtoBuf.Serializers
 
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
-            ctx.EmitBasicWrite("WriteBytes", valueFrom);
+            ctx.EmitBasicWrite("WriteBytes", valueFrom, this);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {

@@ -46,7 +46,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitWrite<BclHelpers>(
                 wellKnown ? nameof(BclHelpers.WriteTimestamp)
-                : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom);
+                : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom, this);
         }
 
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)

@@ -415,7 +415,7 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.LoadValue(loc);
                     ctx.LoadWriter(true);
-                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("AppendExtensionData"));
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("AppendExtensionData", this));
                 }
                 // post-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);

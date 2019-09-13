@@ -14,16 +14,26 @@ namespace ProtoBuf.Compiler
     {
         internal static readonly Type ByRefStateType = typeof(ProtoWriter.State).MakeByRefType();
 
-        internal static MethodInfo GetStaticMethod(string name) =>
-            MethodWrapper<ProtoWriter>.GetStaticMethod(name);
-        internal static MethodInfo GetStaticMethod<T>(string name) =>
-            MethodWrapper<T>.GetStaticMethod(name);
+        internal static MethodInfo GetStaticMethod(string name, Serializers.IProtoSerializer caller) =>
+            MethodWrapper<ProtoWriter>.GetStaticMethod(name, caller);
+        internal static MethodInfo GetStaticMethod<T>(string name, Serializers.IProtoSerializer caller) =>
+            MethodWrapper<T>.GetStaticMethod(name, caller);
 
         internal static class MethodWrapper<T>
         {
             private static readonly Dictionary<string, MethodInfo> _staticWriteMethods;
 
-            public static MethodInfo GetStaticMethod(string name) => _staticWriteMethods[name];
+            public static MethodInfo GetStaticMethod(string name, Serializers.IProtoSerializer caller)
+            {
+                try
+                {
+                    return _staticWriteMethods[name];
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException($"Unable to resolve {typeof(T).Name}.{name} from {(caller?.GetType()?.Name ?? "nil")}: {ex.Message}", ex);
+                }
+            }
 
             static MethodWrapper()
             {

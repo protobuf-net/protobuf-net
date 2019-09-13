@@ -383,11 +383,11 @@ namespace ProtoBuf.Serializers
                         ctx.LoadValue(fieldNumber);
                         ctx.LoadValue((int)WireType.String);
                         ctx.LoadWriter(true);
-                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader"));
+                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
 
                         ctx.LoadValue(list);
                         ctx.LoadWriter(true);
-                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem"));
+                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
                         ctx.StoreValue(token);
 
                         ctx.LoadValue(fieldNumber);
@@ -424,7 +424,7 @@ namespace ProtoBuf.Serializers
                     {
                         ctx.LoadValue(token);
                         ctx.LoadWriter(true);
-                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem"));
+                        ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
                     }
                 }
             }
