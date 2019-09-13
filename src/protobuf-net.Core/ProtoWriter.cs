@@ -558,6 +558,8 @@ namespace ProtoBuf
             Cleanup();
         }
 
+        internal int Depth => depth;
+
         internal void CheckClear(ref State state)
         {
             if (depth != 0 || !TryFlush(ref state)) throw new InvalidOperationException($"The writer is in an incomplete state (depth: {depth}, type: {GetType().Name})");
@@ -1134,16 +1136,24 @@ namespace ProtoBuf
         /// </summary>
         public long Serialize<T>(ref State state, T value, IProtoSerializer<T, T> serializer = null)
         {
-            CheckClear(ref state);
-            long before = GetPosition(ref state);
-            if (value != null)
+            try
             {
-                SetRootObject(value);
-                (serializer ?? TypeModel.GetSerializer<T, T>(Model)).Serialize(this, ref state, value);
+                CheckClear(ref state);
+                long before = GetPosition(ref state);
+                if (value != null)
+                {
+                    SetRootObject(value);
+                    (serializer ?? TypeModel.GetSerializer<T, T>(Model)).Serialize(this, ref state, value);
+                }
+                CheckClear(ref state);
+                long after = GetPosition(ref state);
+                return after - before;
             }
-            CheckClear(ref state);
-            long after = GetPosition(ref state);
-            return after - before;
+            catch
+            {
+                Abandon();
+                throw;
+            }
         }
     }
 

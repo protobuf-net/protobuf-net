@@ -1,5 +1,6 @@
 ﻿using ProtoBuf.Meta;
 using System;
+using System.Buffers;
 using System.IO;
 using Xunit;
 
@@ -7,8 +8,56 @@ namespace ProtoBuf
 {
     public class ManualSerializer
     {
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ReadWriteAutomated_StreamReaderWriter(bool withState)
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            using (var ms = new MemoryStream())
+            {
+                var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
+                ProtoWriter.State writeState = default;
+#pragma warning disable CS0618
+                using (var writer = withState ? ProtoWriter.Create(out writeState, ms, null) : ProtoWriter.Create(ms, null))
+#pragma warning restore CS0618
+                {
+                    model.Serialize(writer, ref writeState, obj);
+                    Assert.Equal(0, writer.Depth);
+                    writer.Close(ref writeState);
+                }
+                var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
+                // 22 = field 4, type String
+                // 08 = length 8
+                //      2A = field 5, type String
+                //      03 = length 3
+                //          18 = field 3, type Variant
+                //          95-06 = 789 (raw) or -395 (zigzag)
+                //      10 = field 2, type Variant
+                //      C8-03 = 456(raw) or 228(zigzag)
+                // 08 = field 1, type Variant
+                // 7B = 123(raw) or - 62(zigzag)
+
+                ms.Position = 0;
+                ProtoReader.State readState = default;
+#pragma warning disable CS0618
+                using (var reader = withState ? ProtoReader.Create(out readState, ms, null) : ProtoReader.Create(ms, null))
+#pragma warning restore CS0618
+                {
+                    var raw = model.Deserialize(reader, ref readState, null, typeof(A));
+                    var clone = Assert.IsType<C>(raw);
+                    Assert.NotSame(obj, clone);
+                    Assert.Equal(123, clone.AVal);
+                    Assert.Equal(456, clone.BVal);
+                    Assert.Equal(789, clone.CVal);
+                }
+            }
+        }
+
         [Fact]
-        public void ReadWriteAutomated()
+        public void ReadWriteAutomated_Stream()
         {
             var model = RuntimeTypeModel.Create();
             model.AutoCompile = false;
@@ -16,6 +65,7 @@ namespace ProtoBuf
             {
                 var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
                 model.Serialize(ms, obj);
+
                 var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
                 Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
                 // 22 = field 4, type String
@@ -39,30 +89,125 @@ namespace ProtoBuf
             }
         }
 
+        static string Hex(ReadOnlySequence<byte> sequence)
+        {
+            var len = checked((int)sequence.Length);
+            var rented = ArrayPool<byte>.Shared.Rent(len);
+            sequence.CopyTo(rented);
+            var hex = BitConverter.ToString(rented, 0, len);
+            ArrayPool<byte>.Shared.Return(rented);
+            return hex;
+        }
+
         [Fact]
-        public void ReadWriteManual()
+        public void ReadWriteAutomated_PipeReaderWriter()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            using (var pipe = Pipelines.Sockets.Unofficial.Buffers.BufferWriter<byte>.Create())
+            {
+                var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
+                using (var writer = ProtoWriter.Create(out var state, pipe.Writer, null))
+                {
+                    model.Serialize(writer, ref state, obj);
+                    Assert.Equal(0, writer.Depth);
+                    writer.Close(ref state);
+                }
+                using (var result = pipe.Flush())
+                {
+                    var hex = Hex(result.Value);
+                    Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
+                    // 22 = field 4, type String
+                    // 08 = length 8
+                    //      2A = field 5, type String
+                    //      03 = length 3
+                    //          18 = field 3, type Variant
+                    //          95-06 = 789 (raw) or -395 (zigzag)
+                    //      10 = field 2, type Variant
+                    //      C8-03 = 456(raw) or 228(zigzag)
+                    // 08 = field 1, type Variant
+                    // 7B = 123(raw) or - 62(zigzag)
+
+                    using (var reader = ProtoReader.Create(out var state, result.Value, null))
+                    {
+                        var raw = model.Deserialize(reader, ref state, null, typeof(A));
+                        var clone = Assert.IsType<C>(raw);
+                        Assert.NotSame(obj, clone);
+                        Assert.Equal(123, clone.AVal);
+                        Assert.Equal(456, clone.BVal);
+                        Assert.Equal(789, clone.CVal);
+                    }
+                }
+            }
+        }
+
+        [Theory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void ReadWriteManual_StreamReaderWriter(bool withState)
         {
             using (var ms = new MemoryStream())
             {
                 var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
-                using (var writer = ProtoWriter.Create(out var state, ms, null))
+                ProtoWriter.State writeState = default;
+#pragma warning disable CS0618
+                using (var writer = withState ? ProtoWriter.Create(out writeState, ms, null) : ProtoWriter.Create(ms, null))
+#pragma warning restore CS0618
                 {
-                    var bytes = writer.Serialize<A>(ref state, obj, ModelSerializer.Serializer);
+                    var bytes = writer.Serialize<A>(ref writeState, obj, ModelSerializer.Serializer);
                     Assert.Equal(12, bytes);
-                    Assert.Equal(12, ms.Length);
-                    var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
-                    Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
-
+                    Assert.Equal(0, writer.Depth);
+                    writer.Close(ref writeState);
                 }
+                Assert.Equal(12, ms.Length);
+                var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
+                Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
+
                 ms.Position = 0;
-                using (var reader = ProtoReader.Create(out var state, ms, null))
+                ProtoReader.State readState = default;
+#pragma warning disable CS0618
+                using (var reader = withState ? ProtoReader.Create(out readState, ms, null) : ProtoReader.Create(ms, null))
+#pragma warning restore CS0618
                 {
-                    var raw = reader.Deserialize<A>(ref state, null, ModelSerializer.Serializer);
+                    var raw = reader.Deserialize<A>(ref readState, null, ModelSerializer.Serializer);
                     var clone = Assert.IsType<C>(raw);
                     Assert.NotSame(obj, clone);
                     Assert.Equal(123, clone.AVal);
                     Assert.Equal(456, clone.BVal);
                     Assert.Equal(789, clone.CVal);
+                }
+            }
+        }
+
+        [Fact]
+        public void ReadWriteManual_PipeReaderWriter()
+        {
+            using (var pipe = Pipelines.Sockets.Unofficial.Buffers.BufferWriter<byte>.Create())
+            {
+                var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
+                using (var writer = ProtoWriter.Create(out var state, pipe.Writer, null))
+                {
+                    var bytes = writer.Serialize<A>(ref state, obj, ModelSerializer.Serializer);
+                    Assert.Equal(12, bytes);
+                    Assert.Equal(0, writer.Depth);
+                    writer.Close(ref state);
+                }
+                Assert.Equal(12, pipe.Length);
+
+                using (var result = pipe.Flush())
+                {
+                    var hex = Hex(result.Value);
+                    Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
+
+                    using (var reader = ProtoReader.Create(out var state, result.Value, null))
+                    {
+                        var raw = reader.Deserialize<A>(ref state, null, ModelSerializer.Serializer);
+                        var clone = Assert.IsType<C>(raw);
+                        Assert.NotSame(obj, clone);
+                        Assert.Equal(123, clone.AVal);
+                        Assert.Equal(456, clone.BVal);
+                        Assert.Equal(789, clone.CVal);
+                    }
                 }
             }
         }
