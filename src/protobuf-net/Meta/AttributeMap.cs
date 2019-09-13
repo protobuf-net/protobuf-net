@@ -1,15 +1,13 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace ProtoBuf.Meta
 {
     internal abstract class AttributeMap
     {
-#if DEBUG
         [Obsolete("Please use AttributeType instead")]
         new public Type GetType() => AttributeType;
-#endif
+
         public override string ToString() => AttributeType?.FullName ?? "";
         public abstract bool TryGet(string key, bool publicOnly, out object value);
         public bool TryGet(string key, out object value)
@@ -92,4 +90,3 @@ namespace ProtoBuf.Meta
         }
     }
 }
-#endif

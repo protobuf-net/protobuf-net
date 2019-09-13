@@ -1,10 +1,10 @@
-﻿#if FEAT_COMPILER
-using System;
+﻿using System;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class CompiledSerializer<T> : CompiledSerializer, IProtoSerializer<T>
+    internal sealed class CompiledSerializer<TBase, TActual> : CompiledSerializer, IProtoSerializer<TBase, TActual>
+        where TActual : TBase
     {
         private readonly Compiler.ProtoSerializer serializer;
         private readonly Compiler.ProtoDeserializer deserializer;
@@ -15,17 +15,17 @@ namespace ProtoBuf.Serializers
             deserializer = Compiler.CompilerContext.BuildDeserializer(head, model);
         }
 
-        T IProtoSerializer<T, T>.Deserialize(ProtoReader reader, ref ProtoReader.State state, T value)
+        TActual IProtoSerializer<TBase, TActual>.Deserialize(ProtoReader reader, ref ProtoReader.State state, TBase value)
         {
             object obj = value;
             obj = deserializer(reader, ref state, obj);
-            return (T)obj;
+            return (TActual)obj;
         }
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
             => deserializer(source, ref state, value);
 
-        void IProtoSerializer<T, T>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
+        void IProtoSerializer<TBase, TActual>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, TActual value)
             => serializer(writer, ref state, value);
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
@@ -57,7 +57,7 @@ namespace ProtoBuf.Serializers
         {
             if (!(head is CompiledSerializer result))
             {
-                var ctor = Helpers.GetConstructor(typeof(CompiledSerializer<>).MakeGenericType(head.ExpectedType),
+                var ctor = Helpers.GetConstructor(typeof(CompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
                     new Type[] { typeof(IProtoTypeSerializer), typeof(TypeModel) }, true);
 
                 try
@@ -74,7 +74,7 @@ namespace ProtoBuf.Serializers
         }
 
         private readonly IProtoTypeSerializer head;
-
+        Type IProtoTypeSerializer.BaseType => head.BaseType;
         protected CompiledSerializer(IProtoTypeSerializer head)
         {
             this.head = head;
@@ -111,4 +111,3 @@ namespace ProtoBuf.Serializers
         }
     }
 }
-#endif

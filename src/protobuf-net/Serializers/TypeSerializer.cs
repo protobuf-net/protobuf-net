@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using ProtoBuf.Meta;
 using System.Reflection;
 
@@ -30,6 +29,7 @@ namespace ProtoBuf.Serializers
 
         private Type constructType;
         public Type ExpectedType => typeof(TActual);
+        Type IProtoTypeSerializer.BaseType => typeof(TBase);
         private IProtoSerializer[] serializers;
         private int[] fieldNumbers;
         private bool isRootType, useConstructor, isExtensible, hasConstructor;
@@ -327,7 +327,7 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.RequiresOldValue { get { return true; } }
         bool IProtoSerializer.ReturnsValue { get { return false; } } // updates field directly
-#if FEAT_COMPILER
+
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type expected = ExpectedType;
@@ -770,7 +770,5 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(afterNullCheck);
             }
         }
-#endif
     }
 }
-#endif

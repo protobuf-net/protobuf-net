@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -24,4 +23,3 @@ namespace ProtoBuf.Serializers
         // interchangeable as long as there is no boxing/unboxing
     }
 }
-#endif

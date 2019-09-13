@@ -1,7 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
-using System.Net;
-using ProtoBuf.Meta;
+﻿using System;
 using System.Reflection;
 
 namespace ProtoBuf.Serializers
@@ -53,7 +50,6 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteString(value.ToString(), dest, ref state);
         }
 
-#if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type type = ExpectedType;
@@ -79,8 +75,5 @@ namespace ProtoBuf.Serializers
             ctx.EmitBasicRead("ReadString", typeof(string));
             ctx.EmitCall(parse);
         }
-#endif
-
     }
 }
-#endif

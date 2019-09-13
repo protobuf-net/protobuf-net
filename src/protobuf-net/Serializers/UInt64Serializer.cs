@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -24,7 +23,6 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteUInt64((ulong)value, dest, ref state);
         }
 
-#if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteUInt64", valueFrom);
@@ -33,7 +31,5 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicRead("ReadUInt64", ExpectedType);
         }
-#endif
     }
 }
-#endif

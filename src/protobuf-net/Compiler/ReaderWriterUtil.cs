@@ -4,7 +4,6 @@ using System.Reflection;
 
 namespace ProtoBuf.Compiler
 {
-#if FEAT_COMPILER
     internal static class ReaderUtil
     {
         internal static readonly Type ByRefStateType = typeof(ProtoReader.State).MakeByRefType();
@@ -65,6 +64,4 @@ namespace ProtoBuf.Compiler
             }
         }
     }
-
 }
-#endif

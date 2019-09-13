@@ -19,9 +19,7 @@ namespace ProtoBuf.ServiceModel
         /// </summary>
         public ProtoOperationBehavior(OperationDescription operation) : base(operation)
         {
-#if !NO_RUNTIME
             model = RuntimeTypeModel.Default;
-#endif
         }
 
         /// <summary>

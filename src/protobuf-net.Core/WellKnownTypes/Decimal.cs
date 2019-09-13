@@ -2,7 +2,7 @@
 
 namespace ProtoBuf.WellKnownTypes
 {
-    partial class WellKnownSerializer : IProtoSerializer<decimal>
+    partial class WellKnownSerializer : IProtoSerializer<decimal, decimal>
     {
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
 

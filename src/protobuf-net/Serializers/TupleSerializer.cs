@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Reflection;
 using ProtoBuf.Meta;
 
@@ -62,10 +61,9 @@ namespace ProtoBuf.Serializers
             return false;
         }
 
-#if FEAT_COMPILER
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, Meta.TypeModel.CallbackType callbackType) { }
-#endif
         public Type ExpectedType => ctor.DeclaringType;
+        Type IProtoTypeSerializer.BaseType => ExpectedType;
 
         void IProtoTypeSerializer.Callback(object value, Meta.TypeModel.CallbackType callbackType, SerializationContext context) { }
         object IProtoTypeSerializer.CreateInstance(ProtoReader source) { throw new NotSupportedException(); }
@@ -131,7 +129,6 @@ namespace ProtoBuf.Serializers
 
         bool IProtoTypeSerializer.CanCreateInstance() { return false; }
 
-#if FEAT_COMPILER
         private Type GetMemberType(int index)
         {
             Type result = Helpers.GetMemberType(members[index]);
@@ -326,8 +323,5 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
-#endif
     }
 }
-
-#endif

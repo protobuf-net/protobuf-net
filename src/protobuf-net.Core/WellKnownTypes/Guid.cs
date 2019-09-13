@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace ProtoBuf.WellKnownTypes
 {
-    partial class WellKnownSerializer : IProtoSerializer<Guid>
+    partial class WellKnownSerializer : IProtoSerializer<Guid, Guid>
     {
         private static
 #if !DEBUG

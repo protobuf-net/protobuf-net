@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 
 using ProtoBuf.Serializers;
 using System.Globalization;
@@ -772,4 +771,3 @@ namespace ProtoBuf.Meta
         }
     }
 }
-#endif

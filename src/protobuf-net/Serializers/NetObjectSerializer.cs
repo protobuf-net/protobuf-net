@@ -1,7 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
-using System.Reflection;
-using ProtoBuf.Meta;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -35,7 +32,6 @@ namespace ProtoBuf.Serializers
             BclHelpers.WriteNetObject(value, dest, ref state, key, options);
         }
 
-#if FEAT_COMPILER
         public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             using (var val = ctx.GetLocalWithValue(ExpectedType, entity))
@@ -63,7 +59,5 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue((int)options);
             ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod<BclHelpers>("WriteNetObject"));
         }
-#endif
     }
 }
-#endif

@@ -1,6 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
-using ProtoBuf.Meta;
+﻿using System;
 using System.Reflection;
 
 namespace ProtoBuf.Serializers
@@ -8,10 +6,8 @@ namespace ProtoBuf.Serializers
     internal sealed class SurrogateSerializer : IProtoTypeSerializer
     {
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
-#if FEAT_COMPILER
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
         void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx) { throw new NotSupportedException(); }
-#endif
         bool IProtoTypeSerializer.CanCreateInstance() => false;
 
         object IProtoTypeSerializer.CreateInstance(ProtoReader source) => throw new NotSupportedException();
@@ -23,6 +19,7 @@ namespace ProtoBuf.Serializers
         public bool RequiresOldValue => true;
 
         public Type ExpectedType { get; }
+        Type IProtoTypeSerializer.BaseType => ExpectedType;
 
         private readonly Type declaredType;
         private readonly MethodInfo toTail, fromTail;
@@ -116,8 +113,6 @@ namespace ProtoBuf.Serializers
             args[0] = rootTail.Read(source, ref state, value);
             return fromTail.Invoke(null, args);
         }
-
-#if FEAT_COMPILER
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Helpers.DebugAssert(valueFrom != null); // don't support stack-head for this
@@ -141,7 +136,5 @@ namespace ProtoBuf.Serializers
             ctx.EmitCall(toTail);
             rootTail.EmitWrite(ctx, null);
         }
-#endif
     }
 }
-#endif

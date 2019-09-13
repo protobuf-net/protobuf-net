@@ -1,17 +1,13 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using ProtoBuf.Meta;
-
-#if FEAT_COMPILER
 using System.Reflection;
 using System.Linq;
-#endif
 
 namespace ProtoBuf.Serializers
 {
     internal sealed class SubItemSerializer<TBase, TActual> : SubItemSerializer, IProtoTypeSerializer
         where TActual : TBase
-    {
+    { 
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
         {
             return ((IProtoTypeSerializer)Proxy.Serializer).HasCallbacks(callbackType);
@@ -22,7 +18,6 @@ namespace ProtoBuf.Serializers
             return ((IProtoTypeSerializer)Proxy.Serializer).CanCreateInstance();
         }
 
-#if FEAT_COMPILER
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             ((IProtoTypeSerializer)Proxy.Serializer).EmitCallback(ctx, valueFrom, callbackType);
@@ -32,7 +27,6 @@ namespace ProtoBuf.Serializers
         {
             ((IProtoTypeSerializer)Proxy.Serializer).EmitCreateInstance(ctx);
         }
-#endif
 
         void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {
@@ -45,6 +39,7 @@ namespace ProtoBuf.Serializers
         }
 
         Type IProtoSerializer.ExpectedType => typeof(TActual);
+        Type IProtoTypeSerializer.BaseType => typeof(TBase);
 
         bool IProtoSerializer.RequiresOldValue => true;
 
@@ -61,8 +56,6 @@ namespace ProtoBuf.Serializers
         {
             return source.ReadSubItem<TBase, TActual>(ref state, (TBase)value, null);
         }
-
-#if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue(valueFrom); // since we're consuming this first, we don't need to capture it
@@ -82,13 +75,11 @@ namespace ProtoBuf.Serializers
                 ctx.EmitCall(ReadSubItem.MakeGenericMethod(typeof(TBase), typeof(TActual)));
             }
         }
-#endif
     }
 
 
     internal abstract class SubItemSerializer
     {
-#if FEAT_COMPILER
         public static readonly MethodInfo WriteSubItem =
             (from method in typeof(ProtoWriter).GetMethods(BindingFlags.Static | BindingFlags.Public)
              where method.Name == nameof(ProtoWriter.WriteSubItem)
@@ -102,7 +93,6 @@ namespace ProtoBuf.Serializers
                 && method.IsGenericMethodDefinition && method.GetGenericArguments().Length == 2
                 && method.GetParameters().Length == 3
              select method).Single();
-#endif
 
         protected ISerializerProxy Proxy { get; private set; }
 
@@ -114,4 +104,3 @@ namespace ProtoBuf.Serializers
         }
     }
 }
-#endif

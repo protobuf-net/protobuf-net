@@ -1,11 +1,8 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Collections;
 using System.Text;
 using System.Reflection;
-#if FEAT_COMPILER
 using System.Reflection.Emit;
-#endif
 
 using ProtoBuf.Serializers;
 using System.Threading;
@@ -26,9 +23,7 @@ namespace ProtoBuf.Meta
            OPTIONS_IsDefaultModel = 2,
            OPTIONS_Frozen = 4,
            OPTIONS_AutoAddMissingTypes = 8,
-#if FEAT_COMPILER
            OPTIONS_AutoCompile = 16,
-#endif
            OPTIONS_UseImplicitZeroDefaults = 32,
            OPTIONS_AllowParseableTypes = 64,
            OPTIONS_AutoAddProtoContractTypesOnly = 128,
@@ -400,7 +395,7 @@ namespace ProtoBuf.Meta
             AutoAddMissingTypes = true;
             UseImplicitZeroDefaults = true;
             SetOption(OPTIONS_IsDefaultModel, isDefault);
-#if FEAT_COMPILER && !DEBUG
+#if !DEBUG
             try
             {
                 AutoCompile = EnableAutoCompile();
@@ -410,7 +405,6 @@ namespace ProtoBuf.Meta
             if (isDefault) TypeModel.DefaultModel = this;
         }
 
-#if FEAT_COMPILER
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static bool EnableAutoCompile()
         {
@@ -431,7 +425,6 @@ namespace ProtoBuf.Meta
                 return false;
             }
         }
-#endif
 
         /// <summary>
         /// Obtains the MetaType associated with a given Type for the current model,
@@ -706,7 +699,6 @@ namespace ProtoBuf.Meta
             return newType;
         }
 
-#if FEAT_COMPILER
         /// <summary>
         /// Should serializers be compiled on demand? It may be useful
         /// to disable this for debugging purposes.
@@ -716,7 +708,7 @@ namespace ProtoBuf.Meta
             get { return GetOption(OPTIONS_AutoCompile); }
             set { SetOption(OPTIONS_AutoCompile, value); }
         }
-#endif
+
         /// <summary>
         /// Should support for unexpected types be added automatically?
         /// If false, an exception is thrown when unexpected types
@@ -840,14 +832,13 @@ namespace ProtoBuf.Meta
             }
         }
 
-#if FEAT_COMPILER
         // this is used by some unit-tests; do not remove
         internal Compiler.ProtoSerializer GetSerializer(IProtoSerializer serializer, bool compiled)
         {
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
-#if FEAT_COMPILER
+
             if (compiled) return Compiler.CompilerContext.BuildSerializer(serializer, this);
-#endif
+
             return new Compiler.ProtoSerializer(serializer.Write);
         }
 
@@ -865,7 +856,6 @@ namespace ProtoBuf.Meta
             }
         }
 
-#endif
         //internal override IProtoSerializer GetTypeSerializer(Type type)
         //{   // this list is thread-safe for reading
         //    .Serializer;
@@ -878,7 +868,6 @@ namespace ProtoBuf.Meta
 
         //}
 
-#if FEAT_COMPILER
         private void BuildAllSerializers()
         {
             // note that types.Count may increase during this operation, as some serializers
@@ -1533,9 +1522,6 @@ namespace ProtoBuf.Meta
                 var namePrefix = $"IProtoSerializer<{runtimeType.Name},{runtimeType.Name}>.";
                 StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoSerializer<int, int>.Serialize)), pair.Serialize, namePrefix);
                 StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoSerializer<int, int>.Deserialize)), pair.Deserialize, namePrefix);
-
-                serType = typeof(IProtoSerializer<>).MakeGenericType(runtimeType);
-                type.AddInterfaceImplementation(serType);
             }
         }
 
@@ -1680,7 +1666,6 @@ namespace ProtoBuf.Meta
             return boxedSerializer;
         }
 
-#endif
         //internal bool IsDefined(Type type, int fieldNumber)
         //{
         //    return FindWithoutAdd(type).IsDefined(fieldNumber);
@@ -1981,7 +1966,6 @@ namespace ProtoBuf.Meta
             }
         }
 
-#if !NO_RUNTIME
         /// <summary>
         /// Creates a new runtime model, to which the caller
         /// can add support for a range of types. A model
@@ -1993,7 +1977,6 @@ namespace ProtoBuf.Meta
             return new RuntimeTypeModel(false);
         }
 
-#if FEAT_COMPILER
         /// <summary>
         /// Create a model that serializes all types from an
         /// assembly specified by type
@@ -2042,8 +2025,6 @@ namespace ProtoBuf.Meta
                 return compiled;
             }
         }
-#endif
-#endif
     }
 
     /// <summary>
@@ -2066,4 +2047,3 @@ namespace ProtoBuf.Meta
     /// </summary>
     public delegate void LockContentedEventHandler(object sender, LockContentedEventArgs args);
 }
-#endif

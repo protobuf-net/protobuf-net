@@ -1,9 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
-using System.Reflection;
-#if FEAT_COMPILER
-using System.Reflection.Emit;
-#endif
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -32,7 +27,7 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.RequiresOldValue { get { return !overwriteList; } }
         bool IProtoSerializer.ReturnsValue { get { return true; } }
-#if FEAT_COMPILER
+
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteBytes", valueFrom);
@@ -52,7 +47,5 @@ namespace ProtoBuf.Serializers
                .GetMethod(nameof(ProtoReader.AppendBytes),
                new[] { typeof(byte[]), typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType}));
         }
-#endif
     }
 }
-#endif

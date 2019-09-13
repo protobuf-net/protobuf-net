@@ -1,9 +1,6 @@
 ﻿#pragma warning disable RCS1165
-using ProtoBuf.Meta;
 using System;
-#if FEAT_COMPILER
 using ProtoBuf.Compiler;
-#endif
 using System.Collections.Generic;
 using System.Reflection;
 
@@ -90,7 +87,6 @@ namespace ProtoBuf.Serializers
             }
         }
 
-#if FEAT_COMPILER
         private static readonly MethodInfo indexerSet = GetIndexerSetter();
 
         private static MethodInfo GetIndexerSetter()
@@ -288,7 +284,6 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
-#endif
     }
 }
 #pragma warning restore RCS1165

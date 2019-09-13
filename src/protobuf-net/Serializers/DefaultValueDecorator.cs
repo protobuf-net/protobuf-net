@@ -1,7 +1,5 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Reflection;
-using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
@@ -39,7 +37,6 @@ namespace ProtoBuf.Serializers
             return Tail.Read(source, ref state, value);
         }
 
-#if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Compiler.CodeLabel done = ctx.DefineLabel();
@@ -248,7 +245,5 @@ namespace ProtoBuf.Serializers
         {
             Tail.EmitRead(ctx, valueFrom);
         }
-#endif
     }
 }
-#endif

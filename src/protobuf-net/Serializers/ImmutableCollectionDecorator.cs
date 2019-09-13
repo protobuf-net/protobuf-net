@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Collections;
 using System.Reflection;
 using ProtoBuf.Meta;
@@ -179,7 +178,6 @@ namespace ProtoBuf.Serializers
             return finish.Invoke(builderInstance, null);
         }
 
-#if FEAT_COMPILER
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             using (Compiler.Local oldList = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom) : null)
@@ -264,7 +262,5 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
-#endif
     }
 }
-#endif

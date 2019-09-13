@@ -1,10 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
-using System.Reflection;
-
-#if FEAT_COMPILER
-using ProtoBuf.Compiler;
-#endif
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -31,7 +25,6 @@ namespace ProtoBuf.Serializers
             return s.Length == 0 ? null : new Uri(s, UriKind.RelativeOrAbsolute);
         }
 
-#if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue(valueFrom);
@@ -53,7 +46,5 @@ namespace ProtoBuf.Serializers
             ctx.EmitCtor(typeof(Uri), typeof(string), typeof(UriKind));
             ctx.MarkLabel(@end);
         }
-#endif
     }
 }
-#endif

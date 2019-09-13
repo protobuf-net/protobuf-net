@@ -1,7 +1,5 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using ProtoBuf.Meta;
-using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
@@ -132,7 +130,6 @@ namespace ProtoBuf.Serializers
             }
         }
 
-#if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ProtoTypeCode typeCode = GetTypeCode();
@@ -260,7 +257,5 @@ namespace ProtoBuf.Serializers
             ctx.StoreValue(local);
             ctx.Branch(@continue, false); // "continue"
         }
-#endif
     }
 }
-#endif

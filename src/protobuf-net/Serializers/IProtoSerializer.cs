@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -43,7 +42,6 @@ namespace ProtoBuf.Serializers
         /// </summary>
         bool ReturnsValue { get; }
 
-#if FEAT_COMPILER
         /// <summary>Emit the IL necessary to perform the given actions
         /// to serialize this data.
         /// </summary>
@@ -63,7 +61,5 @@ namespace ProtoBuf.Serializers
         /// that this is not always provided - a null means not supplied. Since this is always
         /// a variable or argument, it is not necessary to consume this value.</param>
         void EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity);
-#endif
     }
 }
-#endif

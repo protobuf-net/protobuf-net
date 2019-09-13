@@ -20,7 +20,6 @@ namespace ProtoBuf
     /// </remarks>
     public static class Serializer
     {
-#if !NO_RUNTIME
         /// <summary>
         /// Suggest a .proto definition for the given type
         /// </summary>
@@ -380,14 +379,13 @@ namespace ProtoBuf
                 return TryReadLengthPrefix(source, style, out length);
             }
         }
-#endif
+
         /// <summary>
         /// The field number that is used as a default when serializing/deserializing a list of objects.
         /// The data is treated as repeated message with field number 1.
         /// </summary>
         public const int ListItemTag = TypeModel.ListItemTag;
 
-#if !NO_RUNTIME
         /// <summary>
         /// Provides non-generic access to the default serializer.
         /// </summary>
@@ -480,10 +478,8 @@ namespace ProtoBuf
             public static void PrepareSerializer(Type type)
 #pragma warning restore RCS1163
             {
-#if FEAT_COMPILER
                 RuntimeTypeModel model = RuntimeTypeModel.Default;
                 model[type].CompileInPlace();
-#endif
             }
         }
 
@@ -502,7 +498,6 @@ namespace ProtoBuf
                 set { RuntimeTypeModel.Default.InferTagFromNameDefault = value; }
             }
         }
-#endif
 
         /// <summary>
         /// Releases any internal buffers that have been reserved for efficiency; this does not affect any serialization

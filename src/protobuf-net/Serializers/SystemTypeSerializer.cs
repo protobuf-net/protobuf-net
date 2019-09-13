@@ -1,7 +1,5 @@
 ﻿using System;
 
-#if !NO_RUNTIME
-
 namespace ProtoBuf.Serializers
 {
     internal sealed class SystemTypeSerializer : IProtoSerializer
@@ -25,7 +23,6 @@ namespace ProtoBuf.Serializers
 
         bool IProtoSerializer.ReturnsValue => true;
 
-#if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteType", valueFrom);
@@ -34,8 +31,5 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicRead("ReadType", ExpectedType);
         }
-#endif
     }
 }
-
-#endif

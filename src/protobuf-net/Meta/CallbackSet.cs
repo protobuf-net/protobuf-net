@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace ProtoBuf.Meta
@@ -105,4 +104,3 @@ namespace ProtoBuf.Meta
         }
     }
 }
-#endif

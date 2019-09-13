@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Reflection;
 
 namespace ProtoBuf.Serializers
@@ -36,7 +35,6 @@ namespace ProtoBuf.Serializers
             return result;
         }
 
-#if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             if (getSpecified == null)
@@ -69,7 +67,5 @@ namespace ProtoBuf.Serializers
                 ctx.EmitCall(setSpecified);
             }
         }
-#endif
     }
 }
-#endif

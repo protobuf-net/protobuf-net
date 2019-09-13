@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -13,12 +12,9 @@ namespace ProtoBuf.Serializers
         public abstract void Write(ProtoWriter dest, ref ProtoWriter.State state, object value);
         public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
 
-#if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom) { EmitWrite(ctx, valueFrom); }
         protected abstract void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom);
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity) { EmitRead(ctx, entity); }
         protected abstract void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom);
-#endif
     }
 }
-#endif

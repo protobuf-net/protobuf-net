@@ -96,7 +96,7 @@ namespace ProtoBuf.WellKnownTypes
         }
     }
 
-    partial class WellKnownSerializer : IProtoSerializer<ScaledTicks>
+    partial class WellKnownSerializer : IProtoSerializer<ScaledTicks, ScaledTicks>
     {
         ScaledTicks IProtoSerializer<ScaledTicks, ScaledTicks>.Deserialize(ProtoReader reader, ref ProtoReader.State state, ScaledTicks _)
         {

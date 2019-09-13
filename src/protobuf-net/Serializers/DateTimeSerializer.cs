@@ -1,6 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
-using System.Reflection;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -43,7 +41,7 @@ namespace ProtoBuf.Serializers
             else
                 BclHelpers.WriteDateTime((DateTime)value, dest, ref state);
         }
-#if FEAT_COMPILER
+
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitWrite<BclHelpers>(
@@ -58,8 +56,5 @@ namespace ProtoBuf.Serializers
                 wellKnown ? nameof(BclHelpers.ReadTimestamp) : nameof(BclHelpers.ReadDateTime),
                 ExpectedType);
         }
-#endif
-
     }
 }
-#endif

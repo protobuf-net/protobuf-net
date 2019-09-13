@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Collections;
 using ProtoBuf.Meta;
 using System.Reflection;
@@ -112,7 +111,6 @@ namespace ProtoBuf.Serializers
             get { return (options & OPTIONS_OverwriteList) == 0; }
         }
 
-#if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             /* This looks more complex than it is. Look at the non-compiled Read to
@@ -304,7 +302,7 @@ namespace ProtoBuf.Serializers
                 ctx.DiscardValue();
             }
         }
-#endif
+
         private static readonly System.Type ienumeratorType = typeof(IEnumerator), ienumerableType = typeof(IEnumerable);
 
         protected MethodInfo GetEnumeratorInfo(out MethodInfo moveNext, out MethodInfo current)
@@ -366,7 +364,7 @@ namespace ProtoBuf.Serializers
             current = Helpers.GetGetMethod(Helpers.GetProperty(iteratorType, "Current", false), false, false);
             return getEnumerator;
         }
-#if FEAT_COMPILER
+
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             using (Compiler.Local list = ctx.GetLocalWithValue(ExpectedType, valueFrom))
@@ -431,7 +429,6 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
-#endif
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
@@ -538,4 +535,3 @@ namespace ProtoBuf.Serializers
         }
     }
 }
-#endif

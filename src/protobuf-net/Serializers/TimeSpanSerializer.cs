@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -42,7 +41,6 @@ namespace ProtoBuf.Serializers
             }
         }
 
-#if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitWrite<BclHelpers>(
@@ -55,8 +53,5 @@ namespace ProtoBuf.Serializers
                 wellKnown ? nameof(BclHelpers.ReadDuration) : nameof(BclHelpers.ReadTimeSpan),
                 ExpectedType);
         }
-#endif
-
     }
 }
-#endif

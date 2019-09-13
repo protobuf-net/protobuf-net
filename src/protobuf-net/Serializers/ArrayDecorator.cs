@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Collections;
 using System.Reflection;
 using ProtoBuf.Meta;
@@ -64,7 +63,6 @@ namespace ProtoBuf.Serializers
             return Helpers.GetUnderlyingType(itemType) == null;
         }
 
-#if FEAT_COMPILER
         protected override void EmitWrite(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             // int i and T[] arr
@@ -158,7 +156,7 @@ namespace ProtoBuf.Serializers
             ctx.LoadLength(arr, false);
             ctx.BranchIfLess(processItem, false);
         }
-#endif
+
         private bool AppendToCollection => (options & OPTIONS_OverwriteList) == 0;
 
         private bool SupportNull { get { return (options & OPTIONS_SupportNull) != 0; } }
@@ -237,7 +235,6 @@ namespace ProtoBuf.Serializers
             return result;
         }
 
-#if FEAT_COMPILER
         protected override void EmitRead(ProtoBuf.Compiler.CompilerContext ctx, ProtoBuf.Compiler.Local valueFrom)
         {
             Type listType = typeof(System.Collections.Generic.List<>).MakeGenericType(itemType);
@@ -305,7 +302,5 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(newArr);
             }
         }
-#endif
     }
 }
-#endif

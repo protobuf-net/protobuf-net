@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -24,7 +23,6 @@ namespace ProtoBuf.Serializers
             return BclHelpers.ReadGuid(source, ref state);
         }
 
-#if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitWrite<BclHelpers>(nameof(BclHelpers.WriteGuid), valueFrom);
@@ -34,8 +32,5 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicRead<BclHelpers>(nameof(BclHelpers.ReadGuid), ExpectedType);
         }
-#endif
-
     }
 }
-#endif

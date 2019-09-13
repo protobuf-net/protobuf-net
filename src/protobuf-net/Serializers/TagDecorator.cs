@@ -1,6 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
-using System.Reflection;
+﻿using System;
 
 using ProtoBuf.Meta;
 
@@ -31,7 +29,6 @@ namespace ProtoBuf.Serializers
             }
         }
 
-#if FEAT_COMPILER
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             // we only expect this to be invoked if HasCallbacks returned true, so implicitly Tail
@@ -43,8 +40,9 @@ namespace ProtoBuf.Serializers
         {
             ((IProtoTypeSerializer)Tail).EmitCreateInstance(ctx);
         }
-#endif
+
         public override Type ExpectedType => Tail.ExpectedType;
+        Type IProtoTypeSerializer.BaseType => ExpectedType;
 
         public TagDecorator(int fieldNumber, WireType wireType, bool strict, IProtoSerializer tail)
             : base(tail)
@@ -78,7 +76,6 @@ namespace ProtoBuf.Serializers
             Tail.Write(dest, ref state, value);
         }
 
-#if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue((int)fieldNumber);
@@ -106,7 +103,5 @@ namespace ProtoBuf.Serializers
             }
             Tail.EmitRead(ctx, valueFrom);
         }
-#endif
     }
 }
-#endif

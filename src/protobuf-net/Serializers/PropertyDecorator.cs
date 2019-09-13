@@ -1,8 +1,5 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Reflection;
-
-using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
@@ -76,7 +73,6 @@ namespace ProtoBuf.Serializers
             return null;
         }
 
-#if FEAT_COMPILER
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadAddress(valueFrom, ExpectedType);
@@ -139,7 +135,6 @@ namespace ProtoBuf.Serializers
                 }
             }
         }
-#endif
 
         internal static bool CanWrite(MemberInfo member)
         {
@@ -154,4 +149,3 @@ namespace ProtoBuf.Serializers
         }
     }
 }
-#endif

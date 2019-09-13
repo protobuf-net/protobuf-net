@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 using System.Collections;
 using System.Text;
 using ProtoBuf.Serializers;
@@ -327,9 +326,8 @@ namespace ProtoBuf.Meta
                             // serializers needing to wait until another thread has finished adding the properties
                             SetFlag(OPTIONS_Frozen, true, false);
                             serializer = BuildSerializer();
-#if FEAT_COMPILER
+
                             if (model.AutoCompile) CompileInPlace();
-#endif
                         }
                     }
                     finally
@@ -1507,7 +1505,6 @@ namespace ProtoBuf.Meta
             }
         }
 
-#if FEAT_COMPILER
         /// <summary>
         /// Compiles the serializer for this type; this is *not* a full
         /// standalone compile, but can significantly boost performance
@@ -1521,7 +1518,6 @@ namespace ProtoBuf.Meta
                 serializer = CompiledSerializer.Wrap(Serializer, model);
             }
         }
-#endif
 
         internal bool IsDefined(int fieldNumber)
         {
@@ -1630,11 +1626,7 @@ namespace ProtoBuf.Meta
 
         internal bool IsPrepared()
         {
-#if FEAT_COMPILER
             return serializer is CompiledSerializer;
-#else
-            return false;
-#endif
         }
 
         internal IEnumerable Fields => this.fields;
@@ -1938,4 +1930,3 @@ namespace ProtoBuf.Meta
         }
     }
 }
-#endif

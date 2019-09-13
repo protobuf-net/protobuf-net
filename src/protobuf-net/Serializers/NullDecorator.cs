@@ -1,8 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
-using System.Reflection;
-
-using ProtoBuf.Meta;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -31,7 +27,6 @@ namespace ProtoBuf.Serializers
 
         public override bool RequiresOldValue => true;
 
-#if FEAT_COMPILER
         protected override void EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             using (Compiler.Local oldValue = ctx.GetLocalWithValue(ExpectedType, valueFrom))
@@ -133,7 +128,6 @@ namespace ProtoBuf.Serializers
                 ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem"));
             }
         }
-#endif
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
@@ -165,4 +159,3 @@ namespace ProtoBuf.Serializers
         }
     }
 }
-#endif

@@ -1,5 +1,4 @@
-﻿#if !NO_RUNTIME
-using System;
+﻿using System;
 
 namespace ProtoBuf.Serializers
 {
@@ -24,7 +23,6 @@ namespace ProtoBuf.Serializers
             return source.ReadByte(ref state);
         }
 
-#if FEAT_COMPILER
         void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteByte", valueFrom);
@@ -34,7 +32,5 @@ namespace ProtoBuf.Serializers
         {
             ctx.EmitBasicRead("ReadByte", ExpectedType);
         }
-#endif
     }
 }
-#endif
