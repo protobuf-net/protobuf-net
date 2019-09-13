@@ -3,7 +3,7 @@
     /// <summary>
     /// Abstract API capable of serializing/deserializing
     /// </summary>
-    public interface IProtoSerializer<in TBase, TActual> where TActual : TBase
+    public interface IProtoSerializer<TBase, TActual> where TActual : TBase
     {
         /// <summary>
         /// Serialize an instance to the supplied writer
