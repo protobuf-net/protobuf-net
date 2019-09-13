@@ -13,8 +13,6 @@
     <DataAnnotationsValidator />
     <div class="row pt-2 h-100">
         <div class="col-6  d-flex flex-column">
-            <h2 style="flex: none;">Code Generator</h2>
-
             @if (showMoreOptions)
             {
                 <button type="button" @onclick="e => showMoreOptions = !showMoreOptions" class="btn btn-secondary btn-block">
@@ -93,9 +91,6 @@
                                 {
                                 <option value="@language">@language</option>
                                 }
-                            /**/
-                            /**/
-                            /**/
                         </InputSelect>
                     </div>
                     <div class="col">
@@ -143,7 +138,6 @@
             }
             @if (codeFiles != null)
             {
-                <h2>Generated Code</h2>
                 @foreach (var file in codeFiles)
                 {
                     <div class="form-group   flex-grow-1  d-flex flex-column">
