@@ -37,6 +37,7 @@ namespace ProtoBuf.Compiler
 
                     if (typeof(T) == typeof(ProtoWriter))
                     {
+                        if (method.Name == nameof(ProtoWriter.WriteSubItem)) continue; // ignore all of these
                         if (method.Name == nameof(ProtoWriter.Create)) continue; // ignore all of these
                         if (method.Name == nameof(ProtoWriter.WriteBytes)
                             && (args.Length == 5

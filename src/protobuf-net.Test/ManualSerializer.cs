@@ -47,7 +47,9 @@ namespace ProtoBuf
                 var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
                 using (var writer = ProtoWriter.Create(out var state, ms, null))
                 {
-                    ProtoWriter.Serialize<A>(obj, writer, ref state, ModelSerializer.Serializer);
+                    var bytes = writer.Serialize<A>(ref state, obj, ModelSerializer.Serializer);
+                    Assert.Equal(12, bytes);
+                    Assert.Equal(12, ms.Length);
                     var hex = BitConverter.ToString(ms.GetBuffer(), 0, (int)ms.Length);
                     Assert.Equal("22-08-2A-03-18-95-06-10-C8-03-08-7B", hex);
 

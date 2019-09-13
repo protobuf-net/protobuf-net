@@ -1132,16 +1132,18 @@ namespace ProtoBuf
         /// <summary>
         /// Writes an object to the input writer
         /// </summary>
-        public static void Serialize<T>(T value, ProtoWriter writer, ref State state, IProtoSerializer<T, T> serializer = null)
+        public long Serialize<T>(ref State state, T value, IProtoSerializer<T, T> serializer = null)
         {
-            if (writer == null) throw new ArgumentNullException(nameof(writer));
-            writer.CheckClear(ref state);
+            CheckClear(ref state);
+            long before = GetPosition(ref state);
             if (value != null)
             {
-                writer.SetRootObject(value);
-                (serializer ?? TypeModel.GetSerializer<T, T>(writer.model)).Serialize(writer, ref state, value);
+                SetRootObject(value);
+                (serializer ?? TypeModel.GetSerializer<T, T>(Model)).Serialize(this, ref state, value);
             }
-            writer.CheckClear(ref state);
+            CheckClear(ref state);
+            long after = GetPosition(ref state);
+            return after - before;
         }
     }
 
