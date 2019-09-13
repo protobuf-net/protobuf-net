@@ -3,6 +3,7 @@ using System;
 using ProtoBuf.Compiler;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Emit;
 
 namespace ProtoBuf.Serializers
 {
@@ -29,6 +30,7 @@ namespace ProtoBuf.Serializers
             if (!valueTail.ReturnsValue) throw new InvalidOperationException("Value tail should return a value");
 
             AppendToCollection = !overwriteList;
+            _runtimeSerializer = new RuntimePairSerializer(this.keyTail, Tail);
         }
 
         private static readonly TKey DefaultKey = (typeof(TKey) == typeof(string)) ? (TKey)(object)"" : default;
@@ -45,31 +47,11 @@ namespace ProtoBuf.Serializers
         {
             TDictionary typed = (AppendToCollection ? ((TDictionary)value) : null)
                 ?? (TDictionary)Activator.CreateInstance(concreteType);
-
             do
             {
-                var key = DefaultKey;
-                var typedValue = DefaultValue;
-                SubItemToken token = ProtoReader.StartSubItem(source, ref state);
-                int field;
-                while ((field = source.ReadFieldHeader(ref state)) > 0)
-                {
-                    switch (field)
-                    {
-                        case 1:
-                            key = (TKey)keyTail.Read(source, ref state, null);
-                            break;
-                        case 2:
-                            typedValue = (TValue)Tail.Read(source, ref state, Tail.RequiresOldValue ? (object)typedValue : null);
-                            break;
-                        default:
-                            source.SkipField(ref state);
-                            break;
-                    }
-                }
-
-                ProtoReader.EndSubItem(token, source, ref state);
-                typed[key] = typedValue;
+                var pair = new KeyValuePair<TKey, TValue>(DefaultKey, DefaultValue);
+                pair = source.ReadSubItem<KeyValuePair<TKey, TValue>>(ref state, pair, _runtimeSerializer);
+                typed[pair.Key] = pair.Value;
             } while (source.TryReadFieldHeader(ref state, fieldNumber));
 
             return typed;
@@ -80,10 +62,48 @@ namespace ProtoBuf.Serializers
             foreach (var pair in (TDictionary)value)
             {
                 ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
-                var token = ProtoWriter.StartSubItem(null, dest, ref state);
-                if (pair.Key != null) keyTail.Write(dest, ref state, pair.Key);
-                if (pair.Value != null) Tail.Write(dest, ref state, pair.Value);
-                ProtoWriter.EndSubItem(token, dest, ref state);
+                ProtoWriter.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
+            }
+        }
+
+        private readonly IProtoSerializer<KeyValuePair<TKey, TValue>, KeyValuePair<TKey, TValue>> _runtimeSerializer;
+
+        sealed class RuntimePairSerializer : IProtoSerializer<KeyValuePair<TKey, TValue>, KeyValuePair<TKey, TValue>>
+        {
+            private readonly IProtoSerializer _keyTail, _valueTail;
+            public RuntimePairSerializer(IProtoSerializer keyTail, IProtoSerializer valueTail)
+            {
+                _keyTail = keyTail;
+                _valueTail = valueTail;
+            }
+
+            KeyValuePair<TKey, TValue> IProtoSerializer<KeyValuePair<TKey, TValue>, KeyValuePair<TKey, TValue>>.Deserialize(ProtoReader reader, ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
+            {
+                var key = pair.Key;
+                var value = pair.Value;
+                int field;
+                while ((field = reader.ReadFieldHeader(ref state)) > 0)
+                {
+                    switch (field)
+                    {
+                        case 1:
+                            key = (TKey)_keyTail.Read(reader, ref state, null);
+                            break;
+                        case 2:
+                            value = (TValue)_valueTail.Read(reader, ref state, _valueTail.RequiresOldValue ? (object)value : null);
+                            break;
+                        default:
+                            reader.SkipField(ref state);
+                            break;
+                    }
+                }
+                return new KeyValuePair<TKey, TValue>(key, value);
+            }
+
+            void IProtoSerializer<KeyValuePair<TKey, TValue>, KeyValuePair<TKey, TValue>>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
+            {
+                if (pair.Key != null) _keyTail.Write(writer, ref state, pair.Key);
+                if (pair.Value != null) _valueTail.Write(writer, ref state, pair.Value);
             }
         }
 
@@ -109,8 +129,23 @@ namespace ProtoBuf.Serializers
             throw new InvalidOperationException("Unable to resolve indexer for map");
         }
 
+        FieldInfo GetPairSerializer(CompilerContext ctx)
+        {
+            var scope = ctx.Scope;
+            if (!scope.TryGetAdditionalSerializerInstance(this, out var result))
+            {
+                result = scope.DefineAdditionalSerializerInstance<KeyValuePair<TKey, TValue>>(this,
+                    (key, il) => ((MapDecorator<TDictionary, TKey, TValue>)key).WritePairSerialize(il),
+                    (key, il) => ((MapDecorator<TDictionary, TKey, TValue>)key).WritePairDeserialize(il));
+            }
+            return result;
+        }
+        void WritePairSerialize(ILGenerator il) { il.ThrowException(typeof(NotImplementedException)); }
+        void WritePairDeserialize(ILGenerator il) { il.ThrowException(typeof(NotImplementedException)); }
         protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
+            var pairSerializer = GetPairSerializer(ctx);
+
             Type itemType = typeof(KeyValuePair<TKey, TValue>);
             MethodInfo moveNext, current, getEnumerator = ListDecorator.GetEnumeratorInfo(
                 ExpectedType, itemType, out moveNext, out current);
@@ -143,27 +178,15 @@ namespace ProtoBuf.Serializers
                     }
                     ctx.StoreValue(kvp);
 
+
+                    // ProtoWriter.WriteFieldHeader(fieldNumber, wireType, dest, ref state);
                     ctx.LoadValue(fieldNumber);
                     ctx.LoadValue((int)wireType);
                     ctx.LoadWriter(true);
                     ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("WriteFieldHeader", this));
 
-                    ctx.LoadNullRef();
-                    ctx.LoadWriter(true);
-                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("StartSubItem", this));
-                    ctx.StoreValue(token);
-
-                    ctx.LoadAddress(kvp, itemType);
-                    ctx.EmitCall(key, itemType);
-                    ctx.WriteNullCheckedTail(typeof(TKey), keyTail, null);
-
-                    ctx.LoadAddress(kvp, itemType);
-                    ctx.EmitCall(value, itemType);
-                    ctx.WriteNullCheckedTail(typeof(TValue), Tail, null);
-
-                    ctx.LoadValue(token);
-                    ctx.LoadWriter(true);
-                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("EndSubItem", this));
+                    // ProtoWriter.WriteSubItem<KeyValuePair<TKey, TValue>>(pair, dest, ref state, _runtimeSerializer);
+                    SubItemSerializer.EmitWriteSubItem<KeyValuePair<TKey, TValue>>(ctx, kvp, pairSerializer, false);
 
                     ctx.MarkLabel(@next);
                     ctx.LoadAddress(iter, enumeratorType);
@@ -174,6 +197,8 @@ namespace ProtoBuf.Serializers
         }
         protected override void EmitRead(CompilerContext ctx, Local valueFrom)
         {
+            var pairSerializer = GetPairSerializer(ctx);
+
             using (Compiler.Local list = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom)
                 : new Compiler.Local(ctx, typeof(TDictionary)))
             using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken)))

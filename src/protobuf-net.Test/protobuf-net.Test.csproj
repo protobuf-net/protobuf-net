@@ -8,7 +8,7 @@
     <WithSpans>true</WithSpans>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='netcoreapp3.0'">
-    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX</DefineConstants>
+    <DefineConstants>FEAT_COMPILER;NO_NHIBERNATE;COREFX;PLAT_NO_EMITDLL</DefineConstants>
     <LibImport>core</LibImport>
   </PropertyGroup>
   <PropertyGroup Condition="$(TargetFramework)=='net462'">

@@ -9,6 +9,7 @@ using System.Threading;
 using System.IO;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ProtoBuf.Compiler;
 
 namespace ProtoBuf.Meta
 {
@@ -40,6 +41,8 @@ namespace ProtoBuf.Meta
             if (value) options |= option;
             else options &= (ushort)~option;
         }
+
+        internal CompilerContextScope Scope { get; } = CompilerContextScope.CreateInProcess();
 
         /// <summary>
         /// Global default that
@@ -837,7 +840,7 @@ namespace ProtoBuf.Meta
         {
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
 
-            if (compiled) return Compiler.CompilerContext.BuildSerializer<TActual>(serializer, this);
+            if (compiled) return Compiler.CompilerContext.BuildSerializer<TActual>(Scope, serializer, this);
 
             return new Compiler.ProtoSerializer<TActual>(
                 (ProtoWriter dest, ref ProtoWriter.State state, TActual val) => serializer.Write(dest, ref state, val));
@@ -969,10 +972,6 @@ namespace ProtoBuf.Meta
                 newMethod.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
             }
             ILGenerator il = newMethod.GetILGenerator();
-            for (int i = 0; i < parameters.Length; i++)
-            {
-                newMethod.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
-            }
             type.DefineMethodOverride(newMethod, baseMethod);
             return il;
         }
@@ -1122,14 +1121,14 @@ namespace ProtoBuf.Meta
             ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
                                         : asm.DefineDynamicModule(moduleName);
 #endif
-
+            var scope = CompilerContextScope.CreateForModule(module);
             WriteAssemblyAttributes(options, assemblyName, asm);
 
             TypeBuilder type = WriteBasicTypeModel(options, typeName, module);
 
-            WriteSerializers(options, assemblyName, type, out var index, out var hasInheritance, out var methodPairs, out var ilVersion);
+            WriteSerializers(scope, options, assemblyName, type, out var index, out var hasInheritance, out var methodPairs, out var ilVersion);
 
-            WriteGetKeyImpl(type, hasInheritance, methodPairs, ilVersion, assemblyName, out var knownTypesCategory, out var knownTypes, out var knownTypesLookupType);
+            WriteGetKeyImpl(scope, type, hasInheritance, methodPairs, ilVersion, assemblyName, out var knownTypesCategory, out var knownTypes, out var knownTypesLookupType);
 
             // trivial flags
             var il = Override(type, "SerializeDateTimeKind");
@@ -1137,7 +1136,7 @@ namespace ProtoBuf.Meta
             il.Emit(OpCodes.Ret);
             // end: trivial flags
 
-            Compiler.CompilerContext ctx = WriteSerializeDeserialize(assemblyName, type, methodPairs, ilVersion, ref il);
+            Compiler.CompilerContext ctx = WriteSerializeDeserialize(scope, assemblyName, type, methodPairs, ilVersion, ref il);
 
             WriteConstructors(type, ref index, methodPairs, knownTypesCategory, knownTypes, knownTypesLookupType, ctx);
 
@@ -1263,10 +1262,10 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private Compiler.CompilerContext WriteSerializeDeserialize(string assemblyName, TypeBuilder type, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, ref ILGenerator il)
+        private Compiler.CompilerContext WriteSerializeDeserialize(CompilerContextScope scope, string assemblyName, TypeBuilder type, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, ref ILGenerator il)
         {
             il = Override(type, nameof(TypeModel.Serialize));
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(il, false, true, methodPairs, this, ilVersion, assemblyName, typeof(object), "Serialize " + type.Name);
+            Compiler.CompilerContext ctx = new Compiler.CompilerContext(scope, il, false, true, methodPairs, this, ilVersion, assemblyName, typeof(object), "Serialize " + type.Name);
             // arg0 = this, arg1 = dest, arg2 = state, arg3 = key, arg4 = obj
             Compiler.CodeLabel[] jumpTable = new Compiler.CodeLabel[types.Count];
             for (int i = 0; i < jumpTable.Length; i++)
@@ -1289,7 +1288,7 @@ namespace ProtoBuf.Meta
             }
 
             il = Override(type, nameof(TypeModel.DeserializeCore));
-            ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(object), "Deserialize " + type.Name);
+            ctx = new Compiler.CompilerContext(scope, il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(object), "Deserialize " + type.Name);
 
             // arg0 = this, arg1 = source, arg2 = state, arg3 = key, arg4 = obj
 
@@ -1311,7 +1310,7 @@ namespace ProtoBuf.Meta
                     il.Emit(OpCodes.Ldarg_1);
                     il.Emit(OpCodes.Ldarg_2);
                     il.Emit(OpCodes.Ldarg_S, (byte)4);
-                    il.EmitCall(OpCodes.Call, EmitBoxedDeserializer(type, i, keyType, methodPairs, this, ilVersion, assemblyName), null);
+                    il.EmitCall(OpCodes.Call, EmitBoxedDeserializer(scope, type, i, keyType, methodPairs, this, ilVersion, assemblyName), null);
                     ctx.Return();
                 }
                 else
@@ -1328,10 +1327,10 @@ namespace ProtoBuf.Meta
         }
 
         private const int KnownTypes_Array = 1, KnownTypes_Dictionary = 2, KnownTypes_Hashtable = 3, KnownTypes_ArrayCutoff = 20;
-        private void WriteGetKeyImpl(TypeBuilder type, bool hasInheritance, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName, out int knownTypesCategory, out FieldBuilder knownTypes, out Type knownTypesLookupType)
+        private void WriteGetKeyImpl(CompilerContextScope scope, TypeBuilder type, bool hasInheritance, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName, out int knownTypesCategory, out FieldBuilder knownTypes, out Type knownTypesLookupType)
         {
             var il = Override(type, "GetKeyImpl");
-            var ctx = new Compiler.CompilerContext(il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(System.Type), "GetKeyImpl");
+            var ctx = new Compiler.CompilerContext(scope, il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(System.Type), "GetKeyImpl");
 
             if (types.Count <= KnownTypes_ArrayCutoff)
             {
@@ -1457,7 +1456,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private void WriteSerializers(CompilerOptions options, string assemblyName, TypeBuilder type, out int index, out bool hasInheritance, out SerializerPair[] methodPairs, out Compiler.CompilerContext.ILVersion ilVersion)
+        private void WriteSerializers(CompilerContextScope scope, CompilerOptions options, string assemblyName, TypeBuilder type, out int index, out bool hasInheritance, out SerializerPair[] methodPairs, out Compiler.CompilerContext.ILVersion ilVersion)
         {
             Compiler.CompilerContext ctx;
 
@@ -1469,16 +1468,16 @@ namespace ProtoBuf.Meta
                 MethodBuilder writeMethod = type.DefineMethod("Write" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     typeof(void), new Type[] { typeof(ProtoWriter), Compiler.WriterUtil.ByRefStateType, metaType.Type });
-                writeMethod.DefineParameter(0, ParameterAttributes.None, "writer");
-                writeMethod.DefineParameter(1, ParameterAttributes.None, "state");
-                writeMethod.DefineParameter(2, ParameterAttributes.None, "value");
+                writeMethod.DefineParameter(1, ParameterAttributes.None, "writer");
+                writeMethod.DefineParameter(2, ParameterAttributes.None, "state");
+                writeMethod.DefineParameter(3, ParameterAttributes.None, "value");
 
                 MethodBuilder readMethod = type.DefineMethod("Read" + metaType.Type.Name,
                     MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
                     metaType.Type, new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, metaType.Type });
-                readMethod.DefineParameter(0, ParameterAttributes.None, "reader");
-                readMethod.DefineParameter(1, ParameterAttributes.None, "state");
-                readMethod.DefineParameter(2, ParameterAttributes.None, "value");
+                readMethod.DefineParameter(1, ParameterAttributes.None, "reader");
+                readMethod.DefineParameter(2, ParameterAttributes.None, "state");
+                readMethod.DefineParameter(3, ParameterAttributes.None, "value");
 
                 SerializerPair pair = new SerializerPair(
                     GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
@@ -1502,7 +1501,7 @@ namespace ProtoBuf.Meta
                 SerializerPair pair = methodPairs[index];
 
                 var runtimeType = pair.Type.Type;
-                ctx = new Compiler.CompilerContext(pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, runtimeType, "SerializeImpl " + runtimeType.Name);
+                ctx = new Compiler.CompilerContext(scope, pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, runtimeType, "SerializeImpl " + runtimeType.Name);
                 MemberInfo returnType = pair.Deserialize.ReturnType;
 
 
@@ -1510,7 +1509,7 @@ namespace ProtoBuf.Meta
                 pair.Type.Serializer.EmitWrite(ctx, ctx.InputValue);
                 ctx.Return();
 
-                ctx = new Compiler.CompilerContext(pair.DeserializeBody, true, false, methodPairs, this, ilVersion, assemblyName, runtimeType, "DeserializeImpl " + runtimeType.Name);
+                ctx = new Compiler.CompilerContext(scope, pair.DeserializeBody, true, false, methodPairs, this, ilVersion, assemblyName, runtimeType, "DeserializeImpl " + runtimeType.Name);
                 pair.Type.Serializer.EmitRead(ctx, ctx.InputValue);
                 if (!pair.Type.Serializer.ReturnsValue)
                 {
@@ -1537,7 +1536,9 @@ namespace ProtoBuf.Meta
                 (declaration.Attributes | MethodAttributes.Final | MethodAttributes.Private) & ~(MethodAttributes.Abstract | MethodAttributes.Public),
                 declaration.CallingConvention, declaration.ReturnType, pTypes);
             for (int i = 0; i < parameters.Length; i++)
+            {
                 method.DefineParameter(i + 1, parameters[i].Attributes, parameters[i].Name);
+            }
             type.DefineMethodOverride(method, declaration);
             var il = method.GetILGenerator();
             // drop "this" on the floor
@@ -1633,13 +1634,13 @@ namespace ProtoBuf.Meta
             }
         }
 
-        private static MethodBuilder EmitBoxedDeserializer(TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName)
+        private static MethodBuilder EmitBoxedDeserializer(CompilerContextScope scope, TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName)
         {
             MethodInfo dedicated = methodPairs[i].Deserialize;
             MethodBuilder boxedSerializer = type.DefineMethod("_" + i.ToString(), MethodAttributes.Static, CallingConventions.Standard,
                 typeof(object),
                 new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, typeof(object) });
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName, typeof(object), "BoxedSerializer " + valueType.Name);
+            Compiler.CompilerContext ctx = new Compiler.CompilerContext(scope, boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName, typeof(object), "BoxedSerializer " + valueType.Name);
             ctx.LoadValue(ctx.InputValue);
             Compiler.CodeLabel @null = ctx.DefineLabel();
             ctx.BranchIfFalse(@null, true);

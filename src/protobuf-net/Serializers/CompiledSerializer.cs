@@ -8,12 +8,12 @@ namespace ProtoBuf.Serializers
     {
         private readonly Compiler.ProtoSerializer<TActual> serializer;
         private readonly Compiler.ProtoDeserializer<TBase, TActual> deserializer;
-        public CompiledSerializer(IProtoTypeSerializer head, TypeModel model)
+        public CompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
             : base(head)
         {
             try
             {
-                serializer = Compiler.CompilerContext.BuildSerializer<TActual>(head, model);
+                serializer = Compiler.CompilerContext.BuildSerializer<TActual>(model.Scope, head, model);
             }
             catch(Exception ex)
             {
@@ -21,7 +21,7 @@ namespace ProtoBuf.Serializers
             }
             try
             {
-                deserializer = Compiler.CompilerContext.BuildDeserializer<TBase, TActual>(head, model);
+                deserializer = Compiler.CompilerContext.BuildDeserializer<TBase, TActual>(model.Scope, head, model);
             }
             catch (Exception ex)
             {
@@ -63,12 +63,12 @@ namespace ProtoBuf.Serializers
             head.Callback(value, callbackType, context); // these routes only used when bits of the model not compiled
         }
 
-        public static CompiledSerializer Wrap(IProtoTypeSerializer head, TypeModel model)
+        public static CompiledSerializer Wrap(IProtoTypeSerializer head, RuntimeTypeModel model)
         {
             if (!(head is CompiledSerializer result))
             {
                 var ctor = Helpers.GetConstructor(typeof(CompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
-                    new Type[] { typeof(IProtoTypeSerializer), typeof(TypeModel) }, true);
+                    new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
 
                 try
                 {

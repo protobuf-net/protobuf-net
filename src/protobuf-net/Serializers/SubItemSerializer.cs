@@ -60,10 +60,7 @@ namespace ProtoBuf.Serializers
         {
             ctx.LoadValue(valueFrom); // since we're consuming this first, we don't need to capture it
             if (typeof(TBase) != typeof(TActual)) ctx.Cast(typeof(TActual));
-            ctx.LoadWriter(true);
-            ctx.LoadNullRef();
-            ctx.LoadValue(ApplyRecursionCheck);
-            ctx.EmitCall(WriteSubItem.MakeGenericMethod(typeof(TBase), typeof(TActual)));
+            SubItemSerializer.EmitWriteSubItem<TBase, TActual>(ctx, null, null, ApplyRecursionCheck);
         }
         void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
@@ -80,6 +77,23 @@ namespace ProtoBuf.Serializers
 
     internal abstract class SubItemSerializer
     {
+        public static void EmitWriteSubItem<T>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null, bool applyRecursionCheck = true) => EmitWriteSubItem<T, T>(ctx, value, serializer, applyRecursionCheck);
+
+        public static void EmitWriteSubItem<TBase, TActual>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null, bool applyRecursionCheck = true)
+        {
+            ctx.LoadValue(value);
+            ctx.LoadWriter(true);
+            if (serializer == null)
+            {
+                ctx.LoadNullRef();
+            }
+            else
+            {
+                ctx.LoadValue(serializer, checkAccessibility: false);
+            }
+            ctx.LoadValue(applyRecursionCheck);
+            ctx.EmitCall(WriteSubItem.MakeGenericMethod(typeof(TBase), typeof(TActual)));
+        }
         public static readonly MethodInfo WriteSubItem =
             (from method in typeof(ProtoWriter).GetMethods(BindingFlags.Static | BindingFlags.Public)
              where method.Name == nameof(ProtoWriter.WriteSubItem)

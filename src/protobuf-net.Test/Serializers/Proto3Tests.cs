@@ -209,6 +209,64 @@ message HazAliasedEnum {
         public void CompileHazImplicitMap() => Compile<HazImplicitMap>();
 
         [Fact]
+        public void TestHazImplicitMap_Runtime()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(HazImplicitMap), true);
+            TestHazImplicitMap(model);
+        }
+        [Fact]
+        public void TestHazImplicitMap_CompileInPlace()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(HazImplicitMap), true);
+            model.CompileInPlace();
+            TestHazImplicitMap(model);
+        }
+        [Fact]
+        public void TestHazImplicitMap_Compile()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(HazImplicitMap), true);
+            TestHazImplicitMap(model.Compile());
+        }
+#if !PLAT_NO_EMITDLL
+        [Fact]
+        public void TestHazImplicitMap_CompileDll ()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(HazImplicitMap), true);
+            var compiled = model.Compile("TestHazImplicitMap_CompileDll", "TestHazImplicitMap_CompileDll.dll");
+            PEVerify.Verify("TestHazImplicitMap_CompileDll.dll");
+            TestHazImplicitMap(compiled);
+        }
+#endif
+
+        private static void TestHazImplicitMap(TypeModel model)
+        {
+            var obj = new HazImplicitMap
+            {
+                Lookup = {
+                    {123, "abc" },
+                    {456, "def" },
+                }
+            };
+            var clone = (HazImplicitMap)model.DeepClone(obj);
+            Assert.NotNull(clone);
+            Assert.NotSame(obj, clone);
+            Assert.NotSame(obj.Lookup, clone.Lookup);
+            Assert.Equal(2, clone.Lookup.Count);
+            Assert.True(clone.Lookup.TryGetValue(123, out var val));
+            Assert.Equal("abc", val);
+            Assert.True(clone.Lookup.TryGetValue(456, out val));
+            Assert.Equal("def", val);
+        }
+
+        [Fact]
         public void RoundTripBasic()
         {
             var data = new HazMap

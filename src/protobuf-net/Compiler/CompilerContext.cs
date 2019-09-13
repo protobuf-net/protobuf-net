@@ -62,12 +62,12 @@ namespace ProtoBuf.Compiler
             TraceCompile("#: " + label.Index);
         }
 
-        public static ProtoSerializer<TActual> BuildSerializer<TActual>(IProtoSerializer head, TypeModel model)
+        public static ProtoSerializer<TActual> BuildSerializer<TActual>(CompilerContextScope scope, IProtoSerializer head, TypeModel model)
         {
             Type type = head.ExpectedType;
             try
             {
-                CompilerContext ctx = new CompilerContext(type, true, true, model, typeof(TActual), null);
+                CompilerContext ctx = new CompilerContext(scope, type, true, true, model, typeof(TActual), null);
                 ctx.WriteNullCheckedTail(type, head, ctx.InputValue);
                 ctx.Emit(OpCodes.Ret);
                 return (ProtoSerializer<TActual>)ctx.method.CreateDelegate(
@@ -110,11 +110,11 @@ namespace ProtoBuf.Compiler
             return (ProtoCallback)ctx.method.CreateDelegate(
                 typeof(ProtoCallback));
         }*/
-        public static ProtoDeserializer<TBase, TActual> BuildDeserializer<TBase, TActual>(IProtoSerializer head, TypeModel model)
+        public static ProtoDeserializer<TBase, TActual> BuildDeserializer<TBase, TActual>(CompilerContextScope scope, IProtoSerializer head, TypeModel model)
             where TActual : TBase
         {
             Type type = head.ExpectedType;
-            CompilerContext ctx = new CompilerContext(type, false, true, model, typeof(TBase), typeof(TActual));
+            CompilerContext ctx = new CompilerContext(scope, type, false, true, model, typeof(TBase), typeof(TActual));
 
             using (Local typedVal = new Local(ctx, type))
             {
@@ -231,8 +231,9 @@ namespace ProtoBuf.Compiler
         public Local InputValue { get; }
 
         private readonly string assemblyName;
-        internal CompilerContext(ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType, string traceName)
+        internal CompilerContext(CompilerContextScope scope, ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType, string traceName)
         {
+            Scope = scope;
             if (string.IsNullOrEmpty(assemblyName)) throw new ArgumentNullException(nameof(assemblyName));
             this.assemblyName = assemblyName;
             this.methodPairs = methodPairs ?? throw new ArgumentNullException(nameof(methodPairs));
@@ -258,8 +259,11 @@ namespace ProtoBuf.Compiler
             state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
             inputArg = (byte)(isStatic ? 2 : 3);
         }
-        private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType, Type returnType)
+
+        internal CompilerContextScope Scope { get; }
+        private CompilerContext(CompilerContextScope scope, Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType, Type returnType)
         {
+            Scope = scope;
             MetadataVersion = ILVersion.Net2;
             this.isWriter = isWriter;
             Model = model ?? throw new ArgumentNullException(nameof(model));
@@ -813,24 +817,33 @@ namespace ProtoBuf.Compiler
                 }
                 if (!isPublic)
                 {
-                    switch (memberType)
+                    switch (member)
                     {
-                        case MemberTypes.TypeInfo:
-                        case MemberTypes.NestedType:
-                            throw new InvalidOperationException("Non-public type cannot be used with full dll compilation: " +
-                                ((Type)member).FullName);
+                        case FieldBuilder _:
+                        case TypeBuilder _:
+                        case PropertyBuilder _:
+                            // we're building them; 'tis fine
+                            break;
                         default:
-                            throw new InvalidOperationException("Non-public member cannot be used with full dll compilation: " +
-                                member.DeclaringType.FullName + "." + member.Name);
+                            switch (memberType)
+                            {
+                                case MemberTypes.TypeInfo:
+                                case MemberTypes.NestedType:
+                                    throw new InvalidOperationException("Non-public type cannot be used with full dll compilation: " +
+                                        ((Type)member).FullName);
+                                default:
+                                    throw new InvalidOperationException("Non-public member cannot be used with full dll compilation: " +
+                                        member.DeclaringType.FullName + "." + member.Name);
+                            }
                     }
                 }
             }
         }
 
-        public void LoadValue(FieldInfo field)
+        public void LoadValue(FieldInfo field, bool checkAccessibility = true)
         {
             MemberInfo member = field;
-            CheckAccessibility(ref member);
+            if (checkAccessibility) CheckAccessibility(ref member);
             if (member is PropertyInfo prop)
             {
                 LoadValue(prop);
