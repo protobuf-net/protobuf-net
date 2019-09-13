@@ -25,11 +25,12 @@ namespace ProtoBuf.unittest.Meta
                     new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant, false, PrimitiveSerializer<Int32Serializer>.Singleton)),
                     new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String, false, PrimitiveSerializer<StringSerializer>.Singleton))
                 }, null, false, true, null, null, null);
-            var deser = CompilerContext.BuildDeserializer(head, model);
+            var deser = CompilerContext.BuildDeserializer<CustomerStruct, CustomerStruct>(head, model);
 
             using (var reader = ProtoReader.Create(out var state, Stream.Null, null, null))
             {
-                Assert.IsType<CustomerStruct>(deser(reader, ref state, null));
+                var result = deser(reader, ref state, default);
+                Assert.IsType<CustomerStruct>(result);
             }
             using (var reader = ProtoReader.Create(out var state, Stream.Null, null, null))
             {
@@ -49,8 +50,8 @@ namespace ProtoBuf.unittest.Meta
                     new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant,false,  PrimitiveSerializer<Int32Serializer>.Singleton)),
                     new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String,false,  PrimitiveSerializer<StringSerializer>.Singleton))
                 }, null, false, true, null, null, null);
-            var ser = CompilerContext.BuildSerializer(head, model);
-            var deser = CompilerContext.BuildDeserializer(head, model);
+            var ser = CompilerContext.BuildSerializer<CustomerStruct>(head, model);
+            var deser = CompilerContext.BuildDeserializer<CustomerStruct, CustomerStruct>(head, model);
             CustomerStruct cs1 = new CustomerStruct { Id = 123, Name = "Fred" };
             using (MemoryStream ms = new MemoryStream())
             {
@@ -63,7 +64,7 @@ namespace ProtoBuf.unittest.Meta
                 ms.Position = 0;
                 using (ProtoReader reader = ProtoReader.Create(out var state, ms, null, null))
                 {
-                    CustomerStruct? cst = (CustomerStruct?)deser(reader, ref state, null);
+                    CustomerStruct? cst = (CustomerStruct?)deser(reader, ref state, default);
                     Assert.True(cst.HasValue);
                     CustomerStruct cs2 = cst.Value;
                     Assert.Equal(cs1.Id, cs2.Id);

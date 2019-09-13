@@ -13,9 +13,10 @@ namespace ProtoBuf.unittest.Serializers
     internal static partial class Util
     {
 #if !NO_INTERNAL_CONTEXT
-        public static void Test(object value, Type innerType, Func<IProtoSerializer, IProtoSerializer> ctor,
+        public static void Test<T>(T value, Type innerType, Func<IProtoSerializer, IProtoSerializer> ctor,
             string expectedHex)
         {
+            Assert.NotEqual(typeof(object), typeof(T));
             byte[] expected = new byte[expectedHex.Length / 2];
             for (int i = 0; i < expected.Length; i++)
             {
@@ -25,15 +26,15 @@ namespace ProtoBuf.unittest.Serializers
             var ser = ctor(nil);
 
             var model = RuntimeTypeModel.Create();
-            var decorator = model.GetSerializer(ser, false);
+            var decorator = model.GetSerializer<T>(ser, false);
             Test(value, decorator, "decorator", expected);
 
-            var compiled = model.GetSerializer(ser, true);
+            var compiled = model.GetSerializer<T>(ser, true);
             Test(value, compiled, "compiled", expected);
         }
 
 #pragma warning disable RCS1163, IDE0060 // Unused parameter.
-        public static void Test(object obj, ProtoSerializer serializer, string message, byte[] expected)
+        public static void Test<T>(T obj, ProtoSerializer<T> serializer, string message, byte[] expected)
 #pragma warning restore RCS1163, IDE0060 // Unused parameter.
         {
             byte[] data;
@@ -90,7 +91,7 @@ namespace ProtoBuf.unittest.Serializers
 #if !NO_INTERNAL_CONTEXT
         public static void Test<T>(T value, Func<IProtoSerializer, IProtoSerializer> ctor, string expectedHex)
         {
-            Test(value, typeof(T), ctor, expectedHex);
+            Test<T>(value, typeof(T), ctor, expectedHex);
         }
 #endif
         internal static string GetHex(byte[] bytes)

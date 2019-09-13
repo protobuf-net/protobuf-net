@@ -833,13 +833,14 @@ namespace ProtoBuf.Meta
         }
 
         // this is used by some unit-tests; do not remove
-        internal Compiler.ProtoSerializer GetSerializer(IProtoSerializer serializer, bool compiled)
+        internal Compiler.ProtoSerializer<TActual> GetSerializer<TActual>(IProtoSerializer serializer, bool compiled)
         {
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
 
-            if (compiled) return Compiler.CompilerContext.BuildSerializer(serializer, this);
+            if (compiled) return Compiler.CompilerContext.BuildSerializer<TActual>(serializer, this);
 
-            return new Compiler.ProtoSerializer(serializer.Write);
+            return new Compiler.ProtoSerializer<TActual>(
+                (ProtoWriter dest, ref ProtoWriter.State state, TActual val) => serializer.Write(dest, ref state, val));
         }
 
         /// <summary>

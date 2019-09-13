@@ -62,18 +62,16 @@ namespace ProtoBuf.Compiler
             TraceCompile("#: " + label.Index);
         }
 
-        public static ProtoSerializer BuildSerializer(IProtoSerializer head, TypeModel model)
+        public static ProtoSerializer<TActual> BuildSerializer<TActual>(IProtoSerializer head, TypeModel model)
         {
             Type type = head.ExpectedType;
             try
             {
-                CompilerContext ctx = new CompilerContext(type, true, true, model, typeof(object));
-                ctx.LoadValue(ctx.InputValue);
-                ctx.CastFromObject(type);
-                ctx.WriteNullCheckedTail(type, head, null);
+                CompilerContext ctx = new CompilerContext(type, true, true, model, typeof(TActual), null);
+                ctx.WriteNullCheckedTail(type, head, ctx.InputValue);
                 ctx.Emit(OpCodes.Ret);
-                return (ProtoSerializer)ctx.method.CreateDelegate(
-                    typeof(ProtoSerializer));
+                return (ProtoSerializer<TActual>)ctx.method.CreateDelegate(
+                    typeof(ProtoSerializer<TActual>));
             }
             catch (Exception ex)
             {
@@ -112,17 +110,17 @@ namespace ProtoBuf.Compiler
             return (ProtoCallback)ctx.method.CreateDelegate(
                 typeof(ProtoCallback));
         }*/
-        public static ProtoDeserializer BuildDeserializer(IProtoSerializer head, TypeModel model)
+        public static ProtoDeserializer<TBase, TActual> BuildDeserializer<TBase, TActual>(IProtoSerializer head, TypeModel model)
+            where TActual : TBase
         {
             Type type = head.ExpectedType;
-            CompilerContext ctx = new CompilerContext(type, false, true, model, typeof(object));
+            CompilerContext ctx = new CompilerContext(type, false, true, model, typeof(TBase), typeof(TActual));
 
             using (Local typedVal = new Local(ctx, type))
             {
-                if (!Helpers.IsValueType(type))
+                if (typeof(TBase) == type)
                 {
                     ctx.LoadValue(ctx.InputValue);
-                    ctx.CastFromObject(type);
                     ctx.StoreValue(typedVal);
                 }
                 else
@@ -149,11 +147,14 @@ namespace ProtoBuf.Compiler
                 }
 
                 ctx.LoadValue(typedVal);
-                ctx.CastToObject(type);
+                if (type != typeof(TActual))
+                {
+                    ctx.Cast(typeof(TActual));
+                }
+                ctx.Emit(OpCodes.Ret);
             }
-            ctx.Emit(OpCodes.Ret);
-            return (ProtoDeserializer)ctx.method.CreateDelegate(
-                typeof(ProtoDeserializer));
+            return (ProtoDeserializer<TBase, TActual>)ctx.method.CreateDelegate(
+                typeof(ProtoDeserializer<TBase, TActual>));
         }
 
         internal void Return()
@@ -257,27 +258,24 @@ namespace ProtoBuf.Compiler
             state = isStatic ? OpCodes.Ldarg_1 : OpCodes.Ldarg_2;
             inputArg = (byte)(isStatic ? 2 : 3);
         }
-        private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType)
+        private CompilerContext(Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType, Type returnType)
         {
             MetadataVersion = ILVersion.Net2;
             this.isWriter = isWriter;
             Model = model ?? throw new ArgumentNullException(nameof(model));
             NonPublic = true;
             Type[] paramTypes;
-            Type returnType;
             GetOpCodes(isWriter, isStatic, out _state, out _readerWriter, out _inputArg);
             if (isWriter)
             {
-                returnType = typeof(void);
-                paramTypes = new Type[] { typeof(ProtoWriter), Compiler.WriterUtil.ByRefStateType, typeof(object) };
+                paramTypes = new Type[] { typeof(ProtoWriter), Compiler.WriterUtil.ByRefStateType, inputType };
             }
             else
             {
-                returnType = typeof(object);
-                paramTypes = new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, typeof(object) };
+                paramTypes = new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, inputType };
             }
             int uniqueIdentifier = Interlocked.Increment(ref next);
-            method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType, paramTypes,
+            method = new DynamicMethod("proto_" + uniqueIdentifier.ToString(), returnType ?? typeof(void), paramTypes,
                 associatedType.IsInterface ? typeof(object) : associatedType, true);
             this.il = method.GetILGenerator();
             if (inputType != null) InputValue = new Local(null, inputType);

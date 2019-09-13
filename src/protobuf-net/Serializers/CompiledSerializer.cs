@@ -6,30 +6,40 @@ namespace ProtoBuf.Serializers
     internal sealed class CompiledSerializer<TBase, TActual> : CompiledSerializer, IProtoSerializer<TBase, TActual>
         where TActual : TBase
     {
-        private readonly Compiler.ProtoSerializer serializer;
-        private readonly Compiler.ProtoDeserializer deserializer;
+        private readonly Compiler.ProtoSerializer<TActual> serializer;
+        private readonly Compiler.ProtoDeserializer<TBase, TActual> deserializer;
         public CompiledSerializer(IProtoTypeSerializer head, TypeModel model)
             : base(head)
         {
-            serializer = Compiler.CompilerContext.BuildSerializer(head, model);
-            deserializer = Compiler.CompilerContext.BuildDeserializer(head, model);
+            try
+            {
+                serializer = Compiler.CompilerContext.BuildSerializer<TActual>(head, model);
+            }
+            catch(Exception ex)
+            {
+                throw new InvalidOperationException($"Unable to bind serializer: " + ex.Message, ex);
+            }
+            try
+            {
+                deserializer = Compiler.CompilerContext.BuildDeserializer<TBase, TActual>(head, model);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Unable to bind deserializer: " + ex.Message, ex);
+            }
         }
 
         TActual IProtoSerializer<TBase, TActual>.Deserialize(ProtoReader reader, ref ProtoReader.State state, TBase value)
-        {
-            object obj = value;
-            obj = deserializer(reader, ref state, obj);
-            return (TActual)obj;
-        }
+            => deserializer(reader, ref state, value);
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
-            => deserializer(source, ref state, value);
+            => deserializer(source, ref state, (TBase)value);
 
         void IProtoSerializer<TBase, TActual>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, TActual value)
             => serializer(writer, ref state, value);
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
-            => serializer(dest, ref state, value);
+            => serializer(dest, ref state, (TActual)value);
     }
     internal abstract class CompiledSerializer : IProtoTypeSerializer
     {
@@ -66,7 +76,7 @@ namespace ProtoBuf.Serializers
                 }
                 catch (System.Reflection.TargetInvocationException tie)
                 {
-                    throw tie.InnerException;
+                    throw new InvalidOperationException($"Unable to wrap {head.BaseType.Name}/{head.ExpectedType.Name}: {tie.InnerException.Message}", tie.InnerException);
                 }
                 Helpers.DebugAssert(result.ExpectedType == head.ExpectedType);
             }
