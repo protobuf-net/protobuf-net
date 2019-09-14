@@ -77,7 +77,8 @@ namespace ProtoBuf.Serializers
 
     internal abstract class SubItemSerializer
     {
-        public static void EmitWriteSubItem<T>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null, bool applyRecursionCheck = true) => EmitWriteSubItem<T, T>(ctx, value, serializer, applyRecursionCheck);
+        public static void EmitWriteSubItem<T>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null, bool applyRecursionCheck = true)
+            => EmitWriteSubItem<T, T>(ctx, value, serializer, applyRecursionCheck);
 
         public static void EmitWriteSubItem<TBase, TActual>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null, bool applyRecursionCheck = true)
         {
@@ -94,6 +95,43 @@ namespace ProtoBuf.Serializers
             ctx.LoadValue(applyRecursionCheck);
             ctx.EmitCall(WriteSubItem.MakeGenericMethod(typeof(TBase), typeof(TActual)));
         }
+
+        public static void EmitReadSubItem<T>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null)
+            => EmitReadSubItem<T, T>(ctx, value, serializer);
+        public static void EmitReadSubItem<TBase, TActual>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null)
+        {
+            // reader.ReadSubItem<TBase, TActual>(ref state, value, serializer);
+            ctx.LoadReader(true);
+            if (value == null)
+            {
+                if (TypeHelper<TBase>.IsObjectType)
+                {
+                    ctx.LoadNullRef();
+                }
+                else
+                {
+                    using (var val = new Compiler.Local(ctx, typeof(TBase)))
+                    {
+                        ctx.InitLocal(typeof(TBase), val);
+                        ctx.LoadValue(val);
+                    }
+                }
+            }
+            else
+            {
+                ctx.LoadValue(value);
+            }
+            if (serializer == null)
+            {
+                ctx.LoadNullRef();
+            }
+            else
+            {
+                ctx.LoadValue(serializer, checkAccessibility: false);
+            }
+            ctx.EmitCall(ReadSubItem.MakeGenericMethod(typeof(TBase), typeof(TActual)));
+        }
+
         public static readonly MethodInfo WriteSubItem =
             (from method in typeof(ProtoWriter).GetMethods(BindingFlags.Static | BindingFlags.Public)
              where method.Name == nameof(ProtoWriter.WriteSubItem)
