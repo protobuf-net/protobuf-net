@@ -154,7 +154,7 @@ namespace ProtoBuf
                 using (var writer = withState ? ProtoWriter.Create(out writeState, ms, null) : ProtoWriter.Create(ms, null))
 #pragma warning restore CS0618
                 {
-                    var bytes = writer.Serialize<A>(ref writeState, obj, ModelSerializer.Serializer);
+                    var bytes = writer.Serialize<A>(ref writeState, obj, ModelSerializer.Default);
                     Assert.Equal(12, bytes);
                     Assert.Equal(0, writer.Depth);
                     writer.Close(ref writeState);
@@ -169,7 +169,7 @@ namespace ProtoBuf
                 using (var reader = withState ? ProtoReader.Create(out readState, ms, null) : ProtoReader.Create(ms, null))
 #pragma warning restore CS0618
                 {
-                    var raw = reader.Deserialize<A>(ref readState, null, ModelSerializer.Serializer);
+                    var raw = reader.Deserialize<A>(ref readState, null, ModelSerializer.Default);
                     var clone = Assert.IsType<C>(raw);
                     Assert.NotSame(obj, clone);
                     Assert.Equal(123, clone.AVal);
@@ -187,7 +187,7 @@ namespace ProtoBuf
                 var obj = new C { AVal = 123, BVal = 456, CVal = 789 };
                 using (var writer = ProtoWriter.Create(out var state, pipe.Writer, null))
                 {
-                    var bytes = writer.Serialize<A>(ref state, obj, ModelSerializer.Serializer);
+                    var bytes = writer.Serialize<A>(ref state, obj, ModelSerializer.Default);
                     Assert.Equal(12, bytes);
                     Assert.Equal(0, writer.Depth);
                     writer.Close(ref state);
@@ -201,7 +201,7 @@ namespace ProtoBuf
 
                     using (var reader = ProtoReader.Create(out var state, result.Value, null))
                     {
-                        var raw = reader.Deserialize<A>(ref state, null, ModelSerializer.Serializer);
+                        var raw = reader.Deserialize<A>(ref state, null, ModelSerializer.Default);
                         var clone = Assert.IsType<C>(raw);
                         Assert.NotSame(obj, clone);
                         Assert.Equal(123, clone.AVal);
@@ -213,55 +213,67 @@ namespace ProtoBuf
         }
     }
 
-    class ModelSerializer
-        : IProtoSerializer<A, A>, IProtoSerializer<A, B>, IProtoSerializer<A, C>,
-        IProtoFactory<A, A>, IProtoFactory<A, B>, IProtoFactory<A, C>
+    class ModelSerializer :
+        IBasicSerializer<A>,
+        IBasicDeserializer<A>, ISubTypeSerializer<A>, IProtoFactory<A>,
+        IBasicDeserializer<B>, ISubTypeSerializer<B>, IProtoFactory<B>,
+        IBasicDeserializer<C>, ISubTypeSerializer<C>, IProtoFactory<C>
     {
-        private ModelSerializer() { }
-        public static ModelSerializer Serializer { get; } = new ModelSerializer();
+        public static ModelSerializer Default = new ModelSerializer();
+        public ModelSerializer() { }
 
-        A IProtoFactory<A, A>.Create(SerializationContext context) => new A();
-        B IProtoFactory<A, B>.Create(SerializationContext context) => new B();
-        C IProtoFactory<A, C>.Create(SerializationContext context) => new C();
+        A IProtoFactory<A>.Create(SerializationContext context) => new A();
+        B IProtoFactory<B>.Create(SerializationContext context) => new B();
+        C IProtoFactory<C>.Create(SerializationContext context) => new C();
 
-        void IProtoFactory<A, A>.Copy(SerializationContext context, A from, A to)
-        {
-            to.AVal = from.AVal;
-        }
+        //void IProtoFactory<A, A>.Copy(SerializationContext context, A from, A to)
+        //{
+        //    to.AVal = from.AVal;
+        //}
 
-        void IProtoFactory<A, B>.Copy(SerializationContext context, A from, B to)
-        {
-            if (from is B b)
-            {
-                to.BVal = b.BVal;
-            }
+        //void IProtoFactory<A, B>.Copy(SerializationContext context, A from, B to)
+        //{
+        //    if (from is B b)
+        //    {
+        //        to.BVal = b.BVal;
+        //    }
 
-            ((IProtoFactory<A, A>)Serializer).Copy(context, from, to);
-        }
+        //    ((IProtoFactory<A, A>)Serializer).Copy(context, from, to);
+        //}
 
-        void IProtoFactory<A, C>.Copy(SerializationContext context, A from, C to)
-        {
-            if (from is C c)
-            {
-                to.CVal = c.CVal;
-            }
+        //void IProtoFactory<A, C>.Copy(SerializationContext context, A from, C to)
+        //{
+        //    if (from is C c)
+        //    {
+        //        to.CVal = c.CVal;
+        //    }
 
-            if (from is B b)
-            {
-                ((IProtoFactory<A, B>)Serializer).Copy(context, b, to);
-            }
-            else
-            {
-                ((IProtoFactory<A, A>)Serializer).Copy(context, from, to);
-            }
-        }
+        //    if (from is B b)
+        //    {
+        //        ((IProtoFactory<A, B>)Serializer).Copy(context, b, to);
+        //    }
+        //    else
+        //    {
+        //        ((IProtoFactory<A, A>)Serializer).Copy(context, from, to);
+        //    }
+        //}
 
-        void IProtoSerializer<A, A>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
+        void IBasicSerializer<A>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
+            => ((ISubTypeSerializer<A>)this).Serialize(writer, ref state, value);
+
+        A IBasicDeserializer<A>.Deserialize(ProtoReader reader, ref ProtoReader.State state, A value)
+            => ((ISubTypeSerializer<A>)this).Deserialize<A>(reader, ref state, value);
+        B IBasicDeserializer<B>.Deserialize(ProtoReader reader, ref ProtoReader.State state, B value)
+            => (B)((ISubTypeSerializer<A>)this).Deserialize<B>(reader, ref state, value);
+        C IBasicDeserializer<C>.Deserialize(ProtoReader reader, ref ProtoReader.State state, C value)
+            => (C)((ISubTypeSerializer<A>)this).Deserialize<C>(reader, ref state, value);
+
+        void ISubTypeSerializer<A>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
         {
             if (value is B b)
             {
                 ProtoWriter.WriteFieldHeader(4, WireType.String, writer, ref state);
-                ProtoWriter.WriteSubItem<A, B>(b, writer, ref state, Serializer, false);
+                ProtoWriter.WriteSubType<B>(b, writer, ref state, this, false);
             }
             if (value.AVal != 0)
             {
@@ -270,34 +282,35 @@ namespace ProtoBuf
             }
         }
 
-        A IProtoSerializer<A, A>.Deserialize(ProtoReader reader, ref ProtoReader.State state, A value)
+        A ISubTypeSerializer<A>.Deserialize<TCreate>(ProtoReader reader, ref ProtoReader.State state, object value)
         {
             int field;
+            A typed = value as A;
             while ((field = reader.ReadFieldHeader(ref state)) != 0)
             {
                 switch (field)
                 {
                     case 1:
-                        if (value == null) value = new A();
-                        value.AVal = reader.ReadInt32(ref state);
+                        if (typed == null) value = typed = reader.Cast<A, TCreate>(value);
+                        typed.AVal = reader.ReadInt32(ref state);
                         break;
                     case 4:
-                        value = reader.ReadSubItem<A, B>(ref state, value, Serializer);
+                        typed = reader.ReadSubType<B, TCreate>(ref state, value, this);
                         break;
                     default:
                         reader.SkipField(ref state);
                         break;
                 }
             }
-            return value;
+            return typed ?? reader.Cast<A, TCreate>(value);
         }
 
-        void IProtoSerializer<A, B>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, B value)
+        void ISubTypeSerializer<B>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, B value)
         {
             if (value is C c)
             {
                 ProtoWriter.WriteFieldHeader(5, WireType.String, writer, ref state);
-                ProtoWriter.WriteSubItem<A, C>(c, writer, ref state, Serializer, false);
+                ProtoWriter.WriteSubType<C>(c, writer, ref state, this, false);
             }
             if (value.BVal != 0)
             {
@@ -306,7 +319,7 @@ namespace ProtoBuf
             }
         }
 
-        B IProtoSerializer<A, B>.Deserialize(ProtoReader reader, ref ProtoReader.State state, A value)
+        B ISubTypeSerializer<B>.Deserialize<TCreate>(ProtoReader reader, ref ProtoReader.State state, object value)
         {
             int field;
             B typed = value as B;
@@ -315,21 +328,21 @@ namespace ProtoBuf
                 switch (field)
                 {
                     case 2:
-                        if (typed == null) typed = reader.Cast<A, B>(value, Serializer);
+                        if (typed == null) value = typed = reader.Cast<B, TCreate>(value, this as IProtoFactory<TCreate>);
                         typed.BVal = reader.ReadInt32(ref state);
                         break;
                     case 5:
-                        typed = reader.ReadSubItem<A, C>(ref state, typed, Serializer);
+                        typed = reader.ReadSubType<C, TCreate>(ref state, value, this);
                         break;
                     default:
                         reader.SkipField(ref state);
                         break;
                 }
             }
-            return typed ?? reader.Cast<A, B>(value, Serializer);
+            return typed ?? reader.Cast<B, TCreate>(value, this as IProtoFactory<TCreate>);
         }
 
-        void IProtoSerializer<A, C>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, C value)
+        void ISubTypeSerializer<C>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, C value)
         {
             if (value.CVal != 0)
             {
@@ -338,7 +351,7 @@ namespace ProtoBuf
             }
         }
 
-        C IProtoSerializer<A, C>.Deserialize(ProtoReader reader, ref ProtoReader.State state, A value)
+        C ISubTypeSerializer<C>.Deserialize<TCreate>(ProtoReader reader, ref ProtoReader.State state, object value)
         {
             int field;
             C typed = value as C;
@@ -347,7 +360,7 @@ namespace ProtoBuf
                 switch (field)
                 {
                     case 3:
-                        if (typed == null) typed = reader.Cast<A, C>(value, Serializer);
+                        if (typed == null) value = typed = reader.Cast<C, TCreate>(value, this as IProtoFactory<TCreate>);
                         typed.CVal = reader.ReadInt32(ref state);
                         break;
                     default:
@@ -355,7 +368,7 @@ namespace ProtoBuf
                         break;
                 }
             }
-            return typed ?? reader.Cast<A, C>(value, Serializer);
+            return typed ?? reader.Cast<C, TCreate>(value, this as IProtoFactory<TCreate>);
         }
     }
 

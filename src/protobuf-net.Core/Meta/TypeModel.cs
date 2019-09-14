@@ -1207,25 +1207,17 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
-        protected internal virtual IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>()
-            where TActual : TBase
-            => this as IProtoSerializer<TBase, TActual>;
+        protected internal virtual IBasicSerializer<T> GetBasicSerializer<T>()
+            => this as IBasicSerializer<T>;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static IProtoSerializer<TBase, TActual> NoSerializer<TBase, TActual>(TypeModel model)
-            where TActual : TBase
+        private static T NoSerializer<T>(TypeModel model) where T : class
         {
-            string message = typeof(TBase) == typeof(TActual)
-                ? $"No sub-item serializer available for type '{typeof(TBase).Name}'"
-                : $"No sub-item serializer available for type '{typeof(TActual).Name}' : '{typeof(TBase).Name}'";
-            string suffix = model is object ? "" : "; a model instance is required";
-
-            throw new InvalidOperationException(message + suffix);
+            throw new InvalidOperationException($"No {typeof(T).Name} available for model {model?.ToString() ?? "(none)"}");
         }
 
-        internal static IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>(TypeModel model)
-            where TActual : TBase
-           => model?.GetSerializer<TBase, TActual>() ?? WellKnownSerializer.Instance as IProtoSerializer<TBase, TActual> ?? NoSerializer<TBase, TActual>(model);
+        internal static IBasicSerializer<T> GetBasicSerializer<T>(TypeModel model)
+           => model?.GetBasicSerializer<T>() ?? WellKnownSerializer.Instance as IBasicSerializer<T> ?? NoSerializer<IBasicSerializer<T>>(model);
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.

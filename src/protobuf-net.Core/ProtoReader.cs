@@ -1432,27 +1432,44 @@ namespace ProtoBuf
             return result;
         }
 
+        public T Create<T>(IProtoFactory<T> factory = null)
+            where T : class
+        {
+            // if (factory == null)
+            return factory?.Create(Context) ?? Activator.CreateInstance<T>();
+        }
+
         /// <summary>
         /// Change the type of an object (or create a new object)
         /// </summary>
-        public TActual Cast<TBase, TActual>(TBase value, IProtoFactory<TBase, TActual> serializer = null)
-            where TActual : class, TBase
+        public T Cast<T, TCreate>(object value, IProtoFactory<TCreate> factory = null)
+            where T : class
+            where TCreate : class, T
         {
-            if (!(value is TActual actual))
+            switch (value)
             {
-                if (serializer == null)
-                {
-                    serializer = Model.GetSerializer<TBase, TActual>() as IProtoFactory<TBase, TActual>;
-                }
-                actual = serializer?.Create(Context) ?? Activator.CreateInstance<TActual>();
-                if (value is object)
-                {
-                    if (serializer == null) throw new InvalidOperationException(
-                        $"No serializer available that implements IProtoObjectSerializer<{typeof(TBase).Name}, {typeof(TActual).Name}>");
-                    serializer.Copy(Context, value, actual);
-                }
+                case T t: return t;
+                case null: return Create<TCreate>(factory);
+                default:
+                    throw new NotSupportedException("Not yet implemented: upcast objects preserving values");
             }
-            return actual;
+            //if (value is T t) return t;
+            //if (value is null)
+            //if (!(value is TActual actual))
+            //{
+            //    if (serializer == null)
+            //    {
+            //        serializer = Model.GetSerializer<TBase, TActual>() as IProtoFactory<TBase, TActual>;
+            //    }
+            //    actual = serializer?.Create(Context) ?? Activator.CreateInstance<TActual>();
+            //    if (value is object)
+            //    {
+            //        if (serializer == null) throw new InvalidOperationException(
+            //            $"No serializer available that implements IProtoObjectSerializer<{typeof(TBase).Name}, {typeof(TActual).Name}>");
+            //        serializer.Copy(Context, value, actual);
+            //    }
+            //}
+            //return actual;
         }
 
         public T Deserialize<T>(ref State state, T value = default, IProtoSerializer<T, T> serializer = null)
