@@ -44,12 +44,15 @@ namespace ProtoBuf
         private readonly ISerializationContext _context;
         private readonly Func<ISerializationContext, object> _ctor;
         private object _value;
+        private Action<T, ISerializationContext> _onBeforeDeserialize;
 
-        internal SubTypeState(ISerializationContext context, Func<ISerializationContext, object> ctor, object value)
+        internal SubTypeState(ISerializationContext context, Func<ISerializationContext, object> ctor,
+            object value, Action<T, ISerializationContext> onBeforeDeserialize = null)
         {
             _context = context;
             _ctor = ctor;
             _value = value;
+            _onBeforeDeserialize = onBeforeDeserialize;
         }
 
         public T Value
@@ -74,6 +77,7 @@ namespace ProtoBuf
                 // what they asked for)
                 var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeFactory<T>.Instance)(_context);
                 _value = typed;
+                _onBeforeDeserialize?.Invoke(typed, _context);
                 return typed;
             }
 
@@ -84,8 +88,22 @@ namespace ProtoBuf
         {
             var tok = ProtoReader.StartSubItem(reader, ref state);
             _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).Deserialize(reader, ref state,
-                new SubTypeState<TSubType>(_context, _ctor, _value));
+                new SubTypeState<TSubType>(_context, _ctor, _value, _onBeforeDeserialize));
             ProtoReader.EndSubItem(tok, reader, ref state);
+        }
+
+        public void OnBeforeDeserialize(Action<T, ISerializationContext> callback)
+        {
+            if (_value is T obj) callback?.Invoke(obj, _context);
+            else if (_onBeforeDeserialize is object) throw new InvalidOperationException("Only one pending " + nameof(OnBeforeDeserialize) + " callback is supported");
+            else _onBeforeDeserialize = callback;
+        }
+
+        public T OnAfterDeserialize(Action<T, ISerializationContext> callback)
+        {
+            var obj = Value;
+            callback?.Invoke(obj, _context);
+            return obj;
         }
     }
 

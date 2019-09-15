@@ -285,6 +285,7 @@ namespace ProtoBuf
         A ISubTypeSerializer<A>.Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<A> value)
         {
             int field;
+            value.OnBeforeDeserialize((obj, ctx) => obj.OnBeforeDeserialize());
             while ((field = reader.ReadFieldHeader(ref state)) != 0)
             {
                 switch (field)
@@ -300,7 +301,7 @@ namespace ProtoBuf
                         break;
                 }
             }
-            return value.Value;
+            return value.OnAfterDeserialize((obj, ctx) => obj.OnAfterDeserialize());
         }
 
         void ISubTypeSerializer<B>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, B value)
@@ -372,6 +373,10 @@ namespace ProtoBuf
     {
         [ProtoMember(1)]
         public int AVal { get; set; }
+
+        internal void OnAfterDeserialize() { }
+
+        internal void OnBeforeDeserialize() { }
     }
 
     [ProtoContract]
