@@ -758,15 +758,22 @@ namespace ProtoBuf.Meta
         }
 
         /// <inheritdoc/>
-        protected internal override IProtoSerializer<TBase, TActual> GetSerializer<TBase, TActual>()
+        protected internal override IBasicDeserializer<T> GetBasicDeserializer<T>()
+            => GetService<T, IBasicDeserializer<T>>() ?? base.GetBasicDeserializer<T>();
+
+        /// <inheritdoc/>
+        protected internal override IBasicSerializer<T> GetBasicSerializer<T>()
+            => GetService<T, IBasicSerializer<T>>() ?? base.GetBasicSerializer<T>();
+
+        private TService GetService<T, TService>() where TService : class
         {
-            int typeIndex = GetKey(typeof(TActual), false, false);
+            int typeIndex = GetKey(typeof(T), false, false);
             if (typeIndex >= 0)
             {
                 var mt = (MetaType)types[typeIndex];
-                if (mt.Serializer is IProtoSerializer<TBase, TActual> typed) return typed;
+                if (mt.Serializer is TService typed) return typed;
             }
-            return base.GetSerializer<TBase, TActual>();
+            return null;
         }
 
         internal int GetKey(Type type, bool demand, bool getBaseKey)
@@ -1517,11 +1524,15 @@ namespace ProtoBuf.Meta
                 }
                 ctx.Return();
 
-                var serType = typeof(IProtoSerializer<,>).MakeGenericType(runtimeType, runtimeType);
+                var serType = typeof(IBasicSerializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
-                var namePrefix = $"IProtoSerializer<{runtimeType.Name},{runtimeType.Name}>.";
-                StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoSerializer<int, int>.Serialize)), pair.Serialize, namePrefix);
-                StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoSerializer<int, int>.Deserialize)), pair.Deserialize, namePrefix);
+                var namePrefix = $"{serType.Name}<{runtimeType.Name}>.";
+                StaticCallReadWrite(type, serType.GetMethod(nameof(IBasicSerializer<int>.Serialize)), pair.Serialize, namePrefix);
+
+                serType = typeof(IBasicDeserializer<>).MakeGenericType(runtimeType);
+                type.AddInterfaceImplementation(serType);
+                namePrefix = $"{serType.Name}<{runtimeType.Name}>.";
+                StaticCallReadWrite(type, serType.GetMethod(nameof(IBasicDeserializer<int>.Deserialize)), pair.Deserialize, namePrefix);
             }
         }
 

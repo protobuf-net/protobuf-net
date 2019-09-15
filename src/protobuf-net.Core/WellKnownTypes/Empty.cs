@@ -6,9 +6,9 @@
     [ProtoContract(Name = ".google.protobuf.Empty")]
     internal readonly struct Empty { }
 
-    partial class WellKnownSerializer : IProtoSerializer<Empty, Empty>
+    partial class WellKnownSerializer : IBasicDeserializer<Empty>, IBasicSerializer<Empty>
     {
-        Empty IProtoSerializer<Empty, Empty>.Deserialize(ProtoReader reader, ref ProtoReader.State state, Empty value)
+        Empty IBasicDeserializer<Empty>.Deserialize(ProtoReader reader, ref ProtoReader.State state, Empty value)
         {
             while(reader.ReadFieldHeader(ref state) > 0)
             {
@@ -17,6 +17,6 @@
             return value;
         }
 
-        void IProtoSerializer<Empty, Empty>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, Empty value) { }
+        void IBasicSerializer<Empty>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, Empty value) { }
     }
 }

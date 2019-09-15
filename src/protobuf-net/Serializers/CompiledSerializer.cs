@@ -3,17 +3,17 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class CompiledSerializer<TBase, TActual> : CompiledSerializer, IProtoSerializer<TBase, TActual>
-        where TActual : TBase
+    internal sealed class CompiledSerializer<T> : CompiledSerializer,
+        IBasicSerializer<T>, IBasicDeserializer<T>
     {
-        private readonly Compiler.ProtoSerializer<TActual> serializer;
-        private readonly Compiler.ProtoDeserializer<TBase, TActual> deserializer;
+        private readonly Compiler.ProtoSerializer<T> serializer;
+        private readonly Compiler.ProtoDeserializer<T> deserializer;
         public CompiledSerializer(IProtoTypeSerializer head, RuntimeTypeModel model)
             : base(head)
         {
             try
             {
-                serializer = Compiler.CompilerContext.BuildSerializer<TActual>(model.Scope, head, model);
+                serializer = Compiler.CompilerContext.BuildSerializer<T>(model.Scope, head, model);
             }
             catch(Exception ex)
             {
@@ -21,7 +21,7 @@ namespace ProtoBuf.Serializers
             }
             try
             {
-                deserializer = Compiler.CompilerContext.BuildDeserializer<TBase, TActual>(model.Scope, head, model);
+                deserializer = Compiler.CompilerContext.BuildDeserializer<T>(model.Scope, head, model);
             }
             catch (Exception ex)
             {
@@ -29,17 +29,17 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        TActual IProtoSerializer<TBase, TActual>.Deserialize(ProtoReader reader, ref ProtoReader.State state, TBase value)
+        T IBasicDeserializer<T>.Deserialize(ProtoReader reader, ref ProtoReader.State state, T value)
             => deserializer(reader, ref state, value);
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
-            => deserializer(source, ref state, (TBase)value);
+            => deserializer(source, ref state, (T)value);
 
-        void IProtoSerializer<TBase, TActual>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, TActual value)
+        void IBasicSerializer<T>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => serializer(writer, ref state, value);
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
-            => serializer(dest, ref state, (TActual)value);
+            => serializer(dest, ref state, (T)value);
     }
     internal abstract class CompiledSerializer : IProtoTypeSerializer
     {
@@ -67,7 +67,7 @@ namespace ProtoBuf.Serializers
         {
             if (!(head is CompiledSerializer result))
             {
-                var ctor = Helpers.GetConstructor(typeof(CompiledSerializer<,>).MakeGenericType(head.BaseType, head.ExpectedType),
+                var ctor = Helpers.GetConstructor(typeof(CompiledSerializer<>).MakeGenericType(head.BaseType),
                     new Type[] { typeof(IProtoTypeSerializer), typeof(RuntimeTypeModel) }, true);
 
                 try

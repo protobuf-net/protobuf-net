@@ -222,9 +222,9 @@ namespace ProtoBuf
         public static ModelSerializer Default = new ModelSerializer();
         public ModelSerializer() { }
 
-        A IProtoFactory<A>.Create(SerializationContext context) => new A();
-        B IProtoFactory<B>.Create(SerializationContext context) => new B();
-        C IProtoFactory<C>.Create(SerializationContext context) => new C();
+        A IProtoFactory<A>.Create(ISerializationContext context) => new A();
+        B IProtoFactory<B>.Create(ISerializationContext context) => new B();
+        C IProtoFactory<C>.Create(ISerializationContext context) => new C();
 
         //void IProtoFactory<A, A>.Copy(SerializationContext context, A from, A to)
         //{
@@ -262,18 +262,18 @@ namespace ProtoBuf
             => ((ISubTypeSerializer<A>)this).Serialize(writer, ref state, value);
 
         A IBasicDeserializer<A>.Deserialize(ProtoReader reader, ref ProtoReader.State state, A value)
-            => ((ISubTypeSerializer<A>)this).Deserialize<A>(reader, ref state, value);
+            => reader.ReadBaseType<A, A>(ref state, value, this);
         B IBasicDeserializer<B>.Deserialize(ProtoReader reader, ref ProtoReader.State state, B value)
-            => (B)((ISubTypeSerializer<A>)this).Deserialize<B>(reader, ref state, value);
+            => reader.ReadBaseType<A, B>(ref state, value, this);
         C IBasicDeserializer<C>.Deserialize(ProtoReader reader, ref ProtoReader.State state, C value)
-            => (C)((ISubTypeSerializer<A>)this).Deserialize<C>(reader, ref state, value);
+            => reader.ReadBaseType<A, C>(ref state, value, this);
 
         void ISubTypeSerializer<A>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
         {
             if (value is B b)
             {
                 ProtoWriter.WriteFieldHeader(4, WireType.String, writer, ref state);
-                ProtoWriter.WriteSubType<B>(b, writer, ref state, this, false);
+                ProtoWriter.WriteSubType<B>(b, writer, ref state, this);
             }
             if (value.AVal != 0)
             {
@@ -282,27 +282,25 @@ namespace ProtoBuf
             }
         }
 
-        A ISubTypeSerializer<A>.Deserialize<TCreate>(ProtoReader reader, ref ProtoReader.State state, object value)
+        A ISubTypeSerializer<A>.Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<A> value)
         {
             int field;
-            A typed = value as A;
             while ((field = reader.ReadFieldHeader(ref state)) != 0)
             {
                 switch (field)
                 {
                     case 1:
-                        if (typed == null) value = typed = reader.Cast<A, TCreate>(value);
-                        typed.AVal = reader.ReadInt32(ref state);
+                        value.Value.AVal = reader.ReadInt32(ref state);
                         break;
                     case 4:
-                        typed = reader.ReadSubType<B, TCreate>(ref state, value, this);
+                        value.ReadSubType<B>(reader, ref state, this);
                         break;
                     default:
                         reader.SkipField(ref state);
                         break;
                 }
             }
-            return typed ?? reader.Cast<A, TCreate>(value);
+            return value.Value;
         }
 
         void ISubTypeSerializer<B>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, B value)
@@ -310,7 +308,7 @@ namespace ProtoBuf
             if (value is C c)
             {
                 ProtoWriter.WriteFieldHeader(5, WireType.String, writer, ref state);
-                ProtoWriter.WriteSubType<C>(c, writer, ref state, this, false);
+                ProtoWriter.WriteSubType<C>(c, writer, ref state, this);
             }
             if (value.BVal != 0)
             {
@@ -319,27 +317,25 @@ namespace ProtoBuf
             }
         }
 
-        B ISubTypeSerializer<B>.Deserialize<TCreate>(ProtoReader reader, ref ProtoReader.State state, object value)
+        B ISubTypeSerializer<B>.Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<B> value)
         {
             int field;
-            B typed = value as B;
             while ((field = reader.ReadFieldHeader(ref state)) != 0)
             {
                 switch (field)
                 {
                     case 2:
-                        if (typed == null) value = typed = reader.Cast<B, TCreate>(value, this as IProtoFactory<TCreate>);
-                        typed.BVal = reader.ReadInt32(ref state);
+                        value.Value.BVal = reader.ReadInt32(ref state);
                         break;
                     case 5:
-                        typed = reader.ReadSubType<C, TCreate>(ref state, value, this);
+                        value.ReadSubType<C>(reader, ref state, this);
                         break;
                     default:
                         reader.SkipField(ref state);
                         break;
                 }
             }
-            return typed ?? reader.Cast<B, TCreate>(value, this as IProtoFactory<TCreate>);
+            return value.Value;
         }
 
         void ISubTypeSerializer<C>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, C value)
@@ -351,24 +347,22 @@ namespace ProtoBuf
             }
         }
 
-        C ISubTypeSerializer<C>.Deserialize<TCreate>(ProtoReader reader, ref ProtoReader.State state, object value)
+        C ISubTypeSerializer<C>.Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<C> value)
         {
             int field;
-            C typed = value as C;
             while ((field = reader.ReadFieldHeader(ref state)) != 0)
             {
                 switch (field)
                 {
                     case 3:
-                        if (typed == null) value = typed = reader.Cast<C, TCreate>(value, this as IProtoFactory<TCreate>);
-                        typed.CVal = reader.ReadInt32(ref state);
+                        value.Value.CVal = reader.ReadInt32(ref state);
                         break;
                     default:
                         reader.SkipField(ref state);
                         break;
                 }
             }
-            return typed ?? reader.Cast<C, TCreate>(value, this as IProtoFactory<TCreate>);
+            return value.Value;
         }
     }
 

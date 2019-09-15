@@ -110,15 +110,14 @@ namespace ProtoBuf.Compiler
             return (ProtoCallback)ctx.method.CreateDelegate(
                 typeof(ProtoCallback));
         }*/
-        public static ProtoDeserializer<TBase, TActual> BuildDeserializer<TBase, TActual>(CompilerContextScope scope, IProtoSerializer head, TypeModel model)
-            where TActual : TBase
+        public static ProtoDeserializer<T> BuildDeserializer<T>(CompilerContextScope scope, IProtoSerializer head, TypeModel model)
         {
             Type type = head.ExpectedType;
-            CompilerContext ctx = new CompilerContext(scope, type, false, true, model, typeof(TBase), typeof(TActual));
+            CompilerContext ctx = new CompilerContext(scope, type, false, true, model, typeof(T), typeof(T));
 
             using (Local typedVal = new Local(ctx, type))
             {
-                if (typeof(TBase) == type)
+                if (typeof(T) == type)
                 {
                     ctx.LoadValue(ctx.InputValue);
                     ctx.StoreValue(typedVal);
@@ -147,14 +146,14 @@ namespace ProtoBuf.Compiler
                 }
 
                 ctx.LoadValue(typedVal);
-                if (type != typeof(TActual))
+                if (type != typeof(T))
                 {
-                    ctx.Cast(typeof(TActual));
+                    ctx.Cast(typeof(T));
                 }
                 ctx.Emit(OpCodes.Ret);
             }
-            return (ProtoDeserializer<TBase, TActual>)ctx.method.CreateDelegate(
-                typeof(ProtoDeserializer<TBase, TActual>));
+            return (ProtoDeserializer<T>)ctx.method.CreateDelegate(
+                typeof(ProtoDeserializer<T>));
         }
 
         internal void Return()

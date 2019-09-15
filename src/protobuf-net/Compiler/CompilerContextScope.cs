@@ -62,17 +62,25 @@ namespace ProtoBuf.Compiler
                 il.Emit(OpCodes.Stsfld, instance);
                 il.Emit(OpCodes.Ret);
 
-                var iType = typeof(IProtoSerializer<T, T>);
-                type.AddInterfaceImplementation(iType);
-                il = Implement(type, iType, nameof(IProtoSerializer<T, T>.Serialize));
-                var ctx = new CompilerContext(parent, il, false, true, typeof(T), typeof(T).Name + ".Serialize");
-                serialize(key, ctx);
-                ctx.Return();
+                if (serialize != null)
+                {
+                    var iType = typeof(IBasicSerializer<T>);
+                    type.AddInterfaceImplementation(iType);
+                    il = Implement(type, iType, nameof(IBasicSerializer<T>.Serialize));
+                    var ctx = new CompilerContext(parent, il, false, true, typeof(T), typeof(T).Name + ".Serialize");
+                    serialize(key, ctx);
+                    ctx.Return();
+                }
 
-                il = Implement(type, iType, nameof(IProtoSerializer<T, T>.Deserialize));
-                ctx = new CompilerContext(parent, il, false, false, typeof(T), typeof(T).Name + ".Deserialize");
-                deserialize(key, ctx);
-                ctx.Return();
+                if (deserialize != null)
+                {
+                    var iType = typeof(IBasicDeserializer<T>);
+                    type.AddInterfaceImplementation(iType);
+                    il = Implement(type, iType, nameof(IBasicDeserializer<T>.Deserialize));
+                    var ctx = new CompilerContext(parent, il, false, false, typeof(T), typeof(T).Name + ".Deserialize");
+                    deserialize(key, ctx);
+                    ctx.Return();
+                }
 
                 Type finalType = type.CreateTypeInfo();
                 var result = finalType.GetField(InstanceFieldName, BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);

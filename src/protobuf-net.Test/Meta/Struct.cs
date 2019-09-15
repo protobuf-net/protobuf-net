@@ -25,7 +25,7 @@ namespace ProtoBuf.unittest.Meta
                     new PropertyDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetProperty("Id"), new TagDecorator(1, WireType.Variant, false, PrimitiveSerializer<Int32Serializer>.Singleton)),
                     new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String, false, PrimitiveSerializer<StringSerializer>.Singleton))
                 }, null, false, true, null, null, null);
-            var deser = CompilerContext.BuildDeserializer<CustomerStruct, CustomerStruct>(model.Scope, head, model);
+            var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);
 
             using (var reader = ProtoReader.Create(out var state, Stream.Null, null, null))
             {
@@ -51,7 +51,7 @@ namespace ProtoBuf.unittest.Meta
                     new FieldDecorator(typeof(CustomerStruct), typeof(CustomerStruct).GetField("Name"), new TagDecorator(2, WireType.String,false,  PrimitiveSerializer<StringSerializer>.Singleton))
                 }, null, false, true, null, null, null);
             var ser = CompilerContext.BuildSerializer<CustomerStruct>(model.Scope, head, model);
-            var deser = CompilerContext.BuildDeserializer<CustomerStruct, CustomerStruct>(model.Scope, head, model);
+            var deser = CompilerContext.BuildDeserializer<CustomerStruct>(model.Scope, head, model);
             CustomerStruct cs1 = new CustomerStruct { Id = 123, Name = "Fred" };
             using (MemoryStream ms = new MemoryStream())
             {

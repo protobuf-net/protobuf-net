@@ -1208,7 +1208,19 @@ namespace ProtoBuf.Meta
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
         protected internal virtual IBasicSerializer<T> GetBasicSerializer<T>()
-            => this as IBasicSerializer<T>;
+            => GetService<IBasicSerializer<T>>();
+
+        protected internal virtual IBasicDeserializer<T> GetBasicDeserializer<T>()
+            => GetService<IBasicDeserializer<T>>();
+
+        protected internal virtual IProtoFactory<T> GetFactory<T>()
+            => GetService<IProtoFactory<T>>();
+
+        protected internal virtual ISubTypeSerializer<T> GetSubTypeSerializer<T>() where T : class
+            => GetService<ISubTypeSerializer<T>>();
+
+        protected internal virtual T GetService<T>() where T : class
+            => this as T;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T NoSerializer<T>(TypeModel model) where T : class
@@ -1216,8 +1228,17 @@ namespace ProtoBuf.Meta
             throw new InvalidOperationException($"No {typeof(T).Name} available for model {model?.ToString() ?? "(none)"}");
         }
 
+        public static T Create<T>(ISerializationContext context) where T : class
+            => context?.Model?.GetFactory<T>()?.Create(context) ?? Activator.CreateInstance<T>();
+
         internal static IBasicSerializer<T> GetBasicSerializer<T>(TypeModel model)
            => model?.GetBasicSerializer<T>() ?? WellKnownSerializer.Instance as IBasicSerializer<T> ?? NoSerializer<IBasicSerializer<T>>(model);
+
+        internal static IBasicDeserializer<T> GetBasicDeserializer<T>(TypeModel model)
+           => model?.GetBasicDeserializer<T>() ?? WellKnownSerializer.Instance as IBasicDeserializer<T> ?? NoSerializer<IBasicDeserializer<T>>(model);
+
+        internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
+           => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as ISubTypeSerializer<T> ?? NoSerializer<ISubTypeSerializer<T>>(model);
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.

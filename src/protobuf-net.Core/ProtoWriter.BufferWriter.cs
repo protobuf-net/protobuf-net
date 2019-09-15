@@ -33,12 +33,12 @@ namespace ProtoBuf
             return BufferWriterProtoWriter<IBufferWriter<byte>>.CreateBufferWriter(writer, model, context);
         }
 
-        private sealed class BufferWriterProtoWriter<T> : ProtoWriter
-            where T : IBufferWriter<byte>
+        private sealed class BufferWriterProtoWriter<TBuffer> : ProtoWriter
+            where TBuffer : IBufferWriter<byte>
         {
-            internal static BufferWriterProtoWriter<T> CreateBufferWriter(T writer, TypeModel model, SerializationContext context)
+            internal static BufferWriterProtoWriter<TBuffer> CreateBufferWriter(TBuffer writer, TypeModel model, SerializationContext context)
             {
-                var obj = Pool<BufferWriterProtoWriter<T>>.TryGet() ?? new BufferWriterProtoWriter<T>();
+                var obj = Pool<BufferWriterProtoWriter<TBuffer>>.TryGet() ?? new BufferWriterProtoWriter<TBuffer>();
                 obj.Init(model, context);
                 obj._writer = writer;
                 return obj;
@@ -47,7 +47,7 @@ namespace ProtoBuf
             private protected override void Dispose()
             {
                 base.Dispose();
-                Pool<BufferWriterProtoWriter<T>>.Put(this);
+                Pool<BufferWriterProtoWriter<TBuffer>>.Put(this);
             }
 
             private protected override void Cleanup()
@@ -59,7 +59,7 @@ namespace ProtoBuf
             protected internal override State DefaultState() => throw new InvalidOperationException("You must retain and pass the state from ProtoWriter.CreateForBufferWriter");
 
 #pragma warning disable IDE0044 // Add readonly modifier
-            private T _writer; // not readonly, because T could be a struct - might need in-place state changes
+            private TBuffer _writer; // not readonly, because T could be a struct - might need in-place state changes
 #pragma warning restore IDE0044 // Add readonly modifier
             private BufferWriterProtoWriter() { }
 
@@ -172,7 +172,7 @@ namespace ProtoBuf
                 return state.WriteVarint64(value);
             }
 
-            protected internal override void WriteSubItem<TBase, TActual>(ref State state, TActual value, IProtoSerializer<TBase, TActual> serializer,
+            protected internal override void WriteSubItem<T>(ref State state, T value, IBasicSerializer<T> serializer,
                 PrefixStyle style, bool recursionCheck)
             {
                 switch (WireType)
@@ -180,18 +180,17 @@ namespace ProtoBuf
                     case WireType.String:
                     case WireType.Fixed32:
                         PreSubItem(TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null);
-                        WriteWithLengthPrefix<TBase, TActual>(ref state, value, serializer, style);
+                        WriteWithLengthPrefix<T>(ref state, value, serializer, style);
                         PostSubItem();
                         return;
                     case WireType.StartGroup:
                     default:
-                        base.WriteSubItem<TBase, TActual>(ref state, value, serializer, style, recursionCheck);
+                        base.WriteSubItem<T>(ref state, value, serializer, style, recursionCheck);
                         return;
                 }
             }
 
-            private void WriteWithLengthPrefix<TBase, TActual>(ref State state, TActual value, IProtoSerializer<TBase, TActual> serializer, PrefixStyle style)
-                where TActual : TBase
+            private void WriteWithLengthPrefix<T>(ref State state, T value, IBasicSerializer<T> serializer, PrefixStyle style)
             {
                 long calculatedLength;
                 using (var nullWriter = NullProtoWriter.CreateNullImpl(Model, Context, out var nulState))

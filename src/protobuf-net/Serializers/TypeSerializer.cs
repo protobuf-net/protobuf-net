@@ -15,7 +15,7 @@ namespace ProtoBuf.Serializers
         abstract internal void Init(int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory);
     }
     internal sealed class TypeSerializer<TBase, TActual> : TypeSerializer,
-        IProtoTypeSerializer, IProtoSerializer<TBase, TActual> where TActual : TBase
+        IProtoTypeSerializer, IBasicSerializer<TBase>, IBasicDeserializer<TBase> where TActual : TBase
     {
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {
@@ -153,7 +153,7 @@ namespace ProtoBuf.Serializers
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
             => Serialize(dest, ref state, (TActual)value);
 
-        public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, TActual value)
+        public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, TBase value)
         {
             if (isRootType) Callback(value, TypeModel.CallbackType.BeforeSerialize, writer.Context);
             // write inheritance first
@@ -182,7 +182,7 @@ namespace ProtoBuf.Serializers
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
             => Deserialize(source, ref state, (TBase)value);
 
-        public TActual Deserialize(ProtoReader source, ref ProtoReader.State state, TBase value)
+        public TBase Deserialize(ProtoReader source, ref ProtoReader.State state, TBase value)
         {
             if (isRootType && value != null) { Callback(value, TypeModel.CallbackType.BeforeDeserialize, source.Context); }
             int fieldNumber, lastFieldNumber = 0, lastFieldIndex = 0;
@@ -249,7 +249,7 @@ namespace ProtoBuf.Serializers
             //Helpers.DebugWriteLine("<< Reading fields for " + forType.FullName);
             if (value == null) value = (TBase)CreateInstance(source, true);
             if (isRootType) { Callback(value, TypeModel.CallbackType.AfterDeserialize, source.Context); }
-            return (TActual)value;
+            return value;
         }
 
         private object InvokeCallback(MethodInfo method, object obj, SerializationContext context)

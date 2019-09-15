@@ -13,7 +13,7 @@ namespace ProtoBuf
     /// See: http://marcgravell.blogspot.com/2010/03/last-will-be-first-and-first-will-be.html
     /// </para>
     /// </summary>
-    public abstract partial class ProtoWriter : IDisposable
+    public abstract partial class ProtoWriter : IDisposable, ISerializationContext
     {
         internal const string UseStateAPI = ProtoReader.UseStateAPI,
             PreferWriteSubItem = "If possible, please use the WriteSubItem API; this API may not work correctly with all writers";
@@ -1127,6 +1127,18 @@ namespace ProtoBuf
 #pragma warning restore CS0618
         }
 
+        public static void WriteSubType<T>(T value, ProtoWriter writer, ref State state, ISubTypeSerializer<T> serializer = null) where T : class
+            => writer.WriteSubType<T>(ref state, value, serializer);
+
+        protected internal virtual void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer = null) where T : class
+        {
+#pragma warning disable CS0618 // StartSubItem/EndSubItem
+            var tok = StartSubItem(ref state, null, PrefixStyle.Base128);
+            (serializer ?? TypeModel.GetSubTypeSerializer<T>(model)).Serialize(this, ref state, value);
+            EndSubItem(ref state, tok, PrefixStyle.Base128);
+#pragma warning restore CS0618
+        }
+
         /// <summary>
         /// Writes an object to the input writer
         /// </summary>
@@ -1153,6 +1165,10 @@ namespace ProtoBuf
         }
     }
 
+    internal static class TypeFactory<T> where T : class
+    {
+        public static readonly Func<ISerializationContext, T> Instance = ctx => TypeModel.Create<T>(ctx);
+    }
     internal static class TypeHelper<T>
     {
         public static readonly bool IsObjectType = !Helpers.IsValueType(typeof(T));

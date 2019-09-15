@@ -66,9 +66,9 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        private readonly IProtoSerializer<KeyValuePair<TKey, TValue>, KeyValuePair<TKey, TValue>> _runtimeSerializer;
+        private readonly RuntimePairSerializer _runtimeSerializer;
 
-        sealed class RuntimePairSerializer : IProtoSerializer<KeyValuePair<TKey, TValue>, KeyValuePair<TKey, TValue>>
+        sealed class RuntimePairSerializer : IBasicSerializer<KeyValuePair<TKey, TValue>>, IBasicDeserializer<KeyValuePair<TKey, TValue>>
         {
             private readonly IProtoSerializer _keyTail, _valueTail;
             public RuntimePairSerializer(IProtoSerializer keyTail, IProtoSerializer valueTail)
@@ -77,7 +77,7 @@ namespace ProtoBuf.Serializers
                 _valueTail = valueTail;
             }
 
-            KeyValuePair<TKey, TValue> IProtoSerializer<KeyValuePair<TKey, TValue>, KeyValuePair<TKey, TValue>>.Deserialize(ProtoReader reader, ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
+            KeyValuePair<TKey, TValue> IBasicDeserializer<KeyValuePair<TKey, TValue>>.Deserialize(ProtoReader reader, ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
             {
                 var key = pair.Key;
                 var value = pair.Value;
@@ -100,7 +100,7 @@ namespace ProtoBuf.Serializers
                 return new KeyValuePair<TKey, TValue>(key, value);
             }
 
-            void IProtoSerializer<KeyValuePair<TKey, TValue>, KeyValuePair<TKey, TValue>>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
+            void IBasicSerializer<KeyValuePair<TKey, TValue>>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
             {
                 if (pair.Key != null) _keyTail.Write(writer, ref state, pair.Key);
                 if (pair.Value != null) _valueTail.Write(writer, ref state, pair.Value);
@@ -135,7 +135,7 @@ namespace ProtoBuf.Serializers
             {
                 result = ctx.DefineAdditionalSerializerInstance<KeyValuePair<TKey, TValue>>(this,
                     (key, il) => ((MapDecorator<TDictionary, TKey, TValue>)key).WritePairSerialize(il),
-                    (key, il) => ((MapDecorator<TDictionary, TKey, TValue>)key).WritePairDeserialize(il));
+                    null);
             }
             return result;
         }
@@ -155,7 +155,7 @@ namespace ProtoBuf.Serializers
                 ctx.WriteNullCheckedTail(typeof(TValue), Tail, null);
             }
         }
-        void WritePairDeserialize(CompilerContext ctx) { ctx.ThrowException(typeof(NotImplementedException)); }
+
         protected override void EmitWrite(CompilerContext ctx, Local valueFrom)
         {
             var pairSerializer = GetPairSerializer(ctx);
@@ -208,8 +208,6 @@ namespace ProtoBuf.Serializers
         }
         protected override void EmitRead(CompilerContext ctx, Local valueFrom)
         {
-            var pairSerializer = GetPairSerializer(ctx);
-
             using (Compiler.Local list = AppendToCollection ? ctx.GetLocalWithValue(ExpectedType, valueFrom)
                 : new Compiler.Local(ctx, typeof(TDictionary)))
             using (Compiler.Local token = new Compiler.Local(ctx, typeof(SubItemToken)))

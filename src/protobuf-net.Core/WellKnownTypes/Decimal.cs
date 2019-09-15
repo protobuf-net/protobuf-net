@@ -2,11 +2,11 @@
 
 namespace ProtoBuf.WellKnownTypes
 {
-    partial class WellKnownSerializer : IProtoSerializer<decimal, decimal>
+    partial class WellKnownSerializer : IBasicSerializer<decimal>, IBasicDeserializer<decimal>
     {
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
 
-        decimal IProtoSerializer<decimal, decimal>.Deserialize(ProtoReader reader, ref ProtoReader.State state, decimal value)
+        decimal IBasicDeserializer<decimal>.Deserialize(ProtoReader reader, ref ProtoReader.State state, decimal value)
         {
             ulong low = 0;
             uint high = 0;
@@ -30,7 +30,7 @@ namespace ProtoBuf.WellKnownTypes
             return new decimal(lo, mid, hi, isNeg, scale);
         }
 
-        void IProtoSerializer<decimal, decimal>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, decimal value)
+        void IBasicSerializer<decimal>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, decimal value)
         {
             ulong low;
             uint high, signScale;

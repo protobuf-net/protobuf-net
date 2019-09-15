@@ -47,16 +47,16 @@ namespace ProtoBuf.WellKnownTypes
         private static readonly DateTime TimestampEpoch = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
     }
 
-    partial class WellKnownSerializer : IProtoSerializer<Timestamp, Timestamp>
+    partial class WellKnownSerializer : IBasicSerializer<Timestamp>, IBasicDeserializer<Timestamp>
     {
-        Timestamp IProtoSerializer<Timestamp, Timestamp>.Deserialize(ProtoReader reader, ref ProtoReader.State state, Timestamp value)
+        Timestamp IBasicDeserializer<Timestamp>.Deserialize(ProtoReader reader, ref ProtoReader.State state, Timestamp value)
         {
             var duration = new Duration(value.Seconds, value.Nanoseconds);
             duration = ReadDuration(reader, ref state, duration);
             return new Timestamp(duration.Seconds, duration.Nanoseconds);
         }
 
-        void IProtoSerializer<Timestamp, Timestamp>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, Timestamp value)
+        void IBasicSerializer<Timestamp>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, Timestamp value)
             => WriteSecondsNanos(writer, ref state, value.Seconds, value.Nanoseconds);
     }
 }
