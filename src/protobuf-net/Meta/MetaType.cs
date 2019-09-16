@@ -347,6 +347,17 @@ namespace ProtoBuf.Meta
             }
         }
 
+        Type GetInheritanceRoot()
+        {
+            if (Type.IsValueType) return null;
+
+            var root = GetRootType(this);
+            if (!ReferenceEquals(root, this)) return root.Type;
+            if (subTypes != null && subTypes.Count != 0) return root.Type;
+            
+            return null;
+        }
+
         private IProtoTypeSerializer BuildSerializer()
         {
             if (Helpers.IsEnum(Type))
@@ -367,7 +378,8 @@ namespace ProtoBuf.Meta
                 Type defaultType = null;
                 ResolveListTypes(model, Type, ref itemType, ref defaultType);
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
-                return TypeSerializer.Create(Type, MetaType.GetRootType(this).Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
+                return TypeSerializer.Create(Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null,
+                    constructType, factory, GetInheritanceRoot());
             }
             if (surrogate != null)
             {
@@ -428,7 +440,7 @@ namespace ProtoBuf.Meta
                 baseCtorCallbacks.CopyTo(arr, 0);
                 Array.Reverse(arr);
             }
-            return TypeSerializer.Create(Type, MetaType.GetRootType(this).Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory);
+            return TypeSerializer.Create(Type, fieldNumbers, serializers, arr, baseType == null, UseConstructor, callbacks, constructType, factory, GetInheritanceRoot());
         }
 
         [Flags]

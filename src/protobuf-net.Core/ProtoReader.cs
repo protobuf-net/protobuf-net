@@ -1419,7 +1419,7 @@ namespace ProtoBuf
             where TBaseType : class
             where T : class, TBaseType
         {
-            return (T)(serializer ?? TypeModel.GetSubTypeSerializer<TBaseType>(_model)).Deserialize(this, ref state, new SubTypeState<TBaseType>(this, TypeFactory<T>.Instance, value));
+            return (T)(serializer ?? TypeModel.GetSubTypeSerializer<TBaseType>(_model)).Deserialize(this, ref state, new SubTypeState<TBaseType>(this, TypeHelper<T>.Instance, value));
         }
 
         public T Deserialize<T>(ref State state, T value = default, IProtoDeserializer<T> serializer = null)

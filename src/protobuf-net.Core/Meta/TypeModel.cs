@@ -1228,8 +1228,24 @@ namespace ProtoBuf.Meta
             throw new InvalidOperationException($"No {typeof(T).Name} available for model {model?.ToString() ?? "(none)"}");
         }
 
-        public static T Create<T>(ISerializationContext context) where T : class
-            => context?.Model?.GetFactory<T>()?.Create(context) ?? Activator.CreateInstance<T>();
+        public static T Create<T>(ISerializationContext context)
+        {
+            var factory = context?.Model?.GetFactory<T>();
+            if (factory != null)
+            {
+                var val = factory.Create(context);
+                if (TypeHelper<T>.IsObjectType)
+                {
+                    if (val != null) return val;
+                }
+                else
+                {
+                    return val;
+                }
+            }
+
+            return Activator.CreateInstance<T>();
+        }
 
         internal static IProtoSerializer<T> GetBasicSerializer<T>(TypeModel model)
            => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<IProtoSerializer<T>>(model);

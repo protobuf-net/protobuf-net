@@ -39,7 +39,7 @@ namespace ProtoBuf
         T Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value);
     }
 
-    public struct SubTypeState<T> where T : class
+    public struct SubTypeState<T>
     {
         private readonly ISerializationContext _context;
         private readonly Func<ISerializationContext, object> _ctor;
@@ -58,10 +58,17 @@ namespace ProtoBuf
         public T Value
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _value as T ?? Cast();
+            get => _value is T typed ? typed : Cast();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => _value = value;
         }
+
+        public void CreateIfNeeded()
+        {
+            if (_value is null) Cast();
+        }
+
+        internal object RawValue => _value;
 
         public bool HasValue => _value is object;
 
@@ -75,7 +82,7 @@ namespace ProtoBuf
                 // for Deserialize<A>, in which case we'll choose B (because we're at that layer), but the
                 // caller could have asked for Deserialize<C>, in which case we'll prefer C (because that's
                 // what they asked for)
-                var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeFactory<T>.Instance)(_context);
+                var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Instance)(_context);
                 _value = typed;
                 _onBeforeDeserialize?.Invoke(typed, _context);
                 return typed;
@@ -94,9 +101,12 @@ namespace ProtoBuf
 
         public void OnBeforeDeserialize(Action<T, ISerializationContext> callback)
         {
-            if (_value is T obj) callback?.Invoke(obj, _context);
-            else if (_onBeforeDeserialize is object) throw new InvalidOperationException("Only one pending " + nameof(OnBeforeDeserialize) + " callback is supported");
-            else _onBeforeDeserialize = callback;
+            if (callback != null)
+            {
+                if (_value is T obj) callback.Invoke(obj, _context);
+                else if (_onBeforeDeserialize is object) throw new InvalidOperationException("Only one pending " + nameof(OnBeforeDeserialize) + " callback is supported");
+                else _onBeforeDeserialize = callback;
+            }
         }
 
         public T OnAfterDeserialize(Action<T, ISerializationContext> callback)

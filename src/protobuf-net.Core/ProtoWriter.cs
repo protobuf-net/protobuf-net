@@ -1130,6 +1130,9 @@ namespace ProtoBuf
         public static void WriteSubType<T>(T value, ProtoWriter writer, ref State state, IProtoSubTypeSerializer<T> serializer = null) where T : class
             => writer.WriteSubType<T>(ref state, value, serializer);
 
+        public static void WriteBaseType<T>(T value, ProtoWriter writer, ref State state, IProtoSubTypeSerializer<T> serializer = null) where T : class
+            => (serializer ?? TypeModel.GetSubTypeSerializer<T>(writer.model)).Serialize(writer, ref state, value);
+
         protected internal virtual void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
@@ -1164,13 +1167,9 @@ namespace ProtoBuf
             }
         }
     }
-
-    internal static class TypeFactory<T> where T : class
-    {
-        public static readonly Func<ISerializationContext, T> Instance = ctx => TypeModel.Create<T>(ctx);
-    }
     internal static class TypeHelper<T>
     {
         public static readonly bool IsObjectType = !Helpers.IsValueType(typeof(T));
+        public static readonly Func<ISerializationContext, T> Instance = ctx => TypeModel.Create<T>(ctx);
     }
 }
