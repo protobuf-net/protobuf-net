@@ -1247,10 +1247,10 @@ namespace ProtoBuf.Meta
             return Activator.CreateInstance<T>();
         }
 
-        internal static IProtoSerializer<T> GetBasicSerializer<T>(TypeModel model)
+        internal static IProtoSerializer<T> GetSerializer<T>(TypeModel model)
            => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<IProtoSerializer<T>>(model);
 
-        internal static IProtoDeserializer<T> GetBasicDeserializer<T>(TypeModel model)
+        internal static IProtoDeserializer<T> GetDeserializer<T>(TypeModel model)
            => model?.GetDeserializer<T>() ?? WellKnownSerializer.Instance as IProtoDeserializer<T> ?? NoSerializer<IProtoDeserializer<T>>(model);
 
         internal static IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
@@ -1314,7 +1314,7 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Provides the key that represents a given type in the current model.
         /// </summary>
-        protected abstract int GetKeyImpl(Type type);
+        protected virtual int GetKeyImpl(Type type) => throw new NotSupportedException(nameof(GetKeyImpl) + " is not supported");
 
         /// <summary>
         /// Writes a protocol-buffer representation of the given instance to the supplied stream.
@@ -1323,7 +1323,8 @@ namespace ProtoBuf.Meta
         /// <param name="value">The existing instance to be serialized (cannot be null).</param>
         /// <param name="dest">The destination stream to write to.</param>
         /// <param name="state">Write state</param>
-        protected internal abstract void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value);
+        protected internal virtual void Serialize(ProtoWriter dest, ref ProtoWriter.State state, int key, object value)
+            => throw new NotSupportedException(nameof(Serialize) + " is not supported");
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).
@@ -1335,7 +1336,8 @@ namespace ProtoBuf.Meta
         /// <returns>The updated instance; this may be different to the instance argument if
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
-        protected internal abstract object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value);
+        protected internal virtual object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value)
+            => throw new NotSupportedException(nameof(DeserializeCore) + " is not supported");
 
         /// <summary>
         /// Indicates the type of callback to be used

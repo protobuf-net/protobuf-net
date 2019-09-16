@@ -188,20 +188,8 @@ namespace ProtoBuf.Compiler
             { }
             else if (Helpers.IsValueType(type))
             {
-                switch (MetadataVersion)
-                {
-                    case ILVersion.Net1:
-                        il.Emit(OpCodes.Unbox, type);
-                        il.Emit(OpCodes.Ldobj, type);
-                        TraceCompile(OpCodes.Unbox + ": " + type);
-                        TraceCompile(OpCodes.Ldobj + ": " + type);
-                        break;
-                    default:
-
-                        il.Emit(OpCodes.Unbox_Any, type);
-                        TraceCompile(OpCodes.Unbox_Any + ": " + type);
-                        break;
-                }
+                il.Emit(OpCodes.Unbox_Any, type);
+                TraceCompile(OpCodes.Unbox_Any + ": " + type);
             }
             else
             {
@@ -210,29 +198,14 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        private readonly RuntimeTypeModel.SerializerPair[] methodPairs;
-
-        internal int MapMetaKeyToCompiledKey(int metaKey)
-        {
-            if (metaKey < 0 || methodPairs == null) return metaKey; // all meta, or a dummy/wildcard key
-
-            for (int i = 0; i < methodPairs.Length; i++)
-            {
-                if (methodPairs[i].MetaKey == metaKey) return i;
-            }
-            throw new ArgumentException("Key could not be mapped: " + metaKey.ToString(), nameof(metaKey));
-        }
-
         private readonly bool isWriter;
 
         internal bool NonPublic { get; }
 
         public Local InputValue { get; }
 
-        private readonly string assemblyName;
-
         internal CompilerContext(CompilerContext parent, ILGenerator il, bool isStatic, bool isWriter, Type inputType, string traceName)
-            : this(parent.Scope, il, isStatic, isWriter, parent.methodPairs, parent.Model, parent.MetadataVersion, parent.assemblyName, inputType, traceName)
+            : this(parent.Scope, il, isStatic, isWriter, parent.Model, inputType, traceName)
         { }
 
         internal void ThrowException(Type exceptionType) => il.ThrowException(exceptionType);
@@ -244,17 +217,15 @@ namespace ProtoBuf.Compiler
             Action<object, CompilerContext> serialize, Action<object, CompilerContext> deserialize)
             => Scope.DefineAdditionalSerializerInstance<T>(this, key, serialize, deserialize);
 
-        internal CompilerContext(CompilerContextScope scope, ILGenerator il, bool isStatic, bool isWriter, RuntimeTypeModel.SerializerPair[] methodPairs, TypeModel model, ILVersion metadataVersion, string assemblyName, Type inputType, string traceName)
+        internal CompilerContext(CompilerContextScope scope, ILGenerator il, bool isStatic, bool isWriter,
+            TypeModel model, Type inputType, string traceName)
         {
             Scope = scope;
-            if (string.IsNullOrEmpty(assemblyName)) throw new ArgumentNullException(nameof(assemblyName));
-            this.assemblyName = assemblyName;
-            this.methodPairs = methodPairs;
+
             this.il = il ?? throw new ArgumentNullException(nameof(il));
             // NonPublic = false; <== implicit
             this.isWriter = isWriter;
             this.Model = model ?? throw new ArgumentNullException(nameof(model));
-            this.MetadataVersion = metadataVersion;
             if (inputType != null) InputValue = new Local(null, inputType);
             TraceCompile(">> " + traceName);
             _traceName = traceName;
@@ -282,7 +253,6 @@ namespace ProtoBuf.Compiler
         private CompilerContext(CompilerContextScope scope, Type associatedType, bool isWriter, bool isStatic, TypeModel model, Type inputType, Type returnType)
         {
             Scope = scope;
-            MetadataVersion = ILVersion.Net2;
             this.isWriter = isWriter;
             Model = model ?? throw new ArgumentNullException(nameof(model));
             NonPublic = true;
@@ -758,7 +728,7 @@ namespace ProtoBuf.Compiler
 
         private bool InternalsVisible(Assembly assembly)
         {
-            if (string.IsNullOrEmpty(assemblyName)) return false;
+            if (string.IsNullOrEmpty(Scope.AssemblyName)) return false;
             if (knownTrustedAssemblies != null)
             {
                 if (knownTrustedAssemblies.IndexOfReference(assembly) >= 0)
@@ -778,7 +748,7 @@ namespace ProtoBuf.Compiler
             if (attributeType == null) return false;
             foreach (System.Runtime.CompilerServices.InternalsVisibleToAttribute attrib in assembly.GetCustomAttributes(attributeType, false))
             {
-                if (attrib.AssemblyName == assemblyName || attrib.AssemblyName.StartsWith(assemblyName + ","))
+                if (attrib.AssemblyName == Scope.AssemblyName || attrib.AssemblyName.StartsWith(Scope.AssemblyName + ","))
                 {
                     isTrusted = true;
                     break;
@@ -1214,16 +1184,7 @@ namespace ProtoBuf.Compiler
                 if (Helpers.IsValueType(type))
                 {
                     ctx.LoadAddress(local, type);
-                    switch (ctx.MetadataVersion)
-                    {
-                        case ILVersion.Net1:
-                            ctx.LoadValue(local);
-                            ctx.CastToObject(type);
-                            break;
-                        default:
-                            ctx.Constrain(type);
-                            break;
-                    }
+                    ctx.Constrain(type);
                     ctx.EmitCall(dispose);
                 }
                 else
@@ -1436,13 +1397,6 @@ namespace ProtoBuf.Compiler
             if (isWriter) LoadWriter(false);
             else LoadReader(false);
             LoadValue((isWriter ? typeof(ProtoWriter) : typeof(ProtoReader)).GetProperty("Context"));
-        }
-
-        public ILVersion MetadataVersion { get; }
-
-        public enum ILVersion
-        {
-            Net1, Net2
         }
 
         internal bool AllowInternal(PropertyInfo property)

@@ -1150,24 +1150,14 @@ namespace ProtoBuf.Meta
             ModuleBuilder module = save ? asm.DefineDynamicModule(moduleName, path)
                                         : asm.DefineDynamicModule(moduleName);
 #endif
-            var scope = CompilerContextScope.CreateForModule(module, true);
+            var scope = CompilerContextScope.CreateForModule(module, true, assemblyName);
             WriteAssemblyAttributes(options, assemblyName, asm);
 
             TypeBuilder type = WriteBasicTypeModel(options, typeName, module);
 
-            WriteSerializers(scope, options, assemblyName, type, out var index, out var hasInheritance, out var methodPairs, out var ilVersion);
+            WriteSerializers(scope, type);
 
-            WriteGetKeyImpl(scope, type, hasInheritance, methodPairs, ilVersion, assemblyName, out var knownTypesCategory, out var knownTypes, out var knownTypesLookupType);
-
-            // trivial flags
-            var il = Override(type, "SerializeDateTimeKind");
-            il.Emit(IncludeDateTimeKind ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
-            il.Emit(OpCodes.Ret);
-            // end: trivial flags
-
-            Compiler.CompilerContext ctx = WriteSerializeDeserialize(scope, assemblyName, type, methodPairs, ilVersion, ref il);
-
-            WriteConstructors(type, ref index, methodPairs, knownTypesCategory, knownTypes, knownTypesLookupType, ctx);
+            WriteConstructorsAndOverrides(type);
 
 #if PLAT_NO_EMITDLL
             Type finalType = type.CreateTypeInfo().AsType();
@@ -1194,360 +1184,27 @@ namespace ProtoBuf.Meta
             return (TypeModel)Activator.CreateInstance(finalType);
         }
 
-#pragma warning disable RCS1163, IDE0060 // Unused parameter.
-        private void WriteConstructors(TypeBuilder type, ref int index, SerializerPair[] methodPairs, int knownTypesCategory, FieldBuilder knownTypes, Type knownTypesLookupType, Compiler.CompilerContext ctx)
-#pragma warning restore RCS1163, IDE0060 // Unused parameter.
+        private void WriteConstructorsAndOverrides(TypeBuilder type)
         {
             var il = Override(type, nameof(TypeModel.GetInternStrings));
             il.Emit(InternStrings ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
             il.Emit(OpCodes.Ret);
 
+            il = Override(type, nameof(TypeModel.SerializeDateTimeKind));
+            il.Emit(IncludeDateTimeKind ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0);
+            il.Emit(OpCodes.Ret);
+
             type.DefineDefaultConstructor(MethodAttributes.Public);
-            il = type.DefineTypeInitializer().GetILGenerator();
-            switch (knownTypesCategory)
-            {
-                case KnownTypes_Array:
-                    {
-                        Compiler.CompilerContext.LoadValue(il, types.Count);
-                        il.Emit(OpCodes.Newarr, typeof(Type));
-                        index = 0;
-                        foreach (SerializerPair pair in methodPairs)
-                        {
-                            il.Emit(OpCodes.Dup);
-                            Compiler.CompilerContext.LoadValue(il, index);
-                            il.Emit(OpCodes.Ldtoken, pair.Type.Type);
-                            il.EmitCall(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle"), null);
-                            il.Emit(OpCodes.Stelem_Ref);
-                            index++;
-                        }
-                        il.Emit(OpCodes.Stsfld, knownTypes);
-                        il.Emit(OpCodes.Ret);
-                    }
-                    break;
-                case KnownTypes_Dictionary:
-                    {
-                        Compiler.CompilerContext.LoadValue(il, types.Count);
-                        //LocalBuilder loc = il.DeclareLocal(knownTypesLookupType);
-                        il.Emit(OpCodes.Newobj, knownTypesLookupType.GetConstructor(new Type[] { typeof(int) }));
-                        il.Emit(OpCodes.Stsfld, knownTypes);
-                        int typeIndex = 0;
-                        foreach (SerializerPair pair in methodPairs)
-                        {
-                            il.Emit(OpCodes.Ldsfld, knownTypes);
-                            il.Emit(OpCodes.Ldtoken, pair.Type.Type);
-                            il.EmitCall(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle"), null);
-                            int keyIndex = typeIndex++, lastKey = pair.BaseKey;
-                            if (lastKey != pair.MetaKey) // not a base-type; need to give the index of the base-type
-                            {
-                                keyIndex = -1; // assume epic fail
-                                for (int j = 0; j < methodPairs.Length; j++)
-                                {
-                                    if (methodPairs[j].BaseKey == lastKey && methodPairs[j].MetaKey == lastKey)
-                                    {
-                                        keyIndex = j;
-                                        break;
-                                    }
-                                }
-                            }
-                            Compiler.CompilerContext.LoadValue(il, keyIndex);
-                            il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetMethod("Add", new Type[] { typeof(System.Type), typeof(int) }), null);
-                        }
-                        il.Emit(OpCodes.Ret);
-                    }
-                    break;
-                case KnownTypes_Hashtable:
-                    {
-                        Compiler.CompilerContext.LoadValue(il, types.Count);
-                        il.Emit(OpCodes.Newobj, knownTypesLookupType.GetConstructor(new Type[] { typeof(int) }));
-                        il.Emit(OpCodes.Stsfld, knownTypes);
-                        int typeIndex = 0;
-                        foreach (SerializerPair pair in methodPairs)
-                        {
-                            il.Emit(OpCodes.Ldsfld, knownTypes);
-                            il.Emit(OpCodes.Ldtoken, pair.Type.Type);
-                            il.EmitCall(OpCodes.Call, typeof(Type).GetMethod("GetTypeFromHandle"), null);
-                            int keyIndex = typeIndex++, lastKey = pair.BaseKey;
-                            if (lastKey != pair.MetaKey) // not a base-type; need to give the index of the base-type
-                            {
-                                keyIndex = -1; // assume epic fail
-                                for (int j = 0; j < methodPairs.Length; j++)
-                                {
-                                    if (methodPairs[j].BaseKey == lastKey && methodPairs[j].MetaKey == lastKey)
-                                    {
-                                        keyIndex = j;
-                                        break;
-                                    }
-                                }
-                            }
-                            Compiler.CompilerContext.LoadValue(il, keyIndex);
-                            il.Emit(OpCodes.Box, typeof(int));
-                            il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetMethod("Add", new Type[] { typeof(object), typeof(object) }), null);
-                        }
-                        il.Emit(OpCodes.Ret);
-                    }
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
         }
 
-        private Compiler.CompilerContext WriteSerializeDeserialize(CompilerContextScope scope, string assemblyName, TypeBuilder type, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, ref ILGenerator il)
+
+        private void WriteSerializers(CompilerContextScope scope, TypeBuilder type)
         {
-            il = Override(type, nameof(TypeModel.Serialize));
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(scope, il, false, true, methodPairs, this, ilVersion, assemblyName, typeof(object), "Serialize " + type.Name);
-            // arg0 = this, arg1 = dest, arg2 = state, arg3 = key, arg4 = obj
-            Compiler.CodeLabel[] jumpTable = new Compiler.CodeLabel[types.Count];
-            for (int i = 0; i < jumpTable.Length; i++)
+            for (int index = 0; index < types.Count; index++)
             {
-                jumpTable[i] = ctx.DefineLabel();
-            }
-            il.Emit(OpCodes.Ldarg_3);
-            ctx.Switch(jumpTable);
-            ctx.Return();
-            for (int i = 0; i < jumpTable.Length; i++)
-            {
-                SerializerPair pair = methodPairs[i];
-                ctx.MarkLabel(jumpTable[i]);
-                il.Emit(OpCodes.Ldarg_1);
-                il.Emit(OpCodes.Ldarg_2);
-                il.Emit(OpCodes.Ldarg_S, (byte)4);
-                ctx.CastFromObject(pair.Type.Type);
-                il.EmitCall(OpCodes.Call, pair.Serialize, null);
-                ctx.Return();
-            }
-
-            il = Override(type, nameof(TypeModel.DeserializeCore));
-            ctx = new Compiler.CompilerContext(scope, il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(object), "Deserialize " + type.Name);
-
-            // arg0 = this, arg1 = source, arg2 = state, arg3 = key, arg4 = obj
-
-            for (int i = 0; i < jumpTable.Length; i++)
-            {
-                jumpTable[i] = ctx.DefineLabel();
-            }
-            il.Emit(OpCodes.Ldarg_3);
-            ctx.Switch(jumpTable);
-            ctx.LoadNullRef();
-            ctx.Return();
-            for (int i = 0; i < jumpTable.Length; i++)
-            {
-                SerializerPair pair = methodPairs[i];
-                ctx.MarkLabel(jumpTable[i]);
-                Type keyType = pair.Type.Type;
-                if (Helpers.IsValueType(keyType))
-                {
-                    il.Emit(OpCodes.Ldarg_1);
-                    il.Emit(OpCodes.Ldarg_2);
-                    il.Emit(OpCodes.Ldarg_S, (byte)4);
-                    il.EmitCall(OpCodes.Call, EmitBoxedDeserializer(scope, type, i, keyType, methodPairs, this, ilVersion, assemblyName), null);
-                    ctx.Return();
-                }
-                else
-                {
-                    il.Emit(OpCodes.Ldarg_1);
-                    il.Emit(OpCodes.Ldarg_2);
-                    il.Emit(OpCodes.Ldarg_S, (byte)4);
-                    ctx.CastFromObject(keyType);
-                    il.EmitCall(OpCodes.Call, pair.Deserialize, null);
-                    ctx.Return();
-                }
-            }
-            return ctx;
-        }
-
-        private const int KnownTypes_Array = 1, KnownTypes_Dictionary = 2, KnownTypes_Hashtable = 3, KnownTypes_ArrayCutoff = 20;
-        private void WriteGetKeyImpl(CompilerContextScope scope, TypeBuilder type, bool hasInheritance, SerializerPair[] methodPairs, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName, out int knownTypesCategory, out FieldBuilder knownTypes, out Type knownTypesLookupType)
-        {
-            var il = Override(type, "GetKeyImpl");
-            var ctx = new Compiler.CompilerContext(scope, il, false, false, methodPairs, this, ilVersion, assemblyName, typeof(System.Type), "GetKeyImpl");
-
-            if (types.Count <= KnownTypes_ArrayCutoff)
-            {
-                knownTypesCategory = KnownTypes_Array;
-                knownTypesLookupType = typeof(System.Type[]);
-            }
-            else
-            {
-                knownTypesLookupType = typeof(System.Collections.Generic.Dictionary<System.Type, int>);
-                knownTypesCategory = KnownTypes_Dictionary;
-            }
-            knownTypes = type.DefineField("knownTypes", knownTypesLookupType, FieldAttributes.Private | FieldAttributes.InitOnly | FieldAttributes.Static);
-
-            switch (knownTypesCategory)
-            {
-                case KnownTypes_Array:
-                    {
-                        il.Emit(OpCodes.Ldsfld, knownTypes);
-                        il.Emit(OpCodes.Ldarg_1);
-                        // note that Array.IndexOf is not supported under CF
-                        il.EmitCall(OpCodes.Callvirt, typeof(IList).GetMethod(
-                            "IndexOf", new Type[] { typeof(object) }), null);
-                        if (hasInheritance)
-                        {
-                            il.DeclareLocal(typeof(int)); // loc-0
-                            il.Emit(OpCodes.Dup);
-                            il.Emit(OpCodes.Stloc_0);
-
-                            BasicList getKeyLabels = new BasicList();
-                            int lastKey = -1;
-                            for (int i = 0; i < methodPairs.Length; i++)
-                            {
-                                if (methodPairs[i].MetaKey == methodPairs[i].BaseKey) break;
-                                if (lastKey == methodPairs[i].BaseKey)
-                                {   // add the last label again
-                                    getKeyLabels.Add(getKeyLabels[getKeyLabels.Count - 1]);
-                                }
-                                else
-                                {   // add a new unique label
-                                    getKeyLabels.Add(ctx.DefineLabel());
-                                    lastKey = methodPairs[i].BaseKey;
-                                }
-                            }
-                            Compiler.CodeLabel[] subtypeLabels = new Compiler.CodeLabel[getKeyLabels.Count];
-                            getKeyLabels.CopyTo(subtypeLabels, 0);
-
-                            ctx.Switch(subtypeLabels);
-                            il.Emit(OpCodes.Ldloc_0); // not a sub-type; use the original value
-                            il.Emit(OpCodes.Ret);
-
-                            lastKey = -1;
-                            // now output the different branches per sub-type (not derived type)
-                            for (int i = subtypeLabels.Length - 1; i >= 0; i--)
-                            {
-                                if (lastKey != methodPairs[i].BaseKey)
-                                {
-                                    lastKey = methodPairs[i].BaseKey;
-                                    // find the actual base-index for this base-key (i.e. the index of
-                                    // the base-type)
-                                    int keyIndex = -1;
-                                    for (int j = subtypeLabels.Length; j < methodPairs.Length; j++)
-                                    {
-                                        if (methodPairs[j].BaseKey == lastKey && methodPairs[j].MetaKey == lastKey)
-                                        {
-                                            keyIndex = j;
-                                            break;
-                                        }
-                                    }
-                                    ctx.MarkLabel(subtypeLabels[i]);
-                                    Compiler.CompilerContext.LoadValue(il, keyIndex);
-                                    il.Emit(OpCodes.Ret);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Ret);
-                        }
-                    }
-                    break;
-                case KnownTypes_Dictionary:
-                    {
-                        LocalBuilder result = il.DeclareLocal(typeof(int));
-                        Label otherwise = il.DefineLabel();
-                        il.Emit(OpCodes.Ldsfld, knownTypes);
-                        il.Emit(OpCodes.Ldarg_1);
-                        il.Emit(OpCodes.Ldloca_S, result);
-                        il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetMethod("TryGetValue", BindingFlags.Instance | BindingFlags.Public), null);
-                        il.Emit(OpCodes.Brfalse_S, otherwise);
-                        il.Emit(OpCodes.Ldloc_S, result);
-                        il.Emit(OpCodes.Ret);
-                        il.MarkLabel(otherwise);
-                        il.Emit(OpCodes.Ldc_I4_M1);
-                        il.Emit(OpCodes.Ret);
-                    }
-                    break;
-                case KnownTypes_Hashtable:
-                    {
-                        Label otherwise = il.DefineLabel();
-                        il.Emit(OpCodes.Ldsfld, knownTypes);
-                        il.Emit(OpCodes.Ldarg_1);
-                        il.EmitCall(OpCodes.Callvirt, knownTypesLookupType.GetProperty("Item").GetGetMethod(), null);
-                        il.Emit(OpCodes.Dup);
-                        il.Emit(OpCodes.Brfalse_S, otherwise);
-                        if (ilVersion == Compiler.CompilerContext.ILVersion.Net1)
-                        {
-                            il.Emit(OpCodes.Unbox, typeof(int));
-                            il.Emit(OpCodes.Ldobj, typeof(int));
-                        }
-                        else
-                        {
-                            il.Emit(OpCodes.Unbox_Any, typeof(int));
-                        }
-                        il.Emit(OpCodes.Ret);
-                        il.MarkLabel(otherwise);
-                        il.Emit(OpCodes.Pop);
-                        il.Emit(OpCodes.Ldc_I4_M1);
-                        il.Emit(OpCodes.Ret);
-                    }
-                    break;
-                default:
-                    throw new InvalidOperationException();
-            }
-        }
-
-        private void WriteSerializers(CompilerContextScope scope, CompilerOptions options, string assemblyName, TypeBuilder type, out int index, out bool hasInheritance, out SerializerPair[] methodPairs, out Compiler.CompilerContext.ILVersion ilVersion)
-        {
-            Compiler.CompilerContext ctx;
-
-            index = 0;
-            hasInheritance = false;
-            methodPairs = new SerializerPair[types.Count];
-            foreach (MetaType metaType in types)
-            {
-                MethodBuilder writeMethod = type.DefineMethod("Write" + metaType.Type.Name,
-                    MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
-                    typeof(void), new Type[] { typeof(ProtoWriter), Compiler.WriterUtil.ByRefStateType, metaType.Type });
-                writeMethod.DefineParameter(1, ParameterAttributes.None, "writer");
-                writeMethod.DefineParameter(2, ParameterAttributes.None, "state");
-                writeMethod.DefineParameter(3, ParameterAttributes.None, "value");
-
-                MethodBuilder readMethod = type.DefineMethod("Read" + metaType.Type.Name,
-                    MethodAttributes.Private | MethodAttributes.Static, CallingConventions.Standard,
-                    metaType.Type, new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, metaType.Type });
-                readMethod.DefineParameter(1, ParameterAttributes.None, "reader");
-                readMethod.DefineParameter(2, ParameterAttributes.None, "state");
-                readMethod.DefineParameter(3, ParameterAttributes.None, "value");
-
-                SerializerPair pair = new SerializerPair(
-                    GetKey(metaType.Type, true, false), GetKey(metaType.Type, true, true), metaType,
-                    writeMethod, readMethod, writeMethod.GetILGenerator(), readMethod.GetILGenerator());
-                methodPairs[index++] = pair;
-                if (pair.MetaKey != pair.BaseKey) hasInheritance = true;
-            }
-
-            if (hasInheritance)
-            {
-                Array.Sort(methodPairs);
-            }
-
-            ilVersion = Compiler.CompilerContext.ILVersion.Net2;
-            if (options.MetaDataVersion == 0x10000)
-            {
-                ilVersion = Compiler.CompilerContext.ILVersion.Net1; // old-school!
-            }
-            for (index = 0; index < methodPairs.Length; index++)
-            {
-                SerializerPair pair = methodPairs[index];
-
-                var metaType = pair.Type;
+                var metaType = (MetaType)types[index];
                 var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
-                ctx = new Compiler.CompilerContext(scope, pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, runtimeType, "SerializeImpl " + runtimeType.Name);
-                MemberInfo returnType = pair.Deserialize.ReturnType;
-
-
-                ctx.CheckAccessibility(ref returnType);
-                serializer.EmitWrite(ctx, ctx.InputValue);
-                ctx.Return();
-
-                ctx = new Compiler.CompilerContext(scope, pair.DeserializeBody, true, false, methodPairs, this, ilVersion, assemblyName, runtimeType, "DeserializeImpl " + runtimeType.Name);
-                serializer.EmitRead(ctx, ctx.InputValue);
-                if (!serializer.ReturnsValue)
-                {
-                    ctx.LoadValue(ctx.InputValue);
-                }
-                ctx.Return();
-
 
                 Type inheritanceRoot = metaType.GetInheritanceRoot();
                 
@@ -1556,8 +1213,7 @@ namespace ProtoBuf.Meta
                 type.AddInterfaceImplementation(serType);
 
                 var il = CompilerContextScope.Implement(type, serType, nameof(IProtoDeserializer<string>.Read));
-                ctx = new CompilerContext(scope, il, false, false, null, this,
-                     ilVersion, assemblyName, runtimeType, nameof(IProtoDeserializer<string>.Read));
+                var ctx = new CompilerContext(scope, il, false, false, this, runtimeType, nameof(IProtoDeserializer<string>.Read));
                 if (serializer.HasInheritance)
                 {
                     serializer.EmitReadRoot(ctx, ctx.InputValue);
@@ -1576,8 +1232,8 @@ namespace ProtoBuf.Meta
                     type.AddInterfaceImplementation(serType);
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Write));
-                    ctx = new CompilerContext(scope, il, false, true, null, this,
-                         ilVersion, assemblyName, runtimeType, nameof(IProtoSerializer<string>.Write));
+                    ctx = new CompilerContext(scope, il, false, true, this,
+                         runtimeType, nameof(IProtoSerializer<string>.Write));
                     if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
                     else serializer.EmitWrite(ctx, ctx.InputValue);
                     ctx.Return();
@@ -1590,14 +1246,14 @@ namespace ProtoBuf.Meta
                     type.AddInterfaceImplementation(serType);
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
-                    ctx = new CompilerContext(scope, il, false, true, null, this,
-                         ilVersion, assemblyName, runtimeType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
+                    ctx = new CompilerContext(scope, il, false, true, this,
+                         runtimeType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
                     serializer.EmitWrite(ctx, ctx.InputValue);
                     ctx.Return();
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
-                    ctx = new CompilerContext(scope, il, false, false, null, this,
-                         ilVersion, assemblyName, runtimeType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
+                    ctx = new CompilerContext(scope, il, false, false, this,
+                         runtimeType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
                     serializer.EmitRead(ctx, ctx.InputValue);
                     ctx.LoadValue(ctx.InputValue);
                     ctx.Return();
@@ -1610,8 +1266,8 @@ namespace ProtoBuf.Meta
                     type.AddInterfaceImplementation(serType);
 
                     il = CompilerContextScope.Implement(type, serType, nameof(IProtoFactory<string>.Create));
-                    ctx = new CompilerContext(scope, il, false, false, null, this,
-                         ilVersion, assemblyName, null, nameof(IProtoFactory<string>.Create));
+                    ctx = new CompilerContext(scope, il, false, false, this,
+                         typeof(ISerializationContext), nameof(IProtoFactory<string>.Create));
                     serializer.EmitCreateInstance(ctx, false);
                     ctx.Return();
                 }
@@ -1726,45 +1382,6 @@ namespace ProtoBuf.Meta
                 }
             }
         }
-
-        private static MethodBuilder EmitBoxedDeserializer(CompilerContextScope scope, TypeBuilder type, int i, Type valueType, SerializerPair[] methodPairs, TypeModel model, Compiler.CompilerContext.ILVersion ilVersion, string assemblyName)
-        {
-            MethodInfo dedicated = methodPairs[i].Deserialize;
-            MethodBuilder boxedSerializer = type.DefineMethod("_" + i.ToString(), MethodAttributes.Static, CallingConventions.Standard,
-                typeof(object),
-                new Type[] { typeof(ProtoReader), Compiler.ReaderUtil.ByRefStateType, typeof(object) });
-            Compiler.CompilerContext ctx = new Compiler.CompilerContext(scope, boxedSerializer.GetILGenerator(), true, false, methodPairs, model, ilVersion, assemblyName, typeof(object), "BoxedSerializer " + valueType.Name);
-            ctx.LoadValue(ctx.InputValue);
-            Compiler.CodeLabel @null = ctx.DefineLabel();
-            ctx.BranchIfFalse(@null, true);
-
-            Type mappedValueType = valueType;
-            ctx.LoadReader(true);
-            ctx.LoadValue(ctx.InputValue);
-            ctx.CastFromObject(mappedValueType);
-            ctx.EmitCall(dedicated);
-            ctx.CastToObject(mappedValueType);
-            ctx.Return();
-
-            ctx.MarkLabel(@null);
-            using (Compiler.Local typedVal = new Compiler.Local(ctx, mappedValueType))
-            {
-                // create a new valueType
-                ctx.LoadAddress(typedVal, mappedValueType);
-                ctx.EmitCtor(mappedValueType);
-                ctx.LoadReader(true);
-                ctx.LoadValue(typedVal);
-                ctx.EmitCall(dedicated);
-                ctx.CastToObject(mappedValueType);
-                ctx.Return();
-            }
-            return boxedSerializer;
-        }
-
-        //internal bool IsDefined(Type type, int fieldNumber)
-        //{
-        //    return FindWithoutAdd(type).IsDefined(fieldNumber);
-        //}
 
         // note that this is used by some of the unit tests
         internal bool IsPrepared(Type type)

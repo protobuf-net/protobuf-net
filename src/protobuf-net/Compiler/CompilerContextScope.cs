@@ -11,17 +11,20 @@ namespace ProtoBuf.Compiler
     {
         internal static CompilerContextScope CreateInProcess()
         {
-            return new CompilerContextScope(null, false);
+            return new CompilerContextScope(null, false, null);
         }
 
-        internal static CompilerContextScope CreateForModule(ModuleBuilder module, bool isFullEmit)
-            => new CompilerContextScope(module, isFullEmit);
+        internal static CompilerContextScope CreateForModule(ModuleBuilder module, bool isFullEmit, string assemblyName)
+            => new CompilerContextScope(module, isFullEmit, assemblyName);
 
-        private CompilerContextScope(ModuleBuilder module, bool isFullEmit)
+        private CompilerContextScope(ModuleBuilder module, bool isFullEmit, string assemblyName)
         {
             _module = module;
             IsFullEmit = isFullEmit;
+            AssemblyName = assemblyName;
         }
+
+        internal string AssemblyName { get; }
 
         public bool IsFullEmit { get; }
 

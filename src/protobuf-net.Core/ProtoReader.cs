@@ -1407,7 +1407,7 @@ namespace ProtoBuf
         public T ReadSubItem<T>(ref State state, T value = default, IProtoDeserializer<T> serializer = null)
         {
             var tok = StartSubItem(this, ref state);
-            var result = (serializer ?? TypeModel.GetBasicDeserializer<T>(_model)).Read(this, ref state, value);
+            var result = (serializer ?? TypeModel.GetDeserializer<T>(_model)).Read(this, ref state, value);
             EndSubItem(tok, this, ref state);
             return result;
         }
@@ -1429,7 +1429,7 @@ namespace ProtoBuf
                 SetRootObject(value);
             }
 
-            var result = (serializer ?? TypeModel.GetBasicDeserializer<T>(Model)).Read(this, ref state, value);
+            var result = (serializer ?? TypeModel.GetDeserializer<T>(Model)).Read(this, ref state, value);
             CheckFullyConsumed(ref state);
             return result;
         }
