@@ -43,7 +43,7 @@ namespace ProtoBuf.Serializers
         {   // => reader.ReadBaseType<TBase, T>(ref state, value, this);
             context.LoadReader(true);
             context.LoadValue(valueFrom);
-            context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>();
+            context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
             context.EmitCall(typeof(ProtoReader).GetMethod(nameof(ProtoReader.ReadBaseType), BindingFlags.Public | BindingFlags.Instance)
                 .MakeGenericMethod(typeof(TBase), typeof(T)));
         }
@@ -51,7 +51,7 @@ namespace ProtoBuf.Serializers
         {   // => ProtoWriter.WriteBaseType<TBase>(value, writer, ref state, this);
             context.LoadValue(valueFrom);
             context.LoadWriter(true);
-            context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>();
+            context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>(assertImplemented: true);
             context.EmitCall(typeof(ProtoWriter).GetMethod(nameof(ProtoWriter.WriteBaseType), BindingFlags.Public | BindingFlags.Static)
                 .MakeGenericMethod(typeof(TBase)));
         }

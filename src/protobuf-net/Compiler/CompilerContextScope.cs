@@ -11,16 +11,19 @@ namespace ProtoBuf.Compiler
     {
         internal static CompilerContextScope CreateInProcess()
         {
-            return new CompilerContextScope(null);
+            return new CompilerContextScope(null, false);
         }
 
-        internal static CompilerContextScope CreateForModule(ModuleBuilder module)
-            => new CompilerContextScope(module);
+        internal static CompilerContextScope CreateForModule(ModuleBuilder module, bool isFullEmit)
+            => new CompilerContextScope(module, isFullEmit);
 
-        private CompilerContextScope(ModuleBuilder module)
+        private CompilerContextScope(ModuleBuilder module, bool isFullEmit)
         {
             _module = module;
+            IsFullEmit = isFullEmit;
         }
+
+        public bool IsFullEmit { get; }
 
         private Dictionary<object, FieldInfo> _additionalSerializers;
         private ModuleBuilder _module;

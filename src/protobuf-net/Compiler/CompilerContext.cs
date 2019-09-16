@@ -306,7 +306,7 @@ namespace ProtoBuf.Compiler
             IsStatic = isStatic;
         }
 
-        public void LoadSelfAsService<T>() where T : class
+        public void LoadSelfAsService<T>(bool assertImplemented = false) where T : class
         {
             if (IsStatic)
             {
@@ -314,8 +314,15 @@ namespace ProtoBuf.Compiler
             }
             else
             {
-                Emit(OpCodes.Ldarg_0);
-                TryCast(typeof(T));
+                Emit(OpCodes.Ldarg_0); // push ourselves
+                if (assertImplemented && Scope.IsFullEmit)
+                { } // yay, we should be fine here
+                else
+                {
+                    // otherwise, we'll use isinst to find
+                    // out at runtime, else loading null
+                    TryCast(typeof(T));
+                }
             }
         }
 
