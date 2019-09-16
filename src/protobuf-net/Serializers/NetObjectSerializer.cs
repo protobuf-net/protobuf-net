@@ -2,7 +2,7 @@
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class NetObjectSerializer : IProtoSerializer
+    internal sealed class NetObjectSerializer : IRuntimeProtoSerializerNode
     {
         private readonly int key;
 

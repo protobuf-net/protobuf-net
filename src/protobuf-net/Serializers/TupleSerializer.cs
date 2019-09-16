@@ -8,12 +8,12 @@ namespace ProtoBuf.Serializers
     {
         private readonly MemberInfo[] members;
         private readonly ConstructorInfo ctor;
-        private readonly IProtoSerializer[] tails;
+        private readonly IRuntimeProtoSerializerNode[] tails;
         public TupleSerializer(RuntimeTypeModel model, ConstructorInfo ctor, MemberInfo[] members)
         {
             this.ctor = ctor ?? throw new ArgumentNullException(nameof(ctor));
             this.members = members ?? throw new ArgumentNullException(nameof(members));
-            this.tails = new IProtoSerializer[members.Length];
+            this.tails = new IRuntimeProtoSerializerNode[members.Length];
 
             ParameterInfo[] parameters = ctor.GetParameters();
             for (int i = 0; i < members.Length; i++)
@@ -31,7 +31,7 @@ namespace ProtoBuf.Serializers
                 {
                     asReference = model[tmp].AsReferenceDefault;
                 }
-                IProtoSerializer tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out WireType wireType, asReference, false, false, true), serializer;
+                IRuntimeProtoSerializerNode tail = ValueMember.TryGetCoreSerializer(model, DataFormat.Default, tmp, out WireType wireType, asReference, false, false, true), serializer;
                 if (tail == null)
                 {
                     throw new InvalidOperationException("No serializer defined for type: " + tmp.FullName);
@@ -103,7 +103,7 @@ namespace ProtoBuf.Serializers
                 invokeCtor = true;
                 if (field <= tails.Length)
                 {
-                    IProtoSerializer tail = tails[field - 1];
+                    IRuntimeProtoSerializerNode tail = tails[field - 1];
                     values[field - 1] = tails[field - 1].Read(source, ref state, tail.RequiresOldValue ? values[field - 1] : null);
                 }
                 else
@@ -269,7 +269,7 @@ namespace ProtoBuf.Serializers
                         for (int i = 0; i < handlers.Length; i++)
                         {
                             ctx.MarkLabel(handlers[i]);
-                            IProtoSerializer tail = tails[i];
+                            IRuntimeProtoSerializerNode tail = tails[i];
                             Compiler.Local oldValIfNeeded = tail.RequiresOldValue ? locals[i] : null;
                             ctx.ReadNullCheckedTail(locals[i].Type, tail, oldValIfNeeded);
                             if (tail.ReturnsValue)

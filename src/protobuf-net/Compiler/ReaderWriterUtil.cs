@@ -14,16 +14,16 @@ namespace ProtoBuf.Compiler
     {
         internal static readonly Type ByRefStateType = typeof(ProtoWriter.State).MakeByRefType();
 
-        internal static MethodInfo GetStaticMethod(string name, Serializers.IProtoSerializer caller) =>
+        internal static MethodInfo GetStaticMethod(string name, Serializers.IRuntimeProtoSerializerNode caller) =>
             MethodWrapper<ProtoWriter>.GetStaticMethod(name, caller);
-        internal static MethodInfo GetStaticMethod<T>(string name, Serializers.IProtoSerializer caller) =>
+        internal static MethodInfo GetStaticMethod<T>(string name, Serializers.IRuntimeProtoSerializerNode caller) =>
             MethodWrapper<T>.GetStaticMethod(name, caller);
 
         internal static class MethodWrapper<T>
         {
             private static readonly Dictionary<string, MethodInfo> _staticWriteMethods;
 
-            public static MethodInfo GetStaticMethod(string name, Serializers.IProtoSerializer caller)
+            public static MethodInfo GetStaticMethod(string name, Serializers.IRuntimeProtoSerializerNode caller)
             {
                 try
                 {

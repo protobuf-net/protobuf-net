@@ -36,7 +36,7 @@ namespace ProtoBuf.Meta
             return Type.ToString();
         }
 
-        IProtoSerializer ISerializerProxy.Serializer => Serializer;
+        IRuntimeProtoSerializerNode ISerializerProxy.Serializer => Serializer;
         private MetaType baseType;
 
         /// <summary>
@@ -280,7 +280,7 @@ namespace ProtoBuf.Meta
             if (type == null) throw new ArgumentNullException(nameof(type));
 
             if (type.IsArray) throw InbuiltType(type);
-            IProtoSerializer coreSerializer = model.TryGetBasicTypeSerializer(type);
+            IRuntimeProtoSerializerNode coreSerializer = model.TryGetBasicTypeSerializer(type);
             if (coreSerializer != null)
             {
                 throw InbuiltType(type);
@@ -367,7 +367,7 @@ namespace ProtoBuf.Meta
                 Type defaultType = null;
                 ResolveListTypes(model, Type, ref itemType, ref defaultType);
                 ValueMember fakeMember = new ValueMember(model, ProtoBuf.Serializer.ListItemTag, Type, itemType, defaultType, DataFormat.Default);
-                return TypeSerializer.Create(Type, MetaType.GetRootType(this).Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IProtoSerializer[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
+                return TypeSerializer.Create(Type, MetaType.GetRootType(this).Type, new int[] { ProtoBuf.Serializer.ListItemTag }, new IRuntimeProtoSerializerNode[] { fakeMember.Serializer }, null, true, true, null, constructType, factory);
             }
             if (surrogate != null)
             {
@@ -386,7 +386,7 @@ namespace ProtoBuf.Meta
             int fieldCount = fields.Count;
             int subTypeCount = subTypes?.Count ?? 0;
             int[] fieldNumbers = new int[fieldCount + subTypeCount];
-            IProtoSerializer[] serializers = new IProtoSerializer[fieldCount + subTypeCount];
+            IRuntimeProtoSerializerNode[] serializers = new IRuntimeProtoSerializerNode[fieldCount + subTypeCount];
             int i = 0;
             if (subTypeCount != 0)
             {

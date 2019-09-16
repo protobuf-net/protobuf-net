@@ -44,7 +44,7 @@ namespace ProtoBuf.Serializers
         public override Type ExpectedType => Tail.ExpectedType;
         Type IProtoTypeSerializer.BaseType => ExpectedType;
 
-        public TagDecorator(int fieldNumber, WireType wireType, bool strict, IProtoSerializer tail)
+        public TagDecorator(int fieldNumber, WireType wireType, bool strict, IRuntimeProtoSerializerNode tail)
             : base(tail)
         {
             this.fieldNumber = fieldNumber;

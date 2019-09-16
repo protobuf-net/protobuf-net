@@ -10,15 +10,15 @@ namespace ProtoBuf.Serializers
     internal class MapDecorator<TDictionary, TKey, TValue> : ProtoDecoratorBase where TDictionary : class, IDictionary<TKey, TValue>
     {
         private readonly Type concreteType;
-        private readonly IProtoSerializer keyTail;
+        private readonly IRuntimeProtoSerializerNode keyTail;
         private readonly int fieldNumber;
         private readonly WireType wireType;
 
-        internal MapDecorator(Type concreteType, IProtoSerializer keyTail, IProtoSerializer valueTail,
+        internal MapDecorator(Type concreteType, IRuntimeProtoSerializerNode keyTail, IRuntimeProtoSerializerNode valueTail,
             int fieldNumber, WireType wireType, WireType keyWireType, WireType valueWireType, bool overwriteList)
             : base(DefaultValue == null
-                  ? (IProtoSerializer)new TagDecorator(2, valueWireType, false, valueTail)
-                  : (IProtoSerializer)new DefaultValueDecorator(DefaultValue, new TagDecorator(2, valueWireType, false, valueTail)))
+                  ? (IRuntimeProtoSerializerNode)new TagDecorator(2, valueWireType, false, valueTail)
+                  : (IRuntimeProtoSerializerNode)new DefaultValueDecorator(DefaultValue, new TagDecorator(2, valueWireType, false, valueTail)))
         {
             this.wireType = wireType;
             this.keyTail = new DefaultValueDecorator(DefaultKey, new TagDecorator(1, keyWireType, false, keyTail));
@@ -68,16 +68,16 @@ namespace ProtoBuf.Serializers
 
         private readonly RuntimePairSerializer _runtimeSerializer;
 
-        sealed class RuntimePairSerializer : IBasicSerializer<KeyValuePair<TKey, TValue>>, IBasicDeserializer<KeyValuePair<TKey, TValue>>
+        sealed class RuntimePairSerializer : IProtoSerializer<KeyValuePair<TKey, TValue>>, IProtoDeserializer<KeyValuePair<TKey, TValue>>
         {
-            private readonly IProtoSerializer _keyTail, _valueTail;
-            public RuntimePairSerializer(IProtoSerializer keyTail, IProtoSerializer valueTail)
+            private readonly IRuntimeProtoSerializerNode _keyTail, _valueTail;
+            public RuntimePairSerializer(IRuntimeProtoSerializerNode keyTail, IRuntimeProtoSerializerNode valueTail)
             {
                 _keyTail = keyTail;
                 _valueTail = valueTail;
             }
 
-            KeyValuePair<TKey, TValue> IBasicDeserializer<KeyValuePair<TKey, TValue>>.Deserialize(ProtoReader reader, ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
+            KeyValuePair<TKey, TValue> IProtoDeserializer<KeyValuePair<TKey, TValue>>.Deserialize(ProtoReader reader, ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
             {
                 var key = pair.Key;
                 var value = pair.Value;
@@ -100,7 +100,7 @@ namespace ProtoBuf.Serializers
                 return new KeyValuePair<TKey, TValue>(key, value);
             }
 
-            void IBasicSerializer<KeyValuePair<TKey, TValue>>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
+            void IProtoSerializer<KeyValuePair<TKey, TValue>>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, KeyValuePair<TKey, TValue> pair)
             {
                 if (pair.Key != null) _keyTail.Write(writer, ref state, pair.Key);
                 if (pair.Value != null) _valueTail.Write(writer, ref state, pair.Value);

@@ -122,7 +122,7 @@ namespace ProtoBuf.Serializers
 
         private readonly MethodInfo builderFactory, add, addRange, finish;
         private readonly PropertyInfo isEmpty, length;
-        internal ImmutableCollectionDecorator(Type declaredType, Type concreteType, IProtoSerializer tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull,
+        internal ImmutableCollectionDecorator(Type declaredType, Type concreteType, IRuntimeProtoSerializerNode tail, int fieldNumber, bool writePacked, WireType packedWireType, bool returnList, bool overwriteList, bool supportNull,
             MethodInfo builderFactory, PropertyInfo isEmpty, PropertyInfo length, MethodInfo add, MethodInfo addRange, MethodInfo finish)
             : base(declaredType, concreteType, tail, fieldNumber, writePacked, packedWireType, returnList, overwriteList, supportNull)
         {

@@ -1207,17 +1207,17 @@ namespace ProtoBuf.Meta
         /// <summary>
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
-        protected internal virtual IBasicSerializer<T> GetBasicSerializer<T>()
-            => GetService<IBasicSerializer<T>>();
+        protected internal virtual IProtoSerializer<T> GetSerializer<T>()
+            => GetService<IProtoSerializer<T>>();
 
-        protected internal virtual IBasicDeserializer<T> GetBasicDeserializer<T>()
-            => GetService<IBasicDeserializer<T>>();
+        protected internal virtual IProtoDeserializer<T> GetDeserializer<T>()
+            => GetService<IProtoDeserializer<T>>();
 
         protected internal virtual IProtoFactory<T> GetFactory<T>()
             => GetService<IProtoFactory<T>>();
 
-        protected internal virtual ISubTypeSerializer<T> GetSubTypeSerializer<T>() where T : class
-            => GetService<ISubTypeSerializer<T>>();
+        protected internal virtual IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>() where T : class
+            => GetService<IProtoSubTypeSerializer<T>>();
 
         protected internal virtual T GetService<T>() where T : class
             => this as T;
@@ -1231,14 +1231,14 @@ namespace ProtoBuf.Meta
         public static T Create<T>(ISerializationContext context) where T : class
             => context?.Model?.GetFactory<T>()?.Create(context) ?? Activator.CreateInstance<T>();
 
-        internal static IBasicSerializer<T> GetBasicSerializer<T>(TypeModel model)
-           => model?.GetBasicSerializer<T>() ?? WellKnownSerializer.Instance as IBasicSerializer<T> ?? NoSerializer<IBasicSerializer<T>>(model);
+        internal static IProtoSerializer<T> GetBasicSerializer<T>(TypeModel model)
+           => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<IProtoSerializer<T>>(model);
 
-        internal static IBasicDeserializer<T> GetBasicDeserializer<T>(TypeModel model)
-           => model?.GetBasicDeserializer<T>() ?? WellKnownSerializer.Instance as IBasicDeserializer<T> ?? NoSerializer<IBasicDeserializer<T>>(model);
+        internal static IProtoDeserializer<T> GetBasicDeserializer<T>(TypeModel model)
+           => model?.GetDeserializer<T>() ?? WellKnownSerializer.Instance as IProtoDeserializer<T> ?? NoSerializer<IProtoDeserializer<T>>(model);
 
-        internal static ISubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
-           => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as ISubTypeSerializer<T> ?? NoSerializer<ISubTypeSerializer<T>>(model);
+        internal static IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
+           => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSubTypeSerializer<T> ?? NoSerializer<IProtoSubTypeSerializer<T>>(model);
 
         /// <summary>
         /// Provides the key that represents a given type in the current model.
@@ -1320,12 +1320,6 @@ namespace ProtoBuf.Meta
         /// either the original instance was null, or the stream defines a known sub-type of the
         /// original instance.</returns>
         protected internal abstract object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value);
-
-        //internal ProtoSerializer Create(IProtoSerializer head)
-        //{
-        //    return new RuntimeSerializer(head, this);
-        //}
-        //internal ProtoSerializer Compile
 
         /// <summary>
         /// Indicates the type of callback to be used

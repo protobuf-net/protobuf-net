@@ -6,16 +6,16 @@ namespace ProtoBuf.Serializers
 {
     internal abstract class TypeSerializer
     {
-        public static IProtoTypeSerializer Create(Type forType, Type rootType, int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
+        public static IProtoTypeSerializer Create(Type forType, Type rootType, int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
         {
             var obj = (TypeSerializer)Activator.CreateInstance(typeof(TypeSerializer<,>).MakeGenericType(rootType, forType));
             obj.Init(fieldNumbers, serializers, baseCtorCallbacks, isRootType, useConstructor, callbacks, constructType, factory);
             return (IProtoTypeSerializer)obj;
         }
-        abstract internal void Init(int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory);
+        abstract internal void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory);
     }
     internal sealed class TypeSerializer<TBase, TActual> : TypeSerializer,
-        IProtoTypeSerializer, IBasicSerializer<TBase>, IBasicDeserializer<TBase> where TActual : TBase
+        IProtoTypeSerializer, IProtoSerializer<TBase>, IProtoDeserializer<TBase> where TActual : TBase
     {
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {
@@ -30,14 +30,14 @@ namespace ProtoBuf.Serializers
         private Type constructType;
         public Type ExpectedType => typeof(TActual);
         Type IProtoTypeSerializer.BaseType => typeof(TBase);
-        private IProtoSerializer[] serializers;
+        private IRuntimeProtoSerializerNode[] serializers;
         private int[] fieldNumbers;
         private bool isRootType, useConstructor, isExtensible, hasConstructor;
         private CallbackSet callbacks;
         private MethodInfo[] baseCtorCallbacks;
         private MethodInfo factory;
 
-        internal override void Init(int[] fieldNumbers, IProtoSerializer[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
+        internal override void Init(int[] fieldNumbers, IRuntimeProtoSerializerNode[] serializers, MethodInfo[] baseCtorCallbacks, bool isRootType, bool useConstructor, CallbackSet callbacks, Type constructType, MethodInfo factory)
         {
             Helpers.DebugAssert(fieldNumbers != null);
             Helpers.DebugAssert(serializers != null);
@@ -131,7 +131,7 @@ namespace ProtoBuf.Serializers
             IProtoTypeSerializer ser = (IProtoTypeSerializer)GetMoreSpecificSerializer(value);
             if (ser != null) ser.Callback(value, callbackType, context);
         }
-        private IProtoSerializer GetMoreSpecificSerializer(object value)
+        private IRuntimeProtoSerializerNode GetMoreSpecificSerializer(object value)
         {
             if (!CanHaveInheritance) return null;
             Type actualType = value.GetType();
@@ -139,7 +139,7 @@ namespace ProtoBuf.Serializers
 
             for (int i = 0; i < serializers.Length; i++)
             {
-                IProtoSerializer ser = serializers[i];
+                IRuntimeProtoSerializerNode ser = serializers[i];
                 if (ser.ExpectedType != ExpectedType && Helpers.IsAssignableFrom(ser.ExpectedType, actualType))
                 {
                     return ser;
@@ -159,7 +159,7 @@ namespace ProtoBuf.Serializers
             // write inheritance first
             if (CanHaveInheritance)
             {
-                IProtoSerializer next = GetMoreSpecificSerializer(value);
+                IRuntimeProtoSerializerNode next = GetMoreSpecificSerializer(value);
                 if (next != null) next.Write(writer, ref state, value);
             }
 
@@ -167,7 +167,7 @@ namespace ProtoBuf.Serializers
             //Helpers.DebugWriteLine(">> Writing fields for " + forType.FullName);
             for (int i = 0; i < serializers.Length; i++)
             {
-                IProtoSerializer ser = serializers[i];
+                IRuntimeProtoSerializerNode ser = serializers[i];
                 if (ser.ExpectedType == ExpectedType)
                 {
                     //Helpers.DebugWriteLine(": " + ser.ToString());
@@ -200,7 +200,7 @@ namespace ProtoBuf.Serializers
                 {
                     if (fieldNumbers[i] == fieldNumber)
                     {
-                        IProtoSerializer ser = serializers[i];
+                        IRuntimeProtoSerializerNode ser = serializers[i];
                         //Helpers.DebugWriteLine(": " + ser.ToString());
                         Type serType = ser.ExpectedType;
                         if (value == null)
@@ -325,10 +325,10 @@ namespace ProtoBuf.Serializers
             return obj;
         }
 
-        bool IProtoSerializer.RequiresOldValue { get { return true; } }
-        bool IProtoSerializer.ReturnsValue { get { return false; } } // updates field directly
+        bool IRuntimeProtoSerializerNode.RequiresOldValue { get { return true; } }
+        bool IRuntimeProtoSerializerNode.ReturnsValue { get { return false; } } // updates field directly
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type expected = ExpectedType;
             using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
@@ -342,7 +342,7 @@ namespace ProtoBuf.Serializers
                 {
                     for (int i = 0; i < serializers.Length; i++)
                     {
-                        IProtoSerializer ser = serializers[i];
+                        IRuntimeProtoSerializerNode ser = serializers[i];
                         Type serType = ser.ExpectedType;
                         if (serType != ExpectedType)
                         {
@@ -406,7 +406,7 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(startFields);
                 for (int i = 0; i < serializers.Length; i++)
                 {
-                    IProtoSerializer ser = serializers[i];
+                    IRuntimeProtoSerializerNode ser = serializers[i];
                     if (ser.ExpectedType == ExpectedType) ser.EmitWrite(ctx, loc);
                 }
 
@@ -490,7 +490,7 @@ namespace ProtoBuf.Serializers
             {
                 for (int i = 0; i < serializers.Length; i++)
                 {
-                    IProtoSerializer ser = serializers[i];
+                    IRuntimeProtoSerializerNode ser = serializers[i];
                     if (ser.ExpectedType != ExpectedType && ((IProtoTypeSerializer)ser).HasCallbacks(callbackType))
                     {
                         actuallyHasInheritance = true;
@@ -512,7 +512,7 @@ namespace ProtoBuf.Serializers
                 Compiler.CodeLabel @break = ctx.DefineLabel();
                 for (int i = 0; i < serializers.Length; i++)
                 {
-                    IProtoSerializer ser = serializers[i];
+                    IRuntimeProtoSerializerNode ser = serializers[i];
                     IProtoTypeSerializer typeser;
                     Type serType = ser.ExpectedType;
                     if (serType != ExpectedType
@@ -536,7 +536,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type expected = ExpectedType;
             Helpers.DebugAssert(valueFrom != null);
@@ -577,7 +577,7 @@ namespace ProtoBuf.Serializers
                         Compiler.CodeLabel processThisField = ctx.DefineLabel();
                         ctx.BranchIfEqual(processThisField, true);
                         ctx.Branch(tryNextField, false);
-                        WriteFieldHandler(ctx, expected, loc, processThisField, @continue, (IProtoSerializer)group.Items[0]);
+                        WriteFieldHandler(ctx, expected, loc, processThisField, @continue, (IRuntimeProtoSerializerNode)group.Items[0]);
                     }
                     else
                     {   // implement as a jump-table-based switch
@@ -594,7 +594,7 @@ namespace ProtoBuf.Serializers
                         ctx.Branch(tryNextField, false);
                         for (int i = 0; i < groupItemCount; i++)
                         {
-                            WriteFieldHandler(ctx, expected, loc, jmp[i], @continue, (IProtoSerializer)group.Items[i]);
+                            WriteFieldHandler(ctx, expected, loc, jmp[i], @continue, (IRuntimeProtoSerializerNode)group.Items[i]);
                         }
                     }
                     ctx.MarkLabel(tryNextField);
@@ -634,7 +634,7 @@ namespace ProtoBuf.Serializers
 
         private void WriteFieldHandler(
             Compiler.CompilerContext ctx, Type expected, Compiler.Local loc,
-            Compiler.CodeLabel handler, Compiler.CodeLabel @continue, IProtoSerializer serializer)
+            Compiler.CodeLabel handler, Compiler.CodeLabel @continue, IRuntimeProtoSerializerNode serializer)
         {
             ctx.MarkLabel(handler);
             Type serType = serializer.ExpectedType;

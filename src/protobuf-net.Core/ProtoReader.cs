@@ -1404,7 +1404,7 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a sub-item from the input reader
         /// </summary>
-        public T ReadSubItem<T>(ref State state, T value = default, IBasicDeserializer<T> serializer = null)
+        public T ReadSubItem<T>(ref State state, T value = default, IProtoDeserializer<T> serializer = null)
         {
             var tok = StartSubItem(this, ref state);
             var result = (serializer ?? TypeModel.GetBasicDeserializer<T>(_model)).Deserialize(this, ref state, value);
@@ -1415,14 +1415,14 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a sub-item from the input reader
         /// </summary>
-        public T ReadBaseType<TBaseType, T>(ref State state, T value = null, ISubTypeSerializer<TBaseType> serializer = null)
+        public T ReadBaseType<TBaseType, T>(ref State state, T value = null, IProtoSubTypeSerializer<TBaseType> serializer = null)
             where TBaseType : class
             where T : class, TBaseType
         {
             return (T)(serializer ?? TypeModel.GetSubTypeSerializer<TBaseType>(_model)).Deserialize(this, ref state, new SubTypeState<TBaseType>(this, TypeFactory<T>.Instance, value));
         }
 
-        public T Deserialize<T>(ref State state, T value = default, IBasicDeserializer<T> serializer = null)
+        public T Deserialize<T>(ref State state, T value = default, IProtoDeserializer<T> serializer = null)
         {
             if (TypeHelper<T>.IsObjectType && value is object)
             {

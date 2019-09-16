@@ -3,7 +3,7 @@ using System;
 
 namespace ProtoBuf.Serializers
 {
-    internal interface IProtoTypeSerializer : IProtoSerializer
+    internal interface IProtoTypeSerializer : IRuntimeProtoSerializerNode
     {
         Type BaseType { get; }
         bool HasCallbacks(TypeModel.CallbackType callbackType);

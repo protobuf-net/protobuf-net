@@ -163,8 +163,8 @@ namespace ProtoBuf.Meta
             return Convert.ChangeType(value, type, CultureInfo.InvariantCulture);
         }
 
-        private IProtoSerializer serializer;
-        internal IProtoSerializer Serializer
+        private IRuntimeProtoSerializerNode serializer;
+        internal IRuntimeProtoSerializerNode Serializer
         {
             get
             {
@@ -411,14 +411,14 @@ namespace ProtoBuf.Meta
             }
             return false;
         }
-        private IProtoSerializer BuildSerializer()
+        private IRuntimeProtoSerializerNode BuildSerializer()
         {
             int opaqueToken = 0;
             try
             {
                 model.TakeLock(ref opaqueToken);// check nobody is still adding this type
                 var member = backingMember ?? Member;
-                IProtoSerializer ser;
+                IRuntimeProtoSerializerNode ser;
                 if (IsMap)
                 {
                     ResolveMapTypes(out var dictionaryType, out var keyType, out var valueType);
@@ -441,7 +441,7 @@ namespace ProtoBuf.Meta
                     var ctors = typeof(MapDecorator<,,>).MakeGenericType(new Type[] { dictionaryType, keyType, valueType }).GetConstructors(
                         BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
                     if (ctors.Length != 1) throw new InvalidOperationException("Unable to resolve MapDecorator constructor");
-                    ser = (IProtoSerializer)ctors[0].Invoke(new object[] {concreteType, keySer, valueSer, FieldNumber,
+                    ser = (IRuntimeProtoSerializerNode)ctors[0].Invoke(new object[] {concreteType, keySer, valueSer, FieldNumber,
                         DataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String, keyWireType, valueWireType, OverwriteList });
                 }
                 else
@@ -547,7 +547,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        internal static IProtoSerializer TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType,
+        internal static IRuntimeProtoSerializerNode TryGetCoreSerializer(RuntimeTypeModel model, DataFormat dataFormat, Type type, out WireType defaultWireType,
             bool asReference, bool dynamicType, bool overwriteList, bool allowComplexTypes)
         {
             {
@@ -636,7 +636,7 @@ namespace ProtoBuf.Meta
                     defaultWireType = WireType.String;
                     return PrimitiveSerializer<SystemTypeSerializer>.Singleton;
             }
-            IProtoSerializer parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
+            IRuntimeProtoSerializerNode parseable = model.AllowParseableTypes ? ParseableSerializer.TryCreate(type) : null;
             if (parseable != null)
             {
                 defaultWireType = WireType.String;

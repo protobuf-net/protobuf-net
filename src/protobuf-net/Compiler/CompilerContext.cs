@@ -62,7 +62,7 @@ namespace ProtoBuf.Compiler
             TraceCompile("#: " + label.Index);
         }
 
-        public static ProtoSerializer<TActual> BuildSerializer<TActual>(CompilerContextScope scope, IProtoSerializer head, TypeModel model)
+        public static ProtoSerializer<TActual> BuildSerializer<TActual>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model)
         {
             Type type = head.ExpectedType;
             try
@@ -110,7 +110,7 @@ namespace ProtoBuf.Compiler
             return (ProtoCallback)ctx.method.CreateDelegate(
                 typeof(ProtoCallback));
         }*/
-        public static ProtoDeserializer<T> BuildDeserializer<T>(CompilerContextScope scope, IProtoSerializer head, TypeModel model)
+        public static ProtoDeserializer<T> BuildDeserializer<T>(CompilerContextScope scope, IRuntimeProtoSerializerNode head, TypeModel model)
         {
             Type type = head.ExpectedType;
             CompilerContext ctx = new CompilerContext(scope, type, false, true, model, typeof(T), typeof(T));
@@ -548,7 +548,7 @@ namespace ProtoBuf.Compiler
             EmitCall(method);
         }
 
-        internal void EmitBasicWrite(string methodName, Compiler.Local fromValue, IProtoSerializer caller)
+        internal void EmitBasicWrite(string methodName, Compiler.Local fromValue, IRuntimeProtoSerializerNode caller)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             LoadValue(fromValue);
@@ -556,7 +556,7 @@ namespace ProtoBuf.Compiler
             EmitCall(GetWriterMethod(methodName, caller));
         }
 
-        private MethodInfo GetWriterMethod(string methodName, IProtoSerializer caller)
+        private MethodInfo GetWriterMethod(string methodName, IRuntimeProtoSerializerNode caller)
         {
             var method = Compiler.WriterUtil.GetStaticMethod(methodName, caller);
 
@@ -570,7 +570,7 @@ namespace ProtoBuf.Compiler
             throw new ArgumentException("No suitable method found for: " + methodName, nameof(methodName));
         }
 
-        internal void EmitWrite<T>(string methodName, Compiler.Local valueFrom, IProtoSerializer caller)
+        internal void EmitWrite<T>(string methodName, Compiler.Local valueFrom, IRuntimeProtoSerializerNode caller)
         {
             if (string.IsNullOrEmpty(methodName)) throw new ArgumentNullException(nameof(methodName));
             MethodInfo method = Compiler.WriterUtil.GetStaticMethod<T>(methodName, caller);
@@ -616,7 +616,7 @@ namespace ProtoBuf.Compiler
 
         private int nextLabel;
 
-        internal void WriteNullCheckedTail(Type type, IProtoSerializer tail, Compiler.Local valueFrom)
+        internal void WriteNullCheckedTail(Type type, IRuntimeProtoSerializerNode tail, Compiler.Local valueFrom)
         {
             if (Helpers.IsValueType(type))
             {
@@ -655,7 +655,7 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        internal void ReadNullCheckedTail(Type type, IProtoSerializer tail, Compiler.Local valueFrom)
+        internal void ReadNullCheckedTail(Type type, IRuntimeProtoSerializerNode tail, Compiler.Local valueFrom)
         {
             Type underlyingType;
 

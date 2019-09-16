@@ -3,7 +3,7 @@ using ProtoBuf.Meta;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class EnumSerializer : IProtoSerializer
+    internal sealed class EnumSerializer : IRuntimeProtoSerializerNode
     {
         public readonly struct EnumPair
         {
@@ -49,9 +49,9 @@ namespace ProtoBuf.Serializers
 
         public Type ExpectedType { get; }
 
-        bool IProtoSerializer.RequiresOldValue => false;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
 
-        bool IProtoSerializer.ReturnsValue => true;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         private int EnumToWire(object value)
         {
@@ -130,7 +130,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ProtoTypeCode typeCode = GetTypeCode();
             if (map == null)
@@ -166,7 +166,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ProtoTypeCode typeCode = GetTypeCode();
             if (map == null)

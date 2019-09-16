@@ -2,15 +2,15 @@
 
 namespace ProtoBuf.Serializers
 {
-    sealed class SingleSerializer : IProtoSerializer
+    sealed class SingleSerializer : IRuntimeProtoSerializerNode
     {
         static readonly Type expectedType = typeof(float);
 
         public Type ExpectedType { get { return expectedType; } }
 
-        bool IProtoSerializer.RequiresOldValue => false;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
 
-        bool IProtoSerializer.ReturnsValue => true;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
@@ -23,11 +23,11 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteSingle((float)value, dest, ref state);
         }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteSingle", valueFrom, this);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadSingle", ExpectedType);
         }

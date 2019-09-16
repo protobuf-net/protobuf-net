@@ -113,7 +113,7 @@ namespace ProtoBuf.Serializers
             args[0] = rootTail.Read(source, ref state, value);
             return fromTail.Invoke(null, args);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Helpers.DebugAssert(valueFrom != null); // don't support stack-head for this
             using (Compiler.Local converted = new Compiler.Local(ctx, declaredType)) // declare/re-use local
@@ -130,7 +130,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue(valueFrom);
             ctx.EmitCall(toTail);

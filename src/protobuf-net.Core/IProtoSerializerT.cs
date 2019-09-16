@@ -7,7 +7,7 @@ namespace ProtoBuf
     /// <summary>
     /// Abstract API capable of serializing/deserializing
     /// </summary>
-    public interface IBasicSerializer<in T>
+    public interface IProtoSerializer<in T>
     {
         /// <summary>
         /// Serialize an instance to the supplied writer
@@ -15,7 +15,7 @@ namespace ProtoBuf
         void Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value);
     }
 
-    public interface IBasicDeserializer<T>
+    public interface IProtoDeserializer<T>
     {
         /// <summary>
         /// Deserialize an instance from the supplied writer
@@ -26,7 +26,7 @@ namespace ProtoBuf
     /// <summary>
     /// Abstract API capable of serializing/deserializing objects as part of a type hierarchy
     /// </summary>
-    public interface ISubTypeSerializer<T> where T : class
+    public interface IProtoSubTypeSerializer<T> where T : class
     {
         /// <summary>
         /// Serialize an instance to the supplied writer
@@ -84,7 +84,7 @@ namespace ProtoBuf
             throw new NotImplementedException("upcast");
         }
 
-        public void ReadSubType<TSubType>(ProtoReader reader, ref ProtoReader.State state, ISubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
+        public void ReadSubType<TSubType>(ProtoReader reader, ref ProtoReader.State state, IProtoSubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
         {
             var tok = ProtoReader.StartSubItem(reader, ref state);
             _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).Deserialize(reader, ref state,

@@ -38,31 +38,31 @@ namespace ProtoBuf.Serializers
             return ((IProtoTypeSerializer)Proxy.Serializer).CreateInstance(source);
         }
 
-        Type IProtoSerializer.ExpectedType => typeof(TActual);
+        Type IRuntimeProtoSerializerNode.ExpectedType => typeof(TActual);
         Type IProtoTypeSerializer.BaseType => typeof(TBase);
 
-        bool IProtoSerializer.RequiresOldValue => true;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => true;
 
-        bool IProtoSerializer.ReturnsValue => true;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         private bool ApplyRecursionCheck => typeof(TBase) == typeof(TActual);
 
-        void IProtoSerializer.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
+        void IRuntimeProtoSerializerNode.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
             ProtoWriter.WriteSubItem<TActual>((TActual)value, dest, ref state, null, ApplyRecursionCheck);
         }
 
-        object IProtoSerializer.Read(ProtoReader source, ref ProtoReader.State state, object value)
+        object IRuntimeProtoSerializerNode.Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
             return source.ReadSubItem<TActual>(ref state, (TActual)value, null);
         }
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue(valueFrom); // since we're consuming this first, we don't need to capture it
             if (typeof(TBase) != typeof(TActual)) ctx.Cast(typeof(TActual));
             SubItemSerializer.EmitWriteSubItem<TActual>(ctx, null, null, ApplyRecursionCheck);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             using (Compiler.Local val = ctx.GetLocalWithValue(typeof(TBase), valueFrom))
             {
@@ -140,11 +140,11 @@ namespace ProtoBuf.Serializers
 
         protected ISerializerProxy Proxy { get; private set; }
 
-        internal static IProtoSerializer Create(Type baseType, Type actualType, ISerializerProxy proxy)
+        internal static IRuntimeProtoSerializerNode Create(Type baseType, Type actualType, ISerializerProxy proxy)
         {
             var obj = (SubItemSerializer)Activator.CreateInstance(typeof(SubItemSerializer<,>).MakeGenericType(baseType, actualType));
             obj.Proxy = proxy ?? throw new ArgumentNullException(nameof(proxy));
-            return (IProtoSerializer)obj;
+            return (IRuntimeProtoSerializerNode)obj;
         }
     }
 }

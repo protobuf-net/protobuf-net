@@ -1112,13 +1112,13 @@ namespace ProtoBuf
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        public static void WriteSubItem<T>(T value, ProtoWriter writer, ref State state, IBasicSerializer<T> serializer = null, bool recursionCheck = true)
+        public static void WriteSubItem<T>(T value, ProtoWriter writer, ref State state, IProtoSerializer<T> serializer = null, bool recursionCheck = true)
             => writer.WriteSubItem<T>(ref state, value, serializer, PrefixStyle.Base128, recursionCheck);
 
         /// <summary>
         /// Writes a sub-item to the input writer
         /// </summary>
-        protected internal virtual void WriteSubItem<T>(ref State state, T value, IBasicSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
+        protected internal virtual void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style, bool recursionCheck)
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = StartSubItem(ref state, TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null, style);
@@ -1127,10 +1127,10 @@ namespace ProtoBuf
 #pragma warning restore CS0618
         }
 
-        public static void WriteSubType<T>(T value, ProtoWriter writer, ref State state, ISubTypeSerializer<T> serializer = null) where T : class
+        public static void WriteSubType<T>(T value, ProtoWriter writer, ref State state, IProtoSubTypeSerializer<T> serializer = null) where T : class
             => writer.WriteSubType<T>(ref state, value, serializer);
 
-        protected internal virtual void WriteSubType<T>(ref State state, T value, ISubTypeSerializer<T> serializer = null) where T : class
+        protected internal virtual void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = StartSubItem(ref state, null, PrefixStyle.Base128);
@@ -1142,7 +1142,7 @@ namespace ProtoBuf
         /// <summary>
         /// Writes an object to the input writer
         /// </summary>
-        public long Serialize<T>(ref State state, T value, IBasicSerializer<T> serializer = null)
+        public long Serialize<T>(ref State state, T value, IProtoSerializer<T> serializer = null)
         {
             try
             {

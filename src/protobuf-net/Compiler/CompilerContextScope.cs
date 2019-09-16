@@ -64,9 +64,9 @@ namespace ProtoBuf.Compiler
 
                 if (serialize != null)
                 {
-                    var iType = typeof(IBasicSerializer<T>);
+                    var iType = typeof(IProtoSerializer<T>);
                     type.AddInterfaceImplementation(iType);
-                    il = Implement(type, iType, nameof(IBasicSerializer<T>.Serialize));
+                    il = Implement(type, iType, nameof(IProtoSerializer<T>.Serialize));
                     var ctx = new CompilerContext(parent, il, false, true, typeof(T), typeof(T).Name + ".Serialize");
                     serialize(key, ctx);
                     ctx.Return();
@@ -74,9 +74,9 @@ namespace ProtoBuf.Compiler
 
                 if (deserialize != null)
                 {
-                    var iType = typeof(IBasicDeserializer<T>);
+                    var iType = typeof(IProtoDeserializer<T>);
                     type.AddInterfaceImplementation(iType);
-                    il = Implement(type, iType, nameof(IBasicDeserializer<T>.Deserialize));
+                    il = Implement(type, iType, nameof(IProtoDeserializer<T>.Deserialize));
                     var ctx = new CompilerContext(parent, il, false, false, typeof(T), typeof(T).Name + ".Deserialize");
                     deserialize(key, ctx);
                     ctx.Return();

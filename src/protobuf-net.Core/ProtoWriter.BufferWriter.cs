@@ -172,7 +172,7 @@ namespace ProtoBuf
                 return state.WriteVarint64(value);
             }
 
-            protected internal override void WriteSubItem<T>(ref State state, T value, IBasicSerializer<T> serializer,
+            protected internal override void WriteSubItem<T>(ref State state, T value, IProtoSerializer<T> serializer,
                 PrefixStyle style, bool recursionCheck)
             {
                 switch (WireType)
@@ -190,7 +190,7 @@ namespace ProtoBuf
                 }
             }
 
-            private void WriteWithLengthPrefix<T>(ref State state, T value, IBasicSerializer<T> serializer, PrefixStyle style)
+            private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
             {
                 long calculatedLength;
                 using (var nullWriter = NullProtoWriter.CreateNullImpl(Model, Context, out var nulState))

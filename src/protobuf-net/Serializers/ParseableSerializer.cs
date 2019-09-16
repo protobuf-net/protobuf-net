@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class ParseableSerializer : IProtoSerializer
+    internal sealed class ParseableSerializer : IRuntimeProtoSerializerNode
     {
         private readonly MethodInfo parse;
         public static ParseableSerializer TryCreate(Type type)
@@ -36,8 +36,8 @@ namespace ProtoBuf.Serializers
 
         public Type ExpectedType => parse.DeclaringType;
 
-        bool IProtoSerializer.RequiresOldValue { get { return false; } }
-        bool IProtoSerializer.ReturnsValue { get { return true; } }
+        bool IRuntimeProtoSerializerNode.RequiresOldValue { get { return false; } }
+        bool IRuntimeProtoSerializerNode.ReturnsValue { get { return true; } }
 
         public object Read(ProtoReader source, ref ProtoReader.State state, object value)
         {
@@ -50,7 +50,7 @@ namespace ProtoBuf.Serializers
             ProtoWriter.WriteString(value.ToString(), dest, ref state);
         }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Type type = ExpectedType;
             if (Helpers.IsValueType(type))
@@ -70,7 +70,7 @@ namespace ProtoBuf.Serializers
             }
             ctx.EmitBasicWrite("WriteString", valueFrom, this);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadString", typeof(string));
             ctx.EmitCall(parse);

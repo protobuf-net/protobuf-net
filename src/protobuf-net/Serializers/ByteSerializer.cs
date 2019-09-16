@@ -2,15 +2,15 @@
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class ByteSerializer : IProtoSerializer
+    internal sealed class ByteSerializer : IRuntimeProtoSerializerNode
     {
         public Type ExpectedType { get { return expectedType; } }
 
         private static readonly Type expectedType = typeof(byte);
 
-        bool IProtoSerializer.RequiresOldValue => false;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
 
-        bool IProtoSerializer.ReturnsValue => true;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         public void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
         {
@@ -23,12 +23,12 @@ namespace ProtoBuf.Serializers
             return source.ReadByte(ref state);
         }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteByte", valueFrom, this);
         }
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadByte", ExpectedType);
         }

@@ -11,7 +11,7 @@ namespace ProtoBuf.Serializers
 
         public override bool RequiresOldValue => true;
         public override bool ReturnsValue => false;
-        public FieldDecorator(Type forType, FieldInfo field, IProtoSerializer tail) : base(tail)
+        public FieldDecorator(Type forType, FieldInfo field, IRuntimeProtoSerializerNode tail) : base(tail)
         {
             Helpers.DebugAssert(forType != null);
             Helpers.DebugAssert(field != null);

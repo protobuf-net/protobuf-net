@@ -4,7 +4,7 @@ using ProtoBuf.Meta;
 namespace ProtoBuf.Serializers
 {
     internal sealed class CompiledSerializer<T> : CompiledSerializer,
-        IBasicSerializer<T>, IBasicDeserializer<T>
+        IProtoSerializer<T>, IProtoDeserializer<T>
     {
         private readonly Compiler.ProtoSerializer<T> serializer;
         private readonly Compiler.ProtoDeserializer<T> deserializer;
@@ -29,13 +29,13 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        T IBasicDeserializer<T>.Deserialize(ProtoReader reader, ref ProtoReader.State state, T value)
+        T IProtoDeserializer<T>.Deserialize(ProtoReader reader, ref ProtoReader.State state, T value)
             => deserializer(reader, ref state, value);
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
             => deserializer(source, ref state, (T)value);
 
-        void IBasicSerializer<T>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
+        void IProtoSerializer<T>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => serializer(writer, ref state, value);
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
@@ -90,9 +90,9 @@ namespace ProtoBuf.Serializers
             this.head = head;
         }
 
-        bool IProtoSerializer.RequiresOldValue => head.RequiresOldValue;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => head.RequiresOldValue;
 
-        bool IProtoSerializer.ReturnsValue => head.ReturnsValue;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => head.ReturnsValue;
 
         public Type ExpectedType => head.ExpectedType;
 
@@ -100,12 +100,12 @@ namespace ProtoBuf.Serializers
 
         public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             head.EmitWrite(ctx, valueFrom);
         }
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             head.EmitRead(ctx, valueFrom);
         }

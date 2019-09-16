@@ -2,14 +2,14 @@
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class DateTimeSerializer : IProtoSerializer
+    internal sealed class DateTimeSerializer : IRuntimeProtoSerializerNode
     {
         private static readonly Type expectedType = typeof(DateTime);
 
         public Type ExpectedType => expectedType;
 
-        bool IProtoSerializer.RequiresOldValue => false;
-        bool IProtoSerializer.ReturnsValue => true;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
         private readonly bool includeKind, wellKnown;
 
@@ -42,14 +42,14 @@ namespace ProtoBuf.Serializers
                 BclHelpers.WriteDateTime((DateTime)value, dest, ref state);
         }
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitWrite<BclHelpers>(
                 wellKnown ? nameof(BclHelpers.WriteTimestamp)
                 : includeKind ? nameof(BclHelpers.WriteDateTimeWithKind) : nameof(BclHelpers.WriteDateTime), valueFrom, this);
         }
 
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             if (wellKnown) ctx.LoadValue(entity);
             ctx.EmitBasicRead<BclHelpers>(

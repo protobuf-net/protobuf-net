@@ -2,7 +2,7 @@
 
 namespace ProtoBuf.Serializers
 {
-    internal sealed class BooleanSerializer : IProtoSerializer
+    internal sealed class BooleanSerializer : IRuntimeProtoSerializerNode
     {
         private static readonly Type expectedType = typeof(bool);
 
@@ -19,15 +19,15 @@ namespace ProtoBuf.Serializers
             return source.ReadBoolean(ref state);
         }
 
-        bool IProtoSerializer.RequiresOldValue => false;
+        bool IRuntimeProtoSerializerNode.RequiresOldValue => false;
 
-        bool IProtoSerializer.ReturnsValue => true;
+        bool IRuntimeProtoSerializerNode.ReturnsValue => true;
 
-        void IProtoSerializer.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+        void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.EmitBasicWrite("WriteBoolean", valueFrom, this);
         }
-        void IProtoSerializer.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
+        void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local entity)
         {
             ctx.EmitBasicRead("ReadBoolean", ExpectedType);
         }

@@ -484,15 +484,15 @@ namespace ProtoBuf.Meta
         {
             public Type Type { get; }
 
-            public IProtoSerializer Serializer { get; }
+            public IRuntimeProtoSerializerNode Serializer { get; }
 
-            public BasicType(Type type, IProtoSerializer serializer)
+            public BasicType(Type type, IRuntimeProtoSerializerNode serializer)
             {
                 Type = type;
                 Serializer = serializer;
             }
         }
-        internal IProtoSerializer TryGetBasicTypeSerializer(Type type)
+        internal IRuntimeProtoSerializerNode TryGetBasicTypeSerializer(Type type)
         {
             int idx = basicTypes.IndexOf(BasicTypeFinder, type);
 
@@ -505,7 +505,7 @@ namespace ProtoBuf.Meta
                 if (idx >= 0) return ((BasicType)basicTypes[idx]).Serializer;
 
                 MetaType.AttributeFamily family = MetaType.GetContractFamily(this, type, null);
-                IProtoSerializer ser = family == MetaType.AttributeFamily.None
+                IRuntimeProtoSerializerNode ser = family == MetaType.AttributeFamily.None
                     ? ValueMember.TryGetCoreSerializer(this, DataFormat.Default, type, out WireType defaultWireType, false, false, false, false)
                     : null;
 
@@ -762,16 +762,16 @@ namespace ProtoBuf.Meta
             => throw new NotSupportedException(nameof(GetService) + " should not be used directly");
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override IBasicDeserializer<T> GetBasicDeserializer<T>()
-            => GetServices<T>() as IBasicDeserializer<T>;
+        protected internal override IProtoDeserializer<T> GetDeserializer<T>()
+            => GetServices<T>() as IProtoDeserializer<T>;
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override IBasicSerializer<T> GetBasicSerializer<T>()
-            => GetServices<T>() as IBasicSerializer<T>;
+        protected internal override IProtoSerializer<T> GetSerializer<T>()
+            => GetServices<T>() as IProtoSerializer<T>;
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override ISubTypeSerializer<T> GetSubTypeSerializer<T>()
-            => GetServices<T>() as ISubTypeSerializer<T>;
+        protected internal override IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>()
+            => GetServices<T>() as IProtoSubTypeSerializer<T>;
 
         /// <summary>Resolve a service relative to T</summary>
         protected internal override IProtoFactory<T> GetFactory<T>()
@@ -864,7 +864,7 @@ namespace ProtoBuf.Meta
         protected internal override object DeserializeCore(ProtoReader source, ref ProtoReader.State state, int key, object value)
         {
             //Helpers.DebugWriteLine("Deserialize", value);
-            IProtoSerializer ser = ((MetaType)types[key]).Serializer;
+            IRuntimeProtoSerializerNode ser = ((MetaType)types[key]).Serializer;
             if (value == null && Helpers.IsValueType(ser.ExpectedType))
             {
                 if (ser.RequiresOldValue) value = Activator.CreateInstance(ser.ExpectedType);
@@ -877,7 +877,7 @@ namespace ProtoBuf.Meta
         }
 
         // this is used by some unit-tests; do not remove
-        internal Compiler.ProtoSerializer<TActual> GetSerializer<TActual>(IProtoSerializer serializer, bool compiled)
+        internal Compiler.ProtoSerializer<TActual> GetSerializer<TActual>(IRuntimeProtoSerializerNode serializer, bool compiled)
         {
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
 
@@ -900,18 +900,6 @@ namespace ProtoBuf.Meta
                 type.CompileInPlace();
             }
         }
-
-        //internal override IProtoSerializer GetTypeSerializer(Type type)
-        //{   // this list is thread-safe for reading
-        //    .Serializer;
-        //}
-        //internal override IProtoSerializer GetTypeSerializer(int key)
-        //{   // this list is thread-safe for reading
-        //    MetaType type = (MetaType)types.TryGet(key);
-        //    if (type != null) return type.Serializer;
-        //    throw new KeyNotFoundException();
-
-        //}
 
         private void BuildAllSerializers()
         {
@@ -1558,15 +1546,15 @@ namespace ProtoBuf.Meta
                 }
                 ctx.Return();
 
-                var serType = typeof(IBasicSerializer<>).MakeGenericType(runtimeType);
+                var serType = typeof(IProtoSerializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
                 var namePrefix = $"{serType.Name}<{runtimeType.Name}>.";
-                StaticCallReadWrite(type, serType.GetMethod(nameof(IBasicSerializer<int>.Serialize)), pair.Serialize, namePrefix);
+                StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoSerializer<int>.Serialize)), pair.Serialize, namePrefix);
 
-                serType = typeof(IBasicDeserializer<>).MakeGenericType(runtimeType);
+                serType = typeof(IProtoDeserializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
                 namePrefix = $"{serType.Name}<{runtimeType.Name}>.";
-                StaticCallReadWrite(type, serType.GetMethod(nameof(IBasicDeserializer<int>.Deserialize)), pair.Deserialize, namePrefix);
+                StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoDeserializer<int>.Deserialize)), pair.Deserialize, namePrefix);
             }
         }
 
@@ -1904,7 +1892,7 @@ namespace ProtoBuf.Meta
 
             if (effectiveType == typeof(byte[])) return "bytes";
 
-            IProtoSerializer ser = ValueMember.TryGetCoreSerializer(this, dataFormat, effectiveType, out var _, false, false, false, false);
+            IRuntimeProtoSerializerNode ser = ValueMember.TryGetCoreSerializer(this, dataFormat, effectiveType, out var _, false, false, false, false);
             if (ser == null)
             {   // model type
                 if (asReference || dynamicType)

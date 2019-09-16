@@ -12,7 +12,7 @@ namespace ProtoBuf.Serializers
         public override bool ReturnsValue => Tail.ReturnsValue;
 
         private readonly MethodInfo getSpecified, setSpecified;
-        public MemberSpecifiedDecorator(MethodInfo getSpecified, MethodInfo setSpecified, IProtoSerializer tail)
+        public MemberSpecifiedDecorator(MethodInfo getSpecified, MethodInfo setSpecified, IRuntimeProtoSerializerNode tail)
             : base(tail)
         {
             if (getSpecified == null && setSpecified == null) throw new InvalidOperationException();
