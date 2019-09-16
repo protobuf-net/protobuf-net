@@ -190,6 +190,21 @@ namespace ProtoBuf
                 }
             }
 
+            protected internal override void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer)
+            {
+                switch (WireType)
+                {
+                    case WireType.String:
+                    case WireType.Fixed32:
+                        WriteWithLengthPrefix<T>(ref state, value, serializer);
+                        return;
+                    case WireType.StartGroup:
+                    default:
+                        base.WriteSubType<T>(ref state, value, serializer);
+                        return;
+                }
+            }
+
             private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSerializer<T> serializer, PrefixStyle style)
             {
                 long calculatedLength;
@@ -225,6 +240,37 @@ namespace ProtoBuf
                     default:
                         throw new NotImplementedException($"Sub-object prefix style not implemented: {style}");
                 }
+                var oldPos = GetPosition(ref state);
+                serializer.Serialize(this, ref state, value);
+                var newPos = GetPosition(ref state);
+
+                var actualLength = (newPos - oldPos);
+                if (actualLength != calculatedLength)
+                {
+                    throw new InvalidOperationException($"Length mismatch; calculated '{calculatedLength}', actual '{actualLength}'");
+                }
+            }
+
+            private void WriteWithLengthPrefix<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer)
+                where T : class
+            {
+                long calculatedLength;
+                using (var nullWriter = NullProtoWriter.CreateNullImpl(Model, Context, out var nulState))
+                {
+                    try
+                    {
+                        serializer.Serialize(nullWriter, ref nulState, value);
+                        nullWriter.Close(ref nulState);
+                        calculatedLength = nullWriter.GetPosition(ref state);
+                    }
+                    catch
+                    {
+                        nullWriter.Abandon();
+                        throw;
+                    }
+                }
+
+                AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
                 var oldPos = GetPosition(ref state);
                 serializer.Serialize(this, ref state, value);
                 var newPos = GetPosition(ref state);

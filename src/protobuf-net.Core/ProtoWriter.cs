@@ -1128,16 +1128,18 @@ namespace ProtoBuf
         }
 
         public static void WriteSubType<T>(T value, ProtoWriter writer, ref State state, IProtoSubTypeSerializer<T> serializer = null) where T : class
-            => writer.WriteSubType<T>(ref state, value, serializer);
+        {
+            if (value != null) writer.WriteSubType<T>(ref state, value, serializer ?? TypeModel.GetSubTypeSerializer<T>(writer.model));
+        }
 
         public static void WriteBaseType<T>(T value, ProtoWriter writer, ref State state, IProtoSubTypeSerializer<T> serializer = null) where T : class
             => (serializer ?? TypeModel.GetSubTypeSerializer<T>(writer.model)).Serialize(writer, ref state, value);
 
-        protected internal virtual void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer = null) where T : class
+        protected internal virtual void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer) where T : class
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = StartSubItem(ref state, null, PrefixStyle.Base128);
-            (serializer ?? TypeModel.GetSubTypeSerializer<T>(model)).Serialize(this, ref state, value);
+            serializer.Serialize(this, ref state, value);
             EndSubItem(ref state, tok, PrefixStyle.Base128);
 #pragma warning restore CS0618
         }
