@@ -757,21 +757,55 @@ namespace ProtoBuf.Meta
             return GetKey(type, false, true);
         }
 
-        /// <inheritdoc/>
+        /// <summary>Resolve a service relative to T</summary>
+        protected internal override T GetService<T>()
+            => throw new NotSupportedException(nameof(GetService) + " should not be used directly");
+
+        /// <summary>Resolve a service relative to T</summary>
         protected internal override IBasicDeserializer<T> GetBasicDeserializer<T>()
-            => GetService<T, IBasicDeserializer<T>>() ?? base.GetBasicDeserializer<T>();
+            => GetServices<T>() as IBasicDeserializer<T>;
 
-        /// <inheritdoc/>
+        /// <summary>Resolve a service relative to T</summary>
         protected internal override IBasicSerializer<T> GetBasicSerializer<T>()
-            => GetService<T, IBasicSerializer<T>>() ?? base.GetBasicSerializer<T>();
+            => GetServices<T>() as IBasicSerializer<T>;
 
-        private TService GetService<T, TService>() where TService : class
+        /// <summary>Resolve a service relative to T</summary>
+        protected internal override ISubTypeSerializer<T> GetSubTypeSerializer<T>()
+            => GetServices<T>() as ISubTypeSerializer<T>;
+
+        /// <summary>Resolve a service relative to T</summary>
+        protected internal override IProtoFactory<T> GetFactory<T>()
+            => GetServices<T>() as IProtoFactory<T>;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private object GetServices<T>()
+            => (_serviceCache[typeof(T)] ?? GetServicesSlow(typeof(T)));
+
+
+        private readonly Hashtable _serviceCache = new Hashtable();
+        internal void ResetServiceCache(Type type)
         {
-            int typeIndex = GetKey(typeof(T), false, false);
+            if (type != null)
+            {
+                lock (_serviceCache)
+                {
+                    _serviceCache.Remove(type);
+                }
+            }
+        }
+
+        private object GetServicesSlow(Type type)
+        {
+            int typeIndex = GetKey(type, false, false);
             if (typeIndex >= 0)
             {
                 var mt = (MetaType)types[typeIndex];
-                if (mt.Serializer is TService typed) return typed;
+                var service = mt.Serializer;
+                lock (_serviceCache)
+                {
+                    _serviceCache[type] = service;
+                }
+                return service;
             }
             return null;
         }

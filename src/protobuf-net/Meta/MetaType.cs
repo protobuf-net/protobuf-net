@@ -44,7 +44,7 @@ namespace ProtoBuf.Meta
         /// </summary>
         public MetaType BaseType => baseType;
 
-        internal TypeModel Model => model;
+        internal RuntimeTypeModel Model => model;
 
         /// <summary>
         /// When used to compile a model, should public serialization/deserialzation methods
@@ -310,22 +310,22 @@ namespace ProtoBuf.Meta
         /// </summary>
         public Type Type { get; }
 
-        private IProtoTypeSerializer serializer;
+        private IProtoTypeSerializer _serializer;
         internal IProtoTypeSerializer Serializer
         {
             get
             {
-                if (serializer == null)
+                if (_serializer == null)
                 {
                     int opaqueToken = 0;
                     try
                     {
                         model.TakeLock(ref opaqueToken);
-                        if (serializer == null)
+                        if (_serializer == null)
                         { // double-check, but our main purpse with this lock is to ensure thread-safety with
                             // serializers needing to wait until another thread has finished adding the properties
                             SetFlag(OPTIONS_Frozen, true, false);
-                            serializer = BuildSerializer();
+                            _serializer = BuildSerializer();
 
                             if (model.AutoCompile) CompileInPlace();
                         }
@@ -335,7 +335,7 @@ namespace ProtoBuf.Meta
                         model.ReleaseLock(opaqueToken);
                     }
                 }
-                return serializer;
+                return _serializer;
             }
         }
         internal bool IsList
@@ -1513,9 +1513,10 @@ namespace ProtoBuf.Meta
         /// <remarks>An in-place compile can access non-public types / members</remarks>
         public void CompileInPlace()
         {
-            if (!(serializer is CompiledSerializer))
+            if (!(_serializer is CompiledSerializer))
             {
-                serializer = CompiledSerializer.Wrap(Serializer, model);
+                _serializer = CompiledSerializer.Wrap(Serializer, model);
+                Model.ResetServiceCache(Type);
             }
         }
 
@@ -1600,7 +1601,7 @@ namespace ProtoBuf.Meta
 
         internal static MetaType GetRootType(MetaType source)
         {
-            while (source.serializer != null)
+            while (source._serializer != null)
             {
                 MetaType tmp = source.baseType;
                 if (tmp == null) return source;
@@ -1626,7 +1627,7 @@ namespace ProtoBuf.Meta
 
         internal bool IsPrepared()
         {
-            return serializer is CompiledSerializer;
+            return _serializer is CompiledSerializer;
         }
 
         internal IEnumerable Fields => this.fields;
