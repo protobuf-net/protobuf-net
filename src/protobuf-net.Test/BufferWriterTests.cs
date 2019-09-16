@@ -57,9 +57,9 @@ namespace ProtoBuf.Tests
             public static IProtoDeserializer<Foo> Deserializer => s_inst;
             sealed class FooSerializer : IProtoSerializer<Foo>, IProtoDeserializer<Foo>
             {
-                public Foo Deserialize(ProtoReader reader, ref ProtoReader.State state, Foo value) => value;
+                public Foo Read(ProtoReader reader, ref ProtoReader.State state, Foo value) => value;
 
-                public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, Foo value) { }
+                public void Write(ProtoWriter writer, ref ProtoWriter.State state, Foo value) { }
             }
         }
 
@@ -110,7 +110,7 @@ namespace ProtoBuf.Tests
         {
             public ASerializer(ITestOutputHelper log) => Log = log;
             public ITestOutputHelper Log { get; }
-            public A Deserialize(ProtoReader reader, ref ProtoReader.State state, A value)
+            public A Read(ProtoReader reader, ref ProtoReader.State state, A value)
             {
                 int fieldHeader;
                 if (value == null) value = new A();
@@ -132,7 +132,7 @@ namespace ProtoBuf.Tests
                 return value;
             }
 
-            public void Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
+            public void Write(ProtoWriter writer, ref ProtoWriter.State state, A value)
             {
 #pragma warning disable CS0618
                 Log?.WriteLine($"Writing to {writer.GetType().Name}");
@@ -179,7 +179,7 @@ namespace ProtoBuf.Tests
                 {
                     A obj = CreateModel(depth);
                     var ser = new ASerializer(Log);
-                    ser.Serialize(writer, ref state, obj);
+                    ser.Write(writer, ref state, obj);
                     writer.Close(ref state);
                 }
             }
@@ -199,7 +199,7 @@ namespace ProtoBuf.Tests
                 {
                     A obj = CreateModel(depth);
                     var ser = new ASerializer(Log);
-                    ser.Serialize(writer, ref state, obj);
+                    ser.Write(writer, ref state, obj);
                     writer.Close(ref state);
                 }
             }

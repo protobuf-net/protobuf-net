@@ -1122,7 +1122,7 @@ namespace ProtoBuf
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = StartSubItem(ref state, TypeHelper<T>.IsObjectType & recursionCheck ? (object)value : null, style);
-            (serializer ?? TypeModel.GetBasicSerializer<T>(model)).Serialize(this, ref state, value);
+            (serializer ?? TypeModel.GetBasicSerializer<T>(model)).Write(this, ref state, value);
             EndSubItem(ref state, tok, style);
 #pragma warning restore CS0618
         }
@@ -1133,13 +1133,13 @@ namespace ProtoBuf
         }
 
         public static void WriteBaseType<T>(T value, ProtoWriter writer, ref State state, IProtoSubTypeSerializer<T> serializer = null) where T : class
-            => (serializer ?? TypeModel.GetSubTypeSerializer<T>(writer.model)).Serialize(writer, ref state, value);
+            => (serializer ?? TypeModel.GetSubTypeSerializer<T>(writer.model)).WriteSubType(writer, ref state, value);
 
         protected internal virtual void WriteSubType<T>(ref State state, T value, IProtoSubTypeSerializer<T> serializer) where T : class
         {
 #pragma warning disable CS0618 // StartSubItem/EndSubItem
             var tok = StartSubItem(ref state, null, PrefixStyle.Base128);
-            serializer.Serialize(this, ref state, value);
+            serializer.WriteSubType(this, ref state, value);
             EndSubItem(ref state, tok, PrefixStyle.Base128);
 #pragma warning restore CS0618
         }
@@ -1156,7 +1156,7 @@ namespace ProtoBuf
                 if (value != null)
                 {
                     SetRootObject(value);
-                    (serializer ?? TypeModel.GetBasicSerializer<T>(model)).Serialize(this, ref state, value);
+                    (serializer ?? TypeModel.GetBasicSerializer<T>(model)).Write(this, ref state, value);
                 }
                 CheckClear(ref state);
                 long after = GetPosition(ref state);

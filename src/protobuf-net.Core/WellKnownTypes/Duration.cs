@@ -45,7 +45,7 @@ namespace ProtoBuf.WellKnownTypes
 
     partial class WellKnownSerializer : IProtoSerializer<Duration>, IProtoDeserializer<Duration>
     {
-        Duration IProtoDeserializer<Duration>.Deserialize(ProtoReader reader, ref ProtoReader.State state, Duration value)
+        Duration IProtoDeserializer<Duration>.Read(ProtoReader reader, ref ProtoReader.State state, Duration value)
             => ReadDuration(reader, ref state, value);
 
         private static Duration ReadDuration(ProtoReader reader, ref ProtoReader.State state, Duration value)
@@ -108,7 +108,7 @@ namespace ProtoBuf.WellKnownTypes
             return new Duration(seconds, nanos);
         }
 
-        void IProtoSerializer<Duration>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, Duration value)
+        void IProtoSerializer<Duration>.Write(ProtoWriter writer, ref ProtoWriter.State state, Duration value)
             => WriteSecondsNanos(writer, ref state, value.Seconds, value.Nanoseconds);
 
         internal static long ToDurationSeconds(TimeSpan value, out int nanos)

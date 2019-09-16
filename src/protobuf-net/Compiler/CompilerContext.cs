@@ -257,9 +257,14 @@ namespace ProtoBuf.Compiler
             this.MetadataVersion = metadataVersion;
             if (inputType != null) InputValue = new Local(null, inputType);
             TraceCompile(">> " + traceName);
-
+            _traceName = traceName;
+            IsStatic = isStatic;
             GetOpCodes(isWriter, isStatic, out _state, out _readerWriter, out _inputArg);
         }
+
+        public bool IsStatic { get; }
+
+        private readonly string _traceName;
 
         private readonly OpCode _readerWriter, _state;
         private readonly byte _inputArg;
@@ -297,6 +302,21 @@ namespace ProtoBuf.Compiler
             this.il = method.GetILGenerator();
             if (inputType != null) InputValue = new Local(null, inputType);
             TraceCompile(">> " + method.Name);
+            _traceName = method.Name;
+            IsStatic = isStatic;
+        }
+
+        public void LoadSelfAsService<T>() where T : class
+        {
+            if (IsStatic)
+            {
+                LoadNullRef();
+            }
+            else
+            {
+                Emit(OpCodes.Ldarg_0);
+                TryCast(typeof(T));
+            }
         }
 
         private readonly ILGenerator il;
@@ -408,7 +428,7 @@ namespace ProtoBuf.Compiler
         {
             if (!isWriter)
             {
-                throw new InvalidOperationException("Tried to load writer, but was a reader");
+                throw new InvalidOperationException("Tried to load writer, but was a reader; " + _traceName);
             }
             Emit(_readerWriter);
             if (withState) Emit(_state);
@@ -417,7 +437,7 @@ namespace ProtoBuf.Compiler
         {
             if (isWriter)
             {
-                throw new InvalidOperationException("Tried to load reader, but was a writer");
+                throw new InvalidOperationException("Tried to load reader, but was a writer; " + _traceName);
             }
             Emit(_readerWriter);
             if (withState) Emit(_state);
@@ -1412,6 +1432,7 @@ namespace ProtoBuf.Compiler
         }
 
         public ILVersion MetadataVersion { get; }
+
         public enum ILVersion
         {
             Net1, Net2

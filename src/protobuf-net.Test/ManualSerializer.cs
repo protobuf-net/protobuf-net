@@ -274,17 +274,16 @@ namespace ProtoBuf
         //    }
         //}
 
-        void IProtoSerializer<A>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
-            => ((IProtoSubTypeSerializer<A>)this).Serialize(writer, ref state, value);
-
-        A IProtoDeserializer<A>.Deserialize(ProtoReader reader, ref ProtoReader.State state, A value)
+        void IProtoSerializer<A>.Write(ProtoWriter writer, ref ProtoWriter.State state, A value)
+            => ProtoWriter.WriteBaseType<A>(value, writer, ref state, this);
+        A IProtoDeserializer<A>.Read(ProtoReader reader, ref ProtoReader.State state, A value)
             => reader.ReadBaseType<A, A>(ref state, value, this);
-        B IProtoDeserializer<B>.Deserialize(ProtoReader reader, ref ProtoReader.State state, B value)
+        B IProtoDeserializer<B>.Read(ProtoReader reader, ref ProtoReader.State state, B value)
             => reader.ReadBaseType<A, B>(ref state, value, this);
-        C IProtoDeserializer<C>.Deserialize(ProtoReader reader, ref ProtoReader.State state, C value)
+        C IProtoDeserializer<C>.Read(ProtoReader reader, ref ProtoReader.State state, C value)
             => reader.ReadBaseType<A, C>(ref state, value, this);
 
-        void IProtoSubTypeSerializer<A>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
+        void IProtoSubTypeSerializer<A>.WriteSubType(ProtoWriter writer, ref ProtoWriter.State state, A value)
         {
             if (TypeModel.IsSubType<A>(value))
             {
@@ -305,7 +304,7 @@ namespace ProtoBuf
             }
         }
 
-        A IProtoSubTypeSerializer<A>.Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<A> value)
+        A IProtoSubTypeSerializer<A>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<A> value)
         {
             int field;
             value.OnBeforeDeserialize((obj, ctx) => obj.OnBeforeDeserialize());
@@ -327,7 +326,7 @@ namespace ProtoBuf
             return value.OnAfterDeserialize((obj, ctx) => obj.OnAfterDeserialize());
         }
 
-        void IProtoSubTypeSerializer<B>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, B value)
+        void IProtoSubTypeSerializer<B>.WriteSubType(ProtoWriter writer, ref ProtoWriter.State state, B value)
         {
             if (TypeModel.IsSubType<B>(value))
             {
@@ -348,7 +347,7 @@ namespace ProtoBuf
             }
         }
 
-        B IProtoSubTypeSerializer<B>.Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<B> value)
+        B IProtoSubTypeSerializer<B>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<B> value)
         {
             int field;
             while ((field = reader.ReadFieldHeader(ref state)) != 0)
@@ -369,7 +368,7 @@ namespace ProtoBuf
             return value.Value;
         }
 
-        void IProtoSubTypeSerializer<C>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, C value)
+        void IProtoSubTypeSerializer<C>.WriteSubType(ProtoWriter writer, ref ProtoWriter.State state, C value)
         {
             TypeModel.ThrowUnexpectedSubtype<C>(value);
             if (value.CVal != 0)
@@ -379,7 +378,7 @@ namespace ProtoBuf
             }
         }
 
-        C IProtoSubTypeSerializer<C>.Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<C> value)
+        C IProtoSubTypeSerializer<C>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<C> value)
         {
             int field;
             while ((field = reader.ReadFieldHeader(ref state)) != 0)

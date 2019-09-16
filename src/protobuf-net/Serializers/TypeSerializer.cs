@@ -1,6 +1,7 @@
 ﻿using System;
 using ProtoBuf.Meta;
 using System.Reflection;
+using ProtoBuf.Compiler;
 
 namespace ProtoBuf.Serializers
 {
@@ -22,35 +23,60 @@ namespace ProtoBuf.Serializers
         where TBase : class
         where T : class, TBase
     {
+        public override bool HasInheritance => true;
+
         internal override Type BaseType => typeof(TBase);
 
-        public override void Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
+        public override void Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => ProtoWriter.WriteBaseType<TBase>(value, writer, ref state);
 
-        public override T Deserialize(ProtoReader reader, ref ProtoReader.State state, T value)
+        public override T Read(ProtoReader reader, ref ProtoReader.State state, T value)
             => reader.ReadBaseType<TBase, T>(ref state, value);
 
-        T IProtoSubTypeSerializer<T>.Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value)
+        T IProtoSubTypeSerializer<T>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value)
             => DeserializeImpl(reader, ref state, value);
 
-        void IProtoSubTypeSerializer<T>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
+        void IProtoSubTypeSerializer<T>.WriteSubType(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => SerializeImpl(writer, ref state, value);
+
+        public override void EmitReadRoot(CompilerContext context, Local valueFrom)
+        {   // => reader.ReadBaseType<TBase, T>(ref state, value, this);
+            context.LoadReader(true);
+            context.LoadValue(valueFrom);
+            context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>();
+            context.EmitCall(typeof(ProtoReader).GetMethod(nameof(ProtoReader.ReadBaseType), BindingFlags.Public | BindingFlags.Instance)
+                .MakeGenericMethod(typeof(TBase), typeof(T)));
+        }
+        public override void EmitWriteRoot(CompilerContext context, Local valueFrom)
+        {   // => ProtoWriter.WriteBaseType<TBase>(value, writer, ref state, this);
+            context.LoadValue(valueFrom);
+            context.LoadWriter(true);
+            context.LoadSelfAsService<IProtoSubTypeSerializer<TBase>>();
+            context.EmitCall(typeof(ProtoWriter).GetMethod(nameof(ProtoWriter.WriteBaseType), BindingFlags.Public | BindingFlags.Static)
+                .MakeGenericMethod(typeof(TBase)));
+        }
     }
     internal class TypeSerializer<T> : TypeSerializer, IProtoSerializer<T>, IProtoDeserializer<T>, IProtoFactory<T>, IProtoTypeSerializer
     {
+        public virtual bool HasInheritance => false;
+        public virtual void EmitReadRoot(CompilerContext context, Local valueFrom)
+            => ((IRuntimeProtoSerializerNode)this).EmitRead(context, valueFrom);
+        public virtual void EmitWriteRoot(CompilerContext context, Local valueFrom)
+            => ((IRuntimeProtoSerializerNode)this).EmitWrite(context, valueFrom);
+
         T IProtoFactory<T>.Create(ISerializationContext context) => (T)CreateInstance(context);
 
-        public virtual void Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
+        public virtual void Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => SerializeImpl(writer, ref state, value);
 
-        public virtual T Deserialize(ProtoReader reader, ref ProtoReader.State state, T value)
+        public virtual T Read(ProtoReader reader, ref ProtoReader.State state, T value)
             => DeserializeImpl(reader, ref state, new SubTypeState<T>(reader, null, value));
 
         void IRuntimeProtoSerializerNode.Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
-            => Serialize(dest, ref state, (T)value);
+            => Write(dest, ref state, (T)value);
 
         object IRuntimeProtoSerializerNode.Read(ProtoReader source, ref ProtoReader.State state, object value)
-            => Deserialize(source, ref state, (T)value);
+            => Read(source, ref state, (T)value);
 
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {

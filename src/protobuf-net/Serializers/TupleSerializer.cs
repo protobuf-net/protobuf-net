@@ -159,6 +159,14 @@ namespace ProtoBuf.Serializers
         bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
         void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject) { throw new NotSupportedException(); }
 
+        void IProtoTypeSerializer.EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => EmitRead(ctx, valueFrom);
+
+        void IProtoTypeSerializer.EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => EmitWrite(ctx, valueFrom);
+
+        bool IProtoTypeSerializer.HasInheritance => false;
+
         public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local incoming)
         {
             using (Compiler.Local objValue = ctx.GetLocalWithValue(ExpectedType, incoming))

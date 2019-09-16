@@ -79,6 +79,14 @@ namespace ProtoBuf.Serializers
             Tail.Write(dest, ref state, value);
         }
 
+        bool IProtoTypeSerializer.HasInheritance => false;
+
+        void IProtoTypeSerializer.EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => EmitRead(ctx, valueFrom);
+
+        void IProtoTypeSerializer.EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => EmitWrite(ctx, valueFrom);
+
         protected override void EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             ctx.LoadValue((int)fieldNumber);

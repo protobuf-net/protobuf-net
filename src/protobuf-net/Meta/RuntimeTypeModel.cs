@@ -1530,64 +1530,82 @@ namespace ProtoBuf.Meta
                 SerializerPair pair = methodPairs[index];
 
                 var metaType = pair.Type;
+                var serializer = metaType.Serializer;
                 var runtimeType = metaType.Type;
                 ctx = new Compiler.CompilerContext(scope, pair.SerializeBody, true, true, methodPairs, this, ilVersion, assemblyName, runtimeType, "SerializeImpl " + runtimeType.Name);
                 MemberInfo returnType = pair.Deserialize.ReturnType;
 
 
                 ctx.CheckAccessibility(ref returnType);
-                metaType.Serializer.EmitWrite(ctx, ctx.InputValue);
+                serializer.EmitWrite(ctx, ctx.InputValue);
                 ctx.Return();
 
                 ctx = new Compiler.CompilerContext(scope, pair.DeserializeBody, true, false, methodPairs, this, ilVersion, assemblyName, runtimeType, "DeserializeImpl " + runtimeType.Name);
-                metaType.Serializer.EmitRead(ctx, ctx.InputValue);
-                if (!metaType.Serializer.ReturnsValue)
+                serializer.EmitRead(ctx, ctx.InputValue);
+                if (!serializer.ReturnsValue)
                 {
                     ctx.LoadValue(ctx.InputValue);
                 }
                 ctx.Return();
 
+
+                Type inheritanceRoot = metaType.GetInheritanceRoot();
+                
                 // we always emit the deserializer
                 var serType = typeof(IProtoDeserializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
-                StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoDeserializer<int>.Deserialize)), pair.Deserialize,
-                    CompilerContextScope.CSName(serType) + ".");
+
+                var il = CompilerContextScope.Implement(type, serType, nameof(IProtoDeserializer<string>.Read));
+                ctx = new CompilerContext(scope, il, false, false, null, this,
+                     ilVersion, assemblyName, runtimeType, nameof(IProtoDeserializer<string>.Read));
+                if (serializer.HasInheritance) serializer.EmitReadRoot(ctx, ctx.InputValue);
+                else serializer.EmitRead(ctx, ctx.InputValue);
+                ctx.Return();
 
                 // the serializer is variant; we only emit it if this is a basic type, or if we're the root
-                Type inheritanceRoot = metaType.GetInheritanceRoot();
-                if (inheritanceRoot == null || ReferenceEquals(inheritanceRoot, metaType.Type))
+                if (!serializer.HasInheritance || ReferenceEquals(inheritanceRoot, metaType.Type))
                 {
                     serType = typeof(IProtoSerializer<>).MakeGenericType(runtimeType);
                     type.AddInterfaceImplementation(serType);
 
-                    StaticCallReadWrite(type, serType.GetMethod(nameof(IProtoSerializer<int>.Serialize)), pair.Serialize,
-                        CompilerContextScope.CSName(serType) + ".");
+                    il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Write));
+                    ctx = new CompilerContext(scope, il, false, true, null, this,
+                         ilVersion, assemblyName, runtimeType, nameof(IProtoSerializer<string>.Write));
+                    if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
+                    else serializer.EmitWrite(ctx, ctx.InputValue);
+                    ctx.Return();
                 }
 
                 // and we emit the sub-type serializer whenever inheritance is involved
-                if (inheritanceRoot != null)
+                if (serializer.HasInheritance)
                 {
                     serType = typeof(IProtoSubTypeSerializer<>).MakeGenericType(runtimeType);
                     type.AddInterfaceImplementation(serType);
-                    var il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.Serialize));
-                    il.ThrowException(typeof(NotImplementedException));
 
-                    il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.Deserialize));
-                    il.ThrowException(typeof(NotImplementedException));
+                    il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
+                    ctx = new CompilerContext(scope, il, false, true, null, this,
+                         ilVersion, assemblyName, runtimeType, nameof(IProtoSubTypeSerializer<string>.WriteSubType));
+                    serializer.EmitWrite(ctx, ctx.InputValue);
+                    ctx.Return();
+
+                    il = CompilerContextScope.Implement(type, serType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
+                    ctx = new CompilerContext(scope, il, false, false, null, this,
+                         ilVersion, assemblyName, runtimeType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
+                    serializer.EmitRead(ctx, ctx.InputValue);
+                    ctx.Return();
                 }
 
                 // if we're constructor skipping, provide a factory for that
-                
-                if (metaType.Serializer.ShouldEmitCreateInstance)
+                if (serializer.ShouldEmitCreateInstance)
                 {
                     serType = typeof(IProtoFactory<>).MakeGenericType(runtimeType);
                     type.AddInterfaceImplementation(serType);
-                    var il = CompilerContextScope.Implement(type, serType, nameof(IProtoFactory<string>.Create));
 
-                    var emitCtx = new CompilerContext(scope, il, false, false, null, this,
+                    il = CompilerContextScope.Implement(type, serType, nameof(IProtoFactory<string>.Create));
+                    ctx = new CompilerContext(scope, il, false, false, null, this,
                          ilVersion, assemblyName, null, nameof(IProtoFactory<string>.Create));
-                    metaType.Serializer.EmitCreateInstance(emitCtx, false);
-                    il.Emit(OpCodes.Ret);
+                    serializer.EmitCreateInstance(ctx, false);
+                    ctx.Return();
                 }
             }
         }

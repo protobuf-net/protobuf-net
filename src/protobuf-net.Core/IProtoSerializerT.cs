@@ -12,7 +12,7 @@ namespace ProtoBuf
         /// <summary>
         /// Serialize an instance to the supplied writer
         /// </summary>
-        void Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value);
+        void Write(ProtoWriter writer, ref ProtoWriter.State state, T value);
     }
 
     public interface IProtoDeserializer<T>
@@ -20,7 +20,7 @@ namespace ProtoBuf
         /// <summary>
         /// Deserialize an instance from the supplied writer
         /// </summary>
-        T Deserialize(ProtoReader reader, ref ProtoReader.State state, T value);
+        T Read(ProtoReader reader, ref ProtoReader.State state, T value);
     }
 
     /// <summary>
@@ -31,12 +31,12 @@ namespace ProtoBuf
         /// <summary>
         /// Serialize an instance to the supplied writer
         /// </summary>
-        void Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value);
+        void WriteSubType(ProtoWriter writer, ref ProtoWriter.State state, T value);
 
         /// <summary>
         /// Deserialize an instance from the supplied writer
         /// </summary>
-        T Deserialize(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value);
+        T ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value);
     }
 
     public struct SubTypeState<T>
@@ -94,7 +94,7 @@ namespace ProtoBuf
         public void ReadSubType<TSubType>(ProtoReader reader, ref ProtoReader.State state, IProtoSubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
         {
             var tok = ProtoReader.StartSubItem(reader, ref state);
-            _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).Deserialize(reader, ref state,
+            _value = (serializer ?? TypeModel.GetSubTypeSerializer<TSubType>(_context.Model)).ReadSubType(reader, ref state,
                 new SubTypeState<TSubType>(_context, _ctor, _value, _onBeforeDeserialize));
             ProtoReader.EndSubItem(tok, reader, ref state);
         }

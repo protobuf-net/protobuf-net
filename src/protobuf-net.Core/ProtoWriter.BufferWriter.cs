@@ -212,7 +212,7 @@ namespace ProtoBuf
                 {
                     try
                     {
-                        serializer.Serialize(nullWriter, ref nulState, value);
+                        serializer.Write(nullWriter, ref nulState, value);
                         nullWriter.Close(ref nulState);
                         calculatedLength = nullWriter.GetPosition(ref state);
                     }
@@ -241,7 +241,7 @@ namespace ProtoBuf
                         throw new NotImplementedException($"Sub-object prefix style not implemented: {style}");
                 }
                 var oldPos = GetPosition(ref state);
-                serializer.Serialize(this, ref state, value);
+                serializer.Write(this, ref state, value);
                 var newPos = GetPosition(ref state);
 
                 var actualLength = (newPos - oldPos);
@@ -259,7 +259,7 @@ namespace ProtoBuf
                 {
                     try
                     {
-                        serializer.Serialize(nullWriter, ref nulState, value);
+                        serializer.WriteSubType(nullWriter, ref nulState, value);
                         nullWriter.Close(ref nulState);
                         calculatedLength = nullWriter.GetPosition(ref state);
                     }
@@ -272,7 +272,7 @@ namespace ProtoBuf
 
                 AdvanceAndReset(ImplWriteVarint64(ref state, (ulong)calculatedLength));
                 var oldPos = GetPosition(ref state);
-                serializer.Serialize(this, ref state, value);
+                serializer.WriteSubType(this, ref state, value);
                 var newPos = GetPosition(ref state);
 
                 var actualLength = (newPos - oldPos);

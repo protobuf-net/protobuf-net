@@ -71,6 +71,14 @@ namespace ProtoBuf.Serializers
                 SubItemSerializer.EmitReadSubItem<TActual>(ctx, val, null);
             }
         }
+
+        bool IProtoTypeSerializer.HasInheritance => false;
+
+        void IProtoTypeSerializer.EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => ((IRuntimeProtoSerializerNode)this).EmitRead(ctx, valueFrom);
+
+        void IProtoTypeSerializer.EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => ((IRuntimeProtoSerializerNode)this).EmitWrite(ctx, valueFrom);
     }
 
 

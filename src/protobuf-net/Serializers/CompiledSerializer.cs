@@ -29,13 +29,13 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        T IProtoDeserializer<T>.Deserialize(ProtoReader reader, ref ProtoReader.State state, T value)
+        T IProtoDeserializer<T>.Read(ProtoReader reader, ref ProtoReader.State state, T value)
             => deserializer(reader, ref state, value);
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
             => deserializer(source, ref state, (T)value);
 
-        void IProtoSerializer<T>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, T value)
+        void IProtoSerializer<T>.Write(ProtoWriter writer, ref ProtoWriter.State state, T value)
             => serializer(writer, ref state, value);
 
         public override void Write(ProtoWriter dest, ref ProtoWriter.State state, object value)
@@ -101,24 +101,24 @@ namespace ProtoBuf.Serializers
         public abstract object Read(ProtoReader source, ref ProtoReader.State state, object value);
 
         void IRuntimeProtoSerializerNode.EmitWrite(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-        {
-            head.EmitWrite(ctx, valueFrom);
-        }
+            => head.EmitWrite(ctx, valueFrom);
+
+        void IProtoTypeSerializer.EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => head.EmitWriteRoot(ctx, valueFrom);
 
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
-        {
-            head.EmitRead(ctx, valueFrom);
-        }
+            => head.EmitRead(ctx, valueFrom);
+
+        void IProtoTypeSerializer.EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => head.EmitReadRoot(ctx, valueFrom);
+
+        bool IProtoTypeSerializer.HasInheritance => head.HasInheritance;
 
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
-        {
-            head.EmitCallback(ctx, valueFrom, callbackType);
-        }
+            => head.EmitCallback(ctx, valueFrom, callbackType);
 
         void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject)
-        {
-            head.EmitCreateInstance(ctx, callNoteObject);
-        }
+            => head.EmitCreateInstance(ctx, callNoteObject);
 
         bool IProtoTypeSerializer.ShouldEmitCreateInstance
             => head.ShouldEmitCreateInstance;

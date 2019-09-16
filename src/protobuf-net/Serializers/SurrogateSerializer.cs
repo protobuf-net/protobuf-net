@@ -114,6 +114,15 @@ namespace ProtoBuf.Serializers
             args[0] = rootTail.Read(source, ref state, value);
             return fromTail.Invoke(null, args);
         }
+
+        bool IProtoTypeSerializer.HasInheritance => false;
+
+        void IProtoTypeSerializer.EmitReadRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => ((IRuntimeProtoSerializerNode)this).EmitRead(ctx, valueFrom);
+
+        void IProtoTypeSerializer.EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
+            => ((IRuntimeProtoSerializerNode)this).EmitWrite(ctx, valueFrom);
+
         void IRuntimeProtoSerializerNode.EmitRead(Compiler.CompilerContext ctx, Compiler.Local valueFrom)
         {
             Helpers.DebugAssert(valueFrom != null); // don't support stack-head for this
