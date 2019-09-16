@@ -1058,7 +1058,7 @@ namespace ProtoBuf.Reflection
             string returnType, inputType;
             if (method.ServerStreaming)
             {
-                returnType = "global::System.Collection.Generics.IAsyncEnumerable<" + GetTypeName(ctx, method.OutputType) + ">";
+                returnType = "global::System.Collections.Generic.IAsyncEnumerable<" + GetTypeName(ctx, method.OutputType) + ">";
             }
             else
             {
