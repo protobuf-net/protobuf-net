@@ -1255,7 +1255,7 @@ namespace ProtoBuf.Meta
                     ctx = new CompilerContext(scope, il, false, false, this,
                          runtimeType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
                     serializer.EmitRead(ctx, ctx.InputValue);
-                    ctx.LoadValue(ctx.InputValue);
+                    // note that EmitRead will unwrap the T for us on the stack
                     ctx.Return();
                 }
 
