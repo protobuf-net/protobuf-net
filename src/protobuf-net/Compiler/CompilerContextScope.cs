@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace ProtoBuf.Compiler
 {
@@ -90,17 +91,45 @@ namespace ProtoBuf.Compiler
             }
         }
 
-        private static ILGenerator Implement(TypeBuilder type, Type interfaceType, string name)
+        internal static ILGenerator Implement(TypeBuilder type, Type interfaceType, string name, bool @explicit = true)
         {
             var decl = interfaceType.GetMethod(name, BindingFlags.Public | BindingFlags.Instance);
             if (decl == null) throw new ArgumentException(nameof(name));
             var args = decl.GetParameters();
-            var method = type.DefineMethod(name, (decl.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final,
+            string implName = name;
+            var attribs = (decl.Attributes & ~MethodAttributes.Abstract) | MethodAttributes.Final;
+            if (@explicit)
+            {
+                implName = CSName(interfaceType) + "." + name;
+                attribs |= MethodAttributes.HideBySig;
+                attribs &= ~MethodAttributes.Public;
+            }
+            var method = type.DefineMethod(implName, attribs,
                 decl.ReturnType, Array.ConvertAll(args, x => x.ParameterType));
             for (int i = 0; i < args.Length; i++)
                 method.DefineParameter(i + 1, args[i].Attributes, args[i].Name);
             type.DefineMethodOverride(method, decl);
             return method.GetILGenerator();
+        }
+
+        internal static string CSName(Type type)
+        {
+            if (type == null) return null;
+            if (!type.IsGenericType) return type.Name;
+
+            var withTicks = type.Name;
+            var index = withTicks.IndexOf('`');
+            if (index < 0) return type.Name;
+
+            var sb = new StringBuilder();
+            sb.Append(type.Name.Substring(0, index)).Append('<');
+            var args = type.GetGenericArguments();
+            for (int i = 0; i < args.Length; i++)
+            {
+                if (i != 0) sb.Append(',');
+                sb.Append(CSName(args[i]));
+            }
+            return sb.Append('>').ToString();
         }
     }
 }

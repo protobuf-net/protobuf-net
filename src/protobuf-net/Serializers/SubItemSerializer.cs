@@ -23,10 +23,12 @@ namespace ProtoBuf.Serializers
             ((IProtoTypeSerializer)Proxy.Serializer).EmitCallback(ctx, valueFrom, callbackType);
         }
 
-        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx)
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject)
         {
-            ((IProtoTypeSerializer)Proxy.Serializer).EmitCreateInstance(ctx);
+            ((IProtoTypeSerializer)Proxy.Serializer).EmitCreateInstance(ctx, callNoteObject);
         }
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance
+            => ((IProtoTypeSerializer)Proxy.Serializer).ShouldEmitCreateInstance;
 
         void IProtoTypeSerializer.Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {

@@ -1442,6 +1442,21 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>
+        /// Indicates that while an inheritance tree exists, the exact type encountered was not
+        /// specified in that hierarchy and cannot be processed.
+        /// </summary>
+        public static void ThrowUnexpectedSubtype<T>(T value) where T : class
+        {
+            if (IsSubType<T>(value)) ThrowUnexpectedSubtype(typeof(T), value.GetType());
+        }
+
+        /// <summary>
+        /// Returns whether the object provided is a subtype of the expected type
+        /// </summary>
+        public static bool IsSubType<T>(T value) where T : class
+            => value != null && typeof(T) != value.GetType();
+
+        /// <summary>
         /// Indicates that the given type was not expected, and cannot be processed.
         /// </summary>
         protected internal static void ThrowUnexpectedType(Type type)

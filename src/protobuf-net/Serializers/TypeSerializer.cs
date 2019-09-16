@@ -432,7 +432,8 @@ namespace ProtoBuf.Serializers
                     ctx.LoadValue(loc);
                     ctx.EmitCall(typeof(object).GetMethod("GetType"));
                     ctx.EmitCall(typeof(TypeModel).GetMethod("ThrowUnexpectedSubtype",
-                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static));
+                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static,
+                        null, new Type[] { typeof(Type), typeof(Type) },null));
                 }
                 // fields
 
@@ -745,10 +746,12 @@ namespace ProtoBuf.Serializers
             ctx.Branch(@continue, false); // "continue"
         }
 
-        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx)
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance
+            => factory != null || !useConstructor;
+
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject)
         {
             // different ways of creating a new instance
-            bool callNoteObject = true;
             if (factory != null)
             {
                 EmitInvokeCallback(ctx, factory, false, constructType, ExpectedType);

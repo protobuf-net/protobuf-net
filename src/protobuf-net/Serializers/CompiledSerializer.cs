@@ -115,9 +115,12 @@ namespace ProtoBuf.Serializers
             head.EmitCallback(ctx, valueFrom, callbackType);
         }
 
-        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx)
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject)
         {
-            head.EmitCreateInstance(ctx);
+            head.EmitCreateInstance(ctx, callNoteObject);
         }
+
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance
+            => head.ShouldEmitCreateInstance;
     }
 }

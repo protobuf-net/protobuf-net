@@ -249,7 +249,7 @@ namespace ProtoBuf.Compiler
             Scope = scope;
             if (string.IsNullOrEmpty(assemblyName)) throw new ArgumentNullException(nameof(assemblyName));
             this.assemblyName = assemblyName;
-            this.methodPairs = methodPairs ?? throw new ArgumentNullException(nameof(methodPairs));
+            this.methodPairs = methodPairs;
             this.il = il ?? throw new ArgumentNullException(nameof(il));
             // NonPublic = false; <== implicit
             this.isWriter = isWriter;

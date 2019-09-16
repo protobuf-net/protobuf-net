@@ -1,4 +1,5 @@
 ﻿using ProtoBuf.Meta;
+using ProtoBuf.unittest;
 using System;
 using System.Buffers;
 using System.IO;
@@ -8,6 +9,21 @@ namespace ProtoBuf
 {
     public class ManualSerializer
     {
+#if !PLAT_NO_EMITDLL
+        [Fact]
+        public void EmitManualSerializer()
+        {
+            var model = RuntimeTypeModel.Create();
+            model.AutoCompile = false;
+            model.Add(typeof(A));
+            model.Add(typeof(B));
+            model.Add(typeof(C));
+            model.Add(typeof(D));
+            model.Compile("EmitManualSerializer", "EmitManualSerializer.dll");
+            PEVerify.Verify("EmitManualSerializer.dll");
+        }
+#endif
+
         [Theory]
         [InlineData(true)]
         [InlineData(false)]
@@ -270,10 +286,17 @@ namespace ProtoBuf
 
         void IProtoSubTypeSerializer<A>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, A value)
         {
-            if (value is B b)
+            if (TypeModel.IsSubType<A>(value))
             {
-                ProtoWriter.WriteFieldHeader(4, WireType.String, writer, ref state);
-                ProtoWriter.WriteSubType<B>(b, writer, ref state, this);
+                if (value is B b)
+                {
+                    ProtoWriter.WriteFieldHeader(4, WireType.String, writer, ref state);
+                    ProtoWriter.WriteSubType<B>(b, writer, ref state, this);
+                }
+                else
+                {
+                    TypeModel.ThrowUnexpectedSubtype<A>(value);
+                }
             }
             if (value.AVal != 0)
             {
@@ -306,10 +329,17 @@ namespace ProtoBuf
 
         void IProtoSubTypeSerializer<B>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, B value)
         {
-            if (value is C c)
+            if (TypeModel.IsSubType<B>(value))
             {
-                ProtoWriter.WriteFieldHeader(5, WireType.String, writer, ref state);
-                ProtoWriter.WriteSubType<C>(c, writer, ref state, this);
+                if (value is C c)
+                {
+                    ProtoWriter.WriteFieldHeader(5, WireType.String, writer, ref state);
+                    ProtoWriter.WriteSubType<C>(c, writer, ref state, this);
+                }
+                else
+                {
+                    TypeModel.ThrowUnexpectedSubtype<B>(value);
+                }
             }
             if (value.BVal != 0)
             {
@@ -341,6 +371,7 @@ namespace ProtoBuf
 
         void IProtoSubTypeSerializer<C>.Serialize(ProtoWriter writer, ref ProtoWriter.State state, C value)
         {
+            TypeModel.ThrowUnexpectedSubtype<C>(value);
             if (value.CVal != 0)
             {
                 ProtoWriter.WriteFieldHeader(3, WireType.Variant, writer, ref state);
@@ -391,6 +422,13 @@ namespace ProtoBuf
     {
         [ProtoMember(3)]
         public int CVal { get; set; }
+
+    }
+    [ProtoContract(SkipConstructor = true)]
+    public class D
+    {
+        [ProtoMember(1)]
+        public int DVal { get; set; }
 
     }
 }

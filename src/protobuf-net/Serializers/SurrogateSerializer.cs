@@ -7,7 +7,8 @@ namespace ProtoBuf.Serializers
     {
         bool IProtoTypeSerializer.HasCallbacks(ProtoBuf.Meta.TypeModel.CallbackType callbackType) { return false; }
         void IProtoTypeSerializer.EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, ProtoBuf.Meta.TypeModel.CallbackType callbackType) { }
-        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx) { throw new NotSupportedException(); }
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject) { throw new NotSupportedException(); }
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
         bool IProtoTypeSerializer.CanCreateInstance() => false;
 
         object IProtoTypeSerializer.CreateInstance(ProtoReader source) => throw new NotSupportedException();

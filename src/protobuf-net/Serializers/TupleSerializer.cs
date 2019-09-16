@@ -156,7 +156,8 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx) { throw new NotSupportedException(); }
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance => false;
+        void IProtoTypeSerializer.EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject) { throw new NotSupportedException(); }
 
         public void EmitRead(Compiler.CompilerContext ctx, Compiler.Local incoming)
         {

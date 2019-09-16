@@ -347,7 +347,7 @@ namespace ProtoBuf.Meta
             }
         }
 
-        Type GetInheritanceRoot()
+        internal Type GetInheritanceRoot()
         {
             if (Type.IsValueType) return null;
 

@@ -12,6 +12,7 @@ namespace ProtoBuf.Serializers
         void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context);
 
         void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType);
-        void EmitCreateInstance(Compiler.CompilerContext ctx);
+        void EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject = true);
+        bool ShouldEmitCreateInstance { get; }
     }
 }

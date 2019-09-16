@@ -36,10 +36,13 @@ namespace ProtoBuf.Serializers
             ((IProtoTypeSerializer)Tail).EmitCallback(ctx, valueFrom, callbackType);
         }
 
-        public void EmitCreateInstance(Compiler.CompilerContext ctx)
+        public void EmitCreateInstance(Compiler.CompilerContext ctx, bool callNoteObject)
         {
-            ((IProtoTypeSerializer)Tail).EmitCreateInstance(ctx);
+            ((IProtoTypeSerializer)Tail).EmitCreateInstance(ctx, callNoteObject);
         }
+
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance
+            => ((IProtoTypeSerializer)Tail).ShouldEmitCreateInstance;
 
         public override Type ExpectedType => Tail.ExpectedType;
         Type IProtoTypeSerializer.BaseType => ExpectedType;
