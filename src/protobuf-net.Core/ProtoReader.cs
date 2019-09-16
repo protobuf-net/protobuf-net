@@ -1433,5 +1433,12 @@ namespace ProtoBuf
             CheckFullyConsumed(ref state);
             return result;
         }
+
+        public T CreateInstance<T>(IProtoFactory<T> factory = null)
+        {
+            var obj = TypeModel.CreateInstance<T>(this, factory);
+            if (TypeHelper<T>.IsObjectType) NoteObject((object)obj, this);
+            return obj;
+        }
     }
 }

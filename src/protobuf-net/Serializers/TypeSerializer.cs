@@ -604,10 +604,17 @@ namespace ProtoBuf.Serializers
             using (Compiler.Local loc = ctx.GetLocalWithValue(expected, valueFrom))
             using (Compiler.Local fieldNumber = new Compiler.Local(ctx, typeof(int)))
             {
+                bool canBeNull = !Helpers.IsValueType(ExpectedType);
+                if (canBeNull && !HasInheritance)
+                {
+                    EmitCreateIfNull(ctx, loc);
+                    canBeNull = false;
+                }
+
                 // pre-callbacks
                 if (HasCallbacks(TypeModel.CallbackType.BeforeDeserialize))
                 {
-                    if (Helpers.IsValueType(ExpectedType))
+                    if (!canBeNull)
                     {
                         EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.BeforeDeserialize);
                     }
@@ -637,7 +644,7 @@ namespace ProtoBuf.Serializers
                         Compiler.CodeLabel processThisField = ctx.DefineLabel();
                         ctx.BranchIfEqual(processThisField, true);
                         ctx.Branch(tryNextField, false);
-                        WriteFieldHandler(ctx, expected, loc, processThisField, @continue, (IRuntimeProtoSerializerNode)group.Items[0]);
+                        WriteFieldHandler(ctx, expected, loc, canBeNull, processThisField, @continue, (IRuntimeProtoSerializerNode)group.Items[0]);
                     }
                     else
                     {   // implement as a jump-table-based switch
@@ -654,13 +661,13 @@ namespace ProtoBuf.Serializers
                         ctx.Branch(tryNextField, false);
                         for (int i = 0; i < groupItemCount; i++)
                         {
-                            WriteFieldHandler(ctx, expected, loc, jmp[i], @continue, (IRuntimeProtoSerializerNode)group.Items[i]);
+                            WriteFieldHandler(ctx, expected, loc, canBeNull, jmp[i], @continue, (IRuntimeProtoSerializerNode)group.Items[i]);
                         }
                     }
                     ctx.MarkLabel(tryNextField);
                 }
 
-                EmitCreateIfNull(ctx, loc);
+                if (canBeNull) EmitCreateIfNull(ctx, loc);
                 ctx.LoadReader(true);
                 if (isExtensible)
                 {
@@ -679,7 +686,7 @@ namespace ProtoBuf.Serializers
                 ctx.LoadValue(0);
                 ctx.BranchIfGreater(processField, false);
 
-                EmitCreateIfNull(ctx, loc);
+                if (canBeNull) EmitCreateIfNull(ctx, loc);
                 // post-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterDeserialize);
 
@@ -693,14 +700,14 @@ namespace ProtoBuf.Serializers
         }
 
         private void WriteFieldHandler(
-            Compiler.CompilerContext ctx, Type expected, Compiler.Local loc,
+            Compiler.CompilerContext ctx, Type expected, Compiler.Local loc, bool canBeNull,
             Compiler.CodeLabel handler, Compiler.CodeLabel @continue, IRuntimeProtoSerializerNode serializer)
         {
             ctx.MarkLabel(handler);
             Type serType = serializer.ExpectedType;
             if (serType == ExpectedType)
             {
-                EmitCreateIfNull(ctx, loc);
+                if (canBeNull) EmitCreateIfNull(ctx, loc);
                 serializer.EmitRead(ctx, loc);
             }
             else

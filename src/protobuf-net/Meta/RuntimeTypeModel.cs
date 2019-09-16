@@ -1558,8 +1558,15 @@ namespace ProtoBuf.Meta
                 var il = CompilerContextScope.Implement(type, serType, nameof(IProtoDeserializer<string>.Read));
                 ctx = new CompilerContext(scope, il, false, false, null, this,
                      ilVersion, assemblyName, runtimeType, nameof(IProtoDeserializer<string>.Read));
-                if (serializer.HasInheritance) serializer.EmitReadRoot(ctx, ctx.InputValue);
-                else serializer.EmitRead(ctx, ctx.InputValue);
+                if (serializer.HasInheritance)
+                {
+                    serializer.EmitReadRoot(ctx, ctx.InputValue);
+                }
+                else
+                {
+                    serializer.EmitRead(ctx, ctx.InputValue);
+                    ctx.LoadValue(ctx.InputValue);
+                }
                 ctx.Return();
 
                 // the serializer is variant; we only emit it if this is a basic type, or if we're the root
@@ -1592,6 +1599,7 @@ namespace ProtoBuf.Meta
                     ctx = new CompilerContext(scope, il, false, false, null, this,
                          ilVersion, assemblyName, runtimeType, nameof(IProtoSubTypeSerializer<string>.ReadSubType));
                     serializer.EmitRead(ctx, ctx.InputValue);
+                    ctx.LoadValue(ctx.InputValue);
                     ctx.Return();
                 }
 

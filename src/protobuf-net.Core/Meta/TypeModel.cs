@@ -1228,9 +1228,9 @@ namespace ProtoBuf.Meta
             throw new InvalidOperationException($"No {typeof(T).Name} available for model {model?.ToString() ?? "(none)"}");
         }
 
-        public static T Create<T>(ISerializationContext context)
+        internal static T CreateInstance<T>(ISerializationContext context = null, IProtoFactory<T> factory = null)
         {
-            var factory = context?.Model?.GetFactory<T>();
+            if (factory == null) factory = context?.Model?.GetFactory<T>();
             if (factory != null)
             {
                 var val = factory.Create(context);

@@ -233,7 +233,8 @@ namespace ProtoBuf
         IProtoSerializer<A>,
         IProtoDeserializer<A>, IProtoSubTypeSerializer<A>, IProtoFactory<A>,
         IProtoDeserializer<B>, IProtoSubTypeSerializer<B>, IProtoFactory<B>,
-        IProtoDeserializer<C>, IProtoSubTypeSerializer<C>, IProtoFactory<C>
+        IProtoDeserializer<C>, IProtoSubTypeSerializer<C>, IProtoFactory<C>,
+        IProtoSerializer<D>, IProtoDeserializer<D>, IProtoFactory<D>
     {
         public static ModelSerializer Default = new ModelSerializer();
         public ModelSerializer() { }
@@ -241,6 +242,7 @@ namespace ProtoBuf
         A IProtoFactory<A>.Create(ISerializationContext context) => new A();
         B IProtoFactory<B>.Create(ISerializationContext context) => new B();
         C IProtoFactory<C>.Create(ISerializationContext context) => new C();
+        D IProtoFactory<D>.Create(ISerializationContext context) => new D();
 
         //void IProtoFactory<A, A>.Copy(SerializationContext context, A from, A to)
         //{
@@ -394,6 +396,35 @@ namespace ProtoBuf
                 }
             }
             return value.Value;
+        }
+
+        void IProtoSerializer<D>.Write(ProtoWriter writer, ref ProtoWriter.State state, D value)
+        {
+            TypeModel.ThrowUnexpectedSubtype<D>(value);
+            if (value.DVal != 0)
+            {
+                ProtoWriter.WriteFieldHeader(1, WireType.Variant, writer, ref state);
+                ProtoWriter.WriteInt32(value.DVal, writer, ref state);
+            }
+        }
+
+        D IProtoDeserializer<D>.Read(ProtoReader reader, ref ProtoReader.State state, D value)
+        {
+            if (value == null) value = reader.CreateInstance<D>(this);
+            int field;
+            while ((field = reader.ReadFieldHeader(ref state)) != 0)
+            {
+                switch (field)
+                {
+                    case 1:
+                        value.DVal = reader.ReadInt32(ref state);
+                        break;
+                    default:
+                        reader.SkipField(ref state);
+                        break;
+                }
+            }
+            return value;
         }
     }
 
