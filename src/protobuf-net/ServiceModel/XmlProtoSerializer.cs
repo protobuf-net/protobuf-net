@@ -2,6 +2,7 @@
 using System.IO;
 using System.Runtime.Serialization;
 using System.Xml;
+using ProtoBuf.Internal;
 using ProtoBuf.Meta;
 
 namespace ProtoBuf.ServiceModel
@@ -168,23 +169,29 @@ namespace ProtoBuf.ServiceModel
             {
                 if (isList || isEnum)
                 {
+#pragma warning disable CS0618
                     return model.Deserialize(Stream.Null, null, type, null);
+#pragma warning restore CS0618
                 }
                 using var protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
                 return model.DeserializeCore(protoReader, ref state, key, null);
             }
 
-            object result;
+            object result = null;
             Helpers.DebugAssert(reader.CanReadBinaryContent, "CanReadBinaryContent");
-            using (MemoryStream ms = new MemoryStream(reader.ReadContentAsBase64()))
+            ReadOnlyMemory<byte> payload = reader.ReadContentAsBase64();
+            using (var protoReader = ProtoReader.Create(out var state, payload, model, null))
             {
-                if (isList || isEnum)
+                if (DynamicStub.TryDeserialize(type, model, protoReader, ref state, ref result))
+                {} // winning!
+                else if (isList || isEnum)
                 {
-                    result = model.Deserialize(ms, null, type, null);
+#pragma warning disable CS0618
+                    result = model.Deserialize(protoReader, ref state, null, type);
+#pragma warning restore CS0618
                 }
                 else
                 {
-                    using var protoReader = ProtoReader.Create(out var state, ms, model, null, ProtoReader.TO_EOF);
                     result = model.DeserializeCore(protoReader, ref state, key, null);
                 }
             }

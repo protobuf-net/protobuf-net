@@ -181,15 +181,19 @@ namespace FX11
             for (int i = 0; i < loop; i++)
             {
                 reuseDump.Position = 0;
+#pragma warning disable CS0618
                 compiled.Deserialize(reuseDump, null, type);
+#pragma warning restore CS0618
             }
             watch.Stop();
 
             Console.WriteLine("protobuf-net v2 deserialize: {0} ms", watch.ElapsedMilliseconds);
             {
-            reuseDump.Position = 0;
-            Product p1 = (Product)compiled.Deserialize(reuseDump, null, type);
-            DumpObject("protobuf-net v2", props, p1);
+                reuseDump.Position = 0;
+#pragma warning disable CS0618
+                Product p1 = (Product)compiled.Deserialize(reuseDump, null, type);
+#pragma warning restore CS0618
+                DumpObject("protobuf-net v2", props, p1);
             }
 
             // 080d 1203(616263) 207b
@@ -383,7 +387,9 @@ namespace FX11
 
             using (MemoryStream ms = new MemoryStream(blob))
             {
+#pragma warning disable CS0618
                 object clone = model.Deserialize(ms, null, obj.GetType());
+#pragma warning restore CS0618
                 string oldS = Convert.ToString(obj), newS = Convert.ToString(clone);
                 Console.WriteLine(oldS == newS ? ("match: " + newS) : ("delta" + oldS + " vs " + newS));
             }

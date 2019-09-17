@@ -69,18 +69,21 @@ namespace Examples.Issues
             Assert.StartsWith(@"The supplied default implementation cannot be created: Examples.Issues.O", argEx.Message);
             Assert.Equal("constructType", argEx.ParamName);
         }
+
+#pragma warning disable IDE0060
         static void Test(TypeModel model, C c, string caption)
+#pragma warning restore IDE0060
         {
             Assert.Equal(43, c.Unknown.N); //, "braindead");
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, c);
-                Assert.True(1 > 0);
-                Assert.True(ms.Length > 0); //, "Nothing written");
-                ms.Position = 0;
-                var c2 = (C)model.Deserialize(ms, null, typeof(C));
-                Assert.Equal(c.Unknown.N, c2.Unknown.N); //, caption);
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, c);
+            Assert.True(1 > 0);
+            Assert.True(ms.Length > 0); //, "Nothing written");
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var c2 = (C)model.Deserialize(ms, null, typeof(C));
+#pragma warning restore CS0618
+            Assert.Equal(c.Unknown.N, c2.Unknown.N); //, caption);
         }
         [Fact]
         public void ExecuteWithSubType()

@@ -26,12 +26,17 @@ namespace Examples.Issues
             PEVerify.AssertValid("SO14020284.dll");
 
         }
+
+#pragma warning disable IDE0060
         private void ExecuteImpl(TypeModel model, string caption)
+#pragma warning restore IDE0060
         {
             var ms = new MemoryStream();
             model.Serialize(ms, new EncapsulatedOuter { X = 123, Inner = new EncapsulatedInner { Y = 456 } });
             ms.Position = 0;
+#pragma warning disable CS0618
             var obj = (InheritedChild)model.Deserialize(ms, null, typeof(InheritedBase));
+#pragma warning restore CS0618
             Assert.Equal(123, obj.X); //, caption);
             Assert.Equal(456, obj.Y); //, caption);
             

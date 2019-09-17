@@ -106,65 +106,57 @@ namespace Examples.Dictionary
         [Fact]
         public void EmptyDictionaryShouldDeserializeAsNonNull()
         {
-            using (var ms = new MemoryStream())
-            {
-                var data = new Dictionary<string, int>();
+            using var ms = new MemoryStream();
+            var data = new Dictionary<string, int>();
 
-                Serializer.Serialize(ms, data);
-                ms.Position = 0;
-                var clone = Serializer.Deserialize<Dictionary<string, int>>(ms);
+            Serializer.Serialize(ms, data);
+            ms.Position = 0;
+            var clone = Serializer.Deserialize<Dictionary<string, int>>(ms);
 
-                Assert.NotNull(clone);
-                Assert.Empty(clone);
-            }
+            Assert.NotNull(clone);
+            Assert.Empty(clone);
         }
         [Fact]
         public void NonEmptyDictionaryShouldDeserialize()
         {
-            using (var ms = new MemoryStream())
-            {
-                var data = new Dictionary<string, int> { { "abc", 123 } };
+            using var ms = new MemoryStream();
+            var data = new Dictionary<string, int> { { "abc", 123 } };
 
-                Serializer.Serialize(ms, data);
-                ms.Position = 0;
-                var clone = Serializer.Deserialize<Dictionary<string, int>>(ms);
+            Serializer.Serialize(ms, data);
+            ms.Position = 0;
+            var clone = Serializer.Deserialize<Dictionary<string, int>>(ms);
 
-                Assert.NotNull(clone);
-                Assert.Single(clone);
-                Assert.Equal(123, clone["abc"]);
-            }
+            Assert.NotNull(clone);
+            Assert.Single(clone);
+            Assert.Equal(123, clone["abc"]);
         }
         [Fact]
         public void EmptyDictionaryShouldDeserializeAsNonNullViaInterface()
         {
-            using (var ms = new MemoryStream())
-            {
-                var data = new Dictionary<string, int>();
+            using var ms = new MemoryStream();
+            var data = new Dictionary<string, int>();
 
-                Serializer.Serialize(ms, data);
-                ms.Position = 0;
-                var clone = Serializer.Deserialize<IDictionary<string, int>>(ms);
+            Serializer.Serialize(ms, data);
+            ms.Position = 0;
+            var clone = Serializer.Deserialize<IDictionary<string, int>>(ms);
 
-                Assert.NotNull(clone);
-                Assert.Equal(0, clone.Count);
-            }
+            Assert.NotNull(clone);
+            Assert.Equal(0, clone.Count);
 
         }
         [Fact]
         public void NonEmptyDictionaryShouldDeserializeViaInterface()
         {
-            using (var ms = new MemoryStream())
-            {
-                var data = new Dictionary<string, int> { { "abc", 123 } };
+            using var ms = new MemoryStream();
+            var data = new Dictionary<string, int> { { "abc", 123 } };
 
-                Serializer.Serialize(ms, data);
-                ms.Position = 0;
-                var clone = Serializer.Deserialize<IDictionary<string, int>>(ms);
+            Serializer.Serialize(ms, data);
+            ms.Position = 0;
+            var clone = Serializer.Deserialize<IDictionary<string, int>>(ms);
 
-                Assert.NotNull(clone);
-                Assert.Equal(1, clone.Count);
-                Assert.Equal(123, clone["abc"]);
-            }
+            Assert.NotNull(clone);
+            Assert.Equal(1, clone.Count);
+            Assert.Equal(123, clone["abc"]);
         }
     }
     
@@ -221,7 +213,9 @@ namespace Examples.Dictionary
             CheckNested(clone, "clone");
         }
 
+#pragma warning disable IDE0060
         static void CheckNested<TInner>(IDictionary<string, TInner> data, string message)
+#pragma warning restore IDE0060
             where TInner : IDictionary<string, string>
         {
             Assert.NotNull(data); //, message);
@@ -266,7 +260,7 @@ namespace Examples.Dictionary
 
             int l1 = BulkTest(model, o1, out int s1, out int d1);
             int l2 = BulkTest(model, o2, out int s2, out int d2);
-            int l3 = BulkTest(model, o2, out int s3, out int d3);
+            int l3 = BulkTest(model, o3, out int s3, out int d3);
 
             Console.WriteLine("Bytes (props)\t" + l1);
             Console.WriteLine("Ser (props)\t" + s1);
@@ -278,7 +272,7 @@ namespace Examples.Dictionary
             Console.WriteLine("Ser (kv-grouped)\t" + s3);
             Console.WriteLine("Deser (kv-grouped)\t" + d3);
 
-            var pw = ProtoWriter.Create(out var state, Stream.Null, null, null);
+            using var pw = ProtoWriter.Create(out var state, Stream.Null, null, null);
             Stopwatch watch = Stopwatch.StartNew();
             for (int i = 0; i < LOOP; i++ ) {
                 ProtoWriter.WriteFieldHeader(1, WireType.String, pw, ref state);
@@ -296,30 +290,30 @@ namespace Examples.Dictionary
         const int LOOP = 500000;
         static int BulkTest<T>(TypeModel model, T obj, out int serialize, out int deserialize) where T: class
         {
-            
-            using(MemoryStream ms = new MemoryStream())
+
+            using MemoryStream ms = new MemoryStream();
+            Stopwatch watch = Stopwatch.StartNew();
+            for (int i = 0; i < LOOP; i++)
             {
-                Stopwatch watch = Stopwatch.StartNew();
-                for (int i = 0; i < LOOP; i++)
-                {
-                    ms.Position = 0;
-                    ms.SetLength(0);
-                    model.Serialize(ms, obj);
-                }
-                watch.Stop();
-                serialize = (int)watch.ElapsedMilliseconds;
-                watch.Reset();
-                Type type = typeof (T);
-                watch.Start();
-                for (int i = 0; i < LOOP; i++)
-                {
-                    ms.Position = 0;
-                    model.Deserialize(ms, null, type);
-                }
-                watch.Stop();
-                deserialize = (int)watch.ElapsedMilliseconds;
-                return (int)ms.Length;
+                ms.Position = 0;
+                ms.SetLength(0);
+                model.Serialize(ms, obj);
             }
+            watch.Stop();
+            serialize = (int)watch.ElapsedMilliseconds;
+            watch.Reset();
+            Type type = typeof(T);
+            watch.Start();
+            for (int i = 0; i < LOOP; i++)
+            {
+                ms.Position = 0;
+#pragma warning disable CS0618
+                model.Deserialize(ms, null, type);
+#pragma warning restore CS0618
+            }
+            watch.Stop();
+            deserialize = (int)watch.ElapsedMilliseconds;
+            return (int)ms.Length;
         }
 
 

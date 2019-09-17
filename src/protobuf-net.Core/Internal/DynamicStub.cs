@@ -8,7 +8,10 @@ namespace ProtoBuf.Internal
     // bridge between the world of Type and the world of <T>, in a way that doesn't involve constant reflection
     internal abstract class DynamicStub
     {
-        private static readonly Hashtable s_byType = new Hashtable();
+        private static readonly Hashtable s_byType = new Hashtable
+        {
+            {typeof(object), NilStub.Instance }
+        };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool TryDeserialize(Type type, TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)
@@ -30,6 +33,13 @@ namespace ProtoBuf.Internal
 
         protected abstract bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value);
 
+        private sealed class NilStub : DynamicStub
+        {
+            public static DynamicStub Instance { get; } = new NilStub();
+            private NilStub() { }
+            protected override bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)
+                => false;
+        }
         private sealed class ConcreteStub<T> : DynamicStub
         {
             protected override bool TryDeserialize(TypeModel model, ProtoReader reader, ref ProtoReader.State state, ref object value)

@@ -99,26 +99,29 @@ namespace Examples.Issues
             model.Compile("SO11705351", "SO11705351.dll");
             PEVerify.AssertValid("SO11705351.dll");
         }
+
+#pragma warning disable IDE0060
         private static void ExecuteImpl(TypeModel model, string caption)
+#pragma warning restore IDE0060
         {
-            
-            using (var stream = new MemoryStream())
+
+            using var stream = new MemoryStream();
             {
-                {
-                    var assemblage = GetData();
-                    model.Serialize(stream, assemblage);
-                }
+                var assemblage = GetData();
+                model.Serialize(stream, assemblage);
+            }
 
-                stream.Position = 0;
+            stream.Position = 0;
 
-                var obj = (Assemblage) model.Deserialize(stream, null, typeof (Assemblage));
-                {
-                    var assemblage = obj;
-                    var whole = assemblage.Parts[0].Whole;
+#pragma warning disable CS0618
+            var obj = (Assemblage)model.Deserialize(stream, null, typeof(Assemblage));
+#pragma warning restore CS0618
+            {
+                var assemblage = obj;
+                var whole = assemblage.Parts[0].Whole;
 
-                    Assert.Same(assemblage.Parts[0].Whole, whole.Parts[0].Whole); //, "Whole:" + caption);
-                    Assert.Same(assemblage.Parts[0], whole.Parts[0]); //, "Part:" + caption);
-                }
+                Assert.Same(assemblage.Parts[0].Whole, whole.Parts[0].Whole); //, "Whole:" + caption);
+                Assert.Same(assemblage.Parts[0], whole.Parts[0]); //, "Part:" + caption);
             }
         }
 

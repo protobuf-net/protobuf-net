@@ -102,10 +102,14 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(1, "ListString");
-            TypeWithLists obj = new TypeWithLists();
-            obj.ListString = new List<string>();
-            obj.ListString.Add("abc");
-            obj.ListString.Add("def");
+            TypeWithLists obj = new TypeWithLists
+            {
+                ListString = new List<string>
+                {
+                    "abc",
+                    "def"
+                }
+            };
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
             Assert.NotNull(clone);
@@ -129,10 +133,14 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(2, "IListStringTyped");
-            TypeWithLists obj = new TypeWithLists();
-            obj.IListStringTyped = new List<string>();
-            obj.IListStringTyped.Add("abc");
-            obj.IListStringTyped.Add("def");
+            TypeWithLists obj = new TypeWithLists
+            {
+                IListStringTyped = new List<string>
+                {
+                    "abc",
+                    "def"
+                }
+            };
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
             Assert.NotNull(clone);
@@ -157,10 +165,14 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(3, "ArrayListString", typeof(string), null);
-            TypeWithLists obj = new TypeWithLists();
-            obj.ArrayListString = new ArrayList();
-            obj.ArrayListString.Add("abc");
-            obj.ArrayListString.Add("def");
+            TypeWithLists obj = new TypeWithLists
+            {
+                ArrayListString = new ArrayList
+                {
+                    "abc",
+                    "def"
+                }
+            };
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
             Assert.NotNull(clone);
@@ -184,10 +196,14 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(4, "IListStringUntyped", typeof(string), null);
-            TypeWithLists obj = new TypeWithLists();
-            obj.IListStringUntyped = new ArrayList();
-            obj.IListStringUntyped.Add("abc");
-            obj.IListStringUntyped.Add("def");
+            TypeWithLists obj = new TypeWithLists
+            {
+                IListStringUntyped = new ArrayList
+                {
+                    "abc",
+                    "def"
+                }
+            };
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
             Assert.NotNull(clone);
@@ -211,10 +227,14 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(1, "ListInt32");
-            TypeWithLists obj = new TypeWithLists();
-            obj.ListInt32 = new List<int>();
-            obj.ListInt32.Add(123);
-            obj.ListInt32.Add(456);
+            TypeWithLists obj = new TypeWithLists
+            {
+                ListInt32 = new List<int>
+                {
+                    123,
+                    456
+                }
+            };
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
             Assert.NotNull(clone);
@@ -238,10 +258,14 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(2, "IListInt32Typed");
-            TypeWithLists obj = new TypeWithLists();
-            obj.IListInt32Typed = new List<int>();
-            obj.IListInt32Typed.Add(123);
-            obj.IListInt32Typed.Add(456);
+            TypeWithLists obj = new TypeWithLists
+            {
+                IListInt32Typed = new List<int>
+                {
+                    123,
+                    456
+                }
+            };
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
             Assert.NotNull(clone);
@@ -266,10 +290,14 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(3, "ArrayListInt32", typeof(int), null);
-            TypeWithLists obj = new TypeWithLists();
-            obj.ArrayListInt32 = new ArrayList();
-            obj.ArrayListInt32.Add(123);
-            obj.ArrayListInt32.Add(456);
+            TypeWithLists obj = new TypeWithLists
+            {
+                ArrayListInt32 = new ArrayList
+                {
+                    123,
+                    456
+                }
+            };
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
             Assert.NotNull(clone);
@@ -293,10 +321,14 @@ namespace ProtoBuf.unittest.Meta
         {
             var model = RuntimeTypeModel.Create();
             model.Add(typeof(TypeWithLists), false).Add(4, "IListInt32Untyped", typeof(int), null);
-            TypeWithLists obj = new TypeWithLists();
-            obj.IListInt32Untyped = new ArrayList();
-            obj.IListInt32Untyped.Add(123);
-            obj.IListInt32Untyped.Add(456);
+            TypeWithLists obj = new TypeWithLists
+            {
+                IListInt32Untyped = new ArrayList
+                {
+                    123,
+                    456
+                }
+            };
 
             TypeWithLists clone = (TypeWithLists)model.DeepClone(obj);
             Assert.NotNull(clone);
@@ -454,9 +486,8 @@ namespace ProtoBuf.unittest.Meta
             var model = CreateModel();
 
             var orig = new PackedData {ListInt32 = null, ListSingle = null, ListDouble = null};
-            int len;
 
-            var clone = RoundTrip(model, orig, "Runtime", out len);
+            var clone = RoundTrip(model, orig, "Runtime", out int len);
             Assert.Equal(0, len); //, "Runtime");
             Assert.Null(clone.ListDouble);
             Assert.Null(clone.ListInt32);
@@ -482,9 +513,8 @@ namespace ProtoBuf.unittest.Meta
             var model = CreateModel();
 
             var orig = new PackedData { ListInt32 = new List<int>(), ListSingle = new List<float>(), ListDouble = new List<double>()};
-            int len;
 
-            var clone = RoundTrip(model, orig, "Runtime", out len);
+            var clone = RoundTrip(model, orig, "Runtime", out int len);
             Assert.Equal(6, len); //, "Runtime");
             Assert.Empty(clone.ListDouble);
             Assert.Empty(clone.ListInt32);
@@ -503,7 +533,10 @@ namespace ProtoBuf.unittest.Meta
             Assert.Empty(clone.ListInt32);
             Assert.Empty(clone.ListSingle);
         }
+
+#pragma warning disable IDE0060
         static void CheckExpectedListContents(PackedData data, string text)
+#pragma warning restore IDE0060
         {
             Assert.NotNull(data); //, text);
             Assert.Equal(3, data.ListInt32.Count); //, text);
@@ -526,9 +559,8 @@ namespace ProtoBuf.unittest.Meta
 
             var orig = new PackedData { ListInt32 = new List<int> {3,5,7}, ListSingle = new List<float> {3F,5F,7F}, ListDouble = new List<double> {3D,5D,7F} };
             CheckExpectedListContents(orig, "Original");
-            int len;
 
-            var clone = RoundTrip(model, orig, "Runtime", out len);
+            var clone = RoundTrip(model, orig, "Runtime", out int len);
             const int expectedLen = (1 + 1 + 1 + 1 + 1) + (1 + 1 + 4 + 4 + 4) + (1 + 1 + 8 + 8 + 8);
             Assert.Equal(expectedLen, len); //, "Runtime");
             Assert.NotNull(clone);
@@ -549,13 +581,13 @@ namespace ProtoBuf.unittest.Meta
         {
             try
             {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    model.Serialize(ms, orig);
-                    length = (int)ms.Length;
-                    ms.Position = 0;
-                    return (PackedData)model.Deserialize(ms, null, typeof(PackedData));
-                }
+                using MemoryStream ms = new MemoryStream();
+                model.Serialize(ms, orig);
+                length = (int)ms.Length;
+                ms.Position = 0;
+#pragma warning disable CS0618
+                return (PackedData)model.Deserialize(ms, null, typeof(PackedData));
+#pragma warning restore CS0618
             }
             catch (Exception ex)
             {
@@ -597,9 +629,8 @@ namespace ProtoBuf.unittest.Meta
             var model = CreateModel();
 
             var orig = new PackedData { ArrayInt32 = new int[0], ArraySingle = new float[0], ArrayDouble = new double[0] };
-            int len;
 
-            var clone = RoundTrip(model, orig, "Runtime", out len);
+            var clone = RoundTrip(model, orig, "Runtime", out int len);
             Assert.Equal(6, len); //, "Runtime");
             Assert.Empty(clone.ArrayDouble);
             Assert.Empty(clone.ArrayInt32);
@@ -624,9 +655,8 @@ namespace ProtoBuf.unittest.Meta
             var model = CreateModel();
 
             var orig = new PackedData { ArrayInt32 = null, ArraySingle = null, ArrayDouble = null };
-            int len;
 
-            var clone = RoundTrip(model, orig, "Runtime", out len);
+            var clone = RoundTrip(model, orig, "Runtime", out int len);
             Assert.Equal(0, len); //, "Runtime");
             Assert.Null(clone.ArrayDouble);
             Assert.Null(clone.ArrayInt32);
@@ -645,7 +675,10 @@ namespace ProtoBuf.unittest.Meta
             Assert.Null(clone.ArrayInt32);
             Assert.Null(clone.ArraySingle);
         }
+
+#pragma warning disable IDE0060
         static void CheckExpectedListContents(PackedData data, string text)
+#pragma warning restore IDE0060
         {
             Assert.NotNull(data); //, text);
             Assert.Equal(3, data.ArrayInt32.Length); //, text);
@@ -668,9 +701,8 @@ namespace ProtoBuf.unittest.Meta
 
             var orig = new PackedData { ArrayInt32 = new int[] { 3, 5, 7 }, ArraySingle = new float[] { 3F, 5F, 7F }, ArrayDouble = new double[] { 3D, 5D, 7F } };
             CheckExpectedListContents(orig, "Original");
-            int len;
 
-            var clone = RoundTrip(model, orig, "Runtime", out len);
+            var clone = RoundTrip(model, orig, "Runtime", out int len);
             const int expectedLen = (1 + 1 + 1 + 1 + 1) + (1 + 1 + 4 + 4 + 4) + (1 + 1 + 8 + 8 + 8);
             Assert.Equal(expectedLen, len); //, "Runtime");
             Assert.NotNull(clone);
@@ -691,13 +723,13 @@ namespace ProtoBuf.unittest.Meta
         {
             try
             {
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    model.Serialize(ms, orig);
-                    length = (int)ms.Length;
-                    ms.Position = 0;
-                    return (PackedData)model.Deserialize(ms, null, typeof(PackedData));
-                }
+                using MemoryStream ms = new MemoryStream();
+                model.Serialize(ms, orig);
+                length = (int)ms.Length;
+                ms.Position = 0;
+#pragma warning disable CS0618
+                return (PackedData)model.Deserialize(ms, null, typeof(PackedData));
+#pragma warning restore CS0618
             }
             catch (Exception ex)
             {

@@ -107,7 +107,9 @@ using ProtoBuf.Meta;
             for (int i = 0; i < loop; i++)
             {
                 ms.Position = 0;
+#pragma warning disable CS0618
                 model.Deserialize(ms, null, typeof(TypeB));
+#pragma warning restore CS0618
             }
             typeBDeser.Stop();
 

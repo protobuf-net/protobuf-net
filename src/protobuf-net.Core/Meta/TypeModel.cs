@@ -614,7 +614,7 @@ namespace ProtoBuf.Meta
             return obj;
         }
 
-        private const string PreferGenericAPI = "The non-generic API is sub-optimal; it is recommended to use the generic API whenever possible";
+        internal const string PreferGenericAPI = "The non-generic API is sub-optimal; it is recommended to use the generic API whenever possible";
 
         /// <summary>
         /// Applies a protocol-buffer stream to an existing instance (which may be null).

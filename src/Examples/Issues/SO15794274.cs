@@ -13,7 +13,9 @@ namespace Examples.Issues
     
     public class SO15794274
     {
+#pragma warning disable xUnit1004 // Test methods should not be skipped
         [Fact(Skip = "this looks really painful; have tried sharded cache - cripples perf")]
+#pragma warning restore xUnit1004 // Test methods should not be skipped
         public void Execute()
         {
             Assert.Equal(8, IntPtr.Size);
@@ -34,8 +36,10 @@ namespace Examples.Issues
                 
                 model.Serialize(file, forest);
                 file.Position = 0;
-                
+
+#pragma warning disable CS0618
                 var clone = (Forest) model.Deserialize(file, null, typeof(Forest));
+#pragma warning restore CS0618
 
                 var graph = new HashSet<object>(RefComparer.Default);
                 int origChk = 0;

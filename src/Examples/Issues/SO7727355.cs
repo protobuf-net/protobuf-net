@@ -34,7 +34,7 @@ namespace Examples.Issues
 
         private int success;
         private Exception firstException;
-        private ManualResetEvent gate = new ManualResetEvent(false);
+        private readonly ManualResetEvent gate = new ManualResetEvent(false);
         private int waitingThreads;
         [Fact]
         public void Execute()
@@ -79,7 +79,9 @@ namespace Examples.Issues
                 {
                     model.Serialize(stream, web2PdfTestEntity);
                     stream.Position = 0;
+#pragma warning disable CS0618
                     clone = (Web2PdfTest) model.Deserialize(stream, null, typeof (Web2PdfTest));
+#pragma warning restore CS0618
                 }
                 if (clone.Prop1 != web2PdfTestEntity.Prop1) throw new InvalidDataException("Prop1");
                 if (clone.Prop2 != web2PdfTestEntity.Prop2) throw new InvalidDataException("Prop2");

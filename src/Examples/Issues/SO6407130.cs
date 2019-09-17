@@ -96,17 +96,17 @@ namespace Examples.Issues
         {
             var b = new B { A = new A(117) };
             ASurrogate.HackyFlags = 0;
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, b);
-                Assert.Equal(12, ASurrogate.HackyFlags); //, caption);
+            using var ms = new MemoryStream();
+            model.Serialize(ms, b);
+            Assert.Equal(12, ASurrogate.HackyFlags); //, caption);
 
-                ms.Position = 0;
-                ASurrogate.HackyFlags = 0;
-                var b2 = (B)model.Deserialize(ms, null, typeof(B));
-                Assert.Equal(3, ASurrogate.HackyFlags); //, caption);
-                Assert.Equal(117, b2.A.X); //, caption);
-            }
+            ms.Position = 0;
+            ASurrogate.HackyFlags = 0;
+#pragma warning disable CS0618
+            var b2 = (B)model.Deserialize(ms, null, typeof(B));
+#pragma warning restore CS0618
+            Assert.Equal(3, ASurrogate.HackyFlags); //, caption);
+            Assert.Equal(117, b2.A.X); //, caption);
         }
     }
 }

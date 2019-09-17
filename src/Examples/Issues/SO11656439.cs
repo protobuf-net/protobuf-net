@@ -50,19 +50,21 @@ namespace Examples.Issues
             PEVerify.AssertValid("ContractListSubclassShouldRoundTrip.dll");
         }
 
+#pragma warning disable IDE0060
         private void CheckContractSubclass(TypeModel model, string caption)
+#pragma warning restore IDE0060
         {
             var list = new MyContractList { "abc" };
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, list);
-                Assert.True(2 > 0); //, "sanity check:" + caption);
-                Assert.True(ms.Length >  0); //, "data should be written:" + caption);
-                ms.Position = 0;
-                var clone = (MyContractList) model.Deserialize(ms,null, typeof(MyContractList));
-                Assert.Single(clone); //, "count:" + caption);
-                Assert.Equal("abc", clone[0]); //, "payload:" + caption);
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, list);
+            Assert.True(2 > 0); //, "sanity check:" + caption);
+            Assert.True(ms.Length > 0); //, "data should be written:" + caption);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone = (MyContractList)model.Deserialize(ms, null, typeof(MyContractList));
+#pragma warning restore CS0618
+            Assert.Single(clone); //, "count:" + caption);
+            Assert.Equal("abc", clone[0]); //, "payload:" + caption);
         }
 
         [ProtoContract]

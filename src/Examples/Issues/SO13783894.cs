@@ -20,19 +20,21 @@ namespace Examples.Issues
 
             var obj1 = new Test<MyEnum> { Value = MyEnum.Default };
             var obj2 = new Test<MyEnum> { Value = MyEnum.Foo };
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, obj1);
-                ms.Position = 0;
-                var clone1 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
-                ms.SetLength(0);
-                model.Serialize(ms, obj2);
-                ms.Position = 0;
-                var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+            using var ms = new MemoryStream();
+            model.Serialize(ms, obj1);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone1 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+#pragma warning restore CS0618
+            ms.SetLength(0);
+            model.Serialize(ms, obj2);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+#pragma warning restore CS0618
 
-                Assert.Equal(2, clone1.Value);
-                Assert.Equal(3, clone2.Value);
-            }
+            Assert.Equal(2, clone1.Value);
+            Assert.Equal(3, clone2.Value);
         }
         [Fact]
         public void ConfigureExplicitEnumValuesAtRuntime()
@@ -42,19 +44,21 @@ namespace Examples.Issues
 
             var obj1 = new Test<MyEnum> { Value = MyEnum.Default };
             var obj2 = new Test<MyEnum> { Value = MyEnum.Foo };
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, obj1);
-                ms.Position = 0;
-                var clone1 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
-                ms.SetLength(0);
-                model.Serialize(ms, obj2);
-                ms.Position = 0;
-                var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+            using var ms = new MemoryStream();
+            model.Serialize(ms, obj1);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone1 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+#pragma warning restore CS0618
+            ms.SetLength(0);
+            model.Serialize(ms, obj2);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            var clone2 = (Test<int>)model.Deserialize(ms, null, typeof(Test<int>));
+#pragma warning restore CS0618
 
-                Assert.Equal(1, clone1.Value);
-                Assert.Equal(10, clone2.Value);
-            }
+            Assert.Equal(1, clone1.Value);
+            Assert.Equal(10, clone2.Value);
         }
         //[ProtoContract]
         enum MyEnum

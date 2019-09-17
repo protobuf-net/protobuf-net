@@ -70,7 +70,9 @@ namespace ProtoBuf
         /// <returns>A new, initialized instance.</returns>
         public static T Deserialize<T>(Stream source)
         {
+#pragma warning disable CS0618 // deliberately not updating this yet; T could be a range of unsupported things
             return (T)RuntimeTypeModel.Default.Deserialize(source, null, typeof(T));
+#pragma warning restore CS0618 // deliberately not updating this yet
         }
 
         /// <summary>
@@ -79,6 +81,7 @@ namespace ProtoBuf
 		/// <param name="type">The type to be created.</param>
 		/// <param name="source">The binary stream to apply to the new instance (cannot be null).</param>
 		/// <returns>A new, initialized instance.</returns>
+        [Obsolete(TypeModel.PreferGenericAPI, false)]
 		public static object Deserialize(Type type, Stream source)
         {
             return RuntimeTypeModel.Default.Deserialize(source, null, type);
@@ -92,7 +95,7 @@ namespace ProtoBuf
         public static void Serialize<T>(Stream destination, T instance)
         {
 #pragma warning disable RCS1165 // Unconstrained type parameter checked for null.
-            if (instance != null)
+            if (!(TypeHelper<T>.IsObjectType && instance is null))
 #pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
             {
                 RuntimeTypeModel.Default.Serialize(destination, instance);
@@ -215,7 +218,8 @@ namespace ProtoBuf
         /// <param name="instance">The existing instance to be modified (cannot be null).</param>
         /// <param name="info">The SerializationInfo containing the data to apply to the instance (cannot be null).</param>
         /// <param name="context">Additional information about this serialization operation.</param>
-        public static void Merge<T>(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context, T instance) where T : class, System.Runtime.Serialization.ISerializable
+        public static void Merge<T>(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context, T instance)
+            where T : class, System.Runtime.Serialization.ISerializable
         {
             // note: also tried byte[]... it doesn't perform hugely well with either (compared to regular serialization)
             if (info == null) throw new ArgumentNullException(nameof(info));
@@ -224,7 +228,7 @@ namespace ProtoBuf
 
             byte[] buffer = (byte[])info.GetValue(ProtoBinaryField, typeof(byte[]));
             using MemoryStream ms = new MemoryStream(buffer);
-            T result = (T)RuntimeTypeModel.Default.Deserialize(ms, instance, typeof(T), context);
+            T result = RuntimeTypeModel.Default.Deserialize<T>(ms, instance, context);
             if (!ReferenceEquals(result, instance))
             {
                 throw new ProtoException("Deserialization changed the instance; cannot succeed.");
@@ -410,7 +414,9 @@ namespace ProtoBuf
             /// <returns>A new, initialized instance.</returns>
             public static object Deserialize(Type type, Stream source)
             {
+#pragma warning disable CS0618
                 return RuntimeTypeModel.Default.Deserialize(source, null, type);
+#pragma warning restore CS0618
             }
 
             /// <summary>Applies a protocol-buffer stream to an existing instance.</summary>
@@ -420,7 +426,9 @@ namespace ProtoBuf
             public static object Merge(Stream source, object instance)
             {
                 if (instance == null) throw new ArgumentNullException(nameof(instance));
+#pragma warning disable CS0618
                 return RuntimeTypeModel.Default.Deserialize(source, instance, instance.GetType(), null);
+#pragma warning restore CS0618
             }
 
             /// <summary>

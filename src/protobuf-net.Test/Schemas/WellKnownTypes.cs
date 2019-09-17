@@ -92,7 +92,9 @@ namespace ProtoBuf.Schemas
             {
                 model.Serialize(ms, hazDt, null);
                 ms.Position = 0;
+#pragma warning disable CS0618
                 hazTs = (HasTimestamp)model.Deserialize(ms, null, typeof(HasTimestamp));
+#pragma warning restore CS0618
             }
             Assert.Equal(seconds, hazTs.Value?.Seconds ?? 0);
             Assert.Equal(nanos, hazTs.Value?.Nanos ?? 0);

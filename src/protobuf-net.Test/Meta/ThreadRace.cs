@@ -136,7 +136,9 @@ namespace ProtoBuf.unittest.Meta
                             using var ms = new MemoryStream(raw);
                             if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
                             allGo.WaitOne();
+#pragma warning disable CS0618
                             var data = (Dictionary<string, string>)model.Deserialize(ms, null, typeof(Dictionary<string, string>));
+#pragma warning restore CS0618
                             if (data == null || data.Count != 3) throw new InvalidDataException();
                             if (data["a"] != "b") throw new InvalidDataException();
                             if (data["c"] != "d") throw new InvalidDataException();
@@ -226,7 +228,9 @@ namespace ProtoBuf.unittest.Meta
                             using var ms = new MemoryStream(raw);
                             if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
                             else allGo.WaitOne();
+#pragma warning disable CS0618
                             object obj = model.Deserialize(ms, null, typeof(A));
+#pragma warning restore CS0618
                             if (obj.GetType() != typeof(Y)) throw new InvalidDataException("Should be a Y");
                         }
                         catch (Exception ex)
