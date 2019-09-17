@@ -409,7 +409,7 @@ namespace ProtoBuf.Meta
                         throw new ArgumentException("Repeated data (a list, collection, etc) has inbuilt behaviour and cannot be used as a subclass");
                     }
                     fieldNumbers[i] = subType.FieldNumber;
-                    serializers[i++] = subType.Serializer;
+                    serializers[i++] = subType.GetSerializer(Type);
                 }
             }
             if (fieldCount != 0)

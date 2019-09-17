@@ -1440,9 +1440,23 @@ namespace ProtoBuf.Meta
         /// Indicates that while an inheritance tree exists, the exact type encountered was not
         /// specified in that hierarchy and cannot be processed.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ThrowUnexpectedSubtype<T>(T value) where T : class
         {
             if (IsSubType<T>(value)) ThrowUnexpectedSubtype(typeof(T), value.GetType());
+        }
+
+        /// <summary>
+        /// Indicates that while an inheritance tree exists, the exact type encountered was not
+        /// specified in that hierarchy and cannot be processed.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ThrowUnexpectedSubtype<T, TConstruct>(T value)
+            where T : class
+            where TConstruct : class, T
+        {
+            if (IsSubType<T>(value) && value.GetType() != typeof(TConstruct))
+                ThrowUnexpectedSubtype(typeof(T), value.GetType());
         }
 
         /// <summary>

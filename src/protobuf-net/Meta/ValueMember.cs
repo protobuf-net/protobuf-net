@@ -686,7 +686,7 @@ namespace ProtoBuf.Meta
                 if (key >= 0)
                 {
                     defaultWireType = dataFormat == DataFormat.Group ? WireType.StartGroup : WireType.String;
-                    return SubItemSerializer.Create(type, type, meta);
+                    return SubItemSerializer.Create(type, meta);
                 }
             }
             defaultWireType = WireType.None;

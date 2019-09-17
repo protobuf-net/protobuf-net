@@ -20,7 +20,7 @@ namespace ProtoBuf
             model.Add(typeof(C));
             model.Add(typeof(D));
             model.Compile("EmitManualSerializer", "EmitManualSerializer.dll");
-            PEVerify.Verify("EmitManualSerializer.dll");
+            PEVerify.Verify("EmitManualSerializer.dll", 0, deleteOnSuccess: false);
         }
 #endif
 

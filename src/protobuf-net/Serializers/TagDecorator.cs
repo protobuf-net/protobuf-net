@@ -6,30 +6,16 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class TagDecorator : ProtoDecoratorBase, IProtoTypeSerializer
     {
-        bool IProtoTypeSerializer.IsSubType => false;
-        public bool HasCallbacks(TypeModel.CallbackType callbackType)
-        {
-            return Tail is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);
-        }
+        bool IProtoTypeSerializer.IsSubType => Tail is IProtoTypeSerializer pts && pts.IsSubType;
+        public bool HasCallbacks(TypeModel.CallbackType callbackType) => Tail is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);
 
-        public bool CanCreateInstance()
-        {
-            return Tail is IProtoTypeSerializer pts && pts.CanCreateInstance();
-        }
+        public bool CanCreateInstance() => Tail is IProtoTypeSerializer pts && pts.CanCreateInstance();
 
-        public object CreateInstance(ProtoReader source)
-        {
-            return ((IProtoTypeSerializer)Tail).CreateInstance(source);
-        }
+        public object CreateInstance(ProtoReader source) => ((IProtoTypeSerializer)Tail).CreateInstance(source);
 
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
-        {
-            if (Tail is IProtoTypeSerializer pts)
-            {
-                pts.Callback(value, callbackType, context);
-            }
-        }
-
+            => (Tail as IProtoTypeSerializer)?.Callback(value, callbackType, context);
+            
         public void EmitCallback(Compiler.CompilerContext ctx, Compiler.Local valueFrom, TypeModel.CallbackType callbackType)
         {
             // we only expect this to be invoked if HasCallbacks returned true, so implicitly Tail
@@ -42,8 +28,7 @@ namespace ProtoBuf.Serializers
             ((IProtoTypeSerializer)Tail).EmitCreateInstance(ctx, callNoteObject);
         }
 
-        bool IProtoTypeSerializer.ShouldEmitCreateInstance
-            => ((IProtoTypeSerializer)Tail).ShouldEmitCreateInstance;
+        bool IProtoTypeSerializer.ShouldEmitCreateInstance => Tail is IProtoTypeSerializer pts && pts.ShouldEmitCreateInstance;
 
         public override Type ExpectedType => Tail.ExpectedType;
         Type IProtoTypeSerializer.BaseType => ExpectedType;

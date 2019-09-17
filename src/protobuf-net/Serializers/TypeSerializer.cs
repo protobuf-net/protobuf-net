@@ -2,6 +2,8 @@
 using ProtoBuf.Meta;
 using System.Reflection;
 using ProtoBuf.Compiler;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace ProtoBuf.Serializers
 {
@@ -258,7 +260,7 @@ namespace ProtoBuf.Serializers
             for (int i = 0; i < serializers.Length; i++)
             {
                 IRuntimeProtoSerializerNode ser = serializers[i];
-                if (ser.ExpectedType != ExpectedType && Helpers.IsAssignableFrom(ser.ExpectedType, actualType))
+                if (ser is IProtoTypeSerializer ts && ts.IsSubType && Helpers.IsAssignableFrom(ser.ExpectedType, actualType))
                 {
                     return ser;
                 }
@@ -283,7 +285,7 @@ namespace ProtoBuf.Serializers
             for (int i = 0; i < serializers.Length; i++)
             {
                 IRuntimeProtoSerializerNode ser = serializers[i];
-                if (ser.ExpectedType == ExpectedType)
+                if (!(ser is IProtoTypeSerializer ts && ts.IsSubType))
                 {
                     //Helpers.DebugWriteLine(": " + ser.ToString());
                     ser.Write(writer, ref state, value);
@@ -479,67 +481,53 @@ namespace ProtoBuf.Serializers
                 // inheritance
                 if (CanHaveInheritance)
                 {
-                    for (int i = 0; i < serializers.Length; i++)
+                    // if we expect sub-types: do if (IsSubType()) and a switch inside that eventually calls ThrowUnexpectedSubtype
+                    // otherwise, *just* call ThrowUnexpectedSubtype (it does the IsSubType test itself)
+                    if (serializers.Any(x => x is IProtoTypeSerializer pts && pts.IsSubType))
                     {
-                        IRuntimeProtoSerializerNode ser = serializers[i];
-                        Type serType = ser.ExpectedType;
-                        if (serType != ExpectedType)
+                        ctx.LoadValue(loc);
+                        ctx.EmitCall(typeof(TypeModel).GetMethod(nameof(TypeModel.IsSubType), BindingFlags.Static | BindingFlags.Public)
+                            .MakeGenericMethod(typeof(T)));
+                        ctx.BranchIfFalse(startFields, false);
+
+                        for (int i = 0; i < serializers.Length; i++)
                         {
-                            Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
-                            ctx.LoadValue(loc);
-                            ctx.TryCast(serType);
-                            ctx.CopyValue();
-                            ctx.BranchIfTrue(ifMatch, true);
-                            ctx.DiscardValue();
-                            ctx.Branch(nextTest, true);
-                            ctx.MarkLabel(ifMatch);
-                            if (Helpers.IsValueType(serType))
+                            IRuntimeProtoSerializerNode ser = serializers[i];
+                            Type serType = ser.ExpectedType;
+                            if (ser is IProtoTypeSerializer ts && ts.IsSubType)
                             {
-                                ctx.DiscardValue();
+                                Compiler.CodeLabel ifMatch = ctx.DefineLabel(), nextTest = ctx.DefineLabel();
                                 ctx.LoadValue(loc);
-                                ctx.CastFromObject(serType);
+                                ctx.TryCast(serType);
+                                ctx.CopyValue();
+                                ctx.BranchIfTrue(ifMatch, true);
+                                ctx.DiscardValue();
+                                ctx.Branch(nextTest, true);
+                                ctx.MarkLabel(ifMatch);
+                                if (Helpers.IsValueType(serType))
+                                {
+                                    ctx.DiscardValue();
+                                    ctx.LoadValue(loc);
+                                    ctx.CastFromObject(serType);
+                                }
+                                ser.EmitWrite(ctx, null);
+                                ctx.Branch(startFields, false);
+                                ctx.MarkLabel(nextTest);
                             }
-                            ser.EmitWrite(ctx, null);
-                            ctx.Branch(startFields, false);
-                            ctx.MarkLabel(nextTest);
                         }
                     }
-
+                    
+                    MethodInfo method;
                     if (constructType != null && constructType != ExpectedType)
                     {
-                        using (Compiler.Local actualType = new Compiler.Local(ctx, typeof(Type)))
-                        {
-                            // would have jumped to "fields" if an expected sub-type, so two options:
-                            // a: *exactly* that type, b: an *unexpected* type
-                            ctx.LoadValue(loc);
-                            ctx.EmitCall(typeof(object).GetMethod("GetType"));
-                            ctx.CopyValue();
-                            ctx.StoreValue(actualType);
-                            ctx.LoadValue(ExpectedType);
-                            ctx.BranchIfEqual(startFields, true);
-
-                            ctx.LoadValue(actualType);
-                            ctx.LoadValue(constructType);
-                            ctx.BranchIfEqual(startFields, true);
-                        }
+                        method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[2].MakeGenericMethod(ExpectedType, constructType);
                     }
                     else
                     {
-                        // would have jumped to "fields" if an expected sub-type, so two options:
-                        // a: *exactly* that type, b: an *unexpected* type
-                        ctx.LoadValue(loc);
-                        ctx.EmitCall(typeof(object).GetMethod("GetType"));
-                        ctx.LoadValue(ExpectedType);
-                        ctx.BranchIfEqual(startFields, true);
+                        method = TypeSerializerMethodCache.ThrowUnexpectedSubtype[1].MakeGenericMethod(ExpectedType);
                     }
-                    // unexpected, then... note that this *might* be a proxy, which
-                    // is handled by ThrowUnexpectedSubtype
-                    ctx.LoadValue(ExpectedType);
                     ctx.LoadValue(loc);
-                    ctx.EmitCall(typeof(object).GetMethod("GetType"));
-                    ctx.EmitCall(typeof(TypeModel).GetMethod("ThrowUnexpectedSubtype",
-                        BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static,
-                        null, new Type[] { typeof(Type), typeof(Type) },null));
+                    ctx.EmitCall(method);
                 }
                 // fields
 
@@ -547,7 +535,8 @@ namespace ProtoBuf.Serializers
                 for (int i = 0; i < serializers.Length; i++)
                 {
                     IRuntimeProtoSerializerNode ser = serializers[i];
-                    if (ser.ExpectedType == ExpectedType) ser.EmitWrite(ctx, loc);
+                    if (!(ser is IProtoTypeSerializer ts && ts.IsSubType))
+                        ser.EmitWrite(ctx, loc);
                 }
 
                 // extension data
@@ -555,12 +544,13 @@ namespace ProtoBuf.Serializers
                 {
                     ctx.LoadValue(loc);
                     ctx.LoadWriter(true);
-                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod("AppendExtensionData", this));
+                    ctx.EmitCall(Compiler.WriterUtil.GetStaticMethod(nameof(ProtoWriter.AppendExtensionData), this));
                 }
                 // post-callbacks
                 EmitCallbackIfNeeded(ctx, loc, TypeModel.CallbackType.AfterSerialize);
             }
         }
+
         private static void EmitInvokeCallback(Compiler.CompilerContext ctx, MethodInfo method, bool copyValue, Type constructType, Type type)
         {
             if (method != null)
@@ -854,17 +844,28 @@ namespace ProtoBuf.Serializers
             //    serializer.EmitRead(ctx, null);
             //}
 
+            bool isSubtype = false;
             if (HasInheritance)
             {
-                LoadFromState(ctx, loc);
-                serializer.EmitRead(ctx, null);
+                if (serializer is IProtoTypeSerializer pts && pts.IsSubType)
+                {
+                    // special-cased; we don't access .Value here, but instead
+                    // pass the state down
+                    isSubtype = true;
+                    serializer.EmitRead(ctx, loc);
+                }
+                else
+                {
+                    LoadFromState(ctx, loc);
+                    serializer.EmitRead(ctx, null);
+                }
             }
             else
             {
                 serializer.EmitRead(ctx, loc);
             }
 
-            if (serializer.ReturnsValue) 
+            if (!isSubtype && serializer.ReturnsValue) 
             {
                 WriteToState(ctx, loc, null, serializer.ExpectedType);
             }
@@ -947,5 +948,15 @@ namespace ProtoBuf.Serializers
                 ctx.MarkLabel(afterNullCheck);
             }
         }
+    }
+
+    internal static class TypeSerializerMethodCache
+    {
+        internal static readonly Dictionary<int,MethodInfo> ThrowUnexpectedSubtype
+        = (from method in typeof(TypeModel).GetMethods(BindingFlags.Static | BindingFlags.Public)
+                where method.Name == nameof(TypeModel.ThrowUnexpectedSubtype) && method.IsGenericMethodDefinition
+                where method.GetParameters().Length == 1
+                let args = method.GetGenericArguments()
+                select new { Count = args.Length, Method = method }).ToDictionary(x => x.Count, x => x.Method);
     }
 }

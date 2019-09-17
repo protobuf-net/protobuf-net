@@ -37,7 +37,8 @@ namespace ProtoBuf
         T ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value);
     }
 
-    public struct SubTypeState<T> where T : class
+    public struct SubTypeState<T>
+        where T : class
     {
         private readonly ISerializationContext _context;
         private readonly Func<ISerializationContext, object> _ctor;

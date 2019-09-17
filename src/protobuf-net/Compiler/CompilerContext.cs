@@ -277,6 +277,7 @@ namespace ProtoBuf.Compiler
         }
 
         public bool IsService => Scope.IsFullEmit && !IsStatic;
+
         public void LoadSelfAsService<T>(bool assertImplemented = false) where T : class
         {
             if (IsStatic)
