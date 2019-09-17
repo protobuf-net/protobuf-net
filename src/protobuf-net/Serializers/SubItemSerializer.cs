@@ -8,6 +8,7 @@ namespace ProtoBuf.Serializers
     internal sealed class SubItemSerializer<TBase, TActual> : SubItemSerializer, IProtoTypeSerializer
         where TActual : TBase
     { 
+        public bool IsSubType { get; }
         bool IProtoTypeSerializer.HasCallbacks(TypeModel.CallbackType callbackType)
         {
             return ((IProtoTypeSerializer)Proxy.Serializer).HasCallbacks(callbackType);

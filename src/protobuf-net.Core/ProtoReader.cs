@@ -1404,10 +1404,10 @@ namespace ProtoBuf
         /// <summary>
         /// Reads a sub-item from the input reader
         /// </summary>
-        public T ReadSubItem<T>(ref State state, T value = default, IProtoDeserializer<T> serializer = null)
+        public T ReadSubItem<T>(ref State state, T value = default, IProtoSerializer<T> serializer = null)
         {
             var tok = StartSubItem(this, ref state);
-            var result = (serializer ?? TypeModel.GetDeserializer<T>(_model)).Read(this, ref state, value);
+            var result = (serializer ?? TypeModel.GetSerializer<T>(_model)).Read(this, ref state, value);
             EndSubItem(tok, this, ref state);
             return result;
         }
@@ -1419,17 +1419,17 @@ namespace ProtoBuf
             where TBaseType : class
             where T : class, TBaseType
         {
-            return (T)(serializer ?? TypeModel.GetSubTypeSerializer<TBaseType>(_model)).ReadSubType(this, ref state, new SubTypeState<TBaseType>(this, TypeHelper<T>.Instance, value));
+            return (T)(serializer ?? TypeModel.GetSubTypeSerializer<TBaseType>(_model)).ReadSubType(this, ref state, SubTypeState<TBaseType>.Create<T>(this, value));
         }
 
-        public T Deserialize<T>(ref State state, T value = default, IProtoDeserializer<T> serializer = null)
+        public T Deserialize<T>(ref State state, T value = default, IProtoSerializer<T> serializer = null)
         {
             if (TypeHelper<T>.IsObjectType && value is object)
             {
                 SetRootObject(value);
             }
 
-            var result = (serializer ?? TypeModel.GetDeserializer<T>(Model)).Read(this, ref state, value);
+            var result = (serializer ?? TypeModel.GetSerializer<T>(Model)).Read(this, ref state, value);
             CheckFullyConsumed(ref state);
             return result;
         }

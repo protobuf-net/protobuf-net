@@ -4,7 +4,7 @@ using ProtoBuf.Meta;
 namespace ProtoBuf.Serializers
 {
     internal sealed class CompiledSerializer<T> : CompiledSerializer,
-        IProtoSerializer<T>, IProtoDeserializer<T>
+        IProtoSerializer<T>
     {
         private readonly Compiler.ProtoSerializer<T> serializer;
         private readonly Compiler.ProtoDeserializer<T> deserializer;
@@ -29,7 +29,7 @@ namespace ProtoBuf.Serializers
             }
         }
 
-        T IProtoDeserializer<T>.Read(ProtoReader reader, ref ProtoReader.State state, T value)
+        T IProtoSerializer<T>.Read(ProtoReader reader, ref ProtoReader.State state, T value)
             => deserializer(reader, ref state, value);
 
         public override object Read(ProtoReader source, ref ProtoReader.State state, object value)
@@ -48,15 +48,11 @@ namespace ProtoBuf.Serializers
             return head.HasCallbacks(callbackType); // these routes only used when bits of the model not compiled
         }
 
-        bool IProtoTypeSerializer.CanCreateInstance()
-        {
-            return head.CanCreateInstance();
-        }
+        bool IProtoTypeSerializer.IsSubType => head.IsSubType;
 
-        object IProtoTypeSerializer.CreateInstance(ProtoReader source)
-        {
-            return head.CreateInstance(source);
-        }
+        bool IProtoTypeSerializer.CanCreateInstance() => head.CanCreateInstance();
+
+        object IProtoTypeSerializer.CreateInstance(ProtoReader source) => head.CreateInstance(source);
 
         public void Callback(object value, TypeModel.CallbackType callbackType, SerializationContext context)
         {

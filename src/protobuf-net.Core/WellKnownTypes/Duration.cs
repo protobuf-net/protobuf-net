@@ -43,9 +43,9 @@ namespace ProtoBuf.WellKnownTypes
         public static implicit operator Duration(TimeSpan value) => new Duration(value);
     }
 
-    partial class WellKnownSerializer : IProtoSerializer<Duration>, IProtoDeserializer<Duration>
+    partial class WellKnownSerializer : IProtoSerializer<Duration>
     {
-        Duration IProtoDeserializer<Duration>.Read(ProtoReader reader, ref ProtoReader.State state, Duration value)
+        Duration IProtoSerializer<Duration>.Read(ProtoReader reader, ref ProtoReader.State state, Duration value)
             => ReadDuration(reader, ref state, value);
 
         private static Duration ReadDuration(ProtoReader reader, ref ProtoReader.State state, Duration value)

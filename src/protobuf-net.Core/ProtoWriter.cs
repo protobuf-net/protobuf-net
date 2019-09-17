@@ -1172,6 +1172,6 @@ namespace ProtoBuf
     internal static class TypeHelper<T>
     {
         public static readonly bool IsObjectType = !Helpers.IsValueType(typeof(T));
-        public static readonly Func<ISerializationContext, T> Instance = ctx => TypeModel.CreateInstance<T>(ctx);
+        public static readonly Func<ISerializationContext, T> Factory = ctx => TypeModel.CreateInstance<T>(ctx);
     }
 }

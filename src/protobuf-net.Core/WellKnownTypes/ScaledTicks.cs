@@ -96,9 +96,9 @@ namespace ProtoBuf.WellKnownTypes
         }
     }
 
-    partial class WellKnownSerializer : IProtoSerializer<ScaledTicks>, IProtoDeserializer<ScaledTicks>
+    partial class WellKnownSerializer : IProtoSerializer<ScaledTicks>
     {
-        ScaledTicks IProtoDeserializer<ScaledTicks>.Read(ProtoReader reader, ref ProtoReader.State state, ScaledTicks _)
+        ScaledTicks IProtoSerializer<ScaledTicks>.Read(ProtoReader reader, ref ProtoReader.State state, ScaledTicks _)
         {
             int fieldNumber;
             TimeSpanScale scale = TimeSpanScale.Days;

@@ -6,6 +6,8 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class TupleSerializer : IProtoTypeSerializer
     {
+
+        bool IProtoTypeSerializer.IsSubType => false;
         private readonly MemberInfo[] members;
         private readonly ConstructorInfo ctor;
         private readonly IRuntimeProtoSerializerNode[] tails;

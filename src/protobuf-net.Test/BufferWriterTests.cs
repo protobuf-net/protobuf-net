@@ -52,11 +52,11 @@ namespace ProtoBuf.Tests
         {
             private Foo() { }
 
-            private static readonly FooSerializer s_inst = new FooSerializer();
-            public static IProtoSerializer<Foo> Serializer => s_inst;
-            public static IProtoDeserializer<Foo> Deserializer => s_inst;
-            sealed class FooSerializer : IProtoSerializer<Foo>, IProtoDeserializer<Foo>
+            public static IProtoSerializer<Foo> Serializer => FooSerializer.Instance;
+            sealed class FooSerializer : IProtoSerializer<Foo>
             {
+                public static FooSerializer Instance { get; } = new FooSerializer();
+                private FooSerializer() { }
                 public Foo Read(ProtoReader reader, ref ProtoReader.State state, Foo value) => value;
 
                 public void Write(ProtoWriter writer, ref ProtoWriter.State state, Foo value) { }
@@ -106,7 +106,7 @@ namespace ProtoBuf.Tests
             public A Inner { get; set; }
         }
 
-        class ASerializer : IProtoSerializer<A>, IProtoDeserializer<A>
+        class ASerializer : IProtoSerializer<A>
         {
             public ASerializer(ITestOutputHelper log) => Log = log;
             public ITestOutputHelper Log { get; }

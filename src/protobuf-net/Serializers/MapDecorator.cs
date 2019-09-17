@@ -68,7 +68,7 @@ namespace ProtoBuf.Serializers
 
         private readonly RuntimePairSerializer _runtimeSerializer;
 
-        sealed class RuntimePairSerializer : IProtoSerializer<KeyValuePair<TKey, TValue>>, IProtoDeserializer<KeyValuePair<TKey, TValue>>
+        sealed class RuntimePairSerializer : IProtoSerializer<KeyValuePair<TKey, TValue>>
         {
             private readonly IRuntimeProtoSerializerNode _keyTail, _valueTail;
             public RuntimePairSerializer(IRuntimeProtoSerializerNode keyTail, IRuntimeProtoSerializerNode valueTail)
@@ -77,7 +77,7 @@ namespace ProtoBuf.Serializers
                 _valueTail = valueTail;
             }
 
-            KeyValuePair<TKey, TValue> IProtoDeserializer<KeyValuePair<TKey, TValue>>.Read(ProtoReader reader, ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
+            KeyValuePair<TKey, TValue> IProtoSerializer<KeyValuePair<TKey, TValue>>.Read(ProtoReader reader, ref ProtoReader.State state, KeyValuePair<TKey, TValue> pair)
             {
                 var key = pair.Key;
                 var value = pair.Value;

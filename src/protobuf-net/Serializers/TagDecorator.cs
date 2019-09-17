@@ -6,6 +6,7 @@ namespace ProtoBuf.Serializers
 {
     internal sealed class TagDecorator : ProtoDecoratorBase, IProtoTypeSerializer
     {
+        bool IProtoTypeSerializer.IsSubType => false;
         public bool HasCallbacks(TypeModel.CallbackType callbackType)
         {
             return Tail is IProtoTypeSerializer pts && pts.HasCallbacks(callbackType);

@@ -19,5 +19,7 @@ namespace ProtoBuf.Serializers
         void EmitWriteRoot(Compiler.CompilerContext ctx, Compiler.Local entity);
 
         bool HasInheritance { get; }
+
+        bool IsSubType { get; }
     }
 }

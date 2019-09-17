@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace ProtoBuf.WellKnownTypes
 {
-    partial class WellKnownSerializer : IProtoSerializer<Guid>, IProtoDeserializer<Guid>
+    partial class WellKnownSerializer : IProtoSerializer<Guid>
     {
         private static
 #if !DEBUG
@@ -20,7 +20,7 @@ namespace ProtoBuf.WellKnownTypes
         }
 
         private const int FieldGuidLow = 1, FieldGuidHigh = 2;
-        Guid IProtoDeserializer<Guid>.Read(ProtoReader reader, ref ProtoReader.State state, Guid value)
+        Guid IProtoSerializer<Guid>.Read(ProtoReader reader, ref ProtoReader.State state, Guid value)
         {
             ulong low = 0, high = 0;
             int fieldNumber;

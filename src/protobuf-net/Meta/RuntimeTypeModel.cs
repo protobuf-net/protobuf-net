@@ -758,14 +758,6 @@ namespace ProtoBuf.Meta
         }
 
         /// <summary>Resolve a service relative to T</summary>
-        protected internal override T GetService<T>()
-            => throw new NotSupportedException(nameof(GetService) + " should not be used directly");
-
-        /// <summary>Resolve a service relative to T</summary>
-        protected internal override IProtoDeserializer<T> GetDeserializer<T>()
-            => GetServices<T>() as IProtoDeserializer<T>;
-
-        /// <summary>Resolve a service relative to T</summary>
         protected internal override IProtoSerializer<T> GetSerializer<T>()
             => GetServices<T>() as IProtoSerializer<T>;
 
@@ -1208,12 +1200,12 @@ namespace ProtoBuf.Meta
 
                 Type inheritanceRoot = metaType.GetInheritanceRoot();
                 
-                // we always emit the deserializer
-                var serType = typeof(IProtoDeserializer<>).MakeGenericType(runtimeType);
+                // we always emit the serializer API
+                var serType = typeof(IProtoSerializer<>).MakeGenericType(runtimeType);
                 type.AddInterfaceImplementation(serType);
 
-                var il = CompilerContextScope.Implement(type, serType, nameof(IProtoDeserializer<string>.Read));
-                var ctx = new CompilerContext(scope, il, false, false, this, runtimeType, nameof(IProtoDeserializer<string>.Read));
+                var il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Read));
+                var ctx = new CompilerContext(scope, il, false, false, this, runtimeType, nameof(IProtoSerializer<string>.Read));
                 if (serializer.HasInheritance)
                 {
                     serializer.EmitReadRoot(ctx, ctx.InputValue);
@@ -1225,19 +1217,11 @@ namespace ProtoBuf.Meta
                 }
                 ctx.Return();
 
-                // the serializer is variant; we only emit it if this is a basic type, or if we're the root
-                if (!serializer.HasInheritance || ReferenceEquals(inheritanceRoot, metaType.Type))
-                {
-                    serType = typeof(IProtoSerializer<>).MakeGenericType(runtimeType);
-                    type.AddInterfaceImplementation(serType);
-
-                    il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Write));
-                    ctx = new CompilerContext(scope, il, false, true, this,
-                         runtimeType, nameof(IProtoSerializer<string>.Write));
-                    if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
-                    else serializer.EmitWrite(ctx, ctx.InputValue);
-                    ctx.Return();
-                }
+                il = CompilerContextScope.Implement(type, serType, nameof(IProtoSerializer<string>.Write));
+                ctx = new CompilerContext(scope, il, false, true, this, runtimeType, nameof(IProtoSerializer<string>.Write));
+                if (serializer.HasInheritance) serializer.EmitWriteRoot(ctx, ctx.InputValue);
+                else serializer.EmitWrite(ctx, ctx.InputValue);
+                ctx.Return();
 
                 // and we emit the sub-type serializer whenever inheritance is involved
                 if (serializer.HasInheritance)

@@ -7,20 +7,18 @@ namespace ProtoBuf
     /// <summary>
     /// Abstract API capable of serializing/deserializing
     /// </summary>
-    public interface IProtoSerializer<in T>
+    public interface IProtoSerializer<T>
     {
-        /// <summary>
-        /// Serialize an instance to the supplied writer
-        /// </summary>
-        void Write(ProtoWriter writer, ref ProtoWriter.State state, T value);
-    }
 
-    public interface IProtoDeserializer<T>
-    {
         /// <summary>
         /// Deserialize an instance from the supplied writer
         /// </summary>
         T Read(ProtoReader reader, ref ProtoReader.State state, T value);
+
+        /// <summary>
+        /// Serialize an instance to the supplied writer
+        /// </summary>
+        void Write(ProtoWriter writer, ref ProtoWriter.State state, T value);
     }
 
     /// <summary>
@@ -39,15 +37,19 @@ namespace ProtoBuf
         T ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value);
     }
 
-    public struct SubTypeState<T>
+    public struct SubTypeState<T> where T : class
     {
         private readonly ISerializationContext _context;
         private readonly Func<ISerializationContext, object> _ctor;
         private object _value;
         private Action<T, ISerializationContext> _onBeforeDeserialize;
 
-        internal SubTypeState(ISerializationContext context, Func<ISerializationContext, object> ctor,
-            object value, Action<T, ISerializationContext> onBeforeDeserialize = null)
+        public static SubTypeState<T> Create<TValue>(ISerializationContext context, TValue value)
+            where TValue : class, T
+            => new SubTypeState<T>(context, TypeHelper<TValue>.Factory, value, null);
+
+        private SubTypeState(ISerializationContext context, Func<ISerializationContext, object> ctor,
+            object value, Action<T, ISerializationContext> onBeforeDeserialize)
         {
             _context = context;
             _ctor = ctor;
@@ -58,7 +60,7 @@ namespace ProtoBuf
         public T Value
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _value is T typed ? typed : Cast();
+            get => (_value as T) ?? Cast();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => _value = value;
         }
@@ -82,7 +84,7 @@ namespace ProtoBuf
                 // for Deserialize<A>, in which case we'll choose B (because we're at that layer), but the
                 // caller could have asked for Deserialize<C>, in which case we'll prefer C (because that's
                 // what they asked for)
-                var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Instance)(_context);
+                var typed = ((_ctor as Func<ISerializationContext, T>) ?? TypeHelper<T>.Factory)(_context);
                 _value = typed;
                 _onBeforeDeserialize?.Invoke(typed, _context);
                 return typed;

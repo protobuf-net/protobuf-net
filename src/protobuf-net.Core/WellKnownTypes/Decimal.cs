@@ -2,11 +2,11 @@
 
 namespace ProtoBuf.WellKnownTypes
 {
-    partial class WellKnownSerializer : IProtoSerializer<decimal>, IProtoDeserializer<decimal>
+    partial class WellKnownSerializer : IProtoSerializer<decimal>
     {
         private const int FieldDecimalLow = 0x01, FieldDecimalHigh = 0x02, FieldDecimalSignScale = 0x03;
 
-        decimal IProtoDeserializer<decimal>.Read(ProtoReader reader, ref ProtoReader.State state, decimal value)
+        decimal IProtoSerializer<decimal>.Read(ProtoReader reader, ref ProtoReader.State state, decimal value)
         {
             ulong low = 0;
             uint high = 0;

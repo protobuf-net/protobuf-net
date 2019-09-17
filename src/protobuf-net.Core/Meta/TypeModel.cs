@@ -1208,19 +1208,13 @@ namespace ProtoBuf.Meta
         /// Get a typed serializer for <typeparamref name="T"/>
         /// </summary>
         protected internal virtual IProtoSerializer<T> GetSerializer<T>()
-            => GetService<IProtoSerializer<T>>();
-
-        protected internal virtual IProtoDeserializer<T> GetDeserializer<T>()
-            => GetService<IProtoDeserializer<T>>();
+            => this as IProtoSerializer<T>;
 
         protected internal virtual IProtoFactory<T> GetFactory<T>()
-            => GetService<IProtoFactory<T>>();
+            => this as IProtoFactory<T>;
 
         protected internal virtual IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>() where T : class
-            => GetService<IProtoSubTypeSerializer<T>>();
-
-        protected internal virtual T GetService<T>() where T : class
-            => this as T;
+            => this as IProtoSubTypeSerializer<T>;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T NoSerializer<T>(TypeModel model) where T : class
@@ -1247,12 +1241,11 @@ namespace ProtoBuf.Meta
             return Activator.CreateInstance<T>();
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IProtoSerializer<T> GetSerializer<T>(TypeModel model)
            => model?.GetSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSerializer<T> ?? NoSerializer<IProtoSerializer<T>>(model);
 
-        internal static IProtoDeserializer<T> GetDeserializer<T>(TypeModel model)
-           => model?.GetDeserializer<T>() ?? WellKnownSerializer.Instance as IProtoDeserializer<T> ?? NoSerializer<IProtoDeserializer<T>>(model);
-
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>(TypeModel model) where T : class
            => model?.GetSubTypeSerializer<T>() ?? WellKnownSerializer.Instance as IProtoSubTypeSerializer<T> ?? NoSerializer<IProtoSubTypeSerializer<T>>(model);
 
