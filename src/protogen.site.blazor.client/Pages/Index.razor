@@ -116,7 +116,7 @@
                 </div>
             }
             <div class="@(showMoreOptions ? "d-none":"form-group  flex-grow-1 h-100")">
-                <MonacoEditor @ref="protoEditor" Language="protobuf"></MonacoEditor>
+                <MonacoEditor @ref="protoEditor" Language="protobuf" @bind-Content="model.ProtoContent"></MonacoEditor>
             </div>
         </div>
         <div class="col-6  d-flex flex-column">
@@ -144,7 +144,7 @@
                         <p style="flex:none;">
                             @file.Name
                         </p>
-                        <MonacoEditor Language="@model.GetMonacoLanguage()" FirstContent="@file.Text" ReadOnly="true"></MonacoEditor>
+                        <MonacoEditor Language="@model.GetMonacoLanguage()" Content="@file.Text" ReadOnly="true"></MonacoEditor>
                     </div>
                 }
             }
@@ -170,7 +170,6 @@
     {
         model.ProtoContent = await Http.GetStringAsync("https://raw.githubusercontent.com/google/protobuf/master/src/google/protobuf/descriptor.proto");
         showMoreOptions = false;
-        await protoEditor.SetContent(model.ProtoContent);
     }
     //we use this for inserting options at the end of the script without erasing user custom content
     private const string ProtoOptionCommentDelimiter = "//endof options";
@@ -191,20 +190,18 @@
             model.ProtoContent = $"{optContent}{Environment.NewLine}{ProtoOptionCommentDelimiter}{Environment.NewLine}{model.ProtoContent}";
             //because the content was changed we go back to the editor
             showMoreOptions = false;
-            
+
         }
-        await protoEditor.SetContent(model.ProtoContent);
     }
     protected async Task Generate()
     {
-
-        model.ProtoContent = await protoEditor.GetContent();
         try
         {
             loading = true;
             codeFiles = null;
             exceptionMessage = null;
             errors = null;
+            StateHasChanged();
             using (var reader = new StringReader(model.ProtoContent))
             {
                 var set = new FileDescriptorSet

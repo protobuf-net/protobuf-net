@@ -142,12 +142,16 @@
             });
             monaco.languages.register({ id: 'protobuf' });
 
-            window.initMonaco = function (block, language, readonly) {
+            window.initMonaco = function (block,component, language, readonly) {
 
                 if (!block) {
                     return;
                 }
+
                 block.monacoEditorModel = monaco.editor.createModel("", language);
+                block.monacoEditorModel.onDidChangeContent(function (e) {
+                    component.invokeMethodAsync('OnEditorValueChanged', block.monacoEditorModel.getValue());
+                });
                 block.monacoEditor = monaco.editor.create(block, {
                     language: language,
                     minimap: {
@@ -173,7 +177,6 @@
                     message: message,
                     severity: isError ? monaco.MarkerSeverity.Error : monaco.MarkerSeverity.Warning
                 });
-                console.log(existingErrors);
                 monaco.editor.setModelMarkers(block.monacoEditorModel, "owner", existingErrors);
                 block.monacoErrors = existingErrors;
             };
