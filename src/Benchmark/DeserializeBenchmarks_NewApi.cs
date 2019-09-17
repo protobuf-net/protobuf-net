@@ -56,7 +56,7 @@ namespace Benchmark
         {
             using (var reader = ProtoReader.Create(out var state, ExposableData(), model))
             {
-                return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+                return reader.Deserialize<protogen.Database>(ref state);
             }
         }
 
@@ -64,7 +64,7 @@ namespace Benchmark
         {
             using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
             {
-                return (protogen.Database)model.Deserialize(reader, ref state, null, typeof(protogen.Database));
+                return reader.Deserialize<protogen.Database>(ref state);
             }
         }
 

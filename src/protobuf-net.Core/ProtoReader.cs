@@ -1422,6 +1422,9 @@ namespace ProtoBuf
             return (T)(serializer ?? TypeModel.GetSubTypeSerializer<TBaseType>(_model)).ReadSubType(this, ref state, SubTypeState<TBaseType>.Create<T>(this, value));
         }
 
+        /// <summary>
+        /// Deserialize an instance of the provided type
+        /// </summary>
         public T Deserialize<T>(ref State state, T value = default, IProtoSerializer<T> serializer = null)
         {
             if (TypeHelper<T>.IsObjectType && value is object)
@@ -1434,6 +1437,9 @@ namespace ProtoBuf
             return result;
         }
 
+        /// <summary>
+        /// Create an instance of the provided type, respecting any custom factory rules
+        /// </summary>
         public T CreateInstance<T>(IProtoFactory<T> factory = null)
         {
             var obj = TypeModel.CreateInstance<T>(this, factory);

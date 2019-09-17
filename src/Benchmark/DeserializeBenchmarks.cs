@@ -4,6 +4,7 @@ using ProtoBuf;
 using ProtoBuf.Meta;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 
 namespace Benchmark
 {
@@ -11,11 +12,18 @@ namespace Benchmark
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
     public partial class DeserializeBenchmarks
     {
-        //[Benchmark(Baseline = true)]
-        //[Benchmark]
-        public protoc.Database Google()
+        [BenchmarkCategory("Google")]
+        [Benchmark(Description = "Array")]
+        public protoc.Database Google_Array()
         {
             return protoc.Database.Parser.ParseFrom(_data);
+        }
+
+        [BenchmarkCategory("Google")]
+        [Benchmark(Description = "MemoryStream")]
+        public protoc.Database Google_MemoryStream()
+        {
+            return protoc.Database.Parser.ParseFrom(ExposableData());
         }
 
         private byte[] _data;
@@ -57,7 +65,6 @@ namespace Benchmark
         public protogen.Database MemoryStream_Legacy_Dll() => MemoryStream_Legacy(_dll);
 #endif
 
-
         private protogen.Database MemoryStream_Legacy(TypeModel model)
         {
 #pragma warning disable CS0618
@@ -95,8 +102,8 @@ namespace Benchmark
 #endif
         }
 
-#pragma warning disable CS0649
+#pragma warning disable CS0649, CS0169
         TypeModel _cip, _c, _auto, _dll;
-#pragma warning restore CS0649
+#pragma warning restore CS0649, CS0169
     }
 }

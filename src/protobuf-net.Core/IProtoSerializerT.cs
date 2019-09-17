@@ -37,6 +37,9 @@ namespace ProtoBuf
         T ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value);
     }
 
+    /// <summary>
+    /// Represents the state of an inheritance deserialization operation
+    /// </summary>
     public struct SubTypeState<T>
         where T : class
     {
@@ -45,6 +48,9 @@ namespace ProtoBuf
         private object _value;
         private Action<T, ISerializationContext> _onBeforeDeserialize;
 
+        /// <summary>
+        /// Create a new value, using the provided concrete type if a new instance is required
+        /// </summary>
         public static SubTypeState<T> Create<TValue>(ISerializationContext context, TValue value)
             where TValue : class, T
             => new SubTypeState<T>(context, TypeHelper<TValue>.Factory, value, null);
@@ -58,6 +64,9 @@ namespace ProtoBuf
             _onBeforeDeserialize = onBeforeDeserialize;
         }
 
+        /// <summary>
+        /// Gets or sets the current instance represented
+        /// </summary>
         public T Value
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -66,13 +75,17 @@ namespace ProtoBuf
             set => _value = value;
         }
 
-        public void CreateIfNeeded()
-        {
-            if (_value is null) Cast();
-        }
+        /// <summary>
+        /// Ensures that the instance has a value
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CreateIfNeeded() => _ = Value;
 
         internal object RawValue => _value;
 
+        /// <summary>
+        /// Indicates whether an instance currently exists
+        /// </summary>
         public bool HasValue => _value is object;
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -94,6 +107,9 @@ namespace ProtoBuf
             throw new NotImplementedException("upcast");
         }
 
+        /// <summary>
+        /// Parse the input as a sub-type of the instance
+        /// </summary>
         public void ReadSubType<TSubType>(ProtoReader reader, ref ProtoReader.State state, IProtoSubTypeSerializer<TSubType> serializer = null) where TSubType : class, T
         {
             var tok = ProtoReader.StartSubItem(reader, ref state);
@@ -102,6 +118,9 @@ namespace ProtoBuf
             ProtoReader.EndSubItem(tok, reader, ref state);
         }
 
+        /// <summary>
+        /// Specifies a serialization callback to be used when the item is constructed; if the item already exists, the callback is executed immediately
+        /// </summary>
         public void OnBeforeDeserialize(Action<T, ISerializationContext> callback)
         {
             if (callback != null)
@@ -112,6 +131,9 @@ namespace ProtoBuf
             }
         }
 
+        /// <summary>
+        /// Performs a serialization callback on the instance, returning the instance; this is usually the last method in a deserializer
+        /// </summary>
         public T OnAfterDeserialize(Action<T, ISerializationContext> callback)
         {
             var obj = Value;

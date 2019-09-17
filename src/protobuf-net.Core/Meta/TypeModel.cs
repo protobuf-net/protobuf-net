@@ -1210,9 +1210,15 @@ namespace ProtoBuf.Meta
         protected internal virtual IProtoSerializer<T> GetSerializer<T>()
             => this as IProtoSerializer<T>;
 
+        /// <summary>
+        /// Get a factory for creating <typeparamref name="T"/> values
+        /// </summary>
         protected internal virtual IProtoFactory<T> GetFactory<T>()
             => this as IProtoFactory<T>;
 
+        /// <summary>
+        /// Get a typed serializer for deserialzing <typeparamref name="T"/> as part of an inheritance model
+        /// </summary>
         protected internal virtual IProtoSubTypeSerializer<T> GetSubTypeSerializer<T>() where T : class
             => this as IProtoSubTypeSerializer<T>;
 

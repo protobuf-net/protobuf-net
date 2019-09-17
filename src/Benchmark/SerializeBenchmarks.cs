@@ -12,9 +12,9 @@ namespace Benchmark
     {
         private byte[] _data;
         private RuntimeTypeModel _cip;
-#pragma warning disable IDE0044, IDE0051, IDE0052
+#pragma warning disable IDE0044, IDE0051, IDE0052, CS0169
         private TypeModel _c, _dll, _auto;
-#pragma warning restore IDE0044, IDE0051, IDE0052
+#pragma warning restore IDE0044, IDE0051, IDE0052, CS0169
         private Database _database;
 
         [GlobalSetup]
