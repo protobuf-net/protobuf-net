@@ -5,6 +5,7 @@ using System;
 using System.Buffers;
 using System.IO;
 
+#if NEW_API
 namespace Benchmark
 {
     [ClrJob, CoreJob, MemoryDiagnoser]
@@ -40,7 +41,7 @@ namespace Benchmark
             _ms.Position = 0;
             using (var reader = ReadMS(out var state))
             {
-                var dal = Model.Deserialize(reader, ref state, null, typeof(DAL.Database));
+                var dal = Model.Deserialize(reader, ref state, null, typeof(protogen.Database));
                 GC.KeepAlive(dal);
             }
         }
@@ -50,7 +51,7 @@ namespace Benchmark
         {
             using (var reader = ReadROS(out var state))
             {
-                var dal = Model.Deserialize(reader, ref state, null, typeof(DAL.Database));
+                var dal = Model.Deserialize(reader, ref state, null, typeof(protogen.Database));
                 GC.KeepAlive(dal);
             }
         }
@@ -59,9 +60,10 @@ namespace Benchmark
         {
             using (var reader = ReadROM(out var state))
             {
-                var dal = Model.Deserialize(reader, ref state, null, typeof(DAL.Database));
+                var dal = Model.Deserialize(reader, ref state, null, typeof(protogen.Database));
                 GC.KeepAlive(dal);
             }
         }
     }
 }
+#endif

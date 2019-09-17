@@ -1,8 +1,4 @@
-﻿#pragma warning disable RCS1213
-
-using BenchmarkDotNet.Running;
-using ProtoBuf;
-using System;
+﻿using BenchmarkDotNet.Running;
 
 namespace Benchmark
 {

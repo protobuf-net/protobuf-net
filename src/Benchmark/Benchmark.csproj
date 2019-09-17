@@ -2,8 +2,10 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.0;netcoreapp2.1;net47;netcoreapp3.0</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.0;netcoreapp2.1;net472;netcoreapp3.0</TargetFrameworks>
     <NoWarn>CS1591</NoWarn>
+    <DefineConstants>$(DefineConstants);NEW_API</DefineConstants>
+    <DefineConstants Condition="'$(TargetFramework)'=='net472'">$(DefineConstants);WRITE_DLL</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,20 +15,17 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.11.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.6.0" />
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.11.5" />
+    <PackageReference Include="Google.Protobuf" Version="3.9.1" />
     <ProjectReference Include="..\protobuf-net\protobuf-net.csproj" />
+    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.25" />
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0-rc1.19456.4" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="test.bin">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <PackageReference Include="Pipelines.Sockets.Unofficial" Version="2.0.31-pre.31.gf8c8025252" />
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.6.0-preview8.19405.3" />
   </ItemGroup>
 
 </Project>
