@@ -42,7 +42,6 @@ namespace Benchmark
         [Benchmark(Description = "Auto")]
         public protogen.Database MemoryStream_New_Auto() => MemoryStream_New(_auto);
 
-#if WRITE_DLL
         [BenchmarkCategory("ROM_RefState")]
         [Benchmark(Description = "Dll")]
         public protogen.Database ROM_Dll() => ROM_New(_dll);
@@ -50,11 +49,10 @@ namespace Benchmark
         [BenchmarkCategory("MS_RefState")]
         [Benchmark(Description = "Dll")]
         public protogen.Database MS_Dll() => MemoryStream_New(_dll);
-#endif
 
         private protogen.Database MemoryStream_New(TypeModel model)
         {
-            using (var reader = ProtoReader.Create(out var state, ExposableData(), model))
+            using (var reader = ProtoReader.Create(out var state, ExposableData(), model ?? Throw()))
             {
                 return reader.Deserialize<protogen.Database>(ref state);
             }
@@ -62,7 +60,7 @@ namespace Benchmark
 
         private protogen.Database ROM_New(TypeModel model)
         {
-            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
+            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model ?? Throw()))
             {
                 return reader.Deserialize<protogen.Database>(ref state);
             }
@@ -73,8 +71,7 @@ namespace Benchmark
         [Benchmark(Description = "Manual")]
         public protogen.Database ROM_Manual()
         {
-            var model = RuntimeTypeModel.Default;
-            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model))
+            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), RuntimeTypeModel.Default))
             {
                 protogen.Database obj = default;
                 Merge(reader, ref state, ref obj);
@@ -86,8 +83,7 @@ namespace Benchmark
         [Benchmark(Description = "Manual")]
         public protogen.Database MemoryStream_Manual()
         {
-            var model = RuntimeTypeModel.Default;
-            using (var reader = ProtoReader.Create(out var state, ExposableData(), model))
+            using (var reader = ProtoReader.Create(out var state, ExposableData(), RuntimeTypeModel.Default))
             {
                 protogen.Database obj = default;
                 Merge(reader, ref state, ref obj);

@@ -10,6 +10,7 @@ namespace Benchmark
 {
     [ClrJob, CoreJob, MemoryDiagnoser]
     [GroupBenchmarksBy(BenchmarkLogicalGroupRule.ByCategory)]
+    [CategoriesColumn]
     public partial class DeserializeBenchmarks
     {
         [BenchmarkCategory("Google")]
@@ -59,16 +60,17 @@ namespace Benchmark
         public protogen.Database MemoryStream_Legacy_Auto() => MemoryStream_Legacy(_auto);
 #endif
 
-#if WRITE_DLL
         [BenchmarkCategory("MS_Legacy")]
         [Benchmark(Description = "Dll")]
         public protogen.Database MemoryStream_Legacy_Dll() => MemoryStream_Legacy(_dll);
-#endif
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static TypeModel Throw() => throw new NotSupportedException();
 
         private protogen.Database MemoryStream_Legacy(TypeModel model)
         {
 #pragma warning disable CS0618
-            using (var reader = ProtoReader.Create(ExposableData(), model))
+            using (var reader = ProtoReader.Create(ExposableData(), model ?? Throw()))
             {
                 return (protogen.Database)model.Deserialize(reader, null, typeof(protogen.Database));
             }

@@ -1,11 +1,11 @@
-﻿using System;
-using System.IO;
-
+﻿using ProtoBuf.Internal;
+using ProtoBuf.WellKnownTypes;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using ProtoBuf.WellKnownTypes;
 
 namespace ProtoBuf.Meta
 {
@@ -752,15 +752,32 @@ namespace ProtoBuf.Meta
             }
         }
 
+        private static readonly object NoSerializerSentinel = new object();
+        private object DynamicDeserializeAny<T>(ProtoReader reader, ref ProtoReader.State state, T value)
+        {
+            IProtoSerializer<T> serializer = null;
+            try
+            {
+                serializer = TypeModel.GetSerializer<T>(this);
+            }
+            catch { }
+            if (serializer == null) return NoSerializerSentinel;
+
+            return reader.Deserialize<T>(ref state, value, serializer);
+        }
+
         private object DeserializeAny(ProtoReader reader, ref ProtoReader.State state, Type type, object value, bool noAutoCreate)
         {
-            int key = GetKey(ref type);
-            if (key >= 0 && !Helpers.IsEnum(type))
+            if (!DynamicStub.TryDeserialize(type, this, reader, ref state, ref value))
             {
-                return DeserializeCore(reader, ref state, key, value);
+                int key = GetKey(ref type);
+                if (key >= 0 && !Helpers.IsEnum(type))
+                {
+                    return DeserializeCore(reader, ref state, key, value);
+                }
+                // this returns true to say we actively found something, but a value is assigned either way (or throws)
+                TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, noAutoCreate, false, null);
             }
-            // this returns true to say we actively found something, but a value is assigned either way (or throws)
-            TryDeserializeAuxiliaryType(reader, ref state, DataFormat.Default, TypeModel.ListItemTag, type, ref value, true, false, noAutoCreate, false, null);
             return value;
         }
 
@@ -1225,7 +1242,7 @@ namespace ProtoBuf.Meta
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static T NoSerializer<T>(TypeModel model) where T : class
         {
-            throw new InvalidOperationException($"No {typeof(T).Name} available for model {model?.ToString() ?? "(none)"}");
+            throw new ProtoException($"No {typeof(T).Name} available for model {model?.ToString() ?? "(none)"}");
         }
 
         internal static T CreateInstance<T>(ISerializationContext context = null, IProtoFactory<T> factory = null)
