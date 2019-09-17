@@ -42,11 +42,13 @@ using ProtoBuf.Meta;
             TypeB typeB = new TypeB();
             for (int i = 0; i < 100; i++)
             {
-                ContainedType inner = new ContainedType();
-                inner.param1 = "Item " + i.ToString();
-                inner.param2 = i;
-                inner.param3 = i % 2 == 0;
-                inner.param4 = i % 3 == 0;
+                ContainedType inner = new ContainedType
+                {
+                    param1 = "Item " + i.ToString(),
+                    param2 = i,
+                    param3 = i % 2 == 0,
+                    param4 = i % 3 == 0
+                };
                 typeB.containedType.Add(inner);
             }
             var model = CreateModel();
@@ -65,7 +67,9 @@ using ProtoBuf.Meta;
             ms.SetLength(0);
             model.Serialize(ms, typeA);
             ms.Position = 0;
+#pragma warning disable CS0618
             model.Deserialize(ms, null, typeof(TypeA));
+#pragma warning restore CS0618
 
             Stopwatch typeASer = Stopwatch.StartNew();
             for (int i = 0; i < loop; i++)
@@ -78,14 +82,18 @@ using ProtoBuf.Meta;
             for (int i = 0; i < loop; i++)
             {
                 ms.Position = 0;
+#pragma warning disable CS0618
                 model.Deserialize(ms, null, typeof(TypeA));
+#pragma warning restore CS0618
             }
             typeADeser.Stop();
 
             ms.SetLength(0);
             model.Serialize(ms, typeB);
             ms.Position = 0;
+#pragma warning disable CS0618
             TypeB clone = (TypeB)model.Deserialize(ms, null, typeof(TypeB));
+#pragma warning restore CS0618
             Assert.Equal(typeB.containedType.Count, clone.containedType.Count);
 
             Stopwatch typeBSer = Stopwatch.StartNew();

@@ -114,31 +114,27 @@ namespace ProtoBuf.ServiceModel
             }
             else
             {
-                using (MemoryStream ms = new MemoryStream())
+                using MemoryStream ms = new MemoryStream();
+                if (isList)
                 {
-                    if (isList)
-                    {
-                        model.Serialize(ms, graph, null);
-                    }
-                    else
-                    {
-                        using (ProtoWriter protoWriter = ProtoWriter.Create(out var state, ms, model, null))
-                        {
-                            try
-                            {
-                                model.Serialize(protoWriter, ref state, key, graph);
-                                protoWriter.Close(ref state);
-                            }
-                            catch
-                            {
-                                protoWriter.Abandon();
-                                throw;
-                            }
-                        }
-                    }
-                    byte[] buffer = ms.GetBuffer();
-                    writer.WriteBase64(buffer, 0, (int)ms.Length);
+                    model.Serialize(ms, graph, null);
                 }
+                else
+                {
+                    using ProtoWriter protoWriter = ProtoWriter.Create(out var state, ms, model, null);
+                    try
+                    {
+                        model.Serialize(protoWriter, ref state, key, graph);
+                        protoWriter.Close(ref state);
+                    }
+                    catch
+                    {
+                        protoWriter.Abandon();
+                        throw;
+                    }
+                }
+                byte[] buffer = ms.GetBuffer();
+                writer.WriteBase64(buffer, 0, (int)ms.Length);
             }
         }
 
@@ -174,10 +170,8 @@ namespace ProtoBuf.ServiceModel
                 {
                     return model.Deserialize(Stream.Null, null, type, null);
                 }
-                using (var protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF))
-                {
-                    return model.DeserializeCore(protoReader, ref state, key, null);
-                }
+                using var protoReader = ProtoReader.Create(out var state, Stream.Null, model, null, ProtoReader.TO_EOF);
+                return model.DeserializeCore(protoReader, ref state, key, null);
             }
 
             object result;
@@ -190,10 +184,8 @@ namespace ProtoBuf.ServiceModel
                 }
                 else
                 {
-                    using (var protoReader = ProtoReader.Create(out var state, ms, model, null, ProtoReader.TO_EOF))
-                    {
-                        result = model.DeserializeCore(protoReader, ref state, key, null);
-                    }
+                    using var protoReader = ProtoReader.Create(out var state, ms, model, null, ProtoReader.TO_EOF);
+                    result = model.DeserializeCore(protoReader, ref state, key, null);
                 }
             }
             reader.ReadEndElement();

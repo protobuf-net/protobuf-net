@@ -52,18 +52,14 @@ namespace Benchmark
 
         private protogen.Database MemoryStream_New(TypeModel model)
         {
-            using (var reader = ProtoReader.Create(out var state, ExposableData(), model ?? Throw()))
-            {
-                return reader.Deserialize<protogen.Database>(ref state);
-            }
+            using var reader = ProtoReader.Create(out var state, ExposableData(), model ?? Throw());
+            return reader.Deserialize<protogen.Database>(ref state);
         }
 
         private protogen.Database ROM_New(TypeModel model)
         {
-            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model ?? Throw()))
-            {
-                return reader.Deserialize<protogen.Database>(ref state);
-            }
+            using var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), model ?? Throw());
+            return reader.Deserialize<protogen.Database>(ref state);
         }
 
 
@@ -71,24 +67,20 @@ namespace Benchmark
         [Benchmark(Description = "Manual")]
         public protogen.Database ROM_Manual()
         {
-            using (var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), RuntimeTypeModel.Default))
-            {
-                protogen.Database obj = default;
-                Merge(reader, ref state, ref obj);
-                return obj;
-            }
+            using var reader = ProtoReader.Create(out var state, new ReadOnlyMemory<byte>(_data), RuntimeTypeModel.Default);
+            protogen.Database obj = default;
+            Merge(reader, ref state, ref obj);
+            return obj;
         }
 
         [BenchmarkCategory("MS_RefState")]
         [Benchmark(Description = "Manual")]
         public protogen.Database MemoryStream_Manual()
         {
-            using (var reader = ProtoReader.Create(out var state, ExposableData(), RuntimeTypeModel.Default))
-            {
-                protogen.Database obj = default;
-                Merge(reader, ref state, ref obj);
-                return obj;
-            }
+            using var reader = ProtoReader.Create(out var state, ExposableData(), RuntimeTypeModel.Default);
+            protogen.Database obj = default;
+            Merge(reader, ref state, ref obj);
+            return obj;
         }
 
         public TypeModel Auto => _auto;

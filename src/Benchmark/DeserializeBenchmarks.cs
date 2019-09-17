@@ -70,10 +70,8 @@ namespace Benchmark
         private protogen.Database MemoryStream_Legacy(TypeModel model)
         {
 #pragma warning disable CS0618
-            using (var reader = ProtoReader.Create(ExposableData(), model ?? Throw()))
-            {
-                return (protogen.Database)model.Deserialize(reader, null, typeof(protogen.Database));
-            }
+            using var reader = ProtoReader.Create(ExposableData(), model ?? Throw());
+            return (protogen.Database)model.Deserialize(reader, null, typeof(protogen.Database));
 #pragma warning restore CS0618
         }
 
@@ -104,8 +102,8 @@ namespace Benchmark
 #endif
         }
 
-#pragma warning disable CS0649, CS0169
+#pragma warning disable CS0649, CS0169, IDE0044, IDE0051
         TypeModel _cip, _c, _auto, _dll;
-#pragma warning restore CS0649, CS0169
+#pragma warning restore CS0649, CS0169, IDE0044, IDE0051
     }
 }

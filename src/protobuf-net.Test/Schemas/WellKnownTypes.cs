@@ -105,7 +105,7 @@ namespace ProtoBuf.Schemas
         private readonly TypeModel runtime, dynamicMethod, fullyCompiled;
         public WellKnownTypes()
         {
-            RuntimeTypeModel Create(bool autoCompile)
+            static RuntimeTypeModel Create(bool autoCompile)
             {
                 var model = RuntimeTypeModel.Create();
                 model.AutoCompile = autoCompile;
@@ -231,12 +231,12 @@ namespace ProtoBuf.Schemas
         }
         static TTo ChangeType<TFrom, TTo>(TypeModel model, TFrom val)
         {
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, val);
-                ms.Position = 0;
-                return (TTo)model.Deserialize(ms, null, typeof(TTo));
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, val);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            return (TTo)model.Deserialize(ms, null, typeof(TTo));
+#pragma warning restore CS0618
         }
     }
 

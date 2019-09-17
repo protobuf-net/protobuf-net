@@ -154,8 +154,7 @@ namespace FX11
             {
                 compiled.Serialize(ms, prod);
 #if COREFX
-                ArraySegment<byte> tmp;
-                if (!ms.TryGetBuffer(out tmp))
+                if (!ms.TryGetBuffer(out var tmp))
                     throw new Exception("oops");
                 byte[] buffer = tmp.Array;
 #else
@@ -251,9 +250,9 @@ namespace FX11
             return model;
         }
 
-#pragma warning disable RCS1213
+#pragma warning disable RCS1213, IDE0051
         private static Product Read(ref ProtoReader.State state, Product product1, ProtoReader reader1)
-#pragma warning restore RCS1213
+#pragma warning restore RCS1213, IDE0051
         {
             int num;
             while ((num = reader1.ReadFieldHeader(ref state)) > 0)

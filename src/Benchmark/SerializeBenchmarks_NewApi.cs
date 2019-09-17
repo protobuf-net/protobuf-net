@@ -30,34 +30,30 @@ namespace Benchmark
 
         private void WriteBufferWriter(TypeModel model)
         {
-            using (var buffer = BufferWriter<byte>.Create(64 * 1024))
+            using var buffer = BufferWriter<byte>.Create(64 * 1024);
+            for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                for (int i = 0; i < OperationsPerInvoke; i++)
+                using (var writer = ProtoWriter.Create(out var state, buffer, model))
                 {
-                    using (var writer = ProtoWriter.Create(out var state, buffer, model))
-                    {
-                        model.Serialize(writer, ref state, _database);
-                        writer.Close(ref state);
-                    }
-                    AssertLength(buffer.Length);
-                    buffer.Flush().Dispose();
+                    model.Serialize(writer, ref state, _database);
+                    writer.Close(ref state);
                 }
+                AssertLength(buffer.Length);
+                buffer.Flush().Dispose();
             }
         }
 
         private void WriteFakeBufferWriter(TypeModel model)
         {
-            using (var buffer = new FakeBufferWriter())
+            using var buffer = new FakeBufferWriter();
+            for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                for (int i = 0; i < OperationsPerInvoke; i++)
+                using (var writer = ProtoWriter.Create(out var state, buffer, model))
                 {
-                    using (var writer = ProtoWriter.Create(out var state, buffer, model))
-                    {
-                        model.Serialize(writer, ref state, _database);
-                        writer.Close(ref state);
-                    }
-                    AssertLength(buffer.Reset());
+                    model.Serialize(writer, ref state, _database);
+                    writer.Close(ref state);
                 }
+                AssertLength(buffer.Reset());
             }
         }
 

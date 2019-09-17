@@ -57,7 +57,9 @@ namespace ProtoBuf
         /// original instance.</returns>
         public static T Merge<T>(Stream source, T instance)
         {
+#pragma warning disable CS0618
             return (T)RuntimeTypeModel.Default.Deserialize(source, instance, typeof(T));
+#pragma warning restore CS0618
         }
 
         /// <summary>
@@ -110,12 +112,10 @@ namespace ProtoBuf
         /// <returns>A new instane of type TNewType, with the data from TOldType.</returns>
         public static TTo ChangeType<TFrom, TTo>(TFrom instance)
         {
-            using (var ms = new MemoryStream())
-            {
-                Serialize<TFrom>(ms, instance);
-                ms.Position = 0;
-                return Deserialize<TTo>(ms);
-            }
+            using var ms = new MemoryStream();
+            Serialize<TFrom>(ms, instance);
+            ms.Position = 0;
+            return Deserialize<TTo>(ms);
         }
 
         /// <summary>
@@ -141,11 +141,9 @@ namespace ProtoBuf
             if (info == null) throw new ArgumentNullException(nameof(info));
             if (instance == null) throw new ArgumentNullException(nameof(instance));
             if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", nameof(instance));
-            using (MemoryStream ms = new MemoryStream())
-            {
-                RuntimeTypeModel.Default.Serialize(ms, instance, context);
-                info.AddValue(ProtoBinaryField, ms.ToArray());
-            }
+            using MemoryStream ms = new MemoryStream();
+            RuntimeTypeModel.Default.Serialize(ms, instance, context);
+            info.AddValue(ProtoBinaryField, ms.ToArray());
         }
 
         /// <summary>
@@ -161,11 +159,9 @@ namespace ProtoBuf
             if (instance == null) throw new ArgumentNullException(nameof(instance));
 #pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
 
-            using (MemoryStream ms = new MemoryStream())
-            {
-                Serializer.Serialize(ms, instance);
-                writer.WriteBase64(Helpers.GetBuffer(ms), 0, (int)ms.Length);
-            }
+            using MemoryStream ms = new MemoryStream();
+            Serializer.Serialize(ms, instance);
+            writer.WriteBase64(Helpers.GetBuffer(ms), 0, (int)ms.Length);
         }
         /// <summary>
         /// Applies a protocol-buffer from an XmlReader to an existing instance.
@@ -183,23 +179,21 @@ namespace ProtoBuf
             const int LEN = 4096;
             byte[] buffer = new byte[LEN];
             int read;
-            using (MemoryStream ms = new MemoryStream())
+            using MemoryStream ms = new MemoryStream();
+            int depth = reader.Depth;
+            while (reader.Read() && reader.Depth > depth)
             {
-                int depth = reader.Depth;
-                while(reader.Read() && reader.Depth > depth)
+                if (reader.NodeType == System.Xml.XmlNodeType.Text)
                 {
-                    if (reader.NodeType == System.Xml.XmlNodeType.Text)
+                    while ((read = reader.ReadContentAsBase64(buffer, 0, LEN)) > 0)
                     {
-                        while ((read = reader.ReadContentAsBase64(buffer, 0, LEN)) > 0)
-                        {
-                            ms.Write(buffer, 0, read);
-                        }
-                        if (reader.Depth <= depth) break;
+                        ms.Write(buffer, 0, read);
                     }
+                    if (reader.Depth <= depth) break;
                 }
-                ms.Position = 0;
-                Serializer.Merge(ms, instance);
             }
+            ms.Position = 0;
+            Serializer.Merge(ms, instance);
         }
 
         private const string ProtoBinaryField = "proto";
@@ -229,13 +223,11 @@ namespace ProtoBuf
             if (instance.GetType() != typeof(T)) throw new ArgumentException("Incorrect type", nameof(instance));
 
             byte[] buffer = (byte[])info.GetValue(ProtoBinaryField, typeof(byte[]));
-            using (MemoryStream ms = new MemoryStream(buffer))
+            using MemoryStream ms = new MemoryStream(buffer);
+            T result = (T)RuntimeTypeModel.Default.Deserialize(ms, instance, typeof(T), context);
+            if (!ReferenceEquals(result, instance))
             {
-                T result = (T)RuntimeTypeModel.Default.Deserialize(ms, instance, typeof(T), context);
-                if (!ReferenceEquals(result, instance))
-                {
-                    throw new ProtoException("Deserialization changed the instance; cannot succeed.");
-                }
+                throw new ProtoException("Deserialization changed the instance; cannot succeed.");
             }
         }
 
@@ -374,10 +366,8 @@ namespace ProtoBuf
         /// <returns>True if a length could be obtained, false otherwise.</returns>
         public static bool TryReadLengthPrefix(byte[] buffer, int index, int count, PrefixStyle style, out int length)
         {
-            using (Stream source = new MemoryStream(buffer, index, count))
-            {
-                return TryReadLengthPrefix(source, style, out length);
-            }
+            using Stream source = new MemoryStream(buffer, index, count);
+            return TryReadLengthPrefix(source, style, out length);
         }
 
         /// <summary>
@@ -514,10 +504,8 @@ namespace ProtoBuf
         public static T Deserialize<T>(ReadOnlyMemory<byte> source, T value = default, SerializationContext context = null)
         {
             var model = RuntimeTypeModel.Default;
-            using (var reader = ProtoReader.Create(out var state, source, model, context))
-            {
-                return (T)model.Deserialize(reader, ref state, value, typeof(T));
-            }
+            using var reader = ProtoReader.Create(out var state, source, model, context);
+            return (T)model.Deserialize(reader, ref state, value, typeof(T));
         }
 
         /// <summary>
@@ -526,10 +514,8 @@ namespace ProtoBuf
         public static T Deserialize<T>(ReadOnlySequence<byte> source, T value = default, SerializationContext context = null)
         {
             var model = RuntimeTypeModel.Default;
-            using (var reader = ProtoReader.Create(out var state, source, model, context))
-            {
-                return (T)model.Deserialize(reader, ref state, value, typeof(T));
-            }
+            using var reader = ProtoReader.Create(out var state, source, model, context);
+            return (T)model.Deserialize(reader, ref state, value, typeof(T));
         }
 
         /// <summary>
@@ -545,18 +531,16 @@ namespace ProtoBuf
 #pragma warning restore RCS1165 // Unconstrained type parameter checked for null.
             {
                 var model = RuntimeTypeModel.Default;
-                using (var writer = ProtoWriter.Create(out var state, destination, model, context))
+                using var writer = ProtoWriter.Create(out var state, destination, model, context);
+                try
                 {
-                    try
-                    {
-                        model.Serialize(writer, ref state, instance);
-                        writer.Close(ref state);
-                    }
-                    catch
-                    {
-                        writer.Abandon();
-                        throw;
-                    }
+                    model.Serialize(writer, ref state, instance);
+                    writer.Close(ref state);
+                }
+                catch
+                {
+                    writer.Abandon();
+                    throw;
                 }
             }
         }

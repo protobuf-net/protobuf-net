@@ -335,21 +335,14 @@ namespace ProtoBuf
         /// Reads a signed 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64, SignedVariant
         /// </summary>
         public long ReadInt64(ref State state)
-        {
-            switch (WireType)
+            => WireType switch
             {
-                case WireType.Variant:
-                    return (long)ReadUInt64Varint(ref state);
-                case WireType.Fixed32:
-                    return (int)ImplReadUInt32Fixed(ref state);
-                case WireType.Fixed64:
-                    return (long)ImplReadUInt64Fixed(ref state);
-                case WireType.SignedVariant:
-                    return Zag(ReadUInt64Varint(ref state));
-                default:
-                    throw CreateWireTypeException(ref state);
-            }
-        }
+                WireType.Variant => (long)ReadUInt64Varint(ref state),
+                WireType.Fixed32 => (int)ImplReadUInt32Fixed(ref state),
+                WireType.Fixed64 => (long)ImplReadUInt64Fixed(ref state),
+                WireType.SignedVariant => Zag(ReadUInt64Varint(ref state)),
+                _ => throw CreateWireTypeException(ref state),
+            };
 
         private Dictionary<string, string> stringInterner;
         private protected string Intern(string value)
@@ -796,19 +789,13 @@ namespace ProtoBuf
         /// Reads an unsigned 64-bit integer from the stream; supported wire-types: Variant, Fixed32, Fixed64
         /// </summary>
         public ulong ReadUInt64(ref State state)
-        {
-            switch (WireType)
+            => WireType switch
             {
-                case WireType.Variant:
-                    return ReadUInt64Varint(ref state);
-                case WireType.Fixed32:
-                    return ImplReadUInt32Fixed(ref state);
-                case WireType.Fixed64:
-                    return ImplReadUInt64Fixed(ref state);
-                default:
-                    throw CreateWireTypeException(ref state);
-            }
-        }
+                WireType.Variant => ReadUInt64Varint(ref state),
+                WireType.Fixed32 => ImplReadUInt32Fixed(ref state),
+                WireType.Fixed64 => ImplReadUInt64Fixed(ref state),
+                _ => throw CreateWireTypeException(ref state),
+            };
 
         /// <summary>
         /// Reads a single-precision number from the stream; supported wire-types: Fixed32, Fixed64
@@ -1193,14 +1180,13 @@ namespace ProtoBuf
             }
             if (count > 0) ThrowEoF();
         }
-#pragma warning disable RCS1163
+
         internal static Exception AddErrorData(Exception exception, ProtoReader source, ref State state)
-#pragma warning restore RCS1163
         {
             if (exception != null && source != null && !exception.Data.Contains("protoSource"))
             {
                 exception.Data.Add("protoSource", string.Format("tag={0}; wire-type={1}; offset={2}; depth={3}",
-                    source._fieldNumber, source.WireType, source._longPosition, source._depth));
+                    source.FieldNumber, source.WireType, source.GetPosition(ref state), source._depth));
             }
             return exception;
         }
@@ -1357,12 +1343,11 @@ namespace ProtoBuf
             TypeModel model = parent.Model;
             SerializationContext ctx = parent.Context;
             if (model == null) throw new InvalidOperationException("Types cannot be merged unless a type-model has been specified");
-            using (var ms = new MemoryStream())
-            {
-                model.Serialize(ms, from, ctx);
-                ms.Position = 0;
-                return model.Deserialize(ms, to, null);
-            }
+            using var ms = new MemoryStream();
+            model.Serialize(ms, from, ctx);
+            ms.Position = 0;
+#pragma warning disable CS0618
+            return model.Deserialize(ms, to, type: null);
         }
 
         /// <summary>

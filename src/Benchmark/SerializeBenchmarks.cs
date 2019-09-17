@@ -36,10 +36,8 @@ namespace Benchmark
 #endif
 
 #pragma warning disable CS0618
-            using (var reader = ProtoReader.Create(Exposable(_data), model))
-            {
-                _database = (Database)model.Deserialize(reader, null, typeof(Database));
-            }
+            using var reader = ProtoReader.Create(Exposable(_data), model);
+            _database = (Database)model.Deserialize(reader, null, typeof(Database));
 #pragma warning restore CS0618
         }
 
@@ -55,27 +53,25 @@ namespace Benchmark
 
         private void MemoryStream(TypeModel model)
         {
-            using (var buffer = new MemoryStream())
+            using var buffer = new MemoryStream();
+            for (int i = 0; i < OperationsPerInvoke; i++)
             {
-                for (int i = 0; i < OperationsPerInvoke; i++)
-                {
 #if NEW_API
-                    using (var writer = ProtoWriter.Create(out var state, buffer, model))
-                    {
-                        model.Serialize(writer, ref state, _database);
-                        writer.Close(ref state);
-                    }
-#else
-                    using (var writer = ProtoWriter.Create(buffer, model))
-                    {
-                        model.Serialize(writer, _database);
-                        writer.Close();
-                    }
-#endif
-                    AssertLength(buffer.Length);
-                    buffer.Position = 0;
-                    buffer.SetLength(0);
+                using (var writer = ProtoWriter.Create(out var state, buffer, model))
+                {
+                    model.Serialize(writer, ref state, _database);
+                    writer.Close(ref state);
                 }
+#else
+                using (var writer = ProtoWriter.Create(buffer, model))
+                {
+                    model.Serialize(writer, _database);
+                    writer.Close();
+                }
+#endif
+                AssertLength(buffer.Length);
+                buffer.Position = 0;
+                buffer.SetLength(0);
             }
         }
 

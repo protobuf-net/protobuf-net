@@ -55,21 +55,19 @@ namespace Google.Protobuf.Reflection
                 return true; // already exists, that counts as success
             }
             string path = null;
-            using (var reader = source ?? Open(name, out path))
+            using var reader = source ?? Open(name, out path);
+            if (reader == null) return false; // not found
+
+            descriptor = new FileDescriptorProto
             {
-                if (reader == null) return false; // not found
+                Name = name,
+                IncludeInOutput = includeInOutput,
+                DefaultPackage = GetDefaultPackageName(path),
+            };
+            Files.Add(descriptor);
 
-                descriptor = new FileDescriptorProto
-                {
-                    Name = name,
-                    IncludeInOutput = includeInOutput,
-                    DefaultPackage = GetDefaultPackageName(path),
-                };
-                Files.Add(descriptor);
-
-                descriptor.Parse(reader, Errors, name);
-                return true;
-            }
+            descriptor.Parse(reader, Errors, name);
+            return true;
         }
         /// <summary>
         /// Default package to use when none is specified; can use #FILE# and #DIR# tokens
@@ -178,24 +176,18 @@ namespace Google.Protobuf.Reflection
             ApplyImports();
             foreach (var file in Files)
             {
-                using (var ctx = new ParserContext(file, null, Errors))
-                {
-                    file.BuildTypeHierarchy(this);
-                }
+                using var ctx = new ParserContext(file, null, Errors);
+                file.BuildTypeHierarchy(this);
             }
             foreach (var file in Files)
             {
-                using (var ctx = new ParserContext(file, null, Errors))
-                {
-                    file.ResolveTypes(ctx, false);
-                }
+                using var ctx = new ParserContext(file, null, Errors);
+                file.ResolveTypes(ctx, false);
             }
             foreach (var file in Files)
             {
-                using (var ctx = new ParserContext(file, null, Errors))
-                {
-                    file.ResolveTypes(ctx, true);
-                }
+                using var ctx = new ParserContext(file, null, Errors);
+                file.ResolveTypes(ctx, true);
             }
         }
 
@@ -729,25 +721,23 @@ namespace Google.Protobuf.Reflection
         public void Parse(TextReader schema, List<Error> errors, string file)
         {
             Syntax = "";
-            using (var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace()), errors))
+            using var ctx = new ParserContext(this, new Peekable<Token>(schema.Tokenize(file).RemoveCommentsAndWhitespace()), errors);
+            var tokens = ctx.Tokens;
+            tokens.Peek(out Token startOfFile); // want this for "stuff you didn't do" warnings
+
+            // read the file into the object
+            ctx.Fill(this);
+
+            // finish up
+            if (string.IsNullOrWhiteSpace(Syntax))
             {
-                var tokens = ctx.Tokens;
-                tokens.Peek(out Token startOfFile); // want this for "stuff you didn't do" warnings
-
-                // read the file into the object
-                ctx.Fill(this);
-
-                // finish up
-                if (string.IsNullOrWhiteSpace(Syntax))
-                {
-                    ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
-                }
+                ctx.Errors.Warn(startOfFile, "no syntax specified; it is strongly recommended to specify 'syntax=\"proto2\";' or 'syntax=\"proto3\";'", ErrorCode.ProtoSyntaxNotSpecified);
+            }
 #pragma warning disable RCS1156 // Use string.Length instead of comparison with empty string.
-                if (Syntax == "" || Syntax == SyntaxProto2)
+            if (Syntax == "" || Syntax == SyntaxProto2)
 #pragma warning restore RCS1156 // Use string.Length instead of comparison with empty string.
-                {
-                    Syntax = null; // for output compatibility; is blank even if set to proto2 explicitly
-                }
+            {
+                Syntax = null; // for output compatibility; is blank even if set to proto2 explicitly
             }
         }
         internal bool TryResolveEnum(string typeName, IType parent, out EnumDescriptorProto @enum, bool allowImports, bool treatAllAsPublic = false)
@@ -796,7 +786,7 @@ namespace Google.Protobuf.Reflection
         }
         private bool TryResolveExtension(string extendee, string extension, out FieldDescriptorProto field, bool allowImports = true, bool checkOwnPackage = true)
         {
-            bool TryResolveFromFile(FileDescriptorProto file, string ee, string ion, out FieldDescriptorProto fld, bool withPackageName, bool ai)
+            static bool TryResolveFromFile(FileDescriptorProto file, string ee, string ion, out FieldDescriptorProto fld, bool withPackageName, bool ai)
             {
                 fld = null;
                 if (file == null) return false;
@@ -1319,7 +1309,7 @@ namespace Google.Protobuf.Reflection
         }
         private static void AppendOption(FileDescriptorProto file, ProtoWriter writer, ref ProtoWriter.State state, ParserContext ctx, string extendee, OptionHive option, bool resolveOnly, int depth, bool messageSet)
         {
-            bool ShouldWrite(FieldDescriptorProto f, string v, string d)
+            static bool ShouldWrite(FieldDescriptorProto f, string v, string d)
                 => f.label != FieldDescriptorProto.Label.LabelOptional || v != (f.DefaultValue ?? d);
 
             // resolve the field for this level
@@ -1615,22 +1605,20 @@ namespace Google.Protobuf.Reflection
                                     }
                                     else
                                     {
-                                        using (var ms = new MemoryStream(value.AggregateValue.Length))
+                                        using var ms = new MemoryStream(value.AggregateValue.Length);
+                                        if (!LoadBytes(ms, value.AggregateValue))
                                         {
-                                            if (!LoadBytes(ms, value.AggregateValue))
-                                            {
-                                                ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidEscapeSequence);
-                                                continue;
-                                            }
-#if NETSTANDARD1_3
-                                            if (ms.TryGetBuffer(out var seg))
-                                                ProtoWriter.WriteBytes(seg.Array, seg.Offset, seg.Count, writer, ref state);
-                                            else
-                                                ProtoWriter.WriteBytes(ms.ToArray(), writer, ref state);
-#else
-                                            ProtoWriter.WriteBytes(ms.GetBuffer(), 0, (int)ms.Length, writer, ref state);
-#endif
+                                            ctx.Errors.Error(option.Token, $"invalid escape sequence '{field.TypeName}': '{option.Name}' = '{value.AggregateValue}'", ErrorCode.InvalidEscapeSequence);
+                                            continue;
                                         }
+#if NETSTANDARD1_3
+                                        if (ms.TryGetBuffer(out var seg))
+                                            ProtoWriter.WriteBytes(seg.Array, seg.Offset, seg.Count, writer, ref state);
+                                        else
+                                            ProtoWriter.WriteBytes(ms.ToArray(), writer, ref state);
+#else
+                                        ProtoWriter.WriteBytes(ms.GetBuffer(), 0, (int)ms.Length, writer, ref state);
+#endif
                                     }
                                 }
                                 break;
@@ -1902,7 +1890,7 @@ namespace Google.Protobuf.Reflection
         }
         internal static bool TryIdentifyType(string typeName, out Type type)
         {
-            bool Assign(Type @in, out Type @out)
+            static bool Assign(Type @in, out Type @out)
             {
                 @out = @in;
                 return true;
