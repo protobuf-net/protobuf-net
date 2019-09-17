@@ -38,7 +38,7 @@ namespace ProtoBuf.Serializers
         T IProtoSubTypeSerializer<T>.ReadSubType(ProtoReader reader, ref ProtoReader.State state, SubTypeState<T> value)
         {
             value.OnBeforeDeserialize(OnBeforeDeserialize);
-            DeserializeBody(reader, ref state, ref value, (ref SubTypeState<T> s, bool r) => r ? (T)s.RawValue : s.Value, (ref SubTypeState<T> s, T v) => s.Value = v);
+            DeserializeBody(reader, ref state, ref value, (ref SubTypeState<T> s) => s.Value, (ref SubTypeState<T> s, T v) => s.Value = v);
             return value.OnAfterDeserialize(OnAfterDeserialize);
         }
 
@@ -118,7 +118,7 @@ namespace ProtoBuf.Serializers
             object obj = value;
             if (value == null) value = (T)CreateInstance(reader);
             OnBeforeDeserialize?.Invoke(value, reader);
-            DeserializeBody(reader, ref state, ref value, (ref T o, bool _) => o, (ref T o, T v) => o = v);
+            DeserializeBody(reader, ref state, ref value, (ref T o) => o, (ref T o, T v) => o = v);
             value = (T)obj;
             OnAfterDeserialize?.Invoke(value, reader);
             return value;
@@ -297,7 +297,7 @@ namespace ProtoBuf.Serializers
         }
 
         protected Action<T, ISerializationContext> OnBeforeDeserialize, OnAfterDeserialize;
-        protected delegate T StateGetter<TState>(ref TState state, bool raw);
+        protected delegate T StateGetter<TState>(ref TState state);
         protected delegate void StateSetter<TState>(ref TState state, T value);
         protected void DeserializeBody<TState>(ProtoReader source, ref ProtoReader.State state, ref TState bodyState, StateGetter<TState> getter, StateSetter<TState> setter)
         {
@@ -318,12 +318,19 @@ namespace ProtoBuf.Serializers
                     {
                         IRuntimeProtoSerializerNode ser = serializers[i];
                         //Helpers.DebugWriteLine(": " + ser.ToString());
-                        Type serType = ser.ExpectedType;
-
-                        bool isSubtype = serType is IProtoTypeSerializer ts && ts.IsSubType;
-                        var value = getter(ref bodyState, isSubtype);
-                        object result = ser.Read(source, ref state, value);
-                        if (ser.ReturnsValue) setter(ref bodyState, (T)result);
+                        if (ser is IProtoTypeSerializer ts && ts.IsSubType)
+                        {
+                            // sub-types are implemented differently; pass the entire
+                            // state through and unbox again to observe any changes
+                            bodyState = (TState)ser.Read(source, ref state, bodyState);
+                        }
+                        else
+                        {
+                            var value = getter(ref bodyState);
+                            object result = ser.Read(source, ref state, value);
+                            if (ser.ReturnsValue) setter(ref bodyState, (T)result);
+                        }
+                        
 
                         lastFieldIndex = i;
                         lastFieldNumber = fieldNumber;
@@ -336,7 +343,7 @@ namespace ProtoBuf.Serializers
                     //Helpers.DebugWriteLine(": [" + fieldNumber + "] (unknown)");
                     if (isExtensible)
                     {
-                        var val = getter(ref bodyState, false);
+                        var val = getter(ref bodyState);
                         source.AppendExtensionData(ref state, (IExtensible)val);
                     }
                     else
