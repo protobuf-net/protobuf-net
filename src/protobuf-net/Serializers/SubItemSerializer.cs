@@ -126,13 +126,14 @@ namespace ProtoBuf.Serializers
             return ((IProtoTypeSerializer)Proxy.Serializer).CreateInstance(source);
         }
 
-        public static void EmitWriteSubItem<T>(Compiler.CompilerContext ctx, Compiler.Local value = null, FieldInfo serializer = null, bool applyRecursionCheck = true)
+        public static void EmitWriteSubItem<T>(Compiler.CompilerContext ctx, Compiler.Local value = null,
+            FieldInfo serializer = null, bool applyRecursionCheck = true, bool assertImplemented = true)
         {
             ctx.LoadValue(value);
             ctx.LoadWriter(true);
             if (serializer == null)
             {
-                ctx.LoadNullRef();
+                ctx.LoadSelfAsService<IProtoSerializer<T>>(assertImplemented);
             }
             else
             {

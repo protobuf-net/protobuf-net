@@ -2,6 +2,8 @@
 using ProtoBuf.unittest;
 using System;
 using System.Buffers;
+using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using Xunit;
 
@@ -19,6 +21,7 @@ namespace ProtoBuf
             model.Add(typeof(B));
             model.Add(typeof(C));
             model.Add(typeof(D));
+            model.Add(typeof(E));
             model.Compile("EmitManualSerializer", "EmitManualSerializer.dll");
             PEVerify.Verify("EmitManualSerializer.dll", 0, deleteOnSuccess: false);
         }
@@ -442,5 +445,32 @@ namespace ProtoBuf
         [ProtoMember(1)]
         public int DVal { get; set; }
 
+    }
+
+    [ProtoContract]
+    public sealed class E
+    {
+        [ProtoMember(1)]
+        public E PublicAssignable { get; set; }
+
+        [ProtoMember(2)]
+        public E PrivateAssignable { get; private set; }
+
+        [ProtoMember(3)]
+        public E NonAssignable => _nonAssignable ?? (_nonAssignable = new E());
+        private E _nonAssignable;
+
+        [ProtoMember(4)]
+        public List<E> PublicAssignableList { get; set; }
+
+        [ProtoMember(5)]
+        public List<E> PrivateAssignableList { get; private set; }
+
+        [ProtoMember(6)]
+        public List<E> NonAssignableList => _nonAssignableList ?? (_nonAssignableList = new List<E>());
+        public List<E> _nonAssignableList;
+
+        [Browsable(false)]
+        public bool ShouldSerializeNonAssignableList() => _nonAssignableList != null && _nonAssignableList.Count != 0;
     }
 }
